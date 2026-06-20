@@ -25,42 +25,26 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc;color:#0f172a
 .dot-green{width:12px;height:12px;border-radius:50%;background:#22c55e;flex-shrink:0;}
 .dot-yellow{width:12px;height:12px;border-radius:50%;background:#eab308;flex-shrink:0;}
 .dot-red{width:12px;height:12px;border-radius:50%;background:#ef4444;flex-shrink:0;}
+.dot-gray{width:12px;height:12px;border-radius:50%;background:#94a3b8;flex-shrink:0;}
 .mac-dot{width:13px;height:13px;border-radius:50%;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;}
 .mac-red{background:#ff5f57;box-shadow:0 0 0 1px #e0443e;}
 .mac-yellow{background:#ffbd2e;box-shadow:0 0 0 1px #dea123;}
 .mac-green{background:#28c840;box-shadow:0 0 0 1px #1aab29;}
 @keyframes led-pulse{0%,100%{box-shadow:0 0 0 2px #ef4444,0 0 8px 2px #ef444488;}50%{box-shadow:0 0 0 2px #f97316,0 0 16px 4px #f9731666;}}
 .card-expiring{animation:led-pulse 2s infinite;border:2px solid #ef4444!important;}
-/* YC5: month header rõ ràng */
+.card-expired-done{background:#f1f5f9!important;opacity:.65;filter:grayscale(.4);}
+.card-expired-done .order-id-text, .card-expired-done .order-email-text, .card-expired-done .order-meta-text{text-decoration:line-through;}
+/* month header rõ ràng */
 .month-header{font-size:14px;font-weight:900;color:#1e293b;padding:14px 4px 8px;border-bottom:2px solid #e2e8f0;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
 .month-count{background:#4f46e5;color:white;font-size:11px;font-weight:900;padding:3px 10px;border-radius:20px;letter-spacing:.03em;}
-/* order sub-tabs */
-.ord-sub-tab{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;transition:all .15s;color:#64748b;display:flex;align-items:center;gap:6px;}
+/* order sub-tabs — thu nhỏ để vừa 1 dòng trên điện thoại */
+.ord-sub-tab{padding:5px 8px;border-radius:8px;font-size:10.5px;font-weight:800;cursor:pointer;transition:all .15s;color:#64748b;display:flex;align-items:center;gap:4px;white-space:nowrap;}
 .ord-sub-tab.active{background:white;color:#4f46e5;box-shadow:0 1px 4px rgba(0,0,0,.1);}
-/* promo */
-.color-swatch{display:none;}
-.color-swatch+label{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .15s;box-shadow:0 2px 6px rgba(0,0,0,.15);}
-.color-swatch:checked+label{border-color:#0f172a;transform:scale(1.18);box-shadow:0 4px 12px rgba(0,0,0,.25);}
-.color-swatch+label::after{content:'✓';color:white;font-size:13px;font-weight:900;opacity:0;transition:opacity .15s;}
-.color-swatch:checked+label::after{opacity:1;}
-.phone-shell{background:#1e293b;border-radius:2.5rem;padding:14px;box-shadow:0 30px 60px -10px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.08);}
-.phone-screen{background:#f1f5f9;border-radius:1.75rem;overflow:hidden;height:100%;display:flex;flex-direction:column;}
-.phone-content{flex:1;overflow-y:auto;padding:8px;background:#f8fafc;}
-.editor-toolbar{background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:8px 12px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;}
-.toolbar-btn{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid #e2e8f0;background:white;color:#475569;transition:all .12s;}
-.toolbar-btn:hover{background:#f1f5f9;}
-.toolbar-btn.var-btn{background:#eef2ff;border-color:#c7d2fe;color:#4338ca;}
-.tpl-card{background:white;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.04);}
-.tpl-card:hover{border-color:#a5b4fc;box-shadow:0 4px 20px rgba(79,70,229,.1);transform:translateY(-1px);}
-.tpl-card-header{height:6px;}
-.tpl-card-body{padding:14px;}
-/* YC8: target item không cuộn trong khung */
-.target-item{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;transition:background .1s;border-bottom:1px solid #f1f5f9;}
-.target-item:hover{background:#f8fafc;}
-.promo-sub-tab{padding:6px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;color:#64748b;}
-.promo-sub-tab.active{background:white;color:#4f46e5;box-shadow:0 1px 4px rgba(0,0,0,.1);}
-.settings-sub-tab{padding:6px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;color:#64748b;}
-.settings-sub-tab.active{background:white;color:#4f46e5;box-shadow:0 1px 4px rgba(0,0,0,.1);}
+.ord-sub-tab .mac-dot{width:9px;height:9px;}
+@media (min-width:768px){.ord-sub-tab{padding:6px 14px;font-size:12px;gap:6px;}.ord-sub-tab .mac-dot{width:13px;height:13px;}}
+/* link row action bar */
+.lnk-actions-row{display:flex;justify-content:flex-end;gap:6px;border-top:1px dashed #e2e8f0;padding-top:6px;margin-top:4px;}
+/* phone-shell removed (promo) */
 .toggle-wrap{position:relative;width:48px;height:26px;flex-shrink:0;}
 .toggle-wrap input{opacity:0;width:0;height:0;}
 .toggle-slider{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;border-radius:26px;transition:.3s;}
@@ -71,6 +55,8 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
 .log-table th{background:#f1f5f9;padding:9px 12px;text-align:left;font-weight:800;color:#475569;border-bottom:2px solid #e2e8f0;white-space:nowrap;}
 .log-table td{padding:8px 12px;border-bottom:1px solid #f1f5f9;color:#334155;vertical-align:middle;}
 .log-table tr:hover td{background:#f8fafc;}
+.settings-sub-tab{padding:6px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;color:#64748b;}
+.settings-sub-tab.active{background:white;color:#4f46e5;box-shadow:0 1px 4px rgba(0,0,0,.1);}
 </style>
 </head>
 <body class="min-h-screen pb-20 overflow-x-hidden bg-slate-50">
@@ -97,16 +83,15 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
 
 <!-- MAIN -->
 <main id="main" class="hidden max-w-7xl mx-auto p-2 md:p-4 w-full min-w-0">
-  <!-- TAB BAR -->
+  <!-- TAB BAR (đã bỏ Mail Promo) -->
   <div class="grid grid-cols-4 md:flex md:flex-wrap gap-1 md:gap-2 mb-3">
     <button onclick="go('t-ord')"      id="btn-t-ord"      class="tab-btn px-1 py-1 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1"><i class="fas fa-box"></i>Đơn hàng</button>
     <button onclick="go('t-data')"     id="btn-t-data"     class="tab-btn px-1 py-1 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1"><i class="fas fa-chart-pie"></i>Dung lượng</button>
     <button onclick="go('t-lnk')"      id="btn-t-lnk"      class="tab-btn px-1 py-1 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1"><i class="fas fa-link"></i>Link Sub</button>
     <button onclick="go('t-acc')"      id="btn-t-acc"      class="tab-btn px-1 py-1 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1"><i class="fas fa-key"></i>Tài khoản</button>
-    <button onclick="go('t-promo')"    id="btn-t-promo"    class="tab-btn px-1 py-1 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1"><i class="fas fa-envelope-open-text text-pink-500"></i>Mail Promo</button>
     <button onclick="go('t-dead')"     id="btn-t-dead"     class="tab-btn px-1 py-1 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1"><i class="fas fa-ban"></i>Đã xóa</button>
     <button onclick="go('t-cms')"      id="btn-t-cms"      class="tab-btn px-1 py-1 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1"><i class="fas fa-book"></i>Hướng dẫn</button>
-    <button onclick="go('t-settings')" id="btn-t-settings" class="tab-btn col-span-4 md:col-span-1 px-1 py-1 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1"><i class="fas fa-cog"></i>Cài đặt</button>
+    <button onclick="go('t-settings')" id="btn-t-settings" class="tab-btn col-span-2 md:col-span-1 px-1 py-1 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1"><i class="fas fa-cog"></i>Cài đặt</button>
   </div>
 
   <!-- ĐƠN HÀNG -->
@@ -115,10 +100,10 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
       <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Quản lý Đơn hàng</h2>
       <button onclick="openOrdModal(null)" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs lg:text-sm shadow-sm transition"><i class="fas fa-plus mr-1"></i>Tạo thủ công</button>
     </div>
-    <div class="bg-slate-100 p-1 rounded-xl flex gap-1 mb-4 w-fit">
-      <div class="ord-sub-tab active" id="otab-success" onclick="switchOrdTab('success')"><div class="mac-dot mac-green"></div>Thành công<span id="cnt-success" class="bg-green-100 text-green-700 text-[10px] font-black px-2 py-0.5 rounded-full ml-1">0</span></div>
-      <div class="ord-sub-tab" id="otab-pending" onclick="switchOrdTab('pending')"><div class="mac-dot mac-yellow"></div>Chờ duyệt<span id="cnt-pending" class="bg-yellow-100 text-yellow-700 text-[10px] font-black px-2 py-0.5 rounded-full ml-1">0</span></div>
-      <div class="ord-sub-tab" id="otab-failed" onclick="switchOrdTab('failed')"><div class="mac-dot mac-red"></div>Thất bại<span id="cnt-failed" class="bg-red-100 text-red-700 text-[10px] font-black px-2 py-0.5 rounded-full ml-1">0</span></div>
+    <div class="bg-slate-100 p-1 rounded-xl flex gap-1 mb-4 w-fit max-w-full overflow-x-auto">
+      <div class="ord-sub-tab active" id="otab-success" onclick="switchOrdTab('success')"><div class="mac-dot mac-green"></div>Thành công<span id="cnt-success" class="bg-green-100 text-green-700 text-[9px] md:text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
+      <div class="ord-sub-tab" id="otab-pending" onclick="switchOrdTab('pending')"><div class="mac-dot mac-yellow"></div>Chờ duyệt<span id="cnt-pending" class="bg-yellow-100 text-yellow-700 text-[9px] md:text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
+      <div class="ord-sub-tab" id="otab-failed" onclick="switchOrdTab('failed')"><div class="mac-dot mac-red"></div>Thất bại<span id="cnt-failed" class="bg-red-100 text-red-700 text-[9px] md:text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
     </div>
     <div id="ordBody" class="w-full min-w-0"></div>
   </div>
@@ -132,16 +117,8 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     <div id="dataReqBody" class="space-y-3 w-full min-w-0"></div>
   </div>
 
-  <!-- LINK SUB -->
+  <!-- LINK SUB (đã bỏ hướng dẫn quy trình vận hành) -->
   <div id="t-lnk" class="hidden space-y-4 w-full min-w-0">
-    <div class="bg-indigo-50 border border-indigo-100 p-3 md:p-4 rounded-2xl w-full">
-      <h3 class="font-extrabold text-indigo-800 text-[11px] md:text-sm lg:text-base mb-3 flex items-center"><i class="fas fa-clipboard-check mr-2 text-indigo-600"></i>📌 QUY TRÌNH VẬN HÀNH CHUẨN</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-3">
-        <div class="bg-white p-2.5 rounded-xl border shadow-sm"><p class="text-[10px] md:text-xs lg:text-sm text-slate-600 font-bold mb-1"><span class="text-indigo-500 mr-1">1</span>TẠO LINK MỚI</p><p class="text-[9px] md:text-[11px] lg:text-xs text-slate-500 font-medium">Tạo Link Ẩn <i class="fas fa-arrow-right mx-1 text-slate-400"></i> <span class="bg-blue-600 text-white px-1.5 rounded">Đồng bộ GH</span></p></div>
-        <div class="bg-white p-2.5 rounded-xl border shadow-sm"><p class="text-[10px] md:text-xs lg:text-sm text-slate-600 font-bold mb-1"><span class="text-indigo-500 mr-1">2</span>KHÓA / MỞ KHÓA</p><p class="text-[9px] md:text-[11px] lg:text-xs text-slate-500 font-medium">Đổi trạng thái <i class="fas fa-arrow-right mx-1 text-slate-400"></i> <span class="bg-emerald-600 text-white px-1.5 rounded">Rebuild MAP</span></p></div>
-        <div class="bg-white p-2.5 rounded-xl border shadow-sm"><p class="text-[10px] md:text-xs lg:text-sm text-slate-600 font-bold mb-1"><span class="text-indigo-500 mr-1">3</span>SỬA / XÓA LINK</p><p class="text-[9px] md:text-[11px] lg:text-xs text-slate-500 font-medium">Sửa/Xóa <i class="fas fa-arrow-right mx-1 text-slate-400"></i> <span class="bg-emerald-600 text-white px-1.5 rounded">Rebuild MAP</span> <i class="fas fa-arrow-right mx-1 text-slate-400"></i> <span class="bg-blue-600 text-white px-1.5 rounded">Đồng bộ GH</span></p></div>
-      </div>
-    </div>
     <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
       <div class="min-w-0">
         <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Quản lý Link Sub Ẩn</h2>
@@ -150,6 +127,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
       <div class="grid grid-cols-2 sm:flex gap-2 w-full lg:w-auto">
         <button id="btnRunGC" onclick="runGC()" class="bg-white text-red-600 hover:bg-red-50 font-bold px-3 py-2 rounded-xl text-xs lg:text-sm transition shadow-sm border border-slate-200"><i class="fas fa-broom mr-1"></i>Dọn KV</button>
         <button onclick="rebuildAllMAP()" id="btnRebuildAll" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold px-3 py-2 rounded-xl text-xs lg:text-sm transition shadow-sm border border-emerald-100"><i class="fas fa-rotate mr-1"></i>Rebuild MAP</button>
+        <button onclick="sortAllLinks()" id="btnSortLinks" class="bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold px-3 py-2 rounded-xl text-xs lg:text-sm transition shadow-sm border border-purple-100"><i class="fas fa-sort-numeric-down mr-1"></i>Sắp xếp</button>
         <button onclick="triggerGitHub()" id="btnTriggerGH" class="col-span-2 sm:col-span-1 bg-blue-600 text-white hover:bg-blue-700 font-bold px-3 py-2 rounded-xl text-xs lg:text-sm transition shadow-md"><i class="fab fa-github mr-1"></i>Đồng bộ GITHUB</button>
       </div>
     </div>
@@ -163,83 +141,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
       <button onclick="createLink()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 lg:py-3 rounded-xl shadow-md transition w-full text-xs lg:text-base"><i class="fas fa-magic mr-2"></i>TẠO LINK MỚI</button>
     </div>
     <div id="linksTree" class="space-y-3 w-full min-w-0"></div>
-  </div>
-
-  <!-- EMAIL PROMO -->
-  <div id="t-promo" class="hidden w-full min-w-0">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-      <div>
-        <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Email Marketing</h2>
-        <p class="text-xs text-slate-400 mt-0.5">Soạn và gửi chiến dịch Promo cá nhân hóa</p>
-      </div>
-      <div class="bg-slate-100 p-1 rounded-xl flex gap-1 self-start sm:self-auto">
-        <div class="promo-sub-tab active" id="ptab-edit" onclick="switchPromoTab('edit')"><i class="fas fa-pen-nib mr-1.5"></i>Soạn Mail</div>
-        <div class="promo-sub-tab" id="ptab-saved" onclick="switchPromoTab('saved')"><i class="fas fa-folder-open mr-1.5"></i>Mẫu Đã Lưu</div>
-      </div>
-    </div>
-    <div id="promo-view-edit">
-      <div class="grid grid-cols-1 xl:grid-cols-5 gap-4 items-start">
-        <div class="xl:col-span-3 flex flex-col gap-4">
-          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-            <div class="px-4 pt-4 pb-3 border-b border-slate-100 space-y-3">
-              <div><label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Tiêu đề Email</label><input type="text" id="promoSubj" placeholder="🔥 Flash Sale 50% - Chỉ hôm nay!" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400 bg-slate-50 transition"></div>
-              <div class="flex items-center gap-4">
-                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide shrink-0">Màu Header:</label>
-                <div class="flex items-center gap-2 flex-wrap">
-                  <input type="radio" name="promoColor" value="#16a34a" id="cGreen" class="color-swatch" checked onchange="updatePromoPreview()"><label for="cGreen" class="bg-green-600"></label>
-                  <input type="radio" name="promoColor" value="#db2777" id="cPink" class="color-swatch" onchange="updatePromoPreview()"><label for="cPink" class="bg-pink-600"></label>
-                  <input type="radio" name="promoColor" value="#0d9488" id="cTeal" class="color-swatch" onchange="updatePromoPreview()"><label for="cTeal" class="bg-teal-600"></label>
-                  <input type="radio" name="promoColor" value="#ea580c" id="cOrange" class="color-swatch" onchange="updatePromoPreview()"><label for="cOrange" class="bg-orange-600"></label>
-                  <input type="radio" name="promoColor" value="#7c3aed" id="cViolet" class="color-swatch" onchange="updatePromoPreview()"><label for="cViolet" class="bg-violet-600"></label>
-                  <input type="radio" name="promoColor" value="#1e293b" id="cDark" class="color-swatch" onchange="updatePromoPreview()"><label for="cDark" class="bg-slate-800"></label>
-                </div>
-              </div>
-              <div><label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">Chữ Header</label><input type="text" id="promoHead" placeholder="🎉 THÁNG 6 KHUYẾN MÃI LỚN" class="w-full p-2.5 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400 bg-slate-50" onkeyup="updatePromoPreview()"></div>
-            </div>
-            <div class="editor-toolbar">
-              <span class="text-[9px] font-black text-slate-300 uppercase mr-1">Format:</span>
-              <button class="toolbar-btn" onclick="insPromo('[B]In đậm[/B]')"><b>B</b></button>
-              <button class="toolbar-btn" onclick="insPromo('[I]In nghiêng[/I]')"><i>I</i></button>
-              <button class="toolbar-btn" onclick="insPromo('[COLOR=red]Chữ màu[/COLOR]')" style="color:#ef4444">A</button>
-              <div class="w-px h-4 bg-slate-200 mx-1"></div>
-              <span class="text-[9px] font-black text-slate-300 uppercase mr-1">Biến:</span>
-              <button class="toolbar-btn var-btn" onclick="insPromo('{MaDon}')">{Mã Đơn}</button>
-              <button class="toolbar-btn var-btn" onclick="insPromo('{Email}')">{Email}</button>
-              <div class="w-px h-4 bg-slate-200 mx-1"></div>
-              <button class="toolbar-btn" onclick="insPromo('[BTN] CLICK ĐÂY | https://')" style="color:#2563eb"><i class="fas fa-hand-pointer mr-1"></i>Nút</button>
-              <button class="toolbar-btn" onclick="insPromo('[IMG] https://')" style="color:#db2777"><i class="fas fa-image mr-1"></i>Ảnh</button>
-              <button class="toolbar-btn" onclick="insPromo('[LINE]')" style="color:#94a3b8">— Kẻ ngang</button>
-            </div>
-            <textarea id="promoRaw" oninput="updatePromoPreview()" rows="10" class="w-full px-4 py-3 focus:outline-none text-slate-800 font-mono text-[12px] leading-relaxed resize-y bg-white border-0" placeholder="Nội dung thư..."></textarea>
-            <div class="p-3 border-t border-slate-100 bg-slate-50 flex gap-2">
-              <button onclick="savePromoTemplate()" class="flex-1 bg-slate-700 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs lg:text-sm transition shadow-sm flex items-center justify-center gap-1.5"><i class="fas fa-bookmark"></i>Lưu Mẫu</button>
-              <button id="btnSendPromo" onclick="sendPromoMail()" class="flex-1 text-white font-bold py-2.5 rounded-xl text-xs lg:text-sm transition shadow-md flex items-center justify-center gap-1.5" style="background:linear-gradient(135deg,#db2777,#be185d)"><i class="fas fa-paper-plane"></i>Bắn Mail</button>
-            </div>
-          </div>
-        </div>
-        <div class="xl:col-span-2 sticky top-16">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center mb-3"><i class="fas fa-mobile-alt mr-1"></i>Preview</p>
-          <div class="phone-shell mx-auto" style="width:280px;height:560px;">
-            <div class="phone-screen">
-              <div class="bg-white px-3 py-2 border-b border-slate-100 flex items-center gap-2">
-                <div class="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center shrink-0"><i class="fas fa-envelope text-indigo-500" style="font-size:10px"></i></div>
-                <div class="flex-1 min-w-0"><div class="text-[9px] font-black text-slate-700 truncate" id="previewSubjLine">Tiêu đề email...</div><div class="text-[8px] text-slate-400">VPN Trinh Hg</div></div>
-              </div>
-              <div class="phone-content"><div id="promoPreviewPane" class="text-xs"></div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- YC8: Danh sách gửi bên dưới, không cuộn trong khung cố định -->
-      <div class="mt-6 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-        <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
-          <div class="flex items-center gap-2"><i class="fas fa-users text-indigo-400 text-sm"></i><span class="font-bold text-sm lg:text-base text-slate-700">Danh sách gửi</span><span id="promoCountBadge" class="bg-indigo-100 text-indigo-700 text-[10px] font-black px-2 py-0.5 rounded-full">0</span></div>
-          <div class="flex gap-3"><button onclick="tickPromo(true)" class="text-xs font-bold text-indigo-500 hover:text-indigo-700">Chọn hết</button><button onclick="tickPromo(false)" class="text-xs font-bold text-slate-400 hover:text-slate-600">Bỏ chọn</button></div>
-        </div>
-        <div id="promoTargetList" class="divide-y divide-slate-100"></div>
-      </div>
-    </div>
-    <div id="promo-view-saved" class="hidden"><div id="promoSavedGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>
   </div>
 
   <!-- ĐÃ XÓA -->
@@ -296,12 +197,13 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     <div id="accTree" class="space-y-3 w-full min-w-0"></div>
   </div>
 
-  <!-- CÀI ĐẶT (YC9: gộp Thiết bị vào đây) -->
+  <!-- CÀI ĐẶT (đã bỏ tab Bắn Mail Promo, thêm cấu hình 3 Worker bắn tỉa) -->
   <div id="t-settings" class="hidden w-full min-w-0">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Cài đặt hệ thống</h2>
       <div class="bg-slate-100 p-1 rounded-xl flex gap-1 self-start flex-wrap">
         <div class="settings-sub-tab active" id="stab-mail" onclick="switchSettingsTab('mail')"><i class="fas fa-paper-plane mr-1.5"></i>Bắn Mail</div>
+        <div class="settings-sub-tab" id="stab-sync" onclick="switchSettingsTab('sync')"><i class="fas fa-satellite-dish mr-1.5"></i>Bắn Tỉa 3 Web</div>
         <div class="settings-sub-tab" id="stab-log" onclick="switchSettingsTab('log')"><i class="fas fa-list-alt mr-1.5"></i>Nhật ký</div>
         <div class="settings-sub-tab" id="stab-dev" onclick="switchSettingsTab('dev')"><i class="fas fa-laptop mr-1.5"></i>Thiết bị</div>
       </div>
@@ -333,6 +235,18 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
         </div>
       </div>
     </div>
+    <div id="settings-view-sync" class="hidden">
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 max-w-lg">
+        <div class="font-bold text-sm lg:text-base text-slate-800 mb-1">Worker URL của 3 Website</div>
+        <div class="text-xs lg:text-sm text-slate-500 mb-4">Khi LƯU Đơn hàng / CMS / Tài khoản / Yêu cầu Data, trình duyệt sẽ "bắn tỉa" cùng lúc sang 3 Worker bên dưới. Để trống ô nào thì bỏ qua web đó. Link Sub Ẩn KHÔNG đồng bộ chéo — chỉ lưu nội bộ web đang mở.</div>
+        <div class="space-y-3">
+          <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Worker Web 1</label><input id="syncW1" type="text" placeholder="https://worker-web1.workers.dev" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
+          <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Worker Web 2</label><input id="syncW2" type="text" placeholder="https://worker-web2.workers.dev" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
+          <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Worker Web 3</label><input id="syncW3" type="text" placeholder="https://worker-web3.workers.dev" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
+        </div>
+        <button onclick="saveSyncSetting()" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs lg:text-sm shadow-md transition"><i class="fas fa-save mr-2"></i>LƯU CẤU HÌNH</button>
+      </div>
+    </div>
     <div id="settings-view-log" class="hidden">
       <div class="flex items-center justify-between mb-3">
         <div class="text-sm lg:text-base font-bold text-slate-700">Nhật ký gửi mail <span id="logCount" class="text-slate-400 font-normal text-xs">(0 bản ghi)</span></div>
@@ -347,7 +261,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
         </div>
       </div>
     </div>
-    <!-- YC9: Thiết bị trong Cài đặt -->
     <div id="settings-view-dev" class="hidden">
       <div class="mb-3"><div class="text-sm lg:text-base font-bold text-slate-700">Thiết bị quản trị đã đăng nhập</div></div>
       <div id="devBody" class="space-y-3 w-full min-w-0"></div>
@@ -355,7 +268,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
   </div>
 </main>
 
-<!-- MODAL ĐƠN HÀNG -->
+<!-- MODAL ĐƠN HÀNG (đã thêm Nickname + 3 ô Link Sub Web 1/2/3) -->
 <div id="mOrd" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 md:p-4">
   <div class="glass-card p-4 md:p-6 lg:p-8 w-full max-w-lg max-h-[98vh] overflow-y-auto min-w-0">
     <h3 id="mOrdTtl" class="text-base md:text-xl lg:text-2xl font-bold mb-3 text-slate-800">Đơn hàng</h3>
@@ -363,6 +276,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
       <div class="min-w-0"><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-0.5">Mã đơn</label><div class="flex"><input id="mOId" type="text" class="w-full p-1.5 md:p-2 lg:p-3 text-xs lg:text-sm border rounded-l-lg bg-slate-50 font-mono font-bold outline-none focus:border-indigo-500 truncate"><button onclick="document.getElementById('mOId').value=genId()" class="bg-slate-200 px-2 lg:px-4 text-[10px] lg:text-xs font-bold rounded-r-lg border border-l-0 border-slate-300 hover:bg-slate-300">Tạo</button></div></div>
       <div class="min-w-0"><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-0.5">Email Khách</label><input id="mOEmail" type="text" class="w-full p-1.5 md:p-2 lg:p-3 text-xs lg:text-sm border rounded-lg outline-none focus:border-indigo-500 truncate"></div>
     </div>
+    <div class="mb-2 min-w-0"><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-0.5"><i class="fas fa-user-tag text-indigo-400 mr-1"></i>Nickname (để dễ nhớ khách)</label><input id="mONickname" type="text" placeholder="VD: Anh Tuấn FB..." class="w-full p-1.5 md:p-2 lg:p-3 text-xs lg:text-sm border rounded-lg outline-none focus:border-indigo-500 bg-yellow-50 border-yellow-200 truncate"></div>
     <div class="mb-2 min-w-0"><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-0.5">Gói VPN</label><select id="mOPkg" onchange="autoFillDays()" class="w-full p-1.5 md:p-2 lg:p-3 text-xs lg:text-sm border rounded-lg font-bold text-indigo-700 bg-indigo-50 outline-none truncate"></select></div>
     <div class="grid grid-cols-3 gap-2 mb-2">
       <div class="min-w-0"><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-0.5">Trạng thái</label><select id="mOStatus" onchange="togSF()" class="w-full p-1.5 md:p-2 lg:p-3 text-xs lg:text-sm border rounded-lg font-bold outline-none"><option value="pending">Chờ duyệt</option><option value="success">Thành công</option><option value="failed">Từ chối</option></select></div>
@@ -373,7 +287,11 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
       <div class="min-w-0"><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-0.5">SĐT Zalo</label><input id="mOZalo" type="text" placeholder="0917..." class="w-full p-1.5 md:p-2 lg:p-3 text-xs lg:text-sm border rounded-lg outline-none focus:border-indigo-500 bg-slate-50"></div>
       <div class="min-w-0"><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-0.5">Số ngày SD</label><input id="mODays" type="number" min="1" placeholder="30" class="w-full p-1.5 md:p-2 lg:p-3 text-xs lg:text-sm border rounded-lg outline-none focus:border-indigo-500 text-center bg-slate-50" oninput="recalcExpFromDays()"></div>
     </div>
-    <div id="fSuc" class="hidden mb-3 p-2 lg:p-3 border border-green-200 bg-green-50 rounded-lg min-w-0"><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Link Sub</label><input id="mOLink" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
+    <div id="fSuc" class="hidden mb-3 p-2 lg:p-3 border border-green-200 bg-green-50 rounded-lg min-w-0 space-y-2">
+      <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Link Sub Web 1 (Chính)</label><input id="mOLink" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
+      <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Link Sub Web 2 (Dự phòng)</label><input id="mOLink2" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
+      <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Link Sub Web 3 (Dự phòng)</label><input id="mOLink3" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
+    </div>
     <div id="fFail" class="hidden mb-3 p-2 lg:p-3 border border-red-200 bg-red-50 rounded-lg min-w-0"><label class="block font-bold text-[10px] lg:text-xs text-red-700 mb-0.5">Lý do</label><input id="mOReason" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-red-300 bg-white rounded outline-none"></div>
     <div class="flex items-center mb-4 bg-slate-50 border border-slate-200 p-2 lg:p-3 rounded-lg">
       <input type="checkbox" id="mOSendMail" class="w-3 h-3 lg:w-4 lg:h-4 mr-2 accent-indigo-600" checked>
@@ -401,6 +319,17 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
   </div>
 </div>
 
+<!-- MODAL SỬA LINK GỐC (pencil) -->
+<div id="mOrigEdit" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="glass-card p-5 md:p-6 lg:p-8 w-full max-w-sm min-w-0">
+    <h3 class="font-extrabold text-lg lg:text-xl mb-3 text-slate-800">Thông tin Link Gốc</h3>
+    <input type="hidden" id="mOrigKey">
+    <div class="mb-2 min-w-0"><label class="block text-[10px] lg:text-xs font-bold text-slate-600 mb-0.5">Ngày hết hạn Link Gốc</label><input id="mOrigExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-slate-300 rounded-lg outline-none focus:border-indigo-500 text-center bg-slate-50"></div>
+    <div class="mb-4 min-w-0"><label class="block text-[10px] lg:text-xs font-bold text-slate-600 mb-0.5">Ghi chú khác</label><input id="mOrigNote" type="text" placeholder="VD: Acc mẹ số 3..." class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-slate-300 rounded-lg outline-none focus:border-indigo-500 bg-slate-50"></div>
+    <div class="flex gap-2"><button onclick="saveOrigEdit()" class="flex-1 bg-indigo-600 text-white font-bold py-2.5 lg:py-3 rounded-lg text-xs lg:text-sm hover:bg-indigo-700 shadow-md">LƯU</button><button onclick="cm('mOrigEdit')" class="bg-white border border-slate-200 text-slate-700 font-bold py-2.5 lg:py-3 px-4 rounded-lg text-xs lg:text-sm shadow-sm hover:bg-slate-50">Hủy</button></div>
+  </div>
+</div>
+
 <!-- MODAL ACC -->
 <div id="mAcc" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
   <div class="glass-card p-5 md:p-6 lg:p-8 w-full max-w-sm min-w-0">
@@ -425,7 +354,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
 </div>
 
 <script>
-const TABS=["t-ord","t-data","t-lnk","t-acc","t-promo","t-dead","t-cms","t-settings"];
+const TABS=["t-ord","t-data","t-lnk","t-acc","t-dead","t-cms","t-settings"];
 const API=window.location.origin, PD=window.location.origin;
 const GH_REPO="trinhhg/vpntrinhhg3";
 const MAIL_API="https://script.google.com/macros/s/AKfycbyQjEln9By0HuUPtboqJpb1INI6rRp52BxvHR8HaE5fs8qojfgau1R_27P4RyLLxXIp/exec";
@@ -433,6 +362,9 @@ const SITE_KEY=window.location.hostname.replace(/\./g,"_");
 
 const PKGS=["Gói 1 tháng - 60.000đ / $2.5 / ¥15.5 (100GB)","Gói 1 tháng - 70.000đ / $3 / ¥18 (500GB)","Gói 1 tháng - 80.000đ / $3.5 / ¥20.5 (1000GB)","Gói Cao Cấp - 200.000đ / $8 / ¥50 (3000GB)","Gói 1 Năm - 710.000đ / $27 / ¥177.5 (200GB/tháng)","Không Giới Hạn - 200.000đ / $8 / ¥52 (200GB)","Không Giới Hạn - 399.000đ / $16 / ¥102 (1000GB)","Không Giới Hạn - 999.000đ / $40 / ¥256 (5000GB)"];
 const PKG_DAYS=[30,30,30,30,365,0,0,0];
+
+// ════ CÁC ĐƯỜNG DẪN ĐƯỢC BẮN TỈA SANG 3 WEB (Đơn hàng, CMS, Tài khoản, Data Request) ════
+const CROSS_SYNC_PATHS=["/api/orders","/api/cms","/api/accounts","/api/data_requests"];
 
 let ordersDb=[],dataRequestsDb=[],linksDb=[],deadLinksDb=[],cmsDb={},devicesDb=[],accountsDb=[];
 let myDev="",curCms="android",curOrdTab="success";
@@ -464,18 +396,28 @@ async function apG(p,def){
     const d=await r.json();lsSet("a"+p,d);lsSetT(p);return d;
   }catch{return lsGet("a"+p)??def;}
 }
+// ── apP: lưu local + lưu lên Worker đang mở. Nếu path thuộc CROSS_SYNC_PATHS thì
+// đồng thời "bắn tỉa" cùng dữ liệu đó sang 3 Worker cấu hình trong Cài đặt > Bắn Tỉa 3 Web.
 async function apP(p,data){
   lsSet("a"+p,data);lsSetT(p);
   try{const r=await fetch(API+p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});if(!r.ok) toast("Lỗi lưu DB: "+r.status,"err");}
   catch(e){toast("Mất kết nối: "+e.message,"err");}
+  if(CROSS_SYNC_PATHS.includes(p)){
+    const targets=[lsGet("syncW1"),lsGet("syncW2"),lsGet("syncW3")].filter(u=>u&&u.trim());
+    for(const base of targets){
+      const url=base.replace(/\/$/,"")+p;
+      fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)}).catch(()=>{});
+    }
+  }
 }
 
 // Helpers ngày tháng
 function formatDateVN(d){return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;}
 function todayVN(){return formatDateVN(new Date());}
 function addDays(dateStr,days){const d=pd(dateStr);if(!d||!days)return "";d.setDate(d.getDate()+days);return formatDateVN(d);}
+function isExpiredDate(dateStr){const d=pd(dateStr);if(!d)return false;return d.getTime()<Date.now();}
 
-// YC7: format ngày giờ đẹp "18:34 – 4/5/2026"
+// format ngày giờ đẹp "18:34 – 4/5/2026"
 function fmtCardDate(raw){
   if(!raw) return "";
   try{
@@ -486,11 +428,10 @@ function fmtCardDate(raw){
       return `${hh}:${mm} – ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
     }
   }catch{}
-  // fallback: bỏ giây
   return raw.replace(/(\d{1,2}:\d{2}):\d{2}/,'$1');
 }
 
-// YC5: tháng năm rõ ràng
+// tháng năm rõ ràng
 function monthLabel(dateStr){
   if(!dateStr) return "Không rõ tháng";
   const p=dateStr.split("/");if(p.length<3) return dateStr;
@@ -546,6 +487,19 @@ function saveAutoMailSetting(){
   toast(val?"Đã bật tự động gửi mail!":"Đã tắt.");
 }
 
+// ── Cài đặt Bắn Tỉa 3 Web ──
+function loadSyncSettingUI(){
+  document.getElementById("syncW1").value=lsGet("syncW1")||"";
+  document.getElementById("syncW2").value=lsGet("syncW2")||"";
+  document.getElementById("syncW3").value=lsGet("syncW3")||"";
+}
+function saveSyncSetting(){
+  lsSet("syncW1",document.getElementById("syncW1").value.trim());
+  lsSet("syncW2",document.getElementById("syncW2").value.trim());
+  lsSet("syncW3",document.getElementById("syncW3").value.trim());
+  toast("Đã lưu cấu hình Bắn Tỉa 3 Web!");
+}
+
 // AUTH
 window.onload=async function(){
   myDev=lsGet("adm_dev")||"";
@@ -555,7 +509,7 @@ window.onload=async function(){
     ordersDb=lsGet("a/api/orders")||[];dataRequestsDb=lsGet("a/api/data_requests")||[];
     linksDb=lsGet("a/api/links")||[];deadLinksDb=lsGet("a/api/deadlinks")||[];
     devicesDb=cached;accountsDb=lsGet("a/api/accounts")||[];
-    cmsDb=lsGet("a/api/cms")||{};if(!cmsDb.promo_templates) cmsDb.promo_templates=[];
+    cmsDb=lsGet("a/api/cms")||{};if(!cmsDb.link_origins) cmsDb.link_origins={};
     document.getElementById("mOPkg").innerHTML=PKGS.map((p,i)=>`<option value="${i}">${p}</option>`).join("");
     loginOK(false);setTimeout(()=>fetchAll(false),500);
   } else {
@@ -587,7 +541,7 @@ function loginOK(st=true){
   const on=lsGet("autoMailEnabled")||false;
   document.getElementById("toggleAutoMail").checked=on;
   document.getElementById("autoMailStatus").textContent="Trạng thái: "+(on?"✅ Đang bật (gửi lúc 19:00-20:00 giờ VN)":"⏸ Đang tắt");
-  renderMailLog();
+  renderMailLog();loadSyncSettingUI();
 }
 function doLogout(){lsDel("adm_dev");location.reload();}
 
@@ -603,8 +557,7 @@ function go(id){
   lsSet("lastTab",id);
   if(id==="t-dead") renderDead();
   if(id==="t-data") renderDataRequests();
-  if(id==="t-promo"){renderPromoTargets();renderPromoSaved();updatePromoPreview();}
-  if(id==="t-settings"){renderMailLog();renderDev();}
+  if(id==="t-settings"){renderMailLog();renderDev();loadSyncSettingUI();}
 }
 async function fetchAll(msg=false){
   [ordersDb,dataRequestsDb,linksDb,deadLinksDb,devicesDb,accountsDb]=await Promise.all([apG("/api/orders",[]),apG("/api/data_requests",[]),apG("/api/links",[]),apG("/api/deadlinks",[]),apG("/api/devices",[]),apG("/api/accounts",[])]);
@@ -613,8 +566,8 @@ async function fetchAll(msg=false){
   if(!Array.isArray(linksDb)) linksDb=[];if(!Array.isArray(deadLinksDb)) deadLinksDb=[];
   if(!Array.isArray(devicesDb)) devicesDb=[];if(!Array.isArray(accountsDb)) accountsDb=[];
   if(typeof cmsDb!=="object"||Array.isArray(cmsDb)) cmsDb={};
-  if(!cmsDb.promo_templates) cmsDb.promo_templates=[];
-  for(let k in cmsDb){if(k!=="promo_templates") cmsDb[k]=reverseShortcodes(cmsDb[k]);}
+  if(!cmsDb.link_origins) cmsDb.link_origins={};
+  for(let k in cmsDb){if(k!=="promo_templates"&&k!=="link_origins") cmsDb[k]=reverseShortcodes(cmsDb[k]);}
   renderOrd();renderDataRequests();renderLinks();renderDev();renderAcc();
   document.getElementById("cmsRaw").value=cmsDb[curCms]||"";updatePreview();
   if(msg) toast("Đã làm mới dữ liệu!");
@@ -627,7 +580,6 @@ function switchOrdTab(tab){
   renderOrd();
 }
 
-// YC1: Templates mail đầy đủ lấy từ web chính
 const CONTACT_BLOCK=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:15px;margin-top:20px;text-align:center;"><p style="margin:0 0 12px 0;color:#475569;font-size:13px;line-height:1.5;">Cần hỗ trợ? Đội ngũ của chúng tôi sẵn sàng 24/24</p><div style="display:block;width:100%;text-align:center;"><a href="https://zalo.me/0917678211" style="display:inline-block;width:46%;background:#0068ff;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;box-sizing:border-box;">Chat Zalo</a><a href="https://www.facebook.com/trinh.hg.57" style="display:inline-block;width:46%;background:#0668E1;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;margin-left:4%;box-sizing:border-box;">Messenger</a></div></div>`;
 
 function buildSuccessMailHtml(o){
@@ -646,7 +598,7 @@ function buildDataMailHtml(req,gb){
   return `<div style="font-family:sans-serif;width:100%;max-width:500px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-sizing:border-box;"><div style="background:linear-gradient(135deg,#4f46e5,#8b5cf6);padding:20px;text-align:center;"><h2 style="color:white;margin:0;font-size:18px;text-transform:uppercase;">BÁO CÁO DUNG LƯỢNG</h2></div><div style="padding:20px;box-sizing:border-box;"><p style="font-size:15px;line-height:1.5;margin-top:0;color:#334155;">Xin chào,</p><p style="font-size:14px;line-height:1.5;margin-top:0;color:#334155;">Gói VPN của bạn (Mã đơn: <b style="color:#4f46e5;">${req.orderId}</b>) đã sử dụng:</p><div style="background:#f1f5f9;border-left:4px solid #4f46e5;padding:20px;border-radius:8px;margin:20px 0;text-align:center;"><p style="margin:0 0 10px 0;font-size:32px;font-weight:900;color:#4f46e5;letter-spacing:1px;">${gb} <span style="font-size:18px;">GB</span></p></div><div style="text-align:center;margin:25px 0;"><a href="${PD}" style="background:#1e293b;color:white;padding:12px 15px;border-radius:10px;text-decoration:none;font-weight:900;display:inline-block;width:100%;box-sizing:border-box;font-size:14px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">TRUY CẬP CỔNG KHÁCH HÀNG</a><p style="font-size:12px;color:#64748b;margin-top:12px;line-height:1.5;">👉 <i>Dùng <b>Mã Đơn Hàng</b> hoặc <b>Email</b> để tra cứu và lấy link VPN.</i></p></div>${CONTACT_BLOCK}</div></div>`;
 }
 
-// YC2+3+4+5+6+7: renderOrd với đầy đủ fix
+// renderOrd: thêm Nickname, đơn success hết hạn -> card xám gạch ngang
 function renderOrd(){
   const tb=document.getElementById("ordBody");
   const counts={success:0,pending:0,failed:0};
@@ -655,7 +607,6 @@ function renderOrd(){
   const filtered=ordersDb.filter(o=>o.status===curOrdTab);
   if(!filtered.length){tb.innerHTML=`<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold lg:text-base">Không có đơn nào</div>`;return;}
 
-  // Nhóm theo tháng
   const groups={};
   filtered.forEach(o=>{
     const dc=getDateCreated(o);
@@ -668,41 +619,38 @@ function renderOrd(){
   const now=new Date();let html="";
   for(const key of sortedKeys){
     const g=groups[key];
-    // YC5: rõ ràng, số đơn in đậm màu
     html+=`<div class="month-header"><i class="far fa-calendar-alt text-indigo-400"></i><span>${g.label}</span><span class="month-count">${g.orders.length} đơn</span></div><div class="space-y-3 mb-6">`;
     for(const o of g.orders){
       const displayPkg=o.pkg?o.pkg.split(" / ")[0]:(o.pkgName||"—");
       const dc=getDateCreated(o);
-      let isExpiring=false,daysLeft=null;
+      let isExpiring=false,daysLeft=null,isExpiredSuccess=false;
       if(o.status==="success"&&o.expDate){
         const expD=pd(o.expDate);
-        if(expD){daysLeft=Math.ceil((expD-now)/86400000);isExpiring=daysLeft>=0&&daysLeft<=3;}
+        if(expD){daysLeft=Math.ceil((expD-now)/86400000);isExpiring=daysLeft>=0&&daysLeft<=3;isExpiredSuccess=daysLeft<0;}
       }
       const isSuc=o.status==="success",isPen=o.status==="pending";
-      const dot=isSuc?'<div class="dot-green"></div>':isPen?'<div class="dot-yellow"></div>':'<div class="dot-red"></div>';
-      // YC2: layout giống web chính — thông tin trái, ngày tạo + nút phải
-      // YC3: size text giống web chính
-      // YC4: luôn hiện Zalo dù không có
-      // YC6: luôn hiện nút hết hạn với đơn success có expDate
-      // YC7: ngày giờ format đẹp
-      const cardBase=isExpiring?'card-expiring':'bg-white border border-slate-200';
+      const dot=isExpiredSuccess?'<div class="dot-gray"></div>':isSuc?'<div class="dot-green"></div>':isPen?'<div class="dot-yellow"></div>':'<div class="dot-red"></div>';
+      let cardBase='bg-white border border-slate-200';
+      if(isExpiredSuccess) cardBase='card-expired-done border border-slate-300';
+      else if(isExpiring) cardBase='card-expiring';
+      const nicknameHTML=o.nickname?`<span class="text-[9px] md:text-[10px] lg:text-xs font-black bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded ml-1 shrink-0"><i class="fas fa-user-tag mr-0.5"></i>${o.nickname}</span>`:"";
       html+=`<div class="${cardBase} rounded-xl p-3 shadow-sm flex flex-col md:flex-row md:items-start justify-between gap-2 md:gap-3 w-full min-w-0">
-        <!-- Trái: thông tin đơn -->
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 mb-1 min-w-0">
             ${dot}
             <span class="font-bold text-[10px] lg:text-xs text-slate-400">#${ordersDb.indexOf(o)+1}</span>
-            <span class="font-mono font-extrabold text-indigo-600 text-xs md:text-sm lg:text-base cp truncate" onclick="cp('${o.id}')">${o.id}</span>
+            <span class="font-mono font-extrabold text-indigo-600 text-xs md:text-sm lg:text-base cp truncate order-id-text" onclick="cp('${o.id}')">${o.id}</span>
+            ${nicknameHTML}
+            ${isExpiredSuccess?`<span class="text-[9px] lg:text-xs font-black bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1 shrink-0">ĐÃ HẾT HẠN</span>`:""}
           </div>
-          <div class="font-bold text-slate-800 text-[11px] md:text-xs lg:text-sm cp truncate pl-5" onclick="cp('${o.email||''}')">${o.email||"—"}</div>
-          <div class="text-[10px] md:text-[11px] lg:text-sm text-slate-500 mt-0.5 font-medium pl-5">Zalo: <span class="font-bold text-slate-700 cp" onclick="cp('${o.zalo||''}')">${o.zalo||"Không có"}</span></div>
-          <div class="text-[10px] md:text-[11px] lg:text-sm text-slate-500 mt-0.5 font-medium truncate pl-5">${displayPkg}${o.expDate?` • HSD: <span class="font-bold text-slate-700">${o.expDate}</span>`:""}${daysLeft!==null?` <span class="font-black ${daysLeft<=1?'text-red-600':'text-orange-500'}">(còn ${daysLeft}n)</span>`:""}</div>
+          <div class="font-bold text-slate-800 text-[11px] md:text-xs lg:text-sm cp truncate pl-5 order-email-text" onclick="cp('${o.email||''}')">${o.email||"—"}</div>
+          <div class="text-[10px] md:text-[11px] lg:text-sm text-slate-500 mt-0.5 font-medium pl-5 order-meta-text">Zalo: <span class="font-bold text-slate-700 cp" onclick="cp('${o.zalo||''}')">${o.zalo||"Không có"}</span></div>
+          <div class="text-[10px] md:text-[11px] lg:text-sm text-slate-500 mt-0.5 font-medium truncate pl-5 order-meta-text">${displayPkg}${o.expDate?` • HSD: <span class="font-bold text-slate-700">${o.expDate}</span>`:""}${daysLeft!==null&&daysLeft>=0?` <span class="font-black ${daysLeft<=1?'text-red-600':'text-orange-500'}">(còn ${daysLeft}n)</span>`:""}</div>
         </div>
-        <!-- Phải: ngày tạo trên, nút chức năng dưới -->
         <div class="flex flex-col items-end gap-2 shrink-0 border-t border-slate-100 md:border-0 pt-2 md:pt-0 mt-1 md:mt-0">
           ${dc?`<span class="text-[10px] lg:text-xs text-slate-400 font-semibold whitespace-nowrap">${fmtCardDate(dc)}</span>`:""}
           <div class="flex gap-1.5 shrink-0">
-            ${(o.status==="success"&&o.expDate)?`<button onclick="sendExpMail('${o.id}')" title="Nhắc hết hạn" class="text-amber-500 font-bold px-3 py-1.5 bg-amber-50 border border-amber-100 rounded-lg text-xs lg:text-sm hover:bg-amber-500 hover:text-white transition shadow-sm"><i class="fas fa-clock"></i></button>`:""}
+            ${(o.status==="success"&&o.expDate&&!isExpiredSuccess)?`<button onclick="sendExpMail('${o.id}')" title="Nhắc hết hạn" class="text-amber-500 font-bold px-3 py-1.5 bg-amber-50 border border-amber-100 rounded-lg text-xs lg:text-sm hover:bg-amber-500 hover:text-white transition shadow-sm"><i class="fas fa-clock"></i></button>`:""}
             <button onclick="sendZaloMail('${o.id}')" title="Nhắc Zalo khách hàng" class="text-blue-500 font-bold px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg text-xs lg:text-sm hover:bg-blue-500 hover:text-white transition shadow-sm"><i class="fas fa-comment-dots"></i></button>
             <button onclick="openOrdModal('${o.id}')" class="text-indigo-600 font-bold px-4 py-1.5 bg-indigo-50 border border-indigo-100 rounded-lg text-xs lg:text-sm hover:bg-indigo-600 hover:text-white transition shadow-sm"><i class="fas fa-pen md:mr-1.5"></i><span class="hidden md:inline">Sửa</span></button>
             <button onclick="delOrd('${o.id}')" class="text-red-500 font-bold px-3 py-1.5 bg-red-50 border border-red-100 rounded-lg text-xs lg:text-sm hover:bg-red-500 hover:text-white transition shadow-sm"><i class="fas fa-trash"></i></button>
@@ -727,12 +675,14 @@ function recalcExpFromDays(){
   document.getElementById("mOExp").value=addDays(todayVN(),days);
 }
 function openOrdModal(id){
-  const o=id?ordersDb.find(x=>x.id===id):{id:genId(),email:"",status:"pending",info:"",reason:"",expDate:"",method:"Ngân hàng VN",zalo:"",days:""};
+  const o=id?ordersDb.find(x=>x.id===id):{id:genId(),email:"",status:"pending",info:"",info2:"",info3:"",nickname:"",reason:"",expDate:"",method:"Ngân hàng VN",zalo:"",days:""};
   if(!o) return;
   document.getElementById("mOrdTtl").textContent=id?"Sửa đơn":"Tạo thủ công";
   document.getElementById("mOId").value=o.id;document.getElementById("mOEmail").value=o.email||"";
+  document.getElementById("mONickname").value=o.nickname||"";
   document.getElementById("mOZalo").value=o.zalo||"";document.getElementById("mOExp").value=o.expDate||"";
   document.getElementById("mODays").value=o.days||"";document.getElementById("mOLink").value=o.info||"";
+  document.getElementById("mOLink2").value=o.info2||"";document.getElementById("mOLink3").value=o.info3||"";
   document.getElementById("mOReason").value=o.reason||"";document.getElementById("mOStatus").value=o.status||"pending";
   document.getElementById("mOMethod").value=o.method&&o.method.includes("Alipay")?"Alipay":o.method&&o.method.includes("Weixin")?"Weixin":"Ngân hàng VN";
   const sel=document.getElementById("mOPkg");for(let i=0;i<sel.options.length;i++){if(sel.options[i].text.includes(o.pkgName||"")){sel.selectedIndex=i;break;}}
@@ -746,8 +696,8 @@ async function saveOrd(){
   let o=ordersDb.find(x=>x.id===id);
   if(!o){o={id,dateCreated:todayVN(),date:new Date().toLocaleString("vi")};ordersDb.unshift(o);}
   const pkgTxt=PKGS[document.getElementById("mOPkg").value],status=document.getElementById("mOStatus").value;
-  Object.assign(o,{email:document.getElementById("mOEmail").value.trim(),zalo:document.getElementById("mOZalo").value.trim(),pkg:pkgTxt,pkgName:pkgTxt.split(" - ")[0],expDate:document.getElementById("mOExp").value.trim(),days:parseInt(document.getElementById("mODays").value)||"",status,method:document.getElementById("mOMethod").value,info:document.getElementById("mOLink").value.trim(),reason:document.getElementById("mOReason").value.trim()});
-  renderOrd();cm("mOrd");toast("Đang lưu...");await apP("/api/orders",ordersDb);toast("Đã lưu!");
+  Object.assign(o,{email:document.getElementById("mOEmail").value.trim(),nickname:document.getElementById("mONickname").value.trim(),zalo:document.getElementById("mOZalo").value.trim(),pkg:pkgTxt,pkgName:pkgTxt.split(" - ")[0],expDate:document.getElementById("mOExp").value.trim(),days:parseInt(document.getElementById("mODays").value)||"",status,method:document.getElementById("mOMethod").value,info:document.getElementById("mOLink").value.trim(),info2:document.getElementById("mOLink2").value.trim(),info3:document.getElementById("mOLink3").value.trim(),reason:document.getElementById("mOReason").value.trim()});
+  renderOrd();cm("mOrd");toast("Đang lưu & bắn tỉa sang 3 web...");await apP("/api/orders",ordersDb);toast("Đã lưu!");
   if(document.getElementById("mOSendMail").checked&&o.email&&(status==="success"||status==="failed")){
     const subj=status==="success"?"VPN Trinh Hg - Kích hoạt thành công":"VPN Trinh Hg - Kích hoạt thất bại";
     const html=status==="success"?buildSuccessMailHtml(o):buildFailedMailHtml(o);
@@ -813,6 +763,7 @@ function renderLinks(){
   c.innerHTML=Object.values(grps).map(g=>{
     const isLx=g.orig.includes("liangxin"),isDj=g.orig.includes("djjc");
     const badge=isLx?`<span class="badge-lx">Liangxin</span>`:isDj?`<span class="badge-dj">DJJC</span>`:`<span class="badge-ot">Other</span>`;
+    const origMeta=(cmsDb.link_origins&&cmsDb.link_origins[g.orig])||{};
     const sorted=[...g.children].sort((a,b)=>(parseInt(a.linkIndex||a.machine)||1)-(parseInt(b.linkIndex||b.machine)||1));
     const rows=sorted.map(l=>{
       const maskTok=getT(l.masked),isLocked=!!l.isLocked,idx=parseInt(l.linkIndex||l.machine)||1;
@@ -821,19 +772,23 @@ function renderLinks(){
       return `<div class="py-2.5 px-3 border rounded-xl mb-2 ${bg} transition flex flex-col gap-2 w-full min-w-0">
         <div class="flex items-center justify-between gap-2 min-w-0">
           <div class="flex items-center gap-2 min-w-0">${dot}<span class="text-indigo-500 font-mono text-[11px] lg:text-sm font-black cp shrink-0" onclick="cp('${idx}')">#${idx}</span><span class="font-bold text-[11px] lg:text-sm text-slate-800 cp truncate" onclick="cp('${l.email||''}')">${l.email||"Khách lẻ"}</span>${l.expDate?`<span class="text-[9px] lg:text-xs text-slate-400 font-bold cp shrink-0" onclick="cp('${l.expDate}')">(${l.expDate})</span>`:""}</div>
-          <div class="flex items-center gap-1.5 shrink-0">
-            <button onclick="rebuildOneMAP('${l.id}')" title="Rebuild MAP" class="text-emerald-600 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-emerald-50 border border-emerald-100 rounded hover:bg-emerald-500 transition shadow-sm"><i class="fas fa-sync-alt"></i></button>
-            <button onclick="openLnkModal('${l.id}')" class="text-indigo-600 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-indigo-50 border border-indigo-100 rounded hover:bg-indigo-500 transition shadow-sm"><i class="fas fa-pen"></i></button>
-            <button onclick="toggleLock('${maskTok}',${isLocked})" class="${isLocked?"text-white bg-green-500 hover:bg-green-600":"text-orange-500 hover:text-white bg-orange-50 border-orange-100 border hover:bg-orange-500"} text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center rounded transition shadow-sm"><i class="fas ${isLocked?"fa-lock-open":"fa-lock"}"></i></button>
-            <button onclick="delLink('${l.id}')" class="text-red-500 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-red-50 border border-red-100 rounded hover:bg-red-500 transition shadow-sm"><i class="fas fa-trash"></i></button>
-          </div>
         </div>
-        <div class="font-mono text-[10px] lg:text-xs text-slate-500 cp break-all pl-5 leading-relaxed" onclick="cp('${l.masked}')" title="${l.masked}">${l.masked}</div>
+        <div class="font-mono text-[10px] lg:text-xs text-slate-500 cp break-all leading-relaxed" onclick="cp('${l.masked}')" title="${l.masked}">${l.masked}</div>
+        <div class="lnk-actions-row">
+          <button onclick="rebuildOneMAP('${l.id}')" title="Rebuild MAP" class="text-emerald-600 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-emerald-50 border border-emerald-100 rounded hover:bg-emerald-500 transition shadow-sm"><i class="fas fa-sync-alt"></i></button>
+          <button onclick="openLnkModal('${l.id}')" class="text-indigo-600 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-indigo-50 border border-indigo-100 rounded hover:bg-indigo-500 transition shadow-sm"><i class="fas fa-pen"></i></button>
+          <button onclick="toggleLock('${maskTok}',${isLocked})" class="${isLocked?"text-white bg-green-500 hover:bg-green-600":"text-orange-500 hover:text-white bg-orange-50 border-orange-100 border hover:bg-orange-500"} text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center rounded transition shadow-sm"><i class="fas ${isLocked?"fa-lock-open":"fa-lock"}"></i></button>
+          <button onclick="delLink('${l.id}')" class="text-red-500 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-red-50 border border-red-100 rounded hover:bg-red-500 transition shadow-sm"><i class="fas fa-trash"></i></button>
+        </div>
       </div>`;
     }).join("");
+    const metaHTML=(origMeta.exp||origMeta.note)?`<span class="text-[9px] lg:text-xs font-bold text-slate-500 ml-2">${origMeta.exp?`HSD gốc: ${origMeta.exp}`:""}${origMeta.exp&&origMeta.note?" • ":""}${origMeta.note||""}</span>`:"";
     return `<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden mb-4 shadow-sm w-full min-w-0">
       <div class="bg-slate-50 px-3 py-2 border-b border-slate-200 flex flex-col gap-1 min-w-0">
-        <div class="flex items-center justify-between"><div class="flex gap-2 items-center">${badge}<span class="text-[9px] lg:text-xs font-black bg-white border border-slate-200 text-slate-500 px-1.5 py-0.5 rounded shadow-sm">${g.children.length} LINK</span></div></div>
+        <div class="flex items-center justify-between flex-wrap gap-1">
+          <div class="flex gap-2 items-center">${badge}<span class="text-[9px] lg:text-xs font-black bg-white border border-slate-200 text-slate-500 px-1.5 py-0.5 rounded shadow-sm">${g.children.length} LINK</span>${metaHTML}</div>
+          <button onclick="openOrigEditModal('${encodeURIComponent(g.orig)}')" title="Sửa thông tin link gốc" class="text-slate-500 hover:text-indigo-600 w-7 h-7 flex items-center justify-center bg-white border border-slate-200 rounded-lg shadow-sm transition"><i class="fas fa-pen"></i></button>
+        </div>
         <div class="font-mono text-[10px] lg:text-xs font-bold text-slate-600 break-all whitespace-normal cp" onclick="cp('${g.orig}')">${g.orig}</div>
       </div>
       <div class="p-2 lg:p-3">${rows}</div>
@@ -869,6 +824,21 @@ async function saveLnkEdit(){
   l.linkIndex=document.getElementById("mLIdx").value.trim();l.orig=newOrig;delete l.machine;delete l.status;
   renderLinks();cm("mLnk");toast("Đang lưu chỉnh sửa...");await apP("/api/links",linksDb);toast("Đã cập nhật! Bắt buộc Rebuild MAP và Đồng bộ GitHub.");
 }
+// Sửa thông tin Link Gốc (cây bút chì) — lưu trong cmsDb.link_origins
+function openOrigEditModal(encOrig){
+  const orig=decodeURIComponent(encOrig);
+  document.getElementById("mOrigKey").value=encOrig;
+  const meta=(cmsDb.link_origins&&cmsDb.link_origins[orig])||{};
+  document.getElementById("mOrigExp").value=meta.exp||"";
+  document.getElementById("mOrigNote").value=meta.note||"";
+  document.getElementById("mOrigEdit").classList.remove("hidden");
+}
+async function saveOrigEdit(){
+  const orig=decodeURIComponent(document.getElementById("mOrigKey").value);
+  if(!cmsDb.link_origins) cmsDb.link_origins={};
+  cmsDb.link_origins[orig]={exp:document.getElementById("mOrigExp").value.trim(),note:document.getElementById("mOrigNote").value.trim()};
+  cm("mOrigEdit");renderLinks();toast("Đang lưu...");await apP("/api/cms",cmsDb);toast("Đã lưu thông tin Link Gốc!");
+}
 async function toggleLock(tok,isLocked){
   if(!tok) return;let changed=false;
   linksDb.forEach(l=>{if(getT(l.masked)===tok){l.isLocked=!isLocked;changed=true;}});
@@ -879,6 +849,28 @@ async function delLink(id){
   const l=linksDb.find(x=>x.id===id);
   if(l){deadLinksDb.unshift({...l,deadDate:new Date().toISOString()});await apP("/api/deadlinks",deadLinksDb);}
   linksDb=linksDb.filter(x=>x.id!==id);renderLinks();toast("Đang ngắt kết nối...");await apP("/api/links",linksDb);toast("Đã xóa link! Bấm Rebuild MAP và Đồng bộ GitHub.");
+}
+// Sắp xếp: đánh số lại link ẩn trong từng nhóm link gốc theo ngày hết hạn tăng dần, bắt đầu từ 2
+async function sortAllLinks(){
+  const btn=document.getElementById("btnSortLinks");if(btn){btn.innerHTML='<i class="fas fa-spinner fa-spin mr-1"></i>Đang sắp xếp...';btn.disabled=true;}
+  try{
+    const grps={};for(const l of linksDb){const k=l.orig||"?";if(!grps[k]) grps[k]=[];grps[k].push(l);}
+    for(const k in grps){
+      const arr=grps[k];
+      arr.sort((a,b)=>{
+        const da=pd(a.expDate),db_=pd(b.expDate);
+        if(da&&db_) return da-db_;
+        if(da) return -1; if(db_) return 1;
+        return 0;
+      });
+      let n=2;
+      for(const l of arr){ l.linkIndex=String(n); delete l.machine; n++; }
+    }
+    renderLinks();toast("Đang lưu thứ tự mới...");
+    await apP("/api/links",linksDb);
+    toast("Đã sắp xếp lại số Index theo ngày hết hạn! Nhớ Rebuild MAP & Đồng bộ GitHub nếu cần.");
+  }catch(e){toast("Lỗi sắp xếp: "+e.message,"err");}
+  finally{if(btn){btn.innerHTML='<i class="fas fa-sort-numeric-down mr-1"></i>Sắp xếp';btn.disabled=false;}}
 }
 async function triggerGitHub(){
   const btn=document.getElementById("btnTriggerGH");btn.innerHTML=`<i class="fas fa-spinner fa-spin mr-1"></i>Đang bắn lệnh...`;btn.disabled=true;
@@ -919,7 +911,7 @@ async function rebuildOneMAP(id){
   }catch(e){toast("Lỗi mạng: "+e.message,"err");}
 }
 
-// YC10: DEAD LINKS — fix khôi phục lưu cả 2 API đồng thời
+// DEAD LINKS
 function renderDead(){
   const tb=document.getElementById("deadBody");
   if(!deadLinksDb.length){tb.innerHTML=`<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold lg:text-base">Không có lịch sử xóa</div>`;return;}
@@ -940,7 +932,6 @@ async function restoreLink(i){
   deadLinksDb.splice(i,1);
   renderDead();renderLinks();
   toast("Đang khôi phục...");
-  // YC10: lưu cả 2 đồng thời, không để deadlinks cũ còn sót
   await Promise.all([apP("/api/links",linksDb),apP("/api/deadlinks",deadLinksDb)]);
   toast("Đã khôi phục thành công! Nhớ Rebuild MAP.");
 }
@@ -970,6 +961,7 @@ function parseShortcodes(text){
 }
 function reverseShortcodes(html){
   if(!html) return "";let t=html;
+  if(typeof t!=="string") return "";
   t=t.replace(/<div style="background:linear-gradient.*?<i class="fas fa-star".*?<\/i>(.*?)<\/div>/g,"[HEADER] $1");
   t=t.replace(/<div style="display:inline-block;background:#e0e7ff.*?<h3.*?>(.*?)<\/h3><\/div>/g,"[SUB] $1");
   t=t.replace(/<div style="display:flex;gap:8px.*?<span.*?>.*?<\/span><p.*?>(.*?)<\/p><\/div>/g,"[STEP] $1");
@@ -980,94 +972,17 @@ function reverseShortcodes(html){
   return t.replace(/\n\n+/g,"\n");
 }
 function updatePreview(){document.getElementById("cmsPreview").innerHTML=parseShortcodes(document.getElementById("cmsRaw").value);}
-async function saveCms(){cmsDb[curCms]=document.getElementById("cmsRaw").value;toast("Đang lưu CMS...");await apP("/api/cms",cmsDb);toast("Đã lưu Hướng dẫn lên hệ thống!");}
+async function saveCms(){cmsDb[curCms]=document.getElementById("cmsRaw").value;toast("Đang lưu CMS & bắn tỉa sang 3 web...");await apP("/api/cms",cmsDb);toast("Đã lưu Hướng dẫn lên hệ thống!");}
 
-// YC8: PROMO — fix lưu mẫu hoạt động
-function switchPromoTab(tab){
-  const editEl=document.getElementById("promo-view-edit"),savedEl=document.getElementById("promo-view-saved");
-  const te=document.getElementById("ptab-edit"),ts=document.getElementById("ptab-saved");
-  if(tab==="edit"){editEl.style.display="";savedEl.style.display="none";te.classList.add("active");ts.classList.remove("active");}
-  else{editEl.style.display="none";savedEl.style.display="";ts.classList.add("active");te.classList.remove("active");renderPromoSaved();}
-}
 function switchSettingsTab(tab){
-  ["mail","log","dev"].forEach(t=>{
+  ["mail","sync","log","dev"].forEach(t=>{
     const st=document.getElementById("settings-view-"+t),btn=document.getElementById("stab-"+t);
     if(st) st.classList.toggle("hidden",t!==tab);
     if(btn) btn.classList.toggle("active",t===tab);
   });
   if(tab==="log") renderMailLog();
   if(tab==="dev") renderDev();
-}
-function tickPromo(isAll){document.querySelectorAll(".promo-target-cb").forEach(cb=>cb.checked=isAll);updatePromoCount();}
-function updatePromoCount(){document.getElementById("promoCountBadge").textContent=document.querySelectorAll(".promo-target-cb:checked").length;}
-function renderPromoTargets(){
-  const c=document.getElementById("promoTargetList");
-  if(!ordersDb.length){c.innerHTML=`<p class="text-slate-400 p-4 text-center text-sm">Không có khách hàng nào.</p>`;return;}
-  c.innerHTML=ordersDb.map(o=>`<label class="target-item"><input type="checkbox" value="${o.id}" class="promo-target-cb" checked onchange="updatePromoCount()"><div class="flex-1 min-w-0"><span class="font-bold text-xs lg:text-sm text-slate-800 block truncate">${o.email||"Trống"}</span><span class="text-[9px] lg:text-xs text-slate-400 font-mono">${o.id}</span></div><span class="text-[9px] lg:text-xs font-bold shrink-0 px-1.5 py-0.5 rounded ${o.status==="success"?"bg-green-100 text-green-700":"bg-slate-100 text-slate-500"}">${o.status==="success"?"Active":"Khác"}</span></label>`).join("");
-  updatePromoCount();
-}
-function insPromo(t){const ta=document.getElementById("promoRaw"),s=ta.selectionStart;ta.value=ta.value.slice(0,s)+t+ta.value.slice(ta.selectionEnd);ta.selectionStart=ta.selectionEnd=s+t.length;ta.focus();updatePromoPreview();}
-function parsePromoHTML(text,maDon="{MaDon}",email="{Email}"){
-  if(!text) return "";
-  let p=text.replace(/\[B\](.*?)\[\/B\]/gs,"<b>$1</b>").replace(/\[I\](.*?)\[\/I\]/gs,"<i>$1</i>").replace(/\[COLOR=(.*?)\](.*?)\[\/COLOR\]/gs,"<span style='color:$1'>$2</span>").replace(/\{MaDon\}/g,`<b style="color:#4f46e5;">${maDon}</b>`).replace(/\{Email\}/g,`<b style="color:#0f172a;">${email}</b>`);
-  const lines=p.split("\n");let html="";
-  for(let line of lines){
-    line=line.trim();if(!line) continue;
-    if(line==="[LINE]") html+=`<hr style="border:none;border-top:1px solid #e2e8f0;margin:16px 0;" />\n`;
-    else if(line.startsWith("[BTN]")){const ps=line.substring(5).split("|");const nm=ps[0]?.trim()||"CLICK";const lk=ps[1]?.trim()||"#";html+=`<div style="text-align:center;margin:16px 0;"><a href="${lk}" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;padding:12px 28px;border-radius:10px;font-weight:900;text-decoration:none;font-size:14px;box-shadow:0 4px 12px rgba(37,99,235,0.35)">${nm}</a></div>\n`;}
-    else if(line.startsWith("[IMG]")) html+=`<div style="text-align:center;margin:16px 0;"><img src="${line.substring(5).trim()}" style="max-width:100%;border-radius:10px;" /></div>\n`;
-    else html+=`<p style="margin:0 0 10px 0;color:#334155;font-size:14px;line-height:1.7;">${line}</p>\n`;
-  }
-  return html;
-}
-function getPromoColor(){const el=document.querySelector("input[name='promoColor']:checked");return el?el.value:"#16a34a";}
-function getPromoWrapper(colorHex,headerText,bodyHtml){
-  return `<div style="font-family:sans-serif;width:100%;max-width:500px;margin:auto;background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;box-sizing:border-box;"><div style="background:${colorHex};padding:24px 20px;text-align:center;"><h2 style="color:white;margin:0;font-size:18px;text-transform:uppercase;font-weight:900;">${headerText||"THÔNG BÁO"}</h2></div><div style="padding:24px 20px;box-sizing:border-box;">${bodyHtml}<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-top:24px;text-align:center;"><p style="margin:0 0 12px 0;color:#475569;font-size:13px;">Cần hỗ trợ? Sẵn sàng 24/24</p><div style="display:block;width:100%;"><a href="https://zalo.me/0917678211" style="display:inline-block;width:46%;background:#0068ff;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;box-sizing:border-box;">Chat Zalo</a><a href="https://www.facebook.com/trinh.hg.57" style="display:inline-block;width:46%;background:#0668E1;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;margin-left:4%;box-sizing:border-box;">Messenger</a></div></div></div></div>`;
-}
-function updatePromoPreview(){
-  document.getElementById("promoPreviewPane").innerHTML=getPromoWrapper(getPromoColor(),document.getElementById("promoHead").value||"TIÊU ĐỀ HEADER",parsePromoHTML(document.getElementById("promoRaw").value));
-  document.getElementById("previewSubjLine").textContent=document.getElementById("promoSubj").value||"Tiêu đề email...";
-}
-// YC8: fix lưu mẫu — đảm bảo promo_templates là array, reload sau khi lưu
-async function savePromoTemplate(){
-  if(!Array.isArray(cmsDb.promo_templates)) cmsDb.promo_templates=[];
-  const subj=document.getElementById("promoSubj").value.trim(),headTxt=document.getElementById("promoHead").value.trim(),rawBody=document.getElementById("promoRaw").value.trim(),colorHex=getPromoColor();
-  if(!subj||!headTxt||!rawBody) return toast("Điền đủ Tiêu đề, Header và Nội dung!","err");
-  cmsDb.promo_templates.unshift({id:Date.now(),subj,headTxt,rawBody,colorHex,date:new Date().toLocaleString("vi-VN")});
-  toast("Đang lưu mẫu...");
-  await apP("/api/cms",cmsDb);
-  // Fetch lại để đồng bộ
-  const freshCms=await apG("/api/cms",{});
-  if(freshCms&&Array.isArray(freshCms.promo_templates)) cmsDb.promo_templates=freshCms.promo_templates;
-  toast("Đã lưu mẫu thành công!");renderPromoSaved();
-}
-function renderPromoSaved(){
-  if(!Array.isArray(cmsDb.promo_templates)) cmsDb.promo_templates=[];
-  const grid=document.getElementById("promoSavedGrid"),tpls=cmsDb.promo_templates;
-  if(!tpls.length){grid.innerHTML=`<div class="col-span-full p-10 text-center text-slate-400 bg-white rounded-2xl border border-slate-200 font-bold"><i class="fas fa-folder-open text-3xl mb-3 block opacity-30"></i>Chưa có mẫu nào</div>`;return;}
-  grid.innerHTML=tpls.map((t,i)=>`<div class="tpl-card"><div class="tpl-card-header" style="background:${t.colorHex}"></div><div class="tpl-card-body"><div class="flex items-start gap-2 mb-2"><div class="w-2.5 h-2.5 rounded-full mt-1 shrink-0" style="background:${t.colorHex}"></div><div class="flex-1 min-w-0"><h3 class="font-bold text-sm lg:text-base text-slate-800 truncate">${t.subj}</h3><p class="text-[10px] lg:text-xs text-slate-400">Header: ${t.headTxt}</p></div></div><div class="bg-slate-50 border border-slate-100 rounded-lg p-2.5 mb-3 max-h-20 overflow-hidden relative"><p class="text-[10px] font-mono text-slate-500 leading-relaxed line-clamp-4">${t.rawBody}</p><div class="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-slate-50 to-transparent"></div></div><div class="flex items-center justify-between"><span class="text-[9px] text-slate-400">${t.date}</span><div class="flex gap-1.5"><button onclick="loadPromoTemplate(${i})" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white font-bold px-3 py-1.5 rounded-lg text-[10px] lg:text-xs transition border border-indigo-100"><i class="fas fa-edit mr-1"></i>Dùng mẫu</button><button onclick="delPromoTemplate(${i})" class="bg-red-50 text-red-500 hover:bg-red-500 hover:text-white font-bold px-2.5 py-1.5 rounded-lg transition border border-red-100"><i class="fas fa-trash"></i></button></div></div></div></div>`).join("");
-}
-function loadPromoTemplate(idx){
-  const t=cmsDb.promo_templates[idx];if(!t) return;
-  document.getElementById("promoSubj").value=t.subj;document.getElementById("promoHead").value=t.headTxt;document.getElementById("promoRaw").value=t.rawBody;
-  document.querySelectorAll("input[name='promoColor']").forEach(r=>{if(r.value===t.colorHex) r.checked=true;});
-  switchPromoTab("edit");updatePromoPreview();toast("Đã tải mẫu!");
-}
-async function delPromoTemplate(idx){cmsDb.promo_templates.splice(idx,1);renderPromoSaved();await apP("/api/cms",cmsDb);toast("Đã xóa mẫu!");}
-async function sendPromoMail(){
-  const cbs=document.querySelectorAll(".promo-target-cb:checked");if(!cbs.length) return toast("Chưa chọn khách!","err");
-  const subj=document.getElementById("promoSubj").value.trim(),headTxt=document.getElementById("promoHead").value.trim(),rawBody=document.getElementById("promoRaw").value.trim(),colorHex=getPromoColor();
-  if(!subj||!headTxt||!rawBody) return toast("Điền đủ thông tin!","err");
-  if(!confirm(`Xác nhận gửi tới ${cbs.length} khách?`)) return;
-  const btn=document.getElementById("btnSendPromo");btn.innerHTML=`<i class="fas fa-spinner fa-spin mr-1.5"></i>Đang gửi (0/${cbs.length})`;btn.disabled=true;
-  let cnt=0;
-  for(const cb of cbs){
-    const o=ordersDb.find(x=>x.id===cb.value);if(!o||!o.email) continue;
-    const html=getPromoWrapper(colorHex,headTxt,parsePromoHTML(rawBody,o.id,o.email));
-    try{await fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:o.email,subject:subj,html})});cnt++;btn.innerHTML=`<i class="fas fa-spinner fa-spin mr-1.5"></i>Đang gửi (${cnt}/${cbs.length})`;addMailLog("Promo",o.email,o.id);await new Promise(r=>setTimeout(r,300));}
-    catch(e){console.error(e);}
-  }
-  toast(`Hoàn tất! Đã gửi ${cnt}/${cbs.length} email.`);btn.innerHTML=`<i class="fas fa-paper-plane"></i>Bắn Mail`;btn.disabled=false;
+  if(tab==="sync") loadSyncSettingUI();
 }
 
 // ACCOUNTS
@@ -1121,7 +1036,7 @@ async function saveCust(){
 }
 async function delCust(ai,ci){accountsDb[ai].customers.splice(ci,1);renderAcc();toast("Đang xóa...");await apP("/api/accounts",accountsDb);toast("Đã xóa!");}
 
-// YC9: DEVICES — trong tab Cài đặt
+// DEVICES
 function renderDev(){
   const tb=document.getElementById("devBody");if(!tb) return;
   if(!devicesDb.length){tb.innerHTML=`<div class="p-6 text-center text-slate-400 bg-white rounded-xl border shadow-sm font-bold lg:text-base">Trống</div>`;return;}
@@ -1135,6 +1050,7 @@ function renderDev(){
   </div>`).join("");
 }
 async function delDev(id){devicesDb=devicesDb.filter(x=>x.id!==id);renderDev();toast("Đang xóa thiết bị...");await apP("/api/devices",devicesDb);if(id===myDev) doLogout();else toast("Đã xóa!");}
+
 </script>
 </body>
 </html>
