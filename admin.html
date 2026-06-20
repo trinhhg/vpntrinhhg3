@@ -34,17 +34,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc;color:#0f172a
 .card-expiring{animation:led-pulse 2s infinite;border:2px solid #ef4444!important;}
 .card-expired-done{background:#f1f5f9!important;opacity:.65;filter:grayscale(.4);}
 .card-expired-done .order-id-text, .card-expired-done .order-email-text, .card-expired-done .order-meta-text{text-decoration:line-through;}
-/* month header rõ ràng */
 .month-header{font-size:14px;font-weight:900;color:#1e293b;padding:14px 4px 8px;border-bottom:2px solid #e2e8f0;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
 .month-count{background:#4f46e5;color:white;font-size:11px;font-weight:900;padding:3px 10px;border-radius:20px;letter-spacing:.03em;}
-/* order sub-tabs — thu nhỏ để vừa 1 dòng trên điện thoại */
 .ord-sub-tab{padding:5px 8px;border-radius:8px;font-size:10.5px;font-weight:800;cursor:pointer;transition:all .15s;color:#64748b;display:flex;align-items:center;gap:4px;white-space:nowrap;}
 .ord-sub-tab.active{background:white;color:#4f46e5;box-shadow:0 1px 4px rgba(0,0,0,.1);}
 .ord-sub-tab .mac-dot{width:9px;height:9px;}
 @media (min-width:768px){.ord-sub-tab{padding:6px 14px;font-size:12px;gap:6px;}.ord-sub-tab .mac-dot{width:13px;height:13px;}}
-/* link row action bar */
-.lnk-actions-row{display:flex;justify-content:flex-end;gap:6px;border-top:1px dashed #e2e8f0;padding-top:6px;margin-top:4px;}
-/* phone-shell removed (promo) */
+/* Đã điều chỉnh khoảng cách (gap) các nút action để tránh bấm nhầm */
+.lnk-actions-row{display:flex;justify-content:flex-end;gap:16px;border-top:1px dashed #e2e8f0;padding-top:6px;margin-top:4px;}
 .toggle-wrap{position:relative;width:48px;height:26px;flex-shrink:0;}
 .toggle-wrap input{opacity:0;width:0;height:0;}
 .toggle-slider{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;border-radius:26px;transition:.3s;}
@@ -62,7 +59,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
 <body class="min-h-screen pb-20 overflow-x-hidden bg-slate-50">
 <div id="toastBox" class="toast"></div>
 
-<!-- LOGIN -->
 <div id="loginWrap" class="fixed inset-0 bg-slate-50 z-50 flex items-center justify-center p-4">
   <div class="glass-card p-8 md:p-10 w-full max-w-sm text-center">
     <div class="w-14 h-14 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-shield-halved text-2xl text-indigo-600"></i></div>
@@ -72,7 +68,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
   </div>
 </div>
 
-<!-- HEADER -->
 <header id="hdr" class="hidden bg-white px-4 py-2 md:px-4 border-b border-slate-200 flex justify-between items-center shadow-sm w-full sticky top-0 z-40">
   <h1 class="text-base md:text-lg lg:text-xl font-extrabold text-indigo-600 truncate">VPN Trinh Hg</h1>
   <div class="flex gap-2 shrink-0">
@@ -81,9 +76,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
   </div>
 </header>
 
-<!-- MAIN -->
 <main id="main" class="hidden max-w-7xl mx-auto p-2 md:p-4 w-full min-w-0">
-  <!-- TAB BAR (đã bỏ Mail Promo) -->
   <div class="grid grid-cols-4 md:flex md:flex-wrap gap-1 md:gap-2 mb-3">
     <button onclick="go('t-ord')"      id="btn-t-ord"      class="tab-btn px-1 py-1 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1"><i class="fas fa-box"></i>Đơn hàng</button>
     <button onclick="go('t-data')"     id="btn-t-data"     class="tab-btn px-1 py-1 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1"><i class="fas fa-chart-pie"></i>Dung lượng</button>
@@ -94,7 +87,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     <button onclick="go('t-settings')" id="btn-t-settings" class="tab-btn col-span-2 md:col-span-1 px-1 py-1 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1"><i class="fas fa-cog"></i>Cài đặt</button>
   </div>
 
-  <!-- ĐƠN HÀNG -->
   <div id="t-ord" class="w-full min-w-0">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Quản lý Đơn hàng</h2>
@@ -108,7 +100,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     <div id="ordBody" class="w-full min-w-0"></div>
   </div>
 
-  <!-- DUNG LƯỢNG -->
   <div id="t-data" class="hidden w-full min-w-0">
     <div class="flex flex-row items-center justify-between mb-4 gap-3">
       <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Yêu cầu check dung lượng</h2>
@@ -117,7 +108,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     <div id="dataReqBody" class="space-y-3 w-full min-w-0"></div>
   </div>
 
-  <!-- LINK SUB (đã bỏ hướng dẫn quy trình vận hành) -->
   <div id="t-lnk" class="hidden space-y-4 w-full min-w-0">
     <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
       <div class="min-w-0">
@@ -143,7 +133,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     <div id="linksTree" class="space-y-3 w-full min-w-0"></div>
   </div>
 
-  <!-- ĐÃ XÓA -->
   <div id="t-dead" class="hidden w-full min-w-0">
     <div class="flex flex-row items-center justify-between mb-4 gap-3">
       <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Lịch sử Đã Xóa</h2>
@@ -152,7 +141,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     <div id="deadBody" class="space-y-3 w-full min-w-0"></div>
   </div>
 
-  <!-- HƯỚNG DẪN CMS -->
   <div id="t-cms" class="hidden w-full min-w-0">
     <h2 class="text-lg md:text-xl lg:text-2xl font-bold mb-4 text-slate-800">Soạn Hướng Dẫn (CMS)</h2>
     <div class="flex flex-wrap gap-2 mb-4">
@@ -188,7 +176,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     </div>
   </div>
 
-  <!-- TÀI KHOẢN -->
   <div id="t-acc" class="hidden w-full min-w-0">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Tài khoản VPN gốc</h2>
@@ -197,7 +184,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     <div id="accTree" class="space-y-3 w-full min-w-0"></div>
   </div>
 
-  <!-- CÀI ĐẶT (đã bỏ tab Bắn Mail Promo, thêm cấu hình 3 Worker bắn tỉa) -->
   <div id="t-settings" class="hidden w-full min-w-0">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Cài đặt hệ thống</h2>
@@ -268,7 +254,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
   </div>
 </main>
 
-<!-- MODAL ĐƠN HÀNG (đã thêm Nickname + 3 ô Link Sub Web 1/2/3) -->
 <div id="mOrd" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 md:p-4">
   <div class="glass-card p-4 md:p-6 lg:p-8 w-full max-w-lg max-h-[98vh] overflow-y-auto min-w-0">
     <h3 id="mOrdTtl" class="text-base md:text-xl lg:text-2xl font-bold mb-3 text-slate-800">Đơn hàng</h3>
@@ -288,9 +273,9 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
       <div class="min-w-0"><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-0.5">Số ngày SD</label><input id="mODays" type="number" min="1" placeholder="30" class="w-full p-1.5 md:p-2 lg:p-3 text-xs lg:text-sm border rounded-lg outline-none focus:border-indigo-500 text-center bg-slate-50" oninput="recalcExpFromDays()"></div>
     </div>
     <div id="fSuc" class="hidden mb-3 p-2 lg:p-3 border border-green-200 bg-green-50 rounded-lg min-w-0 space-y-2">
-      <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Link Sub Web 1 (Chính)</label><input id="mOLink" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
-      <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Link Sub Web 2 (Dự phòng)</label><input id="mOLink2" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
-      <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Link Sub Web 3 (Dự phòng)</label><input id="mOLink3" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
+      <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Link Web 1 (Liangxin)</label><input id="mOLink1" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
+      <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Link Web 2 (DJJC)</label><input id="mOLink2" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
+      <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Link Web 3 (Backup)</label><input id="mOLink3" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
     </div>
     <div id="fFail" class="hidden mb-3 p-2 lg:p-3 border border-red-200 bg-red-50 rounded-lg min-w-0"><label class="block font-bold text-[10px] lg:text-xs text-red-700 mb-0.5">Lý do</label><input id="mOReason" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-red-300 bg-white rounded outline-none"></div>
     <div class="flex items-center mb-4 bg-slate-50 border border-slate-200 p-2 lg:p-3 rounded-lg">
@@ -304,7 +289,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
   </div>
 </div>
 
-<!-- MODAL LINK -->
 <div id="mLnk" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
   <div class="glass-card p-5 md:p-6 lg:p-8 w-full max-w-sm min-w-0">
     <h3 class="font-extrabold text-lg lg:text-xl mb-3 text-slate-800">Sửa Link Sub</h3>
@@ -319,18 +303,16 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
   </div>
 </div>
 
-<!-- MODAL SỬA LINK GỐC (pencil) -->
 <div id="mOrigEdit" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
   <div class="glass-card p-5 md:p-6 lg:p-8 w-full max-w-sm min-w-0">
     <h3 class="font-extrabold text-lg lg:text-xl mb-3 text-slate-800">Thông tin Link Gốc</h3>
     <input type="hidden" id="mOrigKey">
-    <div class="mb-2 min-w-0"><label class="block text-[10px] lg:text-xs font-bold text-slate-600 mb-0.5">Ngày hết hạn Link Gốc</label><input id="mOrigExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-slate-300 rounded-lg outline-none focus:border-indigo-500 text-center bg-slate-50"></div>
+    <div class="mb-2 min-w-0"><label class="block text-[10px] lg:text-xs font-bold text-slate-600 mb-0.5">Ngày hết hạn Link Gốc</label><input id="mOrigExp" type="text" placeholder="22/07/2026" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-slate-300 rounded-lg outline-none focus:border-indigo-500 text-center bg-slate-50"></div>
     <div class="mb-4 min-w-0"><label class="block text-[10px] lg:text-xs font-bold text-slate-600 mb-0.5">Ghi chú khác</label><input id="mOrigNote" type="text" placeholder="VD: Acc mẹ số 3..." class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-slate-300 rounded-lg outline-none focus:border-indigo-500 bg-slate-50"></div>
     <div class="flex gap-2"><button onclick="saveOrigEdit()" class="flex-1 bg-indigo-600 text-white font-bold py-2.5 lg:py-3 rounded-lg text-xs lg:text-sm hover:bg-indigo-700 shadow-md">LƯU</button><button onclick="cm('mOrigEdit')" class="bg-white border border-slate-200 text-slate-700 font-bold py-2.5 lg:py-3 px-4 rounded-lg text-xs lg:text-sm shadow-sm hover:bg-slate-50">Hủy</button></div>
   </div>
 </div>
 
-<!-- MODAL ACC -->
 <div id="mAcc" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
   <div class="glass-card p-5 md:p-6 lg:p-8 w-full max-w-sm min-w-0">
     <h3 id="mAccTtl" class="font-extrabold text-lg lg:text-xl mb-3 text-slate-800">Tài khoản Mẹ</h3>
@@ -341,7 +323,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
   </div>
 </div>
 
-<!-- MODAL CUST -->
 <div id="mCust" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
   <div class="glass-card p-5 md:p-6 lg:p-8 w-full max-w-sm min-w-0">
     <h3 class="font-extrabold text-lg lg:text-xl mb-1 text-slate-800">Khách Hàng (Con)</h3>
@@ -363,7 +344,6 @@ const SITE_KEY=window.location.hostname.replace(/\./g,"_");
 const PKGS=["Gói 1 tháng - 60.000đ / $2.5 / ¥15.5 (100GB)","Gói 1 tháng - 70.000đ / $3 / ¥18 (500GB)","Gói 1 tháng - 80.000đ / $3.5 / ¥20.5 (1000GB)","Gói Cao Cấp - 200.000đ / $8 / ¥50 (3000GB)","Gói 1 Năm - 710.000đ / $27 / ¥177.5 (200GB/tháng)","Không Giới Hạn - 200.000đ / $8 / ¥52 (200GB)","Không Giới Hạn - 399.000đ / $16 / ¥102 (1000GB)","Không Giới Hạn - 999.000đ / $40 / ¥256 (5000GB)"];
 const PKG_DAYS=[30,30,30,30,365,0,0,0];
 
-// ════ CÁC ĐƯỜNG DẪN ĐƯỢC BẮN TỈA SANG 3 WEB (Đơn hàng, CMS, Tài khoản, Data Request) ════
 const CROSS_SYNC_PATHS=["/api/orders","/api/cms","/api/accounts","/api/data_requests"];
 
 let ordersDb=[],dataRequestsDb=[],linksDb=[],deadLinksDb=[],cmsDb={},devicesDb=[],accountsDb=[];
@@ -396,17 +376,36 @@ async function apG(p,def){
     const d=await r.json();lsSet("a"+p,d);lsSetT(p);return d;
   }catch{return lsGet("a"+p)??def;}
 }
-// ── apP: lưu local + lưu lên Worker đang mở. Nếu path thuộc CROSS_SYNC_PATHS thì
-// đồng thời "bắn tỉa" cùng dữ liệu đó sang 3 Worker cấu hình trong Cài đặt > Bắn Tỉa 3 Web.
 async function apP(p,data){
   lsSet("a"+p,data);lsSetT(p);
-  try{const r=await fetch(API+p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});if(!r.ok) toast("Lỗi lưu DB: "+r.status,"err");}
-  catch(e){toast("Mất kết nối: "+e.message,"err");}
-  if(CROSS_SYNC_PATHS.includes(p)){
+  const localOnly = ["/api/links", "/api/deadlinks"];
+  if (localOnly.includes(p)) {
+    try{
+      const r=await fetch(API+p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+      if(!r.ok) toast("Lỗi lưu nội bộ: "+r.status,"err");
+    } catch(e){toast("Mất kết nối nội bộ: "+e.message,"err");}
+  } else if (CROSS_SYNC_PATHS.includes(p)) {
     const targets=[lsGet("syncW1"),lsGet("syncW2"),lsGet("syncW3")].filter(u=>u&&u.trim());
-    for(const base of targets){
-      const url=base.replace(/\/$/,"")+p;
-      fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)}).catch(()=>{});
+    if (targets.length > 0) {
+        Promise.allSettled(
+          targets.map(base => {
+            const url=base.replace(/\/$/,"")+p;
+            return fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)})
+          })
+        ).then(results => {
+          let okCnt = 0;
+          results.forEach((res, i) => {
+            if (res.status === "fulfilled" && res.value.ok) okCnt++;
+            else console.error(`Web ${i+1} lỗi lưu!`);
+          });
+          if (okCnt === 0) toast("Sập toàn tập 3 web!", "err");
+          else if (okCnt < targets.length) toast(`Lưu được ${okCnt}/${targets.length} web. Có web đang hết quota!`, "warn");
+        });
+    } else {
+        try{
+          const r=await fetch(API+p,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
+          if(!r.ok) toast("Lỗi lưu DB: "+r.status,"err");
+        } catch(e){toast("Mất kết nối: "+e.message,"err");}
     }
   }
 }
@@ -417,7 +416,6 @@ function todayVN(){return formatDateVN(new Date());}
 function addDays(dateStr,days){const d=pd(dateStr);if(!d||!days)return "";d.setDate(d.getDate()+days);return formatDateVN(d);}
 function isExpiredDate(dateStr){const d=pd(dateStr);if(!d)return false;return d.getTime()<Date.now();}
 
-// format ngày giờ đẹp "18:34 – 4/5/2026"
 function fmtCardDate(raw){
   if(!raw) return "";
   try{
@@ -431,7 +429,6 @@ function fmtCardDate(raw){
   return raw.replace(/(\d{1,2}:\d{2}):\d{2}/,'$1');
 }
 
-// tháng năm rõ ràng
 function monthLabel(dateStr){
   if(!dateStr) return "Không rõ tháng";
   const p=dateStr.split("/");if(p.length<3) return dateStr;
@@ -598,7 +595,6 @@ function buildDataMailHtml(req,gb){
   return `<div style="font-family:sans-serif;width:100%;max-width:500px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-sizing:border-box;"><div style="background:linear-gradient(135deg,#4f46e5,#8b5cf6);padding:20px;text-align:center;"><h2 style="color:white;margin:0;font-size:18px;text-transform:uppercase;">BÁO CÁO DUNG LƯỢNG</h2></div><div style="padding:20px;box-sizing:border-box;"><p style="font-size:15px;line-height:1.5;margin-top:0;color:#334155;">Xin chào,</p><p style="font-size:14px;line-height:1.5;margin-top:0;color:#334155;">Gói VPN của bạn (Mã đơn: <b style="color:#4f46e5;">${req.orderId}</b>) đã sử dụng:</p><div style="background:#f1f5f9;border-left:4px solid #4f46e5;padding:20px;border-radius:8px;margin:20px 0;text-align:center;"><p style="margin:0 0 10px 0;font-size:32px;font-weight:900;color:#4f46e5;letter-spacing:1px;">${gb} <span style="font-size:18px;">GB</span></p></div><div style="text-align:center;margin:25px 0;"><a href="${PD}" style="background:#1e293b;color:white;padding:12px 15px;border-radius:10px;text-decoration:none;font-weight:900;display:inline-block;width:100%;box-sizing:border-box;font-size:14px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">TRUY CẬP CỔNG KHÁCH HÀNG</a><p style="font-size:12px;color:#64748b;margin-top:12px;line-height:1.5;">👉 <i>Dùng <b>Mã Đơn Hàng</b> hoặc <b>Email</b> để tra cứu và lấy link VPN.</i></p></div>${CONTACT_BLOCK}</div></div>`;
 }
 
-// renderOrd: thêm Nickname, đơn success hết hạn -> card xám gạch ngang
 function renderOrd(){
   const tb=document.getElementById("ordBody");
   const counts={success:0,pending:0,failed:0};
@@ -663,7 +659,6 @@ function renderOrd(){
   tb.innerHTML=html;
 }
 
-// Modal
 function autoFillDays(){
   const idx=parseInt(document.getElementById("mOPkg").value)||0;
   const days=PKG_DAYS[idx]||0;
@@ -675,14 +670,16 @@ function recalcExpFromDays(){
   document.getElementById("mOExp").value=addDays(todayVN(),days);
 }
 function openOrdModal(id){
-  const o=id?ordersDb.find(x=>x.id===id):{id:genId(),email:"",status:"pending",info:"",info2:"",info3:"",nickname:"",reason:"",expDate:"",method:"Ngân hàng VN",zalo:"",days:""};
+  const o=id?ordersDb.find(x=>x.id===id):{id:genId(),email:"",status:"pending",info1:"",info2:"",info3:"",nickname:"",reason:"",expDate:"",method:"Ngân hàng VN",zalo:"",days:""};
   if(!o) return;
   document.getElementById("mOrdTtl").textContent=id?"Sửa đơn":"Tạo thủ công";
   document.getElementById("mOId").value=o.id;document.getElementById("mOEmail").value=o.email||"";
   document.getElementById("mONickname").value=o.nickname||"";
   document.getElementById("mOZalo").value=o.zalo||"";document.getElementById("mOExp").value=o.expDate||"";
-  document.getElementById("mODays").value=o.days||"";document.getElementById("mOLink").value=o.info||"";
-  document.getElementById("mOLink2").value=o.info2||"";document.getElementById("mOLink3").value=o.info3||"";
+  document.getElementById("mODays").value=o.days||"";
+  document.getElementById("mOLink1").value=o.info1||o.info||"";
+  document.getElementById("mOLink2").value=o.info2||"";
+  document.getElementById("mOLink3").value=o.info3||"";
   document.getElementById("mOReason").value=o.reason||"";document.getElementById("mOStatus").value=o.status||"pending";
   document.getElementById("mOMethod").value=o.method&&o.method.includes("Alipay")?"Alipay":o.method&&o.method.includes("Weixin")?"Weixin":"Ngân hàng VN";
   const sel=document.getElementById("mOPkg");for(let i=0;i<sel.options.length;i++){if(sel.options[i].text.includes(o.pkgName||"")){sel.selectedIndex=i;break;}}
@@ -696,7 +693,21 @@ async function saveOrd(){
   let o=ordersDb.find(x=>x.id===id);
   if(!o){o={id,dateCreated:todayVN(),date:new Date().toLocaleString("vi")};ordersDb.unshift(o);}
   const pkgTxt=PKGS[document.getElementById("mOPkg").value],status=document.getElementById("mOStatus").value;
-  Object.assign(o,{email:document.getElementById("mOEmail").value.trim(),nickname:document.getElementById("mONickname").value.trim(),zalo:document.getElementById("mOZalo").value.trim(),pkg:pkgTxt,pkgName:pkgTxt.split(" - ")[0],expDate:document.getElementById("mOExp").value.trim(),days:parseInt(document.getElementById("mODays").value)||"",status,method:document.getElementById("mOMethod").value,info:document.getElementById("mOLink").value.trim(),info2:document.getElementById("mOLink2").value.trim(),info3:document.getElementById("mOLink3").value.trim(),reason:document.getElementById("mOReason").value.trim()});
+  Object.assign(o,{
+    email:document.getElementById("mOEmail").value.trim(),
+    nickname:document.getElementById("mONickname").value.trim(),
+    zalo:document.getElementById("mOZalo").value.trim(),
+    pkg:pkgTxt,
+    pkgName:pkgTxt.split(" - ")[0],
+    expDate:document.getElementById("mOExp").value.trim(),
+    days:parseInt(document.getElementById("mODays").value)||"",
+    status,
+    method:document.getElementById("mOMethod").value,
+    info1:document.getElementById("mOLink1").value.trim(),
+    info2:document.getElementById("mOLink2").value.trim(),
+    info3:document.getElementById("mOLink3").value.trim(),
+    reason:document.getElementById("mOReason").value.trim()
+  });
   renderOrd();cm("mOrd");toast("Đang lưu & bắn tỉa sang 3 web...");await apP("/api/orders",ordersDb);toast("Đã lưu!");
   if(document.getElementById("mOSendMail").checked&&o.email&&(status==="success"||status==="failed")){
     const subj=status==="success"?"VPN Trinh Hg - Kích hoạt thành công":"VPN Trinh Hg - Kích hoạt thất bại";
@@ -782,12 +793,20 @@ function renderLinks(){
         </div>
       </div>`;
     }).join("");
-    const metaHTML=(origMeta.exp||origMeta.note)?`<span class="text-[9px] lg:text-xs font-bold text-slate-500 ml-2">${origMeta.exp?`HSD gốc: ${origMeta.exp}`:""}${origMeta.exp&&origMeta.note?" • ":""}${origMeta.note||""}</span>`:"";
+    
+    let metaHTML = "";
+    if(origMeta.exp) metaHTML += `<span class="bg-amber-100 text-amber-700 text-[10px] font-black px-2 py-0.5 rounded shadow-sm ml-1">${origMeta.exp}</span>`;
+    if(origMeta.note) metaHTML += `<span class="bg-sky-100 text-sky-700 text-[10px] font-black px-2 py-0.5 rounded shadow-sm ml-1">${origMeta.note}</span>`;
+    
     return `<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden mb-4 shadow-sm w-full min-w-0">
       <div class="bg-slate-50 px-3 py-2 border-b border-slate-200 flex flex-col gap-1 min-w-0">
         <div class="flex items-center justify-between flex-wrap gap-1">
-          <div class="flex gap-2 items-center">${badge}<span class="text-[9px] lg:text-xs font-black bg-white border border-slate-200 text-slate-500 px-1.5 py-0.5 rounded shadow-sm">${g.children.length} LINK</span>${metaHTML}</div>
-          <button onclick="openOrigEditModal('${encodeURIComponent(g.orig)}')" title="Sửa thông tin link gốc" class="text-slate-500 hover:text-indigo-600 w-7 h-7 flex items-center justify-center bg-white border border-slate-200 rounded-lg shadow-sm transition"><i class="fas fa-pen"></i></button>
+          <div class="flex gap-1.5 items-center flex-wrap">
+            ${badge}
+            <span class="text-[9px] lg:text-xs font-black bg-white border border-slate-200 text-slate-500 px-1.5 py-0.5 rounded shadow-sm">${g.children.length} LINK</span>
+            ${metaHTML}
+          </div>
+          <button onclick="openOrigEditModal('${encodeURIComponent(g.orig)}')" title="Sửa thông tin link gốc" class="text-slate-400 hover:text-indigo-600 w-6 h-6 flex items-center justify-center bg-slate-100 hover:bg-indigo-50 rounded transition shrink-0"><i class="fas fa-pen text-[10px]"></i></button>
         </div>
         <div class="font-mono text-[10px] lg:text-xs font-bold text-slate-600 break-all whitespace-normal cp" onclick="cp('${g.orig}')">${g.orig}</div>
       </div>
@@ -824,7 +843,6 @@ async function saveLnkEdit(){
   l.linkIndex=document.getElementById("mLIdx").value.trim();l.orig=newOrig;delete l.machine;delete l.status;
   renderLinks();cm("mLnk");toast("Đang lưu chỉnh sửa...");await apP("/api/links",linksDb);toast("Đã cập nhật! Bắt buộc Rebuild MAP và Đồng bộ GitHub.");
 }
-// Sửa thông tin Link Gốc (cây bút chì) — lưu trong cmsDb.link_origins
 function openOrigEditModal(encOrig){
   const orig=decodeURIComponent(encOrig);
   document.getElementById("mOrigKey").value=encOrig;
@@ -850,21 +868,38 @@ async function delLink(id){
   if(l){deadLinksDb.unshift({...l,deadDate:new Date().toISOString()});await apP("/api/deadlinks",deadLinksDb);}
   linksDb=linksDb.filter(x=>x.id!==id);renderLinks();toast("Đang ngắt kết nối...");await apP("/api/links",linksDb);toast("Đã xóa link! Bấm Rebuild MAP và Đồng bộ GitHub.");
 }
-// Sắp xếp: đánh số lại link ẩn trong từng nhóm link gốc theo ngày hết hạn tăng dần, bắt đầu từ 2
 async function sortAllLinks(){
   const btn=document.getElementById("btnSortLinks");if(btn){btn.innerHTML='<i class="fas fa-spinner fa-spin mr-1"></i>Đang sắp xếp...';btn.disabled=true;}
   try{
     const grps={};for(const l of linksDb){const k=l.orig||"?";if(!grps[k]) grps[k]=[];grps[k].push(l);}
     for(const k in grps){
       const arr=grps[k];
-      arr.sort((a,b)=>{
+      const origTok = getT(k);
+      let idx1Link = null;
+      const others = [];
+
+      for(const l of arr) {
+        if(!idx1Link && getT(l.masked) === origTok && origTok !== "") {
+          idx1Link = l;
+        } else {
+          others.push(l);
+        }
+      }
+
+      others.sort((a,b)=>{
         const da=pd(a.expDate),db_=pd(b.expDate);
         if(da&&db_) return da-db_;
         if(da) return -1; if(db_) return 1;
         return 0;
       });
-      let n=2;
-      for(const l of arr){ l.linkIndex=String(n); delete l.machine; n++; }
+
+      if(idx1Link) {
+        idx1Link.linkIndex = "1";
+        delete idx1Link.machine;
+      }
+
+      let n = 2;
+      for(const l of others){ l.linkIndex=String(n); delete l.machine; n++; }
     }
     renderLinks();toast("Đang lưu thứ tự mới...");
     await apP("/api/links",linksDb);
