@@ -40,7 +40,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc;color:#0f172a
 .ord-sub-tab.active{background:white;color:#4f46e5;box-shadow:0 1px 4px rgba(0,0,0,.1);}
 .ord-sub-tab .mac-dot{width:9px;height:9px;}
 @media (min-width:768px){.ord-sub-tab{padding:6px 14px;font-size:12px;gap:6px;}.ord-sub-tab .mac-dot{width:13px;height:13px;}}
-/* Đã điều chỉnh khoảng cách (gap) các nút action để tránh bấm nhầm */
 .lnk-actions-row{display:flex;justify-content:flex-end;gap:16px;border-top:1px dashed #e2e8f0;padding-top:6px;margin-top:4px;}
 .toggle-wrap{position:relative;width:48px;height:26px;flex-shrink:0;}
 .toggle-wrap input{opacity:0;width:0;height:0;}
@@ -273,9 +272,9 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
       <div class="min-w-0"><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-0.5">Số ngày SD</label><input id="mODays" type="number" min="1" placeholder="30" class="w-full p-1.5 md:p-2 lg:p-3 text-xs lg:text-sm border rounded-lg outline-none focus:border-indigo-500 text-center bg-slate-50" oninput="recalcExpFromDays()"></div>
     </div>
     <div id="fSuc" class="hidden mb-3 p-2 lg:p-3 border border-green-200 bg-green-50 rounded-lg min-w-0 space-y-2">
-      <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Link Web 1 (Liangxin)</label><input id="mOLink1" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
-      <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Link Web 2 (DJJC)</label><input id="mOLink2" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
-      <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Link Web 3 (Backup)</label><input id="mOLink3" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
+      <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Link Web 1 (doicucden)</label><input id="mOLink1" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
+      <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Link Web 2 (onepiecechapter)</label><input id="mOLink2" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
+      <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Link Web 3 (lucastanora)</label><input id="mOLink3" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
     </div>
     <div id="fFail" class="hidden mb-3 p-2 lg:p-3 border border-red-200 bg-red-50 rounded-lg min-w-0"><label class="block font-bold text-[10px] lg:text-xs text-red-700 mb-0.5">Lý do</label><input id="mOReason" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-red-300 bg-white rounded outline-none"></div>
     <div class="flex items-center mb-4 bg-slate-50 border border-slate-200 p-2 lg:p-3 rounded-lg">
@@ -307,6 +306,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
   <div class="glass-card p-5 md:p-6 lg:p-8 w-full max-w-sm min-w-0">
     <h3 class="font-extrabold text-lg lg:text-xl mb-3 text-slate-800">Thông tin Link Gốc</h3>
     <input type="hidden" id="mOrigKey">
+    <div class="mb-2 min-w-0"><label class="block text-[10px] lg:text-xs font-bold text-slate-600 mb-0.5">Thay Link Gốc (áp dụng toàn bộ)</label><input id="mOrigNewLink" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-slate-300 rounded-lg outline-none focus:border-indigo-500 bg-slate-50 font-mono truncate"></div>
     <div class="mb-2 min-w-0"><label class="block text-[10px] lg:text-xs font-bold text-slate-600 mb-0.5">Ngày hết hạn Link Gốc</label><input id="mOrigExp" type="text" placeholder="22/07/2026" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-slate-300 rounded-lg outline-none focus:border-indigo-500 text-center bg-slate-50"></div>
     <div class="mb-4 min-w-0"><label class="block text-[10px] lg:text-xs font-bold text-slate-600 mb-0.5">Ghi chú khác</label><input id="mOrigNote" type="text" placeholder="VD: Acc mẹ số 3..." class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-slate-300 rounded-lg outline-none focus:border-indigo-500 bg-slate-50"></div>
     <div class="flex gap-2"><button onclick="saveOrigEdit()" class="flex-1 bg-indigo-600 text-white font-bold py-2.5 lg:py-3 rounded-lg text-xs lg:text-sm hover:bg-indigo-700 shadow-md">LƯU</button><button onclick="cm('mOrigEdit')" class="bg-white border border-slate-200 text-slate-700 font-bold py-2.5 lg:py-3 px-4 rounded-lg text-xs lg:text-sm shadow-sm hover:bg-slate-50">Hủy</button></div>
@@ -376,6 +376,7 @@ async function apG(p,def){
     const d=await r.json();lsSet("a"+p,d);lsSetT(p);return d;
   }catch{return lsGet("a"+p)??def;}
 }
+
 async function apP(p,data){
   lsSet("a"+p,data);lsSetT(p);
   const localOnly = ["/api/links", "/api/deadlinks"];
@@ -410,7 +411,6 @@ async function apP(p,data){
   }
 }
 
-// Helpers ngày tháng
 function formatDateVN(d){return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;}
 function todayVN(){return formatDateVN(new Date());}
 function addDays(dateStr,days){const d=pd(dateStr);if(!d||!days)return "";d.setDate(d.getDate()+days);return formatDateVN(d);}
@@ -442,7 +442,6 @@ function monthSortKey(dateStr){
 }
 function getDateCreated(o){return o.dateCreated||o.date||"";}
 
-// Mail log
 function getMailLog(){return lsGet("mailLog")||[];}
 function addMailLog(type,email,orderId=""){
   const logs=getMailLog();
@@ -458,7 +457,6 @@ function renderMailLog(){
 }
 function clearMailLog(){lsSet("mailLog",[]);renderMailLog();toast("Đã xóa nhật ký!");}
 
-// Auto mail
 function checkAutoSendExpiry(){
   if(!lsGet("autoMailEnabled")) return;
   const nowVN=new Date(Date.now()+7*3600000);const hour=nowVN.getUTCHours();
@@ -484,7 +482,6 @@ function saveAutoMailSetting(){
   toast(val?"Đã bật tự động gửi mail!":"Đã tắt.");
 }
 
-// ── Cài đặt Bắn Tỉa 3 Web ──
 function loadSyncSettingUI(){
   document.getElementById("syncW1").value=lsGet("syncW1")||"";
   document.getElementById("syncW2").value=lsGet("syncW2")||"";
@@ -497,7 +494,6 @@ function saveSyncSetting(){
   toast("Đã lưu cấu hình Bắn Tỉa 3 Web!");
 }
 
-// AUTH
 window.onload=async function(){
   myDev=lsGet("adm_dev")||"";
   if(!myDev){myDev="DEV-"+Math.random().toString(36).slice(2,11).toUpperCase();lsSet("adm_dev",myDev);}
@@ -570,7 +566,6 @@ async function fetchAll(msg=false){
   if(msg) toast("Đã làm mới dữ liệu!");
 }
 
-// ══ ĐƠN HÀNG ══
 function switchOrdTab(tab){
   curOrdTab=tab;
   ["success","pending","failed"].forEach(t=>document.getElementById("otab-"+t)?.classList.toggle("active",t===tab));
@@ -649,7 +644,7 @@ function renderOrd(){
             ${(o.status==="success"&&o.expDate&&!isExpiredSuccess)?`<button onclick="sendExpMail('${o.id}')" title="Nhắc hết hạn" class="text-amber-500 font-bold px-3 py-1.5 bg-amber-50 border border-amber-100 rounded-lg text-xs lg:text-sm hover:bg-amber-500 hover:text-white transition shadow-sm"><i class="fas fa-clock"></i></button>`:""}
             <button onclick="sendZaloMail('${o.id}')" title="Nhắc Zalo khách hàng" class="text-blue-500 font-bold px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg text-xs lg:text-sm hover:bg-blue-500 hover:text-white transition shadow-sm"><i class="fas fa-comment-dots"></i></button>
             <button onclick="openOrdModal('${o.id}')" class="text-indigo-600 font-bold px-4 py-1.5 bg-indigo-50 border border-indigo-100 rounded-lg text-xs lg:text-sm hover:bg-indigo-600 hover:text-white transition shadow-sm"><i class="fas fa-pen md:mr-1.5"></i><span class="hidden md:inline">Sửa</span></button>
-            <button onclick="delOrd('${o.id}')" class="text-red-500 font-bold px-3 py-1.5 bg-red-50 border border-red-100 rounded-lg text-xs lg:text-sm hover:bg-red-500 hover:text-white transition shadow-sm"><i class="fas fa-trash"></i></button>
+            <button onclick="delOrd('${o.id}')" class="text-red-500 font-bold px-3 py-1.5 bg-red-50 border border-red-100 rounded text-xs lg:text-sm hover:bg-red-500 hover:text-white transition shadow-sm"><i class="fas fa-trash"></i></button>
           </div>
         </div>
       </div>`;
@@ -846,16 +841,42 @@ async function saveLnkEdit(){
 function openOrigEditModal(encOrig){
   const orig=decodeURIComponent(encOrig);
   document.getElementById("mOrigKey").value=encOrig;
+  document.getElementById("mOrigNewLink").value=orig;
   const meta=(cmsDb.link_origins&&cmsDb.link_origins[orig])||{};
   document.getElementById("mOrigExp").value=meta.exp||"";
   document.getElementById("mOrigNote").value=meta.note||"";
   document.getElementById("mOrigEdit").classList.remove("hidden");
 }
 async function saveOrigEdit(){
-  const orig=decodeURIComponent(document.getElementById("mOrigKey").value);
+  const oldOrig=decodeURIComponent(document.getElementById("mOrigKey").value);
+  const newOrig=document.getElementById("mOrigNewLink").value.trim();
   if(!cmsDb.link_origins) cmsDb.link_origins={};
-  cmsDb.link_origins[orig]={exp:document.getElementById("mOrigExp").value.trim(),note:document.getElementById("mOrigNote").value.trim()};
-  cm("mOrigEdit");renderLinks();toast("Đang lưu...");await apP("/api/cms",cmsDb);toast("Đã lưu thông tin Link Gốc!");
+  
+  let changedLinks=false;
+  const exp=document.getElementById("mOrigExp").value.trim();
+  const note=document.getElementById("mOrigNote").value.trim();
+
+  if(newOrig && newOrig !== oldOrig){
+    linksDb.forEach(l => {
+      if(l.orig === oldOrig) {
+        l.orig = newOrig;
+        changedLinks = true;
+      }
+    });
+    cmsDb.link_origins[newOrig] = {exp, note};
+    delete cmsDb.link_origins[oldOrig];
+  } else {
+    cmsDb.link_origins[oldOrig] = {exp, note};
+  }
+
+  cm("mOrigEdit"); renderLinks(); toast("Đang lưu...");
+  if(changedLinks){
+    await Promise.all([apP("/api/links", linksDb), apP("/api/cms", cmsDb)]);
+    toast("Đã đổi link gốc hàng loạt & lưu thông tin! Nhớ Rebuild MAP!");
+  } else {
+    await apP("/api/cms", cmsDb);
+    toast("Đã lưu thông tin Link Gốc!");
+  }
 }
 async function toggleLock(tok,isLocked){
   if(!tok) return;let changed=false;
