@@ -111,24 +111,29 @@ details>summary::-webkit-details-marker{display:none;}
           </div>
           
           <div class="bg-green-50 border-2 border-dashed border-green-500 p-4 md:p-6 rounded-2xl w-full space-y-4">
-            <h3 class="text-green-700 font-extrabold mb-3 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Danh sách Link Subscription:</h3>
             
-            <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
-              <span class="font-bold text-[10px] md:text-xs bg-green-200 text-green-800 px-3 py-2 rounded-xl flex items-center justify-center min-w-[80px]">WEB 1</span>
-              <input type="text" id="subLink1" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
-              <button onclick="copyToClipboard('subLink1',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center"><i class="fas fa-copy mr-1"></i>COPY</button>
+            <div class="w-full">
+              <h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL:</h3>
+              <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
+                <input type="text" id="subLink1" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+                <button onclick="copyToClipboard('subLink1',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center"><i class="fas fa-copy mr-1"></i>COPY</button>
+              </div>
             </div>
             
-            <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch" id="subLink2Wrap">
-              <span class="font-bold text-[10px] md:text-xs bg-green-200 text-green-800 px-3 py-2 rounded-xl flex items-center justify-center min-w-[80px]">WEB 2</span>
-              <input type="text" id="subLink2" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
-              <button onclick="copyToClipboard('subLink2',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center"><i class="fas fa-copy mr-1"></i>COPY</button>
+            <div id="subLink2Wrap" class="w-full">
+              <h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL dự phòng 2:</h3>
+              <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
+                <input type="text" id="subLink2" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+                <button onclick="copyToClipboard('subLink2',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center"><i class="fas fa-copy mr-1"></i>COPY</button>
+              </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch" id="subLink3Wrap">
-              <span class="font-bold text-[10px] md:text-xs bg-green-200 text-green-800 px-3 py-2 rounded-xl flex items-center justify-center min-w-[80px]">WEB 3</span>
-              <input type="text" id="subLink3" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
-              <button onclick="copyToClipboard('subLink3',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center"><i class="fas fa-copy mr-1"></i>COPY</button>
+            <div id="subLink3Wrap" class="w-full">
+              <h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL dự phòng 3:</h3>
+              <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
+                <input type="text" id="subLink3" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+                <button onclick="copyToClipboard('subLink3',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center"><i class="fas fa-copy mr-1"></i>COPY</button>
+              </div>
             </div>
 
             <div class="mt-4 flex justify-center border-t border-green-200 pt-4">
@@ -594,7 +599,7 @@ function renderPaymentBox(){
       <div class="highlight-copy py-4 px-3 rounded-xl text-center cursor-pointer" onclick="copyText('${currentOrderId}')">
         <span class="block text-[11px] font-black mb-2 uppercase">${i18n[lang].copy_memo}</span>
         <strong class="block bg-white font-mono text-2xl py-3 rounded-xl shadow-inner border-2 border-yellow-400">${currentOrderId} <i class="far fa-copy ml-2 opacity-50"></i></strong>
-        <p class="text-[10px] mt-2 italic font-bold opacity-80 uppercase">${lang==='zh'?'请手动输入金额和订单号！':lang==='en'?'Manually enter amount & Memo!':'Vui lòng tự nhập số tiền và nội dung！'}</p>
+        <p class="text-[10px] mt-2 italic font-bold opacity-80 uppercase">${lang==='zh'?'请手动输入金额和订单号！':lang==='en'?'Manually enter amount & Memo!':'Vui lòng tự nhập số tiền和 nội dung！'}</p>
       </div>${paidBtnHTML}</div>`;
   }
 }
