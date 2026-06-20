@@ -8,7 +8,7 @@ inbounds (mixed+tun), route rules đầy đủ, experimental cache+clash_api
 
 import requests, base64, urllib.parse, re, datetime, yaml, json, sys, time
 
-WORKER_DOMAIN  = "https://vpn-worker-test.doicucden.workers.dev"
+WORKER_DOMAIN  = "https://vpntrinhhg3worker.lucastanora.workers.dev"
 API_LINKS      = f"{WORKER_DOMAIN}/api/links"
 API_BATCH_PUSH = f"{WORKER_DOMAIN}/api/push_data_batch"
 
