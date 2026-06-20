@@ -100,22 +100,38 @@ details>summary::-webkit-details-marker{display:none;}
              <p class="text-red-600 font-black text-[11px] md:text-sm animate-pulse bg-red-50 py-2 px-4 rounded-lg inline-block border border-red-200">⚠️ Bắt buộc giữ bí mật Email và Mã đơn hàng để tránh kẻ gian lợi dụng.</p>
           </div>
           
-          <div class="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-3 md:p-4 mb-4 shadow-sm">
-            <div class="flex items-center gap-2 min-w-0">
+          <div class="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-3 md:p-4 mb-4 shadow-sm gap-2">
+            <div class="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
               <span class="bg-slate-100 text-slate-500 font-bold px-2 py-1 rounded text-[10px] md:text-xs shrink-0" data-i18n="order_id_label">Mã đơn</span>
-              <span class="font-mono font-extrabold text-indigo-600 text-xs md:text-sm truncate" id="displayOrderId"></span>
+              <span class="font-mono font-extrabold text-indigo-600 text-[10px] md:text-sm truncate" id="displayOrderId"></span>
             </div>
-            <button id="btnRequestData" onclick="requestDataCheck()" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm hover:scale-105 transition shadow-md flex items-center shrink-0 btn-heartbeat outline-none">
-              <i class="fas fa-chart-pie mr-1.5"></i><span data-i18n="btn_check_data">Kiểm tra dung lượng</span>
+            <button id="btnRequestData" onclick="requestDataCheck()" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold px-2.5 md:px-4 py-2 rounded-lg text-[10px] md:text-sm hover:scale-105 transition shadow-md flex items-center shrink-0 btn-heartbeat outline-none whitespace-nowrap">
+              <i class="fas fa-chart-pie mr-1 md:mr-1.5"></i><span data-i18n="btn_check_data">Kiểm tra dung lượng</span>
             </button>
           </div>
-          <div class="bg-green-50 border-2 border-dashed border-green-500 p-4 md:p-6 rounded-2xl w-full">
-            <h3 class="text-green-700 font-extrabold mb-3 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL:</h3>
-            <div class="flex flex-col sm:flex-row gap-2 w-full">
-              <input type="text" id="subLink" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-3 md:p-4 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
-              <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-row shrink-0 w-full sm:w-auto">
-                <button onclick="copyToClipboard('subLink',true)" class="w-full sm:w-auto bg-green-600 text-white font-bold px-3 md:px-6 py-3 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center"><i class="fas fa-copy mr-1"></i><span data-i18n="btn_copy">COPY LINK</span></button>
-                <button onclick="switchPortalTab('p-store')" class="w-full sm:w-auto bg-indigo-600 text-white font-bold px-3 md:px-6 py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center"><i class="fas fa-redo-alt mr-1"></i><span data-i18n="btn_renew">GIA HẠN</span></button>
+          <div class="bg-green-50 border-2 border-dashed border-green-500 p-4 md:p-6 rounded-2xl w-full space-y-4">
+            <div>
+              <h3 class="text-green-700 font-extrabold mb-3 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL:</h3>
+              <div class="flex flex-col sm:flex-row gap-2 w-full">
+                <input type="text" id="subLink" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-3 md:p-4 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+                <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-row shrink-0 w-full sm:w-auto">
+                  <button onclick="copyToClipboard('subLink',true)" class="w-full sm:w-auto bg-green-600 text-white font-bold px-3 md:px-6 py-3 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center"><i class="fas fa-copy mr-1"></i><span data-i18n="btn_copy">COPY LINK</span></button>
+                  <button onclick="switchPortalTab('p-store')" class="w-full sm:w-auto bg-indigo-600 text-white font-bold px-3 md:px-6 py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center"><i class="fas fa-redo-alt mr-1"></i><span data-i18n="btn_renew">GIA HẠN</span></button>
+                </div>
+              </div>
+            </div>
+            <div id="subLink2Wrap">
+              <h3 class="text-green-700 font-extrabold mb-3 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL dự phòng 2:</h3>
+              <div class="flex flex-col sm:flex-row gap-2 w-full">
+                <input type="text" id="subLink2" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-3 md:p-4 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+                <button onclick="copyToClipboard('subLink2',true)" class="w-full sm:w-auto bg-green-600 text-white font-bold px-3 md:px-6 py-3 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center shrink-0"><i class="fas fa-copy mr-1"></i><span data-i18n="btn_copy">COPY LINK</span></button>
+              </div>
+            </div>
+            <div id="subLink3Wrap">
+              <h3 class="text-green-700 font-extrabold mb-3 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL dự phòng 3:</h3>
+              <div class="flex flex-col sm:flex-row gap-2 w-full">
+                <input type="text" id="subLink3" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-3 md:p-4 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+                <button onclick="copyToClipboard('subLink3',true)" class="w-full sm:w-auto bg-green-600 text-white font-bold px-3 md:px-6 py-3 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center shrink-0"><i class="fas fa-copy mr-1"></i><span data-i18n="btn_copy">COPY LINK</span></button>
               </div>
             </div>
           </div>
@@ -511,17 +527,37 @@ function calculateTotal(){
  
 function toggleZalo(){const z=document.getElementById('cusZalo');z.classList.toggle('hidden');z.required=!z.classList.contains('hidden');}
  
-function copyText(t){navigator.clipboard.writeText(t);showToast(lang==='vi'?'Đã Copy!':'Copied!');}
-function copyToClipboard(id,isInput=false){const e=document.getElementById(id);if(isInput){e.select();document.execCommand('copy');}else copyText(e.innerText);showToast(lang==='vi'?'Đã Copy!':'Copied!');}
+// FIX: copy thật vào clipboard bằng Clipboard API, fallback execCommand
+async function copyText(t){
+  try{ await navigator.clipboard.writeText(t); }
+  catch(e){
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.focus();ta.select();
+      document.execCommand('copy');document.body.removeChild(ta);
+    }catch(e2){}
+  }
+  showToast(lang==='vi'?'Đã Copy!':'Copied!');
+}
+async function copyToClipboard(id,isInput=false){
+  const e=document.getElementById(id);
+  const val=isInput?e.value:e.innerText;
+  if(isInput){e.select();}
+  await copyText(val);
+}
  
 function renderPaymentBox(){
   const col=document.getElementById('checkoutRightCol'),m=document.getElementById('payMethod').value,btn=document.getElementById('btnConfirm');
   const fp=lang==='vi'?`${currentTotalVnd.toLocaleString('vi-VN')}đ`:lang==='en'?`$${currentTotalUsd}`:`¥${currentTotalCny}`;
+  // YC: nút "Tạo mã QR" luôn giữ nguyên ở vị trí cũ, không đổi trạng thái/thành nút khác sau khi bấm
+  btn.innerHTML=i18n[lang].btn_create_order;
+  btn.className='w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md shrink-0';
   if(!currentOrderId){
-   btn.innerText=i18n[lang].btn_create_order;btn.className='w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md shrink-0';
     col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 border-b pb-2"><i class="fas fa-info-circle mr-2"></i>${i18n[lang].guide_title}</h4><p class="text-sm text-slate-600">${i18n[lang].guide_desc}</p></div>`;return;
   }
-  btn.innerHTML=`<i class="fas fa-check-circle mr-2"></i>${i18n[lang].btn_paid}`;btn.className='w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition btn-heartbeat';
+  // Nút "TÔI ĐÃ CHUYỂN KHOẢN" hiển thị riêng NGAY DƯỚI bảng thông tin chuyển khoản
+  const paidBtnHTML=`<button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition btn-heartbeat shadow-md"><i class="fas fa-check-circle mr-2"></i>${i18n[lang].btn_paid}</button>`;
   
   if(m==='bank'){
     col.innerHTML=`<div class="text-center w-full"><div class="bg-indigo-50 p-2 rounded-xl inline-block mb-4"><img src="https://img.vietqr.io/image/mbbank-0917678211-compact.png?amount=${currentTotalVnd}&addInfo=${currentOrderId}&accountName=TRINH THI XUAN HUONG" class="w-40 h-40 md:w-56 md:h-56 rounded-xl mix-blend-multiply mx-auto"></div>
@@ -535,7 +571,7 @@ function renderPaymentBox(){
         <span class="block text-[11px] font-black mb-2 uppercase">${i18n[lang].copy_memo}</span>
         <strong class="block bg-white font-mono text-2xl md:text-3xl py-3 rounded-xl shadow-inner border-2 border-yellow-400">${currentOrderId} <i class="far fa-copy ml-2 opacity-50"></i></strong>
         <p class="text-[10px] mt-2 italic font-bold opacity-80">(NHẤP VÀO MÃ ĐỂ COPY - BẮT BUỘC)</p>
-      </div></div>`;
+      </div>${paidBtnHTML}</div>`;
   }else{
     const isAli=m==='alipay';
     const imgSrc=isAli?'https://i.pinimg.com/736x/44/57/9d/44579dfb5241614ddc897a21ce34e233.jpg':'https://i.pinimg.com/736x/28/b2/95/28b29577c6229ec943e8e13afe241db3.jpg';
@@ -552,8 +588,8 @@ function renderPaymentBox(){
       <div class="highlight-copy py-4 px-3 rounded-xl text-center cursor-pointer" onclick="copyText('${currentOrderId}')">
         <span class="block text-[11px] font-black mb-2 uppercase">${i18n[lang].copy_memo}</span>
         <strong class="block bg-white font-mono text-2xl py-3 rounded-xl shadow-inner border-2 border-yellow-400">${currentOrderId} <i class="far fa-copy ml-2 opacity-50"></i></strong>
-        <p class="text-[10px] mt-2 italic font-bold opacity-80 uppercase">${lang==='zh'?'请手动输入金额和订单号！':lang==='en'?'Manually enter amount & Memo!':'Vui lòng tự nhập số tiền和内容！'}</p>
-      </div></div>`;
+        <p class="text-[10px] mt-2 italic font-bold opacity-80 uppercase">${lang==='zh'?'请手动输入金额和订单号！':lang==='en'?'Manually enter amount & Memo!':'Vui lòng tự nhập số tiền và nội dung！'}</p>
+      </div>${paidBtnHTML}</div>`;
   }
 }
  
@@ -562,43 +598,47 @@ async function submitOrder(e){
   if(!currentOrderId){
     const ch='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';currentOrderId='DH-';for(let i=0;i<10;i++)currentOrderId+=ch.charAt(Math.floor(Math.random()*ch.length));
     renderPaymentBox();
-  }else{
-   btn.innerText='LOADING...';btn.disabled=true;
-    const fp=lang==='vi'?`${currentTotalVnd.toLocaleString('vi-VN')}đ`:lang==='en'?`$${currentTotalUsd}`:`¥${currentTotalCny}`;
-    const cy2=currentMultiplier+' Tháng';
-    const mn=document.getElementById('payMethod').value;
-    const mname=mn==='bank'?'Ngân hàng VN':mn==='alipay'?'Alipay':'WeChat';
-    let db=await apiGet('/api/orders');if(!Array.isArray(db))db=[];
-   db.unshift({id:currentOrderId,email:document.getElementById('cusEmail').value,zalo:document.getElementById('cusZalo').value,
-     method:mname,pkgName:currentPackage.vi.name,pkgData:currentPackage.data,
-      pkg:`${currentPackage.vi.name} (${cy2}) - ${fp} (${currentPackage.data})`,
-     totalVnd:currentTotalVnd,needSupport:document.getElementById('needSupport').checked,
-      status:'pending',date:new Date().toLocaleString(),expDate:'',daysLeft:'',info:''});
-    await apiPost('/api/orders',db);
-    try {
-        const cusZaloVal = document.getElementById('cusZalo').value || 'Không nhập';
-        await fetch(GOOGLE_MAIL_API, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({
-            to: "lucastanora@gmail.com", 
-            subject: `[CÓ ĐƠN MỚI] ${currentOrderId} - Khách báo Đã CK`, 
-            html: `<div style="font-family:sans-serif; max-width:500px; margin:auto; border:1px solid #e2e8f0; border-radius:10px; padding:20px;">
-                <h2 style="color:#2563eb; margin-top:0;">💰 Khách vừa báo ĐÃ THANH TOÁN!</h2>
-                <ul style="list-style-type:none; padding:0; font-size:15px; line-height:1.8;">
-                    <li style="border-bottom:1px solid #f1f5f9; padding-bottom:8px;">📌 <b>Mã Đơn:</b> <span style="color:#ef4444; font-weight:bold;">${currentOrderId}</span></li>
-                    <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">📦 <b>Gói VPN:</b> ${currentPackage.vi.name} (${cy2})</li>
-                    <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">💵 <b>Số tiền:</b> <b style="color:#16a34a;">${fp}</b></li>
-                    <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">📧 <b>Email:</b> ${document.getElementById('cusEmail').value}</li>
-                    <li style="padding-top:8px;">💬 <b>Zalo/Tele:</b> <span style="background:#fef08a; padding:2px 6px; border-radius:4px; font-weight:bold; color:#854d0e;">${cusZaloVal}</span></li>
-                </ul>
-                <p style="background:#eff6ff; padding:10px; border-radius:6px; font-size:13px; color:#1e40af; text-align:center; margin-bottom:0;">Vui lòng mở trang Admin để kiểm tra tiền và duyệt đơn!</p>
-            </div>`
-        }) });
-    } catch(err) {}
-    showToast(lang==='vi'?'Thành công!':'Success!','success');
-   document.getElementById('checkoutSection').classList.add('hidden');
-   document.getElementById('orderForm').reset();
-   document.getElementById('loginInput').value=currentOrderId;login(true);
-    btn.disabled=false;
   }
+}
+
+// YC: tách riêng hành động "Tôi đã chuyển khoản" khỏi nút Tạo mã QR
+async function confirmPaid(){
+  const btn=document.getElementById('btnPaidConfirm');
+  if(!btn)return;
+  btn.innerHTML='LOADING...';btn.disabled=true;
+  const fp=lang==='vi'?`${currentTotalVnd.toLocaleString('vi-VN')}đ`:lang==='en'?`$${currentTotalUsd}`:`¥${currentTotalCny}`;
+  const cy2=currentMultiplier+' Tháng';
+  const mn=document.getElementById('payMethod').value;
+  const mname=mn==='bank'?'Ngân hàng VN':mn==='alipay'?'Alipay':'WeChat';
+  let db=await apiGet('/api/orders');if(!Array.isArray(db))db=[];
+  db.unshift({id:currentOrderId,email:document.getElementById('cusEmail').value,zalo:document.getElementById('cusZalo').value,
+    method:mname,pkgName:currentPackage.vi.name,pkgData:currentPackage.data,
+    pkg:`${currentPackage.vi.name} (${cy2}) - ${fp} (${currentPackage.data})`,
+    totalVnd:currentTotalVnd,needSupport:document.getElementById('needSupport').checked,
+    status:'pending',date:new Date().toLocaleString(),expDate:'',daysLeft:'',info:'',info2:'',info3:'',nickname:''});
+  await apiPost('/api/orders',db);
+  try {
+      const cusZaloVal = document.getElementById('cusZalo').value || 'Không nhập';
+      await fetch(GOOGLE_MAIL_API, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({
+          to: "lucastanora@gmail.com", 
+          subject: `[CÓ ĐƠN MỚI] ${currentOrderId} - Khách báo Đã CK`, 
+          html: `<div style="font-family:sans-serif; max-width:500px; margin:auto; border:1px solid #e2e8f0; border-radius:10px; padding:20px;">
+              <h2 style="color:#2563eb; margin-top:0;">💰 Khách vừa báo ĐÃ THANH TOÁN!</h2>
+              <ul style="list-style-type:none; padding:0; font-size:15px; line-height:1.8;">
+                  <li style="border-bottom:1px solid #f1f5f9; padding-bottom:8px;">📌 <b>Mã Đơn:</b> <span style="color:#ef4444; font-weight:bold;">${currentOrderId}</span></li>
+                  <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">📦 <b>Gói VPN:</b> ${currentPackage.vi.name} (${cy2})</li>
+                  <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">💵 <b>Số tiền:</b> <b style="color:#16a34a;">${fp}</b></li>
+                  <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">📧 <b>Email:</b> ${document.getElementById('cusEmail').value}</li>
+                  <li style="padding-top:8px;">💬 <b>Zalo/Tele:</b> <span style="background:#fef08a; padding:2px 6px; border-radius:4px; font-weight:bold; color:#854d0e;">${cusZaloVal}</span></li>
+              </ul>
+              <p style="background:#eff6ff; padding:10px; border-radius:6px; font-size:13px; color:#1e40af; text-align:center; margin-bottom:0;">Vui lòng mở trang Admin để kiểm tra tiền và duyệt đơn!</p>
+          </div>`
+      }) });
+  } catch(err) {}
+  showToast(lang==='vi'?'Thành công!':'Success!','success');
+  document.getElementById('checkoutSection').classList.add('hidden');
+  document.getElementById('orderForm').reset();
+  document.getElementById('loginInput').value=currentOrderId;login(true);
 }
  
 // ── Portal ──
@@ -612,6 +652,12 @@ function updatePortalInfo(o){
    document.getElementById('portalContentSuccess').classList.remove('hidden');
    document.getElementById('subLink').value=o.info&&o.info.trim()!==''?o.info:'';
    document.getElementById('displayOrderId').innerText=o.id;
+   const l2=o.info2&&o.info2.trim()!==''?o.info2:'';
+   const l3=o.info3&&o.info3.trim()!==''?o.info3:'';
+   document.getElementById('subLink2').value=l2;
+   document.getElementById('subLink3').value=l3;
+   document.getElementById('subLink2Wrap').classList.toggle('hidden',!l2);
+   document.getElementById('subLink3Wrap').classList.toggle('hidden',!l3);
   }else{
    document.getElementById('portalContentPending').classList.add('hidden');
    document.getElementById('portalContentSuccess').classList.add('hidden');
@@ -765,6 +811,7 @@ async function requestDataCheck() {
     btn.disabled = false;
   }
 }
+
 </script>
 </body>
 </html>
