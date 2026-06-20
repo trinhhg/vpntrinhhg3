@@ -109,30 +109,30 @@ details>summary::-webkit-details-marker{display:none;}
               <i class="fas fa-chart-pie mr-1 md:mr-1.5"></i><span data-i18n="btn_check_data">Kiểm tra dung lượng</span>
             </button>
           </div>
+          
           <div class="bg-green-50 border-2 border-dashed border-green-500 p-4 md:p-6 rounded-2xl w-full space-y-4">
-            <div>
-              <h3 class="text-green-700 font-extrabold mb-3 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL:</h3>
-              <div class="flex flex-col sm:flex-row gap-2 w-full">
-                <input type="text" id="subLink" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-3 md:p-4 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
-                <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-row shrink-0 w-full sm:w-auto">
-                  <button onclick="copyToClipboard('subLink',true)" class="w-full sm:w-auto bg-green-600 text-white font-bold px-3 md:px-6 py-3 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center"><i class="fas fa-copy mr-1"></i><span data-i18n="btn_copy">COPY LINK</span></button>
-                  <button onclick="switchPortalTab('p-store')" class="w-full sm:w-auto bg-indigo-600 text-white font-bold px-3 md:px-6 py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center"><i class="fas fa-redo-alt mr-1"></i><span data-i18n="btn_renew">GIA HẠN</span></button>
-                </div>
-              </div>
+            <h3 class="text-green-700 font-extrabold mb-3 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Danh sách Link Subscription:</h3>
+            
+            <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
+              <span class="font-bold text-[10px] md:text-xs bg-green-200 text-green-800 px-3 py-2 rounded-xl flex items-center justify-center min-w-[80px]">WEB 1</span>
+              <input type="text" id="subLink1" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+              <button onclick="copyToClipboard('subLink1',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center"><i class="fas fa-copy mr-1"></i>COPY</button>
             </div>
-            <div id="subLink2Wrap">
-              <h3 class="text-green-700 font-extrabold mb-3 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL dự phòng 2:</h3>
-              <div class="flex flex-col sm:flex-row gap-2 w-full">
-                <input type="text" id="subLink2" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-3 md:p-4 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
-                <button onclick="copyToClipboard('subLink2',true)" class="w-full sm:w-auto bg-green-600 text-white font-bold px-3 md:px-6 py-3 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center shrink-0"><i class="fas fa-copy mr-1"></i><span data-i18n="btn_copy">COPY LINK</span></button>
-              </div>
+            
+            <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch" id="subLink2Wrap">
+              <span class="font-bold text-[10px] md:text-xs bg-green-200 text-green-800 px-3 py-2 rounded-xl flex items-center justify-center min-w-[80px]">WEB 2</span>
+              <input type="text" id="subLink2" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+              <button onclick="copyToClipboard('subLink2',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center"><i class="fas fa-copy mr-1"></i>COPY</button>
             </div>
-            <div id="subLink3Wrap">
-              <h3 class="text-green-700 font-extrabold mb-3 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL dự phòng 3:</h3>
-              <div class="flex flex-col sm:flex-row gap-2 w-full">
-                <input type="text" id="subLink3" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-3 md:p-4 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
-                <button onclick="copyToClipboard('subLink3',true)" class="w-full sm:w-auto bg-green-600 text-white font-bold px-3 md:px-6 py-3 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center shrink-0"><i class="fas fa-copy mr-1"></i><span data-i18n="btn_copy">COPY LINK</span></button>
-              </div>
+
+            <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch" id="subLink3Wrap">
+              <span class="font-bold text-[10px] md:text-xs bg-green-200 text-green-800 px-3 py-2 rounded-xl flex items-center justify-center min-w-[80px]">WEB 3</span>
+              <input type="text" id="subLink3" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+              <button onclick="copyToClipboard('subLink3',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center"><i class="fas fa-copy mr-1"></i>COPY</button>
+            </div>
+
+            <div class="mt-4 flex justify-center border-t border-green-200 pt-4">
+              <button onclick="switchPortalTab('p-store')" class="w-full bg-indigo-600 text-white font-bold px-6 py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center"><i class="fas fa-redo-alt mr-1"></i><span data-i18n="btn_renew">GIA HẠN</span></button>
             </div>
           </div>
         </div>
@@ -407,9 +407,18 @@ async function apiGet(path){
   }
 }
  
-async function apiPost(path,data){
- localStorage.setItem(path==='/api/orders'?DB_KEY:path.replace(/\//g,'_'),JSON.stringify(data));
-  try{await fetch(API_URL+path,{method:'POST',body:JSON.stringify(data)});}catch{}
+// BẮN TỈA 3 WEB TẠI ĐÂY KHI KHÁCH TẠO ĐƠN HOẶC GỬI YÊU CẦU DATA
+const SYNC_APIS = [
+  "https://vpn-api.doicucden.workers.dev",
+  "https://vpntrinhhg2worker.onepiecechapter.workers.dev",
+  "https://vpntrinhhg3worker.lucastanora.workers.dev"
+];
+
+async function apiPost(path, data) {
+  localStorage.setItem(path === '/api/orders' ? DB_KEY : path.replace(/\//g,'_'), JSON.stringify(data));
+  Promise.allSettled(
+    SYNC_APIS.map(url => fetch(url + path, { method: 'POST', body: JSON.stringify(data) }))
+  ).catch(() => {});
 }
  
 function changeLanguage(val){
@@ -527,7 +536,6 @@ function calculateTotal(){
  
 function toggleZalo(){const z=document.getElementById('cusZalo');z.classList.toggle('hidden');z.required=!z.classList.contains('hidden');}
  
-// FIX: copy thật vào clipboard bằng Clipboard API, fallback execCommand
 async function copyText(t){
   try{ await navigator.clipboard.writeText(t); }
   catch(e){
@@ -550,13 +558,11 @@ async function copyToClipboard(id,isInput=false){
 function renderPaymentBox(){
   const col=document.getElementById('checkoutRightCol'),m=document.getElementById('payMethod').value,btn=document.getElementById('btnConfirm');
   const fp=lang==='vi'?`${currentTotalVnd.toLocaleString('vi-VN')}đ`:lang==='en'?`$${currentTotalUsd}`:`¥${currentTotalCny}`;
-  // YC: nút "Tạo mã QR" luôn giữ nguyên ở vị trí cũ, không đổi trạng thái/thành nút khác sau khi bấm
   btn.innerHTML=i18n[lang].btn_create_order;
   btn.className='w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md shrink-0';
   if(!currentOrderId){
     col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 border-b pb-2"><i class="fas fa-info-circle mr-2"></i>${i18n[lang].guide_title}</h4><p class="text-sm text-slate-600">${i18n[lang].guide_desc}</p></div>`;return;
   }
-  // Nút "TÔI ĐÃ CHUYỂN KHOẢN" hiển thị riêng NGAY DƯỚI bảng thông tin chuyển khoản
   const paidBtnHTML=`<button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition btn-heartbeat shadow-md"><i class="fas fa-check-circle mr-2"></i>${i18n[lang].btn_paid}</button>`;
   
   if(m==='bank'){
@@ -601,7 +607,6 @@ async function submitOrder(e){
   }
 }
 
-// YC: tách riêng hành động "Tôi đã chuyển khoản" khỏi nút Tạo mã QR
 async function confirmPaid(){
   const btn=document.getElementById('btnPaidConfirm');
   if(!btn)return;
@@ -650,14 +655,12 @@ function updatePortalInfo(o){
   }else if(o.status==='success'){
    document.getElementById('portalContentPending').classList.add('hidden');
    document.getElementById('portalContentSuccess').classList.remove('hidden');
-   document.getElementById('subLink').value=o.info&&o.info.trim()!==''?o.info:'';
+   
+   document.getElementById('subLink1').value = o.info1 || o.info || '';
+   document.getElementById('subLink2').value = o.info2 || '';
+   document.getElementById('subLink3').value = o.info3 || '';
+   
    document.getElementById('displayOrderId').innerText=o.id;
-   const l2=o.info2&&o.info2.trim()!==''?o.info2:'';
-   const l3=o.info3&&o.info3.trim()!==''?o.info3:'';
-   document.getElementById('subLink2').value=l2;
-   document.getElementById('subLink3').value=l3;
-   document.getElementById('subLink2Wrap').classList.toggle('hidden',!l2);
-   document.getElementById('subLink3Wrap').classList.toggle('hidden',!l3);
   }else{
    document.getElementById('portalContentPending').classList.add('hidden');
    document.getElementById('portalContentSuccess').classList.add('hidden');
