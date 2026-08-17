@@ -302,13 +302,16 @@ const GOOGLE_MAIL_API = "https://script.google.com/macros/s/AKfycbyQjEln9By0HuUP
 const SESSION_KEY = 'vpn_portal_session_24h';
 const DB_KEY = 'vpn_orders_db';
  
-// Thêm biến global cho Đếm ngược
+// Các biến global cho Đếm ngược
 let checkOrderInterval = null;
 let countdownTimerInterval = null;
 let pendingEndTime = 0;
 let currentCountdownOrderId = null;
 
 let lastScrollY = 0;
+let lang='vi', currentPackage=null, currentOrderId='', cmsCache={}, currentMultiplier=1, oCache=null;
+let currentTotalVnd=0, currentTotalCny=0, currentTotalUsd=0;
+
 window.addEventListener('scroll',()=>{
   const nav=document.getElementById('mainNav');
   if(window.scrollY>lastScrollY&&window.scrollY>80)nav.classList.add('nav-hidden');
@@ -415,9 +418,6 @@ const pkgs=[
   {id:'d3',category:['usage'],vi:{name:'Không Giới Hạn',price:'999.000đ',time:'Vĩnh viễn'},en:{name:'Unlimited',price:'$40.00',time:'Lifetime'},zh:{name:'不限时',price:'¥256',time:'永久'},usd:40,vnd:999000,cny:256,data:'5000GB'},
  {id:'custom',isCustom:true,category:['travel','cycle','usage'],vi:{name:'Gói Tùy Chọn',price:'Liên hệ Admin',time:'1 Tháng'},en:{name:'Custom',price:'Contact Admin',time:'1 Month'},zh:{name:'自定义',price:'联系管理员',time:'1个月'},usd:0,vnd:0,cny:0,data:'100GB - 100,000GB'}
 ];
- 
-let lang='vi',currentPackage=null,currentOrderId='',cmsCache={},currentMultiplier=1,oCache=null;
-let currentTotalVnd=0,currentTotalCny=0,currentTotalUsd=0;
  
 function showToast(msg,type='success'){
   const c=document.getElementById('toastContainer');const t=document.createElement('div');
@@ -681,10 +681,6 @@ async function confirmPaid(){
 }
  
 // ── Portal ──
-// Các biến cục bộ phục vụ Đồng hồ & Polling
-let pendingEndTime = 0;
-let currentCountdownOrderId = null;
-
 function updatePortalInfo(o){
   oCache=o;
   if(o.status==='pending'){
