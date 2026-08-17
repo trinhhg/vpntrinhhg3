@@ -109,23 +109,23 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     </div>
     <div class="bg-slate-100 p-1 rounded-xl flex gap-1 mb-4 w-fit max-w-full overflow-x-auto">
       <div class="ord-sub-tab active" id="otab-success" onclick="switchOrdTab('success')"><div class="mac-dot mac-green"></div>Thành công<span id="cnt-success" class="bg-green-100 text-green-700 text-[9px] md:text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
-      <div class="ord-sub-tab" id="otab-pending" onclick="switchOrdTab('pending')"><div class="mac-dot mac-yellow"></div>Đang thực hiện<span id="cnt-pending" class="bg-yellow-100 text-yellow-700 text-[9px] md:text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
+      <div class="ord-sub-tab" id="otab-pending" onclick="switchOrdTab('pending')"><div class="mac-dot mac-yellow"></div>Chờ duyệt<span id="cnt-pending" class="bg-yellow-100 text-yellow-700 text-[9px] md:text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
       <div class="ord-sub-tab" id="otab-failed" onclick="switchOrdTab('failed')"><div class="mac-dot mac-red"></div>Thất bại<span id="cnt-failed" class="bg-red-100 text-red-700 text-[9px] md:text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
     </div>
     <div id="ordBody" class="w-full min-w-0"></div>
   </div>
 
-  <!-- TAB D1 TRANSACTIONS -->
+  <!-- TAB D1 TRANSACTIONS MỚI -->
   <div id="t-trans" class="hidden w-full min-w-0">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Duyệt Giao Dịch D1</h2>
       <button onclick="fetchTransactions()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm transition"><i class="fas fa-sync mr-1"></i>Tải lại</button>
     </div>
     <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-4">
-      <p class="text-blue-800 text-sm font-semibold"><i class="fas fa-info-circle mr-2"></i>Đây là các giao dịch Ngân hàng bị kẹt. Bấm <strong class="text-indigo-600">Duyệt</strong> sẽ tự động tạo link và bắn mail.</p>
+      <p class="text-blue-800 text-sm font-semibold"><i class="fas fa-info-circle mr-2"></i>Đây là các giao dịch Ngân hàng bị kẹt. Bao gồm cả đơn mua mới và Đơn Nâng Cấp gói. Hệ thống D1 đã tự động phân loại.</p>
     </div>
     <div id="transBody" class="space-y-3 w-full min-w-0">
-       <div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold text-sm">Chưa cắm API D1 Worker hoặc Không có giao dịch cần duyệt.</div>
+       <div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold text-sm">Đang nạp dữ liệu...</div>
     </div>
   </div>
 
@@ -159,17 +159,17 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
 
     <!-- Form: KHO LINK TỔNG (AUTO) -->
     <div id="panel-ls-pool" class="w-full min-w-0 mb-4 relative">
-      <div class="bg-white p-4 lg:p-6 rounded-2xl border border-indigo-200 shadow-sm relative overflow-hidden mt-3">
+      <div class="bg-white p-4 lg:p-6 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden mt-3">
         
-        <!-- Khối Giao diện Nút Luân chuyển & Tag Auto MỚI (FIX UI) -->
-        <div class="absolute top-0 right-0 flex items-stretch h-[28px] overflow-hidden rounded-bl-xl shadow-sm">
-           <div class="bg-amber-100 text-amber-800 text-[10px] font-bold px-3 flex items-center border-l border-b border-amber-200">
-               <i class="fas fa-clock mr-1"></i> Auto <span id="autoNextRunText" class="ml-1">04:00</span>
+        <!-- Khối Giao diện Nút Luân chuyển & Tag Auto MỚI (Pastel UI) -->
+        <div class="absolute top-0 right-0 flex items-stretch h-[28px] overflow-hidden rounded-bl-xl shadow-sm border-b border-l border-slate-200">
+           <div class="bg-blue-50 text-blue-600 text-[10px] font-bold px-3 flex items-center border-r border-slate-200">
+               <i class="fas fa-satellite-dish mr-1 animate-pulse"></i> Uptime <span id="autoNextRunText" class="ml-1 font-mono">00:00:00</span>
            </div>
-           <button onclick="autoMigrateLinks()" class="bg-red-500 hover:bg-red-600 text-white text-[10px] font-bold px-3 transition flex items-center cursor-pointer">
-               <i class="fas fa-random mr-1"></i> CHUYỂN NODE NGHẼN
+           <button onclick="autoMigrateLinks()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border-r border-slate-200 text-[10px] font-bold px-3 transition flex items-center cursor-pointer outline-none">
+               <i class="fas fa-random mr-1"></i> ĐỔI NODE NGHẼN
            </button>
-           <div class="bg-indigo-600 text-white text-[10px] font-extrabold px-3 flex items-center">
+           <div class="bg-indigo-50 text-indigo-600 text-[10px] font-extrabold px-3 flex items-center">
                HỆ THỐNG AUTO
            </div>
         </div>
@@ -178,14 +178,15 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
         
         <div class="mb-3"><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Link Gốc (Liangxin / Djjc)</label><input id="poolOrig" type="text" placeholder="https://liangxin..." class="w-full p-2 lg:p-3 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 lg:gap-4 mb-4">
-          <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Tổng dung lượng</label><input id="poolGb" type="number" placeholder="VD: 1000" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
-          <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Đã dùng (GB)</label><input id="poolUsedGb" type="number" placeholder="VD: 0" value="0" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
+          <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Tổng dung lượng (GB)</label><input id="poolGb" type="number" placeholder="VD: 1000" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
+          <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Còn lại (GB)</label><input id="poolRemainGb" type="number" placeholder="VD: 1000" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
           <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Hết hạn</label><input id="poolExp" type="text" placeholder="DD/MM/YYYY hoặc Lifetime" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
           <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Max thiết bị</label><input id="poolMax" type="number" min="1" placeholder="VD: 20" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
         </div>
-        <button onclick="addLinkToPool()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 lg:py-3 rounded-xl shadow-md transition w-full text-xs lg:text-base"><i class="fas fa-plus-circle mr-2"></i>LƯU VÀO KHO TỔNG & TẠO LINK MỚI</button>
+        <button onclick="addLinkToPool()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 lg:py-3 rounded-xl shadow-md transition w-full text-xs lg:text-base"><i class="fas fa-plus-circle mr-2"></i>LƯU VÀO KHO TỔNG & TẠO LINK #1</button>
       </div>
 
+      <!-- Hiển thị Kho Link Pool bên dưới -->
       <h3 class="font-extrabold text-slate-700 mb-2 mt-6 text-sm"><i class="fas fa-list mr-1"></i>Danh sách Kho Link Tổng</h3>
       <div id="poolListBody" class="space-y-2"></div>
     </div>
@@ -256,14 +257,14 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
       <div class="bg-slate-100 p-1 rounded-xl flex gap-1 self-start flex-wrap">
         <div class="settings-sub-tab active" id="stab-mail" onclick="switchSettingsTab('mail')"><i class="fas fa-paper-plane mr-1.5"></i>Bắn Mail</div>
         <div class="settings-sub-tab" id="stab-sync" onclick="switchSettingsTab('sync')"><i class="fas fa-satellite-dish mr-1.5"></i>Bắn Tỉa 3 Web</div>
-        <div class="settings-sub-tab" id="stab-log" onclick="switchSettingsTab('log')"><i class="fas fa-list-alt mr-1.5"></i>Nhật ký (Cải tiến)</div>
+        <div class="settings-sub-tab" id="stab-log" onclick="switchSettingsTab('log')"><i class="fas fa-list-alt mr-1.5"></i>Nhật ký</div>
         <div class="settings-sub-tab" id="stab-dev" onclick="switchSettingsTab('dev')"><i class="fas fa-laptop mr-1.5"></i>Thiết bị</div>
         <div class="settings-sub-tab" id="stab-ui" onclick="switchSettingsTab('ui')"><i class="fas fa-paint-brush mr-1.5"></i>Giao diện</div>
       </div>
     </div>
+    
     <div id="settings-view-mail">
       <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 max-w-lg">
-        
         <div class="flex flex-col gap-3 pb-6 mb-6 border-b border-slate-100">
           <label class="block font-extrabold text-sm text-slate-800">Quyền xử lý Email của Web này</label>
           <p class="text-xs text-slate-500 mb-2">Chỉ định 1 Web làm Master để tránh việc khách nhận 3 mail giống hệt nhau khi đồng bộ.</p>
@@ -360,7 +361,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
           <div class="overflow-x-auto">
             <table class="log-table">
               <thead><tr><th>#</th><th>Loại mail</th><th>Email khách</th><th>Mã đơn</th><th>Thời gian</th></tr></thead>
-              <tbody id="logTableBody"><tr><td colspan="5" class="text-center py-8 text-slate-400 italic text-sm">Chưa có nhật ký</td></tr></tbody>
+              <tbody id="logTableBody"><tr><td colspan="5" class="text-center py-8 text-slate-400 italic text-sm">Chưa có nhật ký Mail</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -460,6 +461,7 @@ const SITE_KEY=window.location.hostname.replace(/\./g,"_");
 const PKGS=["Gói 1 tháng - 60.000đ / $2.5 / ¥15.5 (100GB)","Gói 1 tháng - 70.000đ / $3 / ¥18 (500GB)","Gói 1 tháng - 80.000đ / $3.5 / ¥20.5 (1000GB)","Gói Cao Cấp - 200.000đ / $8 / ¥50 (3000GB)","Gói 1 Năm - 710.000đ / $27 / ¥177.5 (200GB/tháng)","Không Giới Hạn - 200.000đ / $8 / ¥52 (200GB)","Không Giới Hạn - 399.000đ / $16 / ¥102 (1000GB)","Không Giới Hạn - 999.000đ / $40 / ¥256 (5000GB)"];
 const PKG_DAYS=[30,30,30,30,365,0,0,0];
 
+// LOẠI BỎ "/api/links" RA KHỎI DANH SÁCH ĐỒNG BỘ CHÉO ĐỂ TRÁNH RÁC LINK ẨN
 const CROSS_SYNC_PATHS=["/api/orders","/api/cms","/api/data_requests", "/api/link_pool"];
 
 let ordersDb=[],dataRequestsDb=[],linksDb=[],deadLinksDb=[],cmsDb={},devicesDb=[], linkPoolDb=[];
@@ -476,7 +478,7 @@ const cm=id=>document.getElementById(id).classList.add("hidden");
 const genId=()=>"DH-"+Math.random().toString(36).slice(2,11).toUpperCase();
 const getT=m=>{try{const u=new URL(m);return u.searchParams.get("OwO")||u.searchParams.get("token")||"";}catch{return "";}};
 
-// Hàm Date Custom
+// Hàm Date Custom - Xử lý Timezone chuẩn xác
 function getOffset() {
   const tz = (cmsDb && cmsDb.settings && cmsDb.settings.tz) ? cmsDb.settings.tz : "VN";
   return tz === "CN" ? 8 : 7;
@@ -488,15 +490,22 @@ function getAdjustedTime(dateObj = new Date()) {
   return new Date(utc + (3600000 * offset));
 }
 
-function getNowStr() {
-  const d = getAdjustedTime();
-  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')} ${formatDateTZ(d)}`;
+// FORMAT THỐNG NHẤT: HH:mm - DD/MM/YYYY
+function fmtFullTime(d) {
+  if(!d || isNaN(d.getTime())) return "";
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  const DD = String(d.getDate()).padStart(2,'0');
+  const MM = String(d.getMonth()+1).padStart(2,'0');
+  const YYYY = d.getFullYear();
+  return `${hh}:${mm} - ${DD}/${MM}/${YYYY}`;
 }
 
-// CẮT BỎ GIỜ PHÚT, TRẢ VỀ CHUẨN DD/MM/YYYY
+function getNowStr() { return fmtFullTime(getAdjustedTime()); }
 function formatDateTZ(d){return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;}
 function todayTZ(){return formatDateTZ(getAdjustedTime());}
-function normalizeDateStr(dStr) { return dStr ? dStr.split(" ")[dStr.split(" ").length - 1] : ""; } 
+
+function normalizeDateStr(dStr) { return dStr ? dStr.split(" ").pop() : ""; } 
 
 // Sửa lại hàm pd() để parse ngày DD/MM/YYYY chuẩn xác sang Date Object
 const pd=s=>{
@@ -513,16 +522,14 @@ const pd=s=>{
 };
 
 function addDays(dateStr,days){const d=pd(normalizeDateStr(dateStr));if(!d||!days)return "";d.setDate(d.getDate()+days);return formatDateTZ(d);}
+function isExpiredDate(dateStr){const d=pd(normalizeDateStr(dateStr));if(!d)return false;return d.getTime()<getAdjustedTime().getTime();}
 
 function fmtCardDate(raw){
   if(!raw) return "";
+  if(raw.includes(" - ")) return raw; // Đã là chuẩn mới
   try{
     const d=new Date(raw);
-    if(!isNaN(d.getTime())){
-      const hh=String(d.getHours()).padStart(2,'0');
-      const mm=String(d.getMinutes()).padStart(2,'0');
-      return `${hh}:${mm} – ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
-    }
+    if(!isNaN(d.getTime())) return fmtFullTime(d);
   }catch{}
   return raw;
 }
@@ -564,11 +571,15 @@ async function apP(p,data){
   lsSet("a"+p,data);lsSetT(p);
   const localOnly = ["/api/links", "/api/deadlinks"];
 
+  // 1. Luôn luôn lưu cục bộ 
   try {
     const r = await fetch(API+p, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data)});
     if(!r.ok) toast("Lỗi lưu nội bộ: " + r.status, "err");
-  } catch(e) { toast("Mất kết nối nội bộ: " + e.message, "err"); }
+  } catch(e) {
+    toast("Mất kết nối nội bộ: " + e.message, "err");
+  }
 
+  // 2. Bắn tỉa đồng bộ chéo
   if (!localOnly.includes(p) && CROSS_SYNC_PATHS.includes(p)) {
     const syncSettings = (cmsDb && cmsDb.settings) ? cmsDb.settings : {};
     const rawTargets = [syncSettings.syncW1, syncSettings.syncW2, syncSettings.syncW3].filter(u => u && u.trim());
@@ -595,16 +606,16 @@ function getMailLog(){return (cmsDb.settings && cmsDb.settings.mailLog) ? cmsDb.
 function getSysLog(){return (cmsDb.settings && cmsDb.settings.sysLog) ? cmsDb.settings.sysLog : [];}
 
 async function addMailLog(type,email,orderId=""){
-  const logs=getMailLog(); const now = getAdjustedTime();
-  const ts=`${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const logs=getMailLog(); 
+  const ts = getNowStr();
   logs.unshift({type,email,orderId,ts});
   if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", tz:"VN"};
   cmsDb.settings.mailLog=logs.slice(0,100);
   renderMailLog(); await apP("/api/cms",cmsDb);
 }
 async function addSysLog(action, result){
-  const logs=getSysLog(); const now = getAdjustedTime();
-  const ts=`${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const logs=getSysLog(); 
+  const ts = getNowStr();
   logs.unshift({action,result,ts});
   if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", tz:"VN"};
   cmsDb.settings.sysLog=logs.slice(0,100);
@@ -650,6 +661,10 @@ async function saveEmailRoleUI(role) {
 
 async function saveAutoMailSetting(){
   const val=document.getElementById("toggleAutoMail").checked;
+  if(val && !isMaster()) { 
+      document.getElementById("toggleAutoMail").checked = false; 
+      return toast("Web này đang là Slave, không được bật Auto Mail!", "err"); 
+  }
   if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", tz:"VN"};
   cmsDb.settings.autoMailEnabled = val;
   document.getElementById("autoMailStatus").textContent="Trạng thái: "+(val?"✅ Đang bật (Phụ thuộc Cronjob)":"⏸ Đang tắt");
@@ -689,6 +704,8 @@ async function saveSyncSetting(){
   toast("Đã lưu cấu hình Bắn Tỉa 3 Web!");
 }
 
+let sysUptime = 0;
+
 window.onload=async function(){
   myDev=lsGet("adm_dev")||"";
   if(!myDev){myDev="DEV-"+Math.random().toString(36).slice(2,11).toUpperCase();lsSet("adm_dev",myDev);}
@@ -722,6 +739,16 @@ function loginOK(st=true){
   if(st){toast("Đăng nhập thành công!");fetchAll();go(savedTab);}
   else go(savedTab);
   
+  // Bộ đếm Uptime Hệ Thống Auto
+  setInterval(() => {
+    sysUptime++;
+    const h = Math.floor(sysUptime / 3600).toString().padStart(2, '0');
+    const m = Math.floor((sysUptime % 3600) / 60).toString().padStart(2, '0');
+    const s = (sysUptime % 60).toString().padStart(2, '0');
+    const el = document.getElementById("autoNextRunText");
+    if(el) el.innerText = `${h}:${m}:${s}`;
+  }, 1000);
+
   // Vòng lặp check dữ liệu và tính năng hẹn giờ UI
   setInterval(()=>{
     if(!document.getElementById("mOrd").classList.contains("hidden")) return;
@@ -883,9 +910,9 @@ function renderPoolList() {
      const isFull = p.used > p.max;
      return `<div class="bg-white border border-slate-200 p-3 rounded-xl shadow-sm flex items-center justify-between gap-2">
         <div class="min-w-0 flex-1">
-           <div class="flex items-center gap-2 mb-1"><span class="font-bold text-slate-800 text-xs truncate">${p.url}</span></div>
+           <div class="flex items-center gap-2 mb-1"><span class="font-bold text-slate-800 text-xs truncate cp" onclick="cp('${p.url}')">${p.url}</span></div>
            <div class="flex gap-2">
-             <span class="bg-indigo-50 text-indigo-700 text-[9px] font-bold px-1.5 py-0.5 rounded">GB: ${p.usedGb||'0'} / ${p.gb||'N/A'}</span>
+             <span class="bg-indigo-50 text-indigo-700 text-[9px] font-bold px-1.5 py-0.5 rounded">Còn: ${p.remainGb||'0'} / ${p.gb||'N/A'} GB</span>
              <span class="bg-orange-50 text-orange-700 text-[9px] font-bold px-1.5 py-0.5 rounded">HSD: ${p.exp||'N/A'}</span>
              <span class="${isFull ? 'bg-red-100 text-red-700' : 'bg-emerald-50 text-emerald-700'} text-[9px] font-bold px-1.5 py-0.5 rounded">Đã dùng: ${p.used-1}/${p.max}</span>
            </div>
@@ -898,13 +925,13 @@ function renderPoolList() {
 async function addLinkToPool() {
   const orig = document.getElementById("poolOrig").value.trim();
   const gb = document.getElementById("poolGb").value.trim();
-  const usedGb = document.getElementById("poolUsedGb").value.trim();
+  const remainGb = document.getElementById("poolRemainGb").value.trim();
   const exp = document.getElementById("poolExp").value.trim();
   const max = parseInt(document.getElementById("poolMax").value);
   
   if(!orig || !max) return toast("Nhập URL gốc và Max thiết bị!", "err");
   
-  linkPoolDb.push({ id: "POOL-" + Date.now(), url: orig, gb, usedGb: usedGb||"0", exp, max, used: 2 }); // Dành Index 1 cho Hệ thống
+  linkPoolDb.push({ id: "POOL-" + Date.now(), url: orig, gb, remainGb: remainGb||"0", exp, max, used: 2 }); // Dành Index 1 cho Hệ thống
   toast("Đang lưu Kho tổng...");
   await apP("/api/link_pool", linkPoolDb);
   
@@ -922,7 +949,7 @@ async function addLinkToPool() {
   }
 
   toast("Đã thêm vào Kho tự động bốc & Tạo Link #1!");
-  ["poolOrig","poolGb","poolUsedGb","poolExp","poolMax"].forEach(id => document.getElementById(id).value = "");
+  ["poolOrig","poolGb","poolRemainGb","poolExp","poolMax"].forEach(id => document.getElementById(id).value = "");
   renderPoolList(); renderLinks();
   addSysLog("Thêm Link Gốc", "Thành công. Tạo Link Index #1.");
 }
@@ -933,21 +960,7 @@ async function delPool(i) {
   addSysLog("Xóa Link Gốc", "Đã xóa 1 Node khỏi kho.");
 }
 
-// Hàm Luân Chuyển Node Nghẽn (UI Timer tính năng tính giờ tới 4h)
-function updateAutoMigrationTimerUI() {
-  const now = getAdjustedTime();
-  let next4AM = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 4, 0, 0);
-  if (now.getTime() >= next4AM.getTime()) {
-      next4AM.setDate(next4AM.getDate() + 1); // Đã qua 4h sáng, tính cho ngày mai
-  }
-  const diff = Math.floor((next4AM.getTime() - now.getTime()) / 1000);
-  const h = Math.floor(diff / 3600).toString().padStart(2, '0');
-  const m = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
-  const el = document.getElementById("autoNextRunText");
-  if(el) el.innerText = `${h}h${m}m`;
-}
-setInterval(updateAutoMigrationTimerUI, 60000);
-
+// Hàm Luân Chuyển Node Nghẽn
 async function autoMigrateLinks(isAuto = false) {
   if(!isAuto && !confirm("Hệ thống sẽ quét các Node sắp hết hạn (<4 tiếng) hoặc sắp hết dung lượng (<100GB) và TỰ ĐỘNG LUÂN CHUYỂN sang Pool khác. Chạy?")) return;
   if(!isAuto) toast("Đang phân tích Node...");
@@ -967,9 +980,8 @@ async function autoMigrateLinks(isAuto = false) {
         if(expMs && (expMs - now) <= 14400000) needsMigration = true; 
      }
      // Check Dung Lượng (còn < 100GB)
-     if(currentPool.gb && currentPool.usedGb) {
-        const remain = parseFloat(currentPool.gb) - parseFloat(currentPool.usedGb);
-        if(remain < 100) needsMigration = true;
+     if(currentPool.gb && currentPool.remainGb) {
+        if(parseFloat(currentPool.remainGb) < 100) needsMigration = true;
      }
 
      if(needsMigration) {
@@ -1004,7 +1016,7 @@ function switchOrdTab(tab){
 }
 
 function buildDataMailHtml(req, gb){
-  return `<div style="font-family:sans-serif;width:100%;max-width:450px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-sizing:border-box;"><div style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);padding:20px;text-align:center;"><h2 style="color:white;margin:0;font-size:18px;text-transform:uppercase;">KẾT QUẢ TRA CỨU DUNG LƯỢNG</h2></div><div style="padding:25px 20px;box-sizing:border-box;text-align:center;"><p style="font-size:15px;line-height:1.6;margin:0 0 15px 0;color:#334155;">Chào bạn, đây là thông tin dung lượng của đơn hàng <b style="color:#7c3aed;">${req.orderId}</b>.</p><div style="background:#f5f3ff;border:2px dashed #a78bfa;padding:20px;border-radius:12px;margin:20px 0;"><p style="margin:0;font-size:12px;color:#6d28d9;font-weight:bold;text-transform:uppercase;letter-spacing:1px;">DUNG LƯỢNG ĐÃ SỬ DỤNG</p><p style="margin:10px 0 0 0;font-size:32px;font-weight:900;color:#7c3aed;letter-spacing:1px;">${gb} GB</p></div><p style="font-size:13px;color:#475569;margin-top:12px;line-height:1.5;">Vui lòng kiểm tra lại nếu tốc độ bị chậm, có thể gói của bạn đã dùng hết dung lượng.</p><div style="text-align:center;margin-top:20px;"><p style="font-size:13px;color:#475569;margin-bottom:12px;">Cần hỗ trợ thêm?</p><div style="display:block;width:100%;text-align:center;"><a href="https://zalo.me/0917678211" style="display:inline-block;width:46%;background:#0068ff;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;box-sizing:border-box;">Chat Zalo</a></div></div></div></div>`;
+  return `<div style="font-family:sans-serif;width:100%;max-width:450px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-sizing:border-box;"><div style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);padding:20px;text-align:center;"><h2 style="color:white;margin:0;font-size:18px;text-transform:uppercase;">KẾT QUẢ TRA CỨU DUNG LƯỢNG</h2></div><div style="padding:25px 20px;box-sizing:border-box;text-align:center;"><p style="font-size:15px;line-height:1.6;margin:0 0 15px 0;color:#334155;">Chào bạn, đây là thông tin dung lượng của đơn hàng <b style="color:#7c3aed;">${req.orderId}</b>.</p><div style="background:#f5f3ff;border:2px dashed #a78bfa;padding:20px;border-radius:12px;margin:20px 0;"><p style="margin:0;font-size:12px;color:#6d28d9;font-weight:bold;text-transform:uppercase;letter-spacing:1px;">DUNG LƯỢNG CÒN LẠI</p><p style="margin:10px 0 0 0;font-size:32px;font-weight:900;color:#7c3aed;letter-spacing:1px;">${gb} GB</p></div><p style="font-size:13px;color:#475569;margin-top:12px;line-height:1.5;">Vui lòng kiểm tra lại nếu tốc độ bị chậm, có thể gói của bạn đã dùng hết dung lượng.</p><div style="text-align:center;margin-top:20px;"><p style="font-size:13px;color:#475569;margin-bottom:12px;">Cần hỗ trợ thêm?</p><div style="display:block;width:100%;text-align:center;"><a href="https://zalo.me/0917678211" style="display:inline-block;width:46%;background:#0068ff;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;box-sizing:border-box;">Chat Zalo</a></div></div></div></div>`;
 }
 
 const CONTACT_BLOCK=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:15px;margin-top:20px;text-align:center;"><p style="margin:0 0 12px 0;color:#475569;font-size:13px;line-height:1.5;">Cần hỗ trợ? Đội ngũ của chúng tôi sẵn sàng 24/24</p><div style="display:block;width:100%;text-align:center;"><a href="https://zalo.me/0917678211" style="display:inline-block;width:46%;background:#0068ff;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;box-sizing:border-box;">Chat Zalo</a><a href="https://www.facebook.com/trinh.hg.57" style="display:inline-block;width:46%;background:#0668E1;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;margin-left:4%;box-sizing:border-box;">Messenger</a></div></div>`;
@@ -1111,12 +1123,13 @@ function openOrdModal(id){
   document.getElementById("mOReason").value=o.reason||"";document.getElementById("mOStatus").value=o.status||"pending";
   document.getElementById("mOMethod").value=o.method&&o.method.includes("Alipay")?"Alipay":o.method&&o.method.includes("Weixin")?"Weixin":"Ngân hàng VN";
   
-  // FIX LỖI RESET GÓI: Cẩn thận nạp lại Dropdown
+  // FIX LỖI RESET GÓI: So khớp chính xác chuỗi hoặc tạo option ảo nếu là Custom
   const sel=document.getElementById("mOPkg");
   sel.innerHTML = PKGS.map((p,i)=>`<option value="${i}">${p}</option>`).join("");
   let matched = false;
   for(let i=0; i<sel.options.length; i++){
-      if(o.pkg && (o.pkg.includes(sel.options[i].text.split(" - ")[0]) || sel.options[i].text.includes(o.pkgName))) {
+      const optText = sel.options[i].text;
+      if(o.pkgName && optText.includes(o.pkgName) && (!o.pkgData || optText.includes(o.pkgData))) {
           sel.selectedIndex = i; matched = true; break;
       }
   }
