@@ -29,14 +29,15 @@ details>summary::-webkit-details-marker{display:none;}
 .mobile-tab-btn.active{color:#4f46e5;background:#e0e7ff;}
 #guideText{white-space:pre-wrap;word-wrap:break-word;}
 .pkg-disabled { filter: grayscale(1); opacity: 0.6; pointer-events: none; }
+
+/* CSS Anti-Flash An Toàn */
+html.has-session #view-store { display: none !important; }
+html.has-session #view-portal { display: block !important; }
 </style>
-<!-- Chống giật màn hình (Flash UI) - An Toàn 100% -->
 <script>
-  let __s = localStorage.getItem('vpn_portal_session_24h');
-  if(__s) {
-      document.write(`<style id="antiFlashStyle">#view-store { display: none !important; } #view-portal { display: block !important; }</style>`);
-  } else {
-      document.write(`<style id="antiFlashStyle">#view-portal { display: none !important; } #view-store { display: block !important; }</style>`);
+  // Chặn flash màn hình trước khi DOM load xong
+  if(localStorage.getItem('vpn_portal_session_24h')) {
+      document.documentElement.classList.add('has-session');
   }
 </script>
 </head>
@@ -99,10 +100,8 @@ details>summary::-webkit-details-marker{display:none;}
     <div id="p-home" class="portal-tab-content active w-full">
       <div class="bg-white p-4 md:p-8 rounded-3xl mb-8 shadow-sm border border-slate-200 w-full overflow-hidden">
         
-        <!-- Khối Giao diện Chờ Duyệt (Đồng hồ đếm ngược) -->
+        <!-- KHỐI PENDING ĐẾM NGƯỢC -->
         <div id="portalContentPending" class="hidden bg-indigo-50 border border-indigo-200 p-6 rounded-xl flex flex-col items-center text-center mb-6">
-          
-          <!-- Trạng thái đang đếm ngược -->
           <div id="pendingActiveState" class="w-full">
             <i class="fas fa-sync fa-spin text-3xl text-indigo-500 mb-3"></i>
             <h4 id="pendingTitleUI" class="font-extrabold text-indigo-800 text-sm md:text-lg uppercase">Đang kiểm tra giao dịch...</h4>
@@ -112,23 +111,21 @@ details>summary::-webkit-details-marker{display:none;}
             <p class="text-indigo-700 text-sm md:text-base font-bold mb-2 animate-pulse">Tất cả quy trình là tự động hóa, vui lòng đợi chúng tôi ít phút.</p>
           </div>
 
-          <!-- Trạng thái hết giờ (Timeout) -->
           <div id="pendingTimeoutState" class="hidden w-full mb-2">
             <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-3"></i>
             <h4 class="font-extrabold text-red-700 text-sm md:text-lg uppercase">Chưa nhận được thanh toán</h4>
             <p class="text-red-600 text-sm md:text-base font-bold mt-1 mb-2">Đã quá thời gian tự động duyệt. Bạn đã chuyển khoản chưa?</p>
           </div>
 
-          <!-- UI Zalo -->
           <div class="w-full flex flex-col items-center mt-2">
-            <p class="text-slate-500 text-[11px] md:text-sm mb-3 font-semibold px-4">Nếu có thắc mắc khác cần được giải đáp thì vui lòng nhắn tin cho Admin nhé.</p>
+            <p class="text-slate-500 text-[11px] md:text-sm mb-3 font-medium px-4">Nếu có thắc mắc khác cần được giải đáp thì vui lòng nhắn tin cho Admin nhé.</p>
             <a href="https://zalo.me/0917678211" target="_blank" class="mx-auto bg-[#0068ff] text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition shadow-md">
               <i class="fas fa-comment-dots text-lg"></i> Nhắn Zalo Admin
             </a>
           </div>
         </div>
 
-        <!-- Khối Giao diện Thất Bại / Bị Từ Chối -->
+        <!-- KHỐI TỪ CHỐI -->
         <div id="portalContentFailed" class="hidden bg-red-50 border border-red-200 p-6 rounded-xl flex flex-col items-center text-center mb-6">
           <i class="fas fa-times-circle text-4xl text-red-500 mb-3"></i>
           <h4 class="font-extrabold text-red-800 text-sm md:text-lg uppercase">Đơn hàng bị từ chối</h4>
@@ -142,14 +139,13 @@ details>summary::-webkit-details-marker{display:none;}
           </div>
         </div>
         
-        <!-- Khối Thành Công -->
+        <!-- KHỐI THÀNH CÔNG (DASHBOARD) -->
         <div id="portalContentSuccess" class="hidden w-full">
           <div class="mb-4 text-center">
              <p class="text-red-600 font-black text-[11px] md:text-sm animate-pulse bg-red-50 py-2 px-4 rounded-lg inline-block border border-red-200">⚠️ Bắt buộc giữ bí mật Email và Mã đơn hàng để tránh kẻ gian lợi dụng.</p>
           </div>
           
           <div class="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-3 md:p-4 mb-4 shadow-sm gap-2 relative overflow-hidden">
-            <!-- Badge Nâng Cấp Thành Công -->
             <div id="upgradeSuccessBadge" class="hidden absolute top-0 right-0 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md animate-pulse">🎉 NÂNG GÓI THÀNH CÔNG</div>
             
             <div class="flex items-center gap-2 min-w-0 flex-1 overflow-hidden mt-1">
@@ -162,7 +158,6 @@ details>summary::-webkit-details-marker{display:none;}
           </div>
           
           <div class="bg-green-50 border-2 border-dashed border-green-500 p-4 md:p-6 rounded-2xl w-full space-y-4">
-            
             <div class="w-full">
               <h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL:</h3>
               <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
@@ -187,10 +182,9 @@ details>summary::-webkit-details-marker{display:none;}
               </div>
             </div>
 
-            <!-- Nút Nâng Gói & Gia Hạn -->
             <div class="mt-4 grid grid-cols-2 gap-3 border-t border-green-200 pt-4">
               <button onclick="startUpgrade()" class="w-full bg-amber-500 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-amber-600 transition flex items-center justify-center shadow-md"><i class="fas fa-arrow-up mr-1.5"></i> NÂNG GÓI</button>
-              <button onclick="switchPortalTab('p-store'); isUpgradeMode=false; renderPackages('all');" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center shadow-md"><i class="fas fa-redo-alt mr-1.5"></i> GIA HẠN</button>
+              <button onclick="disableUpgradeMode(); switchPortalTab('p-store');" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center shadow-md"><i class="fas fa-redo-alt mr-1.5"></i> GIA HẠN</button>
             </div>
           </div>
         </div>
@@ -207,6 +201,7 @@ details>summary::-webkit-details-marker{display:none;}
       <div id="faqPortalHomeContainer" class="space-y-3"></div>
     </div>
  
+    <!-- TAB STORE -->
     <div id="p-store" class="portal-tab-content w-full">
       <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 md:p-8 mb-8 text-white shadow-lg flex flex-col md:flex-row items-center gap-6">
         <div class="flex-1"><h3 class="text-xl md:text-3xl font-black mb-3" data-i18n="promo_title">🚀 Chơi Game & Lướt Mạng Không Giới Hạn!</h3><p class="text-sm font-medium opacity-90" data-i18n="promo_desc">Hỗ trợ: <b class="text-yellow-300">TikTok, Facebook, Messenger, Instagram, Zalo, YouTube...</b><br>Ping thấp: <b class="text-green-300">Liên Quân Mobile, Genshin Impact...</b></p></div>
@@ -221,6 +216,7 @@ details>summary::-webkit-details-marker{display:none;}
       <div id="packagesContainerPortal" class="grid md:grid-cols-3 gap-4 md:gap-6 mb-10 w-full"></div>
     </div>
  
+    <!-- TAB GUIDE -->
     <div id="p-guide" class="portal-tab-content w-full">
       <div class="bg-white p-4 md:p-8 rounded-3xl mb-8 border border-slate-200 shadow-sm w-full">
         <h2 class="text-xl font-extrabold text-slate-800 mb-6 border-b border-slate-100 pb-4"><i class="fas fa-book-open text-indigo-500 mr-2"></i>Hướng dẫn Cài đặt</h2>
@@ -239,7 +235,8 @@ details>summary::-webkit-details-marker{display:none;}
     </div>
   </div>
  
-  <div id="view-store" class="view-section mb-20 w-full">
+  <!-- NGOÀI STORE MẶC ĐỊNH -->
+  <div id="view-store" class="view-section active mb-20 w-full">
     <div class="text-center mb-8 mt-2 md:mt-4 px-2 w-full">
       <h1 class="text-3xl md:text-5xl font-extrabold mb-3 text-slate-800 leading-tight" data-i18n="hero_title">Vượt rào cản. <span class="text-indigo-600">Kết nối thế giới.</span></h1>
       <p class="text-xs md:text-base text-slate-600 font-medium mb-5" data-i18n="hero_desc">Trải nghiệm VPN chất lượng cao từ ba nhà mạng viễn thông lớn.</p>
@@ -272,6 +269,7 @@ details>summary::-webkit-details-marker{display:none;}
               <p class="text-lg md:text-xl font-black text-indigo-600" id="selectedPackagePrice"></p>
             </div>
             
+            <!-- Note dành cho Nâng Gói -->
             <div id="upgradePriceNote" class="hidden bg-amber-50 border border-amber-200 p-3 rounded-xl mb-5 text-amber-800 text-[11px] md:text-xs font-bold text-center"></div>
 
             <input type="email" id="cusEmail" required placeholder="Nhập Email nhận đơn" data-i18n-placeholder="email_placeholder"
@@ -337,44 +335,38 @@ const GOOGLE_MAIL_API = "https://script.google.com/macros/s/AKfycbyQjEln9By0HuUP
 const SESSION_KEY = 'vpn_portal_session_24h';
 const DB_KEY = 'vpn_orders_db';
  
-// Biến global cho Đếm ngược
+// Các biến global cho Đếm ngược
 let globalPollInterval = null;
 let countdownTimerInterval = null;
 let pendingEndTime = 0;
 let currentCountdownOrderId = null;
 let isUpgradePending = false; // Flag cho timeout nâng gói
-
+ 
 let lastScrollY = 0;
 let lang='vi', currentPackage=null, currentOrderId='', cmsCache={}, currentMultiplier=1, oCache=null;
 let currentTotalVnd=0, currentTotalCny=0, currentTotalUsd=0;
-
+ 
 // Biến cho Nâng gói
 let isUpgradeMode = false;
 let baseOrderPriceVnd = 0;
 let baseOrderPriceUsd = 0;
 let baseOrderPriceCny = 0;
-
+ 
 window.addEventListener('scroll',()=>{
   const nav=document.getElementById('mainNav');
   if(window.scrollY>lastScrollY&&window.scrollY>80)nav.classList.add('nav-hidden');
   else nav.classList.remove('nav-hidden');
   lastScrollY=window.scrollY;
 });
-const obs=new IntersectionObserver(es=>es.forEach(e=>{const s=document.getElementById('floatingSocials');e.isIntersecting?s.classList.add('opacity-0','pointer-events-none','translate-y-10'):s.classList.remove('opacity-0','pointer-events-none','translate-y-10');}),{threshold:.1});
 
-window.addEventListener('DOMContentLoaded', () => {
-    obs.observe(document.getElementById('footerArea'));
-});
-
-// Gỡ cái thẻ style chống giật UI sau khi JS chạy xong
-window.addEventListener('load', () => {
-   const antiFlash = document.getElementById('antiFlashStyle');
-   if(antiFlash) antiFlash.remove();
-   // Gọi lại 1 lần để chắc chắn giao diện Store render đúng
-   if(document.getElementById('view-store').classList.contains('active')){
-       renderPackages('all');
-   }
-});
+// Hàm gỡ Upgrade Mode chuẩn
+function disableUpgradeMode() {
+    isUpgradeMode = false;
+    baseOrderPriceVnd = 0;
+    baseOrderPriceUsd = 0;
+    baseOrderPriceCny = 0;
+    renderPackages('all'); // Phục hồi các gói xám
+}
  
 // ── i18n ──
 const i18n={
@@ -480,8 +472,8 @@ function showToast(msg,type='success'){
   const icon=type==='error'?'fa-times-circle':type==='info'?'fa-info-circle':'fa-check-circle';
   t.className=`${bg} text-white px-4 py-3 rounded-xl shadow-xl flex items-center transform transition-all duration-300 translate-x-full opacity-0 w-[90vw] max-w-sm mb-2`;
   t.innerHTML=`<i class="fas ${icon} mr-2 shrink-0"></i><span class="font-bold text-xs md:text-sm">${msg}</span>`;
- c.appendChild(t);setTimeout(()=>t.classList.remove('translate-x-full','opacity-0'),10);
- setTimeout(()=>{t.classList.add('translate-x-full','opacity-0');setTimeout(()=>t.remove(),300);},3000);
+  c.appendChild(t);setTimeout(()=>t.classList.remove('translate-x-full','opacity-0'),10);
+  setTimeout(()=>{t.classList.add('translate-x-full','opacity-0');setTimeout(()=>t.remove(),300);},3000);
 }
  
 async function apiGet(path){
@@ -489,20 +481,20 @@ async function apiGet(path){
     const r=await fetch(API_URL+path+'?_t='+Date.now());
     if(!r.ok)throw new Error("HTTP "+r.status);
     const d=await r.json();
-   localStorage.setItem(path==='/api/orders'?DB_KEY:path.replace(/\//g,'_'),JSON.stringify(d));
+    localStorage.setItem(path==='/api/orders'?DB_KEY:path.replace(/\//g,'_'),JSON.stringify(d));
     return d;
   }catch(e){
     return JSON.parse(localStorage.getItem(path==='/api/orders'?DB_KEY:path.replace(/\//g,'_')))||(path==='/api/orders'?[]:{});
   }
 }
  
-// BẮN TỈA 3 WEB TẠI ĐÂY KHI KHÁCH TẠO ĐƠN HOẶC GỬI YÊU CẦU DATA
+// BẮN TỈA ĐỒNG BỘ
 const SYNC_APIS = [
   "https://vpn-api.doicucden.workers.dev",
   "https://vpntrinhhg2worker.onepiecechapter.workers.dev",
   "https://vpntrinhhg3worker.lucastanora.workers.dev"
 ];
-
+ 
 async function apiPost(path, data) {
   localStorage.setItem(path === '/api/orders' ? DB_KEY : path.replace(/\//g,'_'), JSON.stringify(data));
   Promise.allSettled(
@@ -512,15 +504,15 @@ async function apiPost(path, data) {
  
 function changeLanguage(val){
   const cy=window.scrollY;lang=val;
- document.getElementById('langSelectMobile').value=val;
- document.getElementById('langSelectDesktop').value=val;
- document.querySelectorAll('[data-i18n]').forEach(el=>el.innerHTML=i18n[lang][el.getAttribute('data-i18n')]||el.innerHTML);
- document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>el.placeholder=i18n[lang][el.getAttribute('data-i18n-placeholder')]||el.placeholder);
+  document.getElementById('langSelectMobile').value=val;
+  document.getElementById('langSelectDesktop').value=val;
+  document.querySelectorAll('[data-i18n]').forEach(el=>el.innerHTML=i18n[lang][el.getAttribute('data-i18n')]||el.innerHTML);
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>el.placeholder=i18n[lang][el.getAttribute('data-i18n-placeholder')]||el.placeholder);
   const isCheckoutVisible=!document.getElementById('checkoutSection').classList.contains('hidden');
   renderPackages('all');
- if(isCheckoutVisible&&currentPackage){
-   document.getElementById('selectedPackageName').innerText=currentPackage[lang].name;
-   document.getElementById('selectedPackagePrice').innerText=currentPackage[lang].price;
+  if(isCheckoutVisible&&currentPackage){
+    document.getElementById('selectedPackageName').innerText=currentPackage[lang].name;
+    document.getElementById('selectedPackagePrice').innerText=currentPackage[lang].price;
     document.querySelectorAll('.dur-btn span').forEach(s=>s.innerText=i18n[lang].month_lbl);
     calculateTotal();
   }
@@ -607,7 +599,7 @@ function startUpgrade() {
     baseOrderPriceUsd = 0;
     baseOrderPriceCny = 0;
 
-    // Dò giá gói hiện tại để làm mốc
+    // Dò giá gói hiện tại để làm mốc (Sửa logic quét chặt hơn)
     for(let p of pkgs) {
         if (oCache.pkgName && p.vi.name.includes(oCache.pkgName) && (!oCache.pkgData || p.data.includes(oCache.pkgData))) {
             baseOrderPriceVnd = p.vnd;
@@ -797,8 +789,7 @@ async function confirmPaid(){
           document.getElementById('userMenu').classList.remove('hidden');
           switchPortalTab('p-home');
           
-          isUpgradeMode = false;
-          renderPackages('all'); // Phục hồi màu sắc gói
+          disableUpgradeMode(); // Đã bao gồm renderPackages('all') để tắt thẻ xám
           
           updatePortalInfo(o);
           window.scrollTo({top:0,behavior:'smooth'});
@@ -821,31 +812,30 @@ async function confirmPaid(){
       });
       await apiPost('/api/orders',db);
       
-      try {
-          const cusZaloVal = document.getElementById('cusZalo').value || 'Không nhập';
-          await fetch(GOOGLE_MAIL_API, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({
-              to: "lucastanora@gmail.com", 
-              subject: `[CÓ ĐƠN MỚI] ${currentOrderId} - Khách báo Đã CK`, 
-              html: `<div style="font-family:sans-serif; max-width:500px; margin:auto; border:1px solid #e2e8f0; border-radius:10px; padding:20px;">
-                  <h2 style="color:#2563eb; margin-top:0;">💰 Khách vừa báo ĐÃ THANH TOÁN!</h2>
-                  <ul style="list-style-type:none; padding:0; font-size:15px; line-height:1.8;">
-                      <li style="border-bottom:1px solid #f1f5f9; padding-bottom:8px;">📌 <b>Mã Đơn:</b> <span style="color:#ef4444; font-weight:bold;">${currentOrderId}</span></li>
-                      <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">📦 <b>Gói VPN:</b> ${currentPackage.vi.name} (${cy2})</li>
-                      <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">💵 <b>Số tiền:</b> <b style="color:#16a34a;">${fp}</b></li>
-                      <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">📧 <b>Email:</b> ${document.getElementById('cusEmail').value}</li>
-                      <li style="padding-top:8px;">💬 <b>Zalo/Tele:</b> <span style="background:#fef08a; padding:2px 6px; border-radius:4px; font-weight:bold; color:#854d0e;">${cusZaloVal}</span></li>
-                  </ul>
-                  <p style="background:#eff6ff; padding:10px; border-radius:6px; font-size:13px; color:#1e40af; text-align:center; margin-bottom:0;">Vui lòng mở trang Admin để kiểm tra tiền và duyệt đơn!</p>
-              </div>`
-          }) });
-      } catch(err) {}
+      // Fire and Forget Mail
+      const cusZaloVal = document.getElementById('cusZalo').value || 'Không nhập';
+      fetch(GOOGLE_MAIL_API, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({
+          to: "lucastanora@gmail.com", 
+          subject: `[CÓ ĐƠN MỚI] ${currentOrderId} - Khách báo Đã CK`, 
+          html: `<div style="font-family:sans-serif; max-width:500px; margin:auto; border:1px solid #e2e8f0; border-radius:10px; padding:20px;">
+              <h2 style="color:#2563eb; margin-top:0;">💰 Khách vừa báo ĐÃ THANH TOÁN!</h2>
+              <ul style="list-style-type:none; padding:0; font-size:15px; line-height:1.8;">
+                  <li style="border-bottom:1px solid #f1f5f9; padding-bottom:8px;">📌 <b>Mã Đơn:</b> <span style="color:#ef4444; font-weight:bold;">${currentOrderId}</span></li>
+                  <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">📦 <b>Gói VPN:</b> ${currentPackage.vi.name} (${cy2})</li>
+                  <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">💵 <b>Số tiền:</b> <b style="color:#16a34a;">${fp}</b></li>
+                  <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">📧 <b>Email:</b> ${document.getElementById('cusEmail').value}</li>
+                  <li style="padding-top:8px;">💬 <b>Zalo/Tele:</b> <span style="background:#fef08a; padding:2px 6px; border-radius:4px; font-weight:bold; color:#854d0e;">${cusZaloVal}</span></li>
+              </ul>
+              <p style="background:#eff6ff; padding:10px; border-radius:6px; font-size:13px; color:#1e40af; text-align:center; margin-bottom:0;">Vui lòng mở trang Admin để kiểm tra tiền và duyệt đơn!</p>
+          </div>`
+      }) }).catch(()=>{});
       
       showToast(lang==='vi'?'Thành công!':'Success!','success');
       document.getElementById('checkoutSection').classList.add('hidden');
       document.getElementById('orderForm').reset();
       document.getElementById('loginInput').value = currentOrderId;
 
-      // Không gọi login(true) để tránh lệch pha Network
+      // Xử lý Giao diện Tức thời (Instant UI Transition)
       let o = db.find(x => x.id === currentOrderId);
       localStorage.setItem(SESSION_KEY,JSON.stringify({id:o.id,time:new Date().getTime()}));
       
@@ -854,8 +844,7 @@ async function confirmPaid(){
       document.getElementById('userMenu').classList.remove('hidden');
       
       switchPortalTab('p-home');
-      isUpgradeMode = false;
-      renderPackages('all'); // Reset UI Store
+      disableUpgradeMode();
       
       updatePortalInfo(o);
       if(!globalPollInterval) startGlobalPolling(o.id);
@@ -863,7 +852,7 @@ async function confirmPaid(){
   }
 }
 
-// Hàm Parse ngày lỗi (nếu lỡ ko có createdTs)
+// Hàm Parse ngày lỗi
 function parseOrderDate(dateStr) {
   if (!dateStr) return Date.now();
   const parts = dateStr.split(" ");
@@ -901,11 +890,10 @@ function updatePortalInfo(o){
   const lastPkgCacheKey = 'last_pkg_' + o.id;
   const lastPkg = localStorage.getItem(lastPkgCacheKey);
 
-  isUpgradePending = false; // reset cờ
+  isUpgradePending = false; 
 
   if (o.status === 'success') {
       if (lastPkg && lastPkg !== o.pkgName && !o.pendingUpgrade) {
-          // Bật Badge nếu phát hiện gói bị thay đổi (Admin đã duyệt)
           upgradeBadge.classList.remove('hidden');
       }
       localStorage.setItem(lastPkgCacheKey, o.pkgName);
@@ -920,22 +908,22 @@ function updatePortalInfo(o){
       let endTime = startTime + 300000; // 5 phút
 
       if(Date.now() >= endTime) {
-         // Hết 5p -> Đá về giao diện gói cũ (Success UI)
+         // Hết 5p -> Đá về giao diện gói cũ
          document.getElementById('portalContentPending').classList.add('hidden');
          document.getElementById('portalContentSuccess').classList.remove('hidden');
          document.getElementById('subLink1').value = o.info1 || o.info || '';
          document.getElementById('subLink2').value = o.info2 || '';
          document.getElementById('subLink3').value = o.info3 || '';
          document.getElementById('displayOrderId').innerText = o.id;
-         startGlobalPolling(o.id);
+         // Vẫn giữ Polling ngầm vĩnh viễn
+         if(!globalPollInterval) startGlobalPolling(o.id);
       } else {
-         // Còn thời gian đếm lùi
          isUpgradePending = true;
          pendingEndTime = endTime;
          document.getElementById('pendingActiveState').classList.remove('hidden');
          startPendingPolling();
       }
-      return; // Dừng tại đây
+      return; 
   }
 
   // 2. Logic Đơn Hàng Mới Bình Thường
@@ -959,7 +947,7 @@ function updatePortalInfo(o){
 
     if(Date.now() >= endTime) {
        document.getElementById('pendingTimeoutState').classList.remove('hidden');
-       startGlobalPolling(o.id); // Vẫn poll ngầm
+       if(!globalPollInterval) startGlobalPolling(o.id); 
     } else {
        pendingEndTime = endTime;
        document.getElementById('pendingActiveState').classList.remove('hidden');
@@ -968,7 +956,6 @@ function updatePortalInfo(o){
   }
 }
 
-// Hàm xử lý Đếm ngược và Check trạng thái ngầm
 function startPendingPolling() {
   updateTimerUI();
   stopPendingPolling();
@@ -978,7 +965,14 @@ function startPendingPolling() {
   }, 1000);
 
   checkOrderInterval = setInterval(() => {
-    login(false, true); // Chạy ngầm check API
+    // Check API ngầm (Dùng fetch chay để tránh load lại login UI)
+    apiGet('/api/orders').then(db => {
+       if(!Array.isArray(db)) return;
+       let o = db.find(x => x.id === oCache.id);
+       if(o && (o.status !== oCache.status || JSON.stringify(o.pendingUpgrade) !== JSON.stringify(oCache.pendingUpgrade))) {
+          updatePortalInfo(o);
+       }
+    }).catch(()=>{});
   }, 10000);
 }
 
@@ -993,8 +987,8 @@ function handlePendingTimeout() {
   document.getElementById('pendingTimeoutState').classList.remove('hidden');
 }
 
-function updateTimerUI(leftStr) {
-  let left = leftStr !== undefined ? leftStr : Math.ceil((pendingEndTime - Date.now()) / 1000);
+function updateTimerUI() {
+  let left = Math.ceil((pendingEndTime - Date.now()) / 1000);
   if (left <= 0) {
     if(isUpgradePending) {
         // Hết giờ nâng gói -> Về màn hình gói cũ
@@ -1005,9 +999,8 @@ function updateTimerUI(leftStr) {
         document.getElementById('subLink2').value = oCache.info2 || '';
         document.getElementById('subLink3').value = oCache.info3 || '';
         document.getElementById('displayOrderId').innerText = oCache.id;
-        startGlobalPolling(oCache.id);
+        if(!globalPollInterval) startGlobalPolling(oCache.id);
     } else {
-        // Mua mới -> Báo đỏ timeout
         handlePendingTimeout(); 
     }
   } else {
@@ -1020,7 +1013,6 @@ function updateTimerUI(leftStr) {
   }
 }
 
-// Hàm khởi động API ngầm (Polling) Vĩnh Viễn
 function startGlobalPolling(orderId) {
   if(globalPollInterval) clearInterval(globalPollInterval);
   globalPollInterval = setInterval(async () => {
@@ -1033,8 +1025,21 @@ function startGlobalPolling(orderId) {
  
 async function login(isManualRefresh=false,isAutoPoll=false){
   const input=document.getElementById('loginInput').value.trim().toUpperCase();if(!input)return;
+  
+  // Fake tạm o để UI không bị văng trong lúc chờ KV đồng bộ
+  let o = null;
+  const session = localStorage.getItem(SESSION_KEY);
+  if (session) {
+      const d = JSON.parse(session);
+      if (d.id.toUpperCase() === input) {
+          o = { id: d.id, status: 'pending', createdTs: d.time };
+      }
+  }
+
   let db=await apiGet('/api/orders');if(!Array.isArray(db))db=[];
-  let o=db.find(x=>x.id.toUpperCase()===input||(x.email&&x.email.toUpperCase()===input));
+  let realO = db.find(x=>x.id.toUpperCase()===input||(x.email&&x.email.toUpperCase()===input));
+  if(realO) o = realO;
+
  if(!o){if(!isAutoPoll)showToast(lang==='vi'?'Không tìm thấy Đơn hàng/Email!':lang==='en'?'Order not found!':'未找到订单','error');return;}
  localStorage.setItem(SESSION_KEY,JSON.stringify({id:o.id,time:new Date().getTime()}));
  if(!isManualRefresh&&!isAutoPoll)showToast(lang==='vi'?'Vào cổng thành công!':lang==='en'?'Login success!':'登录成功','info');
@@ -1046,6 +1051,10 @@ async function login(isManualRefresh=false,isAutoPoll=false){
  document.getElementById('mobileNavWrapper').classList.remove('hidden');
  if(!isAutoPoll&&!isManualRefresh)switchPortalTab('p-home');
   
+  // Tẩy xóa class chống giật của body
+  const antiFlash = document.getElementById('antiFlashStyle');
+  if(antiFlash) antiFlash.remove();
+
   updatePortalInfo(o);
   if(!isAutoPoll) startGlobalPolling(o.id);
 
@@ -1073,10 +1082,12 @@ function logout(){
  document.getElementById('searchAndTabsWrapper').classList.remove('w-full');document.getElementById('searchAndTabsWrapper').classList.add('max-w-2xl','justify-center');
  document.getElementById('centerNavContainer').classList.add('justify-center');
   oCache=null;
-  isUpgradeMode = false;
-  renderPackages('all'); // Phục hồi lại các gói bị xám nếu có
+  
+  // Reset Cờ Nâng Gói & Đồng Hồ
+  disableUpgradeMode();
   if(globalPollInterval) clearInterval(globalPollInterval);
   stopPendingPolling();
+  document.documentElement.classList.remove('has-session'); // Xóa cờ AntiFlash
 }
  
 function parseShortcodes(text) {
@@ -1110,7 +1121,15 @@ function showGuide(dev){
 window.onload=function(){
   changeLanguage('vi');
   const session=localStorage.getItem(SESSION_KEY);
-  if(session){const d=JSON.parse(session);if(new Date().getTime()-d.time<24*3600*1000){document.getElementById('loginInput').value=d.id;login(true);}else localStorage.removeItem(SESSION_KEY);}
+  if(session){
+      const d=JSON.parse(session);
+      if(new Date().getTime()-d.time<24*3600*1000){
+          document.getElementById('loginInput').value=d.id;
+          login(true);
+      } else {
+          localStorage.removeItem(SESSION_KEY);
+      }
+  }
 };
 
 // --- LOGIC YÊU CẦU KIỂM TRA DUNG LƯỢNG ---
@@ -1120,7 +1139,6 @@ async function requestDataCheck() {
   const lastReq = localStorage.getItem(cdKey);
   const now = Date.now();
   
-  // Chống Spam: Cooldown 5 tiếng
   if (lastReq && now - parseInt(lastReq) < 18000000) {
     showToast(lang==='vi'?'Yêu cầu đang chờ xử lý. Vui lòng quay lại sau!':lang==='en'?'Request pending. Try again later!':'请求待处理，请稍后再试！', 'info');
     return;
@@ -1135,6 +1153,7 @@ async function requestDataCheck() {
   try {
     let reqs = await apiGet('/api/data_requests');
     if(!Array.isArray(reqs)) reqs = [];
+    
     reqs = reqs.filter(r => r.orderId !== oCache.id);
     reqs.unshift({
       orderId: oCache.id,
