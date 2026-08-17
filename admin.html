@@ -54,7 +54,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
 .settings-sub-tab{padding:6px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;color:#64748b;}
 .settings-sub-tab.active{background:white;color:#4f46e5;box-shadow:0 1px 4px rgba(0,0,0,.1);}
 
-/* Toggle tab Link Sub */
+/* Nút toggle tab Link Sub */
 .link-tab-switcher { display: flex; gap: 8px; margin-bottom: 1rem; background: #e2e8f0; padding: 4px; border-radius: 12px; width: fit-content; }
 .link-tab-btn { padding: 6px 16px; font-size: 12px; font-weight: 800; border-radius: 8px; cursor: pointer; color: #64748b; transition: all 0.2s; }
 .link-tab-btn.active { background: #fff; color: #4f46e5; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -74,6 +74,15 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
 .card-content { position: relative; z-index: 2; }
 .check-icon { display: none; position: absolute; top: 0.75rem; right: 0.75rem; color: #4f46e5; z-index: 2; font-size: 1.25rem;}
 </style>
+<script>
+  let hasSession = false;
+  for(let i=0; i<localStorage.length; i++) {
+     if(localStorage.key(i).includes('adm_dev')) hasSession = true;
+  }
+  if(hasSession) {
+      document.write(`<style id="adminAntiFlash">#loginWrap { display: none !important; } #hdr, #main { display: flex !important; }</style>`);
+  }
+</script>
 </head>
 <body class="min-h-screen pb-20 overflow-x-hidden bg-slate-50">
 <div id="toastBox" class="toast"></div>
@@ -119,6 +128,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     <div id="ordBody" class="w-full min-w-0"></div>
   </div>
 
+  <!-- TAB D1 TRANSACTIONS MỚI -->
   <div id="t-trans" class="hidden w-full min-w-0">
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Duyệt Giao Dịch D1</h2>
@@ -140,12 +150,11 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     <div id="dataReqBody" class="space-y-3 w-full min-w-0"></div>
   </div>
 
-  <!-- TAB QUẢN LÝ LINK SUB -->
-  <div id="t-lnk" class="hidden w-full min-w-0">
-    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 mb-4">
+  <div id="t-lnk" class="hidden space-y-4 w-full min-w-0">
+    <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
       <div class="min-w-0">
         <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Quản lý Link Sub Ẩn</h2>
-        <p class="text-[11px] md:text-xs lg:text-sm text-slate-500 mt-1 truncate">Hệ thống đồng bộ 2 chiều giữa Kho Tổng và Link Thủ Công</p>
+        <p class="text-[11px] md:text-xs lg:text-sm text-slate-500 mt-1 truncate">Đuôi tự động gán <code class="bg-slate-100 px-1 rounded text-pink-600 font-bold">#VPNTrinhHg</code></p>
       </div>
       <div class="grid grid-cols-2 sm:flex gap-2 w-full lg:w-auto">
         <button id="btnRunGC" onclick="runGC()" class="bg-white text-red-600 hover:bg-red-50 font-bold px-3 py-2 rounded-xl text-xs lg:text-sm transition shadow-sm border border-slate-200"><i class="fas fa-broom mr-1"></i>Dọn KV</button>
@@ -269,9 +278,9 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
         <div class="settings-sub-tab" id="stab-ui" onclick="switchSettingsTab('ui')"><i class="fas fa-paint-brush mr-1.5"></i>Giao diện</div>
       </div>
     </div>
-    
     <div id="settings-view-mail">
       <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 max-w-lg">
+        
         <div class="flex flex-col gap-3 pb-6 mb-6 border-b border-slate-100">
           <label class="block font-extrabold text-sm text-slate-800">Quyền xử lý Email của Web này</label>
           <p class="text-xs text-slate-500 mb-2">Chỉ định 1 Web làm Master để tránh việc khách nhận 3 mail giống hệt nhau khi đồng bộ.</p>
@@ -351,12 +360,14 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
       </div>
     </div>
     
+    <!-- TÁCH TAB NHẬT KÝ THÀNH 2 PHẦN -->
     <div id="settings-view-log" class="hidden">
       <div class="flex gap-2 mb-4">
          <button onclick="switchLogTab('mail')" id="btn-log-mail" class="bg-indigo-600 text-white font-bold px-4 py-2 rounded-lg text-xs shadow-sm">📧 Nhật ký Mail</button>
          <button onclick="switchLogTab('sys')"  id="btn-log-sys"  class="bg-white border border-slate-200 text-slate-600 font-bold px-4 py-2 rounded-lg text-xs hover:bg-slate-50 shadow-sm">⚙️ Nhật ký Hệ thống</button>
       </div>
 
+      <!-- Log Mail -->
       <div id="view-log-mail">
         <div class="flex items-center justify-between mb-3">
           <div class="text-sm lg:text-base font-bold text-slate-700">Mail đã gửi <span id="logCount" class="text-slate-400 font-normal text-xs">(0 bản ghi)</span></div>
@@ -372,6 +383,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
         </div>
       </div>
 
+      <!-- Log Hệ Thống (Auto Migration, Cronjob...) -->
       <div id="view-log-sys" class="hidden">
         <div class="flex items-center justify-between mb-3">
           <div class="text-sm lg:text-base font-bold text-slate-700">Hoạt động Hệ Thống <span id="sysLogCount" class="text-slate-400 font-normal text-xs">(0 bản ghi)</span></div>
@@ -482,7 +494,6 @@ const cm=id=>document.getElementById(id).classList.add("hidden");
 const genId=()=>"DH-"+Math.random().toString(36).slice(2,11).toUpperCase();
 const getT=m=>{try{const u=new URL(m);return u.searchParams.get("OwO")||u.searchParams.get("token")||"";}catch{return "";}};
 
-// Hàm Date Custom - Xử lý Timezone chuẩn xác
 function getOffset() {
   const tz = (cmsDb && cmsDb.settings && cmsDb.settings.tz) ? cmsDb.settings.tz : "VN";
   return tz === "CN" ? 8 : 7;
@@ -511,7 +522,6 @@ function todayTZ(){return formatDateTZ(getAdjustedTime());}
 
 function normalizeDateStr(dStr) { return dStr ? dStr.split(" ").pop() : ""; } 
 
-// Sửa lại hàm pd() để parse ngày DD/MM/YYYY chuẩn xác sang Date Object
 const pd=s=>{
   const p=s?.split("/");
   if(p?.length===3) {
@@ -530,7 +540,7 @@ function isExpiredDate(dateStr){const d=pd(normalizeDateStr(dateStr));if(!d)retu
 
 function fmtCardDate(raw){
   if(!raw) return "";
-  if(raw.includes(" - ")) return raw; // Đã là chuẩn mới
+  if(raw.includes(" - ")) return raw; 
   try{
     const d=new Date(raw);
     if(!isNaN(d.getTime())) return fmtFullTime(d);
@@ -560,7 +570,6 @@ function toast(msg,type="ok"){
   setTimeout(()=>{el.classList.remove("show");setTimeout(()=>el.remove(),250);},3000);
 }
 
-// Hàm Quyền Email
 function isMaster() { return (cmsDb && cmsDb.settings && cmsDb.settings.emailRole === "master"); }
 
 async function apG(p,def){
@@ -577,7 +586,6 @@ async function apP(p,data){
   lsSet("a"+p,data);lsSetT(p);
   const localOnly = ["/api/links", "/api/deadlinks"];
 
-  // 1. Luôn luôn lưu cục bộ 
   try {
     const r = await fetch(API+p, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data)});
     if(!r.ok) { sysHasError = true; toast("Lỗi lưu nội bộ: " + r.status, "err"); }
@@ -586,7 +594,6 @@ async function apP(p,data){
     sysHasError = true; toast("Mất kết nối nội bộ: " + e.message, "err");
   }
 
-  // 2. Bắn tỉa đồng bộ chéo
   if (!localOnly.includes(p) && CROSS_SYNC_PATHS.includes(p)) {
     const syncSettings = (cmsDb && cmsDb.settings) ? cmsDb.settings : {};
     const rawTargets = [syncSettings.syncW1, syncSettings.syncW2, syncSettings.syncW3].filter(u => u && u.trim());
@@ -608,21 +615,19 @@ async function apP(p,data){
   }
 }
 
-// ── HỆ THỐNG LOG KÉP (MAIL + SYSTEM) ──
+// ── HỆ THỐNG LOG KÉP ──
 function getMailLog(){return (cmsDb.settings && cmsDb.settings.mailLog) ? cmsDb.settings.mailLog : [];}
 function getSysLog(){return (cmsDb.settings && cmsDb.settings.sysLog) ? cmsDb.settings.sysLog : [];}
 
 async function addMailLog(type,email,orderId=""){
-  const logs=getMailLog(); 
-  const ts = getNowStr();
+  const logs=getMailLog(); const ts = getNowStr();
   logs.unshift({type,email,orderId,ts});
   if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", tz:"VN"};
   cmsDb.settings.mailLog=logs.slice(0,100);
   renderMailLog(); await apP("/api/cms",cmsDb);
 }
 async function addSysLog(action, result){
-  const logs=getSysLog(); 
-  const ts = getNowStr();
+  const logs=getSysLog(); const ts = getNowStr();
   logs.unshift({action,result,ts});
   if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", tz:"VN"};
   cmsDb.settings.sysLog=logs.slice(0,100);
@@ -746,7 +751,6 @@ function loginOK(st=true){
   if(st){toast("Đăng nhập thành công!");fetchAll();go(savedTab);}
   else go(savedTab);
   
-  // Khởi tạo Uptime Bất Tử
   let upStart = localStorage.getItem('sys_uptime_start');
   if(!upStart) { upStart = Date.now(); localStorage.setItem('sys_uptime_start', upStart); }
   
@@ -767,14 +771,12 @@ function loginOK(st=true){
     }
   }, 1000);
 
-  // Vòng lặp API
   setInterval(()=>{
     if(!document.getElementById("mOrd").classList.contains("hidden")) return;
     apG("/api/orders",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(ordersDb)){ordersDb=f;renderOrd();toast("Có đơn mới!","warn");}});
     apG("/api/data_requests",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(dataRequestsDb)){dataRequestsDb=f;renderDataRequests();toast("Có yêu cầu data mới!","warn");}});
     apG("/api/links",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(linksDb)){linksDb=f;renderLinks();}});
-    apG("/api/link_pool",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(linkPoolDb)){linkPoolDb=f; renderLinks(); }});
-    
+    apG("/api/link_pool",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(linkPoolDb)){linkPoolDb=f; if (curLinkTab==='pool') renderLinks(); }});
   },12000);
 }
 
@@ -786,11 +788,13 @@ function doLogout(){
 
 function go(id){
   TABS.forEach(t=>{
-    document.getElementById(t).classList.add("hidden");
+    const content = document.getElementById(t);
+    if(content) content.classList.add("hidden");
     const btn=document.getElementById("btn-"+t);
     if(btn){btn.classList.remove("bg-indigo-600","text-white","shadow-md","active");btn.classList.add("bg-white","text-slate-600","shadow-sm");}
   });
-  document.getElementById(id).classList.remove("hidden");
+  const activeContent = document.getElementById(id);
+  if(activeContent) activeContent.classList.remove("hidden");
   const act=document.getElementById("btn-"+id);
   if(act){act.classList.remove("bg-white","text-slate-600","shadow-sm");act.classList.add("bg-indigo-600","text-white","shadow-md","active");}
   lsSet("lastTab",id);
@@ -813,11 +817,11 @@ async function fetchAll(msg=false){
   if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", tz:"VN"};
   for(let k in cmsDb){if(k!=="promo_templates"&&k!=="link_origins"&&k!=="settings") cmsDb[k]=reverseShortcodes(cmsDb[k]);}
   
-  // Tự động kiểm tra và thêm link gốc vào Kho Tổng
+  // NẠP ĐỒNG BỘ: Mọi link ẩn gốc vào Kho
   let poolChanged = false;
   linksDb.forEach(l => {
      if(l.orig) {
-         const exists = linkPoolDb.find(p => p.url === l.orig);
+         let exists = linkPoolDb.find(p => p.url === l.orig);
          if(!exists) {
              linkPoolDb.push({ id: "POOL-" + Date.now() + Math.floor(Math.random()*100), url: l.orig, gb: "", remainGb: "", exp: l.expDate||"", max: 30 });
              poolChanged = true;
@@ -826,11 +830,11 @@ async function fetchAll(msg=false){
   });
   if(poolChanged) await apP("/api/link_pool", linkPoolDb);
 
-  renderOrd();renderDataRequests();renderLinks();renderDev();
+  renderOrd();renderDataRequests();renderLinks();
   document.getElementById("cmsRaw").value=cmsDb[curCms]||"";updatePreview();
   
   if(!document.getElementById("t-settings").classList.contains("hidden")){
-      renderMailLog(); renderSysLog(); loadSyncSettingUI();
+      renderMailLog(); renderSysLog(); renderDev(); loadSyncSettingUI();
   }
   
   if(msg) toast("Đã làm mới dữ liệu!");
@@ -856,7 +860,7 @@ async function fetchTransactions() {
       const candidatesHTML = (tx.candidateOrders || []).map(c => `
         <div class="bg-indigo-50 border border-indigo-100 p-2 rounded-lg mt-2 flex justify-between items-center">
            <div><span class="font-mono font-bold text-indigo-700 text-xs">Mã: ${c.order_id}</span><span class="text-[10px] text-slate-500 ml-2">(${c.created_at})</span></div>
-           <button onclick="approveTransaction(${tx.id}, '${c.order_id}')" class="bg-indigo-600 text-white text-[10px] font-bold px-3 py-1.5 rounded hover:bg-indigo-700">Chốt mã này</button>
+           <button onclick="approveTransaction(${tx.id}, '${c.order_id}')" class="bg-indigo-600 text-white text-[10px] font-bold px-3 py-1.5 rounded hover:bg-indigo-700">Duyệt cho mã này</button>
         </div>
       `).join('');
       
@@ -870,9 +874,9 @@ async function fetchTransactions() {
             <div class="text-[10px] text-slate-400">${tx.created_at}</div>
          </div>
          <div class="font-mono text-xs text-slate-600 bg-slate-50 p-2 rounded border border-slate-100 mb-3">${tx.notification || tx.content}</div>
-         <div class="flex gap-2 mb-2">
-           <button onclick="rejectTransaction(${tx.id})" class="flex-1 bg-red-50 text-red-600 border border-red-200 hover:bg-red-500 hover:text-white font-bold py-2 rounded-lg text-xs transition">Từ Chối GD này</button>
-           <button onclick="approveTransaction(${tx.id}, null)" class="flex-1 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-600 hover:text-white font-bold py-2 rounded-lg text-xs transition">Duyệt tự do</button>
+         <div class="flex flex-col sm:flex-row gap-2 mb-2">
+           <button onclick="rejectTransaction(${tx.id})" class="flex-1 bg-red-50 text-red-600 border border-red-200 hover:bg-red-500 hover:text-white font-bold py-2.5 rounded-lg text-xs transition"><i class="fas fa-times-circle mr-1"></i>TỪ CHỐI GIAO DỊCH</button>
+           <button onclick="approveTransaction(${tx.id}, null)" class="flex-1 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-600 hover:text-white font-bold py-2.5 rounded-lg text-xs transition"><i class="fas fa-check-circle mr-1"></i>DUYỆT TỰ DO (Nhập mã)</button>
          </div>
          ${candidatesHTML ? `<div class="border-t border-slate-100 pt-2 mt-2"><p class="text-[10px] font-bold text-slate-500">Các đơn nghi ngờ khớp tiền:</p>${candidatesHTML}</div>` : ''}
       </div>`;
@@ -915,7 +919,6 @@ async function rejectTransaction(txId) {
   } catch(e) { toast("Lỗi kết nối", "err"); }
 }
 
-// TOGGLE TAB LINK SUB (POOL / MANUAL / VIEWS)
 function switchLinkMode(mode) {
   curLinkTab = mode;
   document.getElementById('btn-ls-pool').classList.toggle('active', mode === 'pool');
@@ -940,25 +943,25 @@ function renderLinks() {
       return; 
   }
 
-  // Cập nhật số lượng thiết bị động
+  // TÍNH TOÁN ĐỘNG: Đếm số thiết bị đang dùng chung mỗi Pool
   linkPoolDb.forEach(pool => {
       const children = linksDb.filter(x => x.orig === pool.url);
-      pool.used = children.length; // Số lượng link ẩn đang mượn link gốc này
+      pool.used = children.length; 
   });
 
   if(curLinkListView === 'compact') {
       container.innerHTML = linkPoolDb.map((p, i) => {
-         const isFull = p.used > p.max;
+         const isFull = p.used >= p.max;
          return `<div class="bg-white border border-slate-200 p-3 rounded-xl shadow-sm flex items-center justify-between gap-2">
             <div class="min-w-0 flex-1">
-               <div class="flex items-center gap-2 mb-1"><span class="font-bold text-slate-800 text-xs truncate cp" onclick="cp('${p.url}')">${p.url}</span></div>
-               <div class="flex gap-2">
-                 <span class="bg-indigo-50 text-indigo-700 text-[9px] font-bold px-1.5 py-0.5 rounded">Còn: ${p.remainGb||'0'} / ${p.gb||'N/A'} GB</span>
-                 <span class="bg-orange-50 text-orange-700 text-[9px] font-bold px-1.5 py-0.5 rounded">HSD: ${p.exp||'N/A'}</span>
+               <div class="flex items-center gap-2 mb-1"><span class="font-bold text-slate-800 text-[11px] md:text-sm truncate cp" onclick="cp('${p.url}')">${p.url}</span></div>
+               <div class="flex gap-2 flex-wrap">
+                 <span class="bg-indigo-50 text-indigo-700 text-[9px] font-bold px-1.5 py-0.5 rounded">Còn: ${p.remainGb||'0'} GB</span>
+                 <span class="bg-orange-50 text-orange-700 text-[9px] font-bold px-1.5 py-0.5 rounded">HSD: ${p.exp||'Lifetime'}</span>
                  <span class="${isFull ? 'bg-red-100 text-red-700' : 'bg-emerald-50 text-emerald-700'} text-[9px] font-bold px-1.5 py-0.5 rounded">Đã dùng: ${p.used}/${p.max}</span>
                </div>
             </div>
-            <button onclick="delPool('${p.url}')" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition"><i class="fas fa-trash"></i></button>
+            <button onclick="delPool('${p.url}')" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition shrink-0"><i class="fas fa-trash"></i></button>
          </div>`;
       }).join('');
   } else {
@@ -966,7 +969,6 @@ function renderLinks() {
       for(const l of linksDb){
           const k=l.orig||"?";
           if(!grps[k]) {
-              // Lấy info từ Pool để hiển thị Header
               const poolInfo = linkPoolDb.find(p => p.url === k) || {};
               grps[k]={orig:k, poolInfo, children:[]};
           }
@@ -1024,7 +1026,6 @@ async function addLinkToPool() {
   
   if(!orig || !max) return toast("Nhập URL gốc và Max thiết bị!", "err");
   
-  // Update if exists, else Push
   let exists = linkPoolDb.find(p => p.url === orig);
   if(exists) {
       exists.gb = gb; exists.remainGb = remainGb||"0"; exists.exp = exp; exists.max = max;
@@ -1035,7 +1036,6 @@ async function addLinkToPool() {
   }
   await apP("/api/link_pool", linkPoolDb);
   
-  // TỰ ĐỘNG TẠO LINK ẨN SỐ 1
   let masked="";
   try{
     const u=new URL(orig);let qs=u.search;
@@ -1065,7 +1065,7 @@ async function createLink(){
     else return toast("Domain không hỗ trợ!","err");
   }catch{return toast("Link không hợp lệ!","err");}
   
-  // Auto add to Pool if not exists
+  // Tự động Add vào Kho tổng nếu chưa có
   let exists = linkPoolDb.find(p => p.url === orig);
   if(!exists) {
       linkPoolDb.push({ id: "POOL-" + Date.now(), url: orig, gb: "", remainGb: "", exp: expDate, max: 30 });
@@ -1082,16 +1082,16 @@ async function delPool(url) {
   linkPoolDb = linkPoolDb.filter(p => p.url !== url);
   renderLinks();
   toast("Đang xóa..."); await apP("/api/link_pool", linkPoolDb); toast("Đã xóa khỏi Kho");
-  addSysLog("Xóa Nguồn", "Đã xóa 1 Nguồn Gốc khỏi kho.");
+  addSysLog("Xóa Nguồn", "Đã xóa 1 Node khỏi kho tổng.");
 }
 
-// Hàm Luân Chuyển Node Nghẽn
+// Luân Chuyển Node Nghẽn
 async function autoMigrateLinks(isAuto = false) {
   if(!isAuto && !confirm("Hệ thống sẽ quét các Node sắp hết hạn (<4 tiếng) hoặc sắp hết dung lượng (<100GB) và TỰ ĐỘNG LUÂN CHUYỂN sang Pool khác. Chạy?")) return;
   if(!isAuto) toast("Đang phân tích Node...");
   
   let changed = 0;
-  const now = getAdjustedTime().getTime();
+  const nowMs = getAdjustedTime().getTime();
 
   for(const l of linksDb) {
      if(l.email === "Nguồn Hệ Thống (Auto)") continue;
@@ -1099,10 +1099,13 @@ async function autoMigrateLinks(isAuto = false) {
      if(!currentPool) continue;
      
      let needsMigration = false;
-     // Check Date < 4 tiếng (14,400,000 ms) hoặc Âm ngày
+     // Check Date < 4 tiếng (14,400,000 ms) 
      if(currentPool.exp && currentPool.exp.includes("/")) {
-        const expMs = pd(currentPool.exp)?.getTime();
-        if(expMs && (expMs - now) <= 14400000) needsMigration = true; 
+        const expDateObj = pd(currentPool.exp);
+        if(expDateObj) {
+            const diff = expDateObj.getTime() - nowMs;
+            if(diff <= 14400000) needsMigration = true; 
+        }
      }
      // Check Dung Lượng (còn < 100GB)
      if(currentPool.remainGb) {
@@ -1110,7 +1113,7 @@ async function autoMigrateLinks(isAuto = false) {
      }
 
      if(needsMigration) {
-        // Tìm Pool mới. Ưu tiên 1: Có Date & Rảnh chỗ
+        // Ưu tiên 1: Có Date & Rảnh chỗ
         let newPool = linkPoolDb.find(p => {
              const childrenCount = linksDb.filter(x => x.orig === p.url).length;
              return childrenCount < p.max && p.exp && p.exp.includes("/") && p.url !== currentPool.url;
@@ -1129,7 +1132,7 @@ async function autoMigrateLinks(isAuto = false) {
   }
 
   if(changed > 0) {
-     await apP("/api/links", linksDb);
+     await apP("/api/links", linksDb); // linksDb thay đổi nên renderLinks sẽ update số Used động
      if(!isAuto) { renderLinks(); toast(`Đã luân chuyển thành công ${changed} Node nghẽn!`); }
      addSysLog("Auto Migrate", `Thành công. Chuyển ${changed} khách sang Node mới.`);
   } else {
@@ -1229,7 +1232,7 @@ function renderOrd(){
 
 function autoFillDays(){
   const idx=parseInt(document.getElementById("mOPkg").value)||0;
-  if(idx === -1) return; // Không tự điền nếu chọn Gói Custom
+  if(idx === -1) return;
   const days=PKG_DAYS[idx]||0;
   if(days>0){document.getElementById("mODays").value=days;recalcExpFromDays();}
   else document.getElementById("mODays").value="";
@@ -1252,7 +1255,6 @@ function openOrdModal(id){
   document.getElementById("mOReason").value=o.reason||"";document.getElementById("mOStatus").value=o.status||"pending";
   document.getElementById("mOMethod").value=o.method&&o.method.includes("Alipay")?"Alipay":o.method&&o.method.includes("Weixin")?"Weixin":"Ngân hàng VN";
   
-  // FIX LỖI RESET GÓI: So khớp chính xác TÊN và DATA
   const sel=document.getElementById("mOPkg");
   sel.innerHTML = PKGS.map((p,i)=>`<option value="${i}">${p}</option>`).join("");
   let matched = false;
@@ -1263,13 +1265,13 @@ function openOrdModal(id){
               sel.selectedIndex = i; matched = true; break;
           }
       }
-      if(!matched) { // Nạp gói ảo nếu là gói Custom cũ
+      if(!matched) {
           sel.innerHTML += `<option value="-1" selected>${o.pkg || o.pkgName}</option>`;
           sel.value = "-1";
       }
   }
 
-  if(!id) autoFillDays(); // CHỈ tự điền ngày nếu là TẠO ĐƠN MỚI
+  if(!id) autoFillDays();
   togSF();document.getElementById("mOrd").classList.remove("hidden");
 }
 function togSF(){const s=document.getElementById("mOStatus").value;document.getElementById("fSuc").classList.toggle("hidden",s!=="success");document.getElementById("fFail").classList.toggle("hidden",s!=="failed");}
@@ -1363,397 +1365,33 @@ async function sendDataReport(index){
 async function delDataRequest(i){dataRequestsDb.splice(i,1);renderDataRequests();await apP("/api/data_requests",dataRequestsDb);toast("Đã xóa!");}
 async function clearDataRequests(){dataRequestsDb=[];renderDataRequests();await apP("/api/data_requests",dataRequestsDb);toast("Đã dọn sạch!");}
 
-// LINKS
-function genHex(len){let r="";const c="0123456789abcdef";for(let i=0;i<len;i++)r+=c[Math.floor(Math.random()*16)];return r;}
-
-function renderLinks() {
-  const container = document.getElementById("linksViewContainer");
-  if(!container) return;
-  if(!linkPoolDb.length && !linksDb.length) { 
-      container.innerHTML = `<div class="border border-dashed border-slate-300 p-8 rounded-2xl text-center text-slate-400 font-bold bg-white lg:text-base">Hệ thống chưa có Link nào</div>`; 
-      return; 
-  }
-
-  // Cập nhật số lượng thiết bị động
-  linkPoolDb.forEach(pool => {
-      const children = linksDb.filter(x => x.orig === pool.url);
-      pool.used = children.length; // Số lượng link ẩn đang mượn link gốc này
-  });
-
-  if(curLinkListView === 'compact') {
-      container.innerHTML = linkPoolDb.map((p, i) => {
-         const isFull = p.used >= p.max;
-         return `<div class="bg-white border border-slate-200 p-3 rounded-xl shadow-sm flex items-center justify-between gap-2">
-            <div class="min-w-0 flex-1">
-               <div class="flex items-center gap-2 mb-1"><span class="font-bold text-slate-800 text-xs truncate cp" onclick="cp('${p.url}')">${p.url}</span></div>
-               <div class="flex gap-2">
-                 <span class="bg-indigo-50 text-indigo-700 text-[9px] font-bold px-1.5 py-0.5 rounded">Còn: ${p.remainGb||'0'} GB</span>
-                 <span class="bg-orange-50 text-orange-700 text-[9px] font-bold px-1.5 py-0.5 rounded">HSD: ${p.exp||'Lifetime'}</span>
-                 <span class="${isFull ? 'bg-red-100 text-red-700' : 'bg-emerald-50 text-emerald-700'} text-[9px] font-bold px-1.5 py-0.5 rounded">Đã dùng: ${p.used}/${p.max}</span>
-               </div>
-            </div>
-            <button onclick="delPool('${p.url}')" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition"><i class="fas fa-trash"></i></button>
-         </div>`;
-      }).join('');
-  } else {
-      const grps={};
-      for(const l of linksDb){
-          const k=l.orig||"?";
-          if(!grps[k]) {
-              const poolInfo = linkPoolDb.find(p => p.url === k) || {};
-              grps[k]={orig:k, poolInfo, children:[]};
-          }
-          grps[k].children.push(l);
-      }
-      container.innerHTML=Object.values(grps).map(g=>{
-        const isLx=g.orig.includes("liangxin"),isDj=g.orig.includes("djjc");
-        const badge=isLx?`<span class="badge-lx">Liangxin</span>`:isDj?`<span class="badge-dj">DJJC</span>`:`<span class="badge-ot">Other</span>`;
-        const sorted=[...g.children].sort((a,b)=>(parseInt(a.linkIndex||a.machine)||1)-(parseInt(b.linkIndex||b.machine)||1));
-        const rows=sorted.map(l=>{
-          const maskTok=getT(l.masked),isLocked=!!l.isLocked,idx=parseInt(l.linkIndex||l.machine)||1;
-          const dot=isLocked?`<div class="dot-red"></div>`:`<div class="dot-green"></div>`;
-          const bg=isLocked?`bg-red-50 border-red-200`:`hover:bg-slate-50 border-slate-100`;
-          return `<div class="py-2.5 px-3 border rounded-xl mb-2 ${bg} transition flex flex-col gap-2 w-full min-w-0">
-            <div class="flex items-center justify-between gap-2 min-w-0">
-              <div class="flex items-center gap-2 min-w-0">${dot}<span class="text-indigo-500 font-mono text-[11px] lg:text-sm font-black cp shrink-0" onclick="cp('${idx}')">#${idx}</span><span class="font-bold text-[11px] lg:text-sm text-slate-800 cp truncate" onclick="cp('${l.email||''}')">${l.email||"Khách lẻ"}</span>${l.expDate?`<span class="text-[9px] lg:text-xs text-slate-400 font-bold cp shrink-0" onclick="cp('${l.expDate}')">(${l.expDate})</span>`:""}</div>
-            </div>
-            <div class="font-mono text-[10px] lg:text-xs text-slate-500 cp break-all leading-relaxed" onclick="cp('${l.masked}')" title="${l.masked}">${l.masked}</div>
-            <div class="lnk-actions-row">
-              <button onclick="rebuildOneMAP('${l.id}')" title="Rebuild MAP" class="text-emerald-600 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-emerald-50 border border-emerald-100 rounded hover:bg-emerald-500 transition shadow-sm"><i class="fas fa-sync-alt"></i></button>
-              <button onclick="openLnkModal('${l.id}')" class="text-indigo-600 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-indigo-50 border border-indigo-100 rounded hover:bg-indigo-500 transition shadow-sm"><i class="fas fa-pen"></i></button>
-              <button onclick="toggleLock('${maskTok}',${isLocked})" class="${isLocked?"text-white bg-green-500 hover:bg-green-600":"text-orange-500 hover:text-white bg-orange-50 border-orange-100 border hover:bg-orange-500"} text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center rounded transition shadow-sm"><i class="fas ${isLocked?"fa-lock-open":"fa-lock"}"></i></button>
-              <button onclick="delLink('${l.id}')" class="text-red-500 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-red-50 border border-red-100 rounded hover:bg-red-500 transition shadow-sm"><i class="fas fa-trash"></i></button>
-            </div>
-          </div>`;
-        }).join("");
-        
-        let metaHTML = "";
-        if(g.poolInfo.exp) metaHTML += `<span class="bg-amber-100 text-amber-700 text-[10px] font-black px-2 py-0.5 rounded shadow-sm ml-1">${g.poolInfo.exp}</span>`;
-        if(g.poolInfo.remainGb) metaHTML += `<span class="bg-sky-100 text-sky-700 text-[10px] font-black px-2 py-0.5 rounded shadow-sm ml-1">Còn: ${g.poolInfo.remainGb}GB</span>`;
-        
-        return `<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden mb-4 shadow-sm w-full min-w-0">
-          <div class="bg-slate-50 px-3 py-2 border-b border-slate-200 flex flex-col gap-1 min-w-0">
-            <div class="flex items-center justify-between flex-wrap gap-1">
-              <div class="flex gap-1.5 items-center flex-wrap">
-                ${badge}
-                <span class="text-[9px] lg:text-xs font-black bg-white border border-slate-200 text-slate-500 px-1.5 py-0.5 rounded shadow-sm">${g.children.length} LINK</span>
-                ${metaHTML}
-              </div>
-            </div>
-            <div class="font-mono text-[10px] lg:text-xs font-bold text-slate-600 break-all whitespace-normal cp" onclick="cp('${g.orig}')">${g.orig}</div>
-          </div>
-          <div class="p-2 lg:p-3">${rows}</div>
-        </div>`;
-      }).join("");
-  }
-}
-
-function switchLinkView(viewMode) {
-  curLinkListView = viewMode;
-  document.getElementById('btn-view-compact').classList.toggle('active', viewMode === 'compact');
-  document.getElementById('btn-view-detailed').classList.toggle('active', viewMode === 'detailed');
-  renderLinks();
-}
-
-function switchLinkMode(mode) {
-  curLinkTab = mode;
-  document.getElementById('btn-ls-pool').classList.toggle('active', mode === 'pool');
-  document.getElementById('btn-ls-manual').classList.toggle('active', mode === 'manual');
-  document.getElementById('panel-ls-pool').classList.toggle('hidden', mode !== 'pool');
-  document.getElementById('panel-ls-manual').classList.toggle('hidden', mode !== 'manual');
-}
-
-async function addLinkToPool() {
-  const orig = document.getElementById("poolOrig").value.trim();
-  const gb = document.getElementById("poolGb").value.trim();
-  const remainGb = document.getElementById("poolRemainGb").value.trim();
-  const exp = document.getElementById("poolExp").value.trim();
-  const max = parseInt(document.getElementById("poolMax").value);
-  
-  if(!orig || !max) return toast("Nhập URL gốc và Max thiết bị!", "err");
-  
-  // Cập nhật nếu đã có, push mới nếu chưa
-  let exists = linkPoolDb.find(p => p.url === orig);
-  if(exists) {
-      exists.gb = gb; exists.remainGb = remainGb||"0"; exists.exp = exp; exists.max = max;
-      toast("Đã cập nhật Kho Tổng!");
-  } else {
-      linkPoolDb.push({ id: "POOL-" + Date.now(), url: orig, gb, remainGb: remainGb||"0", exp, max });
-      toast("Đã thêm vào Kho tự động bốc!");
-  }
-  await apP("/api/link_pool", linkPoolDb);
-  
-  // TỰ ĐỘNG TẠO LINK ẨN SỐ 1
-  let masked="";
-  try{
-    const u=new URL(orig);let qs=u.search;
-    const nt=genHex(32);if(orig.includes("liangxin")) qs=`?OwO=${nt}`;else qs=`?token=${nt}`;
-    if(orig.includes("liangxin")) masked=PD+"/v1/VPNTrinhHg"+qs+"#VPNTrinhHg";
-    else if(orig.includes("djjc.cfd")) masked=PD+"/v2/VPNTrinhHg"+qs+"#VPNTrinhHg";
-  }catch{}
-  if(masked) {
-    linksDb.unshift({id:"LNK-"+Date.now(),orig,masked,email:"Nguồn Hệ Thống (Auto)",expDate:exp,linkIndex:"1",isLocked:false,date:getNowStr()});
-    await apP("/api/links",linksDb);
-  }
-
-  ["poolOrig","poolGb","poolRemainGb","poolExp","poolMax"].forEach(id => document.getElementById(id).value = "");
-  renderLinks();
-  addSysLog("Nạp Kho Tổng", `Thành công. URL: ${orig.substring(0,20)}...`);
-}
-
-async function createLink(){
-  const orig=document.getElementById("lkOrig").value.trim(),email=document.getElementById("lkEmail").value.trim(),expDate=document.getElementById("lkExp").value.trim(),idx=document.getElementById("lkIdx").value.trim();
-  if(!orig) return toast("Chưa nhập link gốc!","err");
-  let masked="";
-  try{
-    const u=new URL(orig);let qs=u.search;
-    if(idx&&parseInt(idx)>=2){const t=u.searchParams.get("OwO")||u.searchParams.get("token")||"";const nt=genHex(t.length||32);if(orig.includes("liangxin")) qs=`?OwO=${nt}`;else qs=`?token=${nt}`;}
-    if(orig.includes("liangxin")) masked=PD+"/v1/VPNTrinhHg"+qs+"#VPNTrinhHg";
-    else if(orig.includes("djjc.cfd")) masked=PD+"/v2/VPNTrinhHg"+qs+"#VPNTrinhHg";
-    else return toast("Domain không hỗ trợ!","err");
-  }catch{return toast("Link không hợp lệ!","err");}
-  
-  // Tự động Add vào Kho tổng nếu chưa có
-  let exists = linkPoolDb.find(p => p.url === orig);
-  if(!exists) {
-      linkPoolDb.push({ id: "POOL-" + Date.now(), url: orig, gb: "", remainGb: "", exp: expDate, max: 30 });
-      await apP("/api/link_pool", linkPoolDb);
-  }
-
-  linksDb.unshift({id:"LNK-"+Date.now(),orig,masked,email,expDate,linkIndex:idx,isLocked:false,date:getNowStr()});
-  toast("Đang lưu link...");await apP("/api/links",linksDb);toast("Đã tạo link ẩn! Nhớ Đồng bộ GitHub.");
-  ["lkOrig","lkEmail","lkExp","lkIdx"].forEach(f=>document.getElementById(f).value="");
-  renderLinks();
-}
-
-async function delPool(url) {
-  linkPoolDb = linkPoolDb.filter(p => p.url !== url);
-  renderLinks();
-  toast("Đang xóa..."); await apP("/api/link_pool", linkPoolDb); toast("Đã xóa khỏi Kho");
-  addSysLog("Xóa Nguồn", "Đã xóa 1 Node khỏi kho tổng.");
-}
-
-// Luân Chuyển Node Nghẽn
-async function autoMigrateLinks(isAuto = false) {
-  if(!isAuto && !confirm("Hệ thống sẽ quét các Node sắp hết hạn (<4 tiếng) hoặc sắp hết dung lượng (<100GB) và TỰ ĐỘNG LUÂN CHUYỂN sang Pool khác. Chạy?")) return;
-  if(!isAuto) toast("Đang phân tích Node...");
-  
-  let changed = 0;
-  const nowMs = getAdjustedTime().getTime();
-
-  for(const l of linksDb) {
-     if(l.email === "Nguồn Hệ Thống (Auto)") continue;
-     const currentPool = linkPoolDb.find(p => p.url === l.orig);
-     if(!currentPool) continue;
-     
-     let needsMigration = false;
-     // Check Date < 4 tiếng (14,400,000 ms) 
-     if(currentPool.exp && currentPool.exp.includes("/")) {
-        const expDateObj = pd(currentPool.exp);
-        if(expDateObj) {
-            const diff = expDateObj.getTime() - nowMs;
-            if(diff <= 14400000) needsMigration = true; 
-        }
-     }
-     // Check Dung Lượng (còn < 100GB)
-     if(currentPool.remainGb) {
-        if(parseFloat(currentPool.remainGb) < 100) needsMigration = true;
-     }
-
-     if(needsMigration) {
-        // Ưu tiên 1: Có Date & Rảnh chỗ
-        let newPool = linkPoolDb.find(p => {
-             const childrenCount = linksDb.filter(x => x.orig === p.url).length;
-             return childrenCount < p.max && p.exp && p.exp.includes("/") && p.url !== currentPool.url;
-        });
-        // Ưu tiên 2: Lifetime & Rảnh chỗ
-        if(!newPool) newPool = linkPoolDb.find(p => {
-             const childrenCount = linksDb.filter(x => x.orig === p.url).length;
-             return childrenCount < p.max && p.url !== currentPool.url;
-        }); 
-        
-        if(newPool) {
-           l.orig = newPool.url;
-           changed++;
-        }
-     }
-  }
-
-  if(changed > 0) {
-     await apP("/api/links", linksDb); // linksDb thay đổi nên renderLinks sẽ update số Used
-     if(!isAuto) { renderLinks(); toast(`Đã luân chuyển thành công ${changed} Node nghẽn!`); }
-     addSysLog("Auto Migrate", `Thành công. Chuyển ${changed} khách sang Node mới.`);
-  } else {
-     if(!isAuto) toast("Hệ thống ổn định. Không có Node nào cần luân chuyển.");
-     addSysLog("Auto Migrate", "Hệ thống ổn định. Bỏ qua.");
-  }
-}
-
-function openLnkModal(id){
-  const l=linksDb.find(x=>x.id===id);if(!l) return;
-  document.getElementById("mLId").value=id;document.getElementById("mLOrig").value=l.orig||"";
-  document.getElementById("mLEmail").value=l.email||"";document.getElementById("mLExp").value=l.expDate||"";
-  document.getElementById("mLIdx").value=l.linkIndex||l.machine||"";
-  document.getElementById("mLnk").classList.remove("hidden");
-}
-async function saveLnkEdit(){
-  const id=document.getElementById("mLId").value,l=linksDb.find(x=>x.id===id);if(!l) return;
-  const newOrig=document.getElementById("mLOrig").value.trim();if(!newOrig) return toast("Link gốc rỗng!","err");
-  l.email=document.getElementById("mLEmail").value.trim();l.expDate=document.getElementById("mLExp").value.trim();
-  l.linkIndex=document.getElementById("mLIdx").value.trim();l.orig=newOrig;delete l.machine;delete l.status;
-  renderLinks();cm("mLnk");toast("Đang lưu chỉnh sửa...");await apP("/api/links",linksDb);toast("Đã cập nhật! Bắt buộc Rebuild MAP và Đồng bộ GitHub.");
-}
-async function toggleLock(tok,isLocked){
-  if(!tok) return;let changed=false;
-  linksDb.forEach(l=>{if(getT(l.masked)===tok){l.isLocked=!isLocked;changed=true;}});
-  if(changed){toast("Đang lưu trạng thái Khóa...");await apP("/api/links",linksDb);}
-  renderLinks();toast(isLocked?"Đã mở khóa!":"Đã khóa! Bấm REBUILD MAP!");
-}
-async function delLink(id){
-  const l=linksDb.find(x=>x.id===id);
-  if(l){deadLinksDb.unshift({...l,deadDate:new Date().toISOString()});await apP("/api/deadlinks",deadLinksDb);}
-  linksDb=linksDb.filter(x=>x.id!==id);renderLinks();toast("Đang ngắt kết nối...");await apP("/api/links",linksDb);toast("Đã xóa link! Bấm Rebuild MAP và Đồng bộ GitHub.");
-}
-async function sortAllLinks(){
-  const btn=document.getElementById("btnSortLinks");if(btn){btn.innerHTML='<i class="fas fa-spinner fa-spin mr-1"></i>Đang sắp xếp...';btn.disabled=true;}
-  try{
-    const grps={};for(const l of linksDb){const k=l.orig||"?";if(!grps[k]) grps[k]=[];grps[k].push(l);}
-    for(const k in grps){
-      const arr=grps[k];
-      const origTok = getT(k);
-      let idx1Link = null;
-      const others = [];
-
-      for(const l of arr) {
-        if(!idx1Link && getT(l.masked) === origTok && origTok !== "") {
-          idx1Link = l;
-        } else {
-          others.push(l);
-        }
-      }
-
-      others.sort((a,b)=>{
-        const da=pd(a.expDate),db_=pd(b.expDate);
-        if(da&&db_) return da-db_;
-        if(da) return -1; if(db_) return 1;
-        return 0;
-      });
-
-      if(idx1Link) {
-        idx1Link.linkIndex = "1";
-        delete idx1Link.machine;
-      }
-
-      let n = 2;
-      for(const l of others){ l.linkIndex=String(n); delete l.machine; n++; }
+function switchSettingsTab(tab){
+  ["mail","sync","log","dev","ui"].forEach(t=>{
+    const st=document.getElementById("settings-view-"+t),btn=document.getElementById("stab-"+t);
+    if(st) st.classList.toggle("hidden",t!==tab);
+    if(btn) {
+       if(t===tab) btn.classList.add("active");
+       else btn.classList.remove("active");
     }
-    renderLinks();toast("Đang lưu thứ tự mới...");
-    await apP("/api/links",linksDb);
-    toast("Đã sắp xếp lại số Index theo ngày hết hạn! Nhớ Rebuild MAP & Đồng bộ GitHub nếu cần.");
-  }catch(e){toast("Lỗi sắp xếp: "+e.message,"err");}
-  finally{if(btn){btn.innerHTML='<i class="fas fa-sort-numeric-down mr-1"></i>Sắp xếp';btn.disabled=false;}}
-}
-async function triggerGitHub(){
-  const btn=document.getElementById("btnTriggerGH");btn.innerHTML=`<i class="fas fa-spinner fa-spin mr-1"></i>Đang bắn lệnh...`;btn.disabled=true;
-  try{const r=await fetch(API+"/api/trigger_github",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({repo:GH_REPO,workflow:"update.yml"})});if(r.ok) toast("Đã gửi lệnh Đồng bộ sang GitHub!");else toast("Lỗi gọi GH: "+await r.text(),"err");}
-  catch(e){toast("Lỗi mạng: "+e.message,"err");}
-  finally{btn.innerHTML=`<i class="fab fa-github mr-1"></i>Đồng bộ GITHUB`;btn.disabled=false;}
-}
-async function runGC(){
-  const btn=document.getElementById("btnRunGC");if(btn){btn.innerHTML=`<i class="fas fa-spinner fa-spin mr-1"></i>Đang dọn...`;btn.disabled=true;}
-  toast("Đang quét toàn bộ KV. Vui lòng đợi...");
-  const validTokens=new Set();linksDb.forEach(l=>{const a=getT(l.orig),b=getT(l.masked);if(a)validTokens.add(a);if(b)validTokens.add(b);});
-  try{
-    const r=await fetch(API+"/api/gc",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({validTokens:Array.from(validTokens)})});
-    if(r.ok){const res=await r.json();deadLinksDb=[];await apP("/api/deadlinks",deadLinksDb);renderDead();await rebuildAllMAP();toast(`Dọn rác thành công! Đã xóa ${res.deleted} key rác.`);}
-    else toast("Lỗi GC: HTTP "+r.status,"err");
-  }catch(e){toast("Lỗi mạng: "+e.message,"err");}
-  finally{if(btn){btn.innerHTML=`<i class="fas fa-broom mr-1"></i>Dọn KV`;btn.disabled=false;}}
-}
-async function rebuildAllMAP(){
-  const btn=document.getElementById("btnRebuildAll");if(btn){btn.innerHTML=`<i class="fas fa-spinner fa-spin mr-1"></i>Rebuild...`;btn.disabled=true;}
-  toast("Đang Rebuild toàn bộ hệ thống MAP...");
-  try{
-    const r=await fetch(API+"/api/links",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(linksDb)});
-    if(r.ok){
-      const lockedToks=new Set();linksDb.forEach(l=>{if(l.isLocked) lockedToks.add(getT(l.masked));});
-      for(const tok of lockedToks){if(tok) await fetch(API+"/api/lock",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:tok,action:"lock"})}).catch(()=>{});}
-      toast("Đã khôi phục Khóa & Rebuild xong!");
-    } else toast("Lỗi HTTP "+r.status,"err");
-  }catch(e){toast("Lỗi mạng: "+e.message,"err");}
-  finally{if(btn){btn.innerHTML=`<i class="fas fa-rotate mr-1"></i>Rebuild MAP`;btn.disabled=false;}}
-}
-async function rebuildOneMAP(id){
-  const l=linksDb.find(x=>x.id===id);if(!l) return;toast("Đang rebuild 1 link...");
-  try{
-    const r=await fetch(API+"/api/links",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(linksDb)});
-    if(r.ok){if(l.isLocked) await fetch(API+"/api/lock",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:getT(l.masked),action:"lock"})}).catch(()=>{});toast("Xong!");}
-    else toast("Lỗi HTTP "+r.status,"err");
-  }catch(e){toast("Lỗi mạng: "+e.message,"err");}
+  });
+  if(tab==="log") { renderMailLog(); renderSysLog(); }
+  if(tab==="dev") renderDev();
+  if(tab==="sync" || tab==="mail" || tab==="ui") loadSyncSettingUI();
 }
 
-// DEAD LINKS
-function renderDead(){
-  const tb=document.getElementById("deadBody");
-  if(!deadLinksDb.length){tb.innerHTML=`<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold lg:text-base">Không có lịch sử xóa</div>`;return;}
-  tb.innerHTML=deadLinksDb.map((l,i)=>{
-    let remaining="";if(l.deadDate){const d=new Date(l.deadDate).getTime();if(!isNaN(d)){const left=Math.max(0,Math.ceil((d+86400000-Date.now())/3600000));remaining=left>0?`(còn ${left}h)`:`(sắp xóa)`;}}
-    return `<div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex flex-col gap-2 hover:bg-slate-50 transition w-full min-w-0">
-      <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="font-bold text-xs lg:text-sm text-slate-400">#${i+1}</span><span class="font-bold text-slate-800 text-[11px] md:text-sm lg:text-base cp truncate" onclick="cp('${l.email||''}')">${l.email||"—"}</span></div>
-      <button onclick="restoreLink(${i})" class="text-emerald-600 font-bold px-3 py-1.5 lg:px-4 lg:py-2 bg-emerald-50 rounded-lg text-[10px] md:text-xs lg:text-sm hover:bg-emerald-500 hover:text-white transition shadow-sm border border-emerald-100 shrink-0"><i class="fas fa-rotate-left mr-1"></i>Khôi phục</button></div>
-      <div class="text-[10px] lg:text-xs font-mono text-slate-500 break-all cp" onclick="cp('${l.orig||''}')">${l.orig||"—"}</div>
-      <div class="text-[10px] lg:text-xs font-mono text-indigo-500 break-all cp" onclick="cp('${l.masked||''}')">${l.masked||"—"}</div>
-      <div class="text-[9px] lg:text-xs text-slate-500 font-bold">Ngắt: ${l.deadDate?new Date(l.deadDate).toLocaleString("vi"):"—"} <span class="text-orange-500 ml-1">${remaining}</span></div>
-    </div>`;
-  }).join("");
+function renderDev(){
+  const tb=document.getElementById("devBody");if(!tb) return;
+  if(!devicesDb.length){tb.innerHTML=`<div class="p-6 text-center text-slate-400 bg-white rounded-xl border shadow-sm font-bold lg:text-base">Trống</div>`;return;}
+  tb.innerHTML=devicesDb.map(d=>`<div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex items-center justify-between gap-3 w-full min-w-0">
+    <div class="min-w-0">
+      <div class="font-mono font-bold text-xs lg:text-sm text-indigo-600 cp truncate" onclick="cp('${d.id}')">${d.id}${d.id===myDev?` <span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[9px] lg:text-xs font-bold ml-1">Bạn</span>`:""}</div>
+      <div class="text-[10px] lg:text-xs text-slate-500 cp truncate my-1" onclick="cp('${d.ua||d.userAgent||''}')">${d.ua||d.userAgent||""}</div>
+      <div class="text-[9px] lg:text-xs font-bold text-slate-400 cp" onclick="cp('${d.date||''}')">${d.date||""}</div>
+    </div>
+    <button onclick="delDev('${d.id}')" class="text-red-500 font-bold px-3 py-2 bg-red-50 rounded-lg text-xs lg:text-sm hover:bg-red-500 hover:text-white transition shrink-0"><i class="fas fa-trash"></i></button>
+  </div>`).join("");
 }
-async function restoreLink(i){
-  const l={...deadLinksDb[i]};delete l.deadDate;
-  linksDb.unshift(l);
-  deadLinksDb.splice(i,1);
-  renderDead();renderLinks();
-  toast("Đang khôi phục...");
-  await Promise.all([apP("/api/links",linksDb),apP("/api/deadlinks",deadLinksDb)]);
-  toast("Đã khôi phục thành công! Nhớ Rebuild MAP.");
-}
-function clearDeadLinks(){deadLinksDb=[];renderDead();try{fetch(API+"/api/deadlinks",{method:"DELETE"});}catch{}toast("Đã xóa lịch sử!");}
-
-// CMS
-function setCms(dev){
-  document.querySelectorAll(".dev-btn").forEach(b=>{b.classList.remove("active","border-indigo-500","bg-indigo-50","text-indigo-700");b.classList.add("border-slate-200","text-slate-600");});
-  const btn=document.getElementById("cms-btn-"+dev);btn.classList.add("active","border-indigo-500","bg-indigo-50","text-indigo-700");btn.classList.remove("border-slate-200","text-slate-600");
-  curCms=dev;document.getElementById("cmsRaw").value=cmsDb[dev]||"";updatePreview();
-}
-function insShort(t){const ta=document.getElementById("cmsRaw"),s=ta.selectionStart;ta.value=ta.value.slice(0,s)+t+"\n"+ta.value.slice(ta.selectionEnd);ta.selectionStart=ta.selectionEnd=s+t.length;ta.focus();updatePreview();}
-function parseShortcodes(text){
-  if(!text) return "";
-  const lines=text.split("\n");let html="",n=1;
-  for(let line of lines){
-    line=line.trim();if(!line) continue;
-    if(line.startsWith("[HEADER]")){html+=`<div style="background:linear-gradient(90deg,#4f46e5,#8b5cf6);display:inline-block;color:#fff;padding:8px 16px;border-radius:8px;font-weight:800;margin-bottom:12px;box-shadow:0 4px 10px rgba(79,70,229,0.3)"><i class="fas fa-star" style="margin-right:8px;"></i>${line.substring(8).trim()}</div>\n`;n=1;}
-    else if(line.startsWith("[SUB]")) html+=`<div style="display:inline-block;background:#e0e7ff;border-left:4px solid #4f46e5;padding:6px 12px;border-radius:4px;margin-top:15px;margin-bottom:10px"><h3 style="font-size:14px;font-weight:800;color:#3730a3;margin:0">${line.substring(5).trim()}</h3></div>\n`;
-    else if(line.startsWith("[STEP]")){html+=`<div style="display:flex;gap:8px;margin-bottom:10px;align-items:flex-start"><span style="background:#4f46e5;color:white;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:11px;font-weight:bold;flex-shrink:0">${n++}</span><p style="margin:0;color:#334155;line-height:20px">${line.substring(6).trim()}</p></div>\n`;}
-    else if(line.startsWith("[NOTE]")) html+=`<div style="display:inline-block;max-width:100%;background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;padding:8px 12px;border-radius:6px;margin:10px 0"><p style="margin:0;color:#92400e;line-height:1.5"><b>⚠️ LƯU Ý:</b> ${line.substring(6).trim()}</p></div>\n`;
-    else if(line.startsWith("[BTN]")){const ps=line.substring(5).split("|");const nm=ps[0]?.trim()||"TẢI VỀ";const lk=ps[1]?.trim()||"#";html+=`<div style="display:inline-block;margin:10px 0"><a href="${lk}" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:white;padding:10px 20px;border-radius:10px;font-weight:bold;text-decoration:none;box-shadow:0 4px 15px rgba(109,40,217,0.4)"><i class="fas fa-download" style="margin-right:8px"></i>${nm}</a></div>\n`;}
-    else if(line.startsWith("[IMG]")) html+=`<img src="${line.substring(5).trim()}" style="max-width:100%;border-radius:6px;border:1px solid #e2e8f0;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);margin:10px 0" />\n`;
-    else html+=`<p style="margin:0 0 10px 0;color:#334155;">${line}</p>\n`;
-  }
-  return html;
-}
-function reverseShortcodes(html){
-  if(!html) return "";let t=html;
-  if(typeof t!=="string") return "";
-  t=t.replace(/<div style="background:linear-gradient.*?<i class="fas fa-star".*?<\/i>(.*?)<\/div>/g,"[HEADER] $1");
-  t=t.replace(/<div style="display:inline-block;background:#e0e7ff.*?<h3.*?>(.*?)<\/h3><\/div>/g,"[SUB] $1");
-  t=t.replace(/<div style="display:flex;gap:8px.*?<span.*?>.*?<\/span><p.*?>(.*?)<\/p><\/div>/g,"[STEP] $1");
-  t=t.replace(/<div style="display:inline-block.*?#fffbeb.*?<p.*?><b>.*?<\/b> (.*?)<\/p><\/div>/g,"[NOTE] $1");
-  t=t.replace(/<div style="display:inline-block;margin:10px 0"><a href="(.*?)".*?<i class="fas fa-download".*?<\/i>(.*?)<\/a><\/div>/g,"[BTN] $2 | $1");
-  t=t.replace(/<img src="(.*?)" style=".*?" \/>/g,"[IMG] $1");
-  t=t.replace(/<p style="margin:0 0 10px 0.*?>(.*?)<\/p>/g,"$1");
-  return t.replace(/\n\n+/g,"\n");
-}
-function updatePreview(){document.getElementById("cmsPreview").innerHTML=parseShortcodes(document.getElementById("cmsRaw").value);}
-async function saveCms(){cmsDb[curCms]=document.getElementById("cmsRaw").value;toast("Đang lưu CMS & bắn tỉa sang 3 web...");await apP("/api/cms",cmsDb);toast("Đã lưu Hướng dẫn lên hệ thống!");}
+async function delDev(id){devicesDb=devicesDb.filter(x=>x.id!==id);renderDev();toast("Đang xóa thiết bị...");await apP("/api/devices",devicesDb);if(id===myDev) doLogout();else toast("Đã xóa!");}
 
 </script>
 </body>
