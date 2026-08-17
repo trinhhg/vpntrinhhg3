@@ -88,11 +88,33 @@ details>summary::-webkit-details-marker{display:none;}
   <div id="view-portal" class="view-section mb-20 w-full">
     <div id="p-home" class="portal-tab-content active w-full">
       <div class="bg-white p-4 md:p-8 rounded-3xl mb-8 shadow-sm border border-slate-200 w-full overflow-hidden">
-        <div id="portalContentPending" class="hidden bg-yellow-50 border border-yellow-200 p-6 rounded-xl flex flex-col items-center text-center mb-6">
-          <i class="fas fa-hourglass-half text-3xl text-yellow-500 mb-3"></i>
-          <h4 class="font-extrabold text-yellow-800 text-sm md:text-lg" data-i18n="pending_title">Đơn hàng đang chờ Admin duyệt</h4>
-          <p class="text-yellow-700 text-xs mt-1">Vui lòng quay lại sau ít phút hoặc nhắn tin cho Admin.</p>
-          <a href="https://zalo.me/0917678211" target="_blank" class="mt-4 bg-[#0068ff] text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-sm"><i class="fas fa-comment-dots"></i>Nhắn Zalo Admin</a>
+        
+        <!-- Khối Giao diện Chờ Duyệt (Đã được sửa lại thành Đồng hồ) -->
+        <div id="portalContentPending" class="hidden bg-indigo-50 border border-indigo-200 p-6 rounded-xl flex flex-col items-center text-center mb-6">
+          
+          <!-- Trạng thái đang đếm ngược -->
+          <div id="pendingActiveState" class="w-full">
+            <i class="fas fa-sync fa-spin text-3xl text-indigo-500 mb-3"></i>
+            <h4 class="font-extrabold text-indigo-800 text-sm md:text-lg uppercase">Đang kiểm tra giao dịch...</h4>
+            <div class="my-5">
+              <span id="countdownTimer" class="font-mono text-5xl md:text-6xl font-black text-indigo-600 bg-white px-6 py-3 rounded-2xl shadow-inner border-2 border-indigo-100">05:00</span>
+            </div>
+            <p class="text-indigo-700 text-sm md:text-base font-bold mb-4 animate-pulse">Tất cả quy trình là tự động hóa, vui lòng đợi chúng tôi ít phút.</p>
+          </div>
+
+          <!-- Trạng thái hết giờ (Timeout) -->
+          <div id="pendingTimeoutState" class="hidden w-full mb-4">
+            <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-3"></i>
+            <h4 class="font-extrabold text-red-700 text-sm md:text-lg uppercase">Chưa nhận được thanh toán</h4>
+            <p class="text-red-600 text-sm md:text-base font-bold mt-1">Đã quá thời gian tự động duyệt. Bạn đã chuyển khoản chưa?</p>
+          </div>
+
+          <div class="w-full border-t border-indigo-200 pt-5 mt-2">
+            <p class="text-slate-600 text-xs md:text-sm mb-3 font-semibold">Nếu có thắc mắc khác cần được giải đáp thì vui lòng nhắn tin cho Admin nhé.</p>
+            <a href="https://zalo.me/0917678211" target="_blank" class="mx-auto bg-[#0068ff] text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition shadow-md">
+              <i class="fas fa-comment-dots text-lg"></i> Nhắn Zalo Admin
+            </a>
+          </div>
         </div>
         
         <div id="portalContentSuccess" class="hidden w-full">
@@ -279,6 +301,11 @@ const GOOGLE_MAIL_API = "https://script.google.com/macros/s/AKfycbyQjEln9By0HuUP
 const SESSION_KEY = 'vpn_portal_session_24h';
 const DB_KEY = 'vpn_orders_db';
  
+// Thêm biến global cho Đếm ngược
+let checkOrderInterval = null;
+let countdownTimerInterval = null;
+let pendingTimeLeft = 300; // 5 phút
+
 let lastScrollY = 0;
 window.addEventListener('scroll',()=>{
   const nav=document.getElementById('mainNav');
@@ -652,24 +679,82 @@ async function confirmPaid(){
 }
  
 // ── Portal ──
+// Các biến cục bộ phục vụ Đồng hồ & Polling
+let checkOrderInterval = null;
+let countdownTimerInterval = null;
+let pendingTimeLeft = 300; // 5 phút
+
 function updatePortalInfo(o){
   oCache=o;
   if(o.status==='pending'){
-   document.getElementById('portalContentPending').classList.remove('hidden');
-   document.getElementById('portalContentSuccess').classList.add('hidden');
-  }else if(o.status==='success'){
-   document.getElementById('portalContentPending').classList.add('hidden');
-   document.getElementById('portalContentSuccess').classList.remove('hidden');
+    document.getElementById('portalContentPending').classList.remove('hidden');
+    document.getElementById('portalContentSuccess').classList.add('hidden');
+    startPendingCountdown(); // Bắt đầu đếm ngược 5 phút
+  } else if(o.status==='success'){
+    stopPendingCountdown(); // Hủy đếm ngược
+    document.getElementById('portalContentPending').classList.add('hidden');
+    document.getElementById('portalContentSuccess').classList.remove('hidden');
    
-   document.getElementById('subLink1').value = o.info1 || o.info || '';
-   document.getElementById('subLink2').value = o.info2 || '';
-   document.getElementById('subLink3').value = o.info3 || '';
+    document.getElementById('subLink1').value = o.info1 || o.info || '';
+    document.getElementById('subLink2').value = o.info2 || '';
+    document.getElementById('subLink3').value = o.info3 || '';
    
-   document.getElementById('displayOrderId').innerText=o.id;
-  }else{
-   document.getElementById('portalContentPending').classList.add('hidden');
-   document.getElementById('portalContentSuccess').classList.add('hidden');
+    document.getElementById('displayOrderId').innerText=o.id;
+  } else {
+    stopPendingCountdown(); // Hủy đếm ngược (nếu từ chối)
+    document.getElementById('portalContentPending').classList.add('hidden');
+    document.getElementById('portalContentSuccess').classList.add('hidden');
   }
+}
+
+// Hàm xử lý Đếm ngược và Check trạng thái ngầm
+function startPendingCountdown() {
+  // 1. Reset Giao diện
+  document.getElementById('pendingActiveState').classList.remove('hidden');
+  document.getElementById('pendingTimeoutState').classList.add('hidden');
+  pendingTimeLeft = 300;
+  updateTimerUI();
+
+  // 2. Dọn sạch interval cũ nếu có
+  stopPendingCountdown();
+
+  // 3. Interval Đếm lùi (1 giây/lần)
+  countdownTimerInterval = setInterval(() => {
+    pendingTimeLeft--;
+    if (pendingTimeLeft <= 0) {
+      pendingTimeLeft = 0;
+      updateTimerUI();
+      handlePendingTimeout(); // Hết giờ
+    } else {
+      updateTimerUI();
+    }
+  }, 1000);
+
+  // 4. Interval Polling API (10 giây/lần)
+  checkOrderInterval = setInterval(() => {
+    if (pendingTimeLeft > 0) {
+      login(false, true); // Chạy ngầm, không load lại trang
+    }
+  }, 10000);
+}
+
+function stopPendingCountdown() {
+  if(countdownTimerInterval) clearInterval(countdownTimerInterval);
+  if(checkOrderInterval) clearInterval(checkOrderInterval);
+}
+
+function handlePendingTimeout() {
+  stopPendingCountdown();
+  // Đổi giao diện sang báo lỗi đỏ
+  document.getElementById('pendingActiveState').classList.add('hidden');
+  document.getElementById('pendingTimeoutState').classList.remove('hidden');
+}
+
+function updateTimerUI() {
+  const m = Math.floor(pendingTimeLeft / 60).toString().padStart(2, '0');
+  const s = (pendingTimeLeft % 60).toString().padStart(2, '0');
+  const el = document.getElementById('countdownTimer');
+  if(el) el.innerText = `${m}:${s}`;
 }
  
 async function login(isManualRefresh=false,isAutoPoll=false){
@@ -711,6 +796,7 @@ function logout(){
  document.getElementById('searchAndTabsWrapper').classList.remove('w-full');document.getElementById('searchAndTabsWrapper').classList.add('max-w-2xl','justify-center');
  document.getElementById('centerNavContainer').classList.add('justify-center');
   oCache=null;
+  stopPendingCountdown(); // Clear clock khi thoát
 }
  
 function parseShortcodes(text) {
@@ -745,11 +831,6 @@ window.onload=function(){
   changeLanguage('vi');
   const session=localStorage.getItem(SESSION_KEY);
   if(session){const d=JSON.parse(session);if(new Date().getTime()-d.time<24*3600*1000){document.getElementById('loginInput').value=d.id;login(true);}else localStorage.removeItem(SESSION_KEY);}
-  setInterval(async()=>{
-   if(document.getElementById('view-portal').classList.contains('active')&&!document.getElementById('portalContentPending').classList.contains('hidden')){
-      login(false,true);
-    }
-  },10000);
 };
 
 // --- LOGIC YÊU CẦU KIỂM TRA DUNG LƯỢNG ---
