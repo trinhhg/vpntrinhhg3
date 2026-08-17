@@ -99,19 +99,20 @@ details>summary::-webkit-details-marker{display:none;}
             <div class="my-5">
               <span id="countdownTimer" class="font-mono text-5xl md:text-6xl font-black text-indigo-600 bg-white px-6 py-3 rounded-2xl shadow-inner border-2 border-indigo-100">05:00</span>
             </div>
-            <p class="text-indigo-700 text-sm md:text-base font-bold mb-4 animate-pulse">Tất cả quy trình là tự động hóa, vui lòng đợi chúng tôi ít phút.</p>
+            <p class="text-indigo-700 text-sm md:text-base font-bold mb-2 animate-pulse">Tất cả quy trình là tự động hóa, vui lòng đợi chúng tôi ít phút.</p>
           </div>
 
           <!-- Trạng thái hết giờ (Timeout) -->
           <div id="pendingTimeoutState" class="hidden w-full mb-4">
             <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-3"></i>
             <h4 class="font-extrabold text-red-700 text-sm md:text-lg uppercase">Chưa nhận được thanh toán</h4>
-            <p class="text-red-600 text-sm md:text-base font-bold mt-1">Đã quá thời gian tự động duyệt. Bạn đã chuyển khoản chưa?</p>
+            <p class="text-red-600 text-sm md:text-base font-bold mt-1 mb-2">Đã quá thời gian tự động duyệt. Bạn đã chuyển khoản chưa?</p>
           </div>
 
-          <div class="w-full border-t border-indigo-200 pt-5 mt-2">
-            <p class="text-slate-600 text-xs md:text-sm mb-3 font-semibold">Nếu có thắc mắc khác cần được giải đáp thì vui lòng nhắn tin cho Admin nhé.</p>
-            <a href="https://zalo.me/0917678211" target="_blank" class="mx-auto bg-[#0068ff] text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition shadow-md">
+          <!-- UI Mượt mà không có kẻ ngang thô thiển -->
+          <div class="w-full flex flex-col items-center mt-2">
+            <p class="text-slate-500 text-[11px] md:text-sm mb-3 font-medium px-4">Nếu có thắc mắc khác cần được giải đáp thì vui lòng nhắn tin cho Admin nhé.</p>
+            <a href="https://zalo.me/0917678211" target="_blank" class="bg-[#0068ff] text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition shadow-md">
               <i class="fas fa-comment-dots text-lg"></i> Nhắn Zalo Admin
             </a>
           </div>
@@ -304,7 +305,8 @@ const DB_KEY = 'vpn_orders_db';
 // Thêm biến global cho Đếm ngược
 let checkOrderInterval = null;
 let countdownTimerInterval = null;
-let pendingTimeLeft = 300; // 5 phút
+let pendingEndTime = 0;
+let currentCountdownOrderId = null;
 
 let lastScrollY = 0;
 window.addEventListener('scroll',()=>{
@@ -679,13 +681,35 @@ async function confirmPaid(){
 }
  
 // ── Portal ──
+// Các biến cục bộ phục vụ Đồng hồ & Polling
+let checkOrderInterval = null;
+let countdownTimerInterval = null;
+let pendingEndTime = 0;
+let currentCountdownOrderId = null;
+
 function updatePortalInfo(o){
   oCache=o;
   if(o.status==='pending'){
     document.getElementById('portalContentPending').classList.remove('hidden');
     document.getElementById('portalContentSuccess').classList.add('hidden');
-    startPendingCountdown(); // Bắt đầu đếm ngược 5 phút
+    
+    // Chỉ khởi động lại đồng hồ nếu là một đơn hàng hoàn toàn mới
+    if (currentCountdownOrderId !== o.id) {
+        currentCountdownOrderId = o.id;
+        
+        // Cố gắng khôi phục mốc thời gian cũ từ bộ nhớ trình duyệt
+        const savedEndTime = localStorage.getItem('timer_' + o.id);
+        if (savedEndTime && Number(savedEndTime) > Date.now()) {
+            pendingEndTime = Number(savedEndTime);
+        } else {
+            // Nếu không có mốc cũ hoặc đã quá hạn, set cứng 5 phút từ bây giờ
+            pendingEndTime = Date.now() + 300 * 1000; 
+            localStorage.setItem('timer_' + o.id, pendingEndTime.toString());
+        }
+        startPendingCountdown();
+    }
   } else if(o.status==='success'){
+    currentCountdownOrderId = null;
     stopPendingCountdown(); // Hủy đếm ngược
     document.getElementById('portalContentPending').classList.add('hidden');
     document.getElementById('portalContentSuccess').classList.remove('hidden');
@@ -696,6 +720,7 @@ function updatePortalInfo(o){
    
     document.getElementById('displayOrderId').innerText=o.id;
   } else {
+    currentCountdownOrderId = null;
     stopPendingCountdown(); // Hủy đếm ngược (nếu từ chối)
     document.getElementById('portalContentPending').classList.add('hidden');
     document.getElementById('portalContentSuccess').classList.add('hidden');
@@ -707,7 +732,6 @@ function startPendingCountdown() {
   // 1. Reset Giao diện
   document.getElementById('pendingActiveState').classList.remove('hidden');
   document.getElementById('pendingTimeoutState').classList.add('hidden');
-  pendingTimeLeft = 300;
   updateTimerUI();
 
   // 2. Dọn sạch interval cũ nếu có
@@ -715,20 +739,20 @@ function startPendingCountdown() {
 
   // 3. Interval Đếm lùi (1 giây/lần)
   countdownTimerInterval = setInterval(() => {
-    pendingTimeLeft--;
-    if (pendingTimeLeft <= 0) {
-      pendingTimeLeft = 0;
-      updateTimerUI();
+    let left = Math.ceil((pendingEndTime - Date.now()) / 1000);
+    if (left <= 0) {
+      updateTimerUI(0);
       handlePendingTimeout(); // Hết giờ
     } else {
-      updateTimerUI();
+      updateTimerUI(left);
     }
   }, 1000);
 
   // 4. Interval Polling API (10 giây/lần)
   checkOrderInterval = setInterval(() => {
-    if (pendingTimeLeft > 0) {
-      login(false, true); // Chạy ngầm, không load lại trang
+    let left = Math.ceil((pendingEndTime - Date.now()) / 1000);
+    if (left > 0) {
+      login(false, true); // Chạy ngầm check API, không load lại trang
     }
   }, 10000);
 }
@@ -745,9 +769,11 @@ function handlePendingTimeout() {
   document.getElementById('pendingTimeoutState').classList.remove('hidden');
 }
 
-function updateTimerUI() {
-  const m = Math.floor(pendingTimeLeft / 60).toString().padStart(2, '0');
-  const s = (pendingTimeLeft % 60).toString().padStart(2, '0');
+function updateTimerUI(leftStr) {
+  let left = leftStr !== undefined ? leftStr : Math.ceil((pendingEndTime - Date.now()) / 1000);
+  if (left < 0) left = 0;
+  const m = Math.floor(left / 60).toString().padStart(2, '0');
+  const s = (left % 60).toString().padStart(2, '0');
   const el = document.getElementById('countdownTimer');
   if(el) el.innerText = `${m}:${s}`;
 }
