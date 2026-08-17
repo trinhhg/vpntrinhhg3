@@ -30,12 +30,14 @@ details>summary::-webkit-details-marker{display:none;}
 #guideText{white-space:pre-wrap;word-wrap:break-word;}
 .pkg-disabled { filter: grayscale(1); opacity: 0.6; pointer-events: none; }
 </style>
-<!-- Chống giật màn hình (Flash UI) -->
+<!-- Chống giật màn hình (Flash UI) - An Toàn 100% -->
 <script>
   let __s = localStorage.getItem('vpn_portal_session_24h');
-  let __v = __s ? 'view-portal' : 'view-store';
-  // Đặt ID để JS bứng nó ra sau khi load, giải phóng CSS
-  document.write(`<style id="antiFlashStyle">#${__v} { display: block !important; }</style>`);
+  if(__s) {
+      document.write(`<style id="antiFlashStyle">#view-store { display: none !important; } #view-portal { display: block !important; }</style>`);
+  } else {
+      document.write(`<style id="antiFlashStyle">#view-portal { display: none !important; } #view-store { display: block !important; }</style>`);
+  }
 </script>
 </head>
 <body class="min-h-screen flex flex-col w-full overflow-x-hidden">
@@ -97,7 +99,7 @@ details>summary::-webkit-details-marker{display:none;}
     <div id="p-home" class="portal-tab-content active w-full">
       <div class="bg-white p-4 md:p-8 rounded-3xl mb-8 shadow-sm border border-slate-200 w-full overflow-hidden">
         
-        <!-- ======================= KHỐI PENDING ======================= -->
+        <!-- Khối Giao diện Chờ Duyệt (Đồng hồ đếm ngược) -->
         <div id="portalContentPending" class="hidden bg-indigo-50 border border-indigo-200 p-6 rounded-xl flex flex-col items-center text-center mb-6">
           
           <!-- Trạng thái đang đếm ngược -->
@@ -117,15 +119,16 @@ details>summary::-webkit-details-marker{display:none;}
             <p class="text-red-600 text-sm md:text-base font-bold mt-1 mb-2">Đã quá thời gian tự động duyệt. Bạn đã chuyển khoản chưa?</p>
           </div>
 
+          <!-- UI Zalo -->
           <div class="w-full flex flex-col items-center mt-2">
-            <p class="text-slate-500 text-[11px] md:text-sm mb-3 font-medium px-4">Nếu có thắc mắc khác cần được giải đáp thì vui lòng nhắn tin cho Admin nhé.</p>
+            <p class="text-slate-500 text-[11px] md:text-sm mb-3 font-semibold px-4">Nếu có thắc mắc khác cần được giải đáp thì vui lòng nhắn tin cho Admin nhé.</p>
             <a href="https://zalo.me/0917678211" target="_blank" class="mx-auto bg-[#0068ff] text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition shadow-md">
               <i class="fas fa-comment-dots text-lg"></i> Nhắn Zalo Admin
             </a>
           </div>
         </div>
 
-        <!-- ======================= KHỐI TỪ CHỐI ======================= -->
+        <!-- Khối Giao diện Thất Bại / Bị Từ Chối -->
         <div id="portalContentFailed" class="hidden bg-red-50 border border-red-200 p-6 rounded-xl flex flex-col items-center text-center mb-6">
           <i class="fas fa-times-circle text-4xl text-red-500 mb-3"></i>
           <h4 class="font-extrabold text-red-800 text-sm md:text-lg uppercase">Đơn hàng bị từ chối</h4>
@@ -139,14 +142,14 @@ details>summary::-webkit-details-marker{display:none;}
           </div>
         </div>
         
-        <!-- ======================= KHỐI THÀNH CÔNG ======================= -->
+        <!-- Khối Thành Công -->
         <div id="portalContentSuccess" class="hidden w-full">
           <div class="mb-4 text-center">
              <p class="text-red-600 font-black text-[11px] md:text-sm animate-pulse bg-red-50 py-2 px-4 rounded-lg inline-block border border-red-200">⚠️ Bắt buộc giữ bí mật Email và Mã đơn hàng để tránh kẻ gian lợi dụng.</p>
           </div>
           
           <div class="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-3 md:p-4 mb-4 shadow-sm gap-2 relative overflow-hidden">
-            <!-- Badge Nâng Cấp Thành Công (Mới) -->
+            <!-- Badge Nâng Cấp Thành Công -->
             <div id="upgradeSuccessBadge" class="hidden absolute top-0 right-0 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md animate-pulse">🎉 NÂNG GÓI THÀNH CÔNG</div>
             
             <div class="flex items-center gap-2 min-w-0 flex-1 overflow-hidden mt-1">
@@ -187,7 +190,7 @@ details>summary::-webkit-details-marker{display:none;}
             <!-- Nút Nâng Gói & Gia Hạn -->
             <div class="mt-4 grid grid-cols-2 gap-3 border-t border-green-200 pt-4">
               <button onclick="startUpgrade()" class="w-full bg-amber-500 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-amber-600 transition flex items-center justify-center shadow-md"><i class="fas fa-arrow-up mr-1.5"></i> NÂNG GÓI</button>
-              <button onclick="switchPortalTab('p-store'); isUpgradeMode=false;" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center shadow-md"><i class="fas fa-redo-alt mr-1.5"></i> GIA HẠN</button>
+              <button onclick="switchPortalTab('p-store'); isUpgradeMode=false; renderPackages('all');" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center shadow-md"><i class="fas fa-redo-alt mr-1.5"></i> GIA HẠN</button>
             </div>
           </div>
         </div>
@@ -334,18 +337,22 @@ const GOOGLE_MAIL_API = "https://script.google.com/macros/s/AKfycbyQjEln9By0HuUP
 const SESSION_KEY = 'vpn_portal_session_24h';
 const DB_KEY = 'vpn_orders_db';
  
-// Các biến global cho Đếm ngược
+// Biến global cho Đếm ngược
 let globalPollInterval = null;
 let countdownTimerInterval = null;
-let oCache = null;
- 
+let pendingEndTime = 0;
+let currentCountdownOrderId = null;
+let isUpgradePending = false; // Flag cho timeout nâng gói
+
 let lastScrollY = 0;
-let lang='vi', currentPackage=null, currentOrderId='', cmsCache={}, currentMultiplier=1;
+let lang='vi', currentPackage=null, currentOrderId='', cmsCache={}, currentMultiplier=1, oCache=null;
 let currentTotalVnd=0, currentTotalCny=0, currentTotalUsd=0;
 
 // Biến cho Nâng gói
 let isUpgradeMode = false;
-let baseOrderPrice = 0;
+let baseOrderPriceVnd = 0;
+let baseOrderPriceUsd = 0;
+let baseOrderPriceCny = 0;
 
 window.addEventListener('scroll',()=>{
   const nav=document.getElementById('mainNav');
@@ -354,12 +361,19 @@ window.addEventListener('scroll',()=>{
   lastScrollY=window.scrollY;
 });
 const obs=new IntersectionObserver(es=>es.forEach(e=>{const s=document.getElementById('floatingSocials');e.isIntersecting?s.classList.add('opacity-0','pointer-events-none','translate-y-10'):s.classList.remove('opacity-0','pointer-events-none','translate-y-10');}),{threshold:.1});
-window.addEventListener('DOMContentLoaded',()=>obs.observe(document.getElementById('footerArea')));
 
-// Gỡ cái thẻ style chống giật UI sau khi DOM tải xong
+window.addEventListener('DOMContentLoaded', () => {
+    obs.observe(document.getElementById('footerArea'));
+});
+
+// Gỡ cái thẻ style chống giật UI sau khi JS chạy xong
 window.addEventListener('load', () => {
    const antiFlash = document.getElementById('antiFlashStyle');
    if(antiFlash) antiFlash.remove();
+   // Gọi lại 1 lần để chắc chắn giao diện Store render đúng
+   if(document.getElementById('view-store').classList.contains('active')){
+       renderPackages('all');
+   }
 });
  
 // ── i18n ──
@@ -540,7 +554,7 @@ function genHTML(pkg){
   
   // Logic Nâng gói: Tô xám các gói không khả dụng
   let isDisabled = false;
-  if(isUpgradeMode && pkg.vnd <= baseOrderPrice && !pkg.isCustom) {
+  if(isUpgradeMode && pkg.vnd <= baseOrderPriceVnd && !pkg.isCustom) {
       isDisabled = true;
   }
 
@@ -589,15 +603,20 @@ function renderPackages(filter){
 // Bắt đầu quy trình Nâng Gói
 function startUpgrade() {
     isUpgradeMode = true;
-    let curPrice = 0;
+    baseOrderPriceVnd = 0;
+    baseOrderPriceUsd = 0;
+    baseOrderPriceCny = 0;
+
     // Dò giá gói hiện tại để làm mốc
     for(let p of pkgs) {
         if (oCache.pkgName && p.vi.name.includes(oCache.pkgName) && (!oCache.pkgData || p.data.includes(oCache.pkgData))) {
-            curPrice = p.vnd; break;
+            baseOrderPriceVnd = p.vnd;
+            baseOrderPriceUsd = p.usd;
+            baseOrderPriceCny = p.cny;
+            break;
         }
     }
-    if(!curPrice) curPrice = 60000; // Mặc định nếu không tìm thấy
-    baseOrderPrice = curPrice;
+    if(!baseOrderPriceVnd) { baseOrderPriceVnd = 60000; baseOrderPriceUsd = 2.5; baseOrderPriceCny = 15.5; }
 
     switchPortalTab('p-store');
     renderPackages('all');
@@ -621,7 +640,7 @@ function openCheckout(id){
      currentMultiplier = 1;
      // Hiện block báo giá nâng cấp
      document.getElementById('upgradePriceNote').classList.remove('hidden');
-     document.getElementById('upgradePriceNote').innerHTML = `Số tiền nâng cấp: <b>${currentPackage.vnd.toLocaleString('vi-VN')}đ</b> (Gói mới) - <b>${baseOrderPrice.toLocaleString('vi-VN')}đ</b> (Gói cũ) = <b>${(currentPackage.vnd - baseOrderPrice).toLocaleString('vi-VN')}đ</b>`;
+     document.getElementById('upgradePriceNote').innerHTML = `Số tiền nâng cấp: <b>${currentPackage.vnd.toLocaleString('vi-VN')}đ</b> (Gói mới) - <b>${baseOrderPriceVnd.toLocaleString('vi-VN')}đ</b> (Gói cũ) = <b>${(currentPackage.vnd - baseOrderPriceVnd).toLocaleString('vi-VN')}đ</b>`;
  } else {
      document.getElementById('checkoutTitle').innerText = i18n[lang].checkout_title;
      document.getElementById('durationBlock').classList.remove('hidden');
@@ -652,14 +671,15 @@ function calculateTotal(){
   if(!currentPackage)return;
  
   if(isUpgradeMode) {
-      currentTotalVnd = currentPackage.vnd - baseOrderPrice;
-      currentTotalCny = currentPackage.cny; // Tạm thời để nguyên CNY
-      currentTotalUsd = currentPackage.usd; // Tạm thời để nguyên USD
+      currentTotalVnd = currentPackage.vnd - baseOrderPriceVnd;
+      currentTotalCny = parseFloat((currentPackage.cny - baseOrderPriceCny).toFixed(2));
+      currentTotalUsd = parseFloat((currentPackage.usd - baseOrderPriceUsd).toFixed(2));
+      if(currentTotalVnd <= 0) currentTotalVnd = 0;
       document.getElementById('priceCalculation').innerText = `Thanh toán chênh lệch: ${currentTotalVnd.toLocaleString('vi-VN')}đ`;
   } else {
       currentTotalVnd=currentPackage.vnd*currentMultiplier;
       currentTotalCny=currentPackage.cny*currentMultiplier;
-      currentTotalUsd=(currentPackage.usd*currentMultiplier).toFixed(2);
+      currentTotalUsd=parseFloat((currentPackage.usd*currentMultiplier).toFixed(2));
       const str=lang==='vi'?`${currentPackage.vnd.toLocaleString('vi-VN')}đ×${currentMultiplier}=${currentTotalVnd.toLocaleString('vi-VN')}đ`:lang==='en'?`$${currentPackage.usd}×${currentMultiplier}=$${currentTotalUsd}`:`¥${currentPackage.cny}×${currentMultiplier}=¥${currentTotalCny}`;
       document.getElementById('priceCalculation').innerText=str;
   }
@@ -765,12 +785,23 @@ async function confirmPaid(){
               ts: Date.now()
           };
           await apiPost('/api/orders', db);
+          
           showToast("Yêu cầu Nâng Gói đã được gửi! Đang kiểm tra...", "success");
           
           document.getElementById('checkoutSection').classList.add('hidden');
           document.getElementById('orderForm').reset();
+          
+          // Trở về Portal ngay lập tức
+          document.getElementById('view-store').classList.remove('active');
+          document.getElementById('view-portal').classList.add('active');
+          document.getElementById('userMenu').classList.remove('hidden');
+          switchPortalTab('p-home');
+          
           isUpgradeMode = false;
-          login(true);
+          renderPackages('all'); // Phục hồi màu sắc gói
+          
+          updatePortalInfo(o);
+          window.scrollTo({top:0,behavior:'smooth'});
       }
   } else {
       // LOGIC MUA MỚI
@@ -789,10 +820,46 @@ async function confirmPaid(){
         expDate:'',daysLeft:'',info:'',info2:'',info3:'',nickname:'',reason:''
       });
       await apiPost('/api/orders',db);
+      
+      try {
+          const cusZaloVal = document.getElementById('cusZalo').value || 'Không nhập';
+          await fetch(GOOGLE_MAIL_API, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({
+              to: "lucastanora@gmail.com", 
+              subject: `[CÓ ĐƠN MỚI] ${currentOrderId} - Khách báo Đã CK`, 
+              html: `<div style="font-family:sans-serif; max-width:500px; margin:auto; border:1px solid #e2e8f0; border-radius:10px; padding:20px;">
+                  <h2 style="color:#2563eb; margin-top:0;">💰 Khách vừa báo ĐÃ THANH TOÁN!</h2>
+                  <ul style="list-style-type:none; padding:0; font-size:15px; line-height:1.8;">
+                      <li style="border-bottom:1px solid #f1f5f9; padding-bottom:8px;">📌 <b>Mã Đơn:</b> <span style="color:#ef4444; font-weight:bold;">${currentOrderId}</span></li>
+                      <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">📦 <b>Gói VPN:</b> ${currentPackage.vi.name} (${cy2})</li>
+                      <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">💵 <b>Số tiền:</b> <b style="color:#16a34a;">${fp}</b></li>
+                      <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">📧 <b>Email:</b> ${document.getElementById('cusEmail').value}</li>
+                      <li style="padding-top:8px;">💬 <b>Zalo/Tele:</b> <span style="background:#fef08a; padding:2px 6px; border-radius:4px; font-weight:bold; color:#854d0e;">${cusZaloVal}</span></li>
+                  </ul>
+                  <p style="background:#eff6ff; padding:10px; border-radius:6px; font-size:13px; color:#1e40af; text-align:center; margin-bottom:0;">Vui lòng mở trang Admin để kiểm tra tiền và duyệt đơn!</p>
+              </div>`
+          }) });
+      } catch(err) {}
+      
       showToast(lang==='vi'?'Thành công!':'Success!','success');
       document.getElementById('checkoutSection').classList.add('hidden');
       document.getElementById('orderForm').reset();
-      document.getElementById('loginInput').value=currentOrderId;login(true);
+      document.getElementById('loginInput').value = currentOrderId;
+
+      // Không gọi login(true) để tránh lệch pha Network
+      let o = db.find(x => x.id === currentOrderId);
+      localStorage.setItem(SESSION_KEY,JSON.stringify({id:o.id,time:new Date().getTime()}));
+      
+      document.getElementById('view-store').classList.remove('active');
+      document.getElementById('view-portal').classList.add('active');
+      document.getElementById('userMenu').classList.remove('hidden');
+      
+      switchPortalTab('p-home');
+      isUpgradeMode = false;
+      renderPackages('all'); // Reset UI Store
+      
+      updatePortalInfo(o);
+      if(!globalPollInterval) startGlobalPolling(o.id);
+      window.scrollTo({top:0,behavior:'smooth'});
   }
 }
 
@@ -833,9 +900,12 @@ function updatePortalInfo(o){
   upgradeBadge.classList.add('hidden');
   const lastPkgCacheKey = 'last_pkg_' + o.id;
   const lastPkg = localStorage.getItem(lastPkgCacheKey);
+
+  isUpgradePending = false; // reset cờ
+
   if (o.status === 'success') {
       if (lastPkg && lastPkg !== o.pkgName && !o.pendingUpgrade) {
-          // Bật Badge
+          // Bật Badge nếu phát hiện gói bị thay đổi (Admin đã duyệt)
           upgradeBadge.classList.remove('hidden');
       }
       localStorage.setItem(lastPkgCacheKey, o.pkgName);
@@ -850,11 +920,17 @@ function updatePortalInfo(o){
       let endTime = startTime + 300000; // 5 phút
 
       if(Date.now() >= endTime) {
-         // Quá 5 phút -> Vô thẳng bảng Đỏ, KHÔNG tắt polling
-         document.getElementById('pendingTimeoutState').classList.remove('hidden');
+         // Hết 5p -> Đá về giao diện gói cũ (Success UI)
+         document.getElementById('portalContentPending').classList.add('hidden');
+         document.getElementById('portalContentSuccess').classList.remove('hidden');
+         document.getElementById('subLink1').value = o.info1 || o.info || '';
+         document.getElementById('subLink2').value = o.info2 || '';
+         document.getElementById('subLink3').value = o.info3 || '';
+         document.getElementById('displayOrderId').innerText = o.id;
          startGlobalPolling(o.id);
       } else {
-         // Còn thời gian
+         // Còn thời gian đếm lùi
+         isUpgradePending = true;
          pendingEndTime = endTime;
          document.getElementById('pendingActiveState').classList.remove('hidden');
          startPendingPolling();
@@ -917,10 +993,23 @@ function handlePendingTimeout() {
   document.getElementById('pendingTimeoutState').classList.remove('hidden');
 }
 
-function updateTimerUI() {
-  let left = Math.ceil((pendingEndTime - Date.now()) / 1000);
+function updateTimerUI(leftStr) {
+  let left = leftStr !== undefined ? leftStr : Math.ceil((pendingEndTime - Date.now()) / 1000);
   if (left <= 0) {
-    handlePendingTimeout(); // Hết giờ
+    if(isUpgradePending) {
+        // Hết giờ nâng gói -> Về màn hình gói cũ
+        stopPendingPolling();
+        document.getElementById('portalContentPending').classList.add('hidden');
+        document.getElementById('portalContentSuccess').classList.remove('hidden');
+        document.getElementById('subLink1').value = oCache.info1 || oCache.info || '';
+        document.getElementById('subLink2').value = oCache.info2 || '';
+        document.getElementById('subLink3').value = oCache.info3 || '';
+        document.getElementById('displayOrderId').innerText = oCache.id;
+        startGlobalPolling(oCache.id);
+    } else {
+        // Mua mới -> Báo đỏ timeout
+        handlePendingTimeout(); 
+    }
   } else {
     document.getElementById('pendingActiveState').classList.remove('hidden');
     document.getElementById('pendingTimeoutState').classList.add('hidden');
@@ -957,10 +1046,6 @@ async function login(isManualRefresh=false,isAutoPoll=false){
  document.getElementById('mobileNavWrapper').classList.remove('hidden');
  if(!isAutoPoll&&!isManualRefresh)switchPortalTab('p-home');
   
-  // Tẩy xóa class chống giật của body
-  const antiFlash = document.getElementById('antiFlashStyle');
-  if(antiFlash) antiFlash.remove();
-
   updatePortalInfo(o);
   if(!isAutoPoll) startGlobalPolling(o.id);
 
@@ -989,6 +1074,7 @@ function logout(){
  document.getElementById('centerNavContainer').classList.add('justify-center');
   oCache=null;
   isUpgradeMode = false;
+  renderPackages('all'); // Phục hồi lại các gói bị xám nếu có
   if(globalPollInterval) clearInterval(globalPollInterval);
   stopPendingPolling();
 }
