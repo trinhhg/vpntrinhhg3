@@ -74,7 +74,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
 .card-content { position: relative; z-index: 2; }
 .check-icon { display: none; position: absolute; top: 0.75rem; right: 0.75rem; color: #4f46e5; z-index: 2; font-size: 1.25rem;}
 
-/* CSS Anti-Flash An Toàn 100% */
+/* CSS Anti-Flash An Toàn 100% (ĐÃ SỬA LỖI UI) */
 html.has-session #loginWrap { display: none !important; }
 html.has-session #hdr { display: flex !important; }
 html.has-session #main { display: block !important; } 
@@ -147,6 +147,7 @@ html.has-session #main { display: block !important; }
     </div>
   </div>
 
+  <!-- TAB DUNG LƯỢNG MỚI ĐƯỢC CHÈN CHUẨN XÁC VÀO ĐÂY -->
   <div id="t-data" class="hidden w-full min-w-0">
     <div class="flex flex-row items-center justify-between mb-4 gap-3">
       <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Yêu cầu check dung lượng</h2>
@@ -169,7 +170,6 @@ html.has-session #main { display: block !important; }
       </div>
     </div>
 
-    <!-- Tầng 1: Chọn Form -->
     <div class="link-tab-switcher mb-3">
       <div id="btn-ls-pool" class="link-tab-btn active" onclick="switchLinkMode('pool')"><i class="fas fa-plus-circle mr-1"></i>THÊM VÀO KHO TỔNG</div>
       <div id="btn-ls-manual" class="link-tab-btn" onclick="switchLinkMode('manual')"><i class="fas fa-magic mr-1"></i>TẠO ẨN THỦ CÔNG</div>
@@ -178,7 +178,6 @@ html.has-session #main { display: block !important; }
     <!-- Form 1: KHO LINK TỔNG -->
     <div id="panel-ls-pool" class="w-full min-w-0 mb-4 relative">
       <div class="bg-white p-4 lg:p-6 rounded-2xl border border-indigo-200 shadow-sm relative overflow-hidden mt-3">
-        
         <div class="absolute top-0 right-0 flex items-stretch h-[28px] overflow-hidden rounded-bl-xl shadow-sm border-b border-l border-slate-200">
            <div id="sysUptimeBox" class="bg-blue-50 text-blue-600 text-[10px] font-bold px-3 flex items-center border-r border-slate-200 transition-colors">
                <i class="fas fa-satellite-dish mr-1 animate-pulse"></i> Uptime <span id="autoNextRunText" class="ml-1 font-mono">00:00:00</span>
@@ -224,8 +223,6 @@ html.has-session #main { display: block !important; }
             <div id="btn-view-detailed" class="view-btn" onclick="switchLinkView('detailed')">🌳 CHI TIẾT (CÂY)</div>
         </div>
     </div>
-    
-    <!-- Render Container cho Danh Sách -->
     <div id="linksViewContainer" class="space-y-3 w-full min-w-0"></div>
 
   </div>
@@ -366,7 +363,6 @@ html.has-session #main { display: block !important; }
       </div>
     </div>
     
-    <!-- TÁCH TAB NHẬT KÝ THÀNH 2 PHẦN -->
     <div id="settings-view-log" class="hidden">
       <div class="flex gap-2 mb-4">
          <button onclick="switchLogTab('mail')" id="btn-log-mail" class="bg-indigo-600 text-white font-bold px-4 py-2 rounded-lg text-xs shadow-sm">📧 Nhật ký Mail</button>
@@ -389,7 +385,7 @@ html.has-session #main { display: block !important; }
         </div>
       </div>
 
-      <!-- Log Hệ Thống (Auto Migration, Cronjob...) -->
+      <!-- Log Hệ Thống -->
       <div id="view-log-sys" class="hidden">
         <div class="flex items-center justify-between mb-3">
           <div class="text-sm lg:text-base font-bold text-slate-700">Hoạt động Hệ Thống <span id="sysLogCount" class="text-slate-400 font-normal text-xs">(0 bản ghi)</span></div>
@@ -660,14 +656,6 @@ async function clearSysLog(){
   cmsDb.settings.sysLog=[]; renderSysLog(); await apP("/api/cms",cmsDb); toast("Đã xóa nhật ký Hệ Thống!");
 }
 
-function switchLogTab(tab){
-  document.getElementById('view-log-mail').classList.toggle('hidden', tab !== 'mail');
-  document.getElementById('view-log-sys').classList.toggle('hidden', tab !== 'sys');
-  document.getElementById('btn-log-mail').className = tab === 'mail' ? 'bg-indigo-600 text-white font-bold px-4 py-2 rounded-lg text-xs shadow-sm' : 'bg-white border border-slate-200 text-slate-600 font-bold px-4 py-2 rounded-lg text-xs hover:bg-slate-50 shadow-sm';
-  document.getElementById('btn-log-sys').className = tab === 'sys' ? 'bg-indigo-600 text-white font-bold px-4 py-2 rounded-lg text-xs shadow-sm' : 'bg-white border border-slate-200 text-slate-600 font-bold px-4 py-2 rounded-lg text-xs hover:bg-slate-50 shadow-sm';
-  if(tab === 'sys') renderSysLog();
-}
-
 async function saveEmailRoleUI(role) {
   if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", tz:"VN"};
   cmsDb.settings.emailRole = role;
@@ -751,11 +739,13 @@ function loginOK(st=true){
   document.getElementById("loginWrap").classList.add("hidden");
   document.getElementById("hdr").classList.remove("hidden");
   document.getElementById("main").classList.remove("hidden");
+  document.getElementById("hdr").style.display = "flex";
+  document.getElementById("main").style.display = "block";
   
-  // Xóa class khóa màn hình
   const antiFlash = document.getElementById("adminAntiFlash");
   if(antiFlash) antiFlash.remove();
-  
+  document.documentElement.classList.add('has-session'); // Khóa lại UI chống F5 văng
+
   const savedTab=lsGet("lastTab")||"t-ord";
   if(st){toast("Đăng nhập thành công!");fetchAll();go(savedTab);}
   else go(savedTab);
@@ -785,8 +775,7 @@ function loginOK(st=true){
     apG("/api/orders",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(ordersDb)){ordersDb=f;renderOrd();toast("Có đơn mới!","warn");}});
     apG("/api/data_requests",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(dataRequestsDb)){dataRequestsDb=f;renderDataRequests();toast("Có yêu cầu data mới!","warn");}});
     apG("/api/links",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(linksDb)){linksDb=f;renderLinks();}});
-    apG("/api/link_pool",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(linkPoolDb)){linkPoolDb=f; renderLinks(); }});
-    
+    apG("/api/link_pool",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(linkPoolDb)){linkPoolDb=f; if (curLinkTab==='pool') renderLinks(); }});
   },12000);
 }
 
@@ -868,7 +857,7 @@ async function fetchTransactions() {
       const candidatesHTML = (tx.candidateOrders || []).map(c => `
         <div class="bg-indigo-50 border border-indigo-100 p-2 rounded-lg mt-2 flex justify-between items-center">
            <div><span class="font-mono font-bold text-indigo-700 text-xs">Mã: ${c.order_id}</span><span class="text-[10px] text-slate-500 ml-2">(${c.created_at})</span></div>
-           <button onclick="approveTransaction(${tx.id}, '${c.order_id}')" class="bg-indigo-600 text-white text-[10px] font-bold px-3 py-1.5 rounded hover:bg-indigo-700">Chốt mã này</button>
+           <button onclick="approveTransaction(${tx.id}, '${c.order_id}')" class="bg-indigo-600 text-white text-[10px] font-bold px-3 py-1.5 rounded hover:bg-indigo-700">Duyệt cho mã này</button>
         </div>
       `).join('');
       
@@ -1136,6 +1125,440 @@ async function autoMigrateLinks(isAuto = false) {
 
   if(changed > 0) {
      await apP("/api/links", linksDb);
+     if(!isAuto) { renderLinks(); toast(`Đã luân chuyển thành công ${changed} Node nghẽn!`); }
+     addSysLog("Auto Migrate", `Thành công. Chuyển ${changed} khách sang Node mới.`);
+  } else {
+     if(!isAuto) toast("Hệ thống ổn định. Không có Node nào cần luân chuyển.");
+     addSysLog("Auto Migrate", "Hệ thống ổn định. Bỏ qua.");
+  }
+}
+
+function switchOrdTab(tab){
+  curOrdTab=tab;
+  ["success","pending","failed"].forEach(t=>document.getElementById("otab-"+t)?.classList.toggle("active",t===tab));
+  renderOrd();
+}
+
+function renderOrd(){
+  const tb=document.getElementById("ordBody");
+  const counts={success:0,pending:0,failed:0};
+  ordersDb.forEach(o=>{if(counts[o.status]!==undefined) counts[o.status]++;});
+  ["success","pending","failed"].forEach(t=>{const el=document.getElementById("cnt-"+t);if(el) el.textContent=counts[t];});
+  const filtered=ordersDb.filter(o=>o.status===curOrdTab);
+  if(!filtered.length){tb.innerHTML=`<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold lg:text-base">Không có đơn nào</div>`;return;}
+
+  const groups={};
+  filtered.forEach(o=>{
+    const dc=getDateCreated(o); 
+    const key=monthSortKey(dc)||"000000";
+    const label=monthLabel(dc);
+    if(!groups[key]) groups[key]={label,orders:[]};
+    groups[key].orders.push(o);
+  });
+  const sortedKeys=Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+  const now=getAdjustedTime();let html="";
+  for(const key of sortedKeys){
+    const g=groups[key];
+    html+=`<div class="month-header"><i class="far fa-calendar-alt text-indigo-400"></i><span>${g.label}</span><span class="month-count">${g.orders.length} đơn</span></div><div class="space-y-3 mb-6">`;
+    for(const o of g.orders){
+      const displayPkg=o.pkg?o.pkg.split(" / ")[0]:(o.pkgName||"—");
+      const dc=getDateCreated(o);
+      let isExpiring=false,daysLeft=null,isExpiredSuccess=false;
+      if(o.status==="success"&&o.expDate){
+        const expD=pd(o.expDate);
+        if(expD){daysLeft=Math.ceil((expD-now)/86400000);isExpiring=daysLeft>=0&&daysLeft<=3;isExpiredSuccess=daysLeft<0;}
+      }
+      const isSuc=o.status==="success",isPen=o.status==="pending";
+      const dot=isExpiredSuccess?'<div class="dot-gray"></div>':isSuc?'<div class="dot-green"></div>':isPen?'<div class="dot-yellow"></div>':'<div class="dot-red"></div>';
+      let cardBase='bg-white border border-slate-200';
+      if(isExpiredSuccess) cardBase='card-expired-done border border-slate-300';
+      else if(isExpiring) cardBase='card-expiring';
+      const nicknameHTML=o.nickname?`<span class="text-[9px] md:text-[10px] lg:text-xs font-black bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded ml-1 shrink-0"><i class="fas fa-user-tag mr-0.5"></i>${o.nickname}</span>`:"";
+      html+=`<div class="${cardBase} rounded-xl p-3 shadow-sm flex flex-col md:flex-row md:items-start justify-between gap-2 md:gap-3 w-full min-w-0">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1 min-w-0">
+            ${dot}
+            <span class="font-bold text-[10px] lg:text-xs text-slate-400">#${ordersDb.indexOf(o)+1}</span>
+            <span class="font-mono font-extrabold text-indigo-600 text-xs md:text-sm lg:text-base cp truncate order-id-text" onclick="cp('${o.id}')">${o.id}</span>
+            ${nicknameHTML}
+            ${isExpiredSuccess?`<span class="text-[9px] lg:text-xs font-black bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1 shrink-0">ĐÃ HẾT HẠN</span>`:""}
+          </div>
+          <div class="font-bold text-slate-800 text-[11px] md:text-xs lg:text-sm cp truncate pl-5 order-email-text" onclick="cp('${o.email||''}')">${o.email||"—"}</div>
+          <div class="text-[10px] md:text-[11px] lg:text-sm text-slate-500 mt-0.5 font-medium pl-5 order-meta-text">Zalo: <span class="font-bold text-slate-700 cp" onclick="cp('${o.zalo||''}')">${o.zalo||"Không có"}</span></div>
+          <div class="text-[10px] md:text-[11px] lg:text-sm text-slate-500 mt-0.5 font-medium truncate pl-5 order-meta-text">${displayPkg}${o.expDate?` • HSD: <span class="font-bold text-slate-700">${o.expDate}</span>`:""}${daysLeft!==null&&daysLeft>=0?` <span class="font-black ${daysLeft<=1?'text-red-600':'text-orange-500'}">(còn ${daysLeft}n)</span>`:""}</div>
+        </div>
+        <div class="flex flex-col items-end gap-2 shrink-0 border-t border-slate-100 md:border-0 pt-2 md:pt-0 mt-1 md:mt-0">
+          ${o.date?`<span class="text-[10px] lg:text-xs text-slate-400 font-semibold whitespace-nowrap">${fmtCardDate(o.date)}</span>`:""}
+          <div class="flex gap-1.5 shrink-0 mt-1">
+            ${(o.status==="success"&&o.expDate&&!isExpiredSuccess)?`<button onclick="sendExpMail('${o.id}')" title="Nhắc hết hạn" class="text-amber-500 font-bold px-3 py-1.5 bg-amber-50 border border-amber-100 rounded-lg text-xs lg:text-sm hover:bg-amber-500 hover:text-white transition shadow-sm"><i class="fas fa-clock"></i></button>`:""}
+            <button onclick="sendZaloMail('${o.id}')" title="Nhắc Zalo khách hàng" class="text-blue-500 font-bold px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg text-xs lg:text-sm hover:bg-blue-500 hover:text-white transition shadow-sm"><i class="fas fa-comment-dots"></i></button>
+            <button onclick="openOrdModal('${o.id}')" class="text-indigo-600 font-bold px-4 py-1.5 bg-indigo-50 border border-indigo-100 rounded-lg text-xs lg:text-sm hover:bg-indigo-600 hover:text-white transition shadow-sm"><i class="fas fa-pen md:mr-1.5"></i><span class="hidden md:inline">Sửa</span></button>
+            <button onclick="delOrd('${o.id}')" class="text-red-500 font-bold px-3 py-1.5 bg-red-50 border border-red-100 rounded text-xs lg:text-sm hover:bg-red-500 hover:text-white transition shadow-sm"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      </div>`;
+    }
+    html+=`</div>`;
+  }
+  tb.innerHTML=html;
+}
+
+function autoFillDays(){
+  const idx=parseInt(document.getElementById("mOPkg").value)||0;
+  if(idx === -1) return;
+  const days=PKG_DAYS[idx]||0;
+  if(days>0){document.getElementById("mODays").value=days;recalcExpFromDays();}
+  else document.getElementById("mODays").value="";
+}
+function recalcExpFromDays(){
+  const days=parseInt(document.getElementById("mODays").value)||0;if(!days) return;
+  document.getElementById("mOExp").value=addDays(todayTZ(),days);
+}
+function openOrdModal(id){
+  const o=id?ordersDb.find(x=>x.id===id):{id:genId(),email:"",status:"pending",info1:"",info2:"",info3:"",nickname:"",reason:"",expDate:"",method:"Ngân hàng VN",zalo:"",days:""};
+  if(!o) return;
+  document.getElementById("mOrdTtl").textContent=id?"Sửa đơn":"Tạo thủ công";
+  document.getElementById("mOId").value=o.id;document.getElementById("mOEmail").value=o.email||"";
+  document.getElementById("mONickname").value=o.nickname||"";
+  document.getElementById("mOZalo").value=o.zalo||"";document.getElementById("mOExp").value=o.expDate||"";
+  document.getElementById("mODays").value=o.days||"";
+  document.getElementById("mOLink1").value=o.info1||o.info||"";
+  document.getElementById("mOLink2").value=o.info2||"";
+  document.getElementById("mOLink3").value=o.info3||"";
+  document.getElementById("mOReason").value=o.reason||"";document.getElementById("mOStatus").value=o.status||"pending";
+  document.getElementById("mOMethod").value=o.method&&o.method.includes("Alipay")?"Alipay":o.method&&o.method.includes("Weixin")?"Weixin":"Ngân hàng VN";
+  
+  const sel=document.getElementById("mOPkg");
+  sel.innerHTML = PKGS.map((p,i)=>`<option value="${i}">${p}</option>`).join("");
+  let matched = false;
+  if(id) {
+      for(let i=0; i<sel.options.length; i++){
+          const optText = sel.options[i].text;
+          if(o.pkgName && optText.includes(o.pkgName) && (!o.pkgData || optText.includes(o.pkgData))) {
+              sel.selectedIndex = i; matched = true; break;
+          }
+      }
+      if(!matched) {
+          sel.innerHTML += `<option value="-1" selected>${o.pkg || o.pkgName}</option>`;
+          sel.value = "-1";
+      }
+  }
+
+  if(!id) autoFillDays();
+  togSF();document.getElementById("mOrd").classList.remove("hidden");
+}
+function togSF(){const s=document.getElementById("mOStatus").value;document.getElementById("fSuc").classList.toggle("hidden",s!=="success");document.getElementById("fFail").classList.toggle("hidden",s!=="failed");}
+
+async function saveOrd(){
+  const id=document.getElementById("mOId").value.trim();if(!id) return toast("Mã đơn rỗng!","err");
+  let o=ordersDb.find(x=>x.id===id);
+  if(!o){o={id,dateCreated:todayTZ(),date:getNowStr(), createdTs: Date.now()};ordersDb.unshift(o);} 
+  
+  const pkgVal = document.getElementById("mOPkg").value;
+  const pkgTxt = pkgVal === "-1" ? (o.pkg || "Gói Custom") : PKGS[pkgVal];
+  const pkgNameStr = pkgVal === "-1" ? (o.pkgName || "Gói Custom") : pkgTxt.split(" - ")[0];
+  const status=document.getElementById("mOStatus").value;
+  
+  Object.assign(o,{
+    email:document.getElementById("mOEmail").value.trim(),
+    nickname:document.getElementById("mONickname").value.trim(),
+    zalo:document.getElementById("mOZalo").value.trim(),
+    pkg:pkgTxt,
+    pkgName:pkgNameStr,
+    expDate:document.getElementById("mOExp").value.trim(),
+    days:parseInt(document.getElementById("mODays").value)||"",
+    status,
+    method:document.getElementById("mOMethod").value,
+    info1:document.getElementById("mOLink1").value.trim(),
+    info2:document.getElementById("mOLink2").value.trim(),
+    info3:document.getElementById("mOLink3").value.trim(),
+    reason:document.getElementById("mOReason").value.trim()
+  });
+  renderOrd();cm("mOrd");toast("Đang lưu & bắn tỉa...");await apP("/api/orders",ordersDb);toast("Đã lưu!");
+  
+  if(document.getElementById("mOSendMail").checked && o.email && (status==="success"||status==="failed")){
+    if(!isMaster()) {
+       toast("Đang ở chế độ SLAVE, bỏ qua lệnh gửi Mail!", "warn");
+    } else {
+       const subj=status==="success"?"VPN Trinh Hg - Kích hoạt thành công":"VPN Trinh Hg - Kích hoạt thất bại";
+       const html=status==="success"?buildSuccessMailHtml(o):buildFailedMailHtml(o);
+       fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:o.email,subject:subj,html})});
+       addMailLog(status==="success"?"Kích hoạt thành công":"Kích hoạt thất bại",o.email,o.id);
+    }
+  }
+}
+async function delOrd(id){ordersDb=ordersDb.filter(x=>x.id!==id);renderOrd();await apP("/api/orders",ordersDb);toast("Đã xóa!");}
+
+function sendExpMail(id){
+  if(!isMaster()) return toast("Đang ở chế độ SLAVE, không được gửi mail!", "err");
+  const o=ordersDb.find(x=>x.id===id);if(!o?.email) return toast("Chưa có email!","err");
+  const daysLeft=o.expDate?Math.ceil((pd(o.expDate)-getAdjustedTime())/86400000):null;
+  const msgDay=daysLeft===1?"<b>ngày mai hết hạn</b>":daysLeft!==null?`còn <b>${daysLeft} ngày</b> (hết hạn <b>${o.expDate}</b>)`:` hết hạn ngày <b>${o.expDate||"chưa xác định"}</b>`;
+  fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:o.email,subject:"VPN Trinh Hg - Gói VPN sắp hết hạn",html:buildExpMailHtml(o,msgDay)})});
+  addMailLog("Nhắc hết hạn (Thủ công)",o.email,o.id);toast("Đã gửi mail nhắc hết hạn!");
+}
+function sendZaloMail(id){
+  if(!isMaster()) return toast("Đang ở chế độ SLAVE, không được gửi mail!", "err");
+  const o=ordersDb.find(x=>x.id===id);if(!o?.email) return toast("Chưa có email!","err");
+  fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:o.email,subject:"VPN Trinh Hg - Hỗ trợ cài đặt",html:buildZaloMailHtml(o)})});
+  addMailLog("Hỗ trợ cài đặt",o.email,o.id);toast("Đã gửi mail Nhắc Zalo!");
+}
+
+function renderDataRequests(){
+  const tb=document.getElementById("dataReqBody");
+  if(!dataRequestsDb.length){tb.innerHTML=`<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold lg:text-base">Không có yêu cầu nào</div>`;return;}
+  tb.innerHTML=dataRequestsDb.map((req,i)=>{
+    const isSuc=req.status==="success";
+    const dot=isSuc?'<div class="dot-green"></div>':'<div class="dot-yellow"></div>';
+    const bgCard=isSuc?'bg-slate-50 border-slate-200 opacity-60':'bg-white border-2 border-dashed border-indigo-400';
+    return `<div class="${bgCard} rounded-xl p-3 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 w-full min-w-0 transition">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1 min-w-0">${dot}<span class="font-bold text-[10px] lg:text-xs text-slate-400">#${dataRequestsDb.length-i}</span><span class="font-mono font-extrabold text-indigo-600 text-xs md:text-sm lg:text-base cp truncate" onclick="cp('${req.orderId}')">${req.orderId}</span></div>
+        <div class="font-bold text-slate-800 text-[11px] md:text-xs lg:text-sm cp truncate pl-5" onclick="cp('${req.email}')">${req.email}</div>
+        <div class="text-[10px] md:text-[11px] lg:text-xs text-slate-500 mt-1 truncate pl-5">Gói: <b>${req.pkgName}</b> - ${req.date}</div>
+      </div>
+      <div class="flex gap-2 shrink-0 border-t border-slate-100 md:border-0 pt-3 md:pt-0 mt-2 md:mt-0 items-center">
+        <div class="relative w-24 md:w-32"><input type="number" step="0.1" id="gb-input-${i}" placeholder="Số GB..." class="w-full p-2 text-xs md:text-sm border border-slate-300 rounded-lg outline-none focus:border-indigo-500 font-bold bg-white text-center pr-8" ${isSuc?"disabled":""}><span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] md:text-xs font-bold text-slate-400 pointer-events-none">GB</span></div>
+        <button onclick="sendDataReport(${i})" class="${isSuc?'bg-slate-300 text-slate-500 pointer-events-none':'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md'} font-bold px-3 py-2 rounded-lg text-xs md:text-sm transition flex items-center justify-center shrink-0"><i class="fas fa-paper-plane mr-1.5"></i>${isSuc?"Đã Gửi":"Gửi Khách"}</button>
+        <button onclick="delDataRequest(${i})" class="text-red-500 bg-red-50 border border-red-100 hover:bg-red-500 hover:text-white px-3 py-2 rounded-lg transition shrink-0"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>`;
+  }).join("");
+}
+async function sendDataReport(index){
+  if(!isMaster()) return toast("Đang ở chế độ SLAVE, không được gửi mail!", "err");
+  const req=dataRequestsDb[index];const gb=document.getElementById(`gb-input-${index}`).value.trim();
+  if(!gb) return toast("Nhập số GB đã dùng vào ô trống!","err");toast("Đang soạn mail gửi khách...");
+  try{
+    await fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:req.email,subject:`VPN Trinh Hg - Báo cáo dung lượng ${req.orderId}`,html:buildDataMailHtml(req,gb)})});
+    req.status="success";renderDataRequests();await apP("/api/data_requests",dataRequestsDb);
+    addMailLog("Báo cáo dung lượng",req.email,req.orderId);toast("Đã báo cáo xong cho khách!");
+  }catch(e){toast("Lỗi gửi mail: "+e.message,"err");}
+}
+async function delDataRequest(i){dataRequestsDb.splice(i,1);renderDataRequests();await apP("/api/data_requests",dataRequestsDb);toast("Đã xóa!");}
+async function clearDataRequests(){dataRequestsDb=[];renderDataRequests();await apP("/api/data_requests",dataRequestsDb);toast("Đã dọn sạch!");}
+
+// LINKS
+function genHex(len){let r="";const c="0123456789abcdef";for(let i=0;i<len;i++)r+=c[Math.floor(Math.random()*16)];return r;}
+
+function renderLinks() {
+  const container = document.getElementById("linksViewContainer");
+  if(!container) return;
+  if(!linkPoolDb.length && !linksDb.length) { 
+      container.innerHTML = `<div class="border border-dashed border-slate-300 p-8 rounded-2xl text-center text-slate-400 font-bold bg-white lg:text-base">Hệ thống chưa có Link nào</div>`; 
+      return; 
+  }
+
+  // TÍNH TOÁN ĐỘNG: Đếm số thiết bị đang dùng chung mỗi Pool
+  linkPoolDb.forEach(pool => {
+      const children = linksDb.filter(x => x.orig === pool.url);
+      pool.used = children.length; 
+  });
+
+  if(curLinkListView === 'compact') {
+      container.innerHTML = linkPoolDb.map((p, i) => {
+         const isFull = p.used >= p.max;
+         return `<div class="bg-white border border-slate-200 p-3 rounded-xl shadow-sm flex items-center justify-between gap-2">
+            <div class="min-w-0 flex-1">
+               <div class="flex items-center gap-2 mb-1"><span class="font-bold text-slate-800 text-xs truncate cp" onclick="cp('${p.url}')">${p.url}</span></div>
+               <div class="flex gap-2 flex-wrap">
+                 <span class="bg-indigo-50 text-indigo-700 text-[9px] font-bold px-1.5 py-0.5 rounded">Còn: ${p.remainGb||'0'} / ${p.gb||'N/A'} GB</span>
+                 <span class="bg-orange-50 text-orange-700 text-[9px] font-bold px-1.5 py-0.5 rounded">HSD: ${p.exp||'N/A'}</span>
+                 <span class="${isFull ? 'bg-red-100 text-red-700' : 'bg-emerald-50 text-emerald-700'} text-[9px] font-bold px-1.5 py-0.5 rounded">Đã dùng: ${p.used}/${p.max}</span>
+               </div>
+            </div>
+            <button onclick="delPool('${p.url}')" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition shrink-0"><i class="fas fa-trash"></i></button>
+         </div>`;
+      }).join('');
+  } else {
+      const grps={};
+      for(const l of linksDb){
+          const k=l.orig||"?";
+          if(!grps[k]) {
+              const poolInfo = linkPoolDb.find(p => p.url === k) || {};
+              grps[k]={orig:k, poolInfo, children:[]};
+          }
+          grps[k].children.push(l);
+      }
+      container.innerHTML=Object.values(grps).map(g=>{
+        const isLx=g.orig.includes("liangxin"),isDj=g.orig.includes("djjc");
+        const badge=isLx?`<span class="badge-lx">Liangxin</span>`:isDj?`<span class="badge-dj">DJJC</span>`:`<span class="badge-ot">Other</span>`;
+        const sorted=[...g.children].sort((a,b)=>(parseInt(a.linkIndex||a.machine)||1)-(parseInt(b.linkIndex||b.machine)||1));
+        const rows=sorted.map(l=>{
+          const maskTok=getT(l.masked),isLocked=!!l.isLocked,idx=parseInt(l.linkIndex||l.machine)||1;
+          const dot=isLocked?`<div class="dot-red"></div>`:`<div class="dot-green"></div>`;
+          const bg=isLocked?`bg-red-50 border-red-200`:`hover:bg-slate-50 border-slate-100`;
+          return `<div class="py-2.5 px-3 border rounded-xl mb-2 ${bg} transition flex flex-col gap-2 w-full min-w-0">
+            <div class="flex items-center justify-between gap-2 min-w-0">
+              <div class="flex items-center gap-2 min-w-0">${dot}<span class="text-indigo-500 font-mono text-[11px] lg:text-sm font-black cp shrink-0" onclick="cp('${idx}')">#${idx}</span><span class="font-bold text-[11px] lg:text-sm text-slate-800 cp truncate" onclick="cp('${l.email||''}')">${l.email||"Khách lẻ"}</span>${l.expDate?`<span class="text-[9px] lg:text-xs text-slate-400 font-bold cp shrink-0" onclick="cp('${l.expDate}')">(${l.expDate})</span>`:""}</div>
+            </div>
+            <div class="font-mono text-[10px] lg:text-xs text-slate-500 cp break-all leading-relaxed" onclick="cp('${l.masked}')" title="${l.masked}">${l.masked}</div>
+            <div class="lnk-actions-row">
+              <button onclick="rebuildOneMAP('${l.id}')" title="Rebuild MAP" class="text-emerald-600 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-emerald-50 border border-emerald-100 rounded hover:bg-emerald-500 transition shadow-sm"><i class="fas fa-sync-alt"></i></button>
+              <button onclick="openLnkModal('${l.id}')" class="text-indigo-600 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-indigo-50 border border-indigo-100 rounded hover:bg-indigo-500 transition shadow-sm"><i class="fas fa-pen"></i></button>
+              <button onclick="toggleLock('${maskTok}',${isLocked})" class="${isLocked?"text-white bg-green-500 hover:bg-green-600":"text-orange-500 hover:text-white bg-orange-50 border-orange-100 border hover:bg-orange-500"} text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center rounded transition shadow-sm"><i class="fas ${isLocked?"fa-lock-open":"fa-lock"}"></i></button>
+              <button onclick="delLink('${l.id}')" class="text-red-500 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-red-50 border border-red-100 rounded hover:bg-red-500 transition shadow-sm"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>`;
+        }).join("");
+        
+        let metaHTML = "";
+        if(g.poolInfo.exp) metaHTML += `<span class="bg-amber-100 text-amber-700 text-[10px] font-black px-2 py-0.5 rounded shadow-sm ml-1">${g.poolInfo.exp}</span>`;
+        if(g.poolInfo.remainGb) metaHTML += `<span class="bg-sky-100 text-sky-700 text-[10px] font-black px-2 py-0.5 rounded shadow-sm ml-1">Còn: ${g.poolInfo.remainGb}GB</span>`;
+        
+        return `<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden mb-4 shadow-sm w-full min-w-0">
+          <div class="bg-slate-50 px-3 py-2 border-b border-slate-200 flex flex-col gap-1 min-w-0">
+            <div class="flex items-center justify-between flex-wrap gap-1">
+              <div class="flex gap-1.5 items-center flex-wrap">
+                ${badge}
+                <span class="text-[9px] lg:text-xs font-black bg-white border border-slate-200 text-slate-500 px-1.5 py-0.5 rounded shadow-sm">${g.children.length} LINK</span>
+                ${metaHTML}
+              </div>
+            </div>
+            <div class="font-mono text-[10px] lg:text-xs font-bold text-slate-600 break-all whitespace-normal cp" onclick="cp('${g.orig}')">${g.orig}</div>
+          </div>
+          <div class="p-2 lg:p-3">${rows}</div>
+        </div>`;
+      }).join("");
+  }
+}
+
+function switchLinkView(viewMode) {
+  curLinkListView = viewMode;
+  document.getElementById('btn-view-compact').classList.toggle('active', viewMode === 'compact');
+  document.getElementById('btn-view-detailed').classList.toggle('active', viewMode === 'detailed');
+  renderLinks();
+}
+
+function switchLinkMode(mode) {
+  curLinkTab = mode;
+  document.getElementById('btn-ls-pool').classList.toggle('active', mode === 'pool');
+  document.getElementById('btn-ls-manual').classList.toggle('active', mode === 'manual');
+  document.getElementById('panel-ls-pool').classList.toggle('hidden', mode !== 'pool');
+  document.getElementById('panel-ls-manual').classList.toggle('hidden', mode !== 'manual');
+}
+
+async function addLinkToPool() {
+  const orig = document.getElementById("poolOrig").value.trim();
+  const gb = document.getElementById("poolGb").value.trim();
+  const remainGb = document.getElementById("poolRemainGb").value.trim();
+  const exp = document.getElementById("poolExp").value.trim();
+  const max = parseInt(document.getElementById("poolMax").value);
+  
+  if(!orig || !max) return toast("Nhập URL gốc và Max thiết bị!", "err");
+  
+  // Cập nhật nếu đã có, push mới nếu chưa
+  let exists = linkPoolDb.find(p => p.url === orig);
+  if(exists) {
+      exists.gb = gb; exists.remainGb = remainGb||"0"; exists.exp = exp; exists.max = max;
+      toast("Đã cập nhật Kho Tổng!");
+  } else {
+      linkPoolDb.push({ id: "POOL-" + Date.now(), url: orig, gb, remainGb: remainGb||"0", exp, max });
+      toast("Đã thêm vào Kho tự động bốc!");
+  }
+  await apP("/api/link_pool", linkPoolDb);
+  
+  // TỰ ĐỘNG TẠO LINK ẨN SỐ 1
+  let masked="";
+  try{
+    const u=new URL(orig);let qs=u.search;
+    const nt=genHex(32);if(orig.includes("liangxin")) qs=`?OwO=${nt}`;else qs=`?token=${nt}`;
+    if(orig.includes("liangxin")) masked=PD+"/v1/VPNTrinhHg"+qs+"#VPNTrinhHg";
+    else if(orig.includes("djjc.cfd")) masked=PD+"/v2/VPNTrinhHg"+qs+"#VPNTrinhHg";
+  }catch{}
+  if(masked) {
+    const linkExists = linksDb.find(x => x.orig === orig && x.email === "Nguồn Hệ Thống (Auto)");
+    if(!linkExists) {
+        linksDb.unshift({id:"LNK-"+Date.now(),orig,masked,email:"Nguồn Hệ Thống (Auto)",expDate:exp,linkIndex:"1",isLocked:false,date:getNowStr()});
+        await apP("/api/links",linksDb);
+    }
+  }
+
+  ["poolOrig","poolGb","poolRemainGb","poolExp","poolMax"].forEach(id => document.getElementById(id).value = "");
+  renderLinks();
+  addSysLog("Nạp Kho Tổng", `Thành công. URL: ${orig.substring(0,20)}...`);
+}
+
+async function createLink(){
+  const orig=document.getElementById("lkOrig").value.trim(),email=document.getElementById("lkEmail").value.trim(),expDate=document.getElementById("lkExp").value.trim(),idx=document.getElementById("lkIdx").value.trim();
+  if(!orig) return toast("Chưa nhập link gốc!","err");
+  let masked="";
+  try{
+    const u=new URL(orig);let qs=u.search;
+    if(idx&&parseInt(idx)>=2){const t=u.searchParams.get("OwO")||u.searchParams.get("token")||"";const nt=genHex(t.length||32);if(orig.includes("liangxin")) qs=`?OwO=${nt}`;else qs=`?token=${nt}`;}
+    if(orig.includes("liangxin")) masked=PD+"/v1/VPNTrinhHg"+qs+"#VPNTrinhHg";
+    else if(orig.includes("djjc.cfd")) masked=PD+"/v2/VPNTrinhHg"+qs+"#VPNTrinhHg";
+    else return toast("Domain không hỗ trợ!","err");
+  }catch{return toast("Link không hợp lệ!","err");}
+  
+  // Tự động Add vào Kho tổng nếu chưa có
+  let exists = linkPoolDb.find(p => p.url === orig);
+  if(!exists) {
+      linkPoolDb.push({ id: "POOL-" + Date.now(), url: orig, gb: "", remainGb: "", exp: expDate, max: 30 });
+      await apP("/api/link_pool", linkPoolDb);
+  }
+
+  linksDb.unshift({id:"LNK-"+Date.now(),orig,masked,email,expDate,linkIndex:idx,isLocked:false,date:getNowStr()});
+  toast("Đang lưu link...");await apP("/api/links",linksDb);toast("Đã tạo link ẩn! Nhớ Đồng bộ GitHub.");
+  ["lkOrig","lkEmail","lkExp","lkIdx"].forEach(f=>document.getElementById(f).value="");
+  renderLinks();
+}
+
+async function delPool(url) {
+  linkPoolDb = linkPoolDb.filter(p => p.url !== url);
+  renderLinks();
+  toast("Đang xóa..."); await apP("/api/link_pool", linkPoolDb); toast("Đã xóa khỏi Kho");
+  addSysLog("Xóa Nguồn", "Đã xóa 1 Node khỏi kho tổng.");
+}
+
+// Luân Chuyển Node Nghẽn
+async function autoMigrateLinks(isAuto = false) {
+  if(!isAuto && !confirm("Hệ thống sẽ quét các Node sắp hết hạn (<4 tiếng) hoặc sắp hết dung lượng (<100GB) và TỰ ĐỘNG LUÂN CHUYỂN sang Pool khác. Chạy?")) return;
+  if(!isAuto) toast("Đang phân tích Node...");
+  
+  let changed = 0;
+  const nowMs = getAdjustedTime().getTime();
+
+  for(const l of linksDb) {
+     if(l.email === "Nguồn Hệ Thống (Auto)") continue;
+     const currentPool = linkPoolDb.find(p => p.url === l.orig);
+     if(!currentPool) continue;
+     
+     let needsMigration = false;
+     // Check Date < 4 tiếng (14,400,000 ms) 
+     if(currentPool.exp && currentPool.exp.includes("/")) {
+        const expDateObj = pd(currentPool.exp);
+        if(expDateObj) {
+            const diff = expDateObj.getTime() - nowMs;
+            if(diff <= 14400000) needsMigration = true; 
+        }
+     }
+     // Check Dung Lượng (còn < 100GB)
+     if(currentPool.remainGb) {
+        if(parseFloat(currentPool.remainGb) < 100) needsMigration = true;
+     }
+
+     if(needsMigration) {
+        // Ưu tiên 1: Có Date & Rảnh chỗ
+        let newPool = linkPoolDb.find(p => {
+             const childrenCount = linksDb.filter(x => x.orig === p.url).length;
+             return childrenCount < p.max && p.exp && p.exp.includes("/") && p.url !== currentPool.url;
+        });
+        // Ưu tiên 2: Lifetime & Rảnh chỗ
+        if(!newPool) newPool = linkPoolDb.find(p => {
+             const childrenCount = linksDb.filter(x => x.orig === p.url).length;
+             return childrenCount < p.max && p.url !== currentPool.url;
+        }); 
+        
+        if(newPool) {
+           l.orig = newPool.url;
+           changed++;
+        }
+     }
+  }
+
+  if(changed > 0) {
+     await apP("/api/links", linksDb); // linksDb thay đổi nên renderLinks sẽ update số Used động
      if(!isAuto) { renderLinks(); toast(`Đã luân chuyển thành công ${changed} Node nghẽn!`); }
      addSysLog("Auto Migrate", `Thành công. Chuyển ${changed} khách sang Node mới.`);
   } else {
