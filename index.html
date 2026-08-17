@@ -89,7 +89,7 @@ details>summary::-webkit-details-marker{display:none;}
     <div id="p-home" class="portal-tab-content active w-full">
       <div class="bg-white p-4 md:p-8 rounded-3xl mb-8 shadow-sm border border-slate-200 w-full overflow-hidden">
         
-        <!-- Khối Giao diện Chờ Duyệt (Đã được sửa lại thành Đồng hồ) -->
+        <!-- Khối Giao diện Chờ Duyệt (Đồng hồ đếm ngược) -->
         <div id="portalContentPending" class="hidden bg-indigo-50 border border-indigo-200 p-6 rounded-xl flex flex-col items-center text-center mb-6">
           
           <!-- Trạng thái đang đếm ngược -->
@@ -679,11 +679,6 @@ async function confirmPaid(){
 }
  
 // ── Portal ──
-// Các biến cục bộ phục vụ Đồng hồ & Polling
-let checkOrderInterval = null;
-let countdownTimerInterval = null;
-let pendingTimeLeft = 300; // 5 phút
-
 function updatePortalInfo(o){
   oCache=o;
   if(o.status==='pending'){
