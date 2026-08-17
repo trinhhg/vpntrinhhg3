@@ -35,9 +35,17 @@ html.has-session #view-store { display: none !important; }
 html.has-session #view-portal { display: block !important; }
 </style>
 <script>
-  // Chặn flash màn hình trước khi DOM load xong
-  if(localStorage.getItem('vpn_portal_session_24h')) {
-      document.documentElement.classList.add('has-session');
+  // Chặn flash màn hình an toàn 100%
+  let __s = localStorage.getItem('vpn_portal_session_24h');
+  if(__s) {
+      try {
+          let d = JSON.parse(__s);
+          if(new Date().getTime() - d.time < 24*3600*1000) {
+              document.documentElement.classList.add('has-session');
+          } else {
+              localStorage.removeItem('vpn_portal_session_24h');
+          }
+      } catch(e) {}
   }
 </script>
 </head>
@@ -146,6 +154,7 @@ html.has-session #view-portal { display: block !important; }
           </div>
           
           <div class="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-3 md:p-4 mb-4 shadow-sm gap-2 relative overflow-hidden">
+            <!-- Badge Nâng Cấp Thành Công (Mới) -->
             <div id="upgradeSuccessBadge" class="hidden absolute top-0 right-0 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md animate-pulse">🎉 NÂNG GÓI THÀNH CÔNG</div>
             
             <div class="flex items-center gap-2 min-w-0 flex-1 overflow-hidden mt-1">
@@ -193,15 +202,11 @@ html.has-session #view-portal { display: block !important; }
       <div class="flex justify-center mt-6 mb-8">
         <button onclick="switchPortalTab('p-guide')" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-black py-3 px-6 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center gap-2 text-xs md:text-sm max-w-[90vw] text-center"><i class="fas fa-question-circle text-lg"></i><span data-i18n="btn_watch_guide">Chưa biết sử dụng? Xem hướng dẫn ngay!</span></button>
       </div>
-      <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 md:p-8 mb-8 text-white shadow-lg flex flex-col md:flex-row items-center gap-6">
-        <div class="flex-1"><h3 class="text-xl md:text-3xl font-black mb-3" data-i18n="promo_title">🚀 Chơi Game & Lướt Mạng Không Giới Hạn!</h3><p class="text-sm font-medium opacity-90" data-i18n="promo_desc">Hỗ trợ: <b class="text-yellow-300">TikTok, Facebook, Messenger, Instagram, Zalo, YouTube...</b><br>Ping thấp: <b class="text-green-300">Liên Quân Mobile, Genshin Impact...</b></p></div>
-        <i class="fas fa-rocket text-6xl opacity-80 hidden md:block"></i>
-      </div>
+      <!-- BỎ BANNER PROMO Ở ĐÂY CHO ĐỠ NHẦM LẪN VỚI TAB STORE -->
       <h3 class="text-xl font-extrabold text-center mb-6 text-slate-800" data-i18n="faq_title">Câu hỏi thường gặp (FAQ)</h3>
       <div id="faqPortalHomeContainer" class="space-y-3"></div>
     </div>
  
-    <!-- TAB STORE -->
     <div id="p-store" class="portal-tab-content w-full">
       <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 md:p-8 mb-8 text-white shadow-lg flex flex-col md:flex-row items-center gap-6">
         <div class="flex-1"><h3 class="text-xl md:text-3xl font-black mb-3" data-i18n="promo_title">🚀 Chơi Game & Lướt Mạng Không Giới Hạn!</h3><p class="text-sm font-medium opacity-90" data-i18n="promo_desc">Hỗ trợ: <b class="text-yellow-300">TikTok, Facebook, Messenger, Instagram, Zalo, YouTube...</b><br>Ping thấp: <b class="text-green-300">Liên Quân Mobile, Genshin Impact...</b></p></div>
@@ -216,7 +221,6 @@ html.has-session #view-portal { display: block !important; }
       <div id="packagesContainerPortal" class="grid md:grid-cols-3 gap-4 md:gap-6 mb-10 w-full"></div>
     </div>
  
-    <!-- TAB GUIDE -->
     <div id="p-guide" class="portal-tab-content w-full">
       <div class="bg-white p-4 md:p-8 rounded-3xl mb-8 border border-slate-200 shadow-sm w-full">
         <h2 class="text-xl font-extrabold text-slate-800 mb-6 border-b border-slate-100 pb-4"><i class="fas fa-book-open text-indigo-500 mr-2"></i>Hướng dẫn Cài đặt</h2>
@@ -235,7 +239,6 @@ html.has-session #view-portal { display: block !important; }
     </div>
   </div>
  
-  <!-- NGOÀI STORE MẶC ĐỊNH -->
   <div id="view-store" class="view-section active mb-20 w-full">
     <div class="text-center mb-8 mt-2 md:mt-4 px-2 w-full">
       <h1 class="text-3xl md:text-5xl font-extrabold mb-3 text-slate-800 leading-tight" data-i18n="hero_title">Vượt rào cản. <span class="text-indigo-600">Kết nối thế giới.</span></h1>
@@ -269,7 +272,6 @@ html.has-session #view-portal { display: block !important; }
               <p class="text-lg md:text-xl font-black text-indigo-600" id="selectedPackagePrice"></p>
             </div>
             
-            <!-- Note dành cho Nâng Gói -->
             <div id="upgradePriceNote" class="hidden bg-amber-50 border border-amber-200 p-3 rounded-xl mb-5 text-amber-800 text-[11px] md:text-xs font-bold text-center"></div>
 
             <input type="email" id="cusEmail" required placeholder="Nhập Email nhận đơn" data-i18n-placeholder="email_placeholder"
@@ -340,7 +342,7 @@ let globalPollInterval = null;
 let countdownTimerInterval = null;
 let pendingEndTime = 0;
 let currentCountdownOrderId = null;
-let isUpgradePending = false; // Flag cho timeout nâng gói
+let isUpgradePending = false; 
  
 let lastScrollY = 0;
 let lang='vi', currentPackage=null, currentOrderId='', cmsCache={}, currentMultiplier=1, oCache=null;
@@ -351,7 +353,7 @@ let isUpgradeMode = false;
 let baseOrderPriceVnd = 0;
 let baseOrderPriceUsd = 0;
 let baseOrderPriceCny = 0;
- 
+
 window.addEventListener('scroll',()=>{
   const nav=document.getElementById('mainNav');
   if(window.scrollY>lastScrollY&&window.scrollY>80)nav.classList.add('nav-hidden');
@@ -359,13 +361,13 @@ window.addEventListener('scroll',()=>{
   lastScrollY=window.scrollY;
 });
 
-// Hàm gỡ Upgrade Mode chuẩn
+// Hàm gỡ Upgrade Mode chuẩn để bỏ màu xám
 function disableUpgradeMode() {
     isUpgradeMode = false;
     baseOrderPriceVnd = 0;
     baseOrderPriceUsd = 0;
     baseOrderPriceCny = 0;
-    renderPackages('all'); // Phục hồi các gói xám
+    renderPackages('all'); // Render lại lưới để bỏ thẻ class pkg-disabled
 }
  
 // ── i18n ──
@@ -453,7 +455,6 @@ const i18n={
       btn_check_data:"检查流量"}
 };
  
-// BẢNG GIÁ ĐÃ ĐƯỢC CẬP NHẬT THEO YÊU CẦU MỚI NHẤT
 const pkgs=[
  {id:'t1',category:['cycle','travel'],vi:{name:'Gói 1 tháng',price:'60.000đ',time:'1 Tháng'},en:{name:'1 Month',price:'$2.50',time:'1 Month'},zh:{name:'1个月',price:'¥15.5',time:'1个月'},usd:2.5,vnd:60000,cny:15.5,data:'100GB',tag:{vi:'🔥 BÁN CHẠY',en:'🔥 BEST SELLER',zh:'🔥 热销'},tag2:{vi:'✈️ Du lịch',en:'✈️ Travel',zh:'✈️ 旅游'}},
  {id:'t2',category:['cycle','travel'],vi:{name:'Gói 1 tháng',price:'70.000đ',time:'1 Tháng'},en:{name:'1 Month',price:'$3.00',time:'1 Month'},zh:{name:'1个月',price:'¥18',time:'1个月'},usd:3,vnd:70000,cny:18,data:'500GB',tag:{vi:'🔥 BÁN CHẠY',en:'🔥 BEST SELLER',zh:'🔥 热销'},tag2:{vi:'✈️ Du lịch',en:'✈️ Travel',zh:'✈️ 旅游'}},
@@ -488,7 +489,6 @@ async function apiGet(path){
   }
 }
  
-// BẮN TỈA ĐỒNG BỘ
 const SYNC_APIS = [
   "https://vpn-api.doicucden.workers.dev",
   "https://vpntrinhhg2worker.onepiecechapter.workers.dev",
@@ -544,7 +544,7 @@ function genHTML(pkg){
   let displayTime=p.time;
   if(pkg.category.includes('usage')&&!pkg.isCustom)displayTime=i18n[lang].lifetime_lbl;
   
-  // Logic Nâng gói: Tô xám các gói không khả dụng
+  // Nâng gói: Xám các gói có giá TRƯỚC nâng bé hơn hoặc bằng
   let isDisabled = false;
   if(isUpgradeMode && pkg.vnd <= baseOrderPriceVnd && !pkg.isCustom) {
       isDisabled = true;
@@ -588,18 +588,15 @@ function renderPackages(filter){
     });
   });
   const html=pkgs.filter(p=>filter==='all'||p.category.includes(filter)).map(genHTML).join('');
- document.getElementById('packagesContainerHome').innerHTML=html;
- document.getElementById('packagesContainerPortal').innerHTML=html;
+  document.getElementById('packagesContainerHome').innerHTML=html;
+  document.getElementById('packagesContainerPortal').innerHTML=html;
 }
 
 // Bắt đầu quy trình Nâng Gói
 function startUpgrade() {
     isUpgradeMode = true;
-    baseOrderPriceVnd = 0;
-    baseOrderPriceUsd = 0;
-    baseOrderPriceCny = 0;
+    baseOrderPriceVnd = 0; baseOrderPriceUsd = 0; baseOrderPriceCny = 0;
 
-    // Dò giá gói hiện tại để làm mốc (Sửa logic quét chặt hơn)
     for(let p of pkgs) {
         if (oCache.pkgName && p.vi.name.includes(oCache.pkgName) && (!oCache.pkgData || p.data.includes(oCache.pkgData))) {
             baseOrderPriceVnd = p.vnd;
@@ -611,7 +608,7 @@ function startUpgrade() {
     if(!baseOrderPriceVnd) { baseOrderPriceVnd = 60000; baseOrderPriceUsd = 2.5; baseOrderPriceCny = 15.5; }
 
     switchPortalTab('p-store');
-    renderPackages('all');
+    renderPackages('all'); // Tái hiện lại Card
     showToast("Vui lòng chọn gói cao hơn gói hiện tại để nâng cấp", "info");
 }
  
@@ -630,7 +627,6 @@ function openCheckout(id){
      document.getElementById('checkoutTitle').innerText = "Thanh toán Nâng Gói";
      document.getElementById('durationBlock').classList.add('hidden'); // Ẩn chọn tháng
      currentMultiplier = 1;
-     // Hiện block báo giá nâng cấp
      document.getElementById('upgradePriceNote').classList.remove('hidden');
      document.getElementById('upgradePriceNote').innerHTML = `Số tiền nâng cấp: <b>${currentPackage.vnd.toLocaleString('vi-VN')}đ</b> (Gói mới) - <b>${baseOrderPriceVnd.toLocaleString('vi-VN')}đ</b> (Gói cũ) = <b>${(currentPackage.vnd - baseOrderPriceVnd).toLocaleString('vi-VN')}đ</b>`;
  } else {
@@ -661,7 +657,6 @@ function selectPayMethod(method){
  
 function calculateTotal(){
   if(!currentPackage)return;
- 
   if(isUpgradeMode) {
       currentTotalVnd = currentPackage.vnd - baseOrderPriceVnd;
       currentTotalCny = parseFloat((currentPackage.cny - baseOrderPriceCny).toFixed(2));
@@ -709,7 +704,6 @@ function renderPaymentBox(){
     col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 border-b pb-2"><i class="fas fa-info-circle mr-2"></i>${i18n[lang].guide_title}</h4><p class="text-sm text-slate-600">${i18n[lang].guide_desc}</p></div>`;return;
   }
   
-  // Dùng ID cũ nếu đang nâng gói
   let dispId = isUpgradeMode ? oCache.id : currentOrderId;
 
   const paidBtnHTML=`<button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition btn-heartbeat shadow-md"><i class="fas fa-check-circle mr-2"></i>${i18n[lang].btn_paid}</button>`;
@@ -769,7 +763,6 @@ async function confirmPaid(){
       // LOGIC NÂNG GÓI
       let o = db.find(x => x.id === oCache.id);
       if(o) {
-          // Tạo một cờ chờ duyệt nâng gói
           o.pendingUpgrade = {
               targetPkg: currentPackage.vi.name,
               targetPkgData: currentPackage.data,
@@ -779,17 +772,15 @@ async function confirmPaid(){
           await apiPost('/api/orders', db);
           
           showToast("Yêu cầu Nâng Gói đã được gửi! Đang kiểm tra...", "success");
-          
           document.getElementById('checkoutSection').classList.add('hidden');
           document.getElementById('orderForm').reset();
           
-          // Trở về Portal ngay lập tức
           document.getElementById('view-store').classList.remove('active');
           document.getElementById('view-portal').classList.add('active');
           document.getElementById('userMenu').classList.remove('hidden');
           switchPortalTab('p-home');
           
-          disableUpgradeMode(); // Đã bao gồm renderPackages('all') để tắt thẻ xám
+          disableUpgradeMode(); // Hủy mode xám
           
           updatePortalInfo(o);
           window.scrollTo({top:0,behavior:'smooth'});
@@ -812,7 +803,7 @@ async function confirmPaid(){
       });
       await apiPost('/api/orders',db);
       
-      // Fire and Forget Mail
+      // Fire and Forget Mail => KHÔNG CHẶN GIAO DIỆN
       const cusZaloVal = document.getElementById('cusZalo').value || 'Không nhập';
       fetch(GOOGLE_MAIL_API, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({
           to: "lucastanora@gmail.com", 
@@ -835,7 +826,6 @@ async function confirmPaid(){
       document.getElementById('orderForm').reset();
       document.getElementById('loginInput').value = currentOrderId;
 
-      // Xử lý Giao diện Tức thời (Instant UI Transition)
       let o = db.find(x => x.id === currentOrderId);
       localStorage.setItem(SESSION_KEY,JSON.stringify({id:o.id,time:new Date().getTime()}));
       
@@ -852,7 +842,7 @@ async function confirmPaid(){
   }
 }
 
-// Hàm Parse ngày lỗi
+// Parse ngày cho đơn cũ
 function parseOrderDate(dateStr) {
   if (!dateStr) return Date.now();
   const parts = dateStr.split(" ");
@@ -877,45 +867,42 @@ function parseOrderDate(dateStr) {
 function updatePortalInfo(o){
   oCache = o;
   
-  // Tắt tất cả UI trước
   document.getElementById('portalContentPending').classList.add('hidden');
   document.getElementById('pendingActiveState').classList.add('hidden');
   document.getElementById('pendingTimeoutState').classList.add('hidden');
   document.getElementById('portalContentSuccess').classList.add('hidden');
   document.getElementById('portalContentFailed').classList.add('hidden');
 
-  // Logic kiểm tra Badge Nâng cấp thành công
   const upgradeBadge = document.getElementById('upgradeSuccessBadge');
   upgradeBadge.classList.add('hidden');
-  const lastPkgCacheKey = 'last_pkg_' + o.id;
+  
+  // Dò thay đổi Tên Gói bằng mác "pkg" nguyên chuỗi để tránh nhầm
+  const lastPkgCacheKey = 'last_pkg_full_' + o.id;
   const lastPkg = localStorage.getItem(lastPkgCacheKey);
 
   isUpgradePending = false; 
 
   if (o.status === 'success') {
-      if (lastPkg && lastPkg !== o.pkgName && !o.pendingUpgrade) {
+      if (lastPkg && lastPkg !== o.pkg && !o.pendingUpgrade) {
           upgradeBadge.classList.remove('hidden');
       }
-      localStorage.setItem(lastPkgCacheKey, o.pkgName);
+      localStorage.setItem(lastPkgCacheKey, o.pkg);
   }
 
-  // 1. Nếu đang có yêu cầu nâng gói
   if (o.status === 'success' && o.pendingUpgrade) {
       document.getElementById('portalContentPending').classList.remove('hidden');
       document.getElementById('pendingTitleUI').innerText = "ĐANG KIỂM TRA GIAO DỊCH NÂNG GÓI...";
       
       let startTime = o.pendingUpgrade.ts;
-      let endTime = startTime + 300000; // 5 phút
+      let endTime = startTime + 300000; 
 
       if(Date.now() >= endTime) {
-         // Hết 5p -> Đá về giao diện gói cũ
          document.getElementById('portalContentPending').classList.add('hidden');
          document.getElementById('portalContentSuccess').classList.remove('hidden');
          document.getElementById('subLink1').value = o.info1 || o.info || '';
          document.getElementById('subLink2').value = o.info2 || '';
          document.getElementById('subLink3').value = o.info3 || '';
          document.getElementById('displayOrderId').innerText = o.id;
-         // Vẫn giữ Polling ngầm vĩnh viễn
          if(!globalPollInterval) startGlobalPolling(o.id);
       } else {
          isUpgradePending = true;
@@ -926,7 +913,6 @@ function updatePortalInfo(o){
       return; 
   }
 
-  // 2. Logic Đơn Hàng Mới Bình Thường
   if(o.status === 'failed'){
     document.getElementById('portalContentFailed').classList.remove('hidden');
     document.getElementById('failReasonText').innerText = o.reason || 'Admin từ chối giao dịch';
@@ -959,17 +945,12 @@ function updatePortalInfo(o){
 function startPendingPolling() {
   updateTimerUI();
   stopPendingPolling();
-
-  countdownTimerInterval = setInterval(() => {
-    updateTimerUI();
-  }, 1000);
-
+  countdownTimerInterval = setInterval(() => { updateTimerUI(); }, 1000);
   checkOrderInterval = setInterval(() => {
-    // Check API ngầm (Dùng fetch chay để tránh load lại login UI)
     apiGet('/api/orders').then(db => {
        if(!Array.isArray(db)) return;
        let o = db.find(x => x.id === oCache.id);
-       if(o && (o.status !== oCache.status || JSON.stringify(o.pendingUpgrade) !== JSON.stringify(oCache.pendingUpgrade))) {
+       if(o && (o.status !== oCache.status || JSON.stringify(o.pendingUpgrade) !== JSON.stringify(oCache.pendingUpgrade) || o.pkg !== oCache.pkg)) {
           updatePortalInfo(o);
        }
     }).catch(()=>{});
@@ -987,11 +968,10 @@ function handlePendingTimeout() {
   document.getElementById('pendingTimeoutState').classList.remove('hidden');
 }
 
-function updateTimerUI() {
-  let left = Math.ceil((pendingEndTime - Date.now()) / 1000);
+function updateTimerUI(leftStr) {
+  let left = leftStr !== undefined ? leftStr : Math.ceil((pendingEndTime - Date.now()) / 1000);
   if (left <= 0) {
     if(isUpgradePending) {
-        // Hết giờ nâng gói -> Về màn hình gói cũ
         stopPendingPolling();
         document.getElementById('portalContentPending').classList.add('hidden');
         document.getElementById('portalContentSuccess').classList.remove('hidden');
@@ -1026,7 +1006,6 @@ function startGlobalPolling(orderId) {
 async function login(isManualRefresh=false,isAutoPoll=false){
   const input=document.getElementById('loginInput').value.trim().toUpperCase();if(!input)return;
   
-  // Fake tạm o để UI không bị văng trong lúc chờ KV đồng bộ
   let o = null;
   const session = localStorage.getItem(SESSION_KEY);
   if (session) {
@@ -1051,9 +1030,9 @@ async function login(isManualRefresh=false,isAutoPoll=false){
  document.getElementById('mobileNavWrapper').classList.remove('hidden');
  if(!isAutoPoll&&!isManualRefresh)switchPortalTab('p-home');
   
-  // Tẩy xóa class chống giật của body
   const antiFlash = document.getElementById('antiFlashStyle');
   if(antiFlash) antiFlash.remove();
+  document.documentElement.classList.add('has-session'); // Khóa lại UI chống F5 văng
 
   updatePortalInfo(o);
   if(!isAutoPoll) startGlobalPolling(o.id);
@@ -1082,12 +1061,10 @@ function logout(){
  document.getElementById('searchAndTabsWrapper').classList.remove('w-full');document.getElementById('searchAndTabsWrapper').classList.add('max-w-2xl','justify-center');
  document.getElementById('centerNavContainer').classList.add('justify-center');
   oCache=null;
-  
-  // Reset Cờ Nâng Gói & Đồng Hồ
   disableUpgradeMode();
   if(globalPollInterval) clearInterval(globalPollInterval);
   stopPendingPolling();
-  document.documentElement.classList.remove('has-session'); // Xóa cờ AntiFlash
+  document.documentElement.classList.remove('has-session');
 }
  
 function parseShortcodes(text) {
@@ -1118,20 +1095,6 @@ function showGuide(dev){
  document.getElementById('guideText').innerHTML=cmsCache[dev]?parseShortcodes(cmsCache[dev]):i18n[lang].guide_empty;
 }
  
-window.onload=function(){
-  changeLanguage('vi');
-  const session=localStorage.getItem(SESSION_KEY);
-  if(session){
-      const d=JSON.parse(session);
-      if(new Date().getTime()-d.time<24*3600*1000){
-          document.getElementById('loginInput').value=d.id;
-          login(true);
-      } else {
-          localStorage.removeItem(SESSION_KEY);
-      }
-  }
-};
-
 // --- LOGIC YÊU CẦU KIỂM TRA DUNG LƯỢNG ---
 async function requestDataCheck() {
   if(!oCache) return;
