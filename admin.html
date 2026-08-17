@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VPN Trinh Hg — Admin Test</title>
+<title>VPN Trinh Hg — Admin Panel</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 <style>
@@ -58,6 +58,17 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
 .link-tab-switcher { display: flex; gap: 8px; margin-bottom: 1rem; background: #e2e8f0; padding: 4px; border-radius: 12px; width: fit-content; }
 .link-tab-btn { padding: 6px 16px; font-size: 12px; font-weight: 800; border-radius: 8px; cursor: pointer; color: #64748b; transition: all 0.2s; }
 .link-tab-btn.active { background: #fff; color: #4f46e5; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+/* Giao diện UI Setting Mail Role */
+.radio-card { border: 2px solid #e2e8f0; border-radius: 0.75rem; padding: 1rem; cursor: pointer; transition: all 0.2s; position: relative; background: #fff; }
+.radio-card:hover { border-color: #cbd5e1; background: #f8fafc; }
+.radio-card input { position: absolute; opacity: 0; width: 0; height: 0; }
+.radio-card input:checked ~ .card-content { border-color: #4f46e5; }
+.radio-card input:checked + .card-bg { background: #e0e7ff; border-color: #4f46e5; }
+.radio-card input:checked ~ .check-icon { display: block; }
+.card-bg { position: absolute; inset: 0; border: 2px solid transparent; border-radius: 0.75rem; transition: all 0.2s; z-index: 1; }
+.card-content { position: relative; z-index: 2; }
+.check-icon { display: none; position: absolute; top: 0.75rem; right: 0.75rem; color: #4f46e5; z-index: 2; font-size: 1.25rem;}
 </style>
 </head>
 <body class="min-h-screen pb-20 overflow-x-hidden bg-slate-50">
@@ -81,14 +92,15 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
 </header>
 
 <main id="main" class="hidden max-w-7xl mx-auto p-2 md:p-4 w-full min-w-0">
-  <div class="grid grid-cols-4 md:flex md:flex-wrap gap-1 md:gap-2 mb-3">
-    <button onclick="go('t-ord')"      id="btn-t-ord"      class="tab-btn px-1 py-1 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1"><i class="fas fa-box"></i>Đơn hàng</button>
-    <button onclick="go('t-data')"     id="btn-t-data"     class="tab-btn px-1 py-1 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1"><i class="fas fa-chart-pie"></i>Dung lượng</button>
-    <button onclick="go('t-lnk')"      id="btn-t-lnk"      class="tab-btn px-1 py-1 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1"><i class="fas fa-link"></i>Link Sub</button>
-    <button onclick="go('t-acc')"      id="btn-t-acc"      class="tab-btn px-1 py-1 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1"><i class="fas fa-key"></i>Tài khoản</button>
-    <button onclick="go('t-dead')"     id="btn-t-dead"     class="tab-btn px-1 py-1 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1"><i class="fas fa-ban"></i>Đã xóa</button>
-    <button onclick="go('t-cms')"      id="btn-t-cms"      class="tab-btn px-1 py-1 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1"><i class="fas fa-book"></i>Hướng dẫn</button>
-    <button onclick="go('t-settings')" id="btn-t-settings" class="tab-btn col-span-2 md:col-span-1 px-1 py-1 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-center gap-1"><i class="fas fa-cog"></i>Cài đặt</button>
+  <!-- Thêm tab D1 -->
+  <div class="flex flex-wrap gap-1 md:gap-2 mb-3">
+    <button onclick="go('t-ord')"      id="btn-t-ord"      class="tab-btn flex-1 md:flex-none px-2 py-2 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex items-center justify-center gap-1.5"><i class="fas fa-box"></i><span class="hidden sm:inline">Đơn hàng</span></button>
+    <button onclick="go('t-trans')"    id="btn-t-trans"    class="tab-btn flex-1 md:flex-none px-2 py-2 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex items-center justify-center gap-1.5 relative"><i class="fas fa-file-invoice-dollar"></i><span class="hidden sm:inline">Giao dịch D1</span><span id="transBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center">!</span></button>
+    <button onclick="go('t-data')"     id="btn-t-data"     class="tab-btn flex-1 md:flex-none px-2 py-2 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex items-center justify-center gap-1.5"><i class="fas fa-chart-pie"></i><span class="hidden sm:inline">Dung lượng</span></button>
+    <button onclick="go('t-lnk')"      id="btn-t-lnk"      class="tab-btn flex-1 md:flex-none px-2 py-2 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex items-center justify-center gap-1.5"><i class="fas fa-link"></i><span class="hidden sm:inline">Link Sub</span></button>
+    <button onclick="go('t-dead')"     id="btn-t-dead"     class="tab-btn flex-1 md:flex-none px-2 py-2 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex items-center justify-center gap-1.5"><i class="fas fa-ban"></i><span class="hidden sm:inline">Đã xóa</span></button>
+    <button onclick="go('t-cms')"      id="btn-t-cms"      class="tab-btn flex-1 md:flex-none px-2 py-2 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex items-center justify-center gap-1.5"><i class="fas fa-book"></i><span class="hidden sm:inline">Hướng dẫn</span></button>
+    <button onclick="go('t-settings')" id="btn-t-settings" class="tab-btn flex-1 md:flex-none px-2 py-2 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex items-center justify-center gap-1.5"><i class="fas fa-cog"></i><span class="hidden sm:inline">Cài đặt</span></button>
   </div>
 
   <div id="t-ord" class="w-full min-w-0">
@@ -102,6 +114,20 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
       <div class="ord-sub-tab" id="otab-failed" onclick="switchOrdTab('failed')"><div class="mac-dot mac-red"></div>Thất bại<span id="cnt-failed" class="bg-red-100 text-red-700 text-[9px] md:text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
     </div>
     <div id="ordBody" class="w-full min-w-0"></div>
+  </div>
+
+  <!-- TAB D1 TRANSACTIONS MỚI -->
+  <div id="t-trans" class="hidden w-full min-w-0">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Duyệt Giao Dịch D1</h2>
+      <button onclick="fetchTransactions()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm transition"><i class="fas fa-sync mr-1"></i>Tải lại</button>
+    </div>
+    <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-4">
+      <p class="text-blue-800 text-sm font-semibold"><i class="fas fa-info-circle mr-2"></i>Đây là các giao dịch Ngân hàng bị kẹt do sai số tiền, trùng đơn hoặc thiếu mã DH. Bấm <strong class="text-indigo-600">Duyệt</strong> sẽ tự động tạo link và bắn mail.</p>
+    </div>
+    <div id="transBody" class="space-y-3 w-full min-w-0">
+       <div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold text-sm">Chưa cắm API D1 Worker hoặc Không có giao dịch cần duyệt.</div>
+    </div>
   </div>
 
   <div id="t-data" class="hidden w-full min-w-0">
@@ -133,19 +159,25 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     </div>
 
     <!-- Form: KHO LINK TỔNG (AUTO) -->
-    <div id="panel-ls-pool" class="bg-white p-4 lg:p-6 rounded-2xl border border-indigo-200 shadow-sm w-full min-w-0 mb-4 relative overflow-hidden">
-      <div class="absolute top-0 right-0 bg-indigo-500 text-white text-[9px] font-bold px-3 py-1 rounded-bl-xl">HỆ THỐNG AUTO</div>
-      <h3 class="font-extrabold text-indigo-700 mb-3 text-sm"><i class="fas fa-server mr-1"></i>Thêm Nguồn Link Mới Vào Kho</h3>
-      <div class="mb-3"><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Link Gốc (Liangxin / Djjc)</label><input id="poolOrig" type="text" placeholder="https://liangxin..." class="w-full p-2 lg:p-3 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-4 mb-4">
-        <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Dung lượng</label><input id="poolGb" type="text" placeholder="VD: 1000GB" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
-        <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Hết hạn</label><input id="poolExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
-        <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Max thiết bị</label><input id="poolMax" type="number" min="1" placeholder="VD: 20" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
+    <div id="panel-ls-pool" class="w-full min-w-0 mb-4 relative">
+      <div class="bg-white p-4 lg:p-6 rounded-2xl border border-indigo-200 shadow-sm relative overflow-hidden">
+        <div class="absolute top-0 right-0 bg-indigo-500 text-white text-[9px] font-bold px-3 py-1 rounded-bl-xl">HỆ THỐNG AUTO</div>
+        <h3 class="font-extrabold text-indigo-700 mb-3 text-sm"><i class="fas fa-server mr-1"></i>Thêm Nguồn Link Mới Vào Kho</h3>
+        <div class="mb-3"><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Link Gốc (Liangxin / Djjc)</label><input id="poolOrig" type="text" placeholder="https://liangxin..." class="w-full p-2 lg:p-3 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-4 mb-4">
+          <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Dung lượng</label><input id="poolGb" type="text" placeholder="VD: 1000GB" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
+          <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Hết hạn</label><input id="poolExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
+          <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Max thiết bị</label><input id="poolMax" type="number" min="1" placeholder="VD: 20" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
+        </div>
+        <button onclick="addLinkToPool()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 lg:py-3 rounded-xl shadow-md transition w-full text-xs lg:text-base"><i class="fas fa-plus-circle mr-2"></i>LƯU VÀO KHO TỔNG & TẠO LINK #1</button>
       </div>
-      <button onclick="addLinkToPool()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 lg:py-3 rounded-xl shadow-md transition w-full text-xs lg:text-base"><i class="fas fa-plus-circle mr-2"></i>LƯU VÀO KHO TỔNG</button>
+
+      <!-- Hiển thị Kho Link Pool bên dưới -->
+      <h3 class="font-extrabold text-slate-700 mb-2 mt-6 text-sm"><i class="fas fa-list mr-1"></i>Danh sách Kho Link Tổng</h3>
+      <div id="poolListBody" class="space-y-2"></div>
     </div>
 
-    <!-- Form: TẠO THỦ CÔNG (Giữ nguyên cũ) -->
+    <!-- Form: TẠO THỦ CÔNG -->
     <div id="panel-ls-manual" class="hidden bg-white p-4 lg:p-6 rounded-2xl border border-slate-200 shadow-sm w-full min-w-0 mb-4">
       <h3 class="font-extrabold text-slate-700 mb-3 text-sm"><i class="fas fa-magic mr-1"></i>Tạo Link Ẩn Khách Lẻ</h3>
       <div class="mb-3"><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Link Gốc (Liangxin / Djjc)</label><input id="lkOrig" type="text" placeholder="https://liangxin..." class="w-full p-2 lg:p-3 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
@@ -157,6 +189,8 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
       <button onclick="createLink()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-6 py-2.5 lg:py-3 rounded-xl shadow-md transition w-full text-xs lg:text-base"><i class="fas fa-mask mr-2"></i>TẠO LINK ẨN THỦ CÔNG</button>
     </div>
 
+    <!-- Cây Link Ẩn Hiển thị dưới cùng -->
+    <h3 class="font-extrabold text-slate-700 mb-2 mt-4 text-sm border-t border-slate-200 pt-4"><i class="fas fa-link mr-1"></i>Danh sách Link Sub Ẩn (Gồm Auto & Thủ Công)</h3>
     <div id="linksTree" class="space-y-3 w-full min-w-0"></div>
   </div>
 
@@ -203,14 +237,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     </div>
   </div>
 
-  <div id="t-acc" class="hidden w-full min-w-0">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Tài khoản VPN gốc</h2>
-      <button onclick="openAccModal(null)" class="bg-white border border-slate-200 text-indigo-600 hover:bg-indigo-50 font-bold px-3 py-1.5 lg:px-4 lg:py-2 rounded-xl text-xs lg:text-sm transition shadow-sm"><i class="fas fa-plus mr-1"></i>Thêm Mẹ</button>
-    </div>
-    <div id="accTree" class="space-y-3 w-full min-w-0"></div>
-  </div>
-
   <div id="t-settings" class="hidden w-full min-w-0">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
       <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Cài đặt hệ thống</h2>
@@ -219,45 +245,52 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
         <div class="settings-sub-tab" id="stab-sync" onclick="switchSettingsTab('sync')"><i class="fas fa-satellite-dish mr-1.5"></i>Bắn Tỉa 3 Web</div>
         <div class="settings-sub-tab" id="stab-log" onclick="switchSettingsTab('log')"><i class="fas fa-list-alt mr-1.5"></i>Nhật ký</div>
         <div class="settings-sub-tab" id="stab-dev" onclick="switchSettingsTab('dev')"><i class="fas fa-laptop mr-1.5"></i>Thiết bị</div>
-        <!-- Thêm Tab Giao diện chung -->
         <div class="settings-sub-tab" id="stab-ui" onclick="switchSettingsTab('ui')"><i class="fas fa-paint-brush mr-1.5"></i>Giao diện</div>
       </div>
     </div>
     <div id="settings-view-mail">
       <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 max-w-lg">
         
-        <div class="flex flex-col gap-2 pb-4 mb-4 border-b border-slate-100">
-          <label class="block font-bold text-sm text-slate-800">Quyền xử lý Email của Web này</label>
-          <select id="selEmailRole" class="w-full p-2 border border-slate-300 rounded-lg text-sm bg-slate-50 focus:border-indigo-500 outline-none" onchange="saveEmailRole()">
-            <option value="master">🟢 Master - Tự động Gửi Mail cho Khách</option>
-            <option value="slave">🔴 Slave - Chỉ đồng bộ, KHÔNG gửi Mail</option>
-          </select>
-          <p class="text-xs text-slate-500 mt-1">Lưu ý: Chỉ set 1 web làm Master để tránh gửi trùng 3 mail cho khách.</p>
+        <div class="flex flex-col gap-3 pb-6 mb-6 border-b border-slate-100">
+          <label class="block font-extrabold text-sm text-slate-800">Quyền xử lý Email của Web này</label>
+          <p class="text-xs text-slate-500 mb-2">Chỉ định 1 Web làm Master để tránh việc khách nhận 3 mail giống hệt nhau khi đồng bộ.</p>
+          
+          <label class="radio-card">
+            <input type="radio" name="emailRoleRad" value="master" onclick="saveEmailRoleUI('master')">
+            <div class="card-bg"></div>
+            <i class="fas fa-check-circle check-icon"></i>
+            <div class="card-content flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600"><i class="fas fa-crown"></i></div>
+              <div>
+                <p class="font-bold text-sm text-slate-800">Cấp Master</p>
+                <p class="text-[11px] text-slate-500">Tự động bắn Mail cho khách</p>
+              </div>
+            </div>
+          </label>
+
+          <label class="radio-card mt-2">
+            <input type="radio" name="emailRoleRad" value="slave" onclick="saveEmailRoleUI('slave')">
+            <div class="card-bg"></div>
+            <i class="fas fa-check-circle check-icon"></i>
+            <div class="card-content flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500"><i class="fas fa-eye-slash"></i></div>
+              <div>
+                <p class="font-bold text-sm text-slate-800">Cấp Slave</p>
+                <p class="text-[11px] text-slate-500">Im lặng đồng bộ, không gửi mail</p>
+              </div>
+            </div>
+          </label>
         </div>
 
         <div class="flex items-start justify-between gap-4 pb-4 border-b border-slate-100">
           <div>
             <div class="font-bold text-sm lg:text-base text-slate-800">Tự động gửi mail nhắc hết hạn</div>
-            <div class="text-xs lg:text-sm text-slate-500 mt-1">Gửi lúc 19:00 (giờ VN) — ngày D-2 và D-1 trước khi hết hạn</div>
+            <div class="text-xs lg:text-sm text-slate-500 mt-1">Đã được dời sang Cronjob Worker chạy ngầm</div>
           </div>
-          <label class="toggle-wrap shrink-0 mt-0.5">
-            <input type="checkbox" id="toggleAutoMail" onchange="saveAutoMailSetting()">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        <div class="pt-4 space-y-3">
-          <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-xs text-indigo-700">
-            <p class="font-bold mb-1"><i class="fas fa-info-circle mr-1"></i>Cách hoạt động</p>
-            <ul class="space-y-1 text-[11px] font-medium">
-              <li>• (Tính năng này đang được dời dần sang Cronjob)</li>
-            </ul>
-          </div>
-          <div id="autoMailStatus" class="text-xs lg:text-sm text-slate-500 italic">Trạng thái: Đang kiểm tra...</div>
         </div>
       </div>
     </div>
     
-    <!-- Tab UI Cài Đặt (Timezone) -->
     <div id="settings-view-ui" class="hidden">
       <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 max-w-lg">
          <div class="flex flex-col gap-2 pb-4 mb-4">
@@ -266,7 +299,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
             <option value="VN">🇻🇳 Việt Nam (UTC+7)</option>
             <option value="CN">🇨🇳 Trung Quốc (UTC+8)</option>
           </select>
-          <p class="text-xs text-slate-500 mt-1">Chức năng này thay đổi hiển thị, còn khóa link ngầm vẫn tự chạy theo 23h00 Bắc Kinh.</p>
+          <p class="text-xs text-slate-500 mt-1">Ảnh hưởng đến ngày tháng hiển thị trên UI. (Worker ngầm khóa link vẫn tự chạy theo 23h TQ).</p>
         </div>
       </div>
     </div>
@@ -291,7 +324,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
       <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
           <table class="log-table">
-            <thead><tr><th>#</th><th>Loại mail</th><th>Email khách</th><th>Mã đơn</th><th>Thời gian (GMT+8)</th></tr></thead>
+            <thead><tr><th>#</th><th>Loại mail</th><th>Email khách</th><th>Mã đơn</th><th>Thời gian</th></tr></thead>
             <tbody id="logTableBody"><tr><td colspan="5" class="text-center py-8 text-slate-400 italic text-sm">Chưa có nhật ký</td></tr></tbody>
           </table>
         </div>
@@ -364,29 +397,8 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
   </div>
 </div>
 
-<div id="mAcc" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="glass-card p-5 md:p-6 lg:p-8 w-full max-w-sm min-w-0">
-    <h3 id="mAccTtl" class="font-extrabold text-lg lg:text-xl mb-3 text-slate-800">Tài khoản Mẹ</h3>
-    <input type="hidden" id="mAccIdx">
-    <div class="mb-3 min-w-0"><label class="block text-[10px] lg:text-xs font-bold text-slate-600 mb-0.5">Email VPN Gốc</label><input id="mAEmail" type="text" class="w-full p-2 lg:p-3 text-xs lg:text-sm border border-slate-300 rounded-lg outline-none focus:border-indigo-500 bg-slate-50 truncate"></div>
-    <div class="mb-4 min-w-0"><label class="block text-[10px] lg:text-xs font-bold text-slate-600 mb-0.5">Ghi chú gói</label><input id="mANote" type="text" placeholder="Gói 1 Năm..." class="w-full p-2 lg:p-3 text-xs lg:text-sm border border-slate-300 rounded-lg outline-none focus:border-indigo-500 bg-slate-50 truncate"></div>
-    <div class="flex gap-2"><button onclick="saveAcc()" class="flex-1 bg-indigo-600 text-white font-bold py-2.5 lg:py-3 rounded-lg text-xs lg:text-sm hover:bg-indigo-700 shadow-md">LƯU MẸ</button><button onclick="cm('mAcc')" class="bg-white border border-slate-200 text-slate-700 font-bold py-2.5 lg:py-3 px-4 rounded-lg text-xs lg:text-sm shadow-sm hover:bg-slate-50">Hủy</button></div>
-  </div>
-</div>
-
-<div id="mCust" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-  <div class="glass-card p-5 md:p-6 lg:p-8 w-full max-w-sm min-w-0">
-    <h3 class="font-extrabold text-lg lg:text-xl mb-1 text-slate-800">Khách Hàng (Con)</h3>
-    <p class="text-[9px] lg:text-xs text-slate-500 mb-3 font-mono truncate border-b pb-2" id="mCustAccName"></p>
-    <input type="hidden" id="mCustAccIdx"><input type="hidden" id="mCustEmailIdx">
-    <div class="mb-3 min-w-0"><label class="block text-[10px] lg:text-xs font-bold text-slate-600 mb-0.5">Email khách</label><input id="mCustEmail" type="text" placeholder="khach@email.com" class="w-full p-2 lg:p-3 text-xs lg:text-sm border border-slate-300 rounded-lg outline-none focus:border-indigo-500 bg-slate-50 truncate"></div>
-    <div class="mb-4 min-w-0"><label class="block text-[10px] lg:text-xs font-bold text-slate-600 mb-0.5">Ghi chú (Máy mấy, HSD...)</label><input id="mCustNote" type="text" placeholder="Máy 1..." class="w-full p-2 lg:p-3 text-xs lg:text-sm border border-slate-300 rounded-lg outline-none focus:border-indigo-500 bg-slate-50 truncate"></div>
-    <div class="flex gap-2"><button onclick="saveCust()" class="flex-1 bg-indigo-600 text-white font-bold py-2.5 lg:py-3 rounded-lg text-xs lg:text-sm hover:bg-indigo-700 shadow-md">LƯU KHÁCH</button><button onclick="cm('mCust')" class="bg-white border border-slate-200 text-slate-700 font-bold py-2.5 lg:py-3 px-4 rounded-lg text-xs lg:text-sm shadow-sm hover:bg-slate-50">Hủy</button></div>
-  </div>
-</div>
-
 <script>
-const TABS=["t-ord","t-data","t-lnk","t-acc","t-dead","t-cms","t-settings"];
+const TABS=["t-ord","t-data","t-lnk","t-dead","t-cms","t-settings", "t-trans"];
 const API=window.location.origin, PD=window.location.origin;
 const GH_REPO="trinhhg/vpntrinhhg3";
 const MAIL_API="https://script.google.com/macros/s/AKfycbyQjEln9By0HuUPtboqJpb1INI6rRp52BxvHR8HaE5fs8qojfgau1R_27P4RyLLxXIp/exec";
@@ -396,9 +408,9 @@ const PKGS=["Gói 1 tháng - 60.000đ / $2.5 / ¥15.5 (100GB)","Gói 1 tháng - 
 const PKG_DAYS=[30,30,30,30,365,0,0,0];
 
 // LOẠI BỎ "/api/links" RA KHỎI DANH SÁCH ĐỒNG BỘ CHÉO ĐỂ TRÁNH RÁC LINK ẨN
-const CROSS_SYNC_PATHS=["/api/orders","/api/cms","/api/accounts","/api/data_requests", "/api/link_pool"];
+const CROSS_SYNC_PATHS=["/api/orders","/api/cms","/api/data_requests", "/api/link_pool"];
 
-let ordersDb=[],dataRequestsDb=[],linksDb=[],deadLinksDb=[],cmsDb={},devicesDb=[],accountsDb=[], linkPoolDb=[];
+let ordersDb=[],dataRequestsDb=[],linksDb=[],deadLinksDb=[],cmsDb={},devicesDb=[], linkPoolDb=[];
 let myDev="",curCms="android",curOrdTab="success", curLinkTab="pool";
 
 const lsGet=k=>{try{return JSON.parse(localStorage.getItem(SITE_KEY+"_"+k));}catch{return null;}};
@@ -422,56 +434,24 @@ function toast(msg,type="ok"){
   setTimeout(()=>{el.classList.remove("show");setTimeout(()=>el.remove(),250);},3000);
 }
 
-async function apG(p,def){
-  try{
-    if(Date.now()-lsTime(p)<15000) return lsGet("a"+p)??def;
-    const r=await fetch(API+p+"?_t="+Date.now());if(!r.ok) throw 0;
-    const d=await r.json();lsSet("a"+p,d);lsSetT(p);return d;
-  }catch{return lsGet("a"+p)??def;}
+// Hàm Offset Timezone (VN: +7, CN: +8)
+function getOffset() {
+  const tz = (cmsDb && cmsDb.settings && cmsDb.settings.tz) ? cmsDb.settings.tz : "VN";
+  return tz === "CN" ? 8 : 7;
 }
 
-async function apP(p,data){
-  lsSet("a"+p,data);lsSetT(p);
-  const localOnly = ["/api/links", "/api/deadlinks"];
-
-  // 1. Luôn luôn lưu cục bộ (cho chính web đang mở)
-  try {
-    const r = await fetch(API+p, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data)});
-    if(!r.ok) toast("Lỗi lưu nội bộ: " + r.status, "err");
-  } catch(e) {
-    toast("Mất kết nối nội bộ: " + e.message, "err");
-  }
-
-  // 2. Bắn tỉa đồng bộ chéo (chỉ cho các path cho phép)
-  if (!localOnly.includes(p) && CROSS_SYNC_PATHS.includes(p)) {
-    const syncSettings = (cmsDb && cmsDb.settings) ? cmsDb.settings : {};
-    const rawTargets = [syncSettings.syncW1, syncSettings.syncW2, syncSettings.syncW3].filter(u => u && u.trim());
-    const currentHost = window.location.hostname;
-    const externalTargets = rawTargets.filter(url => !url.includes(currentHost));
-
-    if (externalTargets.length > 0) {
-      Promise.allSettled(
-        externalTargets.map(base => {
-          const url = base.replace(/\/$/, "") + p;
-          return fetch(url, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data)});
-        })
-      ).then(results => {
-        let errCnt = 0;
-        results.forEach(res => {
-          if (res.status !== "fulfilled" || !res.value.ok) errCnt++;
-        });
-        if (errCnt > 0) console.warn(`Có ${errCnt} web vệ tinh bị lỗi đồng bộ!`);
-      });
-    }
-  }
+function getAdjustedTime(dateObj = new Date()) {
+  const offset = getOffset();
+  const utc = dateObj.getTime() + (dateObj.getTimezoneOffset() * 60000);
+  return new Date(utc + (3600000 * offset));
 }
 
-// CẮT BỎ GIỜ PHÚT, CHỈ TRẢ VỀ DD/MM/YYYY ĐỂ TRỊ BỆNH NHẢY TAB THÁNG
-function formatDateVN(d){return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;}
-function todayVN(){return formatDateVN(new Date());}
-function normalizeDateStr(dStr) { return dStr ? dStr.split(" ")[dStr.split(" ").length - 1] : ""; } // Hàm cắt giờ
-function addDays(dateStr,days){const d=pd(normalizeDateStr(dateStr));if(!d||!days)return "";d.setDate(d.getDate()+days);return formatDateVN(d);}
-function isExpiredDate(dateStr){const d=pd(normalizeDateStr(dateStr));if(!d)return false;return d.getTime()<Date.now();}
+// CẮT BỎ GIỜ PHÚT, CHỈ TRẢ VỀ DD/MM/YYYY THEO TIMEZONE
+function formatDateTZ(d){return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;}
+function todayTZ(){return formatDateTZ(getAdjustedTime());}
+function normalizeDateStr(dStr) { return dStr ? dStr.split(" ")[dStr.split(" ").length - 1] : ""; } 
+function addDays(dateStr,days){const d=pd(normalizeDateStr(dateStr));if(!d||!days)return "";d.setDate(d.getDate()+days);return formatDateTZ(d);}
+function isExpiredDate(dateStr){const d=pd(normalizeDateStr(dateStr));if(!d)return false;return d.getTime()<getAdjustedTime().getTime();}
 
 function fmtCardDate(raw){
   if(!raw) return "";
@@ -499,11 +479,55 @@ function monthSortKey(dateStr){
 }
 function getDateCreated(o){return normalizeDateStr(o.dateCreated||o.date||"");}
 
+async function apG(p,def){
+  try{
+    if(Date.now()-lsTime(p)<15000) return lsGet("a"+p)??def;
+    const r=await fetch(API+p+"?_t="+Date.now());if(!r.ok) throw 0;
+    const d=await r.json();lsSet("a"+p,d);lsSetT(p);return d;
+  }catch{return lsGet("a"+p)??def;}
+}
+
+async function apP(p,data){
+  lsSet("a"+p,data);lsSetT(p);
+  const localOnly = ["/api/links", "/api/deadlinks"];
+
+  // 1. Luôn luôn lưu cục bộ 
+  try {
+    const r = await fetch(API+p, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data)});
+    if(!r.ok) toast("Lỗi lưu nội bộ: " + r.status, "err");
+  } catch(e) {
+    toast("Mất kết nối nội bộ: " + e.message, "err");
+  }
+
+  // 2. Bắn tỉa đồng bộ chéo
+  if (!localOnly.includes(p) && CROSS_SYNC_PATHS.includes(p)) {
+    const syncSettings = (cmsDb && cmsDb.settings) ? cmsDb.settings : {};
+    const rawTargets = [syncSettings.syncW1, syncSettings.syncW2, syncSettings.syncW3].filter(u => u && u.trim());
+    const currentHost = window.location.hostname;
+    const externalTargets = rawTargets.filter(url => !url.includes(currentHost));
+
+    if (externalTargets.length > 0) {
+      Promise.allSettled(
+        externalTargets.map(base => {
+          const url = base.replace(/\/$/, "") + p;
+          return fetch(url, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data)});
+        })
+      ).then(results => {
+        let errCnt = 0;
+        results.forEach(res => {
+          if (res.status !== "fulfilled" || !res.value.ok) errCnt++;
+        });
+        if (errCnt > 0) console.warn(`Có ${errCnt} web vệ tinh bị lỗi đồng bộ!`);
+      });
+    }
+  }
+}
+
 function getMailLog(){return (cmsDb.settings && cmsDb.settings.mailLog) ? cmsDb.settings.mailLog : [];}
 async function addMailLog(type,email,orderId=""){
   const logs=getMailLog();
-  const now=new Date(Date.now()+8*3600000);
-  const ts=`${String(now.getUTCDate()).padStart(2,'0')}/${String(now.getUTCMonth()+1).padStart(2,'0')}/${now.getUTCFullYear()} ${String(now.getUTCHours()).padStart(2,'0')}:${String(now.getUTCMinutes()).padStart(2,'0')}`;
+  const now = getAdjustedTime();
+  const ts=`${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   logs.unshift({type,email,orderId,ts});
   if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], emailRole:"slave", tz:"VN"};
   cmsDb.settings.mailLog=logs.slice(0,100);
@@ -524,24 +548,11 @@ async function clearMailLog(){
   toast("Đã xóa nhật ký!");
 }
 
-async function checkAutoSendExpiry(){
-  // Bỏ qua check ở FE, dồn vào CronJob Worker
-}
-async function saveAutoMailSetting(){
-  const val=document.getElementById("toggleAutoMail").checked;
+async function saveEmailRoleUI(role) {
   if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], emailRole:"slave", tz:"VN"};
-  cmsDb.settings.autoMailEnabled = val;
-  document.getElementById("autoMailStatus").textContent="Trạng thái: "+(val?"✅ Đang bật (Phụ thuộc Cronjob)":"⏸ Đang tắt");
+  cmsDb.settings.emailRole = role;
   await apP("/api/cms", cmsDb);
-  toast(val?"Đã bật tự động gửi mail!":"Đã tắt.");
-}
-
-async function saveEmailRole(){
-  const val = document.getElementById("selEmailRole").value;
-  if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], emailRole:"slave", tz:"VN"};
-  cmsDb.settings.emailRole = val;
-  await apP("/api/cms", cmsDb);
-  toast("Đã lưu quyền xử lý Email: " + val.toUpperCase());
+  toast("Đã lưu quyền xử lý Email: " + role.toUpperCase());
 }
 
 async function saveTimezone(){
@@ -551,6 +562,7 @@ async function saveTimezone(){
   await apP("/api/cms", cmsDb);
   toast("Đã lưu Múi giờ hiển thị: " + val);
   renderOrd(); // Cập nhật lại UI
+  renderMailLog();
 }
 
 function loadSyncSettingUI(){
@@ -558,9 +570,11 @@ function loadSyncSettingUI(){
   document.getElementById("syncW1").value = s.syncW1 || "";
   document.getElementById("syncW2").value = s.syncW2 || "";
   document.getElementById("syncW3").value = s.syncW3 || "";
-  document.getElementById("selEmailRole").value = s.emailRole || "slave";
   document.getElementById("selTimezone").value = s.tz || "VN";
+  if (s.emailRole === 'master') { document.querySelector('input[value="master"]').checked = true; }
+  else { document.querySelector('input[value="slave"]').checked = true; }
 }
+
 async function saveSyncSetting(){
   if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], emailRole:"slave", tz:"VN"};
   cmsDb.settings.syncW1 = document.getElementById("syncW1").value.trim();
@@ -578,8 +592,8 @@ window.onload=async function(){
   if(cached.find&&cached.find(x=>x.id===myDev)){
     ordersDb=lsGet("a/api/orders")||[];dataRequestsDb=lsGet("a/api/data_requests")||[];
     linksDb=lsGet("a/api/links")||[];deadLinksDb=lsGet("a/api/deadlinks")||[];
-    devicesDb=cached;accountsDb=lsGet("a/api/accounts")||[];
-    linkPoolDb=lsGet("a/api/link_pool")||[]; // Tải mảng Pool mới
+    devicesDb=cached;
+    linkPoolDb=lsGet("a/api/link_pool")||[];
     cmsDb=lsGet("a/api/cms")||{};if(!cmsDb.link_origins) cmsDb.link_origins={};
     document.getElementById("mOPkg").innerHTML=PKGS.map((p,i)=>`<option value="${i}">${p}</option>`).join("");
     loginOK(false);setTimeout(()=>fetchAll(false),500);
@@ -588,6 +602,7 @@ window.onload=async function(){
     if(devicesDb.find&&devicesDb.find(x=>x.id===myDev)) loginOK(false);
   }
 };
+
 async function doLogin(){
   if(document.getElementById("pwInput").value==="572007"){
     devicesDb=await apG("/api/devices",[]);if(!Array.isArray(devicesDb)) devicesDb=[];
@@ -595,6 +610,7 @@ async function doLogin(){
     loginOK(true);
   } else toast("Sai mật khẩu!","err");
 }
+
 function loginOK(st=true){
   document.getElementById("loginWrap").classList.add("hidden");
   document.getElementById("hdr").classList.remove("hidden");
@@ -608,7 +624,7 @@ function loginOK(st=true){
     apG("/api/orders",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(ordersDb)){ordersDb=f;renderOrd();toast("Có đơn mới!","warn");}});
     apG("/api/data_requests",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(dataRequestsDb)){dataRequestsDb=f;renderDataRequests();toast("Có yêu cầu data mới!","warn");}});
     apG("/api/links",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(linksDb)){linksDb=f;renderLinks();}});
-    apG("/api/link_pool",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(linkPoolDb)){linkPoolDb=f;}});
+    apG("/api/link_pool",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(linkPoolDb)){linkPoolDb=f; if (curLinkTab==='pool') renderPoolList(); }});
   },12000);
 }
 function doLogout(){lsDel("adm_dev");location.reload();}
@@ -627,31 +643,108 @@ function go(id){
   if(id==="t-data") renderDataRequests();
   if(id==="t-settings"){renderMailLog();renderDev();loadSyncSettingUI();}
   if(id==="t-lnk") switchLinkMode(curLinkTab);
+  if(id==="t-trans") fetchTransactions();
 }
 
 async function fetchAll(msg=false){
-  [ordersDb,dataRequestsDb,linksDb,deadLinksDb,devicesDb,accountsDb,linkPoolDb]=await Promise.all([apG("/api/orders",[]),apG("/api/data_requests",[]),apG("/api/links",[]),apG("/api/deadlinks",[]),apG("/api/devices",[]),apG("/api/accounts",[]),apG("/api/link_pool",[])]);
+  [ordersDb,dataRequestsDb,linksDb,deadLinksDb,devicesDb,linkPoolDb]=await Promise.all([apG("/api/orders",[]),apG("/api/data_requests",[]),apG("/api/links",[]),apG("/api/deadlinks",[]),apG("/api/devices",[]),apG("/api/link_pool",[])]);
   cmsDb=await apG("/api/cms",{});
   if(!Array.isArray(ordersDb)) ordersDb=[];if(!Array.isArray(dataRequestsDb)) dataRequestsDb=[];
   if(!Array.isArray(linksDb)) linksDb=[];if(!Array.isArray(deadLinksDb)) deadLinksDb=[];
-  if(!Array.isArray(devicesDb)) devicesDb=[];if(!Array.isArray(accountsDb)) accountsDb=[];
+  if(!Array.isArray(devicesDb)) devicesDb=[];
   if(!Array.isArray(linkPoolDb)) linkPoolDb=[];
   if(typeof cmsDb!=="object"||Array.isArray(cmsDb)) cmsDb={};
   if(!cmsDb.link_origins) cmsDb.link_origins={};
   if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], emailRole:"slave", tz:"VN"};
   for(let k in cmsDb){if(k!=="promo_templates"&&k!=="link_origins"&&k!=="settings") cmsDb[k]=reverseShortcodes(cmsDb[k]);}
   
-  renderOrd();renderDataRequests();renderLinks();renderDev();renderAcc();
+  renderOrd();renderDataRequests();renderLinks();renderDev();
   document.getElementById("cmsRaw").value=cmsDb[curCms]||"";updatePreview();
   
-  const on = cmsDb.settings.autoMailEnabled || false;
-  document.getElementById("toggleAutoMail").checked = on;
-  document.getElementById("autoMailStatus").textContent = "Trạng thái: " + (on ? "✅ Đang bật (Phụ thuộc Cronjob)" : "⏸ Đang tắt");
   if(!document.getElementById("t-settings").classList.contains("hidden")){
       renderMailLog(); loadSyncSettingUI();
   }
-
+  
   if(msg) toast("Đã làm mới dữ liệu!");
+}
+
+// ── GIAO DỊCH D1 MỚI ──
+async function fetchTransactions() {
+  document.getElementById('transBadge').classList.add('hidden');
+  const tb = document.getElementById("transBody");
+  tb.innerHTML = '<div class="p-6 text-center"><i class="fas fa-spinner fa-spin text-2xl text-indigo-500"></i></div>';
+  try {
+    const res = await fetch(API + '/api/admin/reviews');
+    if (!res.ok) throw new Error("Chưa kết nối Worker D1");
+    const data = await res.json();
+    if (!data.reviews || data.reviews.length === 0) {
+      tb.innerHTML = '<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold text-sm">Không có giao dịch nào cần duyệt</div>';
+      return;
+    }
+    document.getElementById('transBadge').innerText = data.reviews.length;
+    document.getElementById('transBadge').classList.remove('hidden');
+    
+    tb.innerHTML = data.reviews.map(tx => {
+      const candidatesHTML = (tx.candidateOrders || []).map(c => `
+        <div class="bg-indigo-50 border border-indigo-100 p-2 rounded-lg mt-2 flex justify-between items-center">
+           <div><span class="font-mono font-bold text-indigo-700 text-xs">Mã: ${c.order_id}</span><span class="text-[10px] text-slate-500 ml-2">(${c.created_at})</span></div>
+           <button onclick="approveTransaction(${tx.id}, '${c.order_id}')" class="bg-indigo-600 text-white text-[10px] font-bold px-3 py-1.5 rounded hover:bg-indigo-700">Chốt mã này</button>
+        </div>
+      `).join('');
+      
+      return `
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm w-full">
+         <div class="flex justify-between items-start mb-2">
+            <div>
+              <span class="font-black text-red-600 text-lg">${Number(tx.amount).toLocaleString('vi-VN')} đ</span>
+              <span class="bg-yellow-100 text-yellow-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">${tx.status === 'review_required' ? 'Trùng Tiền' : 'Sai Mã/Thiếu Tiền'}</span>
+            </div>
+            <div class="text-[10px] text-slate-400">${tx.created_at}</div>
+         </div>
+         <div class="font-mono text-xs text-slate-600 bg-slate-50 p-2 rounded border border-slate-100 mb-3">${tx.notification || tx.content}</div>
+         <div class="flex gap-2 mb-2">
+           <button onclick="rejectTransaction(${tx.id})" class="flex-1 bg-red-50 text-red-600 border border-red-200 hover:bg-red-500 hover:text-white font-bold py-2 rounded-lg text-xs transition">Từ Chối GD này</button>
+           <button onclick="approveTransaction(${tx.id}, null)" class="flex-1 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-600 hover:text-white font-bold py-2 rounded-lg text-xs transition">Duyệt tự do (Nhập mã)</button>
+         </div>
+         ${candidatesHTML ? `<div class="border-t border-slate-100 pt-2 mt-2"><p class="text-[10px] font-bold text-slate-500">Các đơn nghi ngờ khớp tiền:</p>${candidatesHTML}</div>` : ''}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    tb.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold text-sm">Lỗi tải D1: ${e.message}</div>`;
+  }
+}
+
+async function approveTransaction(txId, orderId) {
+  let oid = orderId;
+  if (!oid) {
+    oid = prompt("Nhập chính xác Mã Đơn Hàng (DH-...) muốn chốt cho giao dịch này:");
+    if (!oid) return;
+  }
+  toast("Đang nã lệnh duyệt...");
+  try {
+    const res = await fetch(`${API}/api/admin/reviews/${txId}/approve`, {
+       method: "POST", headers: {"Content-Type": "application/json"},
+       body: JSON.stringify({ orderId: oid.trim(), note: "Duyệt tay qua Admin UI" })
+    });
+    const result = await res.json();
+    if(res.ok) {
+       toast("Duyệt thành công! Worker D1 sẽ tự sinh link ngầm.");
+       fetchTransactions();
+    } else { toast("Lỗi: " + (result.error || "Không rõ"), "err"); }
+  } catch(e) { toast("Lỗi kết nối", "err"); }
+}
+
+async function rejectTransaction(txId) {
+  if(!confirm("Chắc chắn TỪ CHỐI giao dịch này? Đơn hàng (nếu có) sẽ bị failed.")) return;
+  toast("Đang nã lệnh từ chối...");
+  try {
+    const res = await fetch(`${API}/api/admin/reviews/${txId}/reject`, {
+       method: "POST", headers: {"Content-Type": "application/json"},
+       body: JSON.stringify({ note: "Từ chối qua Admin UI" })
+    });
+    if(res.ok) { toast("Đã từ chối thành công"); fetchTransactions(); } 
+    else { toast("Lỗi API D1", "err"); }
+  } catch(e) { toast("Lỗi kết nối", "err"); }
 }
 
 // TOGGLE TAB LINK SUB (POOL / MANUAL)
@@ -661,9 +754,31 @@ function switchLinkMode(mode) {
   document.getElementById('btn-ls-manual').classList.toggle('active', mode === 'manual');
   document.getElementById('panel-ls-pool').classList.toggle('hidden', mode !== 'pool');
   document.getElementById('panel-ls-manual').classList.toggle('hidden', mode !== 'manual');
+  if(mode === 'pool') renderPoolList();
 }
 
-// THÊM LINK VÀO KHO TỔNG (AUTO)
+// RENDER POOL
+function renderPoolList() {
+  const tb = document.getElementById("poolListBody");
+  if(!tb) return;
+  if(!linkPoolDb.length) { tb.innerHTML = `<div class="border border-dashed border-slate-300 p-6 rounded-xl text-center text-slate-400 font-bold text-sm bg-slate-50">Kho đang trống</div>`; return; }
+  
+  tb.innerHTML = linkPoolDb.map((p, i) => {
+     const isFull = p.used > p.max;
+     return `<div class="bg-white border border-slate-200 p-3 rounded-xl shadow-sm flex items-center justify-between gap-2">
+        <div class="min-w-0 flex-1">
+           <div class="flex items-center gap-2 mb-1"><span class="font-bold text-slate-800 text-xs truncate">${p.url}</span></div>
+           <div class="flex gap-2">
+             <span class="bg-indigo-50 text-indigo-700 text-[9px] font-bold px-1.5 py-0.5 rounded">GB: ${p.gb||'N/A'}</span>
+             <span class="bg-orange-50 text-orange-700 text-[9px] font-bold px-1.5 py-0.5 rounded">HSD: ${p.exp||'N/A'}</span>
+             <span class="${isFull ? 'bg-red-100 text-red-700' : 'bg-emerald-50 text-emerald-700'} text-[9px] font-bold px-1.5 py-0.5 rounded">Đã dùng: ${p.used-1}/${p.max}</span>
+           </div>
+        </div>
+        <button onclick="delPool(${i})" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition"><i class="fas fa-trash"></i></button>
+     </div>`;
+  }).join('');
+}
+
 async function addLinkToPool() {
   const orig = document.getElementById("poolOrig").value.trim();
   const gb = document.getElementById("poolGb").value.trim();
@@ -672,14 +787,31 @@ async function addLinkToPool() {
   
   if(!orig || !max) return toast("Nhập URL gốc và Max thiết bị!", "err");
   
-  linkPoolDb.push({ id: "POOL-" + Date.now(), url: orig, gb, exp, max, used: 1 }); // used: 1 chừa lại link gốc
-  toast("Đang lưu vào kho tổng...");
+  linkPoolDb.push({ id: "POOL-" + Date.now(), url: orig, gb, exp, max, used: 2 }); // Dành Index 1 cho Hệ thống
+  toast("Đang lưu Kho tổng...");
   await apP("/api/link_pool", linkPoolDb);
-  toast("Đã thêm vào Kho tự động bốc!");
-  document.getElementById("poolOrig").value = "";
-  document.getElementById("poolGb").value = "";
-  document.getElementById("poolExp").value = "";
-  document.getElementById("poolMax").value = "";
+  
+  // TỰ ĐỘNG TẠO LINK ẨN SỐ 1 CHO NGUỒN NÀY ĐỂ HIỂN THỊ
+  let masked="";
+  try{
+    const u=new URL(orig);let qs=u.search;
+    const nt=genHex(32);if(orig.includes("liangxin")) qs=`?OwO=${nt}`;else qs=`?token=${nt}`;
+    if(orig.includes("liangxin")) masked=PD+"/v1/VPNTrinhHg"+qs+"#VPNTrinhHg";
+    else if(orig.includes("djjc.cfd")) masked=PD+"/v2/VPNTrinhHg"+qs+"#VPNTrinhHg";
+  }catch{}
+  if(masked) {
+    linksDb.unshift({id:"LNK-"+Date.now(),orig,masked,email:"Nguồn Hệ Thống (Auto)",expDate:exp,linkIndex:"1",isLocked:false,date:todayTZ()});
+    await apP("/api/links",linksDb);
+  }
+
+  toast("Đã thêm vào Kho tự động bốc & Tạo Link #1!");
+  ["poolOrig","poolGb","poolExp","poolMax"].forEach(id => document.getElementById(id).value = "");
+  renderPoolList(); renderLinks();
+}
+
+async function delPool(i) {
+  linkPoolDb.splice(i, 1); renderPoolList();
+  toast("Đang xóa..."); await apP("/api/link_pool", linkPoolDb); toast("Đã xóa khỏi Kho");
 }
 
 function switchOrdTab(tab){
@@ -703,6 +835,11 @@ function buildZaloMailHtml(o){
   return `<div style="font-family:sans-serif;width:100%;max-width:450px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-sizing:border-box;"><div style="background:linear-gradient(135deg,#2563eb,#1d4ed8);padding:20px;text-align:center;"><h2 style="color:white;margin:0;font-size:18px;text-transform:uppercase;">HỖ TRỢ CÀI ĐẶT</h2></div><div style="padding:25px 20px;box-sizing:border-box;text-align:center;"><p style="font-size:15px;line-height:1.6;margin:0 0 15px 0;color:#334155;">Chào bạn, vui lòng liên hệ Admin qua Zalo bên dưới để được hỗ trợ về gói VPN có mã đơn hàng là <b style="color:#2563eb;word-break:break-word;">${o.id}</b> ngay nhé!</p><div style="background:#fefce8;border:2px dashed #facc15;padding:20px;border-radius:12px;margin:20px 0;"><p style="margin:0;font-size:13px;color:#a16207;font-weight:bold;text-transform:uppercase;letter-spacing:1px;">ZALO ADMIN</p><p style="margin:10px 0 0 0;font-size:28px;font-weight:900;color:#ca8a04;letter-spacing:1px;">0917678211</p></div><div style="text-align:center;margin:25px 0;"><a href="${PD}" style="background:#1e293b;color:white;padding:12px 15px;border-radius:10px;text-decoration:none;font-weight:900;display:inline-block;font-size:14px;width:100%;box-sizing:border-box;">TRUY CẬP CỔNG KHÁCH HÀNG</a></div><div style="display:block;width:100%;text-align:center;"><a href="https://zalo.me/0917678211" style="display:inline-block;width:46%;background:#0068ff;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;box-sizing:border-box;">Chat Zalo</a><a href="https://www.facebook.com/trinh.hg.57" style="display:inline-block;width:46%;background:#0668E1;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;margin-left:4%;box-sizing:border-box;">Messenger</a></div></div></div>`;
 }
 
+// HÀM BUILD MAIL BÁO DATA DÙNG CHO KHÁCH (MỚI THÊM VÀO ĐỂ FIX LỖI)
+function buildDataMailHtml(req, gb){
+  return `<div style="font-family:sans-serif;width:100%;max-width:450px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-sizing:border-box;"><div style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);padding:20px;text-align:center;"><h2 style="color:white;margin:0;font-size:18px;text-transform:uppercase;">KẾT QUẢ TRA CỨU DUNG LƯỢNG</h2></div><div style="padding:25px 20px;box-sizing:border-box;text-align:center;"><p style="font-size:15px;line-height:1.6;margin:0 0 15px 0;color:#334155;">Chào bạn, đây là thông tin dung lượng của đơn hàng <b style="color:#7c3aed;">${req.orderId}</b>.</p><div style="background:#f5f3ff;border:2px dashed #a78bfa;padding:20px;border-radius:12px;margin:20px 0;"><p style="margin:0;font-size:12px;color:#6d28d9;font-weight:bold;text-transform:uppercase;letter-spacing:1px;">DUNG LƯỢNG ĐÃ SỬ DỤNG</p><p style="margin:10px 0 0 0;font-size:32px;font-weight:900;color:#7c3aed;letter-spacing:1px;">${gb} GB</p></div><p style="font-size:13px;color:#475569;margin-top:12px;line-height:1.5;">Vui lòng kiểm tra lại nếu tốc độ bị chậm, có thể gói của bạn đã dùng hết dung lượng.</p><div style="text-align:center;margin-top:20px;"><p style="font-size:13px;color:#475569;margin-bottom:12px;">Cần hỗ trợ thêm?</p><div style="display:block;width:100%;text-align:center;"><a href="https://zalo.me/0917678211" style="display:inline-block;width:46%;background:#0068ff;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;box-sizing:border-box;">Chat Zalo</a></div></div></div></div>`;
+}
+
 function renderOrd(){
   const tb=document.getElementById("ordBody");
   const counts={success:0,pending:0,failed:0};
@@ -713,14 +850,14 @@ function renderOrd(){
 
   const groups={};
   filtered.forEach(o=>{
-    const dc=getDateCreated(o); // Đã bị ép thành DD/MM/YYYY chuẩn xác
+    const dc=getDateCreated(o); // Đã bị ép thành DD/MM/YYYY chuẩn xác theo Timezone
     const key=monthSortKey(dc)||"000000";
     const label=monthLabel(dc);
     if(!groups[key]) groups[key]={label,orders:[]};
     groups[key].orders.push(o);
   });
   const sortedKeys=Object.keys(groups).sort((a,b)=>b.localeCompare(a));
-  const now=new Date();let html="";
+  const now=getAdjustedTime();let html="";
   for(const key of sortedKeys){
     const g=groups[key];
     html+=`<div class="month-header"><i class="far fa-calendar-alt text-indigo-400"></i><span>${g.label}</span><span class="month-count">${g.orders.length} đơn</span></div><div class="space-y-3 mb-6">`;
@@ -775,7 +912,7 @@ function autoFillDays(){
 }
 function recalcExpFromDays(){
   const days=parseInt(document.getElementById("mODays").value)||0;if(!days) return;
-  document.getElementById("mOExp").value=addDays(todayVN(),days);
+  document.getElementById("mOExp").value=addDays(todayTZ(),days);
 }
 function openOrdModal(id){
   const o=id?ordersDb.find(x=>x.id===id):{id:genId(),email:"",status:"pending",info1:"",info2:"",info3:"",nickname:"",reason:"",expDate:"",method:"Ngân hàng VN",zalo:"",days:""};
@@ -799,7 +936,7 @@ function togSF(){const s=document.getElementById("mOStatus").value;document.getE
 async function saveOrd(){
   const id=document.getElementById("mOId").value.trim();if(!id) return toast("Mã đơn rỗng!","err");
   let o=ordersDb.find(x=>x.id===id);
-  if(!o){o={id,dateCreated:todayVN(),date:todayVN()};ordersDb.unshift(o);} // Cắt sạch giờ phút khi tạo mới
+  if(!o){o={id,dateCreated:todayTZ(),date:todayTZ(), createdTs: Date.now()};ordersDb.unshift(o);} 
   const pkgTxt=PKGS[document.getElementById("mOPkg").value],status=document.getElementById("mOStatus").value;
   Object.assign(o,{
     email:document.getElementById("mOEmail").value.trim(),
@@ -818,7 +955,6 @@ async function saveOrd(){
   });
   renderOrd();cm("mOrd");toast("Đang lưu & bắn tỉa...");await apP("/api/orders",ordersDb);toast("Đã lưu!");
   
-  // Chỉ gửi mail nếu Web này đang set Master
   const isMaster = (cmsDb.settings && cmsDb.settings.emailRole === "master");
   if(document.getElementById("mOSendMail").checked && o.email && (status==="success"||status==="failed") && isMaster){
     const subj=status==="success"?"VPN Trinh Hg - Kích hoạt thành công":"VPN Trinh Hg - Kích hoạt thất bại";
@@ -831,7 +967,7 @@ async function delOrd(id){ordersDb=ordersDb.filter(x=>x.id!==id);renderOrd();awa
 
 function sendExpMail(id){
   const o=ordersDb.find(x=>x.id===id);if(!o?.email) return toast("Chưa có email!","err");
-  const daysLeft=o.expDate?Math.ceil((pd(o.expDate)-new Date())/86400000):null;
+  const daysLeft=o.expDate?Math.ceil((pd(o.expDate)-getAdjustedTime())/86400000):null;
   const msgDay=daysLeft===1?"<b>ngày mai hết hạn</b>":daysLeft!==null?`còn <b>${daysLeft} ngày</b> (hết hạn <b>${o.expDate}</b>)`:` hết hạn ngày <b>${o.expDate||"chưa xác định"}</b>`;
   fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:o.email,subject:"VPN Trinh Hg - Gói VPN sắp hết hạn",html:buildExpMailHtml(o,msgDay)})});
   addMailLog("Nhắc hết hạn (Thủ công)",o.email,o.id);toast("Đã gửi mail nhắc hết hạn!");
@@ -935,7 +1071,7 @@ async function createLink(){
     else if(orig.includes("djjc.cfd")) masked=PD+"/v2/VPNTrinhHg"+qs+"#VPNTrinhHg";
     else return toast("Domain không hỗ trợ!","err");
   }catch{return toast("Link không hợp lệ!","err");}
-  linksDb.unshift({id:"LNK-"+Date.now(),orig,masked,email,expDate,linkIndex:idx,isLocked:false,date:todayVN()}); // Đã cắt giờ phút
+  linksDb.unshift({id:"LNK-"+Date.now(),orig,masked,email,expDate,linkIndex:idx,isLocked:false,date:todayTZ()});
   renderLinks();toast("Đang lưu link...");await apP("/api/links",linksDb);toast("Đã tạo link ẩn! Nhớ Đồng bộ GitHub.");
   ["lkOrig","lkEmail","lkExp","lkIdx"].forEach(f=>document.getElementById(f).value="");
 }
@@ -1155,57 +1291,6 @@ function switchSettingsTab(tab){
   if(tab==="dev") renderDev();
   if(tab==="sync") loadSyncSettingUI();
 }
-
-// ACCOUNTS
-function renderAcc(){
-  const c=document.getElementById("accTree");
-  if(!accountsDb.length){c.innerHTML=`<div class="border border-dashed border-slate-300 p-8 rounded-2xl text-center text-slate-400 font-bold lg:text-base">Chưa có tài khoản nào</div>`;return;}
-  c.innerHTML=accountsDb.map((a,ai)=>{
-    const custs=a.customers||[];
-    const custRows=custs.map((cu,ci)=>`<div class="flex items-center gap-2 py-2 border-b border-slate-100 last:border-0 w-full min-w-0">
-      <span class="text-slate-400 font-mono text-[9px] lg:text-xs font-bold cp shrink-0" onclick="cp('${ci+1}')">#${ci+1}</span>
-      <div class="flex-1 min-w-0 flex flex-col justify-center"><span class="font-bold text-[11px] lg:text-sm text-slate-800 cp truncate" onclick="cp('${cu.email||''}')">${cu.email||"—"}</span>${cu.note?`<span class="text-[9px] lg:text-xs font-medium text-slate-500 cp truncate mt-0.5" onclick="cp('${cu.note}')">${cu.note}</span>`:""}</div>
-      <div class="flex gap-1 shrink-0">
-        <button onclick="openCustModal(${ai},${ci})" class="text-indigo-600 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-white border border-slate-200 rounded hover:bg-indigo-500 transition shadow-sm"><i class="fas fa-pen"></i></button>
-        <button onclick="delCust(${ai},${ci})" class="text-red-500 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-white border border-slate-200 rounded hover:bg-red-500 transition shadow-sm"><i class="fas fa-times"></i></button>
-      </div>
-    </div>`).join("");
-    return `<div class="bg-white border border-slate-200 rounded-2xl mb-4 shadow-sm p-4 w-full min-w-0">
-      <div class="flex items-start justify-between gap-3 min-w-0">
-        <div class="flex-1 min-w-0"><div class="font-extrabold text-sm lg:text-base text-slate-800 cp truncate mb-1" onclick="cp('${a.email||''}')">${a.email||"—"}</div>${a.note?`<div class="text-[10px] lg:text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded shadow-sm w-fit cp truncate" onclick="cp('${a.note}')">${a.note}</div>`:""}</div>
-        <div class="flex gap-1.5 shrink-0">
-          <button onclick="openCustModal(${ai},null)" title="Thêm khách" class="text-emerald-600 font-bold px-2 py-1.5 bg-emerald-50 rounded text-[10px] lg:text-xs hover:bg-emerald-500 hover:text-white transition border border-emerald-100 shadow-sm"><i class="fas fa-user-plus"></i></button>
-          <button onclick="openAccModal(${ai})" class="text-indigo-600 font-bold px-2 py-1.5 bg-indigo-50 border border-indigo-100 rounded text-[10px] lg:text-xs hover:bg-indigo-500 hover:text-white transition shadow-sm"><i class="fas fa-pen"></i></button>
-          <button onclick="delAcc(${ai})" class="text-red-500 font-bold px-2 py-1.5 bg-red-50 border border-red-100 rounded text-[10px] lg:text-xs hover:bg-red-500 hover:text-white transition shadow-sm"><i class="fas fa-trash"></i></button>
-        </div>
-      </div>
-      <div class="mt-3 border-l-2 border-indigo-200 ml-1.5 pl-3 bg-slate-50/50 rounded-r-lg">${custs.length?custRows:`<div class="py-3 text-[10px] lg:text-xs font-bold text-slate-400 italic">Tài khoản trống</div>`}</div>
-    </div>`;
-  }).join("");
-}
-function openAccModal(idx){
-  const isNew=idx===null;document.getElementById("mAccTtl").textContent=isNew?"Thêm Mẹ":"Sửa Mẹ";document.getElementById("mAccIdx").value=isNew?"":idx;
-  const a=isNew?{}:accountsDb[idx];document.getElementById("mAEmail").value=a.email||"";document.getElementById("mANote").value=a.note||"";document.getElementById("mAcc").classList.remove("hidden");
-}
-async function saveAcc(){
-  const idx=document.getElementById("mAccIdx").value,acc={email:document.getElementById("mAEmail").value.trim(),note:document.getElementById("mANote").value.trim()};
-  if(idx===""){ acc.customers=[];accountsDb.unshift(acc); } else { const old=accountsDb[parseInt(idx)];acc.customers=old?.customers||[];accountsDb[parseInt(idx)]=acc; }
-  renderAcc();cm("mAcc");toast("Đang lưu...");await apP("/api/accounts",accountsDb);toast("Đã lưu!");
-}
-async function delAcc(i){accountsDb.splice(i,1);renderAcc();toast("Đang xóa...");await apP("/api/accounts",accountsDb);toast("Đã xóa!");}
-function openCustModal(ai,ci){
-  const isNew=ci===null;document.getElementById("mCustAccIdx").value=ai;document.getElementById("mCustEmailIdx").value=isNew?"":ci;const a=accountsDb[ai];
-  document.getElementById("mCustAccName").textContent="Mẹ: "+(a?.email||"");const cu=isNew?{}:(a?.customers||[])[ci]||{};
-  document.getElementById("mCustEmail").value=cu.email||"";document.getElementById("mCustNote").value=cu.note||"";document.getElementById("mCust").classList.remove("hidden");
-}
-async function saveCust(){
-  const ai=parseInt(document.getElementById("mCustAccIdx").value),ci=document.getElementById("mCustEmailIdx").value,isNew=ci==="";
-  const cu={email:document.getElementById("mCustEmail").value.trim(),note:document.getElementById("mCustNote").value.trim()};
-  if(!cu.email) return toast("Email rỗng!","err");if(!accountsDb[ai].customers) accountsDb[ai].customers=[];
-  if(isNew) accountsDb[ai].customers.unshift(cu);else accountsDb[ai].customers[parseInt(ci)]=cu;
-  renderAcc();cm("mCust");toast("Đang lưu...");await apP("/api/accounts",accountsDb);toast("Đã lưu!");
-}
-async function delCust(ai,ci){accountsDb[ai].customers.splice(ci,1);renderAcc();toast("Đang xóa...");await apP("/api/accounts",accountsDb);toast("Đã xóa!");}
 
 // DEVICES
 function renderDev(){
