@@ -29,25 +29,7 @@ details>summary::-webkit-details-marker{display:none;}
 .mobile-tab-btn.active{color:#4f46e5;background:#e0e7ff;}
 #guideText{white-space:pre-wrap;word-wrap:break-word;}
 .pkg-disabled { filter: grayscale(1); opacity: 0.6; pointer-events: none; }
-
-/* CSS Anti-Flash An Toàn 100% */
-html.has-session #view-store { display: none !important; }
-html.has-session #view-portal { display: block !important; }
 </style>
-<script>
-  // Khóa UI ngay khi load thẻ Head
-  let __s = localStorage.getItem('vpn_portal_session_24h');
-  if(__s) {
-      try {
-          let d = JSON.parse(__s);
-          if(new Date().getTime() - d.time < 24*3600*1000) {
-              document.documentElement.classList.add('has-session');
-          } else {
-              localStorage.removeItem('vpn_portal_session_24h');
-          }
-      } catch(e) {}
-  }
-</script>
 </head>
 <body class="min-h-screen flex flex-col w-full overflow-x-hidden">
 <div id="toastContainer" class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
@@ -154,7 +136,6 @@ html.has-session #view-portal { display: block !important; }
           </div>
           
           <div class="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-3 md:p-4 mb-4 shadow-sm gap-2 relative overflow-hidden">
-            <!-- Badge Nâng Cấp Thành Công -->
             <div id="upgradeSuccessBadge" class="hidden absolute top-0 right-0 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md animate-pulse">🎉 NÂNG GÓI THÀNH CÔNG</div>
             
             <div class="flex items-center gap-2 min-w-0 flex-1 overflow-hidden mt-1">
@@ -202,7 +183,7 @@ html.has-session #view-portal { display: block !important; }
       <div class="flex justify-center mt-6 mb-8">
         <button onclick="switchPortalTab('p-guide')" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-black py-3 px-6 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center gap-2 text-xs md:text-sm max-w-[90vw] text-center"><i class="fas fa-question-circle text-lg"></i><span data-i18n="btn_watch_guide">Chưa biết sử dụng? Xem hướng dẫn ngay!</span></button>
       </div>
-      <!-- BỎ BANNER PROMO Ở ĐÂY CHO ĐỠ NHẦM LẪN VỚI TAB STORE -->
+      
       <h3 class="text-xl font-extrabold text-center mb-6 text-slate-800" data-i18n="faq_title">Câu hỏi thường gặp (FAQ)</h3>
       <div id="faqPortalHomeContainer" class="space-y-3"></div>
     </div>
@@ -242,7 +223,7 @@ html.has-session #view-portal { display: block !important; }
   </div>
  
   <!-- NGOÀI STORE MẶC ĐỊNH -->
-  <div id="view-store" class="view-section mb-20 w-full">
+  <div id="view-store" class="view-section active mb-20 w-full">
     <div class="text-center mb-8 mt-2 md:mt-4 px-2 w-full">
       <h1 class="text-3xl md:text-5xl font-extrabold mb-3 text-slate-800 leading-tight" data-i18n="hero_title">Vượt rào cản. <span class="text-indigo-600">Kết nối thế giới.</span></h1>
       <p class="text-xs md:text-base text-slate-600 font-medium mb-5" data-i18n="hero_desc">Trải nghiệm VPN chất lượng cao từ ba nhà mạng viễn thông lớn.</p>
@@ -334,13 +315,11 @@ html.has-session #view-portal { display: block !important; }
 </footer>
  
 <script>
-// Tự nhận diện Domain
 const API_URL = window.location.origin;  
 const GOOGLE_MAIL_API = "https://script.google.com/macros/s/AKfycbyQjEln9By0HuUPtboqJpb1INI6rRp52BxvHR8HaE5fs8qojfgau1R_27P4RyLLxXIp/exec";
 const SESSION_KEY = 'vpn_portal_session_24h';
 const DB_KEY = 'vpn_orders_db';
  
-// Các biến global cho Đếm ngược
 let globalPollInterval = null;
 let countdownTimerInterval = null;
 let checkOrderInterval = null;
@@ -352,19 +331,17 @@ let lastScrollY = 0;
 let lang='vi', currentPackage=null, currentOrderId='', cmsCache={}, currentMultiplier=1, oCache=null;
 let currentTotalVnd=0, currentTotalCny=0, currentTotalUsd=0;
  
-// Biến cho Nâng gói
 let isUpgradeMode = false;
 let baseOrderPriceVnd = 0;
 let baseOrderPriceUsd = 0;
 let baseOrderPriceCny = 0;
 
-// Hàm gỡ Upgrade Mode chuẩn để bỏ màu xám
 function disableUpgradeMode() {
     isUpgradeMode = false;
     baseOrderPriceVnd = 0;
     baseOrderPriceUsd = 0;
     baseOrderPriceCny = 0;
-    renderPackages('all'); // Render lại lưới để bỏ thẻ class pkg-disabled
+    renderPackages('all');
 }
 
 window.addEventListener('scroll',()=>{
@@ -375,32 +352,6 @@ window.addEventListener('scroll',()=>{
 });
 const obs=new IntersectionObserver(es=>es.forEach(e=>{const s=document.getElementById('floatingSocials');e.isIntersecting?s.classList.add('opacity-0','pointer-events-none','translate-y-10'):s.classList.remove('opacity-0','pointer-events-none','translate-y-10');}),{threshold:.1});
 
-window.addEventListener('DOMContentLoaded', () => {
-    obs.observe(document.getElementById('footerArea'));
-    
-    // NẾU CÓ SESSION THÌ BẬT SẴN BẢNG LOADING CHỐNG TRẮNG MÀN HÌNH LÚC F5 CHỜ API
-    const session = localStorage.getItem(SESSION_KEY);
-    if (session) {
-        document.getElementById('view-store').classList.remove('active');
-        document.getElementById('view-portal').classList.add('active');
-        
-        document.getElementById('portalContentPending').classList.remove('hidden');
-        document.getElementById('pendingActiveState').classList.remove('hidden');
-        document.getElementById('pendingTitleUI').innerText = "ĐANG TẢI DỮ LIỆU ĐƠN HÀNG...";
-        document.getElementById('countdownTimer').innerText = "••:••";
-        
-        document.getElementById('userMenu').classList.remove('hidden');
-        const dn = document.getElementById('desktopPortalNav');
-        dn.classList.remove('hidden','opacity-0','w-0');
-        dn.classList.add('md:flex','opacity-100','w-auto');
-        const wrapper = document.getElementById('searchAndTabsWrapper');
-        wrapper.classList.remove('max-w-2xl','justify-center');
-        wrapper.classList.add('w-full');
-        document.getElementById('centerNavContainer').classList.remove('justify-center');
-        document.getElementById('mobileNavWrapper').classList.remove('hidden');
-    }
-});
- 
 // ── i18n ──
 const i18n={
   vi:{brand:"VPN Trinh Hg",search_placeholder:"Nhập Mã Đơn hoặc Email...",btn_logout:"Thoát",
@@ -486,7 +437,6 @@ const i18n={
       btn_check_data:"检查流量"}
 };
  
-// BẢNG GIÁ ĐÃ ĐƯỢC CẬP NHẬT THEO YÊU CẦU MỚI NHẤT
 const pkgs=[
  {id:'t1',category:['cycle','travel'],vi:{name:'Gói 1 tháng',price:'60.000đ',time:'1 Tháng'},en:{name:'1 Month',price:'$2.50',time:'1 Month'},zh:{name:'1个月',price:'¥15.5',time:'1个月'},usd:2.5,vnd:60000,cny:15.5,data:'100GB',tag:{vi:'🔥 BÁN CHẠY',en:'🔥 BEST SELLER',zh:'🔥 热销'},tag2:{vi:'✈️ Du lịch',en:'✈️ Travel',zh:'✈️ 旅游'}},
  {id:'t2',category:['cycle','travel'],vi:{name:'Gói 1 tháng',price:'70.000đ',time:'1 Tháng'},en:{name:'1 Month',price:'$3.00',time:'1 Month'},zh:{name:'1个月',price:'¥18',time:'1个月'},usd:3,vnd:70000,cny:18,data:'500GB',tag:{vi:'🔥 BÁN CHẠY',en:'🔥 BEST SELLER',zh:'🔥 热销'},tag2:{vi:'✈️ Du lịch',en:'✈️ Travel',zh:'✈️ 旅游'}},
@@ -505,8 +455,8 @@ function showToast(msg,type='success'){
   const icon=type==='error'?'fa-times-circle':type==='info'?'fa-info-circle':'fa-check-circle';
   t.className=`${bg} text-white px-4 py-3 rounded-xl shadow-xl flex items-center transform transition-all duration-300 translate-x-full opacity-0 w-[90vw] max-w-sm mb-2`;
   t.innerHTML=`<i class="fas ${icon} mr-2 shrink-0"></i><span class="font-bold text-xs md:text-sm">${msg}</span>`;
- c.appendChild(t);setTimeout(()=>t.classList.remove('translate-x-full','opacity-0'),10);
- setTimeout(()=>{t.classList.add('translate-x-full','opacity-0');setTimeout(()=>t.remove(),300);},3000);
+  c.appendChild(t);setTimeout(()=>t.classList.remove('translate-x-full','opacity-0'),10);
+  setTimeout(()=>{t.classList.add('translate-x-full','opacity-0');setTimeout(()=>t.remove(),300);},3000);
 }
  
 async function apiGet(path){
@@ -521,7 +471,6 @@ async function apiGet(path){
   }
 }
  
-// BẮN TỈA ĐỒNG BỘ
 const SYNC_APIS = [
   "https://vpn-api.doicucden.workers.dev",
   "https://vpntrinhhg2worker.onepiecechapter.workers.dev",
@@ -577,7 +526,6 @@ function genHTML(pkg){
   let displayTime=p.time;
   if(pkg.category.includes('usage')&&!pkg.isCustom)displayTime=i18n[lang].lifetime_lbl;
   
-  // Nâng gói: Xám các gói có giá TRƯỚC nâng bé hơn hoặc bằng
   let isDisabled = false;
   if(isUpgradeMode && pkg.vnd <= baseOrderPriceVnd && !pkg.isCustom) {
       isDisabled = true;
@@ -621,11 +569,12 @@ function renderPackages(filter){
     });
   });
   const html=pkgs.filter(p=>filter==='all'||p.category.includes(filter)).map(genHTML).join('');
-  document.getElementById('packagesContainerHome').innerHTML=html;
-  document.getElementById('packagesContainerPortal').innerHTML=html;
+  const hC = document.getElementById('packagesContainerHome');
+  const pC = document.getElementById('packagesContainerPortal');
+  if(hC) hC.innerHTML=html;
+  if(pC) pC.innerHTML=html;
 }
 
-// Bắt đầu quy trình Nâng Gói
 function startUpgrade() {
     isUpgradeMode = true;
     baseOrderPriceVnd = 0; baseOrderPriceUsd = 0; baseOrderPriceCny = 0;
@@ -641,7 +590,7 @@ function startUpgrade() {
     if(!baseOrderPriceVnd) { baseOrderPriceVnd = 60000; baseOrderPriceUsd = 2.5; baseOrderPriceCny = 15.5; }
 
     switchPortalTab('p-store');
-    renderPackages('all'); // Tái hiện lại Card
+    renderPackages('all');
     showToast("Vui lòng chọn gói cao hơn gói hiện tại để nâng cấp", "info");
 }
  
@@ -658,7 +607,7 @@ function openCheckout(id){
  
  if(isUpgradeMode) {
      document.getElementById('checkoutTitle').innerText = "Thanh toán Nâng Gói";
-     document.getElementById('durationBlock').classList.add('hidden'); // Ẩn chọn tháng
+     document.getElementById('durationBlock').classList.add('hidden');
      currentMultiplier = 1;
      document.getElementById('upgradePriceNote').classList.remove('hidden');
      document.getElementById('upgradePriceNote').innerHTML = `Số tiền nâng cấp: <b>${currentPackage.vnd.toLocaleString('vi-VN')}đ</b> (Gói mới) - <b>${baseOrderPriceVnd.toLocaleString('vi-VN')}đ</b> (Gói cũ) = <b>${(currentPackage.vnd - baseOrderPriceVnd).toLocaleString('vi-VN')}đ</b>`;
@@ -793,7 +742,6 @@ async function confirmPaid(){
   let db=await apiGet('/api/orders');if(!Array.isArray(db))db=[];
   
   if(isUpgradeMode) {
-      // LOGIC NÂNG GÓI
       let o = db.find(x => x.id === oCache.id);
       if(o) {
           o.pendingUpgrade = {
@@ -813,13 +761,12 @@ async function confirmPaid(){
           document.getElementById('userMenu').classList.remove('hidden');
           switchPortalTab('p-home');
           
-          disableUpgradeMode(); // Hủy mode xám
+          disableUpgradeMode();
           
           updatePortalInfo(o);
           window.scrollTo({top:0,behavior:'smooth'});
       }
   } else {
-      // LOGIC MUA MỚI
       const fp=lang==='vi'?`${currentTotalVnd.toLocaleString('vi-VN')}đ`:lang==='en'?`$${currentTotalUsd}`:`¥${currentTotalCny}`;
       const cy2=currentMultiplier+' Tháng';
       const mn=document.getElementById('payMethod').value;
@@ -838,7 +785,6 @@ async function confirmPaid(){
       db.unshift(newOrder);
       await apiPost('/api/orders',db);
       
-      // Fire and Forget Mail => KHÔNG CHẶN GIAO DIỆN
       const cusZaloVal = document.getElementById('cusZalo').value || 'Không nhập';
       fetch(GOOGLE_MAIL_API, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({
           to: "lucastanora@gmail.com", 
@@ -870,7 +816,7 @@ async function confirmPaid(){
       switchPortalTab('p-home');
       disableUpgradeMode();
       
-      updatePortalInfo(newOrder); // Dùng data vừa tạo luôn, bỏ qua fetch API chậm
+      updatePortalInfo(newOrder);
       if(!globalPollInterval) startGlobalPolling(currentOrderId);
       window.scrollTo({top:0,behavior:'smooth'});
   }
@@ -907,7 +853,7 @@ function updatePortalInfo(o){
   document.getElementById('portalContentFailed').classList.add('hidden');
 
   const upgradeBadge = document.getElementById('upgradeSuccessBadge');
-  upgradeBadge.classList.add('hidden');
+  if(upgradeBadge) upgradeBadge.classList.add('hidden');
   
   const lastPkgCacheKey = 'last_pkg_full_' + o.id;
   const lastPkg = localStorage.getItem(lastPkgCacheKey);
@@ -916,7 +862,7 @@ function updatePortalInfo(o){
 
   if (o.status === 'success') {
       if (lastPkg && lastPkg !== o.pkg && !o.pendingUpgrade) {
-          upgradeBadge.classList.remove('hidden');
+          if(upgradeBadge) upgradeBadge.classList.remove('hidden');
       }
       localStorage.setItem(lastPkgCacheKey, o.pkg);
   }
@@ -1043,7 +989,7 @@ async function login(isManualRefresh=false,isAutoPoll=false){
   
   if(!o){
      if(!isAutoPoll) showToast(lang==='vi'?'Không tìm thấy Đơn hàng/Email!':lang==='en'?'Order not found!':'未找到订单','error');
-     logout(); // XÓA SESSION NẾU LỖI
+     if(!isAutoPoll) logout();
      return;
   }
 
@@ -1056,16 +1002,14 @@ async function login(isManualRefresh=false,isAutoPoll=false){
  document.getElementById('centerNavContainer').classList.remove('justify-center');
  document.getElementById('mobileNavWrapper').classList.remove('hidden');
  if(!isAutoPoll&&!isManualRefresh)switchPortalTab('p-home');
-  
-  const antiFlash = document.getElementById('antiFlashStyle');
-  if(antiFlash) antiFlash.remove();
-  document.documentElement.classList.add('has-session'); 
 
-  updatePortalInfo(o);
-  if(!isAutoPoll) startGlobalPolling(o.id);
+ updatePortalInfo(o);
+ if(!isAutoPoll) startGlobalPolling(o.id);
 
-  if(o.status==='success'){cmsCache=await apiGet('/api/cms');showGuide('android');}
-  renderPackages('all');
+ cmsCache=await apiGet('/api/cms');
+ showGuide('android');
+
+ renderPackages('all');
  if(!isManualRefresh&&!isAutoPoll)window.scrollTo({top:0,behavior:'smooth'});
 }
  
@@ -1121,6 +1065,29 @@ function showGuide(dev){
  document.getElementById('guideContent').classList.remove('hidden');
  document.getElementById('guideText').innerHTML=cmsCache[dev]?parseShortcodes(cmsCache[dev]):i18n[lang].guide_empty;
 }
+
+// ── KHỞI ĐỘNG HỆ THỐNG (CHẠY TRỰC TIẾP KHI VÀO WEB / F5) ──
+window.onload = async function() {
+  changeLanguage('vi');
+  const session = localStorage.getItem(SESSION_KEY);
+  if (session) {
+      try {
+          const d = JSON.parse(session);
+          if (new Date().getTime() - d.time < 24 * 3600 * 1000) {
+              document.getElementById('loginInput').value = d.id;
+              await login(true);
+          } else {
+              localStorage.removeItem(SESSION_KEY);
+              logout();
+          }
+      } catch(e) {
+          localStorage.removeItem(SESSION_KEY);
+          logout();
+      }
+  } else {
+      renderPackages('all');
+  }
+};
  
 // --- LOGIC YÊU CẦU KIỂM TRA DUNG LƯỢNG ---
 async function requestDataCheck() {
