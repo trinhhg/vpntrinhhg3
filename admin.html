@@ -73,7 +73,21 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
 .card-bg { position: absolute; inset: 0; border: 2px solid transparent; border-radius: 0.75rem; transition: all 0.2s; z-index: 1; }
 .card-content { position: relative; z-index: 2; }
 .check-icon { display: none; position: absolute; top: 0.75rem; right: 0.75rem; color: #4f46e5; z-index: 2; font-size: 1.25rem;}
+
+/* CSS Anti-Flash An Toàn 100% */
+html.has-session #loginWrap { display: none !important; }
+html.has-session #hdr, html.has-session #main { display: flex !important; }
 </style>
+<script>
+  let __s = localStorage.getItem('vpn_portal_session_24h');
+  let hasAdminSession = false;
+  for(let i=0; i<localStorage.length; i++) {
+     if(localStorage.key(i).includes('adm_dev')) hasAdminSession = true;
+  }
+  if(hasAdminSession) {
+      document.documentElement.classList.add('has-session');
+  }
+</script>
 </head>
 <body class="min-h-screen pb-20 overflow-x-hidden bg-slate-50">
 <div id="toastBox" class="toast"></div>
@@ -140,8 +154,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     <div id="dataReqBody" class="space-y-3 w-full min-w-0"></div>
   </div>
 
-  <!-- TAB QUẢN LÝ LINK SUB -->
-  <div id="t-lnk" class="hidden w-full min-w-0">
+  <div id="t-lnk" class="hidden space-y-4 w-full min-w-0">
     <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 mb-4">
       <div class="min-w-0">
         <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Quản lý Link Sub Ẩn</h2>
@@ -163,7 +176,9 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
 
     <!-- Form 1: KHO LINK TỔNG -->
     <div id="panel-ls-pool" class="w-full min-w-0 mb-4 relative">
-      <div class="bg-white p-4 lg:p-6 rounded-2xl border border-indigo-200 shadow-sm relative overflow-hidden">
+      <div class="bg-white p-4 lg:p-6 rounded-2xl border border-indigo-200 shadow-sm relative overflow-hidden mt-3">
+        
+        <!-- Khối Giao diện Nút Luân chuyển & Tag Auto MỚI (Pastel UI) -->
         <div class="absolute top-0 right-0 flex items-stretch h-[28px] overflow-hidden rounded-bl-xl shadow-sm border-b border-l border-slate-200">
            <div id="sysUptimeBox" class="bg-blue-50 text-blue-600 text-[10px] font-bold px-3 flex items-center border-r border-slate-200 transition-colors">
                <i class="fas fa-satellite-dish mr-1 animate-pulse"></i> Uptime <span id="autoNextRunText" class="ml-1 font-mono">00:00:00</span>
@@ -190,7 +205,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     </div>
 
     <!-- Form 2: TẠO THỦ CÔNG -->
-    <div id="panel-ls-manual" class="hidden bg-white p-4 lg:p-6 rounded-2xl border border-slate-200 shadow-sm w-full min-w-0 mb-4">
+    <div id="panel-ls-manual" class="hidden bg-white p-4 lg:p-6 rounded-2xl border border-slate-200 shadow-sm w-full min-w-0 mb-4 mt-3">
       <h3 class="font-extrabold text-slate-700 mb-3 text-sm"><i class="fas fa-magic mr-1"></i>Tạo Link Ẩn (Tự động nạp vào Kho nếu chưa có)</h3>
       <div class="mb-3"><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Link Gốc (Liangxin / Djjc)</label><input id="lkOrig" type="text" placeholder="https://liangxin..." class="w-full p-2 lg:p-3 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-4 mb-4">
@@ -786,11 +801,13 @@ function doLogout(){
 
 function go(id){
   TABS.forEach(t=>{
-    document.getElementById(t).classList.add("hidden");
+    const content = document.getElementById(t);
+    if(content) content.classList.add("hidden");
     const btn=document.getElementById("btn-"+t);
     if(btn){btn.classList.remove("bg-indigo-600","text-white","shadow-md","active");btn.classList.add("bg-white","text-slate-600","shadow-sm");}
   });
-  document.getElementById(id).classList.remove("hidden");
+  const activeContent = document.getElementById(id);
+  if(activeContent) activeContent.classList.remove("hidden");
   const act=document.getElementById("btn-"+id);
   if(act){act.classList.remove("bg-white","text-slate-600","shadow-sm");act.classList.add("bg-indigo-600","text-white","shadow-md","active");}
   lsSet("lastTab",id);
@@ -872,7 +889,7 @@ async function fetchTransactions() {
          <div class="font-mono text-xs text-slate-600 bg-slate-50 p-2 rounded border border-slate-100 mb-3">${tx.notification || tx.content}</div>
          <div class="flex gap-2 mb-2">
            <button onclick="rejectTransaction(${tx.id})" class="flex-1 bg-red-50 text-red-600 border border-red-200 hover:bg-red-500 hover:text-white font-bold py-2 rounded-lg text-xs transition">Từ Chối GD này</button>
-           <button onclick="approveTransaction(${tx.id}, null)" class="flex-1 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-600 hover:text-white font-bold py-2 rounded-lg text-xs transition">Duyệt tự do</button>
+           <button onclick="approveTransaction(${tx.id}, null)" class="flex-1 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-600 hover:text-white font-bold py-2 rounded-lg text-xs transition">Duyệt tự do (Nhập mã)</button>
          </div>
          ${candidatesHTML ? `<div class="border-t border-slate-100 pt-2 mt-2"><p class="text-[10px] font-bold text-slate-500">Các đơn nghi ngờ khớp tiền:</p>${candidatesHTML}</div>` : ''}
       </div>`;
@@ -915,13 +932,14 @@ async function rejectTransaction(txId) {
   } catch(e) { toast("Lỗi kết nối", "err"); }
 }
 
-// TOGGLE TAB LINK SUB (POOL / MANUAL / VIEWS)
+// TOGGLE TAB LINK SUB (POOL / MANUAL)
 function switchLinkMode(mode) {
   curLinkTab = mode;
   document.getElementById('btn-ls-pool').classList.toggle('active', mode === 'pool');
   document.getElementById('btn-ls-manual').classList.toggle('active', mode === 'manual');
   document.getElementById('panel-ls-pool').classList.toggle('hidden', mode !== 'pool');
   document.getElementById('panel-ls-manual').classList.toggle('hidden', mode !== 'manual');
+  if(mode === 'pool') renderLinks();
 }
 
 function switchLinkView(viewMode) {
@@ -943,22 +961,22 @@ function renderLinks() {
   // Cập nhật số lượng thiết bị động
   linkPoolDb.forEach(pool => {
       const children = linksDb.filter(x => x.orig === pool.url);
-      pool.used = children.length; // Số lượng link ẩn đang mượn link gốc này
+      pool.used = children.length; 
   });
 
   if(curLinkListView === 'compact') {
       container.innerHTML = linkPoolDb.map((p, i) => {
-         const isFull = p.used > p.max;
+         const isFull = p.used >= p.max;
          return `<div class="bg-white border border-slate-200 p-3 rounded-xl shadow-sm flex items-center justify-between gap-2">
             <div class="min-w-0 flex-1">
                <div class="flex items-center gap-2 mb-1"><span class="font-bold text-slate-800 text-xs truncate cp" onclick="cp('${p.url}')">${p.url}</span></div>
-               <div class="flex gap-2">
+               <div class="flex gap-2 flex-wrap">
                  <span class="bg-indigo-50 text-indigo-700 text-[9px] font-bold px-1.5 py-0.5 rounded">Còn: ${p.remainGb||'0'} / ${p.gb||'N/A'} GB</span>
                  <span class="bg-orange-50 text-orange-700 text-[9px] font-bold px-1.5 py-0.5 rounded">HSD: ${p.exp||'N/A'}</span>
                  <span class="${isFull ? 'bg-red-100 text-red-700' : 'bg-emerald-50 text-emerald-700'} text-[9px] font-bold px-1.5 py-0.5 rounded">Đã dùng: ${p.used}/${p.max}</span>
                </div>
             </div>
-            <button onclick="delPool('${p.url}')" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition"><i class="fas fa-trash"></i></button>
+            <button onclick="delPool('${p.url}')" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition shrink-0"><i class="fas fa-trash"></i></button>
          </div>`;
       }).join('');
   } else {
@@ -966,7 +984,6 @@ function renderLinks() {
       for(const l of linksDb){
           const k=l.orig||"?";
           if(!grps[k]) {
-              // Lấy info từ Pool để hiển thị Header
               const poolInfo = linkPoolDb.find(p => p.url === k) || {};
               grps[k]={orig:k, poolInfo, children:[]};
           }
@@ -1035,7 +1052,7 @@ async function addLinkToPool() {
   }
   await apP("/api/link_pool", linkPoolDb);
   
-  // TỰ ĐỘNG TẠO LINK ẨN SỐ 1
+  // TỰ ĐỘNG TẠO LINK ẨN SỐ 1 CHO NGUỒN NÀY ĐỂ HIỂN THỊ NẾU CHƯA TỒN TẠI
   let masked="";
   try{
     const u=new URL(orig);let qs=u.search;
@@ -1044,8 +1061,11 @@ async function addLinkToPool() {
     else if(orig.includes("djjc.cfd")) masked=PD+"/v2/VPNTrinhHg"+qs+"#VPNTrinhHg";
   }catch{}
   if(masked) {
-    linksDb.unshift({id:"LNK-"+Date.now(),orig,masked,email:"Nguồn Hệ Thống (Auto)",expDate:exp,linkIndex:"1",isLocked:false,date:getNowStr()});
-    await apP("/api/links",linksDb);
+    const linkExists = linksDb.find(x => x.orig === orig && x.email === "Nguồn Hệ Thống (Auto)");
+    if(!linkExists) {
+        linksDb.unshift({id:"LNK-"+Date.now(),orig,masked,email:"Nguồn Hệ Thống (Auto)",expDate:exp,linkIndex:"1",isLocked:false,date:getNowStr()});
+        await apP("/api/links",linksDb);
+    }
   }
 
   ["poolOrig","poolGb","poolRemainGb","poolExp","poolMax"].forEach(id => document.getElementById(id).value = "");
@@ -1065,7 +1085,7 @@ async function createLink(){
     else return toast("Domain không hỗ trợ!","err");
   }catch{return toast("Link không hợp lệ!","err");}
   
-  // Auto add to Pool if not exists
+  // Tự động Add vào Kho tổng nếu chưa có
   let exists = linkPoolDb.find(p => p.url === orig);
   if(!exists) {
       linkPoolDb.push({ id: "POOL-" + Date.now(), url: orig, gb: "", remainGb: "", exp: expDate, max: 30 });
@@ -1082,7 +1102,7 @@ async function delPool(url) {
   linkPoolDb = linkPoolDb.filter(p => p.url !== url);
   renderLinks();
   toast("Đang xóa..."); await apP("/api/link_pool", linkPoolDb); toast("Đã xóa khỏi Kho");
-  addSysLog("Xóa Nguồn", "Đã xóa 1 Nguồn Gốc khỏi kho.");
+  addSysLog("Xóa Nguồn", "Đã xóa 1 Node khỏi kho tổng.");
 }
 
 // Hàm Luân Chuyển Node Nghẽn
@@ -1091,7 +1111,7 @@ async function autoMigrateLinks(isAuto = false) {
   if(!isAuto) toast("Đang phân tích Node...");
   
   let changed = 0;
-  const now = getAdjustedTime().getTime();
+  const nowMs = getAdjustedTime().getTime();
 
   for(const l of linksDb) {
      if(l.email === "Nguồn Hệ Thống (Auto)") continue;
@@ -1101,8 +1121,11 @@ async function autoMigrateLinks(isAuto = false) {
      let needsMigration = false;
      // Check Date < 4 tiếng (14,400,000 ms) hoặc Âm ngày
      if(currentPool.exp && currentPool.exp.includes("/")) {
-        const expMs = pd(currentPool.exp)?.getTime();
-        if(expMs && (expMs - now) <= 14400000) needsMigration = true; 
+        const expDateObj = pd(currentPool.exp);
+        if(expDateObj) {
+            const diff = expDateObj.getTime() - nowMs;
+            if(diff <= 14400000) needsMigration = true; 
+        }
      }
      // Check Dung Lượng (còn < 100GB)
      if(currentPool.remainGb) {
@@ -1110,7 +1133,7 @@ async function autoMigrateLinks(isAuto = false) {
      }
 
      if(needsMigration) {
-        // Tìm Pool mới. Ưu tiên 1: Có Date & Rảnh chỗ
+        // Ưu tiên 1: Có Date & Rảnh chỗ
         let newPool = linkPoolDb.find(p => {
              const childrenCount = linksDb.filter(x => x.orig === p.url).length;
              return childrenCount < p.max && p.exp && p.exp.includes("/") && p.url !== currentPool.url;
@@ -1129,7 +1152,7 @@ async function autoMigrateLinks(isAuto = false) {
   }
 
   if(changed > 0) {
-     await apP("/api/links", linksDb);
+     await apP("/api/links", linksDb); // linksDb thay đổi nên renderLinks sẽ update số Used động
      if(!isAuto) { renderLinks(); toast(`Đã luân chuyển thành công ${changed} Node nghẽn!`); }
      addSysLog("Auto Migrate", `Thành công. Chuyển ${changed} khách sang Node mới.`);
   } else {
@@ -1252,7 +1275,7 @@ function openOrdModal(id){
   document.getElementById("mOReason").value=o.reason||"";document.getElementById("mOStatus").value=o.status||"pending";
   document.getElementById("mOMethod").value=o.method&&o.method.includes("Alipay")?"Alipay":o.method&&o.method.includes("Weixin")?"Weixin":"Ngân hàng VN";
   
-  // FIX LỖI RESET GÓI: So khớp chính xác TÊN và DATA
+  // FIX LỖI RESET GÓI: So khớp chính xác chuỗi hoặc tạo option ảo nếu là Custom
   const sel=document.getElementById("mOPkg");
   sel.innerHTML = PKGS.map((p,i)=>`<option value="${i}">${p}</option>`).join("");
   let matched = false;
@@ -1374,10 +1397,10 @@ function renderLinks() {
       return; 
   }
 
-  // Cập nhật số lượng thiết bị động
+  // TÍNH TOÁN ĐỘNG: Đếm số thiết bị đang dùng chung mỗi Pool
   linkPoolDb.forEach(pool => {
       const children = linksDb.filter(x => x.orig === pool.url);
-      pool.used = children.length; // Số lượng link ẩn đang mượn link gốc này
+      pool.used = children.length; 
   });
 
   if(curLinkListView === 'compact') {
@@ -1385,14 +1408,14 @@ function renderLinks() {
          const isFull = p.used >= p.max;
          return `<div class="bg-white border border-slate-200 p-3 rounded-xl shadow-sm flex items-center justify-between gap-2">
             <div class="min-w-0 flex-1">
-               <div class="flex items-center gap-2 mb-1"><span class="font-bold text-slate-800 text-xs truncate cp" onclick="cp('${p.url}')">${p.url}</span></div>
-               <div class="flex gap-2">
+               <div class="flex items-center gap-2 mb-1"><span class="font-bold text-slate-800 text-[11px] md:text-sm truncate cp" onclick="cp('${p.url}')">${p.url}</span></div>
+               <div class="flex gap-2 flex-wrap">
                  <span class="bg-indigo-50 text-indigo-700 text-[9px] font-bold px-1.5 py-0.5 rounded">Còn: ${p.remainGb||'0'} GB</span>
                  <span class="bg-orange-50 text-orange-700 text-[9px] font-bold px-1.5 py-0.5 rounded">HSD: ${p.exp||'Lifetime'}</span>
                  <span class="${isFull ? 'bg-red-100 text-red-700' : 'bg-emerald-50 text-emerald-700'} text-[9px] font-bold px-1.5 py-0.5 rounded">Đã dùng: ${p.used}/${p.max}</span>
                </div>
             </div>
-            <button onclick="delPool('${p.url}')" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition"><i class="fas fa-trash"></i></button>
+            <button onclick="delPool('${p.url}')" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition shrink-0"><i class="fas fa-trash"></i></button>
          </div>`;
       }).join('');
   } else {
@@ -1492,8 +1515,11 @@ async function addLinkToPool() {
     else if(orig.includes("djjc.cfd")) masked=PD+"/v2/VPNTrinhHg"+qs+"#VPNTrinhHg";
   }catch{}
   if(masked) {
-    linksDb.unshift({id:"LNK-"+Date.now(),orig,masked,email:"Nguồn Hệ Thống (Auto)",expDate:exp,linkIndex:"1",isLocked:false,date:getNowStr()});
-    await apP("/api/links",linksDb);
+    const linkExists = linksDb.find(x => x.orig === orig && x.email === "Nguồn Hệ Thống (Auto)");
+    if(!linkExists) {
+        linksDb.unshift({id:"LNK-"+Date.now(),orig,masked,email:"Nguồn Hệ Thống (Auto)",expDate:exp,linkIndex:"1",isLocked:false,date:getNowStr()});
+        await apP("/api/links",linksDb);
+    }
   }
 
   ["poolOrig","poolGb","poolRemainGb","poolExp","poolMax"].forEach(id => document.getElementById(id).value = "");
@@ -1580,7 +1606,7 @@ async function autoMigrateLinks(isAuto = false) {
   }
 
   if(changed > 0) {
-     await apP("/api/links", linksDb); // linksDb thay đổi nên renderLinks sẽ update số Used
+     await apP("/api/links", linksDb); // linksDb thay đổi nên renderLinks sẽ update số Used động
      if(!isAuto) { renderLinks(); toast(`Đã luân chuyển thành công ${changed} Node nghẽn!`); }
      addSysLog("Auto Migrate", `Thành công. Chuyển ${changed} khách sang Node mới.`);
   } else {
