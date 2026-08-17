@@ -53,6 +53,11 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
 .log-table tr:hover td{background:#f8fafc;}
 .settings-sub-tab{padding:6px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;color:#64748b;}
 .settings-sub-tab.active{background:white;color:#4f46e5;box-shadow:0 1px 4px rgba(0,0,0,.1);}
+
+/* Nút toggle tab Link Sub mới */
+.link-tab-switcher { display: flex; gap: 8px; margin-bottom: 1rem; background: #e2e8f0; padding: 4px; border-radius: 12px; width: fit-content; }
+.link-tab-btn { padding: 6px 16px; font-size: 12px; font-weight: 800; border-radius: 8px; cursor: pointer; color: #64748b; transition: all 0.2s; }
+.link-tab-btn.active { background: #fff; color: #4f46e5; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 </style>
 </head>
 <body class="min-h-screen pb-20 overflow-x-hidden bg-slate-50">
@@ -93,7 +98,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     </div>
     <div class="bg-slate-100 p-1 rounded-xl flex gap-1 mb-4 w-fit max-w-full overflow-x-auto">
       <div class="ord-sub-tab active" id="otab-success" onclick="switchOrdTab('success')"><div class="mac-dot mac-green"></div>Thành công<span id="cnt-success" class="bg-green-100 text-green-700 text-[9px] md:text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
-      <div class="ord-sub-tab" id="otab-pending" onclick="switchOrdTab('pending')"><div class="mac-dot mac-yellow"></div>Chờ duyệt<span id="cnt-pending" class="bg-yellow-100 text-yellow-700 text-[9px] md:text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
+      <div class="ord-sub-tab" id="otab-pending" onclick="switchOrdTab('pending')"><div class="mac-dot mac-yellow"></div>Đang thực hiện<span id="cnt-pending" class="bg-yellow-100 text-yellow-700 text-[9px] md:text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
       <div class="ord-sub-tab" id="otab-failed" onclick="switchOrdTab('failed')"><div class="mac-dot mac-red"></div>Thất bại<span id="cnt-failed" class="bg-red-100 text-red-700 text-[9px] md:text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
     </div>
     <div id="ordBody" class="w-full min-w-0"></div>
@@ -120,15 +125,38 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
         <button onclick="triggerGitHub()" id="btnTriggerGH" class="col-span-2 sm:col-span-1 bg-blue-600 text-white hover:bg-blue-700 font-bold px-3 py-2 rounded-xl text-xs lg:text-sm transition shadow-md"><i class="fab fa-github mr-1"></i>Đồng bộ GITHUB</button>
       </div>
     </div>
-    <div class="bg-white p-4 lg:p-6 rounded-2xl border border-slate-200 shadow-sm w-full min-w-0">
+
+    <!-- Nút Switch Tab trong Tab Link Sub -->
+    <div class="link-tab-switcher">
+      <div id="btn-ls-pool" class="link-tab-btn active" onclick="switchLinkMode('pool')"><i class="fas fa-database mr-1"></i>KHO LINK TỔNG (AUTO)</div>
+      <div id="btn-ls-manual" class="link-tab-btn" onclick="switchLinkMode('manual')"><i class="fas fa-hand-sparkles mr-1"></i>TẠO ẨN THỦ CÔNG</div>
+    </div>
+
+    <!-- Form: KHO LINK TỔNG (AUTO) -->
+    <div id="panel-ls-pool" class="bg-white p-4 lg:p-6 rounded-2xl border border-indigo-200 shadow-sm w-full min-w-0 mb-4 relative overflow-hidden">
+      <div class="absolute top-0 right-0 bg-indigo-500 text-white text-[9px] font-bold px-3 py-1 rounded-bl-xl">HỆ THỐNG AUTO</div>
+      <h3 class="font-extrabold text-indigo-700 mb-3 text-sm"><i class="fas fa-server mr-1"></i>Thêm Nguồn Link Mới Vào Kho</h3>
+      <div class="mb-3"><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Link Gốc (Liangxin / Djjc)</label><input id="poolOrig" type="text" placeholder="https://liangxin..." class="w-full p-2 lg:p-3 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-4 mb-4">
+        <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Dung lượng</label><input id="poolGb" type="text" placeholder="VD: 1000GB" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
+        <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Hết hạn</label><input id="poolExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
+        <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Max thiết bị</label><input id="poolMax" type="number" min="1" placeholder="VD: 20" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
+      </div>
+      <button onclick="addLinkToPool()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 lg:py-3 rounded-xl shadow-md transition w-full text-xs lg:text-base"><i class="fas fa-plus-circle mr-2"></i>LƯU VÀO KHO TỔNG</button>
+    </div>
+
+    <!-- Form: TẠO THỦ CÔNG (Giữ nguyên cũ) -->
+    <div id="panel-ls-manual" class="hidden bg-white p-4 lg:p-6 rounded-2xl border border-slate-200 shadow-sm w-full min-w-0 mb-4">
+      <h3 class="font-extrabold text-slate-700 mb-3 text-sm"><i class="fas fa-magic mr-1"></i>Tạo Link Ẩn Khách Lẻ</h3>
       <div class="mb-3"><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Link Gốc (Liangxin / Djjc)</label><input id="lkOrig" type="text" placeholder="https://liangxin..." class="w-full p-2 lg:p-3 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-4 mb-4">
         <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Email khách</label><input id="lkEmail" type="text" placeholder="khach@email.com" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
         <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Hết hạn</label><input id="lkExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
         <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Index Máy</label><input id="lkIdx" type="number" min="1" placeholder="1, 2..." class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
       </div>
-      <button onclick="createLink()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 lg:py-3 rounded-xl shadow-md transition w-full text-xs lg:text-base"><i class="fas fa-magic mr-2"></i>TẠO LINK MỚI</button>
+      <button onclick="createLink()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-6 py-2.5 lg:py-3 rounded-xl shadow-md transition w-full text-xs lg:text-base"><i class="fas fa-mask mr-2"></i>TẠO LINK ẨN THỦ CÔNG</button>
     </div>
+
     <div id="linksTree" class="space-y-3 w-full min-w-0"></div>
   </div>
 
@@ -191,10 +219,22 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
         <div class="settings-sub-tab" id="stab-sync" onclick="switchSettingsTab('sync')"><i class="fas fa-satellite-dish mr-1.5"></i>Bắn Tỉa 3 Web</div>
         <div class="settings-sub-tab" id="stab-log" onclick="switchSettingsTab('log')"><i class="fas fa-list-alt mr-1.5"></i>Nhật ký</div>
         <div class="settings-sub-tab" id="stab-dev" onclick="switchSettingsTab('dev')"><i class="fas fa-laptop mr-1.5"></i>Thiết bị</div>
+        <!-- Thêm Tab Giao diện chung -->
+        <div class="settings-sub-tab" id="stab-ui" onclick="switchSettingsTab('ui')"><i class="fas fa-paint-brush mr-1.5"></i>Giao diện</div>
       </div>
     </div>
     <div id="settings-view-mail">
       <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 max-w-lg">
+        
+        <div class="flex flex-col gap-2 pb-4 mb-4 border-b border-slate-100">
+          <label class="block font-bold text-sm text-slate-800">Quyền xử lý Email của Web này</label>
+          <select id="selEmailRole" class="w-full p-2 border border-slate-300 rounded-lg text-sm bg-slate-50 focus:border-indigo-500 outline-none" onchange="saveEmailRole()">
+            <option value="master">🟢 Master - Tự động Gửi Mail cho Khách</option>
+            <option value="slave">🔴 Slave - Chỉ đồng bộ, KHÔNG gửi Mail</option>
+          </select>
+          <p class="text-xs text-slate-500 mt-1">Lưu ý: Chỉ set 1 web làm Master để tránh gửi trùng 3 mail cho khách.</p>
+        </div>
+
         <div class="flex items-start justify-between gap-4 pb-4 border-b border-slate-100">
           <div>
             <div class="font-bold text-sm lg:text-base text-slate-800">Tự động gửi mail nhắc hết hạn</div>
@@ -209,21 +249,32 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
           <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-xs text-indigo-700">
             <p class="font-bold mb-1"><i class="fas fa-info-circle mr-1"></i>Cách hoạt động</p>
             <ul class="space-y-1 text-[11px] font-medium">
-              <li>• Chỉ gửi khi đơn hàng có đủ thông tin HSD</li>
-              <li>• Ngày D-2: mail ghi "<b>Còn 2 ngày</b>" + ngày hết hạn cụ thể</li>
-              <li>• Ngày D-1: mail ghi "<b>Ngày mai hết hạn</b>"</li>
-              <li>• Không gửi trùng 2 lần trong cùng ngày (tracked)</li>
-              <li>• Chạy khi admin mở trang lúc 19:00-20:00 VN</li>
+              <li>• (Tính năng này đang được dời dần sang Cronjob)</li>
             </ul>
           </div>
           <div id="autoMailStatus" class="text-xs lg:text-sm text-slate-500 italic">Trạng thái: Đang kiểm tra...</div>
         </div>
       </div>
     </div>
+    
+    <!-- Tab UI Cài Đặt (Timezone) -->
+    <div id="settings-view-ui" class="hidden">
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 max-w-lg">
+         <div class="flex flex-col gap-2 pb-4 mb-4">
+          <label class="block font-bold text-sm text-slate-800">Múi giờ hiển thị Đơn Hàng & Link</label>
+          <select id="selTimezone" class="w-full p-2 border border-slate-300 rounded-lg text-sm bg-slate-50 focus:border-indigo-500 outline-none" onchange="saveTimezone()">
+            <option value="VN">🇻🇳 Việt Nam (UTC+7)</option>
+            <option value="CN">🇨🇳 Trung Quốc (UTC+8)</option>
+          </select>
+          <p class="text-xs text-slate-500 mt-1">Chức năng này thay đổi hiển thị, còn khóa link ngầm vẫn tự chạy theo 23h00 Bắc Kinh.</p>
+        </div>
+      </div>
+    </div>
+
     <div id="settings-view-sync" class="hidden">
       <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 max-w-lg">
         <div class="font-bold text-sm lg:text-base text-slate-800 mb-1">Worker URL của 3 Website</div>
-        <div class="text-xs lg:text-sm text-slate-500 mb-4">Khi LƯU Đơn hàng / CMS / Tài khoản / Yêu cầu Data, trình duyệt sẽ "bắn tỉa" cùng lúc sang 3 Worker bên dưới. Để trống ô nào thì bỏ qua web đó. Link Sub Ẩn KHÔNG đồng bộ chéo — chỉ lưu nội bộ web đang mở.</div>
+        <div class="text-xs lg:text-sm text-slate-500 mb-4">Chỉ đồng bộ: Đơn Hàng, Kho Link Tổng, Yêu Cầu Data, CMS. <strong class="text-red-500">Link Ẩn tự sinh không bắn tỉa qua lại.</strong></div>
         <div class="space-y-3">
           <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Worker Web 1</label><input id="syncW1" type="text" placeholder="https://worker-web1.workers.dev" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
           <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Worker Web 2</label><input id="syncW2" type="text" placeholder="https://worker-web2.workers.dev" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
@@ -279,7 +330,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     <div id="fFail" class="hidden mb-3 p-2 lg:p-3 border border-red-200 bg-red-50 rounded-lg min-w-0"><label class="block font-bold text-[10px] lg:text-xs text-red-700 mb-0.5">Lý do</label><input id="mOReason" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-red-300 bg-white rounded outline-none"></div>
     <div class="flex items-center mb-4 bg-slate-50 border border-slate-200 p-2 lg:p-3 rounded-lg">
       <input type="checkbox" id="mOSendMail" class="w-3 h-3 lg:w-4 lg:h-4 mr-2 accent-indigo-600" checked>
-      <label for="mOSendMail" class="font-bold text-[10px] lg:text-sm text-slate-700 select-none cursor-pointer">Gửi mail báo khách</label>
+      <label for="mOSendMail" class="font-bold text-[10px] lg:text-sm text-slate-700 select-none cursor-pointer">Gửi mail báo khách (Nếu là Master)</label>
     </div>
     <div class="flex gap-2">
       <button onclick="saveOrd()" class="flex-1 bg-indigo-600 text-white font-bold py-2.5 lg:py-3 rounded-lg hover:bg-indigo-700 transition text-xs lg:text-sm shadow-md"><i class="fas fa-save mr-1"></i>LƯU</button>
@@ -344,10 +395,11 @@ const SITE_KEY=window.location.hostname.replace(/\./g,"_");
 const PKGS=["Gói 1 tháng - 60.000đ / $2.5 / ¥15.5 (100GB)","Gói 1 tháng - 70.000đ / $3 / ¥18 (500GB)","Gói 1 tháng - 80.000đ / $3.5 / ¥20.5 (1000GB)","Gói Cao Cấp - 200.000đ / $8 / ¥50 (3000GB)","Gói 1 Năm - 710.000đ / $27 / ¥177.5 (200GB/tháng)","Không Giới Hạn - 200.000đ / $8 / ¥52 (200GB)","Không Giới Hạn - 399.000đ / $16 / ¥102 (1000GB)","Không Giới Hạn - 999.000đ / $40 / ¥256 (5000GB)"];
 const PKG_DAYS=[30,30,30,30,365,0,0,0];
 
-const CROSS_SYNC_PATHS=["/api/orders","/api/cms","/api/accounts","/api/data_requests"];
+// LOẠI BỎ "/api/links" RA KHỎI DANH SÁCH ĐỒNG BỘ CHÉO ĐỂ TRÁNH RÁC LINK ẨN
+const CROSS_SYNC_PATHS=["/api/orders","/api/cms","/api/accounts","/api/data_requests", "/api/link_pool"];
 
-let ordersDb=[],dataRequestsDb=[],linksDb=[],deadLinksDb=[],cmsDb={},devicesDb=[],accountsDb=[];
-let myDev="",curCms="android",curOrdTab="success";
+let ordersDb=[],dataRequestsDb=[],linksDb=[],deadLinksDb=[],cmsDb={},devicesDb=[],accountsDb=[], linkPoolDb=[];
+let myDev="",curCms="android",curOrdTab="success", curLinkTab="pool";
 
 const lsGet=k=>{try{return JSON.parse(localStorage.getItem(SITE_KEY+"_"+k));}catch{return null;}};
 const lsSet=(k,v)=>{try{localStorage.setItem(SITE_KEY+"_"+k,JSON.stringify(v));}catch{}};
@@ -414,10 +466,12 @@ async function apP(p,data){
   }
 }
 
+// CẮT BỎ GIỜ PHÚT, CHỈ TRẢ VỀ DD/MM/YYYY ĐỂ TRỊ BỆNH NHẢY TAB THÁNG
 function formatDateVN(d){return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;}
 function todayVN(){return formatDateVN(new Date());}
-function addDays(dateStr,days){const d=pd(dateStr);if(!d||!days)return "";d.setDate(d.getDate()+days);return formatDateVN(d);}
-function isExpiredDate(dateStr){const d=pd(dateStr);if(!d)return false;return d.getTime()<Date.now();}
+function normalizeDateStr(dStr) { return dStr ? dStr.split(" ")[dStr.split(" ").length - 1] : ""; } // Hàm cắt giờ
+function addDays(dateStr,days){const d=pd(normalizeDateStr(dateStr));if(!d||!days)return "";d.setDate(d.getDate()+days);return formatDateVN(d);}
+function isExpiredDate(dateStr){const d=pd(normalizeDateStr(dateStr));if(!d)return false;return d.getTime()<Date.now();}
 
 function fmtCardDate(raw){
   if(!raw) return "";
@@ -429,21 +483,21 @@ function fmtCardDate(raw){
       return `${hh}:${mm} – ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
     }
   }catch{}
-  return raw.replace(/(\d{1,2}:\d{2}):\d{2}/,'$1');
+  return raw;
 }
 
 function monthLabel(dateStr){
   if(!dateStr) return "Không rõ tháng";
-  const p=dateStr.split("/");if(p.length<3) return dateStr;
+  const p = normalizeDateStr(dateStr).split("/"); if(p.length<3) return dateStr;
   const mo=["Tháng 1","Tháng 2","Tháng 3","Tháng 4","Tháng 5","Tháng 6","Tháng 7","Tháng 8","Tháng 9","Tháng 10","Tháng 11","Tháng 12"];
   return `${mo[parseInt(p[1])-1]} năm ${p[2]}`;
 }
 function monthSortKey(dateStr){
   if(!dateStr) return "000000";
-  const p=dateStr.split("/");if(p.length<3) return "000000";
+  const p = normalizeDateStr(dateStr).split("/"); if(p.length<3) return "000000";
   return p[2]+String(p[1]).padStart(2,'0');
 }
-function getDateCreated(o){return o.dateCreated||o.date||"";}
+function getDateCreated(o){return normalizeDateStr(o.dateCreated||o.date||"");}
 
 function getMailLog(){return (cmsDb.settings && cmsDb.settings.mailLog) ? cmsDb.settings.mailLog : [];}
 async function addMailLog(type,email,orderId=""){
@@ -451,7 +505,7 @@ async function addMailLog(type,email,orderId=""){
   const now=new Date(Date.now()+8*3600000);
   const ts=`${String(now.getUTCDate()).padStart(2,'0')}/${String(now.getUTCMonth()+1).padStart(2,'0')}/${now.getUTCFullYear()} ${String(now.getUTCHours()).padStart(2,'0')}:${String(now.getUTCMinutes()).padStart(2,'0')}`;
   logs.unshift({type,email,orderId,ts});
-  if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[]};
+  if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], emailRole:"slave", tz:"VN"};
   cmsDb.settings.mailLog=logs.slice(0,100);
   renderMailLog();
   await apP("/api/cms",cmsDb);
@@ -463,7 +517,7 @@ function renderMailLog(){
   tbody.innerHTML=logs.map((l,i)=>`<tr><td class="text-slate-400 font-mono">${i+1}</td><td><span class="font-bold text-slate-700">${l.type}</span></td><td class="font-mono text-xs text-slate-600 cp" onclick="cp('${l.email||''}')">${l.email||"—"}</td><td class="font-mono text-xs text-indigo-600 cp" onclick="cp('${l.orderId||''}')">${l.orderId||"—"}</td><td class="text-slate-500 text-xs whitespace-nowrap">${l.ts}</td></tr>`).join("");
 }
 async function clearMailLog(){
-  if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[]};
+  if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], emailRole:"slave", tz:"VN"};
   cmsDb.settings.mailLog=[];
   renderMailLog();
   await apP("/api/cms",cmsDb);
@@ -471,42 +525,32 @@ async function clearMailLog(){
 }
 
 async function checkAutoSendExpiry(){
-  if(!cmsDb || !cmsDb.settings || !cmsDb.settings.autoMailEnabled) return;
-  const nowVN=new Date(Date.now()+7*3600000);const hour=nowVN.getUTCHours();
-  if(hour<19||hour>=20) return;
-  const todayKey=formatDateVN(nowVN);
-  if(cmsDb.settings.autoMailSentDate === todayKey) return;
-  
-  const now=new Date();let sent=0;
-  for(const o of ordersDb){
-    if(o.status!=="success"||!o.expDate||!o.email) continue;
-    const expD=pd(o.expDate);if(!expD) continue;
-    const daysLeft=Math.ceil((expD-now)/86400000);
-    if(daysLeft===2||daysLeft===1){
-      const msgDay=daysLeft===2?`còn <b>2 ngày</b> (hết hạn ngày <b>${o.expDate}</b>)`:`<b>ngày mai hết hạn</b> (${o.expDate})`;
-      fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:o.email,subject:"VPN Trinh Hg - Gói VPN sắp hết hạn",html:buildExpMailHtml(o,msgDay)})});
-      
-      const logs = cmsDb.settings.mailLog || [];
-      const ts=`${String(nowVN.getUTCDate()).padStart(2,'0')}/${String(nowVN.getUTCMonth()+1).padStart(2,'0')}/${nowVN.getUTCFullYear()} ${String(nowVN.getUTCHours()).padStart(2,'0')}:${String(nowVN.getUTCMinutes()).padStart(2,'0')}`;
-      logs.unshift({type:"Auto hết hạn",email:o.email,orderId:o.id,ts});
-      cmsDb.settings.mailLog = logs.slice(0,100);
-      sent++;
-    }
-  }
-  if(sent>0){
-    cmsDb.settings.autoMailSentDate = todayKey;
-    renderMailLog();
-    toast(`Đã tự động gửi ${sent} mail nhắc hết hạn!`,"warn");
-    await apP("/api/cms", cmsDb);
-  }
+  // Bỏ qua check ở FE, dồn vào CronJob Worker
 }
 async function saveAutoMailSetting(){
   const val=document.getElementById("toggleAutoMail").checked;
-  if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[]};
+  if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], emailRole:"slave", tz:"VN"};
   cmsDb.settings.autoMailEnabled = val;
-  document.getElementById("autoMailStatus").textContent="Trạng thái: "+(val?"✅ Đang bật (gửi lúc 19:00-20:00 giờ VN)":"⏸ Đang tắt");
+  document.getElementById("autoMailStatus").textContent="Trạng thái: "+(val?"✅ Đang bật (Phụ thuộc Cronjob)":"⏸ Đang tắt");
   await apP("/api/cms", cmsDb);
   toast(val?"Đã bật tự động gửi mail!":"Đã tắt.");
+}
+
+async function saveEmailRole(){
+  const val = document.getElementById("selEmailRole").value;
+  if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], emailRole:"slave", tz:"VN"};
+  cmsDb.settings.emailRole = val;
+  await apP("/api/cms", cmsDb);
+  toast("Đã lưu quyền xử lý Email: " + val.toUpperCase());
+}
+
+async function saveTimezone(){
+  const val = document.getElementById("selTimezone").value;
+  if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], emailRole:"slave", tz:"VN"};
+  cmsDb.settings.tz = val;
+  await apP("/api/cms", cmsDb);
+  toast("Đã lưu Múi giờ hiển thị: " + val);
+  renderOrd(); // Cập nhật lại UI
 }
 
 function loadSyncSettingUI(){
@@ -514,9 +558,11 @@ function loadSyncSettingUI(){
   document.getElementById("syncW1").value = s.syncW1 || "";
   document.getElementById("syncW2").value = s.syncW2 || "";
   document.getElementById("syncW3").value = s.syncW3 || "";
+  document.getElementById("selEmailRole").value = s.emailRole || "slave";
+  document.getElementById("selTimezone").value = s.tz || "VN";
 }
 async function saveSyncSetting(){
-  if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[]};
+  if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], emailRole:"slave", tz:"VN"};
   cmsDb.settings.syncW1 = document.getElementById("syncW1").value.trim();
   cmsDb.settings.syncW2 = document.getElementById("syncW2").value.trim();
   cmsDb.settings.syncW3 = document.getElementById("syncW3").value.trim();
@@ -533,6 +579,7 @@ window.onload=async function(){
     ordersDb=lsGet("a/api/orders")||[];dataRequestsDb=lsGet("a/api/data_requests")||[];
     linksDb=lsGet("a/api/links")||[];deadLinksDb=lsGet("a/api/deadlinks")||[];
     devicesDb=cached;accountsDb=lsGet("a/api/accounts")||[];
+    linkPoolDb=lsGet("a/api/link_pool")||[]; // Tải mảng Pool mới
     cmsDb=lsGet("a/api/cms")||{};if(!cmsDb.link_origins) cmsDb.link_origins={};
     document.getElementById("mOPkg").innerHTML=PKGS.map((p,i)=>`<option value="${i}">${p}</option>`).join("");
     loginOK(false);setTimeout(()=>fetchAll(false),500);
@@ -557,10 +604,11 @@ function loginOK(st=true){
   if(st){toast("Đăng nhập thành công!");fetchAll();go(savedTab);}
   else go(savedTab);
   setInterval(()=>{
-    checkAutoSendExpiry();
     if(!document.getElementById("mOrd").classList.contains("hidden")) return;
     apG("/api/orders",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(ordersDb)){ordersDb=f;renderOrd();toast("Có đơn mới!","warn");}});
     apG("/api/data_requests",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(dataRequestsDb)){dataRequestsDb=f;renderDataRequests();toast("Có yêu cầu data mới!","warn");}});
+    apG("/api/links",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(linksDb)){linksDb=f;renderLinks();}});
+    apG("/api/link_pool",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(linkPoolDb)){linkPoolDb=f;}});
   },12000);
 }
 function doLogout(){lsDel("adm_dev");location.reload();}
@@ -578,16 +626,19 @@ function go(id){
   if(id==="t-dead") renderDead();
   if(id==="t-data") renderDataRequests();
   if(id==="t-settings"){renderMailLog();renderDev();loadSyncSettingUI();}
+  if(id==="t-lnk") switchLinkMode(curLinkTab);
 }
+
 async function fetchAll(msg=false){
-  [ordersDb,dataRequestsDb,linksDb,deadLinksDb,devicesDb,accountsDb]=await Promise.all([apG("/api/orders",[]),apG("/api/data_requests",[]),apG("/api/links",[]),apG("/api/deadlinks",[]),apG("/api/devices",[]),apG("/api/accounts",[])]);
+  [ordersDb,dataRequestsDb,linksDb,deadLinksDb,devicesDb,accountsDb,linkPoolDb]=await Promise.all([apG("/api/orders",[]),apG("/api/data_requests",[]),apG("/api/links",[]),apG("/api/deadlinks",[]),apG("/api/devices",[]),apG("/api/accounts",[]),apG("/api/link_pool",[])]);
   cmsDb=await apG("/api/cms",{});
   if(!Array.isArray(ordersDb)) ordersDb=[];if(!Array.isArray(dataRequestsDb)) dataRequestsDb=[];
   if(!Array.isArray(linksDb)) linksDb=[];if(!Array.isArray(deadLinksDb)) deadLinksDb=[];
   if(!Array.isArray(devicesDb)) devicesDb=[];if(!Array.isArray(accountsDb)) accountsDb=[];
+  if(!Array.isArray(linkPoolDb)) linkPoolDb=[];
   if(typeof cmsDb!=="object"||Array.isArray(cmsDb)) cmsDb={};
   if(!cmsDb.link_origins) cmsDb.link_origins={};
-  if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[]};
+  if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], emailRole:"slave", tz:"VN"};
   for(let k in cmsDb){if(k!=="promo_templates"&&k!=="link_origins"&&k!=="settings") cmsDb[k]=reverseShortcodes(cmsDb[k]);}
   
   renderOrd();renderDataRequests();renderLinks();renderDev();renderAcc();
@@ -595,12 +646,40 @@ async function fetchAll(msg=false){
   
   const on = cmsDb.settings.autoMailEnabled || false;
   document.getElementById("toggleAutoMail").checked = on;
-  document.getElementById("autoMailStatus").textContent = "Trạng thái: " + (on ? "✅ Đang bật (gửi lúc 19:00-20:00 giờ VN)" : "⏸ Đang tắt");
+  document.getElementById("autoMailStatus").textContent = "Trạng thái: " + (on ? "✅ Đang bật (Phụ thuộc Cronjob)" : "⏸ Đang tắt");
   if(!document.getElementById("t-settings").classList.contains("hidden")){
       renderMailLog(); loadSyncSettingUI();
   }
 
   if(msg) toast("Đã làm mới dữ liệu!");
+}
+
+// TOGGLE TAB LINK SUB (POOL / MANUAL)
+function switchLinkMode(mode) {
+  curLinkTab = mode;
+  document.getElementById('btn-ls-pool').classList.toggle('active', mode === 'pool');
+  document.getElementById('btn-ls-manual').classList.toggle('active', mode === 'manual');
+  document.getElementById('panel-ls-pool').classList.toggle('hidden', mode !== 'pool');
+  document.getElementById('panel-ls-manual').classList.toggle('hidden', mode !== 'manual');
+}
+
+// THÊM LINK VÀO KHO TỔNG (AUTO)
+async function addLinkToPool() {
+  const orig = document.getElementById("poolOrig").value.trim();
+  const gb = document.getElementById("poolGb").value.trim();
+  const exp = document.getElementById("poolExp").value.trim();
+  const max = parseInt(document.getElementById("poolMax").value);
+  
+  if(!orig || !max) return toast("Nhập URL gốc và Max thiết bị!", "err");
+  
+  linkPoolDb.push({ id: "POOL-" + Date.now(), url: orig, gb, exp, max, used: 1 }); // used: 1 chừa lại link gốc
+  toast("Đang lưu vào kho tổng...");
+  await apP("/api/link_pool", linkPoolDb);
+  toast("Đã thêm vào Kho tự động bốc!");
+  document.getElementById("poolOrig").value = "";
+  document.getElementById("poolGb").value = "";
+  document.getElementById("poolExp").value = "";
+  document.getElementById("poolMax").value = "";
 }
 
 function switchOrdTab(tab){
@@ -634,7 +713,7 @@ function renderOrd(){
 
   const groups={};
   filtered.forEach(o=>{
-    const dc=getDateCreated(o);
+    const dc=getDateCreated(o); // Đã bị ép thành DD/MM/YYYY chuẩn xác
     const key=monthSortKey(dc)||"000000";
     const label=monthLabel(dc);
     if(!groups[key]) groups[key]={label,orders:[]};
@@ -673,7 +752,7 @@ function renderOrd(){
           <div class="text-[10px] md:text-[11px] lg:text-sm text-slate-500 mt-0.5 font-medium truncate pl-5 order-meta-text">${displayPkg}${o.expDate?` • HSD: <span class="font-bold text-slate-700">${o.expDate}</span>`:""}${daysLeft!==null&&daysLeft>=0?` <span class="font-black ${daysLeft<=1?'text-red-600':'text-orange-500'}">(còn ${daysLeft}n)</span>`:""}</div>
         </div>
         <div class="flex flex-col items-end gap-2 shrink-0 border-t border-slate-100 md:border-0 pt-2 md:pt-0 mt-1 md:mt-0">
-          ${dc?`<span class="text-[10px] lg:text-xs text-slate-400 font-semibold whitespace-nowrap">${fmtCardDate(dc)}</span>`:""}
+          ${dc?`<span class="text-[10px] lg:text-xs text-slate-400 font-semibold whitespace-nowrap">${dc}</span>`:""}
           <div class="flex gap-1.5 shrink-0">
             ${(o.status==="success"&&o.expDate&&!isExpiredSuccess)?`<button onclick="sendExpMail('${o.id}')" title="Nhắc hết hạn" class="text-amber-500 font-bold px-3 py-1.5 bg-amber-50 border border-amber-100 rounded-lg text-xs lg:text-sm hover:bg-amber-500 hover:text-white transition shadow-sm"><i class="fas fa-clock"></i></button>`:""}
             <button onclick="sendZaloMail('${o.id}')" title="Nhắc Zalo khách hàng" class="text-blue-500 font-bold px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg text-xs lg:text-sm hover:bg-blue-500 hover:text-white transition shadow-sm"><i class="fas fa-comment-dots"></i></button>
@@ -720,7 +799,7 @@ function togSF(){const s=document.getElementById("mOStatus").value;document.getE
 async function saveOrd(){
   const id=document.getElementById("mOId").value.trim();if(!id) return toast("Mã đơn rỗng!","err");
   let o=ordersDb.find(x=>x.id===id);
-  if(!o){o={id,dateCreated:todayVN(),date:new Date().toLocaleString("vi")};ordersDb.unshift(o);}
+  if(!o){o={id,dateCreated:todayVN(),date:todayVN()};ordersDb.unshift(o);} // Cắt sạch giờ phút khi tạo mới
   const pkgTxt=PKGS[document.getElementById("mOPkg").value],status=document.getElementById("mOStatus").value;
   Object.assign(o,{
     email:document.getElementById("mOEmail").value.trim(),
@@ -738,7 +817,10 @@ async function saveOrd(){
     reason:document.getElementById("mOReason").value.trim()
   });
   renderOrd();cm("mOrd");toast("Đang lưu & bắn tỉa...");await apP("/api/orders",ordersDb);toast("Đã lưu!");
-  if(document.getElementById("mOSendMail").checked&&o.email&&(status==="success"||status==="failed")){
+  
+  // Chỉ gửi mail nếu Web này đang set Master
+  const isMaster = (cmsDb.settings && cmsDb.settings.emailRole === "master");
+  if(document.getElementById("mOSendMail").checked && o.email && (status==="success"||status==="failed") && isMaster){
     const subj=status==="success"?"VPN Trinh Hg - Kích hoạt thành công":"VPN Trinh Hg - Kích hoạt thất bại";
     const html=status==="success"?buildSuccessMailHtml(o):buildFailedMailHtml(o);
     fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:o.email,subject:subj,html})});
@@ -752,7 +834,7 @@ function sendExpMail(id){
   const daysLeft=o.expDate?Math.ceil((pd(o.expDate)-new Date())/86400000):null;
   const msgDay=daysLeft===1?"<b>ngày mai hết hạn</b>":daysLeft!==null?`còn <b>${daysLeft} ngày</b> (hết hạn <b>${o.expDate}</b>)`:` hết hạn ngày <b>${o.expDate||"chưa xác định"}</b>`;
   fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:o.email,subject:"VPN Trinh Hg - Gói VPN sắp hết hạn",html:buildExpMailHtml(o,msgDay)})});
-  addMailLog("Nhắc hết hạn",o.email,o.id);toast("Đã gửi mail nhắc hết hạn!");
+  addMailLog("Nhắc hết hạn (Thủ công)",o.email,o.id);toast("Đã gửi mail nhắc hết hạn!");
 }
 function sendZaloMail(id){
   const o=ordersDb.find(x=>x.id===id);if(!o?.email) return toast("Chưa có email!","err");
@@ -853,7 +935,7 @@ async function createLink(){
     else if(orig.includes("djjc.cfd")) masked=PD+"/v2/VPNTrinhHg"+qs+"#VPNTrinhHg";
     else return toast("Domain không hỗ trợ!","err");
   }catch{return toast("Link không hợp lệ!","err");}
-  linksDb.unshift({id:"LNK-"+Date.now(),orig,masked,email,expDate,linkIndex:idx,isLocked:false,date:new Date().toLocaleString("vi")});
+  linksDb.unshift({id:"LNK-"+Date.now(),orig,masked,email,expDate,linkIndex:idx,isLocked:false,date:todayVN()}); // Đã cắt giờ phút
   renderLinks();toast("Đang lưu link...");await apP("/api/links",linksDb);toast("Đã tạo link ẩn! Nhớ Đồng bộ GitHub.");
   ["lkOrig","lkEmail","lkExp","lkIdx"].forEach(f=>document.getElementById(f).value="");
 }
@@ -1064,7 +1146,7 @@ function updatePreview(){document.getElementById("cmsPreview").innerHTML=parseSh
 async function saveCms(){cmsDb[curCms]=document.getElementById("cmsRaw").value;toast("Đang lưu CMS & bắn tỉa sang 3 web...");await apP("/api/cms",cmsDb);toast("Đã lưu Hướng dẫn lên hệ thống!");}
 
 function switchSettingsTab(tab){
-  ["mail","sync","log","dev"].forEach(t=>{
+  ["mail","sync","log","dev","ui"].forEach(t=>{
     const st=document.getElementById("settings-view-"+t),btn=document.getElementById("stab-"+t);
     if(st) st.classList.toggle("hidden",t!==tab);
     if(btn) btn.classList.toggle("active",t===tab);
