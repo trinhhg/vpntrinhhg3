@@ -11,7 +11,6 @@
 body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc;color:#0f172a;overflow-x:hidden;}
 .glass-ui{background:rgba(255,255,255,.95);backdrop-filter:blur(16px);}
 .view-section{display:none;animation:fadeUp .4s ease-out forwards;}
-.view-section.active{display:block;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
 .portal-tab-content{display:none;animation:fadeUp .3s ease forwards;}
 .portal-tab-content.active{display:block;}
@@ -29,6 +28,12 @@ details>summary::-webkit-details-marker{display:none;}
 .mobile-tab-btn.active{color:#4f46e5;background:#e0e7ff;}
 #guideText{white-space:pre-wrap;word-wrap:break-word;}
 </style>
+<!-- Chống giật màn hình (Flash UI) -->
+<script>
+  let __s = localStorage.getItem('vpn_portal_session_24h');
+  let __v = __s ? 'view-portal' : 'view-store';
+  document.write(`<style>#${__v} { display: block !important; }</style>`);
+</script>
 </head>
 <body class="min-h-screen flex flex-col w-full overflow-x-hidden">
 <div id="toastContainer" class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
@@ -89,7 +94,7 @@ details>summary::-webkit-details-marker{display:none;}
     <div id="p-home" class="portal-tab-content active w-full">
       <div class="bg-white p-4 md:p-8 rounded-3xl mb-8 shadow-sm border border-slate-200 w-full overflow-hidden">
         
-        <!-- Khối Giao diện Đang Kiểm tra Giao dịch (Có Đếm ngược 5p) -->
+        <!-- ======================= KHỐI PENDING ======================= -->
         <div id="portalContentPending" class="hidden bg-indigo-50 border border-indigo-200 p-6 rounded-xl flex flex-col items-center text-center mb-6">
           
           <!-- Trạng thái đang đếm ngược -->
@@ -99,7 +104,7 @@ details>summary::-webkit-details-marker{display:none;}
             <div class="my-5">
               <span id="countdownTimer" class="font-mono text-5xl md:text-6xl font-black text-indigo-600 bg-white px-6 py-3 rounded-2xl shadow-inner border-2 border-indigo-100">05:00</span>
             </div>
-            <p class="text-indigo-700 text-sm md:text-base font-bold mb-4 animate-pulse">Tất cả quy trình là tự động hóa, vui lòng đợi chúng tôi ít phút.</p>
+            <p class="text-indigo-700 text-sm md:text-base font-bold mb-2 animate-pulse">Tất cả quy trình là tự động hóa, vui lòng đợi chúng tôi ít phút.</p>
           </div>
 
           <!-- Trạng thái hết giờ (Timeout) -->
@@ -109,16 +114,15 @@ details>summary::-webkit-details-marker{display:none;}
             <p class="text-red-600 text-sm md:text-base font-bold mt-1 mb-2">Đã quá thời gian tự động duyệt. Bạn đã chuyển khoản chưa?</p>
           </div>
 
-          <!-- UI Zalo hỗ trợ Admin -->
-          <div class="w-full flex flex-col items-center mt-3">
-            <p class="text-slate-600 text-[11px] md:text-sm mb-3 font-semibold px-4">Nếu có thắc mắc khác cần được giải đáp thì vui lòng nhắn tin cho Admin nhé.</p>
+          <div class="w-full flex flex-col items-center mt-2">
+            <p class="text-slate-500 text-[11px] md:text-sm mb-3 font-medium px-4">Nếu có thắc mắc khác cần được giải đáp thì vui lòng nhắn tin cho Admin nhé.</p>
             <a href="https://zalo.me/0917678211" target="_blank" class="mx-auto bg-[#0068ff] text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition shadow-md">
               <i class="fas fa-comment-dots text-lg"></i> Nhắn Zalo Admin
             </a>
           </div>
         </div>
 
-        <!-- Khối Giao diện Thất Bại / Bị Từ Chối -->
+        <!-- ======================= KHỐI TỪ CHỐI ======================= -->
         <div id="portalContentFailed" class="hidden bg-red-50 border border-red-200 p-6 rounded-xl flex flex-col items-center text-center mb-6">
           <i class="fas fa-times-circle text-4xl text-red-500 mb-3"></i>
           <h4 class="font-extrabold text-red-800 text-sm md:text-lg uppercase">Đơn hàng bị từ chối</h4>
@@ -132,7 +136,7 @@ details>summary::-webkit-details-marker{display:none;}
           </div>
         </div>
         
-        <!-- Khối Thành Công -->
+        <!-- ======================= KHỐI THÀNH CÔNG ======================= -->
         <div id="portalContentSuccess" class="hidden w-full">
           <div class="mb-4 text-center">
              <p class="text-red-600 font-black text-[11px] md:text-sm animate-pulse bg-red-50 py-2 px-4 rounded-lg inline-block border border-red-200">⚠️ Bắt buộc giữ bí mật Email và Mã đơn hàng để tránh kẻ gian lợi dụng.</p>
@@ -224,7 +228,7 @@ details>summary::-webkit-details-marker{display:none;}
     </div>
   </div>
  
-  <div id="view-store" class="view-section active mb-20 w-full">
+  <div id="view-store" class="view-section mb-20 w-full">
     <div class="text-center mb-8 mt-2 md:mt-4 px-2 w-full">
       <h1 class="text-3xl md:text-5xl font-extrabold mb-3 text-slate-800 leading-tight" data-i18n="hero_title">Vượt rào cản. <span class="text-indigo-600">Kết nối thế giới.</span></h1>
       <p class="text-xs md:text-base text-slate-600 font-medium mb-5" data-i18n="hero_desc">Trải nghiệm VPN chất lượng cao từ ba nhà mạng viễn thông lớn.</p>
@@ -317,13 +321,13 @@ const GOOGLE_MAIL_API = "https://script.google.com/macros/s/AKfycbyQjEln9By0HuUP
 const SESSION_KEY = 'vpn_portal_session_24h';
 const DB_KEY = 'vpn_orders_db';
  
-// Các biến global cho Đếm ngược
-let checkOrderInterval = null;
+// Biến global cho Đếm ngược
+let globalPollInterval = null;
 let countdownTimerInterval = null;
-let pendingEndTime = 0;
+let oCache = null;
 
 let lastScrollY = 0;
-let lang='vi', currentPackage=null, currentOrderId='', cmsCache={}, currentMultiplier=1, oCache=null;
+let lang='vi', currentPackage=null, currentOrderId='', cmsCache={}, currentMultiplier=1;
 let currentTotalVnd=0, currentTotalCny=0, currentTotalUsd=0;
 
 window.addEventListener('scroll',()=>{
@@ -723,81 +727,76 @@ function parseOrderDate(dateStr) {
  
 // ── Portal ──
 function updatePortalInfo(o){
-  oCache=o;
+  oCache = o;
+  
+  // Tắt tất cả UI trước
   document.getElementById('portalContentPending').classList.add('hidden');
+  document.getElementById('pendingActiveState').classList.add('hidden');
+  document.getElementById('pendingTimeoutState').classList.add('hidden');
   document.getElementById('portalContentSuccess').classList.add('hidden');
   document.getElementById('portalContentFailed').classList.add('hidden');
-  
-  if(o.status==='pending'){
-    document.getElementById('portalContentPending').classList.remove('hidden');
-    
-    // Đếm ngược vĩnh hằng dựa vào giờ tạo đơn
-    let startTime = o.createdTs || parseOrderDate(o.date);
-    pendingEndTime = startTime + 300 * 1000; // Cấp 5 phút từ lúc tạo đơn
-    
-    startPendingPolling();
-    
-  } else if(o.status==='success'){
-    stopPendingPolling(); // Tắt ngầm
+
+  if(countdownTimerInterval) { clearInterval(countdownTimerInterval); countdownTimerInterval = null; }
+
+  if(o.status === 'success'){
     document.getElementById('portalContentSuccess').classList.remove('hidden');
-   
     document.getElementById('subLink1').value = o.info1 || o.info || '';
     document.getElementById('subLink2').value = o.info2 || '';
     document.getElementById('subLink3').value = o.info3 || '';
-   
-    document.getElementById('displayOrderId').innerText=o.id;
-  } else if(o.status==='failed'){
-    stopPendingPolling(); // Tắt ngầm
+    document.getElementById('displayOrderId').innerText = o.id;
+  } 
+  else if(o.status === 'failed'){
     document.getElementById('portalContentFailed').classList.remove('hidden');
-    document.getElementById('failReasonText').innerText = o.reason || 'Không rõ lý do';
+    document.getElementById('failReasonText').innerText = o.reason || 'Admin từ chối giao dịch';
+  } 
+  else if(o.status === 'pending'){
+    document.getElementById('portalContentPending').classList.remove('hidden');
+    
+    // Lấy thời gian bắt đầu
+    let startTime = o.createdTs || parseOrderDate(o.date);
+    let endTime = startTime + 300000; // Mốc tử hình: +5 phút
+
+    if(Date.now() >= endTime) {
+       // Quá 5 phút -> Vô thẳng bảng Đỏ
+       document.getElementById('pendingTimeoutState').classList.remove('hidden');
+    } else {
+       // Còn thời gian -> Bật Active, chạy đồng hồ
+       document.getElementById('pendingActiveState').classList.remove('hidden');
+       let left = Math.ceil((endTime - Date.now()) / 1000);
+       updateTimerUI(left);
+
+       countdownTimerInterval = setInterval(() => {
+         let currentLeft = Math.ceil((endTime - Date.now()) / 1000);
+         if(currentLeft <= 0) {
+            clearInterval(countdownTimerInterval);
+            countdownTimerInterval = null;
+            document.getElementById('pendingActiveState').classList.add('hidden');
+            document.getElementById('pendingTimeoutState').classList.remove('hidden');
+         } else {
+            updateTimerUI(currentLeft);
+         }
+       }, 1000);
+    }
   }
 }
 
-// Hàm xử lý Đếm ngược và Check trạng thái ngầm
-function startPendingPolling() {
-  // 1. Reset giao diện
-  document.getElementById('pendingActiveState').classList.remove('hidden');
-  document.getElementById('pendingTimeoutState').classList.add('hidden');
-  updateTimerUI();
+function updateTimerUI(leftStr) {
+  if (leftStr < 0) leftStr = 0;
+  const m = Math.floor(leftStr / 60).toString().padStart(2, '0');
+  const s = (leftStr % 60).toString().padStart(2, '0');
+  const el = document.getElementById('countdownTimer');
+  if(el) el.innerText = `${m}:${s}`;
+}
 
-  // 2. Dọn sạch interval cũ
-  stopPendingPolling();
-
-  // 3. UI Countdown (chạy mỗi giây để vẽ đồng hồ)
-  countdownTimerInterval = setInterval(() => {
-    updateTimerUI();
-  }, 1000);
-
-  // 4. API Polling (chạy 10s/lần xuyên suốt quá trình pending, KHÔNG DỪNG kể cả khi đỏ)
-  checkOrderInterval = setInterval(() => {
-    login(false, true); // Chạy ngầm check API
+// Hàm khởi động API ngầm (Polling) Vĩnh Viễn
+function startGlobalPolling(orderId) {
+  if(globalPollInterval) clearInterval(globalPollInterval);
+  globalPollInterval = setInterval(async () => {
+    let db = await apiGet('/api/orders');
+    if(!Array.isArray(db)) return;
+    let o = db.find(x => x.id === orderId);
+    if(o) updatePortalInfo(o);
   }, 10000);
-}
-
-function stopPendingPolling() {
-  if (typeof countdownTimerInterval !== 'undefined' && countdownTimerInterval) clearInterval(countdownTimerInterval);
-  if (typeof checkOrderInterval !== 'undefined' && checkOrderInterval) clearInterval(checkOrderInterval);
-}
-
-function handlePendingTimeout() {
-  // Hết giờ -> Đổi màu đỏ, nhưng KHÔNG TẮT Polling (để duyệt tay là nhảy tab luôn)
-  if (typeof countdownTimerInterval !== 'undefined' && countdownTimerInterval) clearInterval(countdownTimerInterval);
-  document.getElementById('pendingActiveState').classList.add('hidden');
-  document.getElementById('pendingTimeoutState').classList.remove('hidden');
-}
-
-function updateTimerUI() {
-  let left = Math.ceil((pendingEndTime - Date.now()) / 1000);
-  if (left <= 0) {
-    handlePendingTimeout(); // Hết giờ
-  } else {
-    document.getElementById('pendingActiveState').classList.remove('hidden');
-    document.getElementById('pendingTimeoutState').classList.add('hidden');
-    const m = Math.floor(left / 60).toString().padStart(2, '0');
-    const s = (left % 60).toString().padStart(2, '0');
-    const el = document.getElementById('countdownTimer');
-    if(el) el.innerText = `${m}:${s}`;
-  }
 }
  
 async function login(isManualRefresh=false,isAutoPoll=false){
@@ -814,7 +813,10 @@ async function login(isManualRefresh=false,isAutoPoll=false){
  document.getElementById('centerNavContainer').classList.remove('justify-center');
  document.getElementById('mobileNavWrapper').classList.remove('hidden');
  if(!isAutoPoll&&!isManualRefresh)switchPortalTab('p-home');
+  
   updatePortalInfo(o);
+  if(!isAutoPoll) startGlobalPolling(o.id); // Chỉ gọi 1 lần khi đăng nhập/tạo đơn xong
+
   if(o.status==='success'){cmsCache=await apiGet('/api/cms');showGuide('android');}
   renderPackages('all');
  if(!isManualRefresh&&!isAutoPoll)window.scrollTo({top:0,behavior:'smooth'});
@@ -839,7 +841,8 @@ function logout(){
  document.getElementById('searchAndTabsWrapper').classList.remove('w-full');document.getElementById('searchAndTabsWrapper').classList.add('max-w-2xl','justify-center');
  document.getElementById('centerNavContainer').classList.add('justify-center');
   oCache=null;
-  stopPendingPolling(); // Clear clock khi thoát
+  if(globalPollInterval) clearInterval(globalPollInterval);
+  if(countdownTimerInterval) clearInterval(countdownTimerInterval);
 }
  
 function parseShortcodes(text) {
