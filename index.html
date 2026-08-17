@@ -682,8 +682,6 @@ async function confirmPaid(){
  
 // ── Portal ──
 // Các biến cục bộ phục vụ Đồng hồ & Polling
-let checkOrderInterval = null;
-let countdownTimerInterval = null;
 let pendingEndTime = 0;
 let currentCountdownOrderId = null;
 
@@ -758,8 +756,8 @@ function startPendingCountdown() {
 }
 
 function stopPendingCountdown() {
-  if(countdownTimerInterval) clearInterval(countdownTimerInterval);
-  if(checkOrderInterval) clearInterval(checkOrderInterval);
+  if(typeof countdownTimerInterval !== 'undefined' && countdownTimerInterval) clearInterval(countdownTimerInterval);
+  if(typeof checkOrderInterval !== 'undefined' && checkOrderInterval) clearInterval(checkOrderInterval);
 }
 
 function handlePendingTimeout() {
