@@ -11,6 +11,7 @@
 body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc;color:#0f172a;overflow-x:hidden;}
 .glass-ui{background:rgba(255,255,255,.95);backdrop-filter:blur(16px);}
 .view-section{display:none;animation:fadeUp .4s ease-out forwards;}
+.view-section.active{display:block;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
 .portal-tab-content{display:none;animation:fadeUp .3s ease forwards;}
 .portal-tab-content.active{display:block;}
@@ -27,12 +28,14 @@ details>summary::-webkit-details-marker{display:none;}
 .desktop-tab-btn.active{background:#4f46e5;color:white!important;box-shadow:0 4px 15px rgba(79,70,229,.3);}
 .mobile-tab-btn.active{color:#4f46e5;background:#e0e7ff;}
 #guideText{white-space:pre-wrap;word-wrap:break-word;}
+.pkg-disabled { filter: grayscale(1); opacity: 0.6; pointer-events: none; }
 </style>
 <!-- Chống giật màn hình (Flash UI) -->
 <script>
   let __s = localStorage.getItem('vpn_portal_session_24h');
   let __v = __s ? 'view-portal' : 'view-store';
-  document.write(`<style>#${__v} { display: block !important; }</style>`);
+  // Đặt ID để JS bứng nó ra sau khi load, giải phóng CSS
+  document.write(`<style id="antiFlashStyle">#${__v} { display: block !important; }</style>`);
 </script>
 </head>
 <body class="min-h-screen flex flex-col w-full overflow-x-hidden">
@@ -100,7 +103,7 @@ details>summary::-webkit-details-marker{display:none;}
           <!-- Trạng thái đang đếm ngược -->
           <div id="pendingActiveState" class="w-full">
             <i class="fas fa-sync fa-spin text-3xl text-indigo-500 mb-3"></i>
-            <h4 class="font-extrabold text-indigo-800 text-sm md:text-lg uppercase">Đang kiểm tra giao dịch...</h4>
+            <h4 id="pendingTitleUI" class="font-extrabold text-indigo-800 text-sm md:text-lg uppercase">Đang kiểm tra giao dịch...</h4>
             <div class="my-5">
               <span id="countdownTimer" class="font-mono text-5xl md:text-6xl font-black text-indigo-600 bg-white px-6 py-3 rounded-2xl shadow-inner border-2 border-indigo-100">05:00</span>
             </div>
@@ -142,12 +145,15 @@ details>summary::-webkit-details-marker{display:none;}
              <p class="text-red-600 font-black text-[11px] md:text-sm animate-pulse bg-red-50 py-2 px-4 rounded-lg inline-block border border-red-200">⚠️ Bắt buộc giữ bí mật Email và Mã đơn hàng để tránh kẻ gian lợi dụng.</p>
           </div>
           
-          <div class="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-3 md:p-4 mb-4 shadow-sm gap-2">
-            <div class="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+          <div class="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-3 md:p-4 mb-4 shadow-sm gap-2 relative overflow-hidden">
+            <!-- Badge Nâng Cấp Thành Công (Mới) -->
+            <div id="upgradeSuccessBadge" class="hidden absolute top-0 right-0 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md animate-pulse">🎉 NÂNG GÓI THÀNH CÔNG</div>
+            
+            <div class="flex items-center gap-2 min-w-0 flex-1 overflow-hidden mt-1">
               <span class="bg-slate-100 text-slate-500 font-bold px-2 py-1 rounded text-[10px] md:text-xs shrink-0" data-i18n="order_id_label">Mã đơn</span>
               <span class="font-mono font-extrabold text-indigo-600 text-[10px] md:text-sm truncate" id="displayOrderId"></span>
             </div>
-            <button id="btnRequestData" onclick="requestDataCheck()" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold px-2.5 md:px-4 py-2 rounded-lg text-[10px] md:text-sm hover:scale-105 transition shadow-md flex items-center shrink-0 btn-heartbeat outline-none whitespace-nowrap">
+            <button id="btnRequestData" onclick="requestDataCheck()" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold px-2.5 md:px-4 py-2 rounded-lg text-[10px] md:text-sm hover:scale-105 transition shadow-md flex items-center shrink-0 btn-heartbeat outline-none whitespace-nowrap mt-1">
               <i class="fas fa-chart-pie mr-1 md:mr-1.5"></i><span data-i18n="btn_check_data">Kiểm tra dung lượng</span>
             </button>
           </div>
@@ -178,8 +184,10 @@ details>summary::-webkit-details-marker{display:none;}
               </div>
             </div>
 
-            <div class="mt-4 flex justify-center border-t border-green-200 pt-4">
-              <button onclick="switchPortalTab('p-store')" class="w-full bg-indigo-600 text-white font-bold px-6 py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center"><i class="fas fa-redo-alt mr-1"></i><span data-i18n="btn_renew">GIA HẠN</span></button>
+            <!-- Nút Nâng Gói & Gia Hạn -->
+            <div class="mt-4 grid grid-cols-2 gap-3 border-t border-green-200 pt-4">
+              <button onclick="startUpgrade()" class="w-full bg-amber-500 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-amber-600 transition flex items-center justify-center shadow-md"><i class="fas fa-arrow-up mr-1.5"></i> NÂNG GÓI</button>
+              <button onclick="switchPortalTab('p-store'); isUpgradeMode=false;" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center shadow-md"><i class="fas fa-redo-alt mr-1.5"></i> GIA HẠN</button>
             </div>
           </div>
         </div>
@@ -252,7 +260,7 @@ details>summary::-webkit-details-marker{display:none;}
     </div>
     <div id="packagesContainerHome" class="grid md:grid-cols-3 gap-4 md:gap-6 mb-10 w-full"></div>
     <div id="checkoutSection" class="hidden mt-6 scroll-mt-24 w-full">
-      <div class="text-center mb-6"><h3 class="text-xl md:text-3xl font-extrabold text-slate-800" data-i18n="checkout_title">Thanh toán Đơn hàng</h3></div>
+      <div class="text-center mb-6"><h3 id="checkoutTitle" class="text-xl md:text-3xl font-extrabold text-slate-800" data-i18n="checkout_title">Thanh toán Đơn hàng</h3></div>
       <form id="orderForm" onsubmit="submitOrder(event)">
         <div class="grid lg:grid-cols-2 gap-6">
           <div class="bg-white border border-slate-200 p-5 md:p-8 rounded-3xl flex flex-col shadow-sm">
@@ -260,6 +268,9 @@ details>summary::-webkit-details-marker{display:none;}
               <div><p class="text-sm font-black text-slate-800 uppercase" id="selectedPackageName"></p><p class="text-xs font-bold text-slate-500 mt-0.5" id="selectedPackageData"></p></div>
               <p class="text-lg md:text-xl font-black text-indigo-600" id="selectedPackagePrice"></p>
             </div>
+            
+            <div id="upgradePriceNote" class="hidden bg-amber-50 border border-amber-200 p-3 rounded-xl mb-5 text-amber-800 text-[11px] md:text-xs font-bold text-center"></div>
+
             <input type="email" id="cusEmail" required placeholder="Nhập Email nhận đơn" data-i18n-placeholder="email_placeholder"
               class="w-full border border-slate-200 rounded-xl p-3.5 outline-none text-sm focus:border-indigo-500 mb-2 bg-slate-50">
             <div class="bg-red-50 border border-red-200 p-3 rounded-xl mb-5 flex items-start gap-2">
@@ -280,7 +291,8 @@ details>summary::-webkit-details-marker{display:none;}
               </label>
               <input type="text" id="cusZalo" required class="w-full border border-slate-300 rounded-lg p-2.5 mt-3 outline-none text-xs" placeholder="Nhập Zalo / Telegram...">
             </div>
-            <div class="mb-4">
+            
+            <div id="durationBlock" class="mb-4">
               <label class="block font-bold text-xs text-slate-700 mb-2" data-i18n="choose_dur">Chọn thời gian:</label>
               <div class="grid grid-cols-4 gap-2 text-center">
                 <button type="button" onclick="selectDuration(1)"  id="dur-btn-1"  class="dur-btn active bg-indigo-600 text-white font-bold py-2 rounded-lg text-sm">1 <span class="text-[10px] font-normal" data-i18n="month_lbl">Tháng</span></button>
@@ -290,6 +302,7 @@ details>summary::-webkit-details-marker{display:none;}
               </div>
               <div id="priceCalculation" class="mt-3 text-sm font-black text-indigo-700 bg-indigo-50 border border-indigo-100 p-2.5 rounded-lg text-center"></div>
             </div>
+
             <div class="sticky bottom-0 z-40 mt-auto pt-4 bg-white/90 backdrop-blur-md rounded-b-3xl pb-2">
               <button type="submit" id="btnConfirm" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md" data-i18n="btn_create_order">TẠO MÃ QR CHUYỂN KHOẢN</button>
             </div>
@@ -321,14 +334,18 @@ const GOOGLE_MAIL_API = "https://script.google.com/macros/s/AKfycbyQjEln9By0HuUP
 const SESSION_KEY = 'vpn_portal_session_24h';
 const DB_KEY = 'vpn_orders_db';
  
-// Biến global cho Đếm ngược
+// Các biến global cho Đếm ngược
 let globalPollInterval = null;
 let countdownTimerInterval = null;
 let oCache = null;
-
+ 
 let lastScrollY = 0;
 let lang='vi', currentPackage=null, currentOrderId='', cmsCache={}, currentMultiplier=1;
 let currentTotalVnd=0, currentTotalCny=0, currentTotalUsd=0;
+
+// Biến cho Nâng gói
+let isUpgradeMode = false;
+let baseOrderPrice = 0;
 
 window.addEventListener('scroll',()=>{
   const nav=document.getElementById('mainNav');
@@ -338,6 +355,12 @@ window.addEventListener('scroll',()=>{
 });
 const obs=new IntersectionObserver(es=>es.forEach(e=>{const s=document.getElementById('floatingSocials');e.isIntersecting?s.classList.add('opacity-0','pointer-events-none','translate-y-10'):s.classList.remove('opacity-0','pointer-events-none','translate-y-10');}),{threshold:.1});
 window.addEventListener('DOMContentLoaded',()=>obs.observe(document.getElementById('footerArea')));
+
+// Gỡ cái thẻ style chống giật UI sau khi DOM tải xong
+window.addEventListener('load', () => {
+   const antiFlash = document.getElementById('antiFlashStyle');
+   if(antiFlash) antiFlash.remove();
+});
  
 // ── i18n ──
 const i18n={
@@ -513,14 +536,28 @@ const faqHTML=`
 function genHTML(pkg){
   const l=i18n[lang];const p=pkg[lang];
   let displayTime=p.time;
- if(pkg.category.includes('usage')&&!pkg.isCustom)displayTime=i18n[lang].lifetime_lbl;
+  if(pkg.category.includes('usage')&&!pkg.isCustom)displayTime=i18n[lang].lifetime_lbl;
+  
+  // Logic Nâng gói: Tô xám các gói không khả dụng
+  let isDisabled = false;
+  if(isUpgradeMode && pkg.vnd <= baseOrderPrice && !pkg.isCustom) {
+      isDisabled = true;
+  }
+
   let priceHTML=pkg.isCustom
     ?`<div class="text-xl font-black text-red-600 mb-4 border-b border-slate-100 pb-4 mt-2">${p.price}</div>`
     :`<div class="text-2xl md:text-3xl font-black text-indigo-600 mb-4 border-b border-slate-100 pb-4 mt-2">${p.price}</div>`;
-  let btnHTML=pkg.isCustom
-    ?`<a href="#footerArea" class="w-full block text-center bg-red-50 text-red-700 font-bold py-3 rounded-xl text-sm hover:bg-red-600 hover:text-white transition">${l.btn_contact}</a>`
-    :`<button onclick="openCheckout('${pkg.id}')" class="w-full bg-indigo-50 text-indigo-700 font-bold py-3 rounded-xl text-sm hover:bg-indigo-600 hover:text-white transition">${l.btn_buy}</button>`;
-  return `<div class="bg-white p-5 md:p-6 rounded-3xl border border-slate-100 shadow-sm relative flex flex-col justify-between hover:shadow-lg transition mt-4 md:mt-0">
+  
+  let btnHTML = "";
+  if(isDisabled) {
+      btnHTML = `<button disabled class="w-full bg-slate-100 text-slate-400 font-bold py-3 rounded-xl text-sm cursor-not-allowed">Không khả dụng</button>`;
+  } else {
+      btnHTML = pkg.isCustom
+        ?`<a href="#footerArea" class="w-full block text-center bg-red-50 text-red-700 font-bold py-3 rounded-xl text-sm hover:bg-red-600 hover:text-white transition">${l.btn_contact}</a>`
+        :`<button onclick="openCheckout('${pkg.id}')" class="w-full bg-indigo-50 text-indigo-700 font-bold py-3 rounded-xl text-sm hover:bg-indigo-600 hover:text-white transition">${l.btn_buy}</button>`;
+  }
+
+  return `<div class="bg-white p-5 md:p-6 rounded-3xl border border-slate-100 shadow-sm relative flex flex-col justify-between hover:shadow-lg transition mt-4 md:mt-0 ${isDisabled ? 'pkg-disabled' : ''}">
     ${pkg.tag?`<span class="absolute -top-3 right-4 bg-red-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10">${pkg.tag[lang]||pkg.tag.vi}</span>`:''}
     ${pkg.tag2?`<span class="absolute -top-3 left-4 bg-blue-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10">${pkg.tag2[lang]||pkg.tag2.vi}</span>`:''}
     <div class="${pkg.tag||pkg.tag2?'pt-2':''}">
@@ -548,6 +585,24 @@ function renderPackages(filter){
  document.getElementById('packagesContainerHome').innerHTML=html;
  document.getElementById('packagesContainerPortal').innerHTML=html;
 }
+
+// Bắt đầu quy trình Nâng Gói
+function startUpgrade() {
+    isUpgradeMode = true;
+    let curPrice = 0;
+    // Dò giá gói hiện tại để làm mốc
+    for(let p of pkgs) {
+        if (oCache.pkgName && p.vi.name.includes(oCache.pkgName) && (!oCache.pkgData || p.data.includes(oCache.pkgData))) {
+            curPrice = p.vnd; break;
+        }
+    }
+    if(!curPrice) curPrice = 60000; // Mặc định nếu không tìm thấy
+    baseOrderPrice = curPrice;
+
+    switchPortalTab('p-store');
+    renderPackages('all');
+    showToast("Vui lòng chọn gói cao hơn gói hiện tại để nâng cấp", "info");
+}
  
 function openCheckout(id){
   currentPackage=pkgs.find(p=>p.id===id);
@@ -555,10 +610,27 @@ function openCheckout(id){
  if(document.getElementById('view-portal').classList.contains('active'))document.getElementById('p-store').appendChild(co);
   else document.getElementById('view-store').appendChild(co);
  co.classList.remove('hidden');co.scrollIntoView({behavior:'smooth'});
+ 
  document.getElementById('selectedPackageName').innerText=currentPackage[lang].name;
  document.getElementById('selectedPackageData').innerText=currentPackage.data;
  document.getElementById('selectedPackagePrice').innerText=currentPackage[lang].price;
- selectDuration(1);currentOrderId='';calculateTotal();
+ 
+ if(isUpgradeMode) {
+     document.getElementById('checkoutTitle').innerText = "Thanh toán Nâng Gói";
+     document.getElementById('durationBlock').classList.add('hidden'); // Ẩn chọn tháng
+     currentMultiplier = 1;
+     // Hiện block báo giá nâng cấp
+     document.getElementById('upgradePriceNote').classList.remove('hidden');
+     document.getElementById('upgradePriceNote').innerHTML = `Số tiền nâng cấp: <b>${currentPackage.vnd.toLocaleString('vi-VN')}đ</b> (Gói mới) - <b>${baseOrderPrice.toLocaleString('vi-VN')}đ</b> (Gói cũ) = <b>${(currentPackage.vnd - baseOrderPrice).toLocaleString('vi-VN')}đ</b>`;
+ } else {
+     document.getElementById('checkoutTitle').innerText = i18n[lang].checkout_title;
+     document.getElementById('durationBlock').classList.remove('hidden');
+     document.getElementById('upgradePriceNote').classList.add('hidden');
+     currentOrderId=''; 
+     selectDuration(1);
+ }
+
+ calculateTotal();
  if(document.getElementById('needSupport').checked)document.getElementById('cusZalo').classList.remove('hidden');
 }
  
@@ -573,16 +645,24 @@ function selectPayMethod(method){
  document.getElementById('payMethod').value=method;
  document.querySelectorAll('.pay-btn').forEach(b=>{b.classList.remove('active','bg-indigo-50','border-indigo-500','text-indigo-700');b.classList.add('bg-white','border-slate-200','text-slate-600');});
   const ab=document.getElementById('pay-btn-'+method);ab.classList.remove('bg-white','border-slate-200','text-slate-600');ab.classList.add('active','bg-indigo-50','border-indigo-500','text-indigo-700');
-  if(currentOrderId)renderPaymentBox();
+  if(currentOrderId || isUpgradeMode) renderPaymentBox();
 }
  
 function calculateTotal(){
   if(!currentPackage)return;
- currentTotalVnd=currentPackage.vnd*currentMultiplier;
- currentTotalCny=currentPackage.cny*currentMultiplier;
- currentTotalUsd=(currentPackage.usd*currentMultiplier).toFixed(2);
-  const str=lang==='vi'?`${currentPackage.vnd.toLocaleString('vi-VN')}đ×${currentMultiplier}=${currentTotalVnd.toLocaleString('vi-VN')}đ`:lang==='en'?`$${currentPackage.usd}×${currentMultiplier}=$${currentTotalUsd}`:`¥${currentPackage.cny}×${currentMultiplier}=¥${currentTotalCny}`;
- document.getElementById('priceCalculation').innerText=str;
+ 
+  if(isUpgradeMode) {
+      currentTotalVnd = currentPackage.vnd - baseOrderPrice;
+      currentTotalCny = currentPackage.cny; // Tạm thời để nguyên CNY
+      currentTotalUsd = currentPackage.usd; // Tạm thời để nguyên USD
+      document.getElementById('priceCalculation').innerText = `Thanh toán chênh lệch: ${currentTotalVnd.toLocaleString('vi-VN')}đ`;
+  } else {
+      currentTotalVnd=currentPackage.vnd*currentMultiplier;
+      currentTotalCny=currentPackage.cny*currentMultiplier;
+      currentTotalUsd=(currentPackage.usd*currentMultiplier).toFixed(2);
+      const str=lang==='vi'?`${currentPackage.vnd.toLocaleString('vi-VN')}đ×${currentMultiplier}=${currentTotalVnd.toLocaleString('vi-VN')}đ`:lang==='en'?`$${currentPackage.usd}×${currentMultiplier}=$${currentTotalUsd}`:`¥${currentPackage.cny}×${currentMultiplier}=¥${currentTotalCny}`;
+      document.getElementById('priceCalculation').innerText=str;
+  }
   renderPaymentBox();
 }
  
@@ -612,22 +692,27 @@ function renderPaymentBox(){
   const fp=lang==='vi'?`${currentTotalVnd.toLocaleString('vi-VN')}đ`:lang==='en'?`$${currentTotalUsd}`:`¥${currentTotalCny}`;
   btn.innerHTML=i18n[lang].btn_create_order;
   btn.className='w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md shrink-0';
-  if(!currentOrderId){
+  
+  if(!currentOrderId && !isUpgradeMode){
     col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 border-b pb-2"><i class="fas fa-info-circle mr-2"></i>${i18n[lang].guide_title}</h4><p class="text-sm text-slate-600">${i18n[lang].guide_desc}</p></div>`;return;
   }
+  
+  // Dùng ID cũ nếu đang nâng gói
+  let dispId = isUpgradeMode ? oCache.id : currentOrderId;
+
   const paidBtnHTML=`<button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition btn-heartbeat shadow-md"><i class="fas fa-check-circle mr-2"></i>${i18n[lang].btn_paid}</button>`;
   
   if(m==='bank'){
-    col.innerHTML=`<div class="text-center w-full"><div class="bg-indigo-50 p-2 rounded-xl inline-block mb-4"><img src="https://img.vietqr.io/image/mbbank-0917678211-compact.png?amount=${currentTotalVnd}&addInfo=${currentOrderId}&accountName=TRINH THI XUAN HUONG" class="w-40 h-40 md:w-56 md:h-56 rounded-xl mix-blend-multiply mx-auto"></div>
+    col.innerHTML=`<div class="text-center w-full"><div class="bg-indigo-50 p-2 rounded-xl inline-block mb-4"><img src="https://img.vietqr.io/image/mbbank-0917678211-compact.png?amount=${currentTotalVnd}&addInfo=${dispId}&accountName=TRINH THI XUAN HUONG" class="w-40 h-40 md:w-56 md:h-56 rounded-xl mix-blend-multiply mx-auto"></div>
       <div class="text-left text-xs space-y-2 mb-6 w-full">
         <div class="flex justify-between bg-white p-2.5 rounded-xl border"><span class="text-slate-500">Chủ TK:</span><strong>TRINH THI XUAN HUONG</strong></div>
         <div class="flex justify-between bg-white p-2.5 rounded-xl border"><span class="text-slate-500">Ngân hàng:</span><strong>MB BANK</strong></div>
         <div class="flex justify-between bg-white p-2.5 rounded-xl border"><span class="text-slate-500">Số TK:</span><strong class="text-indigo-600 cursor-pointer" onclick="copyText('0917678211')">0917678211 <i class="far fa-copy ml-1"></i></strong></div>
         <div class="flex justify-between bg-white p-2.5 rounded-xl border"><span class="text-slate-500">${i18n[lang].copy_amount}</span><strong class="text-red-500 font-black text-base">${fp}</strong></div>
       </div>
-      <div class="highlight-copy py-4 px-3 rounded-xl text-center cursor-pointer" onclick="copyText('${currentOrderId}')">
+      <div class="highlight-copy py-4 px-3 rounded-xl text-center cursor-pointer" onclick="copyText('${dispId}')">
         <span class="block text-[11px] font-black mb-2 uppercase">${i18n[lang].copy_memo}</span>
-        <strong class="block bg-white font-mono text-2xl md:text-3xl py-3 rounded-xl shadow-inner border-2 border-yellow-400">${currentOrderId} <i class="far fa-copy ml-2 opacity-50"></i></strong>
+        <strong class="block bg-white font-mono text-2xl md:text-3xl py-3 rounded-xl shadow-inner border-2 border-yellow-400">${dispId} <i class="far fa-copy ml-2 opacity-50"></i></strong>
         <p class="text-[10px] mt-2 italic font-bold opacity-80">(NHẤP VÀO MÃ ĐỂ COPY - BẮT BUỘC)</p>
       </div>${paidBtnHTML}</div>`;
   }else{
@@ -643,18 +728,20 @@ function renderPaymentBox(){
          <div class="flex justify-between bg-white p-2.5 rounded-xl border"><span class="text-slate-500">Chủ TK:</span><strong>TRINH THI XUAN HUONG</strong></div>
          <div class="flex justify-between bg-white p-2.5 rounded-xl border"><span class="text-slate-500">${i18n[lang].copy_amount}</span><strong class="text-red-500 font-black text-base">¥${currentTotalCny}</strong></div>
       </div>
-      <div class="highlight-copy py-4 px-3 rounded-xl text-center cursor-pointer" onclick="copyText('${currentOrderId}')">
+      <div class="highlight-copy py-4 px-3 rounded-xl text-center cursor-pointer" onclick="copyText('${dispId}')">
         <span class="block text-[11px] font-black mb-2 uppercase">${i18n[lang].copy_memo}</span>
-        <strong class="block bg-white font-mono text-2xl py-3 rounded-xl shadow-inner border-2 border-yellow-400">${currentOrderId} <i class="far fa-copy ml-2 opacity-50"></i></strong>
-        <p class="text-[10px] mt-2 italic font-bold opacity-80 uppercase">${lang==='zh'?'请手动输入金额和订单号！':lang==='en'?'Manually enter amount & Memo!':'Vui lòng tự nhập số tiền和 nội dung！'}</p>
+        <strong class="block bg-white font-mono text-2xl py-3 rounded-xl shadow-inner border-2 border-yellow-400">${dispId} <i class="far fa-copy ml-2 opacity-50"></i></strong>
+        <p class="text-[10px] mt-2 italic font-bold opacity-80 uppercase">${lang==='zh'?'请手动输入金额和订单号！':lang==='en'?'Manually enter amount & Memo!':'Vui lòng tự nhập số tiền và nội dung！'}</p>
       </div>${paidBtnHTML}</div>`;
   }
 }
  
 async function submitOrder(e){
   e.preventDefault();const btn=document.getElementById('btnConfirm');
-  if(!currentOrderId){
+  if(!currentOrderId && !isUpgradeMode){
     const ch='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';currentOrderId='DH-';for(let i=0;i<10;i++)currentOrderId+=ch.charAt(Math.floor(Math.random()*ch.length));
+    renderPaymentBox();
+  } else if (isUpgradeMode) {
     renderPaymentBox();
   }
 }
@@ -663,45 +750,50 @@ async function confirmPaid(){
   const btn=document.getElementById('btnPaidConfirm');
   if(!btn)return;
   btn.innerHTML='LOADING...';btn.disabled=true;
-  const fp=lang==='vi'?`${currentTotalVnd.toLocaleString('vi-VN')}đ`:lang==='en'?`$${currentTotalUsd}`:`¥${currentTotalCny}`;
-  const cy2=currentMultiplier+' Tháng';
-  const mn=document.getElementById('payMethod').value;
-  const mname=mn==='bank'?'Ngân hàng VN':mn==='alipay'?'Alipay':'WeChat';
+  
   let db=await apiGet('/api/orders');if(!Array.isArray(db))db=[];
   
-  // TẠO TRƯỜNG createdTs ĐỂ ĐỒNG BỘ ĐỒNG HỒ ĐẾM NGƯỢC XUYÊN THIẾT BỊ
-  const nowTs = Date.now();
-  db.unshift({
-    id:currentOrderId,email:document.getElementById('cusEmail').value,zalo:document.getElementById('cusZalo').value,
-    method:mname,pkgName:currentPackage.vi.name,pkgData:currentPackage.data,
-    pkg:`${currentPackage.vi.name} (${cy2}) - ${fp} (${currentPackage.data})`,
-    totalVnd:currentTotalVnd,needSupport:document.getElementById('needSupport').checked,
-    status:'pending',date:new Date().toLocaleString('vi-VN'), createdTs: nowTs, 
-    expDate:'',daysLeft:'',info:'',info2:'',info3:'',nickname:'',reason:''
-  });
-  await apiPost('/api/orders',db);
-  try {
-      const cusZaloVal = document.getElementById('cusZalo').value || 'Không nhập';
-      await fetch(GOOGLE_MAIL_API, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({
-          to: "lucastanora@gmail.com", 
-          subject: `[CÓ ĐƠN MỚI] ${currentOrderId} - Khách báo Đã CK`, 
-          html: `<div style="font-family:sans-serif; max-width:500px; margin:auto; border:1px solid #e2e8f0; border-radius:10px; padding:20px;">
-              <h2 style="color:#2563eb; margin-top:0;">💰 Khách vừa báo ĐÃ THANH TOÁN!</h2>
-              <ul style="list-style-type:none; padding:0; font-size:15px; line-height:1.8;">
-                  <li style="border-bottom:1px solid #f1f5f9; padding-bottom:8px;">📌 <b>Mã Đơn:</b> <span style="color:#ef4444; font-weight:bold;">${currentOrderId}</span></li>
-                  <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">📦 <b>Gói VPN:</b> ${currentPackage.vi.name} (${cy2})</li>
-                  <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">💵 <b>Số tiền:</b> <b style="color:#16a34a;">${fp}</b></li>
-                  <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">📧 <b>Email:</b> ${document.getElementById('cusEmail').value}</li>
-                  <li style="padding-top:8px;">💬 <b>Zalo/Tele:</b> <span style="background:#fef08a; padding:2px 6px; border-radius:4px; font-weight:bold; color:#854d0e;">${cusZaloVal}</span></li>
-              </ul>
-              <p style="background:#eff6ff; padding:10px; border-radius:6px; font-size:13px; color:#1e40af; text-align:center; margin-bottom:0;">Vui lòng mở trang Admin để kiểm tra tiền và duyệt đơn!</p>
-          </div>`
-      }) });
-  } catch(err) {}
-  showToast(lang==='vi'?'Thành công!':'Success!','success');
-  document.getElementById('checkoutSection').classList.add('hidden');
-  document.getElementById('orderForm').reset();
-  document.getElementById('loginInput').value=currentOrderId;login(true);
+  if(isUpgradeMode) {
+      // LOGIC NÂNG GÓI
+      let o = db.find(x => x.id === oCache.id);
+      if(o) {
+          // Tạo một cờ chờ duyệt nâng gói
+          o.pendingUpgrade = {
+              targetPkg: currentPackage.vi.name,
+              targetPkgData: currentPackage.data,
+              amount: currentTotalVnd,
+              ts: Date.now()
+          };
+          await apiPost('/api/orders', db);
+          showToast("Yêu cầu Nâng Gói đã được gửi! Đang kiểm tra...", "success");
+          
+          document.getElementById('checkoutSection').classList.add('hidden');
+          document.getElementById('orderForm').reset();
+          isUpgradeMode = false;
+          login(true);
+      }
+  } else {
+      // LOGIC MUA MỚI
+      const fp=lang==='vi'?`${currentTotalVnd.toLocaleString('vi-VN')}đ`:lang==='en'?`$${currentTotalUsd}`:`¥${currentTotalCny}`;
+      const cy2=currentMultiplier+' Tháng';
+      const mn=document.getElementById('payMethod').value;
+      const mname=mn==='bank'?'Ngân hàng VN':mn==='alipay'?'Alipay':'WeChat';
+      
+      const nowTs = Date.now();
+      db.unshift({
+        id:currentOrderId,email:document.getElementById('cusEmail').value,zalo:document.getElementById('cusZalo').value,
+        method:mname,pkgName:currentPackage.vi.name,pkgData:currentPackage.data,
+        pkg:`${currentPackage.vi.name} (${cy2}) - ${fp} (${currentPackage.data})`,
+        totalVnd:currentTotalVnd,needSupport:document.getElementById('needSupport').checked,
+        status:'pending',date:new Date().toLocaleString('vi-VN'), createdTs: nowTs, 
+        expDate:'',daysLeft:'',info:'',info2:'',info3:'',nickname:'',reason:''
+      });
+      await apiPost('/api/orders',db);
+      showToast(lang==='vi'?'Thành công!':'Success!','success');
+      document.getElementById('checkoutSection').classList.add('hidden');
+      document.getElementById('orderForm').reset();
+      document.getElementById('loginInput').value=currentOrderId;login(true);
+  }
 }
 
 // Hàm Parse ngày lỗi (nếu lỡ ko có createdTs)
@@ -736,56 +828,107 @@ function updatePortalInfo(o){
   document.getElementById('portalContentSuccess').classList.add('hidden');
   document.getElementById('portalContentFailed').classList.add('hidden');
 
-  if(countdownTimerInterval) { clearInterval(countdownTimerInterval); countdownTimerInterval = null; }
+  // Logic kiểm tra Badge Nâng cấp thành công
+  const upgradeBadge = document.getElementById('upgradeSuccessBadge');
+  upgradeBadge.classList.add('hidden');
+  const lastPkgCacheKey = 'last_pkg_' + o.id;
+  const lastPkg = localStorage.getItem(lastPkgCacheKey);
+  if (o.status === 'success') {
+      if (lastPkg && lastPkg !== o.pkgName && !o.pendingUpgrade) {
+          // Bật Badge
+          upgradeBadge.classList.remove('hidden');
+      }
+      localStorage.setItem(lastPkgCacheKey, o.pkgName);
+  }
 
-  if(o.status === 'success'){
+  // 1. Nếu đang có yêu cầu nâng gói
+  if (o.status === 'success' && o.pendingUpgrade) {
+      document.getElementById('portalContentPending').classList.remove('hidden');
+      document.getElementById('pendingTitleUI').innerText = "ĐANG KIỂM TRA GIAO DỊCH NÂNG GÓI...";
+      
+      let startTime = o.pendingUpgrade.ts;
+      let endTime = startTime + 300000; // 5 phút
+
+      if(Date.now() >= endTime) {
+         // Quá 5 phút -> Vô thẳng bảng Đỏ, KHÔNG tắt polling
+         document.getElementById('pendingTimeoutState').classList.remove('hidden');
+         startGlobalPolling(o.id);
+      } else {
+         // Còn thời gian
+         pendingEndTime = endTime;
+         document.getElementById('pendingActiveState').classList.remove('hidden');
+         startPendingPolling();
+      }
+      return; // Dừng tại đây
+  }
+
+  // 2. Logic Đơn Hàng Mới Bình Thường
+  if(o.status === 'failed'){
+    document.getElementById('portalContentFailed').classList.remove('hidden');
+    document.getElementById('failReasonText').innerText = o.reason || 'Admin từ chối giao dịch';
+  } 
+  else if(o.status === 'success'){
     document.getElementById('portalContentSuccess').classList.remove('hidden');
     document.getElementById('subLink1').value = o.info1 || o.info || '';
     document.getElementById('subLink2').value = o.info2 || '';
     document.getElementById('subLink3').value = o.info3 || '';
     document.getElementById('displayOrderId').innerText = o.id;
-  } 
-  else if(o.status === 'failed'){
-    document.getElementById('portalContentFailed').classList.remove('hidden');
-    document.getElementById('failReasonText').innerText = o.reason || 'Admin từ chối giao dịch';
-  } 
+  }
   else if(o.status === 'pending'){
     document.getElementById('portalContentPending').classList.remove('hidden');
+    document.getElementById('pendingTitleUI').innerText = "ĐANG KIỂM TRA GIAO DỊCH...";
     
-    // Lấy thời gian bắt đầu
     let startTime = o.createdTs || parseOrderDate(o.date);
-    let endTime = startTime + 300000; // Mốc tử hình: +5 phút
+    let endTime = startTime + 300000;
 
     if(Date.now() >= endTime) {
-       // Quá 5 phút -> Vô thẳng bảng Đỏ
        document.getElementById('pendingTimeoutState').classList.remove('hidden');
+       startGlobalPolling(o.id); // Vẫn poll ngầm
     } else {
-       // Còn thời gian -> Bật Active, chạy đồng hồ
+       pendingEndTime = endTime;
        document.getElementById('pendingActiveState').classList.remove('hidden');
-       let left = Math.ceil((endTime - Date.now()) / 1000);
-       updateTimerUI(left);
-
-       countdownTimerInterval = setInterval(() => {
-         let currentLeft = Math.ceil((endTime - Date.now()) / 1000);
-         if(currentLeft <= 0) {
-            clearInterval(countdownTimerInterval);
-            countdownTimerInterval = null;
-            document.getElementById('pendingActiveState').classList.add('hidden');
-            document.getElementById('pendingTimeoutState').classList.remove('hidden');
-         } else {
-            updateTimerUI(currentLeft);
-         }
-       }, 1000);
+       startPendingPolling();
     }
   }
 }
 
-function updateTimerUI(leftStr) {
-  if (leftStr < 0) leftStr = 0;
-  const m = Math.floor(leftStr / 60).toString().padStart(2, '0');
-  const s = (leftStr % 60).toString().padStart(2, '0');
-  const el = document.getElementById('countdownTimer');
-  if(el) el.innerText = `${m}:${s}`;
+// Hàm xử lý Đếm ngược và Check trạng thái ngầm
+function startPendingPolling() {
+  updateTimerUI();
+  stopPendingPolling();
+
+  countdownTimerInterval = setInterval(() => {
+    updateTimerUI();
+  }, 1000);
+
+  checkOrderInterval = setInterval(() => {
+    login(false, true); // Chạy ngầm check API
+  }, 10000);
+}
+
+function stopPendingPolling() {
+  if (typeof countdownTimerInterval !== 'undefined' && countdownTimerInterval) clearInterval(countdownTimerInterval);
+  if (typeof checkOrderInterval !== 'undefined' && checkOrderInterval) clearInterval(checkOrderInterval);
+}
+
+function handlePendingTimeout() {
+  if (typeof countdownTimerInterval !== 'undefined' && countdownTimerInterval) clearInterval(countdownTimerInterval);
+  document.getElementById('pendingActiveState').classList.add('hidden');
+  document.getElementById('pendingTimeoutState').classList.remove('hidden');
+}
+
+function updateTimerUI() {
+  let left = Math.ceil((pendingEndTime - Date.now()) / 1000);
+  if (left <= 0) {
+    handlePendingTimeout(); // Hết giờ
+  } else {
+    document.getElementById('pendingActiveState').classList.remove('hidden');
+    document.getElementById('pendingTimeoutState').classList.add('hidden');
+    const m = Math.floor(left / 60).toString().padStart(2, '0');
+    const s = (left % 60).toString().padStart(2, '0');
+    const el = document.getElementById('countdownTimer');
+    if(el) el.innerText = `${m}:${s}`;
+  }
 }
 
 // Hàm khởi động API ngầm (Polling) Vĩnh Viễn
@@ -814,8 +957,12 @@ async function login(isManualRefresh=false,isAutoPoll=false){
  document.getElementById('mobileNavWrapper').classList.remove('hidden');
  if(!isAutoPoll&&!isManualRefresh)switchPortalTab('p-home');
   
+  // Tẩy xóa class chống giật của body
+  const antiFlash = document.getElementById('antiFlashStyle');
+  if(antiFlash) antiFlash.remove();
+
   updatePortalInfo(o);
-  if(!isAutoPoll) startGlobalPolling(o.id); // Chỉ gọi 1 lần khi đăng nhập/tạo đơn xong
+  if(!isAutoPoll) startGlobalPolling(o.id);
 
   if(o.status==='success'){cmsCache=await apiGet('/api/cms');showGuide('android');}
   renderPackages('all');
@@ -841,8 +988,9 @@ function logout(){
  document.getElementById('searchAndTabsWrapper').classList.remove('w-full');document.getElementById('searchAndTabsWrapper').classList.add('max-w-2xl','justify-center');
  document.getElementById('centerNavContainer').classList.add('justify-center');
   oCache=null;
+  isUpgradeMode = false;
   if(globalPollInterval) clearInterval(globalPollInterval);
-  if(countdownTimerInterval) clearInterval(countdownTimerInterval);
+  stopPendingPolling();
 }
  
 function parseShortcodes(text) {
@@ -886,7 +1034,7 @@ async function requestDataCheck() {
   const lastReq = localStorage.getItem(cdKey);
   const now = Date.now();
   
-  // Chống Spam: Cooldown 5 tiếng (18.000.000 ms)
+  // Chống Spam: Cooldown 5 tiếng
   if (lastReq && now - parseInt(lastReq) < 18000000) {
     showToast(lang==='vi'?'Yêu cầu đang chờ xử lý. Vui lòng quay lại sau!':lang==='en'?'Request pending. Try again later!':'请求待处理，请稍后再试！', 'info');
     return;
@@ -901,11 +1049,7 @@ async function requestDataCheck() {
   try {
     let reqs = await apiGet('/api/data_requests');
     if(!Array.isArray(reqs)) reqs = [];
-    
-    // Gỡ yêu cầu cũ của mã đơn này nếu có (tránh rác KV)
     reqs = reqs.filter(r => r.orderId !== oCache.id);
-    
-    // Đẩy yêu cầu mới lên đầu
     reqs.unshift({
       orderId: oCache.id,
       email: oCache.email,
@@ -915,7 +1059,6 @@ async function requestDataCheck() {
     });
     await apiPost('/api/data_requests', reqs);
 
-    // Bắn Mail thông báo cho Admin
     const htmlAdmin = `<div style="font-family:sans-serif; max-width:500px; margin:auto; border:1px solid #e2e8f0; border-radius:10px; padding:20px;">
         <h2 style="color:#2563eb; margin-top:0;">📊 YÊU CẦU CHECK DUNG LƯỢNG!</h2>
         <p>Khách hàng vừa bấm nút yêu cầu kiểm tra dung lượng.</p>
