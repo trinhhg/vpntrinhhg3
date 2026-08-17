@@ -92,7 +92,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
 </header>
 
 <main id="main" class="hidden max-w-7xl mx-auto p-2 md:p-4 w-full min-w-0">
-  <!-- Thêm tab D1 -->
   <div class="flex flex-wrap gap-1 md:gap-2 mb-3">
     <button onclick="go('t-ord')"      id="btn-t-ord"      class="tab-btn flex-1 md:flex-none px-2 py-2 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex items-center justify-center gap-1.5"><i class="fas fa-box"></i><span class="hidden sm:inline">Đơn hàng</span></button>
     <button onclick="go('t-trans')"    id="btn-t-trans"    class="tab-btn flex-1 md:flex-none px-2 py-2 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm flex items-center justify-center gap-1.5 relative"><i class="fas fa-file-invoice-dollar"></i><span class="hidden sm:inline">Giao dịch D1</span><span id="transBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[9px] w-4 h-4 rounded-full flex items-center justify-center">!</span></button>
@@ -110,7 +109,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     </div>
     <div class="bg-slate-100 p-1 rounded-xl flex gap-1 mb-4 w-fit max-w-full overflow-x-auto">
       <div class="ord-sub-tab active" id="otab-success" onclick="switchOrdTab('success')"><div class="mac-dot mac-green"></div>Thành công<span id="cnt-success" class="bg-green-100 text-green-700 text-[9px] md:text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
-      <div class="ord-sub-tab" id="otab-pending" onclick="switchOrdTab('pending')"><div class="mac-dot mac-yellow"></div>Đang thực hiện<span id="cnt-pending" class="bg-yellow-100 text-yellow-700 text-[9px] md:text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
+      <div class="ord-sub-tab" id="otab-pending" onclick="switchOrdTab('pending')"><div class="mac-dot mac-yellow"></div>Chờ duyệt<span id="cnt-pending" class="bg-yellow-100 text-yellow-700 text-[9px] md:text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
       <div class="ord-sub-tab" id="otab-failed" onclick="switchOrdTab('failed')"><div class="mac-dot mac-red"></div>Thất bại<span id="cnt-failed" class="bg-red-100 text-red-700 text-[9px] md:text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
     </div>
     <div id="ordBody" class="w-full min-w-0"></div>
@@ -123,7 +122,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
       <button onclick="fetchTransactions()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm transition"><i class="fas fa-sync mr-1"></i>Tải lại</button>
     </div>
     <div class="bg-blue-50 border border-blue-200 p-4 rounded-xl mb-4">
-      <p class="text-blue-800 text-sm font-semibold"><i class="fas fa-info-circle mr-2"></i>Đây là các giao dịch Ngân hàng bị kẹt do sai số tiền, trùng đơn hoặc thiếu mã DH. Bấm <strong class="text-indigo-600">Duyệt</strong> sẽ tự động tạo link và bắn mail.</p>
+      <p class="text-blue-800 text-sm font-semibold"><i class="fas fa-info-circle mr-2"></i>Đây là các giao dịch Ngân hàng bị kẹt. Bấm <strong class="text-indigo-600">Duyệt</strong> sẽ tự động tạo link và bắn mail.</p>
     </div>
     <div id="transBody" class="space-y-3 w-full min-w-0">
        <div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold text-sm">Chưa cắm API D1 Worker hoặc Không có giao dịch cần duyệt.</div>
@@ -162,11 +161,16 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     <div id="panel-ls-pool" class="w-full min-w-0 mb-4 relative">
       <div class="bg-white p-4 lg:p-6 rounded-2xl border border-indigo-200 shadow-sm relative overflow-hidden">
         <div class="absolute top-0 right-0 bg-indigo-500 text-white text-[9px] font-bold px-3 py-1 rounded-bl-xl">HỆ THỐNG AUTO</div>
-        <h3 class="font-extrabold text-indigo-700 mb-3 text-sm"><i class="fas fa-server mr-1"></i>Thêm Nguồn Link Mới Vào Kho</h3>
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="font-extrabold text-indigo-700 text-sm"><i class="fas fa-server mr-1"></i>Thêm Nguồn Link Mới Vào Kho</h3>
+            <button onclick="autoMigrateLinks()" class="bg-red-50 text-red-600 border border-red-200 hover:bg-red-600 hover:text-white text-[10px] font-bold px-3 py-1.5 rounded transition"><i class="fas fa-random mr-1"></i>Luân Chuyển Node Nghẽn</button>
+        </div>
+        
         <div class="mb-3"><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Link Gốc (Liangxin / Djjc)</label><input id="poolOrig" type="text" placeholder="https://liangxin..." class="w-full p-2 lg:p-3 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-4 mb-4">
-          <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Dung lượng</label><input id="poolGb" type="text" placeholder="VD: 1000GB" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
-          <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Hết hạn</label><input id="poolExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 lg:gap-4 mb-4">
+          <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Tổng dung lượng</label><input id="poolGb" type="number" placeholder="VD: 1000" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
+          <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Đã dùng (GB)</label><input id="poolUsedGb" type="number" placeholder="VD: 0" value="0" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
+          <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Hết hạn</label><input id="poolExp" type="text" placeholder="DD/MM/YYYY hoặc Lifetime" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
           <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Max thiết bị</label><input id="poolMax" type="number" min="1" placeholder="VD: 20" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
         </div>
         <button onclick="addLinkToPool()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 lg:py-3 rounded-xl shadow-md transition w-full text-xs lg:text-base"><i class="fas fa-plus-circle mr-2"></i>LƯU VÀO KHO TỔNG & TẠO LINK #1</button>
@@ -285,8 +289,21 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
         <div class="flex items-start justify-between gap-4 pb-4 border-b border-slate-100">
           <div>
             <div class="font-bold text-sm lg:text-base text-slate-800">Tự động gửi mail nhắc hết hạn</div>
-            <div class="text-xs lg:text-sm text-slate-500 mt-1">Đã được dời sang Cronjob Worker chạy ngầm</div>
+            <div class="text-xs lg:text-sm text-slate-500 mt-1">Gửi lúc 19:00 (giờ VN) — ngày D-2 và D-1 trước khi hết hạn</div>
           </div>
+          <label class="toggle-wrap shrink-0 mt-0.5">
+            <input type="checkbox" id="toggleAutoMail" onchange="saveAutoMailSetting()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="pt-4 space-y-3">
+          <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-xs text-indigo-700">
+            <p class="font-bold mb-1"><i class="fas fa-info-circle mr-1"></i>Cách hoạt động</p>
+            <ul class="space-y-1 text-[11px] font-medium">
+              <li>• Tính năng này đã được dời sang Cronjob Worker chạy ngầm để đảm bảo hoạt động 24/24. Bật công tắc này để Worker nhận lệnh.</li>
+            </ul>
+          </div>
+          <div id="autoMailStatus" class="text-xs lg:text-sm text-slate-500 italic">Trạng thái: Đang kiểm tra...</div>
         </div>
       </div>
     </div>
@@ -363,7 +380,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
     <div id="fFail" class="hidden mb-3 p-2 lg:p-3 border border-red-200 bg-red-50 rounded-lg min-w-0"><label class="block font-bold text-[10px] lg:text-xs text-red-700 mb-0.5">Lý do</label><input id="mOReason" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-red-300 bg-white rounded outline-none"></div>
     <div class="flex items-center mb-4 bg-slate-50 border border-slate-200 p-2 lg:p-3 rounded-lg">
       <input type="checkbox" id="mOSendMail" class="w-3 h-3 lg:w-4 lg:h-4 mr-2 accent-indigo-600" checked>
-      <label for="mOSendMail" class="font-bold text-[10px] lg:text-sm text-slate-700 select-none cursor-pointer">Gửi mail báo khách (Nếu là Master)</label>
+      <label for="mOSendMail" class="font-bold text-[10px] lg:text-sm text-slate-700 select-none cursor-pointer">Gửi mail báo khách (Yêu cầu quyền Master)</label>
     </div>
     <div class="flex gap-2">
       <button onclick="saveOrd()" class="flex-1 bg-indigo-600 text-white font-bold py-2.5 lg:py-3 rounded-lg hover:bg-indigo-700 transition text-xs lg:text-sm shadow-md"><i class="fas fa-save mr-1"></i>LƯU</button>
@@ -434,6 +451,9 @@ function toast(msg,type="ok"){
   setTimeout(()=>{el.classList.remove("show");setTimeout(()=>el.remove(),250);},3000);
 }
 
+// Hàm Quyền Email
+function isMaster() { return (cmsDb && cmsDb.settings && cmsDb.settings.emailRole === "master"); }
+
 // Hàm Offset Timezone (VN: +7, CN: +8)
 function getOffset() {
   const tz = (cmsDb && cmsDb.settings && cmsDb.settings.tz) ? cmsDb.settings.tz : "VN";
@@ -444,6 +464,11 @@ function getAdjustedTime(dateObj = new Date()) {
   const offset = getOffset();
   const utc = dateObj.getTime() + (dateObj.getTimezoneOffset() * 60000);
   return new Date(utc + (3600000 * offset));
+}
+
+function getNowStr() {
+  const d = getAdjustedTime();
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')} ${formatDateTZ(d)}`;
 }
 
 // CẮT BỎ GIỜ PHÚT, CHỈ TRẢ VỀ DD/MM/YYYY THEO TIMEZONE
@@ -593,7 +618,7 @@ window.onload=async function(){
     ordersDb=lsGet("a/api/orders")||[];dataRequestsDb=lsGet("a/api/data_requests")||[];
     linksDb=lsGet("a/api/links")||[];deadLinksDb=lsGet("a/api/deadlinks")||[];
     devicesDb=cached;
-    linkPoolDb=lsGet("a/api/link_pool")||[];
+    linkPoolDb=lsGet("a/api/link_pool")||[]; 
     cmsDb=lsGet("a/api/cms")||{};if(!cmsDb.link_origins) cmsDb.link_origins={};
     document.getElementById("mOPkg").innerHTML=PKGS.map((p,i)=>`<option value="${i}">${p}</option>`).join("");
     loginOK(false);setTimeout(()=>fetchAll(false),500);
@@ -606,7 +631,7 @@ window.onload=async function(){
 async function doLogin(){
   if(document.getElementById("pwInput").value==="572007"){
     devicesDb=await apG("/api/devices",[]);if(!Array.isArray(devicesDb)) devicesDb=[];
-    if(!devicesDb.find(x=>x.id===myDev)){devicesDb.push({id:myDev,ua:navigator.userAgent.slice(0,60),date:new Date().toLocaleString("vi")});await apP("/api/devices",devicesDb);}
+    if(!devicesDb.find(x=>x.id===myDev)){devicesDb.push({id:myDev,ua:navigator.userAgent.slice(0,60),date:getNowStr()});await apP("/api/devices",devicesDb);}
     loginOK(true);
   } else toast("Sai mật khẩu!","err");
 }
@@ -769,7 +794,7 @@ function renderPoolList() {
         <div class="min-w-0 flex-1">
            <div class="flex items-center gap-2 mb-1"><span class="font-bold text-slate-800 text-xs truncate">${p.url}</span></div>
            <div class="flex gap-2">
-             <span class="bg-indigo-50 text-indigo-700 text-[9px] font-bold px-1.5 py-0.5 rounded">GB: ${p.gb||'N/A'}</span>
+             <span class="bg-indigo-50 text-indigo-700 text-[9px] font-bold px-1.5 py-0.5 rounded">GB: ${p.usedGb||'0'} / ${p.gb||'N/A'}</span>
              <span class="bg-orange-50 text-orange-700 text-[9px] font-bold px-1.5 py-0.5 rounded">HSD: ${p.exp||'N/A'}</span>
              <span class="${isFull ? 'bg-red-100 text-red-700' : 'bg-emerald-50 text-emerald-700'} text-[9px] font-bold px-1.5 py-0.5 rounded">Đã dùng: ${p.used-1}/${p.max}</span>
            </div>
@@ -782,12 +807,13 @@ function renderPoolList() {
 async function addLinkToPool() {
   const orig = document.getElementById("poolOrig").value.trim();
   const gb = document.getElementById("poolGb").value.trim();
+  const usedGb = document.getElementById("poolUsedGb").value.trim();
   const exp = document.getElementById("poolExp").value.trim();
   const max = parseInt(document.getElementById("poolMax").value);
   
   if(!orig || !max) return toast("Nhập URL gốc và Max thiết bị!", "err");
   
-  linkPoolDb.push({ id: "POOL-" + Date.now(), url: orig, gb, exp, max, used: 2 }); // Dành Index 1 cho Hệ thống
+  linkPoolDb.push({ id: "POOL-" + Date.now(), url: orig, gb, usedGb: usedGb||"0", exp, max, used: 2 }); // Dành Index 1 cho Hệ thống
   toast("Đang lưu Kho tổng...");
   await apP("/api/link_pool", linkPoolDb);
   
@@ -800,18 +826,66 @@ async function addLinkToPool() {
     else if(orig.includes("djjc.cfd")) masked=PD+"/v2/VPNTrinhHg"+qs+"#VPNTrinhHg";
   }catch{}
   if(masked) {
-    linksDb.unshift({id:"LNK-"+Date.now(),orig,masked,email:"Nguồn Hệ Thống (Auto)",expDate:exp,linkIndex:"1",isLocked:false,date:todayTZ()});
+    linksDb.unshift({id:"LNK-"+Date.now(),orig,masked,email:"Nguồn Hệ Thống (Auto)",expDate:exp,linkIndex:"1",isLocked:false,date:getNowStr()});
     await apP("/api/links",linksDb);
   }
 
   toast("Đã thêm vào Kho tự động bốc & Tạo Link #1!");
-  ["poolOrig","poolGb","poolExp","poolMax"].forEach(id => document.getElementById(id).value = "");
+  ["poolOrig","poolGb","poolUsedGb","poolExp","poolMax"].forEach(id => document.getElementById(id).value = "");
   renderPoolList(); renderLinks();
 }
 
 async function delPool(i) {
   linkPoolDb.splice(i, 1); renderPoolList();
   toast("Đang xóa..."); await apP("/api/link_pool", linkPoolDb); toast("Đã xóa khỏi Kho");
+}
+
+// Hàm Test Luân Chuyển Ngay Trên Trình Duyệt
+async function autoMigrateLinks() {
+  if(!confirm("Hệ thống sẽ quét các Node sắp hết hạn (<4 tiếng) hoặc sắp hết dung lượng (<100GB) và TỰ ĐỘNG LUÂN CHUYỂN sang Pool khác. Chạy?")) return;
+  toast("Đang phân tích Node...");
+  let changed = 0;
+  const now = getAdjustedTime().getTime();
+
+  for(const l of linksDb) {
+     if(l.email === "Nguồn Hệ Thống (Auto)") continue;
+     // Xác định Pool hiện tại của link này
+     const currentPool = linkPoolDb.find(p => p.url === l.orig);
+     if(!currentPool) continue;
+     
+     let needsMigration = false;
+     // Check Date < 4 tiếng
+     if(currentPool.exp && currentPool.exp.includes("/")) {
+        const expMs = pd(currentPool.exp)?.getTime();
+        if(expMs && (expMs - now) < 14400000) needsMigration = true; // < 4 tiếng
+     }
+     // Check Dung Lượng (còn < 100GB)
+     if(currentPool.gb && currentPool.usedGb) {
+        const remain = parseFloat(currentPool.gb) - parseFloat(currentPool.usedGb);
+        if(remain < 100) needsMigration = true;
+     }
+
+     if(needsMigration) {
+        // Tìm Pool mới. Ưu tiên 1: Có Date & rảnh. Ưu tiên 2: Lifetime & rảnh.
+        let newPool = linkPoolDb.find(p => p.used <= p.max && p.exp && p.exp.includes("/") && p.url !== currentPool.url);
+        if(!newPool) newPool = linkPoolDb.find(p => p.used <= p.max && p.url !== currentPool.url); // Lấy đại thằng rảnh
+        
+        if(newPool) {
+           l.orig = newPool.url;
+           currentPool.used--;
+           newPool.used++;
+           changed++;
+        }
+     }
+  }
+
+  if(changed > 0) {
+     await Promise.all([apP("/api/links", linksDb), apP("/api/link_pool", linkPoolDb)]);
+     renderLinks(); renderPoolList();
+     toast(`Đã luân chuyển thành công ${changed} Node nghẽn!`);
+  } else {
+     toast("Hệ thống ổn định. Không có Node nào cần luân chuyển.");
+  }
 }
 
 function switchOrdTab(tab){
@@ -834,8 +908,6 @@ function buildExpMailHtml(o,msgDay){
 function buildZaloMailHtml(o){
   return `<div style="font-family:sans-serif;width:100%;max-width:450px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-sizing:border-box;"><div style="background:linear-gradient(135deg,#2563eb,#1d4ed8);padding:20px;text-align:center;"><h2 style="color:white;margin:0;font-size:18px;text-transform:uppercase;">HỖ TRỢ CÀI ĐẶT</h2></div><div style="padding:25px 20px;box-sizing:border-box;text-align:center;"><p style="font-size:15px;line-height:1.6;margin:0 0 15px 0;color:#334155;">Chào bạn, vui lòng liên hệ Admin qua Zalo bên dưới để được hỗ trợ về gói VPN có mã đơn hàng là <b style="color:#2563eb;word-break:break-word;">${o.id}</b> ngay nhé!</p><div style="background:#fefce8;border:2px dashed #facc15;padding:20px;border-radius:12px;margin:20px 0;"><p style="margin:0;font-size:13px;color:#a16207;font-weight:bold;text-transform:uppercase;letter-spacing:1px;">ZALO ADMIN</p><p style="margin:10px 0 0 0;font-size:28px;font-weight:900;color:#ca8a04;letter-spacing:1px;">0917678211</p></div><div style="text-align:center;margin:25px 0;"><a href="${PD}" style="background:#1e293b;color:white;padding:12px 15px;border-radius:10px;text-decoration:none;font-weight:900;display:inline-block;font-size:14px;width:100%;box-sizing:border-box;">TRUY CẬP CỔNG KHÁCH HÀNG</a></div><div style="display:block;width:100%;text-align:center;"><a href="https://zalo.me/0917678211" style="display:inline-block;width:46%;background:#0068ff;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;box-sizing:border-box;">Chat Zalo</a><a href="https://www.facebook.com/trinh.hg.57" style="display:inline-block;width:46%;background:#0668E1;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;margin-left:4%;box-sizing:border-box;">Messenger</a></div></div></div>`;
 }
-
-// HÀM BUILD MAIL BÁO DATA DÙNG CHO KHÁCH (MỚI THÊM VÀO ĐỂ FIX LỖI)
 function buildDataMailHtml(req, gb){
   return `<div style="font-family:sans-serif;width:100%;max-width:450px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-sizing:border-box;"><div style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);padding:20px;text-align:center;"><h2 style="color:white;margin:0;font-size:18px;text-transform:uppercase;">KẾT QUẢ TRA CỨU DUNG LƯỢNG</h2></div><div style="padding:25px 20px;box-sizing:border-box;text-align:center;"><p style="font-size:15px;line-height:1.6;margin:0 0 15px 0;color:#334155;">Chào bạn, đây là thông tin dung lượng của đơn hàng <b style="color:#7c3aed;">${req.orderId}</b>.</p><div style="background:#f5f3ff;border:2px dashed #a78bfa;padding:20px;border-radius:12px;margin:20px 0;"><p style="margin:0;font-size:12px;color:#6d28d9;font-weight:bold;text-transform:uppercase;letter-spacing:1px;">DUNG LƯỢNG ĐÃ SỬ DỤNG</p><p style="margin:10px 0 0 0;font-size:32px;font-weight:900;color:#7c3aed;letter-spacing:1px;">${gb} GB</p></div><p style="font-size:13px;color:#475569;margin-top:12px;line-height:1.5;">Vui lòng kiểm tra lại nếu tốc độ bị chậm, có thể gói của bạn đã dùng hết dung lượng.</p><div style="text-align:center;margin-top:20px;"><p style="font-size:13px;color:#475569;margin-bottom:12px;">Cần hỗ trợ thêm?</p><div style="display:block;width:100%;text-align:center;"><a href="https://zalo.me/0917678211" style="display:inline-block;width:46%;background:#0068ff;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;box-sizing:border-box;">Chat Zalo</a></div></div></div></div>`;
 }
@@ -850,7 +922,7 @@ function renderOrd(){
 
   const groups={};
   filtered.forEach(o=>{
-    const dc=getDateCreated(o); // Đã bị ép thành DD/MM/YYYY chuẩn xác theo Timezone
+    const dc=getDateCreated(o); 
     const key=monthSortKey(dc)||"000000";
     const label=monthLabel(dc);
     if(!groups[key]) groups[key]={label,orders:[]};
@@ -889,8 +961,8 @@ function renderOrd(){
           <div class="text-[10px] md:text-[11px] lg:text-sm text-slate-500 mt-0.5 font-medium truncate pl-5 order-meta-text">${displayPkg}${o.expDate?` • HSD: <span class="font-bold text-slate-700">${o.expDate}</span>`:""}${daysLeft!==null&&daysLeft>=0?` <span class="font-black ${daysLeft<=1?'text-red-600':'text-orange-500'}">(còn ${daysLeft}n)</span>`:""}</div>
         </div>
         <div class="flex flex-col items-end gap-2 shrink-0 border-t border-slate-100 md:border-0 pt-2 md:pt-0 mt-1 md:mt-0">
-          ${dc?`<span class="text-[10px] lg:text-xs text-slate-400 font-semibold whitespace-nowrap">${dc}</span>`:""}
-          <div class="flex gap-1.5 shrink-0">
+          ${o.date?`<span class="text-[10px] lg:text-xs text-slate-400 font-semibold whitespace-nowrap">${fmtCardDate(o.date)}</span>`:""}
+          <div class="flex gap-1.5 shrink-0 mt-1">
             ${(o.status==="success"&&o.expDate&&!isExpiredSuccess)?`<button onclick="sendExpMail('${o.id}')" title="Nhắc hết hạn" class="text-amber-500 font-bold px-3 py-1.5 bg-amber-50 border border-amber-100 rounded-lg text-xs lg:text-sm hover:bg-amber-500 hover:text-white transition shadow-sm"><i class="fas fa-clock"></i></button>`:""}
             <button onclick="sendZaloMail('${o.id}')" title="Nhắc Zalo khách hàng" class="text-blue-500 font-bold px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg text-xs lg:text-sm hover:bg-blue-500 hover:text-white transition shadow-sm"><i class="fas fa-comment-dots"></i></button>
             <button onclick="openOrdModal('${o.id}')" class="text-indigo-600 font-bold px-4 py-1.5 bg-indigo-50 border border-indigo-100 rounded-lg text-xs lg:text-sm hover:bg-indigo-600 hover:text-white transition shadow-sm"><i class="fas fa-pen md:mr-1.5"></i><span class="hidden md:inline">Sửa</span></button>
@@ -906,6 +978,7 @@ function renderOrd(){
 
 function autoFillDays(){
   const idx=parseInt(document.getElementById("mOPkg").value)||0;
+  if(idx === -1) return; // Không tự điền nếu chọn Gói Custom
   const days=PKG_DAYS[idx]||0;
   if(days>0){document.getElementById("mODays").value=days;recalcExpFromDays();}
   else document.getElementById("mODays").value="";
@@ -927,8 +1000,21 @@ function openOrdModal(id){
   document.getElementById("mOLink3").value=o.info3||"";
   document.getElementById("mOReason").value=o.reason||"";document.getElementById("mOStatus").value=o.status||"pending";
   document.getElementById("mOMethod").value=o.method&&o.method.includes("Alipay")?"Alipay":o.method&&o.method.includes("Weixin")?"Weixin":"Ngân hàng VN";
-  const sel=document.getElementById("mOPkg");for(let i=0;i<sel.options.length;i++){if(sel.options[i].text.includes(o.pkgName||"")){sel.selectedIndex=i;break;}}
-  if(!id) setTimeout(()=>autoFillDays(),0);
+  
+  // FIX LỖI RESET GÓI: Cẩn thận nạp lại Dropdown
+  const sel=document.getElementById("mOPkg");
+  sel.innerHTML = PKGS.map((p,i)=>`<option value="${i}">${p}</option>`).join("");
+  let matched = false;
+  for(let i=0; i<sel.options.length; i++){
+      if(o.pkg && o.pkg.includes(sel.options[i].text.split(" - ")[0])) {
+          sel.selectedIndex = i; matched = true; break;
+      }
+  }
+  if(!matched && id) { // Nạp gói ảo nếu là gói Custom cũ
+      sel.innerHTML += `<option value="-1" selected>${o.pkg || o.pkgName}</option>`;
+  }
+
+  if(!id) autoFillDays(); // CHỈ tự điền ngày nếu là TẠO ĐƠN MỚI
   togSF();document.getElementById("mOrd").classList.remove("hidden");
 }
 function togSF(){const s=document.getElementById("mOStatus").value;document.getElementById("fSuc").classList.toggle("hidden",s!=="success");document.getElementById("fFail").classList.toggle("hidden",s!=="failed");}
@@ -936,8 +1022,12 @@ function togSF(){const s=document.getElementById("mOStatus").value;document.getE
 async function saveOrd(){
   const id=document.getElementById("mOId").value.trim();if(!id) return toast("Mã đơn rỗng!","err");
   let o=ordersDb.find(x=>x.id===id);
-  if(!o){o={id,dateCreated:todayTZ(),date:todayTZ(), createdTs: Date.now()};ordersDb.unshift(o);} 
-  const pkgTxt=PKGS[document.getElementById("mOPkg").value],status=document.getElementById("mOStatus").value;
+  if(!o){o={id,dateCreated:todayTZ(),date:getNowStr(), createdTs: Date.now()};ordersDb.unshift(o);} 
+  
+  const pkgVal = document.getElementById("mOPkg").value;
+  const pkgTxt = pkgVal === "-1" ? o.pkg : PKGS[pkgVal];
+  const status=document.getElementById("mOStatus").value;
+  
   Object.assign(o,{
     email:document.getElementById("mOEmail").value.trim(),
     nickname:document.getElementById("mONickname").value.trim(),
@@ -955,17 +1045,21 @@ async function saveOrd(){
   });
   renderOrd();cm("mOrd");toast("Đang lưu & bắn tỉa...");await apP("/api/orders",ordersDb);toast("Đã lưu!");
   
-  const isMaster = (cmsDb.settings && cmsDb.settings.emailRole === "master");
-  if(document.getElementById("mOSendMail").checked && o.email && (status==="success"||status==="failed") && isMaster){
-    const subj=status==="success"?"VPN Trinh Hg - Kích hoạt thành công":"VPN Trinh Hg - Kích hoạt thất bại";
-    const html=status==="success"?buildSuccessMailHtml(o):buildFailedMailHtml(o);
-    fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:o.email,subject:subj,html})});
-    addMailLog(status==="success"?"Kích hoạt thành công":"Kích hoạt thất bại",o.email,o.id);
+  if(document.getElementById("mOSendMail").checked && o.email && (status==="success"||status==="failed")){
+    if(!isMaster()) {
+       toast("Đang ở chế độ SLAVE, bỏ qua lệnh gửi Mail!", "warn");
+    } else {
+       const subj=status==="success"?"VPN Trinh Hg - Kích hoạt thành công":"VPN Trinh Hg - Kích hoạt thất bại";
+       const html=status==="success"?buildSuccessMailHtml(o):buildFailedMailHtml(o);
+       fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:o.email,subject:subj,html})});
+       addMailLog(status==="success"?"Kích hoạt thành công":"Kích hoạt thất bại",o.email,o.id);
+    }
   }
 }
 async function delOrd(id){ordersDb=ordersDb.filter(x=>x.id!==id);renderOrd();await apP("/api/orders",ordersDb);toast("Đã xóa!");}
 
 function sendExpMail(id){
+  if(!isMaster()) return toast("Đang ở chế độ SLAVE, không được gửi mail!", "err");
   const o=ordersDb.find(x=>x.id===id);if(!o?.email) return toast("Chưa có email!","err");
   const daysLeft=o.expDate?Math.ceil((pd(o.expDate)-getAdjustedTime())/86400000):null;
   const msgDay=daysLeft===1?"<b>ngày mai hết hạn</b>":daysLeft!==null?`còn <b>${daysLeft} ngày</b> (hết hạn <b>${o.expDate}</b>)`:` hết hạn ngày <b>${o.expDate||"chưa xác định"}</b>`;
@@ -973,6 +1067,7 @@ function sendExpMail(id){
   addMailLog("Nhắc hết hạn (Thủ công)",o.email,o.id);toast("Đã gửi mail nhắc hết hạn!");
 }
 function sendZaloMail(id){
+  if(!isMaster()) return toast("Đang ở chế độ SLAVE, không được gửi mail!", "err");
   const o=ordersDb.find(x=>x.id===id);if(!o?.email) return toast("Chưa có email!","err");
   fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:o.email,subject:"VPN Trinh Hg - Hỗ trợ cài đặt",html:buildZaloMailHtml(o)})});
   addMailLog("Hỗ trợ cài đặt",o.email,o.id);toast("Đã gửi mail Nhắc Zalo!");
@@ -1000,6 +1095,7 @@ function renderDataRequests(){
   }).join("");
 }
 async function sendDataReport(index){
+  if(!isMaster()) return toast("Đang ở chế độ SLAVE, không được gửi mail!", "err");
   const req=dataRequestsDb[index];const gb=document.getElementById(`gb-input-${index}`).value.trim();
   if(!gb) return toast("Nhập số GB đã dùng vào ô trống!","err");toast("Đang soạn mail gửi khách...");
   try{
