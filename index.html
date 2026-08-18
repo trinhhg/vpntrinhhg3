@@ -31,8 +31,8 @@ details>summary::-webkit-details-marker{display:none;}
 .pkg-disabled { filter: grayscale(1); opacity: 0.6; pointer-events: none; }
 
 /* Mac OS Dock Style Icons */
-.dock-container { display: flex; justify-content: center; align-items: flex-end; gap: 10px; padding: 10px 20px; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.4); margin: 0 auto; width: max-content;}
-.dock-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; color: white; font-size: 20px; text-decoration: none; transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1); transform-origin: bottom; box-shadow: 0 4px 10px rgba(0,0,0,0.15);}
+.dock-container { display: flex; justify-content: center; align-items: flex-end; gap: 8px; padding: 10px 15px; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(10px); border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.4); margin: 0 auto; width: max-content; max-width: 95vw; flex-wrap: wrap;}
+.dock-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; color: white; font-size: 20px; text-decoration: none; transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1); transform-origin: bottom; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.15);}
 .dock-container:hover .dock-icon { transform: scale(0.85); opacity: 0.7; }
 .dock-icon:hover { transform: scale(1.6) translateY(-5px) !important; opacity: 1 !important; z-index: 10; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
 .dock-icon:hover + .dock-icon, .dock-icon:has(+ .dock-icon:hover) { transform: scale(1.2) translateY(-2px) !important; opacity: 0.9 !important; }
@@ -40,10 +40,12 @@ details>summary::-webkit-details-marker{display:none;}
 /* Custom Brand Colors for Dock */
 .bg-fb { background: linear-gradient(135deg, #1877F2, #0e5aeb); }
 .bg-mess { background: linear-gradient(135deg, #00B2FF, #006AFF); }
-.bg-tiktok { background: #000000; }
+.bg-tele { background: linear-gradient(135deg, #0088cc, #00aaff); }
+.bg-wa { background: linear-gradient(135deg, #25D366, #128C7E); }
+.bg-discord { background: linear-gradient(135deg, #5865F2, #7289DA); }
+.bg-tiktok { background: linear-gradient(135deg, #FE2C55, #25F4EE); } 
 .bg-insta { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
-.bg-x { background: #14171A; }
-.bg-threads { background: #000000; }
+.bg-x { background: linear-gradient(135deg, #14171A, #333333); }
 .bg-youtube { background: linear-gradient(135deg, #FF0000, #c40000); }
 .bg-reddit { background: linear-gradient(135deg, #FF4500, #d13600); }
 </style>
@@ -249,10 +251,12 @@ details>summary::-webkit-details-marker{display:none;}
       <div class="dock-container mt-6 mb-8">
         <a href="#" class="dock-icon bg-fb"><i class="fab fa-facebook-f"></i></a>
         <a href="#" class="dock-icon bg-mess"><i class="fab fa-facebook-messenger"></i></a>
+        <a href="#" class="dock-icon bg-tele"><i class="fab fa-telegram-plane"></i></a>
+        <a href="#" class="dock-icon bg-wa"><i class="fab fa-whatsapp"></i></a>
+        <a href="#" class="dock-icon bg-discord"><i class="fab fa-discord"></i></a>
         <a href="#" class="dock-icon bg-tiktok"><i class="fab fa-tiktok"></i></a>
         <a href="#" class="dock-icon bg-insta"><i class="fab fa-instagram"></i></a>
         <a href="#" class="dock-icon bg-x"><i class="fab fa-x-twitter"></i></a>
-        <a href="#" class="dock-icon bg-threads"><i class="fab fa-threads"></i></a>
         <a href="#" class="dock-icon bg-youtube"><i class="fab fa-youtube"></i></a>
         <a href="#" class="dock-icon bg-reddit"><i class="fab fa-reddit-alien"></i></a>
       </div>
@@ -771,7 +775,8 @@ async function confirmPaid(){
   // ==========================================
   try {
      const WH_URL = "https://payment-webhook.doicucden.workers.dev";
-     // SỬ DỤNG MẬT KHẨU WEB API CỦA MÀY VÀO CHỖ NÀY
+     
+     // DÁN CÁI MẬT KHẨU WEB API SECRET CỦA MÀY VÀO TRONG NGOẶC KÉP BÊN DƯỚI:
      const WH_SECRET = "JeEmBX8K6fhzx7UGvdglsZujN13FW9c2kYaMLrwHA5DRi0PV"; 
      
      if (isUpgradeMode) {
