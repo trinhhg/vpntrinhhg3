@@ -54,10 +54,12 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
 .settings-sub-tab{padding:6px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;color:#64748b;}
 .settings-sub-tab.active{background:white;color:#4f46e5;box-shadow:0 1px 4px rgba(0,0,0,.1);}
 
+/* Toggle tab Link Sub */
 .link-tab-switcher { display: flex; gap: 8px; margin-bottom: 1rem; background: #e2e8f0; padding: 4px; border-radius: 12px; width: fit-content; }
 .link-tab-btn { padding: 6px 16px; font-size: 12px; font-weight: 800; border-radius: 8px; cursor: pointer; color: #64748b; transition: all 0.2s; }
 .link-tab-btn.active { background: #fff; color: #4f46e5; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
+/* Chế độ xem Link Sub */
 .view-switcher { display: flex; gap: 6px; background: #f1f5f9; padding: 4px; border-radius: 8px; width: fit-content; }
 .view-btn { padding: 4px 12px; font-size: 11px; font-weight: 800; border-radius: 6px; cursor: pointer; color: #64748b; transition: all 0.2s; }
 .view-btn.active { background: #4f46e5; color: #fff; box-shadow: 0 2px 4px rgba(79,70,229,0.2); }
@@ -179,6 +181,7 @@ html.has-session #main { display: block !important; }
       </div>
     </div>
 
+    <!-- Tầng 1: Chọn Form -->
     <div class="link-tab-switcher mb-3">
       <div id="btn-ls-pool" class="link-tab-btn active" onclick="switchLinkMode('pool')"><i class="fas fa-plus-circle mr-1"></i>THÊM VÀO KHO TỔNG</div>
       <div id="btn-ls-manual" class="link-tab-btn" onclick="switchLinkMode('manual')"><i class="fas fa-magic mr-1"></i>TẠO ẨN THỦ CÔNG</div>
@@ -232,6 +235,8 @@ html.has-session #main { display: block !important; }
             <div id="btn-view-detailed" class="view-btn" onclick="switchLinkView('detailed')">🌳 CHI TIẾT (CÂY)</div>
         </div>
     </div>
+    
+    <!-- Render Container cho Danh Sách -->
     <div id="linksViewContainer" class="space-y-3 w-full min-w-0"></div>
 
   </div>
@@ -364,7 +369,7 @@ html.has-session #main { display: block !important; }
           </label>
           <div id="simTimeInputs" class="hidden flex gap-2">
              <input type="datetime-local" id="simTimeVal" class="w-full p-2 border border-slate-300 rounded-lg text-sm bg-slate-50 focus:border-indigo-500 outline-none">
-             <button onclick="saveSimTime()" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-purple-700 transition">Set</button>
+             <button onclick="saveSimTime()" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-purple-700 transition shadow-md">Set</button>
           </div>
         </div>
       </div>
@@ -397,7 +402,6 @@ html.has-session #main { display: block !important; }
          <button onclick="switchLogTab('sys')"  id="btn-log-sys"  class="bg-white border border-slate-200 text-slate-600 font-bold px-4 py-2 rounded-lg text-xs hover:bg-slate-50 shadow-sm">⚙️ Nhật ký Hệ thống</button>
       </div>
 
-      <!-- Log Mail -->
       <div id="view-log-mail">
         <div class="flex items-center justify-between mb-3">
           <div class="text-sm lg:text-base font-bold text-slate-700">Mail đã gửi <span id="logCount" class="text-slate-400 font-normal text-xs">(0 bản ghi)</span></div>
@@ -413,7 +417,6 @@ html.has-session #main { display: block !important; }
         </div>
       </div>
 
-      <!-- Log Hệ Thống -->
       <div id="view-log-sys" class="hidden">
         <div class="flex items-center justify-between mb-3">
           <div class="text-sm lg:text-base font-bold text-slate-700">Hoạt động Hệ Thống <span id="sysLogCount" class="text-slate-400 font-normal text-xs">(0 bản ghi)</span></div>
@@ -469,6 +472,24 @@ html.has-session #main { display: block !important; }
       <button onclick="saveOrd()" class="flex-1 bg-indigo-600 text-white font-bold py-2.5 lg:py-3 rounded-lg hover:bg-indigo-700 transition text-xs lg:text-sm shadow-md"><i class="fas fa-save mr-1"></i>LƯU</button>
       <button onclick="cm('mOrd')" class="bg-white border border-slate-200 text-slate-700 font-bold py-2.5 lg:py-3 px-4 rounded-lg hover:bg-slate-50 text-xs lg:text-sm shadow-sm">Hủy</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL SỬA KHO TỔNG (POOL) -->
+<div id="mPoolEdit" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="glass-card p-5 md:p-6 lg:p-8 w-full max-w-sm min-w-0">
+    <h3 class="font-extrabold text-lg lg:text-xl mb-3 text-slate-800">Sửa Nguồn Node</h3>
+    <input type="hidden" id="mPEUrl">
+    <div class="mb-2 min-w-0"><label class="block text-[10px] lg:text-xs font-bold text-slate-600 mb-0.5">Link gốc</label><input id="mPEOrig" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-slate-300 rounded-lg font-mono outline-none bg-slate-100 text-slate-500 truncate" readonly></div>
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <div class="min-w-0"><label class="block text-[10px] lg:text-xs font-bold text-slate-600 mb-0.5">Tổng GB</label><input id="mPEGb" type="number" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-slate-300 rounded-lg outline-none focus:border-indigo-500 bg-slate-50"></div>
+      <div class="min-w-0"><label class="block text-[10px] lg:text-xs font-bold text-slate-600 mb-0.5">Còn lại GB</label><input id="mPERemain" type="number" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-slate-300 rounded-lg outline-none focus:border-indigo-500 bg-slate-50"></div>
+    </div>
+    <div class="grid grid-cols-2 gap-2 mb-4">
+      <div class="min-w-0"><label class="block text-[10px] lg:text-xs font-bold text-slate-600 mb-0.5">Hết hạn</label><input id="mPEExp" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-slate-300 rounded-lg outline-none focus:border-indigo-500 text-center bg-slate-50"></div>
+      <div class="min-w-0"><label class="block text-[10px] lg:text-xs font-bold text-slate-600 mb-0.5">Max thiết bị</label><input id="mPEMax" type="number" min="1" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-slate-300 rounded-lg outline-none focus:border-indigo-500 text-center bg-slate-50"></div>
+    </div>
+    <div class="flex gap-2"><button onclick="savePoolEdit()" class="flex-1 bg-indigo-600 text-white font-bold py-2.5 lg:py-3 rounded-lg text-xs lg:text-sm hover:bg-indigo-700 shadow-md">LƯU</button><button onclick="cm('mPoolEdit')" class="bg-white border border-slate-200 text-slate-700 font-bold py-2.5 lg:py-3 px-4 rounded-lg text-xs lg:text-sm shadow-sm hover:bg-slate-50">Hủy</button></div>
   </div>
 </div>
 
@@ -546,6 +567,7 @@ function getAdjustedTime(dateObj = null) {
   return new Date(utc + (3600000 * offset));
 }
 
+// Bắt buộc format chuẩn: HH:mm - DD/MM/YYYY (Full Padding 0)
 function fmtFullTime(d) {
   if(!d || isNaN(d.getTime())) return "";
   const hh = String(d.getHours()).padStart(2,'0');
@@ -557,7 +579,13 @@ function fmtFullTime(d) {
 }
 
 function getNowStr() { return fmtFullTime(getAdjustedTime()); }
-function formatDateTZ(d){return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;}
+
+function formatDateTZ(d){
+  const DD = String(d.getDate()).padStart(2, '0');
+  const MM = String(d.getMonth() + 1).padStart(2, '0');
+  const YYYY = d.getFullYear();
+  return `${DD}/${MM}/${YYYY}`;
+}
 function todayTZ(){return formatDateTZ(getAdjustedTime());}
 
 function normalizeDateStr(dStr) { return dStr ? dStr.split(" ").pop() : ""; } 
@@ -580,11 +608,22 @@ function isExpiredDate(dateStr){const d=pd(normalizeDateStr(dateStr));if(!d)retu
 
 function fmtCardDate(raw){
   if(!raw) return "";
-  if(raw.includes(" - ")) return raw; 
-  try{
-    const d=new Date(raw);
-    if(!isNaN(d.getTime())) return fmtFullTime(d);
-  }catch{}
+  if(/^\d{2}:\d{2} - \d{2}\/\d{2}\/\d{4}$/.test(raw)) return raw; 
+  
+  let dObj = new Date(raw);
+  if(!isNaN(dObj.getTime())) return fmtFullTime(dObj);
+
+  const parts = raw.split(" ");
+  if(parts.length === 2 && parts[0].includes(":") && parts[1].includes("/")) {
+     const t = parts[0].split(":");
+     const d = parts[1].split("/");
+     const hh = String(t[0]||"0").padStart(2, '0');
+     const mm = String(t[1]||"0").padStart(2, '0');
+     const DD = String(d[0]||"0").padStart(2, '0');
+     const MM = String(d[1]||"0").padStart(2, '0');
+     const YYYY = d[2] || "2026";
+     return `${hh}:${mm} - ${DD}/${MM}/${YYYY}`;
+  }
   return raw;
 }
 
@@ -1177,7 +1216,10 @@ function renderLinks() {
                  <span class="${isFull ? 'bg-red-100 text-red-700' : 'bg-emerald-50 text-emerald-700'} text-[9px] font-bold px-1.5 py-0.5 rounded">Đã dùng: ${p.used}/${p.max}</span>
                </div>
             </div>
-            <button onclick="delPool('${p.url}')" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition shrink-0"><i class="fas fa-trash"></i></button>
+            <div class="flex gap-2 shrink-0">
+               <button onclick="openPoolEditModal('${p.url}')" class="text-indigo-600 bg-indigo-50 p-2 rounded hover:bg-indigo-600 hover:text-white transition shadow-sm"><i class="fas fa-pen"></i></button>
+               <button onclick="delPool('${p.url}')" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white transition shadow-sm"><i class="fas fa-trash"></i></button>
+            </div>
          </div>`;
       }).join('');
   } else {
@@ -1270,6 +1312,33 @@ async function addLinkToPool() {
   ["poolOrig","poolGb","poolRemainGb","poolExp","poolMax"].forEach(id => document.getElementById(id).value = "");
   renderLinks();
   addSysLog("Nạp Kho Tổng", `Thành công. URL: ${orig.substring(0,20)}...`);
+}
+
+function openPoolEditModal(url) {
+    const p = linkPoolDb.find(x => x.url === url);
+    if(!p) return;
+    document.getElementById("mPEUrl").value = p.url;
+    document.getElementById("mPEOrig").value = p.url;
+    document.getElementById("mPEGb").value = p.gb || "";
+    document.getElementById("mPERemain").value = p.remainGb || "";
+    document.getElementById("mPEExp").value = p.exp || "";
+    document.getElementById("mPEMax").value = p.max || 30;
+    document.getElementById("mPoolEdit").classList.remove("hidden");
+}
+
+async function savePoolEdit() {
+    const url = document.getElementById("mPEUrl").value;
+    const p = linkPoolDb.find(x => x.url === url);
+    if(!p) return;
+    p.gb = document.getElementById("mPEGb").value.trim();
+    p.remainGb = document.getElementById("mPERemain").value.trim();
+    p.exp = document.getElementById("mPEExp").value.trim();
+    p.max = parseInt(document.getElementById("mPEMax").value) || 30;
+    cm("mPoolEdit");
+    renderLinks();
+    toast("Đang lưu chỉnh sửa kho...");
+    await apP("/api/link_pool", linkPoolDb);
+    toast("Đã cập nhật Kho tổng!");
 }
 
 async function createLink(){
@@ -1425,8 +1494,8 @@ function renderOrd(){
 }
 
 function autoFillDays(){
-  const idx=parseInt(document.getElementById("mOPkg").value)||0;
-  if(idx === -1) return;
+  const idx=parseInt(document.getElementById("mOPkg").value);
+  if(isNaN(idx) || idx === -1) return;
   const days=PKG_DAYS[idx]||0;
   if(days>0){document.getElementById("mODays").value=days;recalcExpFromDays();}
   else document.getElementById("mODays").value="";
@@ -1467,6 +1536,7 @@ function openOrdModal(id){
 
   if(!id) {
       sel.selectedIndex = 0;
+      document.getElementById("mOPkg").value = "0";
       autoFillDays();
   }
   togSF();document.getElementById("mOrd").classList.remove("hidden");
