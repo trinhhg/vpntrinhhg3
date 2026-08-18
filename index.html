@@ -45,7 +45,8 @@ details>summary::-webkit-details-marker{display:none;}
 .bg-discord { background: linear-gradient(135deg, #5865F2, #7289DA); }
 .bg-tiktok { background: linear-gradient(135deg, #FE2C55, #25F4EE); } 
 .bg-insta { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
-.bg-x { background: linear-gradient(135deg, #14171A, #333333); }
+.bg-x { background: #0f1419; box-shadow: inset 0 0 15px rgba(255,255,255,0.2), 0 4px 10px rgba(0,0,0,0.3); border: 1px solid #333;}
+.bg-threads { background: #000000; box-shadow: inset 0 0 10px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); border: 1px solid #444;}
 .bg-youtube { background: linear-gradient(135deg, #FF0000, #c40000); }
 .bg-reddit { background: linear-gradient(135deg, #FF4500, #d13600); }
 </style>
@@ -756,7 +757,7 @@ function renderPaymentBox(){
 async function submitOrder(e){
   e.preventDefault();const btn=document.getElementById('btnConfirm');
   if(!currentOrderId && !isUpgradeMode){
-    const ch='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';currentOrderId='DH-';for(let i=0;i<10;i++)currentOrderId+=ch.charAt(Math.floor(Math.random()*ch.length));
+    const ch='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';currentOrderId='DH';for(let i=0;i<10;i++)currentOrderId+=ch.charAt(Math.floor(Math.random()*ch.length));
     renderPaymentBox();
   } else if (isUpgradeMode) {
     renderPaymentBox();
@@ -777,7 +778,7 @@ async function confirmPaid(){
      const WH_URL = "https://payment-webhook.doicucden.workers.dev";
      
      // DÁN CÁI MẬT KHẨU WEB API SECRET CỦA MÀY VÀO TRONG NGOẶC KÉP BÊN DƯỚI:
-     const WH_SECRET = "JeEmBX8K6fhzx7UGvdglsZujN13FW9c2kYaMLrwHA5DRi0PV"; 
+     const WH_SECRET = "DÁN_WEB_API_SECRET_VÀO_ĐÂY"; 
      
      if (isUpgradeMode) {
         await fetch(WH_URL + "/api/upgrades", {
