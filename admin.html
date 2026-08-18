@@ -54,17 +54,14 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
 .settings-sub-tab{padding:6px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;color:#64748b;}
 .settings-sub-tab.active{background:white;color:#4f46e5;box-shadow:0 1px 4px rgba(0,0,0,.1);}
 
-/* Toggle tab Link Sub */
 .link-tab-switcher { display: flex; gap: 8px; margin-bottom: 1rem; background: #e2e8f0; padding: 4px; border-radius: 12px; width: fit-content; }
 .link-tab-btn { padding: 6px 16px; font-size: 12px; font-weight: 800; border-radius: 8px; cursor: pointer; color: #64748b; transition: all 0.2s; }
 .link-tab-btn.active { background: #fff; color: #4f46e5; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-/* Chế độ xem Link Sub */
 .view-switcher { display: flex; gap: 6px; background: #f1f5f9; padding: 4px; border-radius: 8px; width: fit-content; }
 .view-btn { padding: 4px 12px; font-size: 11px; font-weight: 800; border-radius: 6px; cursor: pointer; color: #64748b; transition: all 0.2s; }
 .view-btn.active { background: #4f46e5; color: #fff; box-shadow: 0 2px 4px rgba(79,70,229,0.2); }
 
-/* Filter Tabs cho D1 Giao Dịch */
 .pkg-filters::-webkit-scrollbar{height:0}
 .pkg-filters{scrollbar-width:none;}
 
@@ -78,7 +75,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
 .card-content { position: relative; z-index: 2; }
 .check-icon { display: none; position: absolute; top: 0.75rem; right: 0.75rem; color: #4f46e5; z-index: 2; font-size: 1.25rem;}
 
-/* CSS Anti-Flash An Toàn 100% */
 html.has-session #loginWrap { display: none !important; }
 html.has-session #hdr { display: flex !important; }
 html.has-session #main { display: block !important; } 
@@ -183,7 +179,6 @@ html.has-session #main { display: block !important; }
       </div>
     </div>
 
-    <!-- Tầng 1: Chọn Form -->
     <div class="link-tab-switcher mb-3">
       <div id="btn-ls-pool" class="link-tab-btn active" onclick="switchLinkMode('pool')"><i class="fas fa-plus-circle mr-1"></i>THÊM VÀO KHO TỔNG</div>
       <div id="btn-ls-manual" class="link-tab-btn" onclick="switchLinkMode('manual')"><i class="fas fa-magic mr-1"></i>TẠO ẨN THỦ CÔNG</div>
@@ -237,8 +232,6 @@ html.has-session #main { display: block !important; }
             <div id="btn-view-detailed" class="view-btn" onclick="switchLinkView('detailed')">🌳 CHI TIẾT (CÂY)</div>
         </div>
     </div>
-    
-    <!-- Render Container cho Danh Sách -->
     <div id="linksViewContainer" class="space-y-3 w-full min-w-0"></div>
 
   </div>
@@ -1361,6 +1354,233 @@ async function autoMigrateLinks(isAuto = false) {
   }
 }
 
+function switchOrdTab(tab){
+  curOrdTab=tab;
+  ["success","pending","failed"].forEach(t=>document.getElementById("otab-"+t)?.classList.toggle("active",t===tab));
+  renderOrd();
+}
+
+function renderOrd(){
+  const tb=document.getElementById("ordBody");
+  const counts={success:0,pending:0,failed:0};
+  ordersDb.forEach(o=>{if(counts[o.status]!==undefined) counts[o.status]++;});
+  ["success","pending","failed"].forEach(t=>{const el=document.getElementById("cnt-"+t);if(el) el.textContent=counts[t];});
+  const filtered=ordersDb.filter(o=>o.status===curOrdTab);
+  if(!filtered.length){tb.innerHTML=`<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold lg:text-base">Không có đơn nào</div>`;return;}
+
+  const groups={};
+  filtered.forEach(o=>{
+    const dc=getDateCreated(o); 
+    const key=monthSortKey(dc)||"000000";
+    const label=monthLabel(dc);
+    if(!groups[key]) groups[key]={label,orders:[]};
+    groups[key].orders.push(o);
+  });
+  const sortedKeys=Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+  const now=getAdjustedTime();let html="";
+  for(const key of sortedKeys){
+    const g=groups[key];
+    html+=`<div class="month-header"><i class="far fa-calendar-alt text-indigo-400"></i><span>${g.label}</span><span class="month-count">${g.orders.length} đơn</span></div><div class="space-y-3 mb-6">`;
+    for(const o of g.orders){
+      const displayPkg=o.pkg?o.pkg.split(" / ")[0]:(o.pkgName||"—");
+      const dc=getDateCreated(o);
+      let isExpiring=false,daysLeft=null,isExpiredSuccess=false;
+      if(o.status==="success"&&o.expDate){
+        const expD=pd(o.expDate);
+        if(expD){daysLeft=Math.ceil((expD-now)/86400000);isExpiring=daysLeft>=0&&daysLeft<=3;isExpiredSuccess=daysLeft<0;}
+      }
+      const isSuc=o.status==="success",isPen=o.status==="pending";
+      const dot=isExpiredSuccess?'<div class="dot-gray"></div>':isSuc?'<div class="dot-green"></div>':isPen?'<div class="dot-yellow"></div>':'<div class="dot-red"></div>';
+      let cardBase='bg-white border border-slate-200';
+      if(isExpiredSuccess) cardBase='card-expired-done border border-slate-300';
+      else if(isExpiring) cardBase='card-expiring';
+      const nicknameHTML=o.nickname?`<span class="text-[9px] md:text-[10px] lg:text-xs font-black bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded ml-1 shrink-0"><i class="fas fa-user-tag mr-0.5"></i>${o.nickname}</span>`:"";
+      html+=`<div class="${cardBase} rounded-xl p-3 shadow-sm flex flex-col md:flex-row md:items-start justify-between gap-2 md:gap-3 w-full min-w-0">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1 min-w-0">
+            ${dot}
+            <span class="font-bold text-[10px] lg:text-xs text-slate-400">#${ordersDb.indexOf(o)+1}</span>
+            <span class="font-mono font-extrabold text-indigo-600 text-xs md:text-sm lg:text-base cp truncate order-id-text" onclick="cp('${o.id}')">${o.id}</span>
+            ${nicknameHTML}
+            ${isExpiredSuccess?`<span class="text-[9px] lg:text-xs font-black bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1 shrink-0">ĐÃ HẾT HẠN</span>`:""}
+          </div>
+          <div class="font-bold text-slate-800 text-[11px] md:text-xs lg:text-sm cp truncate pl-5 order-email-text" onclick="cp('${o.email||''}')">${o.email||"—"}</div>
+          <div class="text-[10px] md:text-[11px] lg:text-sm text-slate-500 mt-0.5 font-medium pl-5 order-meta-text">Zalo: <span class="font-bold text-slate-700 cp" onclick="cp('${o.zalo||''}')">${o.zalo||"Không có"}</span></div>
+          <div class="text-[10px] md:text-[11px] lg:text-sm text-slate-500 mt-0.5 font-medium truncate pl-5 order-meta-text">${displayPkg}${o.expDate?` • HSD: <span class="font-bold text-slate-700">${o.expDate}</span>`:""}${daysLeft!==null&&daysLeft>=0?` <span class="font-black ${daysLeft<=1?'text-red-600':'text-orange-500'}">(còn ${daysLeft}n)</span>`:""}</div>
+        </div>
+        <div class="flex flex-col items-end gap-2 shrink-0 border-t border-slate-100 md:border-0 pt-2 md:pt-0 mt-1 md:mt-0">
+          ${o.date?`<span class="text-[10px] lg:text-xs text-slate-400 font-semibold whitespace-nowrap">${fmtCardDate(o.date)}</span>`:""}
+          <div class="flex gap-1.5 shrink-0 mt-1">
+            ${(o.status==="success"&&o.expDate&&!isExpiredSuccess)?`<button onclick="sendExpMail('${o.id}')" title="Nhắc hết hạn" class="text-amber-500 font-bold px-3 py-1.5 bg-amber-50 border border-amber-100 rounded-lg text-xs lg:text-sm hover:bg-amber-500 hover:text-white transition shadow-sm"><i class="fas fa-clock"></i></button>`:""}
+            <button onclick="sendZaloMail('${o.id}')" title="Nhắc Zalo khách hàng" class="text-blue-500 font-bold px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg text-xs lg:text-sm hover:bg-blue-500 hover:text-white transition shadow-sm"><i class="fas fa-comment-dots"></i></button>
+            <button onclick="openOrdModal('${o.id}')" class="text-indigo-600 font-bold px-4 py-1.5 bg-indigo-50 border border-indigo-100 rounded-lg text-xs lg:text-sm hover:bg-indigo-600 hover:text-white transition shadow-sm"><i class="fas fa-pen md:mr-1.5"></i><span class="hidden md:inline">Sửa</span></button>
+            <button onclick="delOrd('${o.id}')" class="text-red-500 font-bold px-3 py-1.5 bg-red-50 border border-red-100 rounded text-xs lg:text-sm hover:bg-red-500 hover:text-white transition shadow-sm"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+      </div>`;
+    }
+    html+=`</div>`;
+  }
+  tb.innerHTML=html;
+}
+
+function autoFillDays(){
+  const idx=parseInt(document.getElementById("mOPkg").value)||0;
+  if(idx === -1) return;
+  const days=PKG_DAYS[idx]||0;
+  if(days>0){document.getElementById("mODays").value=days;recalcExpFromDays();}
+  else document.getElementById("mODays").value="";
+}
+function recalcExpFromDays(){
+  const days=parseInt(document.getElementById("mODays").value)||0;if(!days) return;
+  document.getElementById("mOExp").value=addDays(todayTZ(),days);
+}
+function openOrdModal(id){
+  const o=id?ordersDb.find(x=>x.id===id):{id:genId(),email:"",status:"pending",info1:"",info2:"",info3:"",nickname:"",reason:"",expDate:"",method:"Ngân hàng VN",zalo:"",days:""};
+  if(!o) return;
+  document.getElementById("mOrdTtl").textContent=id?"Sửa đơn":"Tạo thủ công";
+  document.getElementById("mOId").value=o.id;document.getElementById("mOEmail").value=o.email||"";
+  document.getElementById("mONickname").value=o.nickname||"";
+  document.getElementById("mOZalo").value=o.zalo||"";document.getElementById("mOExp").value=o.expDate||"";
+  document.getElementById("mODays").value=o.days||"";
+  document.getElementById("mOLink1").value=o.info1||o.info||"";
+  document.getElementById("mOLink2").value=o.info2||"";
+  document.getElementById("mOLink3").value=o.info3||"";
+  document.getElementById("mOReason").value=o.reason||"";document.getElementById("mOStatus").value=o.status||"pending";
+  document.getElementById("mOMethod").value=o.method&&o.method.includes("Alipay")?"Alipay":o.method&&o.method.includes("Weixin")?"Weixin":"Ngân hàng VN";
+  
+  const sel=document.getElementById("mOPkg");
+  sel.innerHTML = PKGS.map((p,i)=>`<option value="${i}">${p}</option>`).join("");
+  let matched = false;
+  if(id) {
+      for(let i=0; i<sel.options.length; i++){
+          const optText = sel.options[i].text;
+          if(o.pkgName && optText.includes(o.pkgName) && (!o.pkgData || optText.includes(o.pkgData))) {
+              sel.selectedIndex = i; matched = true; break;
+          }
+      }
+      if(!matched) {
+          sel.innerHTML += `<option value="-1" selected>${o.pkg || o.pkgName}</option>`;
+          sel.value = "-1";
+      }
+  }
+
+  if(!id) {
+      sel.selectedIndex = 0;
+      autoFillDays();
+  }
+  togSF();document.getElementById("mOrd").classList.remove("hidden");
+}
+function togSF(){const s=document.getElementById("mOStatus").value;document.getElementById("fSuc").classList.toggle("hidden",s!=="success");document.getElementById("fFail").classList.toggle("hidden",s!=="failed");}
+
+async function saveOrd(){
+  const id=document.getElementById("mOId").value.trim();if(!id) return toast("Mã đơn rỗng!","err");
+  let o=ordersDb.find(x=>x.id===id);
+  if(!o){o={id,dateCreated:todayTZ(),date:getNowStr(), createdTs: Date.now()};ordersDb.unshift(o);} 
+  
+  const pkgVal = document.getElementById("mOPkg").value;
+  const pkgTxt = pkgVal === "-1" ? (o.pkg || "Gói Custom") : PKGS[pkgVal];
+  const pkgNameStr = pkgVal === "-1" ? (o.pkgName || "Gói Custom") : pkgTxt.split(" - ")[0];
+  const status=document.getElementById("mOStatus").value;
+  
+  Object.assign(o,{
+    email:document.getElementById("mOEmail").value.trim(),
+    nickname:document.getElementById("mONickname").value.trim(),
+    zalo:document.getElementById("mOZalo").value.trim(),
+    pkg:pkgTxt,
+    pkgName:pkgNameStr,
+    expDate:document.getElementById("mOExp").value.trim(),
+    days:parseInt(document.getElementById("mODays").value)||"",
+    status,
+    method:document.getElementById("mOMethod").value,
+    info1:document.getElementById("mOLink1").value.trim(),
+    info2:document.getElementById("mOLink2").value.trim(),
+    info3:document.getElementById("mOLink3").value.trim(),
+    reason:document.getElementById("mOReason").value.trim()
+  });
+  renderOrd();cm("mOrd");toast("Đang lưu & bắn tỉa...");await apP("/api/orders",ordersDb);toast("Đã lưu!");
+  
+  if(document.getElementById("mOSendMail").checked && o.email && (status==="success"||status==="failed")){
+    if(!isMaster()) {
+       toast("Đang ở chế độ SLAVE, bỏ qua lệnh gửi Mail!", "warn");
+    } else {
+       const subj=status==="success"?"VPN Trinh Hg - Kích hoạt thành công":"VPN Trinh Hg - Kích hoạt thất bại";
+       const html=status==="success"?buildSuccessMailHtml(o):buildFailedMailHtml(o);
+       fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:o.email,subject:subj,html})});
+       addMailLog(status==="success"?"Kích hoạt thành công":"Kích hoạt thất bại",o.email,o.id);
+    }
+  }
+}
+async function delOrd(id){ordersDb=ordersDb.filter(x=>x.id!==id);renderOrd();await apP("/api/orders",ordersDb);toast("Đã xóa!");}
+
+function sendExpMail(id){
+  if(!isMaster()) return toast("Đang ở chế độ SLAVE, không được gửi mail!", "err");
+  const o=ordersDb.find(x=>x.id===id);if(!o?.email) return toast("Chưa có email!","err");
+  const daysLeft=o.expDate?Math.ceil((pd(o.expDate)-getAdjustedTime())/86400000):null;
+  const msgDay=daysLeft===1?"<b>ngày mai hết hạn</b>":daysLeft!==null?`còn <b>${daysLeft} ngày</b> (hết hạn <b>${o.expDate}</b>)`:` hết hạn ngày <b>${o.expDate||"chưa xác định"}</b>`;
+  fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:o.email,subject:"VPN Trinh Hg - Gói VPN sắp hết hạn",html:buildExpMailHtml(o,msgDay)})});
+  addMailLog("Nhắc hết hạn (Thủ công)",o.email,o.id);toast("Đã gửi mail nhắc hết hạn!");
+}
+function sendZaloMail(id){
+  if(!isMaster()) return toast("Đang ở chế độ SLAVE, không được gửi mail!", "err");
+  const o=ordersDb.find(x=>x.id===id);if(!o?.email) return toast("Chưa có email!","err");
+  fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:o.email,subject:"VPN Trinh Hg - Hỗ trợ cài đặt",html:buildZaloMailHtml(o)})});
+  addMailLog("Hỗ trợ cài đặt",o.email,o.id);toast("Đã gửi mail Nhắc Zalo!");
+}
+
+function buildDataMailHtml(req, gb){
+  return `<div style="font-family:sans-serif;width:100%;max-width:450px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-sizing:border-box;"><div style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);padding:20px;text-align:center;"><h2 style="color:white;margin:0;font-size:18px;text-transform:uppercase;">KẾT QUẢ TRA CỨU DUNG LƯỢNG</h2></div><div style="padding:25px 20px;box-sizing:border-box;text-align:center;"><p style="font-size:15px;line-height:1.6;margin:0 0 15px 0;color:#334155;">Chào bạn, đây là thông tin dung lượng của đơn hàng <b style="color:#7c3aed;">${req.orderId}</b>.</p><div style="background:#f5f3ff;border:2px dashed #a78bfa;padding:20px;border-radius:12px;margin:20px 0;"><p style="margin:0;font-size:12px;color:#6d28d9;font-weight:bold;text-transform:uppercase;letter-spacing:1px;">DUNG LƯỢNG CÒN LẠI</p><p style="margin:10px 0 0 0;font-size:32px;font-weight:900;color:#7c3aed;letter-spacing:1px;">${gb} GB</p></div><p style="font-size:13px;color:#475569;margin-top:12px;line-height:1.5;">Vui lòng kiểm tra lại nếu tốc độ bị chậm, có thể gói của bạn đã dùng hết dung lượng.</p><div style="text-align:center;margin-top:20px;"><p style="font-size:13px;color:#475569;margin-bottom:12px;">Cần hỗ trợ thêm?</p><div style="display:block;width:100%;text-align:center;"><a href="https://zalo.me/0917678211" style="display:inline-block;width:46%;background:#0068ff;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;box-sizing:border-box;">Chat Zalo</a></div></div></div></div>`;
+}
+
+const CONTACT_BLOCK=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:15px;margin-top:20px;text-align:center;"><p style="margin:0 0 12px 0;color:#475569;font-size:13px;line-height:1.5;">Cần hỗ trợ? Đội ngũ của chúng tôi sẵn sàng 24/24</p><div style="display:block;width:100%;text-align:center;"><a href="https://zalo.me/0917678211" style="display:inline-block;width:46%;background:#0068ff;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;box-sizing:border-box;">Chat Zalo</a><a href="https://www.facebook.com/trinh.hg.57" style="display:inline-block;width:46%;background:#0668E1;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;margin-left:4%;box-sizing:border-box;">Messenger</a></div></div>`;
+
+function buildSuccessMailHtml(o){
+  return `<div style="font-family:sans-serif;width:100%;max-width:500px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-sizing:border-box;"><div style="background:linear-gradient(135deg,#4f46e5,#8b5cf6);padding:20px;text-align:center;"><h2 style="color:white;margin:0;font-size:18px;text-transform:uppercase;">KÍCH HOẠT THÀNH CÔNG</h2></div><div style="padding:20px;box-sizing:border-box;"><p style="font-size:15px;line-height:1.5;margin-top:0;">Xin chào, Gói VPN <b style="color:#4f46e5;">${o.pkgName}</b> của bạn đã sẵn sàng.</p><div style="background:#f1f5f9;border-left:4px solid #4f46e5;padding:15px;border-radius:8px;margin:20px 0;text-align:center;"><p style="margin:0;font-size:11px;color:#64748b;font-weight:bold;text-transform:uppercase;">MÃ ĐƠN HÀNG CỦA BẠN</p><p style="margin:8px 0 0 0;font-size:22px;font-weight:900;color:#4f46e5;letter-spacing:1px;word-break:break-word;">${o.id}</p></div><div style="text-align:center;margin:25px 0;"><a href="${PD}" style="background:#1e293b;color:white;padding:12px 15px;border-radius:10px;text-decoration:none;font-weight:900;display:inline-block;width:100%;box-sizing:border-box;font-size:14px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);">TRUY CẬP CỔNG KHÁCH HÀNG</a><p style="font-size:12px;color:#64748b;margin-top:12px;line-height:1.5;">👉 <i>Dùng <b>Mã Đơn Hàng</b> hoặc <b>Email</b> để tra cứu và lấy link VPN.</i></p></div>${CONTACT_BLOCK}</div></div>`;
+}
+function buildFailedMailHtml(o){
+  return `<div style="font-family:sans-serif;width:100%;max-width:500px;margin:auto;background:#ffffff;border:1px solid #fecaca;border-radius:12px;overflow:hidden;box-sizing:border-box;"><div style="background:linear-gradient(135deg,#ef4444,#b91c1c);padding:20px;text-align:center;"><h2 style="color:white;margin:0;font-size:18px;text-transform:uppercase;">KÍCH HOẠT THẤT BẠI</h2></div><div style="padding:20px;box-sizing:border-box;"><p style="font-size:15px;line-height:1.5;margin-top:0;">Xin chào, Gói VPN <b style="color:#ef4444;">${o.pkgName}</b> của bạn không thể kích hoạt.</p><div style="background:#f1f5f9;border-left:4px solid #4f46e5;padding:15px;border-radius:8px;margin:20px 0;text-align:center;"><p style="margin:0;font-size:11px;color:#64748b;font-weight:bold;text-transform:uppercase;">MÃ ĐƠN HÀNG CỦA BẠN</p><p style="margin:8px 0 0 0;font-size:22px;font-weight:900;color:#4f46e5;letter-spacing:1px;word-break:break-word;">${o.id}</p></div><div style="background:#fef2f2;border:1px dashed #fca5a5;padding:15px;border-radius:8px;margin:20px 0;text-align:center;"><p style="margin:0;font-size:12px;color:#991b1b;font-weight:bold;text-transform:uppercase;">LÝ DO TỪ CHỐI</p><p style="margin:8px 0 0 0;font-size:14px;font-weight:bold;color:#b91c1c;word-break:break-word;">${o.reason}</p></div><div style="text-align:center;margin:25px 0;"><p style="font-size:12px;color:#64748b;margin-top:12px;line-height:1.5;">👉 <i>Dùng <b>Mã Đơn Hàng</b> hoặc <b>Email</b> để tra cứu và lấy link VPN.</i></p></div>${CONTACT_BLOCK}</div></div>`;
+}
+function buildExpMailHtml(o,msgDay){
+  return `<div style="font-family:sans-serif;width:100%;max-width:450px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-sizing:border-box;"><div style="background:linear-gradient(135deg,#f59e0b,#d97706);padding:20px;text-align:center;"><h2 style="color:white;margin:0;font-size:18px;text-transform:uppercase;">GÓI VPN SẮP HẾT HẠN</h2></div><div style="padding:25px 20px;box-sizing:border-box;text-align:center;"><p style="font-size:15px;line-height:1.6;margin:0 0 15px 0;color:#334155;">Xin chào, Gói VPN <b>${o.pkgName}</b> của bạn ${msgDay}.</p><div style="background:#f1f5f9;border-left:4px solid #f59e0b;padding:15px;border-radius:8px;margin:20px 0;text-align:center;"><p style="margin:0;font-size:11px;color:#64748b;font-weight:bold;text-transform:uppercase;">MÃ ĐƠN HÀNG HIỆN TẠI</p><p style="margin:8px 0 0 0;font-size:22px;font-weight:900;color:#d97706;letter-spacing:1px;word-break:break-word;">${o.id}</p></div><div style="text-align:center;margin:25px 0;"><a href="${PD}" style="background:#1e293b;color:white;padding:12px 15px;border-radius:10px;text-decoration:none;font-weight:900;display:inline-block;font-size:13px;width:100%;box-sizing:border-box;">GIA HẠN NGAY TẠI CỔNG KHÁCH HÀNG</a></div><p style="font-size:13px;color:#475569;margin-top:12px;line-height:1.5;">Gia hạn ngay tại website để tránh gián đoạn dịch vụ.</p><div style="text-align:center;margin-top:20px;"><p style="font-size:13px;color:#475569;margin-bottom:12px;">Cần hỗ trợ gia hạn? Đội ngũ của chúng tôi sẵn sàng 24/24</p><div style="display:block;width:100%;text-align:center;"><a href="https://zalo.me/0917678211" style="display:inline-block;width:46%;background:#0068ff;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;box-sizing:border-box;">Chat Zalo</a><a href="https://www.facebook.com/trinh.hg.57" style="display:inline-block;width:46%;background:#0668E1;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;margin-left:4%;box-sizing:border-box;">Messenger</a></div></div></div></div>`;
+}
+function buildZaloMailHtml(o){
+  return `<div style="font-family:sans-serif;width:100%;max-width:450px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-sizing:border-box;"><div style="background:linear-gradient(135deg,#2563eb,#1d4ed8);padding:20px;text-align:center;"><h2 style="color:white;margin:0;font-size:18px;text-transform:uppercase;">HỖ TRỢ CÀI ĐẶT</h2></div><div style="padding:25px 20px;box-sizing:border-box;text-align:center;"><p style="font-size:15px;line-height:1.6;margin:0 0 15px 0;color:#334155;">Chào bạn, vui lòng liên hệ Admin qua Zalo bên dưới để được hỗ trợ về gói VPN có mã đơn hàng là <b style="color:#2563eb;word-break:break-word;">${o.id}</b> ngay nhé!</p><div style="background:#fefce8;border:2px dashed #facc15;padding:20px;border-radius:12px;margin:20px 0;"><p style="margin:0;font-size:13px;color:#a16207;font-weight:bold;text-transform:uppercase;letter-spacing:1px;">ZALO ADMIN</p><p style="margin:10px 0 0 0;font-size:28px;font-weight:900;color:#ca8a04;letter-spacing:1px;">0917678211</p></div><div style="text-align:center;margin:25px 0;"><a href="${PD}" style="background:#1e293b;color:white;padding:12px 15px;border-radius:10px;text-decoration:none;font-weight:900;display:inline-block;font-size:14px;width:100%;box-sizing:border-box;">TRUY CẬP CỔNG KHÁCH HÀNG</a></div><div style="display:block;width:100%;text-align:center;"><a href="https://zalo.me/0917678211" style="display:inline-block;width:46%;background:#0068ff;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;box-sizing:border-box;">Chat Zalo</a><a href="https://www.facebook.com/trinh.hg.57" style="display:inline-block;width:46%;background:#0668E1;color:white;padding:10px 0;text-decoration:none;border-radius:8px;font-weight:bold;font-size:12px;margin-left:4%;box-sizing:border-box;">Messenger</a></div></div></div>`;
+}
+
+function renderDataRequests(){
+  const tb=document.getElementById("dataReqBody");
+  if(!dataRequestsDb.length){tb.innerHTML=`<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold lg:text-base">Không có yêu cầu nào</div>`;return;}
+  tb.innerHTML=dataRequestsDb.map((req,i)=>{
+    const isSuc=req.status==="success";
+    const dot=isSuc?'<div class="dot-green"></div>':'<div class="dot-yellow"></div>';
+    const bgCard=isSuc?'bg-slate-50 border-slate-200 opacity-60':'bg-white border-2 border-dashed border-indigo-400';
+    return `<div class="${bgCard} rounded-xl p-3 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 w-full min-w-0 transition">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1 min-w-0">${dot}<span class="font-bold text-[10px] lg:text-xs text-slate-400">#${dataRequestsDb.length-i}</span><span class="font-mono font-extrabold text-indigo-600 text-xs md:text-sm lg:text-base cp truncate" onclick="cp('${req.orderId}')">${req.orderId}</span></div>
+        <div class="font-bold text-slate-800 text-[11px] md:text-xs lg:text-sm cp truncate pl-5" onclick="cp('${req.email}')">${req.email}</div>
+        <div class="text-[10px] md:text-[11px] lg:text-xs text-slate-500 mt-1 truncate pl-5">Gói: <b>${req.pkgName}</b> - ${req.date}</div>
+      </div>
+      <div class="flex gap-2 shrink-0 border-t border-slate-100 md:border-0 pt-3 md:pt-0 mt-2 md:mt-0 items-center">
+        <div class="relative w-24 md:w-32"><input type="number" step="0.1" id="gb-input-${i}" placeholder="Số GB..." class="w-full p-2 text-xs md:text-sm border border-slate-300 rounded-lg outline-none focus:border-indigo-500 font-bold bg-white text-center pr-8" ${isSuc?"disabled":""}><span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] md:text-xs font-bold text-slate-400 pointer-events-none">GB</span></div>
+        <button onclick="sendDataReport(${i})" class="${isSuc?'bg-slate-300 text-slate-500 pointer-events-none':'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md'} font-bold px-3 py-2 rounded-lg text-xs md:text-sm transition flex items-center justify-center shrink-0"><i class="fas fa-paper-plane mr-1.5"></i>${isSuc?"Đã Gửi":"Gửi Khách"}</button>
+        <button onclick="delDataRequest(${i})" class="text-red-500 bg-red-50 border border-red-100 hover:bg-red-500 hover:text-white px-3 py-2 rounded-lg transition shrink-0"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>`;
+  }).join("");
+}
+async function sendDataReport(index){
+  if(!isMaster()) return toast("Đang ở chế độ SLAVE, không được gửi mail!", "err");
+  const req=dataRequestsDb[index];const gb=document.getElementById(`gb-input-${index}`).value.trim();
+  if(!gb) return toast("Nhập số GB đã dùng vào ô trống!","err");toast("Đang soạn mail gửi khách...");
+  try{
+    await fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:req.email,subject:`VPN Trinh Hg - Báo cáo dung lượng ${req.orderId}`,html:buildDataMailHtml(req,gb)})});
+    req.status="success";renderDataRequests();await apP("/api/data_requests",dataRequestsDb);
+    addMailLog("Báo cáo dung lượng",req.email,req.orderId);toast("Đã báo cáo xong cho khách!");
+  }catch(e){toast("Lỗi gửi mail: "+e.message,"err");}
+}
+async function delDataRequest(i){dataRequestsDb.splice(i,1);renderDataRequests();await apP("/api/data_requests",dataRequestsDb);toast("Đã xóa!");}
+async function clearDataRequests(){dataRequestsDb=[];renderDataRequests();await apP("/api/data_requests",dataRequestsDb);toast("Đã dọn sạch!");}
+
 function openLnkModal(id){
   const l=linksDb.find(x=>x.id===id);if(!l) return;
   document.getElementById("mLId").value=id;document.getElementById("mLOrig").value=l.orig||"";
@@ -1564,6 +1784,20 @@ function reverseShortcodes(html){
 }
 function updatePreview(){document.getElementById("cmsPreview").innerHTML=parseShortcodes(document.getElementById("cmsRaw").value);}
 async function saveCms(){cmsDb[curCms]=document.getElementById("cmsRaw").value;toast("Đang lưu CMS & bắn tỉa sang 3 web...");await apP("/api/cms",cmsDb);toast("Đã lưu Hướng dẫn lên hệ thống!");}
+
+function switchSettingsTab(tab){
+  ["mail","sync","log","dev","time"].forEach(t=>{
+    const st=document.getElementById("settings-view-"+t),btn=document.getElementById("stab-"+t);
+    if(st) st.classList.toggle("hidden",t!==tab);
+    if(btn) {
+       if(t===tab) btn.classList.add("active");
+       else btn.classList.remove("active");
+    }
+  });
+  if(tab==="log") { renderMailLog(); renderSysLog(); }
+  if(tab==="dev") renderDev();
+  if(tab==="sync" || tab==="mail" || tab==="time") loadSyncSettingUI();
+}
 
 function renderDev(){
   const tb=document.getElementById("devBody");if(!tb) return;
