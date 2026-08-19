@@ -85,10 +85,10 @@ html.has-session #main { display: block !important; }
  const _sk = window.location.hostname.replace(/\./g,"_");
  let _admHasSession = false;
  for(let i=0; i<localStorage.length; i++) {
-     if(localStorage.key(i).includes(_sk + '_adm_dev')) _admHasSession = true;
+    if(localStorage.key(i).includes(_sk + '_adm_dev')) _admHasSession = true;
  }
  if(_admHasSession) {
-    document.documentElement.classList.add('has-session');
+   document.documentElement.classList.add('has-session');
  }
 </script>
 </head>
@@ -301,37 +301,37 @@ html.has-session #main { display: block !important; }
         
         <div class="flex flex-col gap-4 pb-6 mb-6 border-b border-slate-100">
           <div>
-              <label class="block font-extrabold text-sm text-slate-800">1. Quyền Bốc Node Tự Động (Auto-Fulfillment)</label>
-              <p class="text-[11px] text-slate-500 mb-2">Chỉ định web này làm Master để tự động quét đơn D1 và bốc Node cấp Link.</p>
-              <div class="grid grid-cols-2 gap-2">
-                <label class="radio-card p-2">
-                  <input type="radio" name="autoRoleRad" value="master" onclick="saveAutoRoleUI('master')">
-                  <div class="card-bg"></div><i class="fas fa-check-circle check-icon text-sm top-2 right-2"></i>
-                  <div class="card-content text-center"><p class="font-bold text-sm">Master (Bật)</p></div>
-                </label>
-                <label class="radio-card p-2">
-                  <input type="radio" name="autoRoleRad" value="slave" onclick="saveAutoRoleUI('slave')">
-                  <div class="card-bg"></div><i class="fas fa-check-circle check-icon text-sm top-2 right-2"></i>
-                  <div class="card-content text-center"><p class="font-bold text-sm">Slave (Tắt)</p></div>
-                </label>
-              </div>
+             <label class="block font-extrabold text-sm text-slate-800">1. Quyền Bốc Node Tự Động (Auto-Fulfillment)</label>
+             <p class="text-[11px] text-slate-500 mb-2">Chỉ định web này làm Master để tự động quét đơn D1 và bốc Node cấp Link.</p>
+             <div class="grid grid-cols-2 gap-2">
+               <label class="radio-card p-2">
+                 <input type="radio" name="autoRoleRad" value="master" onclick="saveAutoRoleUI('master')">
+                 <div class="card-bg"></div><i class="fas fa-check-circle check-icon text-sm top-2 right-2"></i>
+                 <div class="card-content text-center"><p class="font-bold text-sm">Master (Bật)</p></div>
+               </label>
+               <label class="radio-card p-2">
+                 <input type="radio" name="autoRoleRad" value="slave" onclick="saveAutoRoleUI('slave')">
+                 <div class="card-bg"></div><i class="fas fa-check-circle check-icon text-sm top-2 right-2"></i>
+                 <div class="card-content text-center"><p class="font-bold text-sm">Slave (Tắt)</p></div>
+               </label>
+             </div>
           </div>
           
           <div>
-              <label class="block font-extrabold text-sm text-slate-800 mt-2">2. Quyền Gửi Email Tự Động</label>
-              <p class="text-[11px] text-slate-500 mb-2">Nếu bật Master, web này sẽ chịu trách nhiệm gửi Mail khi đơn thành công.</p>
-              <div class="grid grid-cols-2 gap-2">
-                <label class="radio-card p-2">
-                  <input type="radio" name="emailRoleRad" value="master" onclick="saveEmailRoleUI('master')">
-                  <div class="card-bg"></div><i class="fas fa-check-circle check-icon text-sm top-2 right-2"></i>
-                  <div class="card-content text-center"><p class="font-bold text-sm">Master (Gửi)</p></div>
-                </label>
-                <label class="radio-card p-2">
-                  <input type="radio" name="emailRoleRad" value="slave" onclick="saveEmailRoleUI('slave')">
-                  <div class="card-bg"></div><i class="fas fa-check-circle check-icon text-sm top-2 right-2"></i>
-                  <div class="card-content text-center"><p class="font-bold text-sm">Slave (Tắt)</p></div>
-                </label>
-              </div>
+             <label class="block font-extrabold text-sm text-slate-800 mt-2">2. Quyền Gửi Email Tự Động</label>
+             <p class="text-[11px] text-slate-500 mb-2">Nếu bật Master, web này sẽ chịu trách nhiệm gửi Mail khi đơn thành công.</p>
+             <div class="grid grid-cols-2 gap-2">
+               <label class="radio-card p-2">
+                 <input type="radio" name="emailRoleRad" value="master" onclick="saveEmailRoleUI('master')">
+                 <div class="card-bg"></div><i class="fas fa-check-circle check-icon text-sm top-2 right-2"></i>
+                 <div class="card-content text-center"><p class="font-bold text-sm">Master (Gửi)</p></div>
+               </label>
+               <label class="radio-card p-2">
+                 <input type="radio" name="emailRoleRad" value="slave" onclick="saveEmailRoleUI('slave')">
+                 <div class="card-bg"></div><i class="fas fa-check-circle check-icon text-sm top-2 right-2"></i>
+                 <div class="card-content text-center"><p class="font-bold text-sm">Slave (Tắt)</p></div>
+               </label>
+             </div>
           </div>
         </div>
 
@@ -343,14 +343,14 @@ html.has-session #main { display: block !important; }
           <label class="toggle-wrap shrink-0 mt-0.5">
             <input type="checkbox" id="toggleAutoMail" onchange="saveAutoMailSetting()">
             <span class="toggle-slider"></span>
-          </label>
+         </label>
         </div>
         <div class="pt-4 space-y-3">
           <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-xs text-indigo-700">
             <p class="font-bold mb-1"><i class="fas fa-info-circle mr-1"></i>Cách hoạt động</p>
             <ul class="space-y-1 text-[11px] font-medium">
-              <li>• Tính năng này đã được dời sang Cronjob Worker chạy ngầm để đảm bảo hoạt động 24/24. Bật công tắc này để Worker nhận lệnh.</li>
-            </ul>
+             <li>• Tính năng này đã được dời sang Cronjob Worker chạy ngầm để đảm bảo hoạt động 24/24. Bật công tắc này để Worker nhận lệnh.</li>
+           </ul>
           </div>
           <div id="autoMailStatus" class="text-xs lg:text-sm text-slate-500 italic">Trạng thái: Đang kiểm tra...</div>
         </div>
@@ -364,7 +364,7 @@ html.has-session #main { display: block !important; }
           <select id="selTimezone" class="w-full p-2 border border-slate-300 rounded-lg text-sm bg-slate-50 focus:border-indigo-500 outline-none" onchange="saveTimezone()">
             <option value="VN">🇻🇳 Việt Nam (UTC+7)</option>
             <option value="CN">🇨🇳 Trung Quốc (UTC+8)</option>
-          </select>
+         </select>
         </div>
         <div class="flex flex-col gap-2">
           <label class="block font-bold text-sm text-slate-800 text-purple-700"><i class="fas fa-flask mr-1"></i>Giả lập Thời Gian (Dành cho Test Auto)</label>
@@ -372,10 +372,10 @@ html.has-session #main { display: block !important; }
           <label class="toggle-wrap shrink-0 mb-2">
             <input type="checkbox" id="toggleSimTime" onchange="toggleSimTimeUI()">
             <span class="toggle-slider"></span>
-          </label>
+         </label>
           <div id="simTimeInputs" class="hidden flex gap-2">
              <input type="datetime-local" id="simTimeVal" class="w-full p-2 border border-slate-300 rounded-lg text-sm bg-slate-50 focus:border-indigo-500 outline-none">
-             <button onclick="saveSimTime()" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-purple-700 transition shadow-md">Set</button>
+            <button onclick="saveSimTime()" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-purple-700 transition shadow-md">Set</button>
           </div>
         </div>
       </div>
@@ -386,16 +386,16 @@ html.has-session #main { display: block !important; }
         <div class="font-bold text-sm lg:text-base text-slate-800 mb-1">Worker URL của 3 Website</div>
         <div class="text-xs lg:text-sm text-slate-500 mb-4">Chỉ đồng bộ: Đơn Hàng, Kho Link Tổng, Yêu Cầu Data, CMS. <strong class="text-red-500">Link Ẩn tự sinh không bắn tỉa qua lại.</strong></div>
         <div class="space-y-3 mb-6">
-          <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Worker Web 1</label><input id="syncW1" type="text" placeholder="https://worker-web1.workers.dev" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
-          <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Worker Web 2</label><input id="syncW2" type="text" placeholder="https://worker-web2.workers.dev" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
-          <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Worker Web 3</label><input id="syncW3" type="text" placeholder="https://worker-web3.workers.dev" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
+         <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Worker Web 1</label><input id="syncW1" type="text" placeholder="https://worker-web1.workers.dev" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
+         <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Worker Web 2</label><input id="syncW2" type="text" placeholder="https://worker-web2.workers.dev" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
+         <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Worker Web 3</label><input id="syncW3" type="text" placeholder="https://worker-web3.workers.dev" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
         </div>
         
         <div class="font-bold text-sm lg:text-base text-slate-800 mb-1 border-t border-slate-100 pt-4">Kết nối D1 Webhook</div>
         <div class="text-xs lg:text-sm text-slate-500 mb-4">Để lấy dữ liệu ngân hàng cho tab Giao Dịch D1 và Auto Fulfillment.</div>
         <div class="space-y-3">
-          <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">D1 Webhook URL</label><input id="syncD1Url" type="text" placeholder="https://payment-webhook..." class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
-          <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">D1 Secret Token</label><input id="syncD1Secret" type="password" placeholder="***" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
+         <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">D1 Webhook URL</label><input id="syncD1Url" type="text" placeholder="https://payment-webhook..." class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
+         <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">D1 Secret Token</label><input id="syncD1Secret" type="password" placeholder="***" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
         </div>
         
         <button onclick="saveSyncSetting()" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs lg:text-sm shadow-md transition"><i class="fas fa-save mr-2"></i>LƯU CẤU HÌNH</button>
@@ -417,8 +417,8 @@ html.has-session #main { display: block !important; }
           <div class="overflow-x-auto">
             <table class="log-table">
               <thead><tr><th>#</th><th>Loại mail</th><th>Email khách</th><th>Mã đơn</th><th>Thời gian</th></tr></thead>
-              <tbody id="logTableBody"><tr><td colspan="5" class="text-center py-8 text-slate-400 italic text-sm">Chưa có nhật ký Mail</td></tr></tbody>
-            </table>
+             <tbody id="logTableBody"><tr><td colspan="5" class="text-center py-8 text-slate-400 italic text-sm">Chưa có nhật ký Mail</td></tr></tbody>
+           </table>
           </div>
         </div>
       </div>
@@ -432,8 +432,8 @@ html.has-session #main { display: block !important; }
           <div class="overflow-x-auto">
             <table class="log-table">
               <thead><tr><th>#</th><th>Hành động</th><th>Kết quả</th><th>Thời gian</th></tr></thead>
-              <tbody id="sysLogTableBody"><tr><td colspan="4" class="text-center py-8 text-slate-400 italic text-sm">Chưa có hoạt động</td></tr></tbody>
-            </table>
+             <tbody id="sysLogTableBody"><tr><td colspan="4" class="text-center py-8 text-slate-400 italic text-sm">Chưa có hoạt động</td></tr></tbody>
+           </table>
           </div>
         </div>
       </div>
@@ -465,9 +465,9 @@ html.has-session #main { display: block !important; }
       <div class="min-w-0"><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-0.5">Số ngày SD</label><input id="mODays" type="number" min="1" placeholder="30" class="w-full p-1.5 md:p-2 lg:p-3 text-xs lg:text-sm border rounded-lg outline-none focus:border-indigo-500 text-center bg-slate-50" oninput="recalcExpFromDays()"></div>
   </div>
   <div id="fSuc" class="hidden mb-3 p-2 lg:p-3 border border-green-200 bg-green-50 rounded-lg min-w-0 space-y-2">
-      <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Web 1 (doicucden)</label><input id="mOLink1" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
-      <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Web 2 (onepiecechapter)</label><input id="mOLink2" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
-      <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Web 3 (lucastanora)</label><input id="mOLink3" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
+     <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Web 1 (doicucden)</label><input id="mOLink1" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
+     <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Web 2 (onepiecechapter)</label><input id="mOLink2" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
+     <div><label class="block font-bold text-[10px] lg:text-xs text-green-700 mb-0.5">Web 3 (lucastanora)</label><input id="mOLink3" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-green-300 bg-white rounded font-mono outline-none shadow-inner"></div>
   </div>
   <div id="fFail" class="hidden mb-3 p-2 lg:p-3 border border-red-200 bg-red-50 rounded-lg min-w-0"><label class="block font-bold text-[10px] lg:text-xs text-red-700 mb-0.5">Lý do</label><input id="mOReason" type="text" class="w-full p-1.5 lg:p-2.5 text-[10px] lg:text-sm border border-red-300 bg-white rounded outline-none"></div>
   <div class="flex items-center mb-4 bg-slate-50 border border-slate-200 p-2 lg:p-3 rounded-lg">
@@ -538,6 +538,7 @@ const CROSS_SYNC_PATHS=["/api/orders","/api/cms","/api/data_requests", "/api/lin
 let ordersDb=[],dataRequestsDb=[],linksDb=[],deadLinksDb=[],cmsDb={},devicesDb=[], linkPoolDb=[];
 let myDev="",curCms="android",curOrdTab="success", curLinkTab="pool", curLinkListView="compact", curTxTab="all";
 let sysHasError = false;
+let isProcessingFulfillment = false; // Bẫy chống chạy đè 2 vòng lặp cùng lúc
 
 const lsGet=k=>{try{return JSON.parse(localStorage.getItem(SITE_KEY+"_"+k));}catch{return null;}};
 const lsSet=(k,v)=>{try{localStorage.setItem(SITE_KEY+"_"+k,JSON.stringify(v));}catch{}};
@@ -548,8 +549,16 @@ const lsSetT=k=>localStorage.setItem(SITE_KEY+"_t_"+k,Date.now());
 const cp=t=>{if(!t)return;navigator.clipboard.writeText(t).catch(()=>{});toast("Đã copy: "+(t.length>20?t.substring(0,20)+"...":t));};
 const cm=id=>document.getElementById(id).classList.add("hidden");
 
-// ĐÃ FIX: Gen ID format mới DHXXXXXXXXXX
+// ĐÃ FIX: Hàm genId chuẩn hóa DHXXXXXXXXXX
 const genId=()=>"DH"+Math.random().toString(36).slice(2,12).toUpperCase();
+
+// ĐÃ BỔ SUNG: Hàm genHex bị mất từ trước khiến lỗi bung bét khi tạo Link
+function genHex(len) {
+    let s = '';
+    while(s.length < len) s += Math.random().toString(36).slice(2);
+    return s.substring(0, len).toLowerCase();
+}
+
 const getT=m=>{try{const u=new URL(m);return u.searchParams.get("OwO")||u.searchParams.get("token")||"";}catch{return "";}};
 
 // Hàm Date Custom - Xử lý Timezone chuẩn xác
@@ -656,7 +665,6 @@ function toast(msg,type="ok"){
  setTimeout(()=>{el.classList.remove("show");setTimeout(()=>el.remove(),250);},3000);
 }
 
-// ĐÃ FIX: CHIA RIÊNG 2 QUYỀN
 function isMailMaster() { return (cmsDb && cmsDb.settings && cmsDb.settings.emailRole === "master"); }
 function isAutoMaster() { return (cmsDb && cmsDb.settings && cmsDb.settings.autoRole === "master"); }
 
@@ -751,7 +759,6 @@ function switchLogTab(tab){
  if(tab === 'sys') renderSysLog();
 }
 
-// ĐÃ FIX: CHIA 2 QUYỀN
 async function saveEmailRoleUI(role) {
  if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  cmsDb.settings.emailRole = role;
@@ -768,7 +775,7 @@ async function saveAutoRoleUI(role) {
 async function saveAutoMailSetting(){
  const val=document.getElementById("toggleAutoMail").checked;
  if(val && !isMailMaster()) { 
-    document.getElementById("toggleAutoMail").checked = false; 
+   document.getElementById("toggleAutoMail").checked = false; 
       return toast("Web này đang là Slave Email, không được bật Auto Mail!", "err"); 
  }
  if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
@@ -791,9 +798,9 @@ function toggleSimTimeUI() {
   const isSim = document.getElementById("toggleSimTime").checked;
   document.getElementById("simTimeInputs").classList.toggle('hidden', !isSim);
   if(!isSim) {
-        if(cmsDb.settings) {
-            cmsDb.settings.simMode = false;
-            apP("/api/cms", cmsDb);
+       if(cmsDb.settings) {
+           cmsDb.settings.simMode = false;
+           apP("/api/cms", cmsDb);
         }
         toast("Đã tắt Giả lập thời gian, chạy theo giờ thực tế");
   }
@@ -862,7 +869,6 @@ window.onload=async function(){
   linkPoolDb=lsGet("a/api/link_pool")||[];
   cmsDb=lsGet("a/api/cms")||{};if(!cmsDb.link_origins) cmsDb.link_origins={};
   
-  // ĐÃ FIX: CHẠY QUÉT DỌN DẸP DẤU GẠCH TRONG KV MỘT LẦN KHI LOAD
   let migrated = false;
   ordersDb.forEach(o => {
       if(o.id && o.id.includes('-')) {
@@ -926,7 +932,6 @@ function loginOK(st=true){
   pollAutoFulfillment();
   if(document.getElementById("mOrd") && !document.getElementById("mOrd").classList.contains("hidden")) return;
   apG("/api/orders",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(ordersDb)){
-      // Xóa gạch nếu có order mới
       let mig=false; f.forEach(o=>{if(o.id.includes('-')){o.id=o.id.replace(/-/g,'');mig=true;}});
       if(mig) apP('/api/orders', f);
       ordersDb=f;renderOrd();toast("Có đơn mới!","warn");
@@ -938,105 +943,158 @@ function loginOK(st=true){
 }
 
 // ── TỰ ĐỘNG CHỐT ĐƠN (AUTO FULFILLMENT) ──
+// ĐÃ FIX: CHIA NHỎ TRY-CATCH TỪNG ĐƠN, TÍNH USED LIVE, CLAIM TRƯỚC KHI CẤP
 async function pollAutoFulfillment() {
-  if(!isAutoMaster()) return; // ĐÃ FIX: CHỈ CẦN AUTO MASTER LÀ CHẠY
+  if(!isAutoMaster()) return; 
+  if(isProcessingFulfillment) return; 
+  
   const webhookUrl = (cmsDb.settings && cmsDb.settings.d1Url) ? cmsDb.settings.d1Url.replace(/\/$/, '') : "";
   const webhookSecret = (cmsDb.settings && cmsDb.settings.d1Secret) ? cmsDb.settings.d1Secret : "";
   if(!webhookUrl || !webhookSecret) return;
- 
+
+  isProcessingFulfillment = true;
+
   try {
         const res = await fetch(`${webhookUrl}/api/admin/ready_to_fulfill`, {
             headers: { 'Authorization': 'Bearer ' + webhookSecret }
         });
-        if(!res.ok) return;
+        if(!res.ok) throw new Error("API ready_to_fulfill báo lỗi " + res.status);
         const data = await res.json();
         
-        let fulfilledOrders = [];
-        let fulfilledUpgrades = [];
-        let kvChanged = false;
-
-        // Xử lý Nâng Gói (Upgrades)
-        for(const upg of data.upgrades || []) {
-            let kvOrder = ordersDb.find(x => x.id.replace(/-/g,'') === upg.order_id.replace(/-/g,''));
-            if(kvOrder) {
-                kvOrder.totalVnd = upg.target_price_vnd;
-                let catalogPkgIndex = PKGS.findIndex(p => p.includes(upg.target_price_vnd.toLocaleString()));
-                if(catalogPkgIndex !== -1) {
-                    kvOrder.pkg = PKGS[catalogPkgIndex];
-                    kvOrder.pkgName = kvOrder.pkg.split(" - ")[0];
-                } else {
-                    kvOrder.pkgName = upg.target_package_id;
-                }
-                delete kvOrder.pendingUpgrade;
-                kvChanged = true;
-                if(kvOrder.email && isMailMaster()) { // CHECK QUYỀN GỬI MAIL
-                  fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:kvOrder.email,subject:"VPN Trinh Hg - Nâng cấp thành công",html:buildSuccessMailHtml(kvOrder)})});
-                   addMailLog("Nâng cấp thành công", kvOrder.email, kvOrder.id);
-                }
-            }
-            fulfilledUpgrades.push(upg.id);
-        }
-
-        // Xử lý Mua Mới (New Orders)
+        // ============================================
+        // 1. XỬ LÝ ĐƠN MUA MỚI
+        // ============================================
         for(const o of data.newOrders || []) {
-            let kvOrder = ordersDb.find(x => x.id.replace(/-/g,'') === o.order_id.replace(/-/g,''));
-            if(!kvOrder) continue;
-
-            let node = linkPoolDb.find(p => p.used < p.max && p.exp && p.exp.includes("/"));
-            if(!node) node = linkPoolDb.find(p => p.used < p.max);
-
-            if(!node) {
-                kvOrder.info1 = "[CHỜ NẠP NODE]";
-                kvOrder.status = "success";
-                if(kvOrder.email && isMailMaster()) { // CHECK QUYỀN GỬI MAIL
-                  fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:kvOrder.email,subject:"VPN Trinh Hg - Hệ thống đang bận",html:buildFailedMailHtml(kvOrder)})});
-                    addMailLog("Báo Hết Node", kvOrder.email, kvOrder.id);
-                }
-            } else {
-                let prefix = kvOrder.email ? kvOrder.email.split('@')[0] : "Khach";
-                let idx = linksDb.filter(x => x.orig === node.url).length + 1;
-                let qs = `?token=${genHex(32)}`;
-                if(node.url.includes("liangxin")) qs = `?OwO=${genHex(32)}`;
-                let masked = PD + (node.url.includes("liangxin") ? "/v1/VPNTrinhHg" : "/v2/VPNTrinhHg") + qs + "#VPNTrinhHg";
-
-                linksDb.unshift({
-                    id: "LNK-" + Date.now() + Math.floor(Math.random()*1000),
-                    orig: node.url,
-                    masked: masked,
-                    email: prefix,
-                    expDate: kvOrder.expDate || "",
-                    linkIndex: String(idx),
-                    isLocked: false,
-                    date: getNowStr()
+            try {
+                // PHASE 3: CLAIM TRƯỚC KHI CẤP LINK TRÁNH RACE CONDITION
+                const claimRes = await fetch(`${webhookUrl}/api/admin/claim_fulfillment`, {
+                    method: "POST",
+                    headers: { 'Authorization': 'Bearer ' + webhookSecret, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId: o.order_id })
                 });
-                node.used++;
-                kvOrder.info1 = masked;
-                kvOrder.status = "success";
-                
-                if(kvOrder.email && isMailMaster()) { // CHECK QUYỀN GỬI MAIL
-                  fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:kvOrder.email,subject:"VPN Trinh Hg - Kích hoạt thành công",html:buildSuccessMailHtml(kvOrder)})});
-                    addMailLog("Kích hoạt thành công (Auto)", kvOrder.email, kvOrder.id);
+                // Bỏ qua nếu có người khác claim hoặc đơn đã bị xử lý
+                if(claimRes.status === 409 || claimRes.status === 400) continue; 
+
+                let kvOrder = ordersDb.find(x => x.id.replace(/-/g,'') === o.order_id.replace(/-/g,''));
+                if(!kvOrder) throw new Error(`Không tìm thấy đơn ${o.order_id} trong KV`);
+
+                // PHASE 5: TÍNH USED TỪ LINKS_DB (SERVER-SIDE SNAPSHOT TẠI THỜI ĐIỂM CẤP) ĐỂ TRÁNH LỆCH PHA
+                linkPoolDb.forEach(pool => {
+                    pool.used = linksDb.filter(x => x.orig === pool.url).length;
+                });
+
+                let node = linkPoolDb.find(p => p.used < p.max && p.exp && p.exp.includes("/"));
+                if(!node) node = linkPoolDb.find(p => p.used < p.max);
+
+                if(!node) {
+                    kvOrder.info1 = "[CHỜ NẠP NODE]";
+                    kvOrder.status = "success";
+                    if(kvOrder.email && isMailMaster()) {
+                        fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:kvOrder.email,subject:"VPN Trinh Hg - Hệ thống đang bận",html:buildFailedMailHtml(kvOrder)})});
+                        addMailLog("Báo Hết Node", kvOrder.email, kvOrder.id);
+                    }
+                } else {
+                    let prefix = kvOrder.email ? kvOrder.email.split('@')[0] : "Khach";
+                    let idx = linksDb.filter(x => x.orig === node.url).length + 1;
+                    let qs = `?token=${genHex(32)}`;
+                    if(node.url.includes("liangxin")) qs = `?OwO=${genHex(32)}`;
+                    let masked = PD + (node.url.includes("liangxin") ? "/v1/VPNTrinhHg" : "/v2/VPNTrinhHg") + qs + "#VPNTrinhHg";
+
+                    linksDb.unshift({
+                        id: "LNK-" + Date.now() + Math.floor(Math.random()*1000),
+                        orig: node.url,
+                        masked: masked,
+                        email: prefix,
+                        expDate: kvOrder.expDate || "",
+                        linkIndex: String(idx),
+                        isLocked: false,
+                        date: getNowStr()
+                    });
+                    
+                    // Tính lại để update UI
+                    node.used++;
+                    kvOrder.info1 = masked;
+                    kvOrder.status = "success";
+                    
+                    if(kvOrder.email && isMailMaster()) {
+                        fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:kvOrder.email,subject:"VPN Trinh Hg - Kích hoạt thành công",html:buildSuccessMailHtml(kvOrder)})});
+                        addMailLog("Kích hoạt thành công (Auto)", kvOrder.email, kvOrder.id);
+                    }
                 }
+                
+                // LƯU NGAY LẬP TỨC TỪNG ĐƠN ĐỂ TRÁNH MẤT DATA DO BATCH (PHASE 6)
+                await apP("/api/orders", ordersDb);
+                await apP("/api/links", linksDb);
+                await apP("/api/link_pool", linkPoolDb);
+                renderOrd(); renderLinks();
+
+                // GỬI LỆNH ĐÓNG HỒ SƠ ĐƠN NÀY LÊN D1 LUÔN
+                await fetch(`${webhookUrl}/api/admin/mark_fulfilled`, {
+                    method: "POST",
+                    headers: { 'Authorization': 'Bearer ' + webhookSecret, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderIds: [o.order_id], upgradeIds: [] })
+                });
+
+                addSysLog("AutoFulfillment", `Cấp Link thành công cho đơn ${o.order_id}`);
+
+            } catch(e) {
+                // PHASE 7: LOG LỖI TỪNG ĐƠN, ĐÉO NUỐT IM ỈM NỮA
+                console.error("Lỗi cấp link đơn", o.order_id, e);
+                addSysLog("Fulfillment Lỗi", `Đơn ${o.order_id}: ${e.message}`);
             }
-            kvChanged = true;
-            fulfilledOrders.push(o.order_id);
         }
 
-        if(kvChanged) {
-            await apP("/api/orders", ordersDb);
-            await apP("/api/links", linksDb);
-            await apP("/api/link_pool", linkPoolDb);
-            renderOrd(); renderLinks();
-        }
+        // ============================================
+        // 2. XỬ LÝ UPGRADE (NÂNG GÓI)
+        // ============================================
+        for(const upg of data.upgrades || []) {
+            try {
+                const claimRes = await fetch(`${webhookUrl}/api/admin/claim_fulfillment`, {
+                    method: "POST",
+                    headers: { 'Authorization': 'Bearer ' + webhookSecret, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ upgradeId: upg.id })
+                });
+                if(claimRes.status === 409 || claimRes.status === 400) continue; 
 
-        if(fulfilledOrders.length > 0 || fulfilledUpgrades.length > 0) {
-            await fetch(`${webhookUrl}/api/admin/mark_fulfilled`, {
-                method: "POST",
-                headers: { 'Authorization': 'Bearer ' + webhookSecret, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderIds: fulfilledOrders, upgradeIds: fulfilledUpgrades })
-            });
+                let kvOrder = ordersDb.find(x => x.id.replace(/-/g,'') === upg.order_id.replace(/-/g,''));
+                if(kvOrder) {
+                    kvOrder.totalVnd = upg.target_price_vnd;
+                    let catalogPkgIndex = PKGS.findIndex(p => p.includes(upg.target_price_vnd.toLocaleString()));
+                    if(catalogPkgIndex !== -1) {
+                        kvOrder.pkg = PKGS[catalogPkgIndex];
+                        kvOrder.pkgName = kvOrder.pkg.split(" - ")[0];
+                    } else {
+                        kvOrder.pkgName = upg.target_package_id;
+                    }
+                    delete kvOrder.pendingUpgrade;
+
+                    await apP("/api/orders", ordersDb);
+                    renderOrd();
+
+                    if(kvOrder.email && isMailMaster()) {
+                        fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:kvOrder.email,subject:"VPN Trinh Hg - Nâng cấp thành công",html:buildSuccessMailHtml(kvOrder)})});
+                        addMailLog("Nâng cấp thành công", kvOrder.email, kvOrder.id);
+                    }
+                }
+
+                await fetch(`${webhookUrl}/api/admin/mark_fulfilled`, {
+                    method: "POST",
+                    headers: { 'Authorization': 'Bearer ' + webhookSecret, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderIds: [], upgradeIds: [upg.id] })
+                });
+
+                addSysLog("AutoFulfillment", `Nâng cấp thành công cho đơn ${upg.order_id}`);
+
+            } catch(e) {
+                console.error("Lỗi cấp Upgrade", upg.id, e);
+                addSysLog("Upgrade Lỗi", `Upgrade ID ${upg.id}: ${e.message}`);
+            }
         }
-  } catch (e) {}
+  } catch (error) {
+      console.error("Fulfillment API Error:", error);
+  } finally {
+      isProcessingFulfillment = false;
+  }
 }
 
 function doLogout(){
@@ -1188,6 +1246,10 @@ async function approveTransaction(txId, orderId) {
   oid = prompt("Nhập chính xác Mã Đơn Hàng (DHXXXXXXXXXX) muốn chốt cho giao dịch này:");
   if (!oid) return;
  }
+ 
+ // ÉP UPERCASE VÀ XÓA DẤU GẠCH NẾU THẰNG ADMIN NHẬP LỆCH
+ oid = oid.trim().toUpperCase().replace(/-/g, "");
+
  toast("Đang nã lệnh duyệt...");
  try {
   const webhookUrl = (cmsDb.settings && cmsDb.settings.d1Url) ? cmsDb.settings.d1Url.replace(/\/$/, '') : API;
@@ -1195,7 +1257,7 @@ async function approveTransaction(txId, orderId) {
   
   const res = await fetch(`${webhookUrl}/api/admin/reviews/${txId}/approve`, {
       method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + webhookSecret },
-      body: JSON.stringify({ orderId: oid.trim(), note: "Duyệt tay qua Admin UI" })
+      body: JSON.stringify({ orderId: oid, note: "Duyệt tay qua Admin UI" })
   });
   const result = await res.json();
   if(res.ok) {
@@ -1834,7 +1896,7 @@ async function rebuildOneMAP(id){
  const l=linksDb.find(x=>x.id===id);if(!l) return;toast("Đang rebuild 1 link...");
  try{
    const r=await fetch(API+"/api/links",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(linksDb)});
-   if(r.ok){if(l.isLocked) await fetch(API+"/api/lock",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:getT(l.masked),action:"lock"})}).catch(()=>{});toast("Xong!");}
+  if(r.ok){if(l.isLocked) await fetch(API+"/api/lock",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:getT(l.masked),action:"lock"})}).catch(()=>{});toast("Xong!");}
    else toast("Lỗi HTTP "+r.status,"err");
  }catch(e){toast("Lỗi mạng: "+e.message,"err");}
 }
@@ -1874,8 +1936,8 @@ function parseShortcodes(text){
  if(!text) return "";
  const lines=text.split("\n");let html="",n=1;
  for(let line of lines){
-   line=line.trim();if(!line) continue;
-   if(line.startsWith("[HEADER]")){html+=`<div style="background:linear-gradient(90deg,#4f46e5,#8b5cf6);display:inline-block;color:#fff;padding:8px 16px;border-radius:8px;font-weight:800;margin-bottom:12px;box-shadow:0 4px 10px rgba(79,70,229,0.3)"><i class="fas fa-star" style="margin-right:8px;"></i>${line.substring(8).trim()}</div>\n`;n=1;}
+  line=line.trim();if(!line) continue;
+  if(line.startsWith("[HEADER]")){html+=`<div style="background:linear-gradient(90deg,#4f46e5,#8b5cf6);display:inline-block;color:#fff;padding:8px 16px;border-radius:8px;font-weight:800;margin-bottom:12px;box-shadow:0 4px 10px rgba(79,70,229,0.3)"><i class="fas fa-star" style="margin-right:8px;"></i>${line.substring(8).trim()}</div>\n`;n=1;}
    else if(line.startsWith("[SUB]")) html+=`<div style="display:inline-block;background:#e0e7ff;border-left:4px solid #4f46e5;padding:6px 12px;border-radius:4px;margin-top:15px;margin-bottom:10px"><h3 style="font-size:14px;font-weight:800;color:#3730a3;margin:0">${line.substring(5).trim()}</h3></div>\n`;
    else if(line.startsWith("[STEP]")){html+=`<div style="display:flex;gap:8px;margin-bottom:10px;align-items:flex-start"><span style="background:#4f46e5;color:white;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:11px;font-weight:bold;flex-shrink:0">${n++}</span><p style="margin:0;color:#334155;line-height:20px">${line.substring(6).trim()}</p></div>\n`;}
    else if(line.startsWith("[NOTE]")) html+=`<div style="display:inline-block;max-width:100%;background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;padding:8px 12px;border-radius:6px;margin:10px 0"><p style="margin:0;color:#92400e;line-height:1.5"><b>⚠️ LƯU Ý:</b> ${line.substring(6).trim()}</p></div>\n`;
