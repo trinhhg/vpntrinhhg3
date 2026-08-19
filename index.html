@@ -1,3 +1,4 @@
+<!-- v1.3 - Cập nhật Icon MXH, Bouncing Bubbles Footer, Tag Lọc QR Chưa Thanh Toán - 2026-08-19 -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -5,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>VPN Trinh Hg - Tốc độ & Bảo mật</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap');
 body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc;color:#0f172a;overflow-x:hidden;}
@@ -45,8 +46,8 @@ details>summary::-webkit-details-marker{display:none;}
 .bg-discord { background: linear-gradient(135deg, #5865F2, #7289DA); }
 .bg-tiktok { background: linear-gradient(135deg, #FE2C55, #25F4EE); } 
 .bg-insta { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
-.bg-x { background: #0f1419; box-shadow: inset 0 0 15px rgba(255,255,255,0.2), 0 4px 10px rgba(0,0,0,0.3); border: 1px solid #333;}
-.bg-threads { background: #000000; box-shadow: inset 0 0 10px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); border: 1px solid #444;}
+.bg-x { background: #000000; box-shadow: inset 0 0 15px rgba(255,255,255,0.2), 0 4px 10px rgba(0,0,0,0.3); border: 1px solid #333; color: #ffffff !important;}
+.bg-threads { background: #000000; box-shadow: inset 0 0 10px rgba(255,255,255,0.15), 0 4px 10px rgba(0,0,0,0.3); border: 1px solid #444; color: #ffffff !important;}
 .bg-youtube { background: linear-gradient(135deg, #FF0000, #c40000); }
 .bg-reddit { background: linear-gradient(135deg, #FF4500, #d13600); }
 </style>
@@ -73,8 +74,8 @@ details>summary::-webkit-details-marker{display:none;}
       <div id="searchAndTabsWrapper" class="flex w-full items-center justify-center max-w-2xl gap-4">
         <div class="flex-1 relative shadow-sm">
           <input type="text" id="loginInput" onkeyup="if(event.key==='Enter')login()"
-           class="w-full bg-white border-2 border-indigo-100 rounded-full pl-5 pr-12 py-2.5 text-sm outline-none font-bold text-slate-700 focus:border-indigo-400 transition"
-           placeholder="Nhập Mã Đơn hoặc Email..." data-i18n-placeholder="search_placeholder">
+          class="w-full bg-white border-2 border-indigo-100 rounded-full pl-5 pr-12 py-2.5 text-sm outline-none font-bold text-slate-700 focus:border-indigo-400 transition"
+          placeholder="Nhập Mã Đơn hoặc Email..." data-i18n-placeholder="search_placeholder">
           <button onclick="login()" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 bg-indigo-600 rounded-full text-white hover:bg-indigo-700 flex items-center justify-center"><i class="fas fa-search text-xs"></i></button>
         </div>
         <div id="desktopPortalNav" class="max-md:hidden hidden items-center gap-2 shrink-0 opacity-0 w-0 overflow-hidden whitespace-nowrap transition-all duration-500">
@@ -161,41 +162,41 @@ details>summary::-webkit-details-marker{display:none;}
             <div class="flex items-center gap-2 min-w-0 flex-1 overflow-hidden mt-1">
               <span class="bg-slate-100 text-slate-500 font-bold px-2 py-1 rounded text-[10px] md:text-xs shrink-0" data-i18n="order_id_label">Mã đơn</span>
               <span class="font-mono font-extrabold text-indigo-600 text-[10px] md:text-sm truncate" id="displayOrderId"></span>
-           </div>
+            </div>
             <button id="btnRequestData" onclick="requestDataCheck()" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold px-2.5 md:px-4 py-2 rounded-lg text-[10px] md:text-sm hover:scale-105 transition shadow-md flex items-center shrink-0 btn-heartbeat outline-none whitespace-nowrap mt-1">
               <i class="fas fa-chart-pie mr-1 md:mr-1.5"></i><span data-i18n="btn_check_data">Kiểm tra dung lượng</span>
-           </button>
+            </button>
           </div>
           
           <div class="bg-green-50 border-2 border-dashed border-green-500 p-4 md:p-6 rounded-2xl w-full space-y-4">
             <div class="w-full">
               <h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL:</h3>
               <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
-               <input type="text" id="subLink1" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
-               <button onclick="copyToClipboard('subLink1',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center"><i class="fas fa-copy mr-1"></i>COPY</button>
-             </div>
-           </div>
+                <input type="text" id="subLink1" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+                <button onclick="copyToClipboard('subLink1',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center"><i class="fas fa-copy mr-1"></i>COPY</button>
+              </div>
+            </div>
             
             <div id="subLink2Wrap" class="w-full">
               <h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL dự phòng 2:</h3>
               <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
-               <input type="text" id="subLink2" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
-               <button onclick="copyToClipboard('subLink2',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center"><i class="fas fa-copy mr-1"></i>COPY</button>
-             </div>
-           </div>
+                <input type="text" id="subLink2" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+                <button onclick="copyToClipboard('subLink2',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center"><i class="fas fa-copy mr-1"></i>COPY</button>
+              </div>
+            </div>
 
             <div id="subLink3Wrap" class="w-full">
               <h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL dự phòng 3:</h3>
               <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
-               <input type="text" id="subLink3" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
-               <button onclick="copyToClipboard('subLink3',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center"><i class="fas fa-copy mr-1"></i>COPY</button>
-             </div>
-           </div>
+                <input type="text" id="subLink3" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+                <button onclick="copyToClipboard('subLink3',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center"><i class="fas fa-copy mr-1"></i>COPY</button>
+              </div>
+            </div>
 
             <div class="mt-4 grid grid-cols-2 gap-3 border-t border-green-200 pt-4">
-             <button onclick="startUpgrade()" class="w-full bg-amber-500 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-amber-600 transition flex items-center justify-center shadow-md"><i class="fas fa-arrow-up mr-1.5"></i> NÂNG GÓI</button>
-             <button onclick="disableUpgradeMode(); switchPortalTab('p-store');" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center shadow-md"><i class="fas fa-redo-alt mr-1.5"></i> GIA HẠN</button>
-           </div>
+              <button onclick="startUpgrade()" class="w-full bg-amber-500 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-amber-600 transition flex items-center justify-center shadow-md"><i class="fas fa-arrow-up mr-1.5"></i> NÂNG GÓI</button>
+              <button onclick="disableUpgradeMode(); switchPortalTab('p-store');" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center shadow-md"><i class="fas fa-redo-alt mr-1.5"></i> GIA HẠN</button>
+            </div>
           </div>
         </div>
 
@@ -215,7 +216,7 @@ details>summary::-webkit-details-marker{display:none;}
         <i class="fas fa-rocket text-6xl opacity-80 hidden md:block"></i>
       </div>
       <div class="flex justify-start md:justify-center gap-2 mb-6 bg-white p-1.5 rounded-xl w-full md:w-fit mx-auto border border-slate-100 shadow-sm overflow-x-auto flex-nowrap pkg-filters">
-        <button onclick="renderPackages('all')"  id="ptab-all"  class="tab-btn active text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_all">Tất cả</button>
+        <button onclick="renderPackages('all')" id="ptab-all" class="tab-btn active text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_all">Tất cả</button>
         <button onclick="renderPackages('travel')" id="ptab-travel" class="tab-btn text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_travel">Du lịch</button>
         <button onclick="renderPackages('cycle')" id="ptab-cycle" class="tab-btn text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_cycle">Chu kỳ</button>
         <button onclick="renderPackages('usage')" id="ptab-usage" class="tab-btn text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_usage">Dung lượng</button>
@@ -231,7 +232,7 @@ details>summary::-webkit-details-marker{display:none;}
           <button onclick="showGuide('android')" id="btn-dev-android" class="dev-btn bg-white border border-slate-200 px-5 py-2.5 rounded-xl font-bold flex items-center text-xs md:text-sm shadow-sm hover:bg-slate-50 transition"><i class="fab fa-android text-green-500 text-lg mr-2"></i>Android</button>
           <button onclick="showGuide('windows')" id="btn-dev-windows" class="dev-btn bg-white border border-slate-200 px-5 py-2.5 rounded-xl font-bold flex items-center text-xs md:text-sm shadow-sm hover:bg-slate-50 transition"><i class="fab fa-windows text-blue-500 text-lg mr-2"></i>Windows</button>
           <button onclick="showGuide('macos')" id="btn-dev-macos" class="dev-btn bg-white border border-slate-200 px-5 py-2.5 rounded-xl font-bold flex items-center text-xs md:text-sm shadow-sm hover:bg-slate-50 transition"><i class="fab fa-apple text-slate-800 text-lg mr-2"></i>MacOS</button>
-          <button onclick="showGuide('ios')"   id="btn-dev-ios"   class="dev-btn bg-white border border-slate-200 px-5 py-2.5 rounded-xl font-bold flex items-center text-xs md:text-sm shadow-sm hover:bg-slate-50 transition"><i class="fab fa-app-store-ios text-blue-400 text-lg mr-2"></i>iOS</button>
+          <button onclick="showGuide('ios')"  id="btn-dev-ios"  class="dev-btn bg-white border border-slate-200 px-5 py-2.5 rounded-xl font-bold flex items-center text-xs md:text-sm shadow-sm hover:bg-slate-50 transition"><i class="fab fa-app-store-ios text-blue-400 text-lg mr-2"></i>iOS</button>
         </div>
         <div id="guideContent" class="hidden overflow-x-auto w-full">
           <div id="guideText" class="text-sm text-slate-800 leading-relaxed font-medium"></div>
@@ -250,16 +251,17 @@ details>summary::-webkit-details-marker{display:none;}
       
       <!-- Dock Icon Xịn Xò -->
       <div class="dock-container mt-6 mb-8">
-        <a href="#" class="dock-icon bg-fb"><i class="fab fa-facebook-f"></i></a>
-        <a href="#" class="dock-icon bg-mess"><i class="fab fa-facebook-messenger"></i></a>
-        <a href="#" class="dock-icon bg-tele"><i class="fab fa-telegram-plane"></i></a>
-        <a href="#" class="dock-icon bg-wa"><i class="fab fa-whatsapp"></i></a>
-        <a href="#" class="dock-icon bg-discord"><i class="fab fa-discord"></i></a>
-        <a href="#" class="dock-icon bg-tiktok"><i class="fab fa-tiktok"></i></a>
-        <a href="#" class="dock-icon bg-insta"><i class="fab fa-instagram"></i></a>
-        <a href="#" class="dock-icon bg-x"><i class="fab fa-x-twitter"></i></a>
-        <a href="#" class="dock-icon bg-youtube"><i class="fab fa-youtube"></i></a>
-        <a href="#" class="dock-icon bg-reddit"><i class="fab fa-reddit-alien"></i></a>
+        <a href="https://www.facebook.com/" target="_blank" class="dock-icon bg-fb"><i class="fab fa-facebook-f"></i></a>
+        <a href="https://messenger.com/" target="_blank" class="dock-icon bg-mess"><i class="fab fa-facebook-messenger"></i></a>
+        <a href="https://telegram.org/" target="_blank" class="dock-icon bg-tele"><i class="fab fa-telegram-plane"></i></a>
+        <a href="https://whatsapp.com/" target="_blank" class="dock-icon bg-wa"><i class="fab fa-whatsapp"></i></a>
+        <a href="https://discord.com/" target="_blank" class="dock-icon bg-discord"><i class="fab fa-discord"></i></a>
+        <a href="https://tiktok.com/" target="_blank" class="dock-icon bg-tiktok"><i class="fab fa-tiktok"></i></a>
+        <a href="https://instagram.com/" target="_blank" class="dock-icon bg-insta"><i class="fab fa-instagram"></i></a>
+        <a href="https://twitter.com/" target="_blank" class="dock-icon bg-x"><i class="fab fa-x-twitter"></i></a>
+        <a href="https://threads.net/" target="_blank" class="dock-icon bg-threads"><i class="fab fa-threads"></i></a>
+        <a href="https://youtube.com/" target="_blank" class="dock-icon bg-youtube"><i class="fab fa-youtube"></i></a>
+        <a href="https://reddit.com/" target="_blank" class="dock-icon bg-reddit"><i class="fab fa-reddit-alien"></i></a>
       </div>
 
     </div>
@@ -270,7 +272,7 @@ details>summary::-webkit-details-marker{display:none;}
       <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center"><i class="fas fa-laptop-house text-2xl md:text-3xl text-indigo-500 mb-2"></i><h4 class="font-bold text-xs md:text-sm" data-i18n="feat_4">Đa hệ điều hành</h4></div>
     </div>
     <div class="flex justify-start md:justify-center gap-2 mb-6 bg-white p-1.5 rounded-xl w-full md:w-fit mx-auto border border-slate-100 shadow-sm overflow-x-auto flex-nowrap pkg-filters">
-      <button onclick="renderPackages('all')"  id="htab-all"  class="tab-btn active text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap shrink-0" data-i18n="tab_all">Tất cả</button>
+      <button onclick="renderPackages('all')" id="htab-all" class="tab-btn active text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap shrink-0" data-i18n="tab_all">Tất cả</button>
       <button onclick="renderPackages('travel')" id="htab-travel" class="tab-btn text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap shrink-0" data-i18n="tab_travel">Du lịch</button>
       <button onclick="renderPackages('cycle')" id="htab-cycle" class="tab-btn text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap shrink-0" data-i18n="tab_cycle">Chu kỳ</button>
       <button onclick="renderPackages('usage')" id="htab-usage" class="tab-btn text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap shrink-0" data-i18n="tab_usage">Dung lượng</button>
@@ -296,7 +298,7 @@ details>summary::-webkit-details-marker{display:none;}
            </div>
             <label class="block font-bold text-xs text-slate-700 mb-2">Phương thức thanh toán:</label>
             <div class="grid grid-cols-4 gap-2 mb-4">
-             <button type="button" onclick="selectPayMethod('bank')"  id="pay-btn-bank"  class="col-span-2 pay-btn active bg-indigo-50 border-indigo-500 text-indigo-700 border-2 font-bold py-2.5 rounded-xl flex flex-col items-center gap-1 text-xs shadow-sm"><i class="fas fa-university text-xl"></i>Ngân hàng VN</button>
+             <button type="button" onclick="selectPayMethod('bank')" id="pay-btn-bank" class="col-span-2 pay-btn active bg-indigo-50 border-indigo-500 text-indigo-700 border-2 font-bold py-2.5 rounded-xl flex flex-col items-center gap-1 text-xs shadow-sm"><i class="fas fa-university text-xl"></i>Ngân hàng VN</button>
              <button type="button" onclick="selectPayMethod('alipay')" id="pay-btn-alipay" class="col-span-1 pay-btn bg-white border-slate-200 text-slate-600 border-2 font-bold py-2.5 rounded-xl flex flex-col items-center gap-1 text-xs shadow-sm hover:bg-slate-50"><i class="fab fa-alipay text-xl text-blue-500"></i>Alipay</button>
              <button type="button" onclick="selectPayMethod('wechat')" id="pay-btn-wechat" class="col-span-1 pay-btn bg-white border-slate-200 text-slate-600 border-2 font-bold py-2.5 rounded-xl flex flex-col items-center gap-1 text-xs shadow-sm hover:bg-slate-50"><i class="fab fa-weixin text-xl text-green-500"></i>Weixin</button>
            </div>
@@ -371,90 +373,108 @@ function disableUpgradeMode() {
     baseOrderPriceVnd = 0;
     baseOrderPriceUsd = 0;
     baseOrderPriceCny = 0;
-    renderPackages('all');
+   renderPackages('all');
 }
 
 window.addEventListener('scroll',()=>{
   const nav=document.getElementById('mainNav');
-  if(window.scrollY>lastScrollY&&window.scrollY>80)nav.classList.add('nav-hidden');
+ if(window.scrollY>lastScrollY&&window.scrollY>80)nav.classList.add('nav-hidden');
   else nav.classList.remove('nav-hidden');
-  lastScrollY=window.scrollY;
+ lastScrollY=window.scrollY;
 });
-const obs=new IntersectionObserver(es=>es.forEach(e=>{const s=document.getElementById('floatingSocials');e.isIntersecting?s.classList.add('opacity-0','pointer-events-none','translate-y-10'):s.classList.remove('opacity-0','pointer-events-none','translate-y-10');}),{threshold:.1});
+
+// === CHỈNH SỬA INTERSECTION OBSERVER CHẮC CHẮN ẨN BONG BÓNG ===
+const obs=new IntersectionObserver(entries => {
+    entries.forEach(e => {
+        const s = document.getElementById('floatingSocials');
+        if(!s) return;
+        if(e.isIntersecting){
+            // Kéo xuống thấy footer -> Ẩn bằng css inline đè Tailwind
+            s.style.opacity = '0';
+            s.style.pointerEvents = 'none';
+            s.style.transform = 'translateY(20px)';
+        } else {
+            // Cuộn lên -> Hiện lại
+            s.style.opacity = '1';
+            s.style.pointerEvents = 'auto';
+            s.style.transform = 'translateY(0)';
+        }
+    });
+}, { threshold: 0.1 });
 
 // ── i18n ──
 const i18n={
   vi:{brand:"VPN Trinh Hg",search_placeholder:"Nhập Mã Đơn hoặc Email...",btn_logout:"Thoát",
-     tab_p_home:"Trang chủ",tab_p_store:"Cửa hàng",tab_p_guide:"Hướng dẫn",
-     pending_title:"Đơn hàng đang chờ Admin duyệt",btn_copy:"COPY LINK",btn_renew:"GIA HẠN",
-     btn_watch_guide:"Chưa biết sử dụng? Xem hướng dẫn ngay!",
-     order_id_label:"Mã Đơn",pkg_name_label:"Gói",exp_date_label:"Ngày Hết Hạn",time_left_label:"Còn Lại",
-     hero_title:"Vượt rào cản. <span class='text-indigo-600'>Kết nối thế giới.</span>",
-     hero_desc:"Trải nghiệm VPN chất lượng cao từ ba nhà mạng viễn thông lớn.",
+    tab_p_home:"Trang chủ",tab_p_store:"Cửa hàng",tab_p_guide:"Hướng dẫn",
+    pending_title:"Đơn hàng đang chờ Admin duyệt",btn_copy:"COPY LINK",btn_renew:"GIA HẠN",
+    btn_watch_guide:"Chưa biết sử dụng? Xem hướng dẫn ngay!",
+    order_id_label:"Mã Đơn",pkg_name_label:"Gói",exp_date_label:"Ngày Hết Hạn",time_left_label:"Còn Lại",
+    hero_title:"Vượt rào cản. <span class='text-indigo-600'>Kết nối thế giới.</span>",
+    hero_desc:"Trải nghiệm VPN chất lượng cao từ ba nhà mạng viễn thông lớn.",
      feat_1:"Mở khóa mọi Nền tảng",feat_2:"Ping thấp, Tối ưu Game",feat_3:"Không lưu Nhật ký",feat_4:"Đa hệ điều hành",
      tab_all:"Tất cả",tab_travel:"Du lịch",tab_cycle:"Chu kỳ",tab_usage:"Dung lượng",
-     checkout_title:"Thanh toán Đơn hàng",email_placeholder:"Nhập Email nhận đơn",
-     btn_create_order:"TẠO MÃ QR CHUYỂN KHOẢN",btn_paid:"TÔI ĐÃ CHUYỂN KHOẢN",
-     month_lbl:"Tháng",choose_dur:"Chọn thời gian:",
-     email_warning:"Vui lòng nhập đúng Email vì chúng tôi sẽ gửi mail kích hoạt.",
-     header_contact:"Cần test app nào? Liên hệ Admin qua Messenger hoặc Zalo",
-     guide_title:"Hướng dẫn Thanh toán",guide_desc:"Điền Email, chọn thời gian & phương thức, sau đó tạo đơn để lấy mã QR.",
-     guide_empty:"<p class='text-center py-8 text-slate-400'>Đang cập nhật hướng dẫn...</p>",
-     promo_title:"🚀 Chơi Game & Lướt Mạng Không Giới Hạn!",
-     promo_desc:"Hỗ trợ: <b class='text-yellow-300'>TikTok, Facebook, Messenger, Instagram, Zalo, YouTube...</b><br>Ping thấp: <b class='text-green-300'>Liên Quân Mobile, Genshin Impact...</b>",
+    checkout_title:"Thanh toán Đơn hàng",email_placeholder:"Nhập Email nhận đơn",
+    btn_create_order:"TẠO MÃ QR CHUYỂN KHOẢN",btn_paid:"TÔI ĐÃ CHUYỂN KHOẢN",
+    month_lbl:"Tháng",choose_dur:"Chọn thời gian:",
+    email_warning:"Vui lòng nhập đúng Email — mail kích hoạt sẽ gửi về đây.",
+    header_contact:"Cần test app nào? Liên hệ Admin qua Messenger hoặc Zalo",
+    guide_title:"Hướng dẫn Thanh toán",guide_desc:"Điền Email, chọn thời gian & phương thức, sau đó tạo đơn để lấy mã QR.",
+    guide_empty:"<p class='text-center py-8 text-slate-400'>Đang cập nhật hướng dẫn...</p>",
+    promo_title:"🚀 Chơi Game & Lướt Mạng Không Giới Hạn!",
+    promo_desc:"Hỗ trợ: <b class='text-yellow-300'>TikTok, Facebook, Messenger, Instagram, Zalo, YouTube...</b><br>Ping thấp: <b class='text-green-300'>Liên Quân Mobile, Genshin Impact...</b>",
      data_label:"Dung lượng:",dev_label:"Không giới hạn thiết bị",speed_label:"Băng thông > 100Gbps",
      btn_buy:"Đăng ký Gói Này",btn_contact:"Liên hệ Admin",
      copy_memo:"Nội dung chuyển khoản:",copy_amount:"Số tiền:",need_support:"Cần Hỗ trợ Cài đặt (Zalo/Tele)",
-     faq_title:"Câu hỏi thường gặp (FAQ)",
+    faq_title:"Câu hỏi thường gặp (FAQ)",
      faq_1_q:"Làm sao lấy Link cài đặt?",faq_1_a:"Nhập Mã Đơn hoặc Email vào thanh tìm kiếm trên cùng.",
      faq_2_q:"VPN hỗ trợ những app nào?",faq_2_a:"TikTok, Facebook, Messenger, Instagram, Telegram, Zalo, YouTube... Nhắn Admin để test.",
      faq_3_q:"Có những phương thức thanh toán nào?",faq_3_a:"Ngân hàng VN (VietQR), Alipay, Weixin.",
      faq_4_q:"Đổi máy có dùng tiếp được không?",faq_4_a:"Có. Tra cứu lại Mã Đơn trên web.",
-     status_pending:"Chờ duyệt",status_success:"Thành công",status_failed:"Từ chối",lifetime_lbl:"Vĩnh viễn",days_lbl:" Ngày",expired_lbl:"Đã hết hạn",
-     btn_check_data:"Kiểm tra dung lượng"},
+    status_pending:"Chờ duyệt",status_success:"Thành công",status_failed:"Từ chối",lifetime_lbl:"Vĩnh viễn",days_lbl:" Ngày",expired_lbl:"Đã hết hạn",
+    btn_check_data:"Kiểm tra dung lượng"},
   en:{brand:"VPN Trinh Hg",search_placeholder:"Order ID or Email...",btn_logout:"Exit",
-     tab_p_home:"Home",tab_p_store:"Store",tab_p_guide:"Guide",
-     pending_title:"Order pending approval",btn_copy:"COPY URL",btn_renew:"RENEW",
-     btn_watch_guide:"Don't know how? Read the guide now!",
-     order_id_label:"Order ID",pkg_name_label:"Plan",exp_date_label:"Exp. Date",time_left_label:"Remaining",
-     hero_title:"Break barriers. <span class='text-indigo-600'>Connect the world.</span>",
-     hero_desc:"Premium VPN experience with unlimited bandwidth.",
-     feat_1:"Unblock everything",feat_2:"Low Ping Gaming",feat_3:"No-log Policy",feat_4:"Multi-OS",
-     tab_all:"All",tab_travel:"Travel",tab_cycle:"Cycle",tab_usage:"Data",
-     checkout_title:"Checkout",email_placeholder:"Enter your Email",
-     btn_create_order:"CREATE PAYMENT QR",btn_paid:"I HAVE PAID",
-     month_lbl:"Months",choose_dur:"Duration:",
-     email_warning:"Please enter a valid Email. Activation link will be sent here.",
-     header_contact:"Want to test an app? Contact Admin via Messenger or Zalo",
-     guide_title:"Payment Instructions",guide_desc:"Fill Email, choose duration & method, then create order.",
-     guide_empty:"<p class='text-center py-8 text-slate-400'>Guide updating...</p>",
-     promo_title:"🚀 Unlimited Gaming & Browsing!",
-     promo_desc:"Smooth: <b class='text-yellow-300'>TikTok, Facebook, Messenger, Instagram, Zalo, YouTube...</b><br>Low ping: <b class='text-green-300'>Arena of Valor, Genshin Impact...</b>",
-     data_label:"Data:",dev_label:"Unlimited devices",speed_label:"Speed > 100Gbps",
-     btn_buy:"Subscribe Now",btn_contact:"Contact Admin",
-     copy_memo:"Transfer Memo:",copy_amount:"Amount:",need_support:"Need Setup Support",
-     faq_title:"FAQ",faq_1_q:"Where is the setup guide?",faq_1_a:"Enter Order ID in the search bar above.",
-     faq_2_q:"What apps does VPN support?",faq_2_a:"TikTok, Facebook, Messenger, Instagram, Telegram, Zalo, YouTube...",
-     faq_3_q:"Payment methods?",faq_3_a:"Vietnam Bank, Alipay, Weixin.",
+    tab_p_home:"Home",tab_p_store:"Store",tab_p_guide:"Guide",
+    pending_title:"Order pending approval",btn_copy:"COPY URL",btn_renew:"RENEW",
+    btn_watch_guide:"Don't know how? Read the guide now!",
+    order_id_label:"Order ID",pkg_name_label:"Plan",exp_date_label:"Exp. Date",time_left_label:"Remaining",
+    hero_title:"Break barriers. <span class='text-indigo-600'>Connect the world.</span>",
+    hero_desc:"Premium VPN experience with unlimited bandwidth.",
+    feat_1:"Unblock everything",feat_2:"Low Ping Gaming",feat_3:"No-log Policy",feat_4:"Multi-OS",
+    tab_all:"All",tab_travel:"Travel",tab_cycle:"Cycle",tab_usage:"Data",
+    checkout_title:"Checkout",email_placeholder:"Enter your Email",
+    btn_create_order:"CREATE PAYMENT QR",btn_paid:"I HAVE PAID",
+    month_lbl:"Months",choose_dur:"Duration:",
+    email_warning:"Please enter a valid Email. Activation link will be sent here.",
+    header_contact:"Want to test an app? Contact Admin via Messenger or Zalo",
+    guide_title:"Payment Instructions",guide_desc:"Fill Email, choose duration & method, then create order.",
+    guide_empty:"<p class='text-center py-8 text-slate-400'>Guide updating...</p>",
+    promo_title:"🚀 Unlimited Gaming & Browsing!",
+    promo_desc:"Smooth: <b class='text-yellow-300'>TikTok, Facebook, Messenger, Instagram, Zalo, YouTube...</b><br>Low ping: <b class='text-green-300'>Arena of Valor, Genshin Impact...</b>",
+    data_label:"Data:",dev_label:"Unlimited devices",speed_label:"Speed > 100Gbps",
+    btn_buy:"Subscribe Now",btn_contact:"Contact Admin",
+    copy_memo:"Transfer Memo:",copy_amount:"Amount:",need_support:"Need Setup Support",
+    faq_title:"FAQ",faq_1_q:"Where is the setup guide?",faq_1_a:"Enter Order ID in the search bar above.",
+    faq_2_q:"What apps does VPN support?",faq_2_a:"TikTok, Facebook, Messenger, Instagram, Telegram, Zalo, YouTube...",
+    faq_3_q:"Payment methods?",faq_3_a:"Vietnam Bank, Alipay, Weixin.",
      faq_4_q:"Can I change my device?",faq_4_a:"Yes. Re-enter your Order ID to get the config link.",
-     status_pending:"Pending",status_success:"Active",status_failed:"Rejected",lifetime_lbl:"Lifetime",days_lbl:" Days",expired_lbl:"Expired",
-     btn_check_data:"Check Data Usage"},
+    status_pending:"Pending",status_success:"Active",status_failed:"Rejected",lifetime_lbl:"Lifetime",days_lbl:" Days",expired_lbl:"Expired",
+    btn_check_data:"Check Data Usage"},
   zh:{brand:"VPN Trinh Hg",search_placeholder:"输入订单号或邮箱...",btn_logout:"退出",
      tab_p_home:"主页",tab_p_store:"商店",tab_p_guide:"指南",
-     pending_title:"订单处理中",btn_copy:"复制链接",btn_renew:"续费",
-     btn_watch_guide:"不知如何使用？立即查看指南！",
-     order_id_label:"订单号",pkg_name_label:"套餐",exp_date_label:"到期日期",time_left_label:"剩余",
+    pending_title:"订单处理中",btn_copy:"复制链接",btn_renew:"续费",
+    btn_watch_guide:"不知如何使用？立即查看指南！",
+    order_id_label:"订单号",pkg_name_label:"套餐",exp_date_label:"到期日期",time_left_label:"剩余",
      hero_title:"突破界限。<span class='text-indigo-600'>连接世界。</span>",hero_desc:"体验优质VPN，不限带宽。",
      feat_1:"解锁所有平台",feat_2:"低延迟游戏",feat_3:"无日志记录",feat_4:"多操作系统",
      tab_all:"全部",tab_travel:"旅游",tab_cycle:"周期",tab_usage:"流量",
-     checkout_title:"结账",email_placeholder:"输入您的邮箱",
-     btn_create_order:"创建支付二维码",btn_paid:"我已付款",
+    checkout_title:"结账",email_placeholder:"输入您的邮箱",
+    btn_create_order:"创建支付二维码",btn_paid:"我已付款",
      month_lbl:"个月",choose_dur:"选择时长：",
-     email_warning:"请输入有效邮箱，激活链接将发送到此地址。",
-     header_contact:"想测试某个应用？通过Messenger或Zalo联系管理员",
-     guide_title:"付款说明",guide_desc:"填写邮箱，选择时长和付款方式，然后创建订单。",
-     guide_empty:"<p class='text-center py-8 text-slate-400'>教程更新中...</p>",
-     promo_title:"🚀 无限游戏与浏览！",
+    email_warning:"请输入有效邮箱，激活链接将发送到此地址。",
+    header_contact:"想测试某个应用？通过Messenger或Zalo联系管理员",
+    guide_title:"付款说明",guide_desc:"填写邮箱，选择时长和付款方式，然后创建订单。",
+    guide_empty:"<p class='text-center py-8 text-slate-400'>教程更新中...</p>",
+    promo_title:"🚀 无限游戏与浏览！",
      promo_desc:"流畅访问: <b class='text-yellow-300'>TikTok, Facebook, Messenger, Zalo, YouTube...</b><br>低延迟: <b class='text-green-300'>王者荣耀, 原神...</b>",
      data_label:"流量:",dev_label:"无限制设备",speed_label:"带宽 > 100Gbps",
      btn_buy:"立即订阅",btn_contact:"联系管理员",
@@ -463,8 +483,8 @@ const i18n={
      faq_2_q:"VPN支持哪些应用？",faq_2_a:"TikTok、Facebook、Messenger、Instagram、Telegram、YouTube...",
      faq_3_q:"有哪些付款方式？",faq_3_a:"越南银行、支付宝、微信支付 (Weixin)。",
      faq_4_q:"可以更换设备吗？",faq_4_a:"可以，重新输入订单号即可获取链接。",
-     status_pending:"待处理",status_success:"已激活",status_failed:"已拒绝",lifetime_lbl:"永久",days_lbl:"天",expired_lbl:"已过期",
-     btn_check_data:"检查流量"}
+    status_pending:"待处理",status_success:"已激活",status_failed:"已拒绝",lifetime_lbl:"永久",days_lbl:"天",expired_lbl:"已过期",
+    btn_check_data:"检查流量"}
 };
 
 const pkgs=[
@@ -485,8 +505,8 @@ function showToast(msg,type='success'){
   const icon=type==='error'?'fa-times-circle':type==='info'?'fa-info-circle':'fa-check-circle';
   t.className=`${bg} text-white px-4 py-3 rounded-xl shadow-xl flex items-center transform transition-all duration-300 translate-x-full opacity-0 w-[90vw] max-w-sm mb-2`;
   t.innerHTML=`<i class="fas ${icon} mr-2 shrink-0"></i><span class="font-bold text-xs md:text-sm">${msg}</span>`;
-  c.appendChild(t);setTimeout(()=>t.classList.remove('translate-x-full','opacity-0'),10);
-  setTimeout(()=>{t.classList.add('translate-x-full','opacity-0');setTimeout(()=>t.remove(),300);},3000);
+ c.appendChild(t);setTimeout(()=>t.classList.remove('translate-x-full','opacity-0'),10);
+ setTimeout(()=>{t.classList.add('translate-x-full','opacity-0');setTimeout(()=>t.remove(),300);},3000);
 }
 
 async function apiGet(path){
@@ -494,7 +514,7 @@ async function apiGet(path){
     const r=await fetch(API_URL+path+'?_t='+Date.now());
     if(!r.ok)throw new Error("HTTP "+r.status);
     const d=await r.json();
-    localStorage.setItem(path==='/api/orders'?DB_KEY:path.replace(/\//g,'_'),JSON.stringify(d));
+   localStorage.setItem(path==='/api/orders'?DB_KEY:path.replace(/\//g,'_'),JSON.stringify(d));
     return d;
   }catch(e){
     return JSON.parse(localStorage.getItem(path==='/api/orders'?DB_KEY:path.replace(/\//g,'_')))||(path==='/api/orders'?[]:{});
@@ -516,20 +536,20 @@ async function apiPost(path, data) {
 
 function changeLanguage(val){
   const cy=window.scrollY;lang=val;
-  document.getElementById('langSelectMobile').value=val;
-  document.getElementById('langSelectDesktop').value=val;
-  document.querySelectorAll('[data-i18n]').forEach(el=>el.innerHTML=i18n[lang][el.getAttribute('data-i18n')]||el.innerHTML);
-  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>el.placeholder=i18n[lang][el.getAttribute('data-i18n-placeholder')]||el.placeholder);
+ document.getElementById('langSelectMobile').value=val;
+ document.getElementById('langSelectDesktop').value=val;
+ document.querySelectorAll('[data-i18n]').forEach(el=>el.innerHTML=i18n[lang][el.getAttribute('data-i18n')]||el.innerHTML);
+ document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>el.placeholder=i18n[lang][el.getAttribute('data-i18n-placeholder')]||el.placeholder);
   const isCheckoutVisible=!document.getElementById('checkoutSection').classList.contains('hidden');
-  renderPackages('all');
-  if(isCheckoutVisible&&currentPackage){
-    document.getElementById('selectedPackageName').innerText=currentPackage[lang].name;
-    document.getElementById('selectedPackagePrice').innerText=currentPackage[lang].price;
-    document.querySelectorAll('.dur-btn span').forEach(s=>s.innerText=i18n[lang].month_lbl);
+ renderPackages('all');
+ if(isCheckoutVisible&&currentPackage){
+   document.getElementById('selectedPackageName').innerText=currentPackage[lang].name;
+   document.getElementById('selectedPackagePrice').innerText=currentPackage[lang].price;
+   document.querySelectorAll('.dur-btn span').forEach(s=>s.innerText=i18n[lang].month_lbl);
     calculateTotal();
   }
   if(oCache) updatePortalInfo(oCache);
-  window.scrollTo(0,cy);
+ window.scrollTo(0,cy);
 }
 
 const faqHTML=`
@@ -554,7 +574,7 @@ const faqHTML=`
 function genHTML(pkg){
   const l=i18n[lang];const p=pkg[lang];
   let displayTime=p.time;
-  if(pkg.category.includes('usage')&&!pkg.isCustom)displayTime=i18n[lang].lifetime_lbl;
+ if(pkg.category.includes('usage')&&!pkg.isCustom)displayTime=i18n[lang].lifetime_lbl;
   
   let isDisabled = false;
   if(isUpgradeMode && pkg.vnd <= baseOrderPriceVnd && !pkg.isCustom) {
@@ -576,26 +596,26 @@ function genHTML(pkg){
 
   return `<div class="bg-white p-5 md:p-6 rounded-3xl border border-slate-100 shadow-sm relative flex flex-col justify-between hover:shadow-lg transition mt-4 md:mt-0 ${isDisabled ? 'pkg-disabled' : ''}">
    ${pkg.tag?`<span class="absolute -top-3 right-4 bg-red-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10">${pkg.tag[lang]||pkg.tag.vi}</span>`:''}
-   ${pkg.tag2?`<span class="absolute -top-3 left-4 bg-blue-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10">${pkg.tag2[lang]||pkg.tag2.vi}</span>`:''}
+  ${pkg.tag2?`<span class="absolute -top-3 left-4 bg-blue-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10">${pkg.tag2[lang]||pkg.tag2.vi}</span>`:''}
     <div class="${pkg.tag||pkg.tag2?'pt-2':''}">
       <h3 class="font-extrabold text-lg md:text-xl">${p.name}</h3>
       <p class="text-xs font-bold text-slate-500 mb-3">${displayTime}</p>
       ${priceHTML}
       <ul class="text-xs md:text-sm space-y-2.5 mb-6 font-medium text-slate-600">
-        <li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${l.data_label} <b>${pkg.data}</b></li>
-        <li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${l.dev_label}</li>
-        <li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${l.speed_label}</li>
+       <li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${l.data_label} <b>${pkg.data}</b></li>
+       <li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${l.dev_label}</li>
+       <li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${l.speed_label}</li>
       </ul>
-   </div>${btnHTML}</div>`;
+  </div>${btnHTML}</div>`;
 }
 
 function renderPackages(filter){
-  ['htab','ptab'].forEach(p=>{
-   ['all','travel','cycle','usage'].forEach(t=>{
+ ['htab','ptab'].forEach(p=>{
+  ['all','travel','cycle','usage'].forEach(t=>{
       const b=document.getElementById(`${p}-${t}`);
       if(!b)return;
-    if(t===filter){b.classList.add('active','bg-indigo-600','text-white');b.classList.remove('text-slate-600');}
-    else{b.classList.remove('active','bg-indigo-600','text-white');b.classList.add('text-slate-600');}
+   if(t===filter){b.classList.add('active','bg-indigo-600','text-white');b.classList.remove('text-slate-600');}
+   else{b.classList.remove('active','bg-indigo-600','text-white');b.classList.add('text-slate-600');}
     });
   });
   const html=pkgs.filter(p=>filter==='all'||p.category.includes(filter)).map(genHTML).join('');
@@ -611,16 +631,16 @@ function startUpgrade() {
 
     for(let p of pkgs) {
         if (oCache.pkgName && p.vi.name.includes(oCache.pkgName) && (!oCache.pkgData || p.data.includes(oCache.pkgData))) {
-           baseOrderPriceVnd = p.vnd;
-           baseOrderPriceUsd = p.usd;
-           baseOrderPriceCny = p.cny;
+          baseOrderPriceVnd = p.vnd;
+          baseOrderPriceUsd = p.usd;
+          baseOrderPriceCny = p.cny;
             break;
         }
     }
-   if(!baseOrderPriceVnd) { baseOrderPriceVnd = 60000; baseOrderPriceUsd = 2.5; baseOrderPriceCny = 15.5; }
+  if(!baseOrderPriceVnd) { baseOrderPriceVnd = 60000; baseOrderPriceUsd = 2.5; baseOrderPriceCny = 15.5; }
 
-   switchPortalTab('p-store');
-   renderPackages('all');
+  switchPortalTab('p-store');
+  renderPackages('all');
    showToast("Vui lòng chọn gói cao hơn gói hiện tại để nâng cấp", "info");
 }
 
@@ -636,16 +656,16 @@ function openCheckout(id){
  document.getElementById('selectedPackagePrice').innerText=currentPackage[lang].price;
 
  if(isUpgradeMode) {
-    document.getElementById('checkoutTitle').innerText = "Thanh toán Nâng Gói";
-    document.getElementById('durationBlock').classList.add('hidden');
+   document.getElementById('checkoutTitle').innerText = "Thanh toán Nâng Gói";
+   document.getElementById('durationBlock').classList.add('hidden');
      currentMultiplier = 1;
-    document.getElementById('upgradePriceNote').classList.remove('hidden');
-    document.getElementById('upgradePriceNote').innerHTML = `Số tiền nâng cấp: <b>${currentPackage.vnd.toLocaleString('vi-VN')}đ</b> (Gói mới) - <b>${baseOrderPriceVnd.toLocaleString('vi-VN')}đ</b> (Gói cũ) = <b>${(currentPackage.vnd - baseOrderPriceVnd).toLocaleString('vi-VN')}đ</b>`;
+   document.getElementById('upgradePriceNote').classList.remove('hidden');
+   document.getElementById('upgradePriceNote').innerHTML = `Số tiền nâng cấp: <b>${currentPackage.vnd.toLocaleString('vi-VN')}đ</b> (Gói mới) - <b>${baseOrderPriceVnd.toLocaleString('vi-VN')}đ</b> (Gói cũ) = <b>${(currentPackage.vnd - baseOrderPriceVnd).toLocaleString('vi-VN')}đ</b>`;
  } else {
-    document.getElementById('checkoutTitle').innerText = i18n[lang].checkout_title;
-    document.getElementById('durationBlock').classList.remove('hidden');
-    document.getElementById('upgradePriceNote').classList.add('hidden');
-    currentOrderId=''; 
+   document.getElementById('checkoutTitle').innerText = i18n[lang].checkout_title;
+   document.getElementById('durationBlock').classList.remove('hidden');
+   document.getElementById('upgradePriceNote').classList.add('hidden');
+    currentOrderId='';
     selectDuration(1);
  }
 
@@ -655,14 +675,14 @@ function openCheckout(id){
 
 function selectDuration(m){
   currentMultiplier=m;
-  document.querySelectorAll('.dur-btn').forEach(b=>{b.classList.remove('bg-indigo-600','text-white','border-transparent');b.classList.add('bg-white','text-slate-600','border-slate-200');});
+ document.querySelectorAll('.dur-btn').forEach(b=>{b.classList.remove('bg-indigo-600','text-white','border-transparent');b.classList.add('bg-white','text-slate-600','border-slate-200');});
   const ab=document.getElementById('dur-btn-'+m);ab.classList.remove('bg-white','text-slate-600','border-slate-200');ab.classList.add('bg-indigo-600','text-white','border-transparent');
   calculateTotal();
 }
 
 function selectPayMethod(method){
-  document.getElementById('payMethod').value=method;
-  document.querySelectorAll('.pay-btn').forEach(b=>{b.classList.remove('active','bg-indigo-50','border-indigo-500','text-indigo-700');b.classList.add('bg-white','border-slate-200','text-slate-600');});
+ document.getElementById('payMethod').value=method;
+ document.querySelectorAll('.pay-btn').forEach(b=>{b.classList.remove('active','bg-indigo-50','border-indigo-500','text-indigo-700');b.classList.add('bg-white','border-slate-200','text-slate-600');});
   const ab=document.getElementById('pay-btn-'+method);ab.classList.remove('bg-white','border-slate-200','text-slate-600');ab.classList.add('active','bg-indigo-50','border-indigo-500','text-indigo-700');
   if(currentOrderId || isUpgradeMode) renderPaymentBox();
 }
@@ -673,14 +693,14 @@ function calculateTotal(){
       currentTotalVnd = currentPackage.vnd - baseOrderPriceVnd;
       currentTotalCny = parseFloat((currentPackage.cny - baseOrderPriceCny).toFixed(2));
       currentTotalUsd = parseFloat((currentPackage.usd - baseOrderPriceUsd).toFixed(2));
-     if(currentTotalVnd <= 0) currentTotalVnd = 0;
-     document.getElementById('priceCalculation').innerText = `Thanh toán chênh lệch: ${currentTotalVnd.toLocaleString('vi-VN')}đ`;
+    if(currentTotalVnd <= 0) currentTotalVnd = 0;
+    document.getElementById('priceCalculation').innerText = `Thanh toán chênh lệch: ${currentTotalVnd.toLocaleString('vi-VN')}đ`;
   } else {
-     currentTotalVnd=currentPackage.vnd*currentMultiplier;
-     currentTotalCny=currentPackage.cny*currentMultiplier;
-     currentTotalUsd=parseFloat((currentPackage.usd*currentMultiplier).toFixed(2));
+    currentTotalVnd=currentPackage.vnd*currentMultiplier;
+    currentTotalCny=currentPackage.cny*currentMultiplier;
+    currentTotalUsd=parseFloat((currentPackage.usd*currentMultiplier).toFixed(2));
       const str=lang==='vi'?`${currentPackage.vnd.toLocaleString('vi-VN')}đ×${currentMultiplier}=${currentTotalVnd.toLocaleString('vi-VN')}đ`:lang==='en'?`$${currentPackage.usd}×${currentMultiplier}=$${currentTotalUsd}`:`¥${currentPackage.cny}×${currentMultiplier}=¥${currentTotalCny}`;
-     document.getElementById('priceCalculation').innerText=str;
+    document.getElementById('priceCalculation').innerText=str;
   }
   renderPaymentBox();
 }
@@ -692,12 +712,12 @@ async function copyText(t){
   catch(e){
     try{
       const ta=document.createElement('textarea');
-     ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
-     document.body.appendChild(ta);ta.focus();ta.select();
-     document.execCommand('copy');document.body.removeChild(ta);
+    ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.focus();ta.select();
+    document.execCommand('copy');document.body.removeChild(ta);
     }catch(e2){}
   }
-  showToast(lang==='vi'?'Đã Copy!':'Copied!');
+ showToast(lang==='vi'?'Đã Copy!':'Copied!');
 }
 async function copyToClipboard(id,isInput=false){
   const e=document.getElementById(id);
@@ -709,11 +729,11 @@ async function copyToClipboard(id,isInput=false){
 function renderPaymentBox(){
   const col=document.getElementById('checkoutRightCol'),m=document.getElementById('payMethod').value,btn=document.getElementById('btnConfirm');
   const fp=lang==='vi'?`${currentTotalVnd.toLocaleString('vi-VN')}đ`:lang==='en'?`$${currentTotalUsd}`:`¥${currentTotalCny}`;
-  btn.innerHTML=i18n[lang].btn_create_order;
-  btn.className='w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md shrink-0';
+ btn.innerHTML=i18n[lang].btn_create_order;
+ btn.className='w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md shrink-0';
   
   if(!currentOrderId && !isUpgradeMode){
-    col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 border-b pb-2"><i class="fas fa-info-circle mr-2"></i>${i18n[lang].guide_title}</h4><p class="text-sm text-slate-600">${i18n[lang].guide_desc}</p></div>`;return;
+   col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 border-b pb-2"><i class="fas fa-info-circle mr-2"></i>${i18n[lang].guide_title}</h4><p class="text-sm text-slate-600">${i18n[lang].guide_desc}</p></div>`;return;
   }
   
   let dispId = isUpgradeMode ? oCache.id : currentOrderId;
@@ -721,7 +741,7 @@ function renderPaymentBox(){
   const paidBtnHTML=`<button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition btn-heartbeat shadow-md"><i class="fas fa-check-circle mr-2"></i>${i18n[lang].btn_paid}</button>`;
   
   if(m==='bank'){
-    col.innerHTML=`<div class="text-center w-full"><div class="bg-indigo-50 p-2 rounded-xl inline-block mb-4"><img src="https://img.vietqr.io/image/mbbank-0917678211-compact.png?amount=${currentTotalVnd}&addInfo=${dispId}&accountName=TRINH THI XUAN HUONG" class="w-40 h-40 md:w-56 md:h-56 rounded-xl mix-blend-multiply mx-auto"></div>
+   col.innerHTML=`<div class="text-center w-full"><div class="bg-indigo-50 p-2 rounded-xl inline-block mb-4"><img src="https://img.vietqr.io/image/mbbank-0917678211-compact.png?amount=${currentTotalVnd}&addInfo=${dispId}&accountName=TRINH THI XUAN HUONG" class="w-40 h-40 md:w-56 md:h-56 rounded-xl mix-blend-multiply mx-auto"></div>
       <div class="text-left text-xs space-y-2 mb-6 w-full">
         <div class="flex justify-between bg-white p-2.5 rounded-xl border"><span class="text-slate-500">Chủ TK:</span><strong>TRINH THI XUAN HUONG</strong></div>
         <div class="flex justify-between bg-white p-2.5 rounded-xl border"><span class="text-slate-500">Ngân hàng:</span><strong>MB BANK</strong></div>
@@ -732,13 +752,13 @@ function renderPaymentBox(){
         <span class="block text-[11px] font-black mb-2 uppercase">${i18n[lang].copy_memo}</span>
         <strong class="block bg-white font-mono text-2xl md:text-3xl py-3 rounded-xl shadow-inner border-2 border-yellow-400">${dispId} <i class="far fa-copy ml-2 opacity-50"></i></strong>
         <p class="text-[10px] mt-2 italic font-bold opacity-80">(NHẤP VÀO MÃ ĐỂ COPY - BẮT BUỘC)</p>
-     </div>${paidBtnHTML}</div>`;
+    </div>${paidBtnHTML}</div>`;
   }else{
     const isAli=m==='alipay';
     const imgSrc=isAli?'https://i.pinimg.com/736x/44/57/9d/44579dfb5241614ddc897a21ce34e233.jpg':'https://i.pinimg.com/736x/28/b2/95/28b29577c6229ec943e8e13afe241db3.jpg';
     const methodDisplay = isAli ? 'Alipay <i class="fas fa-qrcode text-sm ml-1"></i>' : 'Weixin <i class="fas fa-qrcode text-sm ml-1"></i>';
     const methodClass = isAli ? 'text-blue-600' : 'text-green-600';
-    col.innerHTML=`<div class="text-center w-full"><h4 class="font-extrabold text-lg mb-4 ${methodClass}">${methodDisplay}</h4>
+   col.innerHTML=`<div class="text-center w-full"><h4 class="font-extrabold text-lg mb-4 ${methodClass}">${methodDisplay}</h4>
       <div class="bg-slate-50 p-2 rounded-xl inline-block mb-4 border border-slate-100 shadow-sm">
         <img src="${imgSrc}" class="w-48 max-w-full h-auto mx-auto rounded-lg object-contain mix-blend-multiply">
       </div>
@@ -749,132 +769,136 @@ function renderPaymentBox(){
       <div class="highlight-copy py-4 px-3 rounded-xl text-center cursor-pointer" onclick="copyText('${dispId}')">
         <span class="block text-[11px] font-black mb-2 uppercase">${i18n[lang].copy_memo}</span>
         <strong class="block bg-white font-mono text-2xl py-3 rounded-xl shadow-inner border-2 border-yellow-400">${dispId} <i class="far fa-copy ml-2 opacity-50"></i></strong>
-        <p class="text-[10px] mt-2 italic font-bold opacity-80 uppercase">${lang==='zh'?'请手动输入金额和订单号！':lang==='en'?'Manually enter amount & Memo!':'Vui lòng tự nhập số tiền và nội dung！'}</p>
-     </div>${paidBtnHTML}</div>`;
+        <p class="text-[10px] mt-2 italic font-bold opacity-80 uppercase">${lang==='zh'?'请手动输入金额和订单号！':lang==='en'?'Manually enter amount & Memo!':'Vui lòng tự nhập划款内容！'}</p>
+    </div>${paidBtnHTML}</div>`;
   }
 }
 
+// === FIX TAG LỌC QR (CHƯA XÁC NHẬN) VÀO ZALO ===
 async function submitOrder(e){
-  e.preventDefault();const btn=document.getElementById('btnConfirm');
+ e.preventDefault();
   if(!currentOrderId && !isUpgradeMode){
     const ch='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';currentOrderId='DH';for(let i=0;i<10;i++)currentOrderId+=ch.charAt(Math.floor(Math.random()*ch.length));
-    renderPaymentBox();
+   
+    let db=await apiGet('/api/orders');if(!Array.isArray(db))db=[];
+    
+    const fp=lang==='vi'?`${currentTotalVnd.toLocaleString('vi-VN')}đ`:lang==='en'?`$${currentTotalUsd}`:`¥${currentTotalCny}`;
+    const cy2=currentMultiplier+' Tháng';
+    const mn=document.getElementById('payMethod').value;
+    const mname=mn==='bank'?'Ngân hàng VN':mn==='alipay'?'Alipay':'WeChat';
+    const nowTs = Date.now();
+    
+    let cusZaloVal = document.getElementById('cusZalo').value.trim();
+    // THÊM TAG TRỰC TIẾP VÀO TRƯỜNG ZALO ĐỂ ADMIN LỌC BẰNG MẮT NGAY TRONG DASHBOARD
+    let zaloStore = cusZaloVal ? cusZaloVal + ' (Chưa xác nhận CK)' : '(Chưa xác nhận CK)';
+
+    const newOrder = {
+      id:currentOrderId,email:document.getElementById('cusEmail').value,zalo:zaloStore,
+      method:mname,pkgName:currentPackage.vi.name,pkgData:currentPackage.data,
+      pkg:`${currentPackage.vi.name} (${cy2}) - ${fp} (${currentPackage.data})`,
+      totalVnd:currentTotalVnd,needSupport:document.getElementById('needSupport').checked,
+      status:'pending',date:new Date().toLocaleString('vi-VN'), createdTs: nowTs, 
+      expDate:'',daysLeft:'',info:'',info2:'',info3:'',nickname:'',reason:''
+    };
+    
+    db.unshift(newOrder);
+    await apiPost('/api/orders',db);
+
+    try {
+        const webhookUrl = (cmsCache.settings && cmsCache.settings.d1Url) ? cmsCache.settings.d1Url.replace(/\/$/, '') : API_URL;
+        const webhookSecret = (cmsCache.settings && cmsCache.settings.d1Secret) ? cmsCache.settings.d1Secret : "";
+        fetch(webhookUrl + "/api/orders", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": "Bearer " + webhookSecret },
+            body: JSON.stringify({ orderId: currentOrderId, totalVnd: currentTotalVnd })
+        }).catch(()=>{});
+    } catch(err) {}
+
+   renderPaymentBox();
   } else if (isUpgradeMode) {
-    renderPaymentBox();
+    let db=await apiGet('/api/orders');if(!Array.isArray(db))db=[];
+    let o = db.find(x => x.id === oCache.id);
+    if(o) {
+       o.pendingUpgrade = {
+           targetPkg: currentPackage.vi.name,
+           targetPkgData: currentPackage.data,
+             amount: currentTotalVnd,
+             ts: Date.now()
+         };
+        await apiPost('/api/orders', db);
+    }
+    
+    try {
+        const webhookUrl = (cmsCache.settings && cmsCache.settings.d1Url) ? cmsCache.settings.d1Url.replace(/\/$/, '') : API_URL;
+        const webhookSecret = (cmsCache.settings && cmsCache.settings.d1Secret) ? cmsCache.settings.d1Secret : "";
+        fetch(webhookUrl + "/api/upgrades", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": "Bearer " + webhookSecret },
+            body: JSON.stringify({ orderId: oCache.id, targetPackageId: currentPackage.id })
+        }).catch(()=>{});
+    } catch(err) {}
+
+   renderPaymentBox();
   }
 }
 
+// === FIX TẨY TAG LỌC QR KHI ĐÃ XÁC NHẬN ===
 async function confirmPaid(){
   const btn=document.getElementById('btnPaidConfirm');
   if(!btn)return;
-  btn.innerHTML='LOADING...';btn.disabled=true;
+ btn.innerHTML='LOADING...';btn.disabled=true;
   
-  let db=await apiGet('/api/orders');if(!Array.isArray(db))db=[];
+  const fp=lang==='vi'?`${currentTotalVnd.toLocaleString('vi-VN')}đ`:lang==='en'?`$${currentTotalUsd}`:`¥${currentTotalCny}`;
+  const cy2=currentMultiplier+' Tháng';
+  const mn=document.getElementById('payMethod').value;
+  const mname=mn==='bank'?'Ngân hàng VN':mn==='alipay'?'Alipay':'WeChat';
+  const dispId = isUpgradeMode ? oCache.id : currentOrderId;
+  const cusZaloVal = document.getElementById('cusZalo').value || 'Không nhập';
   
-  // ==========================================
-  // FIX: POST SANG D1 WEBHOOK ĐỂ TRÁNH LỖI UNMATCHED
-  // ==========================================
-  try {
-     const WH_URL = "https://payment-webhook.doicucden.workers.dev";
-     
-     // DÁN CÁI MẬT KHẨU WEB API SECRET CỦA MÀY VÀO TRONG NGOẶC KÉP BÊN DƯỚI:
-     const WH_SECRET = "DÁN_WEB_API_SECRET_VÀO_ĐÂY"; 
-     
-     if (isUpgradeMode) {
-        await fetch(WH_URL + "/api/upgrades", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": "Bearer " + WH_SECRET },
-            body: JSON.stringify({ orderId: oCache.id, targetPackageId: currentPackage.id })
-        });
-     } else {
-        await fetch(WH_URL + "/api/orders", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": "Bearer " + WH_SECRET },
-            body: JSON.stringify({ orderId: currentOrderId, totalVnd: currentTotalVnd })
-        });
-     }
-  } catch(e) {}
-  // ==========================================
-
-  if(isUpgradeMode) {
-      let o = db.find(x => x.id === oCache.id);
-      if(o) {
-         o.pendingUpgrade = {
-             targetPkg: currentPackage.vi.name,
-             targetPkgData: currentPackage.data,
-              amount: currentTotalVnd,
-              ts: Date.now()
-          };
-         await apiPost('/api/orders', db);
-         
-         showToast("Yêu cầu Nâng Gói đã được gửi! Đang kiểm tra...", "success");
-         document.getElementById('checkoutSection').classList.add('hidden');
-         document.getElementById('orderForm').reset();
-         
-         document.getElementById('view-store').classList.remove('active');
-         document.getElementById('view-portal').classList.add('active');
-         document.getElementById('userMenu').classList.remove('hidden');
-         switchPortalTab('p-home');
-         
-         disableUpgradeMode();
-         
-         updatePortalInfo(o);
-         window.scrollTo({top:0,behavior:'smooth'});
-      }
-  } else {
-      const fp=lang==='vi'?`${currentTotalVnd.toLocaleString('vi-VN')}đ`:lang==='en'?`$${currentTotalUsd}`:`¥${currentTotalCny}`;
-      const cy2=currentMultiplier+' Tháng';
-      const mn=document.getElementById('payMethod').value;
-      const mname=mn==='bank'?'Ngân hàng VN':mn==='alipay'?'Alipay':'WeChat';
-      
-      const nowTs = Date.now();
-      const newOrder = {
-        id:currentOrderId,email:document.getElementById('cusEmail').value,zalo:document.getElementById('cusZalo').value,
-        method:mname,pkgName:currentPackage.vi.name,pkgData:currentPackage.data,
-        pkg:`${currentPackage.vi.name} (${cy2}) - ${fp} (${currentPackage.data})`,
-        totalVnd:currentTotalVnd,needSupport:document.getElementById('needSupport').checked,
-        status:'pending',date:new Date().toLocaleString('vi-VN'), createdTs: nowTs, 
-        expDate:'',daysLeft:'',info:'',info2:'',info3:'',nickname:'',reason:''
-      };
-      
-      db.unshift(newOrder);
-      await apiPost('/api/orders',db);
-      
-      const cusZaloVal = document.getElementById('cusZalo').value || 'Không nhập';
-      fetch(GOOGLE_MAIL_API, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({
-          to: "lucastanora@gmail.com", 
-          subject: `[CÓ ĐƠN MỚI] ${currentOrderId} - Khách báo Đã CK`, 
-          html: `<div style="font-family:sans-serif; max-width:500px; margin:auto; border:1px solid #e2e8f0; border-radius:10px; padding:20px;">
+  fetch(GOOGLE_MAIL_API, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({
+      to: "lucastanora@gmail.com", 
+      subject: `[CÓ ĐƠN MỚI/NÂNG CẤP] ${dispId} - Khách báo Đã CK`, 
+      html: `<div style="font-family:sans-serif; max-width:500px; margin:auto; border:1px solid #e2e8f0; border-radius:10px; padding:20px;">
               <h2 style="color:#2563eb; margin-top:0;">💰 Khách vừa báo ĐÃ THANH TOÁN!</h2>
               <ul style="list-style-type:none; padding:0; font-size:15px; line-height:1.8;">
-                 <li style="border-bottom:1px solid #f1f5f9; padding-bottom:8px;">📌 <b>Mã Đơn:</b> <span style="color:#ef4444; font-weight:bold;">${currentOrderId}</span></li>
-                 <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">📦 <b>Gói VPN:</b> ${currentPackage.vi.name} (${cy2})</li>
-                 <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">💵 <b>Số tiền:</b> <b style="color:#16a34a;">${fp}</b></li>
-                 <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">📧 <b>Email:</b> ${document.getElementById('cusEmail').value}</li>
-                 <li style="padding-top:8px;">💬 <b>Zalo/Tele:</b> <span style="background:#fef08a; padding:2px 6px; border-radius:4px; font-weight:bold; color:#854d0e;">${cusZaloVal}</span></li>
-             </ul>
-              <p style="background:#eff6ff; padding:10px; border-radius:6px; font-size:13px; color:#1e40af; text-align:center; margin-bottom:0;">Vui lòng mở trang Admin để kiểm tra tiền và duyệt đơn!</p>
+                <li style="border-bottom:1px solid #f1f5f9; padding-bottom:8px;">📌 <b>Mã Đơn:</b> <span style="color:#ef4444; font-weight:bold;">${dispId}</span></li>
+                <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">📦 <b>Gói VPN:</b> ${currentPackage.vi.name} (${cy2})</li>
+                <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">💵 <b>Số tiền:</b> <b style="color:#16a34a;">${fp}</b></li>
+                <li style="border-bottom:1px solid #f1f5f9; padding:8px 0;">📧 <b>Email:</b> ${document.getElementById('cusEmail').value}</li>
+                <li style="padding-top:8px;">💬 <b>Zalo/Tele:</b> <span style="background:#fef08a; padding:2px 6px; border-radius:4px; font-weight:bold; color:#854d0e;">${cusZaloVal}</span></li>
+            </ul>
+              <p style="background:#eff6ff; padding:10px; border-radius:6px; font-size:13px; color:#1e40af; text-align:center; margin-bottom:0;">Vui lòng kiểm tra trên Webhook D1 hoặc Admin panel!</p>
          </div>`
-      }) }).catch(()=>{});
-      
-      showToast(lang==='vi'?'Thành công!':'Success!','success');
-      document.getElementById('checkoutSection').classList.add('hidden');
-      document.getElementById('orderForm').reset();
-      document.getElementById('loginInput').value = currentOrderId;
+  })}).catch(()=>{});
 
-      localStorage.setItem(SESSION_KEY,JSON.stringify({id:currentOrderId,time:new Date().getTime()}));
-      
-      document.getElementById('view-store').classList.remove('active');
-      document.getElementById('view-portal').classList.add('active');
-      document.getElementById('userMenu').classList.remove('hidden');
-      
-      switchPortalTab('p-home');
-      disableUpgradeMode();
-      
-      updatePortalInfo(newOrder);
-      if(!globalPollInterval) startGlobalPolling(currentOrderId);
-      window.scrollTo({top:0,behavior:'smooth'});
+  // TẨY TAG LỌC Ở KV
+  let db=await apiGet('/api/orders');if(!Array.isArray(db))db=[];
+  let oUpdate = db.find(x => x.id === dispId);
+  if(oUpdate && oUpdate.zalo) {
+     oUpdate.zalo = oUpdate.zalo.replace(' (Chưa xác nhận CK)', '');
+     if(oUpdate.zalo.trim() === '') oUpdate.zalo = 'Không nhập';
+     await apiPost('/api/orders', db);
   }
+  
+ showToast(lang==='vi'?'Thành công!':'Success!','success');
+ document.getElementById('checkoutSection').classList.add('hidden');
+ document.getElementById('orderForm').reset();
+ document.getElementById('loginInput').value = dispId;
+
+ localStorage.setItem(SESSION_KEY,JSON.stringify({id:dispId,time:new Date().getTime()}));
+  
+ document.getElementById('view-store').classList.remove('active');
+ document.getElementById('view-portal').classList.add('active');
+ document.getElementById('userMenu').classList.remove('hidden');
+  
+ switchPortalTab('p-home');
+ disableUpgradeMode();
+
+ let dbUpdated = await apiGet('/api/orders');
+ let oNew = dbUpdated.find(x => x.id === dispId);
+ if (oNew) updatePortalInfo(oNew);
+ if(!globalPollInterval) startGlobalPolling(dispId);
+ window.scrollTo({top:0,behavior:'smooth'});
 }
 
 function parseOrderDate(dateStr) {
@@ -885,12 +909,12 @@ function parseOrderDate(dateStr) {
      const dateParts = parts[1].split("/");
      if (timeParts.length >= 2 && dateParts.length === 3) {
          const d = new Date();
-         d.setFullYear(parseInt(dateParts[2]));
-         d.setMonth(parseInt(dateParts[1]) - 1);
-         d.setDate(parseInt(dateParts[0]));
-         d.setHours(parseInt(timeParts[0]));
-         d.setMinutes(parseInt(timeParts[1]));
-         d.setSeconds(timeParts[2] ? parseInt(timeParts[2]) : 0);
+        d.setFullYear(parseInt(dateParts[2]));
+        d.setMonth(parseInt(dateParts[1]) - 1);
+        d.setDate(parseInt(dateParts[0]));
+        d.setHours(parseInt(timeParts[0]));
+        d.setMinutes(parseInt(timeParts[1]));
+        d.setSeconds(timeParts[2] ? parseInt(timeParts[2]) : 0);
          return d.getTime();
      }
   }
@@ -901,12 +925,12 @@ function parseOrderDate(dateStr) {
 function updatePortalInfo(o){
   oCache = o;
   
-  document.getElementById('portalContentPending').classList.add('hidden');
-  document.getElementById('pendingActiveState').classList.add('hidden');
-  document.getElementById('pendingTimeoutState').classList.add('hidden');
-  document.getElementById('portalContentSuccess').classList.add('hidden');
-  document.getElementById('portalContentFailed').classList.add('hidden');
-
+ document.getElementById('portalContentPending').classList.add('hidden');
+ document.getElementById('pendingActiveState').classList.add('hidden');
+ document.getElementById('pendingTimeoutState').classList.add('hidden');
+ document.getElementById('portalContentSuccess').classList.add('hidden');
+ document.getElementById('portalContentFailed').classList.add('hidden');
+ 
   const upgradeBadge = document.getElementById('upgradeSuccessBadge');
   if(upgradeBadge) upgradeBadge.classList.add('hidden');
   
@@ -917,76 +941,76 @@ function updatePortalInfo(o){
 
   if (o.status === 'success') {
       if (lastPkg && lastPkg !== o.pkg && !o.pendingUpgrade) {
-         if(upgradeBadge) upgradeBadge.classList.remove('hidden');
+        if(upgradeBadge) upgradeBadge.classList.remove('hidden');
       }
-      localStorage.setItem(lastPkgCacheKey, o.pkg);
+     localStorage.setItem(lastPkgCacheKey, o.pkg);
   }
 
   if (o.status === 'success' && o.pendingUpgrade) {
-     document.getElementById('portalContentPending').classList.remove('hidden');
-     document.getElementById('pendingTitleUI').innerText = "ĐANG KIỂM TRA GIAO DỊCH NÂNG GÓI...";
+    document.getElementById('portalContentPending').classList.remove('hidden');
+    document.getElementById('pendingTitleUI').innerText = "ĐANG KIỂM TRA GIAO DỊCH NÂNG GÓI...";
       
      let startTime = o.pendingUpgrade.ts;
      let endTime = startTime + 300000; 
 
      if(Date.now() >= endTime) {
-        document.getElementById('portalContentPending').classList.add('hidden');
-        document.getElementById('portalContentSuccess').classList.remove('hidden');
-        document.getElementById('subLink1').value = o.info1 || o.info || '';
-        document.getElementById('subLink2').value = o.info2 || '';
-        document.getElementById('subLink3').value = o.info3 || '';
-        document.getElementById('displayOrderId').innerText = o.id;
-        if(!globalPollInterval) startGlobalPolling(o.id);
+       document.getElementById('portalContentPending').classList.add('hidden');
+       document.getElementById('portalContentSuccess').classList.remove('hidden');
+       document.getElementById('subLink1').value = o.info1 || o.info || '';
+       document.getElementById('subLink2').value = o.info2 || '';
+       document.getElementById('subLink3').value = o.info3 || '';
+       document.getElementById('displayOrderId').innerText = o.id;
+       if(!globalPollInterval) startGlobalPolling(o.id);
       } else {
-        isUpgradePending = true;
+       isUpgradePending = true;
         pendingEndTime = endTime;
-        document.getElementById('pendingActiveState').classList.remove('hidden');
-        startPendingPolling();
+       document.getElementById('pendingActiveState').classList.remove('hidden');
+       startPendingPolling();
       }
       return; 
   }
 
   if(o.status === 'failed'){
-   document.getElementById('portalContentFailed').classList.remove('hidden');
-   document.getElementById('failReasonText').innerText = o.reason || 'Admin từ chối giao dịch';
+  document.getElementById('portalContentFailed').classList.remove('hidden');
+  document.getElementById('failReasonText').innerText = o.reason || 'Admin từ chối giao dịch';
   } 
   else if(o.status === 'success'){
-   document.getElementById('portalContentSuccess').classList.remove('hidden');
-   document.getElementById('subLink1').value = o.info1 || o.info || '';
-   document.getElementById('subLink2').value = o.info2 || '';
-   document.getElementById('subLink3').value = o.info3 || '';
-   document.getElementById('displayOrderId').innerText = o.id;
+  document.getElementById('portalContentSuccess').classList.remove('hidden');
+  document.getElementById('subLink1').value = o.info1 || o.info || '';
+  document.getElementById('subLink2').value = o.info2 || '';
+  document.getElementById('subLink3').value = o.info3 || '';
+  document.getElementById('displayOrderId').innerText = o.id;
   }
   else if(o.status === 'pending'){
-   document.getElementById('portalContentPending').classList.remove('hidden');
-   document.getElementById('pendingTitleUI').innerText = "ĐANG KIỂM TRA GIAO DỊCH...";
+  document.getElementById('portalContentPending').classList.remove('hidden');
+  document.getElementById('pendingTitleUI').innerText = "ĐANG KIỂM TRA GIAO DỊCH...";
     
    let startTime = o.createdTs || parseOrderDate(o.date);
    let endTime = startTime + 300000;
 
    if(Date.now() >= endTime) {
-      document.getElementById('pendingTimeoutState').classList.remove('hidden');
-      if(!globalPollInterval) startGlobalPolling(o.id); 
+     document.getElementById('pendingTimeoutState').classList.remove('hidden');
+     if(!globalPollInterval) startGlobalPolling(o.id); 
    } else {
        pendingEndTime = endTime;
-      document.getElementById('pendingActiveState').classList.remove('hidden');
-      startPendingPolling();
+     document.getElementById('pendingActiveState').classList.remove('hidden');
+     startPendingPolling();
    }
   }
 }
 
 function startPendingPolling() {
   updateTimerUI();
-  stopPendingPolling();
-  countdownTimerInterval = setInterval(() => { updateTimerUI(); }, 1000);
+ stopPendingPolling();
+ countdownTimerInterval = setInterval(() => { updateTimerUI(); }, 1000);
   checkOrderInterval = setInterval(() => {
-   apiGet('/api/orders').then(db => {
-      if(!Array.isArray(db)) return;
+  apiGet('/api/orders').then(db => {
+     if(!Array.isArray(db)) return;
        let o = db.find(x => x.id === oCache.id);
        if(o && (o.status !== oCache.status || JSON.stringify(o.pendingUpgrade) !== JSON.stringify(oCache.pendingUpgrade) || o.pkg !== oCache.pkg)) {
-         updatePortalInfo(o);
+        updatePortalInfo(o);
        }
-   }).catch(()=>{});
+  }).catch(()=>{});
   }, 10000);
 }
 
@@ -997,28 +1021,28 @@ function stopPendingPolling() {
 
 function handlePendingTimeout() {
   if (typeof countdownTimerInterval !== 'undefined' && countdownTimerInterval) clearInterval(countdownTimerInterval);
-  document.getElementById('pendingActiveState').classList.add('hidden');
-  document.getElementById('pendingTimeoutState').classList.remove('hidden');
+ document.getElementById('pendingActiveState').classList.add('hidden');
+ document.getElementById('pendingTimeoutState').classList.remove('hidden');
 }
 
 function updateTimerUI(leftStr) {
   let left = leftStr !== undefined ? leftStr : Math.ceil((pendingEndTime - Date.now()) / 1000);
   if (left <= 0) {
-   if(isUpgradePending) {
-       stopPendingPolling();
-       document.getElementById('portalContentPending').classList.add('hidden');
-       document.getElementById('portalContentSuccess').classList.remove('hidden');
-       document.getElementById('subLink1').value = oCache.info1 || oCache.info || '';
-       document.getElementById('subLink2').value = oCache.info2 || '';
-       document.getElementById('subLink3').value = oCache.info3 || '';
-       document.getElementById('displayOrderId').innerText = oCache.id;
-       if(!globalPollInterval) startGlobalPolling(oCache.id);
+  if(isUpgradePending) {
+      stopPendingPolling();
+      document.getElementById('portalContentPending').classList.add('hidden');
+      document.getElementById('portalContentSuccess').classList.remove('hidden');
+      document.getElementById('subLink1').value = oCache.info1 || oCache.info || '';
+      document.getElementById('subLink2').value = oCache.info2 || '';
+      document.getElementById('subLink3').value = oCache.info3 || '';
+      document.getElementById('displayOrderId').innerText = oCache.id;
+      if(!globalPollInterval) startGlobalPolling(oCache.id);
     } else {
-       handlePendingTimeout(); 
+      handlePendingTimeout(); 
     }
   } else {
-   document.getElementById('pendingActiveState').classList.remove('hidden');
-   document.getElementById('pendingTimeoutState').classList.add('hidden');
+  document.getElementById('pendingActiveState').classList.remove('hidden');
+  document.getElementById('pendingTimeoutState').classList.add('hidden');
    const m = Math.floor(left / 60).toString().padStart(2, '0');
    const s = (left % 60).toString().padStart(2, '0');
    const el = document.getElementById('countdownTimer');
@@ -1030,7 +1054,7 @@ function startGlobalPolling(orderId) {
  if(globalPollInterval) clearInterval(globalPollInterval);
   globalPollInterval = setInterval(async () => {
     let db = await apiGet('/api/orders');
-   if(!Array.isArray(db)) return;
+  if(!Array.isArray(db)) return;
     let o = db.find(x => x.id === orderId);
     if(o) updatePortalInfo(o);
   }, 10000);
@@ -1048,49 +1072,49 @@ async function login(isManualRefresh=false,isAutoPoll=false){
      return;
   }
 
-  localStorage.setItem(SESSION_KEY,JSON.stringify({id:o.id,time:new Date().getTime()}));
-  if(!isManualRefresh&&!isAutoPoll)showToast(lang==='vi'?'Vào cổng thành công!':lang==='en'?'Login success!':'登录成功','info');
-  document.getElementById('view-store').classList.remove('active');document.getElementById('view-portal').classList.add('active');
-  document.getElementById('userMenu').classList.remove('hidden');document.getElementById('checkoutSection').classList.add('hidden');
+ localStorage.setItem(SESSION_KEY,JSON.stringify({id:o.id,time:new Date().getTime()}));
+ if(!isManualRefresh&&!isAutoPoll)showToast(lang==='vi'?'Vào cổng thành công!':lang==='en'?'Login success!':'登录成功','info');
+ document.getElementById('view-store').classList.remove('active');document.getElementById('view-portal').classList.add('active');
+ document.getElementById('userMenu').classList.remove('hidden');document.getElementById('checkoutSection').classList.add('hidden');
   const dn=document.getElementById('desktopPortalNav');dn.classList.remove('hidden','opacity-0','w-0');dn.classList.add('md:flex','opacity-100','w-auto');
-  document.getElementById('searchAndTabsWrapper').classList.remove('max-w-2xl','justify-center');document.getElementById('searchAndTabsWrapper').classList.add('w-full');
-  document.getElementById('centerNavContainer').classList.remove('justify-center');
-  document.getElementById('mobileNavWrapper').classList.remove('hidden');
-  if(!isAutoPoll&&!isManualRefresh)switchPortalTab('p-home');
-
+ document.getElementById('searchAndTabsWrapper').classList.remove('max-w-2xl','justify-center');document.getElementById('searchAndTabsWrapper').classList.add('w-full');
+ document.getElementById('centerNavContainer').classList.remove('justify-center');
+ document.getElementById('mobileNavWrapper').classList.remove('hidden');
+ if(!isAutoPoll&&!isManualRefresh)switchPortalTab('p-home');
+ 
   updatePortalInfo(o);
   if(!isAutoPoll) startGlobalPolling(o.id);
-
+ 
   cmsCache=await apiGet('/api/cms');
-  showGuide('android');
-
-  renderPackages('all');
-  if(!isManualRefresh&&!isAutoPoll)window.scrollTo({top:0,behavior:'smooth'});
+ showGuide('android');
+ 
+ renderPackages('all');
+ if(!isManualRefresh&&!isAutoPoll)window.scrollTo({top:0,behavior:'smooth'});
 }
 
 function switchPortalTab(tabId){
-  document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.desktop-tab-btn').forEach(el=>{el.classList.remove('active','text-white','bg-indigo-600');el.classList.add('text-slate-600');});
-  document.querySelectorAll('.mobile-tab-btn').forEach(el=>{el.classList.remove('active','text-indigo-600','bg-[#e0e7ff]');el.classList.add('text-slate-500');});
-  document.getElementById(tabId).classList.add('active');
+ document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
+ document.querySelectorAll('.desktop-tab-btn').forEach(el=>{el.classList.remove('active','text-white','bg-indigo-600');el.classList.add('text-slate-600');});
+ document.querySelectorAll('.mobile-tab-btn').forEach(el=>{el.classList.remove('active','text-indigo-600','bg-[#e0e7ff]');el.classList.add('text-slate-500');});
+ document.getElementById(tabId).classList.add('active');
   const id=tabId.replace('p-','');
-  document.querySelectorAll('.desktop-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','bg-indigo-600','text-white');el.classList.remove('text-slate-600');});
-  document.querySelectorAll('.mobile-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','text-indigo-600','bg-[#e0e7ff]');el.classList.remove('text-slate-500');});
+ document.querySelectorAll('.desktop-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','bg-indigo-600','text-white');el.classList.remove('text-slate-600');});
+ document.querySelectorAll('.mobile-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','text-indigo-600','bg-[#e0e7ff]');el.classList.remove('text-slate-500');});
 }
 
 function logout(){
-  localStorage.removeItem(SESSION_KEY);
-  document.getElementById('view-portal').classList.remove('active');document.getElementById('view-store').classList.add('active');
-  document.getElementById('userMenu').classList.add('hidden');document.getElementById('loginInput').value='';
-  document.getElementById('mobileNavWrapper').classList.add('hidden');
+ localStorage.removeItem(SESSION_KEY);
+ document.getElementById('view-portal').classList.remove('active');document.getElementById('view-store').classList.add('active');
+ document.getElementById('userMenu').classList.add('hidden');document.getElementById('loginInput').value='';
+ document.getElementById('mobileNavWrapper').classList.add('hidden');
   const dn=document.getElementById('desktopPortalNav');dn.classList.remove('md:flex','opacity-100','w-auto');dn.classList.add('hidden','opacity-0','w-0');
-  document.getElementById('searchAndTabsWrapper').classList.remove('w-full');document.getElementById('searchAndTabsWrapper').classList.add('max-w-2xl','justify-center');
-  document.getElementById('centerNavContainer').classList.add('justify-center');
+ document.getElementById('searchAndTabsWrapper').classList.remove('w-full');document.getElementById('searchAndTabsWrapper').classList.add('max-w-2xl','justify-center');
+ document.getElementById('centerNavContainer').classList.add('justify-center');
   oCache=null;
-  disableUpgradeMode();
-  if(globalPollInterval) clearInterval(globalPollInterval);
-  stopPendingPolling();
-  document.documentElement.classList.remove('has-session');
+ disableUpgradeMode();
+ if(globalPollInterval) clearInterval(globalPollInterval);
+ stopPendingPolling();
+ document.documentElement.classList.remove('has-session');
 }
 
 function parseShortcodes(text) {
@@ -1100,7 +1124,7 @@ function parseShortcodes(text) {
   for(let line of lines) {
     line = line.trim();
     if(!line) continue;
-    if(line.startsWith("[HEADER]")) { html += `<div style="background:linear-gradient(90deg,#4f46e5,#8b5cf6);display:inline-block;color:#fff;padding:8px 16px;border-radius:8px;font-weight:800;margin-bottom:12px;box-shadow:0 4px 10px rgba(79,70,229,0.3)"><i class="fas fa-star" style="margin-right:8px;"></i>${line.substring(8).trim()}</div>\n`; stepCount=1; }
+   if(line.startsWith("[HEADER]")) { html += `<div style="background:linear-gradient(90deg,#4f46e5,#8b5cf6);display:inline-block;color:#fff;padding:8px 16px;border-radius:8px;font-weight:800;margin-bottom:12px;box-shadow:0 4px 10px rgba(79,70,229,0.3)"><i class="fas fa-star" style="margin-right:8px;"></i>${line.substring(8).trim()}</div>\n`; stepCount=1; }
     else if(line.startsWith("[SUB]")) html += `<div style="display:inline-block;background:#e0e7ff;border-left:4px solid #4f46e5;padding:6px 12px;border-radius:4px;margin-top:15px;margin-bottom:10px"><h3 style="font-size:14px;font-weight:800;color:#3730a3;margin:0">${line.substring(5).trim()}</h3></div>\n`;
     else if(line.startsWith("[STEP]")) { html += `<div style="display:flex;gap:8px;margin-bottom:10px;align-items:flex-start"><span style="background:#4f46e5;color:white;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:11px;font-weight:bold;flex-shrink:0">${stepCount++}</span><p style="margin:0;color:#334155;line-height:20px">${line.substring(6).trim()}</p></div>\n`; }
     else if(line.startsWith("[NOTE]")) html += `<div style="display:inline-block;max-width:100%;background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;padding:8px 12px;border-radius:6px;margin:10px 0"><p style="margin:0;color:#92400e;line-height:1.5"><b>⚠️ LƯU Ý:</b> ${line.substring(6).trim()}</p></div>\n`;
@@ -1115,33 +1139,36 @@ function parseShortcodes(text) {
 }
 
 function showGuide(dev){
-  document.querySelectorAll('.dev-btn').forEach(b=>{b.classList.remove('active','border-indigo-500');});
-  document.getElementById('btn-dev-'+dev).classList.add('active','border-indigo-500');
-  document.getElementById('guideContent').classList.remove('hidden');
-  document.getElementById('guideText').innerHTML=cmsCache[dev]?parseShortcodes(cmsCache[dev]):i18n[lang].guide_empty;
+ document.querySelectorAll('.dev-btn').forEach(b=>{b.classList.remove('active','border-indigo-500');});
+ document.getElementById('btn-dev-'+dev).classList.add('active','border-indigo-500');
+ document.getElementById('guideContent').classList.remove('hidden');
+ document.getElementById('guideText').innerHTML=cmsCache[dev]?parseShortcodes(cmsCache[dev]):i18n[lang].guide_empty;
 }
 
-// ── KHỞI ĐỘNG HỆ THỐNG (CHẠY TRỰC TIẾP KHI VÀO WEB / F5) ──
 window.onload = async function() {
-  changeLanguage('vi');
+ changeLanguage('vi');
   const session = localStorage.getItem(SESSION_KEY);
   if (session) {
       try {
           const d = JSON.parse(session);
           if (new Date().getTime() - d.time < 24 * 3600 * 1000) {
-              document.getElementById('loginInput').value = d.id;
+             document.getElementById('loginInput').value = d.id;
               await login(true);
           } else {
-              localStorage.removeItem(SESSION_KEY);
-              logout();
+             localStorage.removeItem(SESSION_KEY);
+             logout();
           }
       } catch(e) {
-          localStorage.removeItem(SESSION_KEY);
+         localStorage.removeItem(SESSION_KEY);
           logout();
       }
   } else {
-      renderPackages('all');
+     renderPackages('all');
   }
+  
+  // Khởi động Observer cho footer
+  const footer = document.getElementById('footerArea');
+  if (footer) obs.observe(footer);
 };
 
 // --- LOGIC YÊU CẦU KIỂM TRA DUNG LƯỢNG ---
@@ -1152,19 +1179,19 @@ async function requestDataCheck() {
   const now = Date.now();
   
   if (lastReq && now - parseInt(lastReq) < 18000000) {
-    showToast(lang==='vi'?'Yêu cầu đang chờ xử lý. Vui lòng quay lại sau!':lang==='en'?'Request pending. Try again later!':'请求待处理，请稍后再试！', 'info');
+   showToast(lang==='vi'?'Yêu cầu đang chờ xử lý. Vui lòng quay lại sau!':lang==='en'?'Request pending. Try again later!':'请求待处理，请稍后再试！', 'info');
     return;
   }
 
   const btn = document.getElementById('btnRequestData');
   const originalHtml = btn.innerHTML;
   btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1.5"></i> ${lang==='vi'?'Đang gửi...':lang==='en'?'Sending...':'发送中...'}`;
-  btn.classList.remove('btn-heartbeat');
+ btn.classList.remove('btn-heartbeat');
   btn.disabled = true;
 
   try {
     let reqs = await apiGet('/api/data_requests');
-    if(!Array.isArray(reqs)) reqs = [];
+   if(!Array.isArray(reqs)) reqs = [];
     
     reqs = reqs.filter(r => r.orderId !== oCache.id);
     reqs.unshift({
@@ -1186,23 +1213,23 @@ async function requestDataCheck() {
         <p style="background:#eff6ff; padding:10px; border-radius:6px; font-size:13px; color:#1e40af; text-align:center;">Mở tab "Dung lượng" trên Admin để báo số GB cho khách!</p>
     </div>`;
     
-    fetch(GOOGLE_MAIL_API, { 
+   fetch(GOOGLE_MAIL_API, { 
         method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'}, 
         body: JSON.stringify({
             to: "lucastanora@gmail.com", 
             subject: `[TRA CỨU DATA] ${oCache.id}`, 
             html: htmlAdmin
         }) 
-    }).catch(()=>{});
+   }).catch(()=>{});
 
-    localStorage.setItem(cdKey, now.toString());
-    showToast(lang==='vi'?'Đã gửi yêu cầu! Vui lòng chờ Email báo cáo.':lang==='en'?'Request sent! Please check your email later.':'请求已发送！请稍后检查您的电子邮件。', 'success');
+   localStorage.setItem(cdKey, now.toString());
+   showToast(lang==='vi'?'Đã gửi yêu cầu! Vui lòng chờ Email báo cáo.':lang==='en'?'Request sent! Please check your email later.':'请求已发送！请稍后检查您的电子邮件。', 'success');
     btn.innerHTML = `<i class="fas fa-check-circle mr-1.5"></i> ${lang==='vi'?'Đã gửi yêu cầu':lang==='en'?'Request sent':'请求已发送'}`;
     
   } catch(e) {
-    showToast(lang==='vi'?'Có lỗi xảy ra, vui lòng thử lại!':'Error occurred, please try again.', 'error');
+   showToast(lang==='vi'?'Có lỗi xảy ra, vui lòng thử lại!':'Error occurred, please try again.', 'error');
     btn.innerHTML = originalHtml;
-    btn.classList.add('btn-heartbeat');
+   btn.classList.add('btn-heartbeat');
     btn.disabled = false;
   }
 }
