@@ -869,15 +869,6 @@ window.onload=async function(){
   linkPoolDb=lsGet("a/api/link_pool")||[];
   cmsDb=lsGet("a/api/cms")||{};if(!cmsDb.link_origins) cmsDb.link_origins={};
   
-  let migrated = false;
-  ordersDb.forEach(o => {
-      if(o.id && o.id.includes('-')) {
-          o.id = o.id.replace(/-/g, '');
-          migrated = true;
-      }
-  });
-  if(migrated) await apP("/api/orders", ordersDb);
-
   loginOK(false);setTimeout(()=>fetchAll(false),500);
  } else {
   devicesDb=await apG("/api/devices",[]);
@@ -932,8 +923,6 @@ function loginOK(st=true){
   pollAutoFulfillment();
   if(document.getElementById("mOrd") && !document.getElementById("mOrd").classList.contains("hidden")) return;
   apG("/api/orders",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(ordersDb)){
-      let mig=false; f.forEach(o=>{if(o.id.includes('-')){o.id=o.id.replace(/-/g,'');mig=true;}});
-      if(mig) apP('/api/orders', f);
       ordersDb=f;renderOrd();toast("Có đơn mới!","warn");
   }});
   apG("/api/data_requests",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(dataRequestsDb)){dataRequestsDb=f;renderDataRequests();toast("Có yêu cầu data mới!","warn");}});
@@ -943,7 +932,7 @@ function loginOK(st=true){
 }
 
 // ── TỰ ĐỘNG CHỐT ĐƠN (AUTO FULFILLMENT) ──
-// ĐÃ FIX: CHIA NHỎ TRY-CATCH TỪNG ĐƠN, TÍNH USED LIVE, CLAIM TRƯỚC KHI CẤP
+// ĐÃ FIX: CHIA NHỎ TRY-CATCH TỪNG ĐƠN, TÍNH USED LIVE, CHECK KV RỒI MỚI CLAIM ĐỂ CHỐNG RACE CONDITION
 async function pollAutoFulfillment() {
   if(!isAutoMaster()) return; 
   if(isProcessingFulfillment) return; 
@@ -966,19 +955,23 @@ async function pollAutoFulfillment() {
         // ============================================
         for(const o of data.newOrders || []) {
             try {
-                // PHASE 3: CLAIM TRƯỚC KHI CẤP LINK TRÁNH RACE CONDITION
+                // PHASE A: KIỂM TRA KV TRƯỚC KHI CLAIM
+                let kvOrder = ordersDb.find(x => x.id === o.order_id);
+
+                if(!kvOrder) {
+                    console.warn(`[AutoFulfillment] Đơn ${o.order_id} có trên D1 nhưng chưa có trong KV. Đang chờ Website đồng bộ metadata...`);
+                    continue; // BỎ QUA KHÔNG CLAIM, KHÔNG NÉM ERROR LÀM ĐỨT VÒNG LẶP CHUNG
+                }
+
+                // PHASE D: CÓ KV RỒI MỚI CLAIM ĐƠN TRÊN D1 TRÁNH TRÙNG LẶP
                 const claimRes = await fetch(`${webhookUrl}/api/admin/claim_fulfillment`, {
                     method: "POST",
                     headers: { 'Authorization': 'Bearer ' + webhookSecret, 'Content-Type': 'application/json' },
                     body: JSON.stringify({ orderId: o.order_id })
                 });
-                // Bỏ qua nếu có người khác claim hoặc đơn đã bị xử lý
                 if(claimRes.status === 409 || claimRes.status === 400) continue; 
 
-                let kvOrder = ordersDb.find(x => x.id.replace(/-/g,'') === o.order_id.replace(/-/g,''));
-                if(!kvOrder) throw new Error(`Không tìm thấy đơn ${o.order_id} trong KV`);
-
-                // PHASE 5: TÍNH USED TỪ LINKS_DB (SERVER-SIDE SNAPSHOT TẠI THỜI ĐIỂM CẤP) ĐỂ TRÁNH LỆCH PHA
+                // PHASE 5: TÍNH USED LIVE TỪ SERVER-SIDE SNAPSHOT (LINKS_DB)
                 linkPoolDb.forEach(pool => {
                     pool.used = linksDb.filter(x => x.orig === pool.url).length;
                 });
@@ -1011,7 +1004,6 @@ async function pollAutoFulfillment() {
                         date: getNowStr()
                     });
                     
-                    // Tính lại để update UI
                     node.used++;
                     kvOrder.info1 = masked;
                     kvOrder.status = "success";
@@ -1022,7 +1014,7 @@ async function pollAutoFulfillment() {
                     }
                 }
                 
-                // LƯU NGAY LẬP TỨC TỪNG ĐƠN ĐỂ TRÁNH MẤT DATA DO BATCH (PHASE 6)
+                // LƯU KV NGAY SAU KHI XỬ LÝ (TRÁNH LỖI BATCH)
                 await apP("/api/orders", ordersDb);
                 await apP("/api/links", linksDb);
                 await apP("/api/link_pool", linkPoolDb);
@@ -1038,7 +1030,7 @@ async function pollAutoFulfillment() {
                 addSysLog("AutoFulfillment", `Cấp Link thành công cho đơn ${o.order_id}`);
 
             } catch(e) {
-                // PHASE 7: LOG LỖI TỪNG ĐƠN, ĐÉO NUỐT IM ỈM NỮA
+                // PHASE 7: LOG LỖI TỪNG ĐƠN VÀ ĐI TIẾP
                 console.error("Lỗi cấp link đơn", o.order_id, e);
                 addSysLog("Fulfillment Lỗi", `Đơn ${o.order_id}: ${e.message}`);
             }
@@ -1049,6 +1041,12 @@ async function pollAutoFulfillment() {
         // ============================================
         for(const upg of data.upgrades || []) {
             try {
+                let kvOrder = ordersDb.find(x => x.id === upg.order_id);
+                if(!kvOrder) {
+                    console.warn(`[AutoFulfillment Upgrade] Đơn ${upg.order_id} chưa có trong KV. Bỏ qua chờ đồng bộ.`);
+                    continue; 
+                }
+
                 const claimRes = await fetch(`${webhookUrl}/api/admin/claim_fulfillment`, {
                     method: "POST",
                     headers: { 'Authorization': 'Bearer ' + webhookSecret, 'Content-Type': 'application/json' },
@@ -1056,25 +1054,22 @@ async function pollAutoFulfillment() {
                 });
                 if(claimRes.status === 409 || claimRes.status === 400) continue; 
 
-                let kvOrder = ordersDb.find(x => x.id.replace(/-/g,'') === upg.order_id.replace(/-/g,''));
-                if(kvOrder) {
-                    kvOrder.totalVnd = upg.target_price_vnd;
-                    let catalogPkgIndex = PKGS.findIndex(p => p.includes(upg.target_price_vnd.toLocaleString()));
-                    if(catalogPkgIndex !== -1) {
-                        kvOrder.pkg = PKGS[catalogPkgIndex];
-                        kvOrder.pkgName = kvOrder.pkg.split(" - ")[0];
-                    } else {
-                        kvOrder.pkgName = upg.target_package_id;
-                    }
-                    delete kvOrder.pendingUpgrade;
+                kvOrder.totalVnd = upg.target_price_vnd;
+                let catalogPkgIndex = PKGS.findIndex(p => p.includes(upg.target_price_vnd.toLocaleString()));
+                if(catalogPkgIndex !== -1) {
+                    kvOrder.pkg = PKGS[catalogPkgIndex];
+                    kvOrder.pkgName = kvOrder.pkg.split(" - ")[0];
+                } else {
+                    kvOrder.pkgName = upg.target_package_id;
+                }
+                delete kvOrder.pendingUpgrade;
 
-                    await apP("/api/orders", ordersDb);
-                    renderOrd();
+                await apP("/api/orders", ordersDb);
+                renderOrd();
 
-                    if(kvOrder.email && isMailMaster()) {
-                        fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:kvOrder.email,subject:"VPN Trinh Hg - Nâng cấp thành công",html:buildSuccessMailHtml(kvOrder)})});
-                        addMailLog("Nâng cấp thành công", kvOrder.email, kvOrder.id);
-                    }
+                if(kvOrder.email && isMailMaster()) {
+                    fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:kvOrder.email,subject:"VPN Trinh Hg - Nâng cấp thành công",html:buildSuccessMailHtml(kvOrder)})});
+                    addMailLog("Nâng cấp thành công", kvOrder.email, kvOrder.id);
                 }
 
                 await fetch(`${webhookUrl}/api/admin/mark_fulfilled`, {
@@ -1146,15 +1141,6 @@ async function fetchAll(msg=false){
  });
  if(poolChanged) await apP("/api/link_pool", linkPoolDb);
  
- let migrated = false;
- ordersDb.forEach(o => {
-     if(o.id && o.id.includes('-')) {
-         o.id = o.id.replace(/-/g, '');
-         migrated = true;
-     }
- });
- if(migrated) await apP("/api/orders", ordersDb);
-
  renderOrd();renderDataRequests();renderLinks();renderDev();
  document.getElementById("cmsRaw").value=cmsDb[curCms]||"";updatePreview();
  
@@ -1247,8 +1233,7 @@ async function approveTransaction(txId, orderId) {
   if (!oid) return;
  }
  
- // ÉP UPERCASE VÀ XÓA DẤU GẠCH NẾU THẰNG ADMIN NHẬP LỆCH
- oid = oid.trim().toUpperCase().replace(/-/g, "");
+ oid = oid.trim().toUpperCase();
 
  toast("Đang nã lệnh duyệt...");
  try {
