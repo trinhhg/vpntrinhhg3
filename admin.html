@@ -1,4 +1,4 @@
-<!-- v1.9 - Định tuyến Link Sub, Auto-Polling 5s, Xóa rác D1 - 2026-08-26 -->
+<!-- v2.0 - Adaptive Incremental Polling & Tab Xóa - 2026-08-26 -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -135,11 +135,11 @@ html.has-session #main { display: block !important; }
  <div id="t-trans" class="hidden w-full min-w-0">
   <div class="flex items-center justify-between mb-4">
       <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Duyệt Giao Dịch D1</h2>
-      <button onclick="fetchTransactions()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm transition"><i class="fas fa-sync mr-1"></i>Tải lại</button>
+      <button onclick="initialLoadTransactions(true)" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm transition"><i class="fas fa-sync mr-1"></i>Tải lại</button>
   </div>
   
   <div class="flex justify-start gap-2 mb-4 bg-white p-1.5 rounded-xl border border-slate-100 shadow-sm overflow-x-auto flex-nowrap scroll-hide">
-      <button onclick="switchTxTab('all')" id="tx-all" class="tab-btn active text-slate-600 px-3 py-2 rounded-lg font-bold text-xs shrink-0 whitespace-nowrap">Tất cả</button>
+      <button onclick="switchTxTab('all')" id="tx-all" class="tab-btn active bg-indigo-600 text-white px-3 py-2 rounded-lg font-bold text-xs shrink-0 whitespace-nowrap">Tất cả</button>
       <button onclick="switchTxTab('paid')" id="tx-paid" class="tab-btn text-slate-600 px-3 py-2 rounded-lg font-bold text-xs shrink-0 whitespace-nowrap">Đã thanh toán</button>
       <button onclick="switchTxTab('paid_review')" id="tx-paid_review" class="tab-btn text-slate-600 px-3 py-2 rounded-lg font-bold text-xs shrink-0 whitespace-nowrap">Xem lại</button>
       <button onclick="switchTxTab('review_required')" id="tx-review_required" class="tab-btn text-slate-600 px-3 py-2 rounded-lg font-bold text-xs shrink-0 whitespace-nowrap">Nhiều đơn trùng</button>
@@ -148,6 +148,7 @@ html.has-session #main { display: block !important; }
       <button onclick="switchTxTab('amount_mismatch')" id="tx-amount_mismatch" class="tab-btn text-slate-600 px-3 py-2 rounded-lg font-bold text-xs shrink-0 whitespace-nowrap">Sai số tiền</button>
       <button onclick="switchTxTab('invalid_order_status')" id="tx-invalid_order_status" class="tab-btn text-slate-600 px-3 py-2 rounded-lg font-bold text-xs shrink-0 whitespace-nowrap">Sai trạng thái</button>
       <button onclick="switchTxTab('outlier')" id="tx-outlier" class="tab-btn text-purple-600 px-3 py-2 rounded-lg font-bold text-xs shrink-0 whitespace-nowrap bg-purple-50">Ngoài lề</button>
+      <button onclick="switchTxTab('delete')" id="tx-delete" class="tab-btn text-red-600 px-3 py-2 rounded-lg font-bold text-xs shrink-0 whitespace-nowrap bg-red-50">Xóa</button>
   </div>
 
   <div id="transBody" class="space-y-3 w-full min-w-0">
@@ -553,6 +554,17 @@ const PKG_DAYS=[30,30,30,30,365,0,0,0];
 
 const CROSS_SYNC_PATHS=["/api/orders","/api/cms","/api/data_requests", "/api/link_pool"];
 
+// -------------------------------------------------------------
+// V2 ADAPTIVE INCREMENTAL POLLING STATE
+// -------------------------------------------------------------
+let txData = [];
+let txLastSeenId = 0;
+let txOldestId = null;
+let isTxPolling = false;
+let txPollTimer = null;
+let txPollFails = 0;
+let selectedTxIds = new Set();
+
 let ordersDb=[],dataRequestsDb=[],linksDb=[],deadLinksDb=[],cmsDb={},devicesDb=[], linkPoolDb=[];
 let myDev="",curCms="android",curOrdTab="success", curLinkTab="pool", curLinkListView="compact", curTxTab="all";
 let sysHasError = false;
@@ -915,29 +927,6 @@ async function doLogin(){
  } else toast("Sai mật khẩu!","err");
 }
 
-async function checkD1BadgeBackground() {
-    try {
-        const webhookUrl = (cmsDb.settings && cmsDb.settings.d1Url) ? cmsDb.settings.d1Url.replace(/\/$/, '') : "";
-        const webhookSecret = (cmsDb.settings && cmsDb.settings.d1Secret) ? cmsDb.settings.d1Secret : "";
-        if(!webhookUrl) return;
-        const res = await fetch(`${webhookUrl}/api/admin/transactions?status=all`, {
-            headers: webhookSecret ? { 'Authorization': 'Bearer ' + webhookSecret } : {}
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        const list = data.transactions || data.reviews || [];
-        const lastViewed = lsTime("D1Viewed");
-        const actionableCount = list.filter(t => 
-            (t.status === 'unmatched' || t.status.includes('review') || t.status.includes('mismatch')) 
-            && new Date(t.created_at).getTime() > lastViewed
-        ).length;
-        if(actionableCount > 0) {
-            document.getElementById('transBadge').innerText = actionableCount;
-            document.getElementById('transBadge').classList.remove('hidden');
-        }
-    } catch(e) {}
-}
-
 function loginOK(st=true){
  document.getElementById("loginWrap").classList.add("hidden");
  document.getElementById("hdr").classList.remove("hidden");
@@ -983,13 +972,10 @@ function loginOK(st=true){
  apG("/api/links",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(linksDb)){linksDb=f;renderLinks();}});
  apG("/api/link_pool",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(linkPoolDb)){linkPoolDb=f;
  if (curLinkTab==='pool') renderLinks(); }});
- 
- if (document.getElementById("t-trans").classList.contains("hidden")) {
-     checkD1BadgeBackground();
- } else {
-     fetchTransactions(true);
- }
  },5000);
+
+ // Khởi tạo dữ liệu Giao dịch ngay khi đăng nhập
+ initialLoadTransactions();
 }
 
 async function pollAutoFulfillment() {}
@@ -1042,10 +1028,11 @@ function go(id){
  if(id==="t-settings"){renderMailLog(); renderSysLog(); renderDev(); loadSyncSettingUI();}
  if(id==="t-lnk") switchLinkMode(curLinkTab);
  if(id==="t-trans") {
-    // Tắt đèn báo khi vào tab
     lsSetT("D1Viewed");
    document.getElementById('transBadge').classList.add('hidden');
-    fetchTransactions();
+    // Khi mở tab, nếu chưa có dữ liệu thì load lần đầu, nếu có rồi thì chỉ render
+    if(txData.length === 0) initialLoadTransactions();
+    else renderTransactions();
  }
 }
 
@@ -1083,11 +1070,16 @@ async function fetchAll(msg=false){
  if(msg) toast("Đã làm mới dữ liệu!");
 }
 
+// -------------------------------------------------------------
+// V2 ADAPTIVE INCREMENTAL POLLING CỦA TAB GIAO DỊCH D1
+// -------------------------------------------------------------
 function switchTxTab(tab) {
  curTxTab = tab;
+ selectedTxIds.clear(); // Reset lựa chọn xóa khi đổi tab
  document.querySelectorAll('#t-trans .tab-btn').forEach(b => {
-    b.classList.remove('active', 'bg-indigo-600', 'text-white', 'bg-purple-600');
+    b.classList.remove('active', 'bg-indigo-600', 'text-white', 'bg-purple-600', 'bg-red-600', 'text-red-600', 'bg-purple-50', 'bg-red-50');
     if(b.id === 'tx-outlier') b.classList.add('text-purple-600', 'bg-purple-50');
+    else if(b.id === 'tx-delete') b.classList.add('text-red-600', 'bg-red-50');
     else b.classList.add('text-slate-600');
  });
 
@@ -1095,36 +1087,21 @@ function switchTxTab(tab) {
  if(tab === 'outlier') {
      el.classList.add('active', 'bg-purple-600', 'text-white');
     el.classList.remove('text-purple-600', 'bg-purple-50');
+ } else if(tab === 'delete') {
+     el.classList.add('active', 'bg-red-600', 'text-white');
+    el.classList.remove('text-red-600', 'bg-red-50');
  } else {
      el.classList.add('active', 'bg-indigo-600', 'text-white');
     el.classList.remove('text-slate-600');
  }
- fetchTransactions();
+ 
+ // Chuyển Tab cực nhanh 0ms bằng data đã có sẵn
+ renderTransactions();
 }
 
-async function fetchTransactions(silent = false) {
- const tb = document.getElementById("transBody");
- if(!silent) tb.innerHTML = '<div class="p-6 text-center"><i class="fas fa-spinner fa-spin text-2xl text-indigo-500"></i></div>';
- try {
-  const webhookUrl = (cmsDb.settings && cmsDb.settings.d1Url) ? cmsDb.settings.d1Url.replace(/\/$/, '') : "";
-  const webhookSecret = (cmsDb.settings && cmsDb.settings.d1Secret) ? cmsDb.settings.d1Secret : "";
-  if(!webhookUrl) throw new Error("Chưa điền URL Webhook D1 trong Cài Đặt");
-  
-  const query = (curTxTab === 'all' || curTxTab === 'outlier') ? '?status=all' : `?status=${curTxTab}`;
-  const res = await fetch(`${webhookUrl}/api/admin/transactions${query}`, {
-        headers: webhookSecret ? { 'Authorization': 'Bearer ' + webhookSecret } : {}
-  });
-  
-  if (!res.ok) throw new Error("Lỗi gọi API D1");
-  const data = await res.json();
-  let list = data.transactions || data.reviews || [];
-  
-  if(curTxTab === 'outlier') {
-      list = list.filter(t => !validAmts.has(Number(t.amount)));
-  }
- 
+function updateTxBadge() {
   const lastViewed = lsTime("D1Viewed");
-  const actionableCount = (data.transactions || data.reviews || []).filter(t => 
+  const actionableCount = txData.filter(t => 
       (t.status === 'unmatched' || t.status.includes('review') || t.status.includes('mismatch')) 
       && new Date(t.created_at).getTime() > lastViewed
   ).length;
@@ -1133,6 +1110,147 @@ async function fetchTransactions(silent = false) {
      document.getElementById('transBadge').innerText = actionableCount;
      document.getElementById('transBadge').classList.remove('hidden');
   }
+}
+
+async function initialLoadTransactions(force = false) {
+    if(!force && txData.length > 0) return; // Đã load rồi thì thôi
+    const tb = document.getElementById("transBody");
+    if(document.getElementById("t-trans").classList.contains("hidden") === false) {
+        tb.innerHTML = '<div class="p-6 text-center"><i class="fas fa-spinner fa-spin text-2xl text-indigo-500"></i></div>';
+    }
+
+    try {
+        const webhookUrl = (cmsDb.settings && cmsDb.settings.d1Url) ? cmsDb.settings.d1Url.replace(/\/$/, '') : "";
+        const webhookSecret = (cmsDb.settings && cmsDb.settings.d1Secret) ? cmsDb.settings.d1Secret : "";
+        if(!webhookUrl) throw new Error("Chưa điền URL Webhook D1 trong Cài Đặt");
+
+        // Gọi lấy 50 record mới nhất
+        const res = await fetch(`${webhookUrl}/api/admin/transactions?status=all&limit=50`, {
+            headers: webhookSecret ? { 'Authorization': 'Bearer ' + webhookSecret } : {}
+        });
+        
+        if(!res.ok) throw new Error("API error");
+        const data = await res.json();
+        
+        let list = data.transactions || data.reviews || [];
+        
+        txData = list;
+        if(list.length > 0) {
+            txLastSeenId = Math.max(...list.map(t => t.id));
+            txOldestId = Math.min(...list.map(t => t.id));
+        }
+        
+        if (!document.getElementById("t-trans").classList.contains("hidden")) {
+            renderTransactions();
+        }
+        updateTxBadge();
+        scheduleTxPoll(); // Khởi động nhịp tim
+    } catch(e) {
+        if(document.getElementById("t-trans").classList.contains("hidden") === false) {
+            tb.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold text-sm">Lỗi tải D1: ${e.message}</div>`;
+        }
+        scheduleTxPoll(); // Cứ cho nó poll để tự hồi phục
+    }
+}
+
+async function pollTransactions() {
+    if(isTxPolling) return; // Cấm chồng Request
+    isTxPolling = true;
+
+    try {
+        const webhookUrl = (cmsDb.settings && cmsDb.settings.d1Url) ? cmsDb.settings.d1Url.replace(/\/$/, '') : "";
+        const webhookSecret = (cmsDb.settings && cmsDb.settings.d1Secret) ? cmsDb.settings.d1Secret : "";
+        if(!webhookUrl) throw new Error("Missing");
+
+        // Chỉ xin những cái mới hơn txLastSeenId
+        const url = `${webhookUrl}/api/admin/transactions?status=all&after_id=${txLastSeenId}&limit=100`;
+        const res = await fetch(url, {
+            headers: webhookSecret ? { 'Authorization': 'Bearer ' + webhookSecret } : {}
+        });
+        
+        if(!res.ok) throw new Error("API error");
+        const data = await res.json();
+        let list = data.transactions || data.reviews || [];
+        
+        if(list.length > 0) {
+            txPollFails = 0; // Reset số lần Fail vì có data mới
+            const newMaxId = Math.max(...list.map(t => t.id));
+            if(newMaxId > txLastSeenId) txLastSeenId = newMaxId;
+
+            // Merge & Deduplicate
+            const map = new Map();
+            txData.forEach(t => map.set(t.id, t));
+            list.forEach(t => map.set(t.id, t));
+            txData = Array.from(map.values()).sort((a,b) => b.id - a.id);
+
+            updateTxBadge();
+            if (!document.getElementById("t-trans").classList.contains("hidden")) {
+                renderTransactions();
+            }
+        } else {
+            txPollFails++; // Tăng fail count để kéo giãn thời gian poll
+        }
+    } catch(e) {
+        txPollFails++;
+    }
+
+    isTxPolling = false;
+    scheduleTxPoll();
+}
+
+function scheduleTxPoll() {
+    if(txPollTimer) clearTimeout(txPollTimer);
+
+    let interval = 3000;
+    if (document.visibilityState === 'hidden') {
+        interval = 30000; // Ngủ đông khi tab ẩn
+    } else {
+        if (txPollFails === 0) interval = 3000;
+        else if (txPollFails === 1) interval = 5000;
+        else if (txPollFails === 2) interval = 8000;
+        else if (txPollFails === 3) interval = 12000;
+        else interval = 15000; // Kịch khung
+    }
+
+    txPollTimer = setTimeout(pollTransactions, interval);
+}
+
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === 'visible') {
+        txPollFails = 0; // Đánh thức ngay lập tức
+        if(txPollTimer) clearTimeout(txPollTimer);
+        pollTransactions();
+    }
+});
+
+function toggleTxSelect(id) {
+    if(selectedTxIds.has(id)) selectedTxIds.delete(id);
+    else selectedTxIds.add(id);
+    document.getElementById("delSelectedCount").innerText = selectedTxIds.size;
+}
+
+function selectAllTx() {
+    const list = getFilteredTxList();
+    if(selectedTxIds.size === list.length) {
+        selectedTxIds.clear(); // Bỏ chọn hết
+    } else {
+        list.forEach(t => selectedTxIds.add(t.id));
+    }
+    renderTransactions(); // Vẽ lại để cập nhật nút check
+}
+
+function getFilteredTxList() {
+    return txData.filter(t => {
+        if (curTxTab === 'all') return true;
+        if (curTxTab === 'delete') return true;
+        if (curTxTab === 'outlier') return !validAmts.has(Number(t.amount));
+        return t.status === curTxTab;
+    });
+}
+
+function renderTransactions() {
+  const tb = document.getElementById("transBody");
+  const list = getFilteredTxList();
   
   if (!list || list.length === 0) {
       tb.innerHTML = '<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold text-sm">Không có giao dịch nào</div>';
@@ -1153,24 +1271,28 @@ async function fetchTransactions(silent = false) {
       else statusColor = "bg-yellow-100 text-yellow-800 border-yellow-200";
 
       return `
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm w-full transition hover:shadow-md">
-         <div class="flex justify-between items-start mb-2">
-           <div>
-              <span class="font-black text-slate-800 text-lg">${Number(tx.amount).toLocaleString('vi-VN')} đ</span>
-              <span class="${statusColor} border text-[10px] font-bold px-2 py-0.5 rounded ml-2">${tx.status}</span>
-          </div>
-           <div class="flex items-center gap-3">
-              <div class="text-[10px] text-slate-400 font-medium">${tx.created_at}</div>
-              <button onclick="deleteTransaction(${tx.id})" title="Xóa giao dịch này" class="text-slate-300 hover:text-red-500 transition"><i class="fas fa-trash-alt"></i></button>
-           </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm w-full transition hover:shadow-md flex items-start gap-3">
+         ${curTxTab === 'delete' ? `
+         <div class="mt-1">
+             <input type="checkbox" class="w-4 h-4 accent-red-600 cursor-pointer" onchange="toggleTxSelect(${tx.id})" ${selectedTxIds.has(tx.id) ? 'checked' : ''}>
          </div>
-         <div class="font-mono text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100 mb-3 leading-relaxed break-all">${tx.notification || tx.content}</div>
-         ${(tx.status !== 'paid' && tx.status !== 'rejected') ? `
-         <div class="flex flex-col sm:flex-row gap-2 mb-2">
-           <button onclick="rejectTransaction(${tx.id})" class="flex-1 bg-white border border-red-200 text-red-600 hover:bg-red-50 font-bold py-2 rounded-lg text-xs transition shadow-sm">Từ Chối GD này</button>
-           <button onclick="approveTransaction(${tx.id}, null)" class="flex-1 bg-white border border-emerald-200 text-emerald-600 hover:bg-emerald-50 font-bold py-2 rounded-lg text-xs transition shadow-sm">Duyệt tự do</button>
-         </div>` : ''}
-       ${candidatesHTML ? `<div class="border-t border-slate-100 pt-3 mt-3"><p class="text-[10px] font-bold text-slate-500 mb-1">CÁC ĐƠN NGHI NGỜ KHỚP TIỀN:</p>${candidatesHTML}</div>` : ''}
+         ` : ''}
+         <div class="flex-1 min-w-0">
+             <div class="flex justify-between items-start mb-2">
+               <div>
+                  <span class="font-black text-slate-800 text-lg">${Number(tx.amount).toLocaleString('vi-VN')} đ</span>
+                  <span class="${statusColor} border text-[10px] font-bold px-2 py-0.5 rounded ml-2">${tx.status}</span>
+              </div>
+               <div class="text-[10px] text-slate-400 font-medium">${tx.created_at}</div>
+             </div>
+             <div class="font-mono text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100 mb-3 leading-relaxed break-all">${tx.notification || tx.content}</div>
+             ${(curTxTab !== 'delete' && tx.status !== 'paid' && tx.status !== 'rejected') ? `
+             <div class="flex flex-col sm:flex-row gap-2 mb-2">
+               <button onclick="rejectTransaction(${tx.id})" class="flex-1 bg-white border border-red-200 text-red-600 hover:bg-red-50 font-bold py-2 rounded-lg text-xs transition shadow-sm">Từ Chối GD này</button>
+               <button onclick="approveTransaction(${tx.id}, null)" class="flex-1 bg-white border border-emerald-200 text-emerald-600 hover:bg-emerald-50 font-bold py-2 rounded-lg text-xs transition shadow-sm">Duyệt tự do</button>
+             </div>` : ''}
+           ${(curTxTab !== 'delete' && candidatesHTML) ? `<div class="border-t border-slate-100 pt-3 mt-3"><p class="text-[10px] font-bold text-slate-500 mb-1">CÁC ĐƠN NGHI NGỜ KHỚP TIỀN:</p>${candidatesHTML}</div>` : ''}
+         </div>
       </div>`;
   }).join('');
   
@@ -1181,17 +1303,62 @@ async function fetchTransactions(silent = false) {
                   <div class="font-bold text-purple-800 text-sm">Cảnh báo Giao dịch Rác</div>
                   <div class="text-xs text-purple-600 font-medium">Phát hiện ${list.length} giao dịch có số tiền không khớp chuẩn.</div>
               </div>
-              <button onclick="deleteOutlierBatch()" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-sm transition text-xs flex items-center shrink-0">
-                  <i class="fas fa-trash-alt mr-2"></i>Quét & Xóa Giao Dịch Ngoài Luồng
-              </button>
+          </div>
+      ` + htmlStr;
+  }
+
+  if (curTxTab === 'delete') {
+      htmlStr = `
+          <div class="mb-4 bg-red-50 border border-red-200 p-4 rounded-xl flex flex-col md:flex-row justify-between items-center gap-3 shadow-sm sticky top-[72px] z-10">
+              <div>
+                  <div class="font-bold text-red-800 text-sm">Chế Độ Xóa Rác</div>
+                  <div class="text-xs text-red-600 font-medium">Chọn các giao dịch cần xóa. Đã chọn: <span id="delSelectedCount" class="font-black text-lg">${selectedTxIds.size}</span></div>
+              </div>
+              <div class="flex gap-2">
+                  <button onclick="selectAllTx()" class="bg-white border border-red-200 text-red-600 font-bold py-2 px-4 rounded-lg shadow-sm transition text-xs shrink-0 whitespace-nowrap">Chọn / Bỏ Chọn Tất Cả</button>
+                  <button onclick="executeBatchDelete()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-sm transition text-xs flex items-center shrink-0 whitespace-nowrap">
+                      <i class="fas fa-trash-alt mr-2"></i>Xóa Đã Chọn
+                  </button>
+              </div>
           </div>
       ` + htmlStr;
   }
   
   tb.innerHTML = htmlStr;
- } catch(e) {
-  if(!silent) tb.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold text-sm">Lỗi tải D1: ${e.message}</div>`;
- }
+}
+
+// Hàm Xóa Mới theo mảng ID nội bộ
+async function executeBatchDelete() {
+    if(selectedTxIds.size === 0) return toast("Chưa chọn giao dịch nào!", "err");
+    if(!confirm(`Xác nhận xóa vĩnh viễn ${selectedTxIds.size} giao dịch đã chọn? Hành động này không thể hoàn tác!`)) return;
+    
+    toast("Đang tống cổ rác...");
+    try {
+        const webhookUrl = (cmsDb.settings && cmsDb.settings.d1Url) ? cmsDb.settings.d1Url.replace(/\/$/, '') : "";
+        const webhookSecret = (cmsDb.settings && cmsDb.settings.d1Secret) ? cmsDb.settings.d1Secret : "";
+        
+        const idsArray = Array.from(selectedTxIds);
+        
+        const delRes = await fetch(`${webhookUrl}/api/admin/transactions/delete_batch`, {
+            method: 'POST',
+            headers: { 
+                "Content-Type": "application/json",
+                "Authorization": webhookSecret ? 'Bearer ' + webhookSecret : ""
+            },
+            body: JSON.stringify({ ids: idsArray })
+        });
+        
+        if(delRes.ok) {
+            toast(`Lệnh dọn rác hoàn thành!`);
+            // Xóa cứng khỏi Local State luôn cho mượt
+            txData = txData.filter(t => !selectedTxIds.has(t.id));
+            selectedTxIds.clear();
+            renderTransactions(); // UI nháy cực nhanh
+            addSysLog("Xóa Giao Dịch", `Đã xóa ${idsArray.length} GD khỏi D1.`);
+        } else {
+            toast("Lỗi khi xóa. Hãy kiểm tra lại API Delete", "err");
+        }
+    } catch(e) { toast("Lỗi mạng", "err"); }
 }
 
 async function approveTransaction(txId, orderId) {
@@ -1211,8 +1378,11 @@ async function approveTransaction(txId, orderId) {
   });
   const result = await res.json();
   if(res.ok) {
-      toast("Duyệt thành công! Đơn sẽ vào tab Đã Thanh Toán.");
-     fetchTransactions();
+      toast("Duyệt thành công!");
+      // Cập nhật State nội bộ cho mượt
+      const localTx = txData.find(t => t.id === txId);
+      if(localTx) { localTx.status = 'paid'; localTx.order_id = oid; }
+      renderTransactions();
   } else { toast("Lỗi: " + (result.error || "Không rõ"), "err"); }
  } catch(e) { toast("Lỗi kết nối", "err"); }
 }
@@ -1227,67 +1397,14 @@ async function rejectTransaction(txId) {
       method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + webhookSecret },
       body: JSON.stringify({ note: "Từ chối qua Admin UI" })
   });
-  if(res.ok) { toast("Đã từ chối thành công"); fetchTransactions(); } 
+  if(res.ok) { 
+      toast("Đã từ chối thành công"); 
+      const localTx = txData.find(t => t.id === txId);
+      if(localTx) localTx.status = 'rejected';
+      renderTransactions();
+  } 
   else { toast("Lỗi API D1", "err"); }
  } catch(e) { toast("Lỗi kết nối", "err"); }
-}
-
-async function deleteTransaction(id) {
-    if(!confirm("Bạn có chắc chắn muốn xóa vĩnh viễn giao dịch này?")) return;
-    toast("Đang xóa...");
-    try {
-        const webhookUrl = (cmsDb.settings && cmsDb.settings.d1Url) ? cmsDb.settings.d1Url.replace(/\/$/, '') : "";
-        const webhookSecret = (cmsDb.settings && cmsDb.settings.d1Secret) ? cmsDb.settings.d1Secret : "";
-        const delRes = await fetch(`${webhookUrl}/api/admin/transactions/delete_batch`, {
-            method: 'POST',
-            headers: { 
-                "Content-Type": "application/json",
-                "Authorization": webhookSecret ? 'Bearer ' + webhookSecret : ""
-            },
-            body: JSON.stringify({ ids: [id] })
-        });
-        if(delRes.ok) {
-            toast("Đã xóa giao dịch!");
-            fetchTransactions();
-        } else {
-            toast("Lỗi khi xóa", "err");
-        }
-    } catch(e) { toast("Lỗi mạng", "err"); }
-}
-
-async function deleteOutlierBatch() {
-    if(!confirm("Hủy diệt TOÀN BỘ các giao dịch ngoài luồng hiện tại? Hành động này không thể hoàn tác!")) return;
-    toast("Đang dọn rác...");
-    try {
-        const webhookUrl = (cmsDb.settings && cmsDb.settings.d1Url) ? cmsDb.settings.d1Url.replace(/\/$/, '') : "";
-        const webhookSecret = (cmsDb.settings && cmsDb.settings.d1Secret) ? cmsDb.settings.d1Secret : "";
-        
-        const res = await fetch(`${webhookUrl}/api/admin/transactions?status=all`, {
-            headers: webhookSecret ? { 'Authorization': 'Bearer ' + webhookSecret } : {}
-        });
-        const data = await res.json();
-        let list = data.transactions || data.reviews || [];
-        list = list.filter(t => !validAmts.has(Number(t.amount)));
-        const ids = list.map(t => t.id);
-        
-        if(ids.length === 0) return toast("Không còn rác để xóa!");
-        
-        const delRes = await fetch(`${webhookUrl}/api/admin/transactions/delete_batch`, {
-            method: 'POST',
-            headers: { 
-                "Content-Type": "application/json",
-                "Authorization": webhookSecret ? 'Bearer ' + webhookSecret : ""
-            },
-            body: JSON.stringify({ ids })
-        });
-        
-        if(delRes.ok) {
-            toast(`Đã xóa sạch ${ids.length} giao dịch rác!`);
-            fetchTransactions();
-        } else {
-            toast("Lỗi khi xóa rác D1", "err");
-        }
-    } catch(e) { toast("Lỗi mạng", "err"); }
 }
 
 function switchLinkMode(mode) {
