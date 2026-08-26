@@ -1,4 +1,4 @@
-<!-- v1.8 - Fix UI Orders, D1 Notification Logic, Link Sub Sync & Outlier Tab - 2026-08-21 -->
+<!-- v1.9 - Định tuyến Link Sub, Auto-Polling 5s, Xóa rác D1 - 2026-08-26 -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -81,10 +81,10 @@ html.has-session #main { display: block !important; }
  const _sk = window.location.hostname.replace(/\./g,"_");
  let _admHasSession = false;
  for(let i=0; i<localStorage.length; i++) {
-  if(localStorage.key(i).includes(_sk + '_adm_dev')) _admHasSession = true;
+ if(localStorage.key(i).includes(_sk + '_adm_dev')) _admHasSession = true;
  }
  if(_admHasSession) {
-  document.documentElement.classList.add('has-session');
+ document.documentElement.classList.add('has-session');
  }
 </script>
 </head>
@@ -285,7 +285,7 @@ html.has-session #main { display: block !important; }
         <div class="settings-sub-tab" id="stab-dev" onclick="switchSettingsTab('dev')"><i class="fas fa-laptop mr-1.5"></i>Thiết bị</div>
         <div class="settings-sub-tab" id="stab-time" onclick="switchSettingsTab('time')"><i class="fas fa-clock mr-1.5"></i>Thời gian</div>
       </div>
-  </div>
+  </div> 
   
   <div id="settings-view-mail">
       <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 max-w-lg">
@@ -346,7 +346,7 @@ html.has-session #main { display: block !important; }
           <div id="autoMailStatus" class="text-xs lg:text-sm text-slate-500 italic">Trạng thái: Đang kiểm tra...</div>
         </div>
       </div>
-  </div>
+  </div> 
   
   <div id="settings-view-time" class="hidden">
       <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 max-w-lg">
@@ -377,16 +377,24 @@ html.has-session #main { display: block !important; }
         <div class="font-bold text-sm lg:text-base text-slate-800 mb-1">Worker URL của 3 Website</div>
         <div class="text-xs lg:text-sm text-slate-500 mb-4">Chỉ đồng bộ: Đơn Hàng, Kho Link Tổng, Yêu Cầu Data, CMS. <strong class="text-red-500">Link Ẩn tự sinh không bắn tỉa qua lại.</strong></div>
         <div class="space-y-3 mb-6">
-      <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Worker Web 1</label><input id="syncW1" type="text" placeholder="https://worker-web1.workers.dev" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
-      <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Worker Web 2</label><input id="syncW2" type="text" placeholder="https://worker-web2.workers.dev" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
-      <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Worker Web 3</label><input id="syncW3" type="text" placeholder="https://worker-web3.workers.dev" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
+       <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Worker Web 1</label><input id="syncW1" type="text" placeholder="https://worker-web1.workers.dev" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
+       <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Worker Web 2</label><input id="syncW2" type="text" placeholder="https://worker-web2.workers.dev" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
+       <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Worker Web 3</label><input id="syncW3" type="text" placeholder="https://worker-web3.workers.dev" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
+        </div>
+
+        <div class="font-bold text-sm lg:text-base text-slate-800 mb-1 border-t border-slate-100 pt-4">Định Tuyến Ô Dán Link Sub Ẩn</div>
+        <div class="text-xs lg:text-sm text-slate-500 mb-4">Nhập chính xác chuỗi URL/Domain để Worker nhận diện và dán Link ẩn vào đúng Ô (info1, info2, info3).</div>
+        <div class="space-y-3 mb-6">
+            <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Định tuyến Ô Web 1 (info1)</label><input id="routeWeb1" type="text" placeholder="VD: doicucden" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
+            <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Định tuyến Ô Web 2 (info2)</label><input id="routeWeb2" type="text" placeholder="VD: onepiecechapter" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
+            <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">Định tuyến Ô Web 3 (info3)</label><input id="routeWeb3" type="text" placeholder="VD: lucastanora" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
         </div>
         
         <div class="font-bold text-sm lg:text-base text-slate-800 mb-1 border-t border-slate-100 pt-4">Kết nối D1 Webhook</div>
         <div class="text-xs lg:text-sm text-slate-500 mb-4">Để lấy dữ liệu ngân hàng cho tab Giao Dịch D1 và Auto Fulfillment.</div>
         <div class="space-y-3">
-      <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">D1 Webhook URL</label><input id="syncD1Url" type="text" placeholder="https://payment-webhook..." class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
-      <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">D1 Secret Token</label><input id="syncD1Secret" type="password" placeholder="***" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
+       <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">D1 Webhook URL</label><input id="syncD1Url" type="text" placeholder="https://payment-webhook..." class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
+       <div><label class="block font-bold text-[10px] lg:text-xs text-slate-600 mb-1">D1 Secret Token</label><input id="syncD1Secret" type="password" placeholder="***" class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
         </div>
         
         <button onclick="saveSyncSetting()" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs lg:text-sm shadow-md transition"><i class="fas fa-save mr-2"></i>LƯU CẤU HÌNH</button>
@@ -407,7 +415,7 @@ html.has-session #main { display: block !important; }
         <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
           <div class="overflow-x-auto">
             <table class="log-table">
-          <thead><tr><th>#</th><th>Loại mail</th><th>Email khách</th><th>Mã đơn</th><th>Thời gian</th></tr></thead>
+         <thead><tr><th>#</th><th>Loại mail</th><th>Email khách</th><th>Mã đơn</th><th>Thời gian</th></tr></thead>
              <tbody id="logTableBody"><tr><td colspan="5" class="text-center py-8 text-slate-400 italic text-sm">Chưa có nhật ký Mail</td></tr></tbody>
         </table>
           </div>
@@ -422,7 +430,7 @@ html.has-session #main { display: block !important; }
         <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
           <div class="overflow-x-auto">
             <table class="log-table">
-          <thead><tr><th>#</th><th>Hành động</th><th>Kết quả</th><th>Thời gian</th></tr></thead>
+         <thead><tr><th>#</th><th>Hành động</th><th>Kết quả</th><th>Thời gian</th></tr></thead>
              <tbody id="sysLogTableBody"><tr><td colspan="4" class="text-center py-8 text-slate-400 italic text-sm">Chưa có hoạt động</td></tr></tbody>
         </table>
           </div>
@@ -587,13 +595,13 @@ function getAdjustedTime(dateObj = null) {
  const s = (cmsDb && cmsDb.settings) ? cmsDb.settings : {};
  const tz = s.tz || "VN";
  const offset = tz === "CN" ? 8 : 7;
- 
+
  let baseMs = dateObj ? dateObj.getTime() : Date.now();
- 
+
  if (!dateObj && s.simMode && s.simOffset) {
       baseMs += s.simOffset;
  }
- 
+
  const d = new Date(baseMs);
  const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
  return new Date(utc + (3600000 * offset));
@@ -698,7 +706,7 @@ async function apG(p,def){
 async function apP(p,data){
  lsSet("a"+p,data);lsSetT(p);
  const localOnly = ["/api/links", "/api/deadlinks"];
- 
+
  try {
   const r = await fetch(API+p, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data)});
   if(!r.ok) { sysHasError = true; toast("Lỗi lưu nội bộ: " + r.status, "err"); }
@@ -706,7 +714,7 @@ async function apP(p,data){
  } catch(e) {
   sysHasError = true; toast("Mất kết nối nội bộ: " + e.message, "err");
  }
- 
+
  if (!localOnly.includes(p) && CROSS_SYNC_PATHS.includes(p)) {
   const syncSettings = (cmsDb && cmsDb.settings) ? cmsDb.settings : {};
   const rawTargets = [syncSettings.syncW1, syncSettings.syncW2, syncSettings.syncW3].filter(u => u && u.trim());
@@ -841,20 +849,23 @@ function loadSyncSettingUI(){
  document.getElementById("syncW1").value = s.syncW1 || "";
  document.getElementById("syncW2").value = s.syncW2 || "";
  document.getElementById("syncW3").value = s.syncW3 || "";
+ document.getElementById("routeWeb1").value = s.routeWeb1 || "";
+ document.getElementById("routeWeb2").value = s.routeWeb2 || "";
+ document.getElementById("routeWeb3").value = s.routeWeb3 || "";
  document.getElementById("syncD1Url").value = s.d1Url || "";
  document.getElementById("syncD1Secret").value = s.d1Secret || "";
- 
+
  document.getElementById("selTimezone").value = s.tz || "VN";
  const on = s.autoMailEnabled || false;
  document.getElementById("toggleAutoMail").checked = on;
  document.getElementById("autoMailStatus").textContent = "Trạng thái: " + (on ? "✅ Đang bật (Phụ thuộc Cronjob)" : "⏸ Đang tắt");
- 
+
  if (s.emailRole === 'master') { document.querySelector('input[name="emailRoleRad"][value="master"]').checked = true; }
  else { document.querySelector('input[name="emailRoleRad"][value="slave"]').checked = true; }
- 
+
  if (s.autoRole === 'master') { document.querySelector('input[name="autoRoleRad"][value="master"]').checked = true; }
  else { document.querySelector('input[name="autoRoleRad"][value="slave"]').checked = true; }
- 
+
  const isSim = s.simMode || false;
  document.getElementById("toggleSimTime").checked = isSim;
  document.getElementById("simTimeInputs").classList.toggle('hidden', !isSim);
@@ -865,9 +876,12 @@ async function saveSyncSetting(){
  cmsDb.settings.syncW1 = document.getElementById("syncW1").value.trim();
  cmsDb.settings.syncW2 = document.getElementById("syncW2").value.trim();
  cmsDb.settings.syncW3 = document.getElementById("syncW3").value.trim();
+ cmsDb.settings.routeWeb1 = document.getElementById("routeWeb1").value.trim();
+ cmsDb.settings.routeWeb2 = document.getElementById("routeWeb2").value.trim();
+ cmsDb.settings.routeWeb3 = document.getElementById("routeWeb3").value.trim();
  cmsDb.settings.d1Url = document.getElementById("syncD1Url").value.trim();
  cmsDb.settings.d1Secret = document.getElementById("syncD1Secret").value.trim();
- 
+
  toast("Đang lưu cấu hình...");
  await apP("/api/cms", cmsDb);
  toast("Đã lưu cấu hình Hệ Thống & Bắn Tỉa!");
@@ -901,24 +915,47 @@ async function doLogin(){
  } else toast("Sai mật khẩu!","err");
 }
 
+async function checkD1BadgeBackground() {
+    try {
+        const webhookUrl = (cmsDb.settings && cmsDb.settings.d1Url) ? cmsDb.settings.d1Url.replace(/\/$/, '') : "";
+        const webhookSecret = (cmsDb.settings && cmsDb.settings.d1Secret) ? cmsDb.settings.d1Secret : "";
+        if(!webhookUrl) return;
+        const res = await fetch(`${webhookUrl}/api/admin/transactions?status=all`, {
+            headers: webhookSecret ? { 'Authorization': 'Bearer ' + webhookSecret } : {}
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = data.transactions || data.reviews || [];
+        const lastViewed = lsTime("D1Viewed");
+        const actionableCount = list.filter(t => 
+            (t.status === 'unmatched' || t.status.includes('review') || t.status.includes('mismatch')) 
+            && new Date(t.created_at).getTime() > lastViewed
+        ).length;
+        if(actionableCount > 0) {
+            document.getElementById('transBadge').innerText = actionableCount;
+            document.getElementById('transBadge').classList.remove('hidden');
+        }
+    } catch(e) {}
+}
+
 function loginOK(st=true){
  document.getElementById("loginWrap").classList.add("hidden");
  document.getElementById("hdr").classList.remove("hidden");
  document.getElementById("main").classList.remove("hidden");
  document.getElementById("hdr").style.display = "flex";
  document.getElementById("main").style.display = "block";
- 
+
  const antiFlash = document.getElementById("adminAntiFlash");
  if(antiFlash) antiFlash.remove();
  document.documentElement.classList.add('has-session');
- 
+
  const savedTab=lsGet("lastTab")||"t-ord";
  if(st){toast("Đăng nhập thành công!");fetchAll();go(savedTab);}
  else go(savedTab);
- 
+
  let upStart = localStorage.getItem('sys_uptime_start');
  if(!upStart) { upStart = Date.now(); localStorage.setItem('sys_uptime_start', upStart); }
- 
+
  if(sysUptimeInterval) clearInterval(sysUptimeInterval);
  sysUptimeInterval = setInterval(() => {
   const elBox = document.getElementById("sysUptimeBox");
@@ -935,7 +972,7 @@ function loginOK(st=true){
         if(elText) elText.innerText = `${h}:${m}:${s}`;
   }
  }, 1000);
- 
+
  setInterval(()=>{
  pollAutoFulfillment();
  if(document.getElementById("mOrd") && !document.getElementById("mOrd").classList.contains("hidden")) return;
@@ -944,8 +981,15 @@ function loginOK(st=true){
   }});
  apG("/api/data_requests",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(dataRequestsDb)){dataRequestsDb=f;renderDataRequests();toast("Có yêu cầu data mới!","warn");}});
  apG("/api/links",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(linksDb)){linksDb=f;renderLinks();}});
- apG("/api/link_pool",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(linkPoolDb)){linkPoolDb=f; if (curLinkTab==='pool') renderLinks(); }});
- },12000);
+ apG("/api/link_pool",[]).then(f=>{if(JSON.stringify(f)!==JSON.stringify(linkPoolDb)){linkPoolDb=f;
+ if (curLinkTab==='pool') renderLinks(); }});
+ 
+ if (document.getElementById("t-trans").classList.contains("hidden")) {
+     checkD1BadgeBackground();
+ } else {
+     fetchTransactions(true);
+ }
+ },5000);
 }
 
 async function pollAutoFulfillment() {}
@@ -992,7 +1036,7 @@ function go(id){
  const act=document.getElementById("btn-"+id);
  if(act){act.classList.remove("bg-white","text-slate-600","shadow-sm");act.classList.add("bg-indigo-600","text-white","shadow-md","active");}
  lsSet("lastTab",id);
- 
+
  if(id==="t-dead") renderDead();
  if(id==="t-data") renderDataRequests();
  if(id==="t-settings"){renderMailLog(); renderSysLog(); renderDev(); loadSyncSettingUI();}
@@ -1000,7 +1044,7 @@ function go(id){
  if(id==="t-trans") {
     // Tắt đèn báo khi vào tab
     lsSetT("D1Viewed");
-    document.getElementById('transBadge').classList.add('hidden');
+   document.getElementById('transBadge').classList.add('hidden');
     fetchTransactions();
  }
 }
@@ -1016,7 +1060,7 @@ async function fetchAll(msg=false){
  if(!cmsDb.link_origins) cmsDb.link_origins={};
  if(!cmsDb.settings) cmsDb.settings={syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  for(let k in cmsDb){if(k!=="promo_templates"&&k!=="link_origins"&&k!=="settings") cmsDb[k]=reverseShortcodes(cmsDb[k]);}
- 
+
  let poolChanged = false;
  linksDb.forEach(l => {
      if(l.orig) {
@@ -1028,14 +1072,14 @@ async function fetchAll(msg=false){
      }
  });
  if(poolChanged) await apP("/api/link_pool", linkPoolDb);
- 
+
  renderOrd();renderDataRequests();renderLinks();renderDev();
  document.getElementById("cmsRaw").value=cmsDb[curCms]||"";updatePreview();
- 
+
  if(!document.getElementById("t-settings").classList.contains("hidden")){
       renderMailLog(); renderSysLog(); loadSyncSettingUI();
  }
- 
+
  if(msg) toast("Đã làm mới dữ liệu!");
 }
 
@@ -1046,21 +1090,21 @@ function switchTxTab(tab) {
     if(b.id === 'tx-outlier') b.classList.add('text-purple-600', 'bg-purple-50');
     else b.classList.add('text-slate-600');
  });
- 
+
  const el = document.getElementById('tx-' + tab);
  if(tab === 'outlier') {
      el.classList.add('active', 'bg-purple-600', 'text-white');
-     el.classList.remove('text-purple-600', 'bg-purple-50');
+    el.classList.remove('text-purple-600', 'bg-purple-50');
  } else {
      el.classList.add('active', 'bg-indigo-600', 'text-white');
-     el.classList.remove('text-slate-600');
+    el.classList.remove('text-slate-600');
  }
  fetchTransactions();
 }
 
-async function fetchTransactions() {
+async function fetchTransactions(silent = false) {
  const tb = document.getElementById("transBody");
- tb.innerHTML = '<div class="p-6 text-center"><i class="fas fa-spinner fa-spin text-2xl text-indigo-500"></i></div>';
+ if(!silent) tb.innerHTML = '<div class="p-6 text-center"><i class="fas fa-spinner fa-spin text-2xl text-indigo-500"></i></div>';
  try {
   const webhookUrl = (cmsDb.settings && cmsDb.settings.d1Url) ? cmsDb.settings.d1Url.replace(/\/$/, '') : "";
   const webhookSecret = (cmsDb.settings && cmsDb.settings.d1Secret) ? cmsDb.settings.d1Secret : "";
@@ -1077,11 +1121,8 @@ async function fetchTransactions() {
   
   if(curTxTab === 'outlier') {
       list = list.filter(t => !validAmts.has(Number(t.amount)));
-  } else if(curTxTab === 'all') {
-      // Để nguyên
   }
-
-  // Check Badge logic (báo đỏ nếu có giao dịch mới chưa xem)
+ 
   const lastViewed = lsTime("D1Viewed");
   const actionableCount = (data.transactions || data.reviews || []).filter(t => 
       (t.status === 'unmatched' || t.status.includes('review') || t.status.includes('mismatch')) 
@@ -1089,8 +1130,8 @@ async function fetchTransactions() {
   ).length;
   
   if(actionableCount > 0 && document.getElementById("t-trans").classList.contains("hidden")) {
-      document.getElementById('transBadge').innerText = actionableCount;
-      document.getElementById('transBadge').classList.remove('hidden');
+     document.getElementById('transBadge').innerText = actionableCount;
+     document.getElementById('transBadge').classList.remove('hidden');
   }
   
   if (!list || list.length === 0) {
@@ -1098,7 +1139,7 @@ async function fetchTransactions() {
       return;
   }
   
-  tb.innerHTML = list.map(tx => {
+  let htmlStr = list.map(tx => {
       const candidatesHTML = (tx.candidateOrders || []).map(c => `
         <div class="bg-indigo-50 border border-indigo-100 p-2 rounded-lg mt-2 flex justify-between items-center">
         <div><span class="font-mono font-bold text-indigo-700 text-xs">Mã: ${c.order_id}</span><span class="text-[10px] text-slate-500 ml-2">(${c.created_at})</span></div>
@@ -1118,7 +1159,10 @@ async function fetchTransactions() {
               <span class="font-black text-slate-800 text-lg">${Number(tx.amount).toLocaleString('vi-VN')} đ</span>
               <span class="${statusColor} border text-[10px] font-bold px-2 py-0.5 rounded ml-2">${tx.status}</span>
           </div>
-            <div class="text-[10px] text-slate-400 font-medium">${tx.created_at}</div>
+           <div class="flex items-center gap-3">
+              <div class="text-[10px] text-slate-400 font-medium">${tx.created_at}</div>
+              <button onclick="deleteTransaction(${tx.id})" title="Xóa giao dịch này" class="text-slate-300 hover:text-red-500 transition"><i class="fas fa-trash-alt"></i></button>
+           </div>
          </div>
          <div class="font-mono text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100 mb-3 leading-relaxed break-all">${tx.notification || tx.content}</div>
          ${(tx.status !== 'paid' && tx.status !== 'rejected') ? `
@@ -1129,8 +1173,24 @@ async function fetchTransactions() {
        ${candidatesHTML ? `<div class="border-t border-slate-100 pt-3 mt-3"><p class="text-[10px] font-bold text-slate-500 mb-1">CÁC ĐƠN NGHI NGỜ KHỚP TIỀN:</p>${candidatesHTML}</div>` : ''}
       </div>`;
   }).join('');
+  
+  if (curTxTab === 'outlier' && list.length > 0) {
+      htmlStr = `
+          <div class="mb-4 bg-purple-50 border border-purple-200 p-4 rounded-xl flex flex-col md:flex-row justify-between items-center gap-3 shadow-sm">
+              <div>
+                  <div class="font-bold text-purple-800 text-sm">Cảnh báo Giao dịch Rác</div>
+                  <div class="text-xs text-purple-600 font-medium">Phát hiện ${list.length} giao dịch có số tiền không khớp chuẩn.</div>
+              </div>
+              <button onclick="deleteOutlierBatch()" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-sm transition text-xs flex items-center shrink-0">
+                  <i class="fas fa-trash-alt mr-2"></i>Quét & Xóa Giao Dịch Ngoài Luồng
+              </button>
+          </div>
+      ` + htmlStr;
+  }
+  
+  tb.innerHTML = htmlStr;
  } catch(e) {
-  tb.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold text-sm">Lỗi tải D1: ${e.message}</div>`;
+  if(!silent) tb.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold text-sm">Lỗi tải D1: ${e.message}</div>`;
  }
 }
 
@@ -1172,6 +1232,64 @@ async function rejectTransaction(txId) {
  } catch(e) { toast("Lỗi kết nối", "err"); }
 }
 
+async function deleteTransaction(id) {
+    if(!confirm("Bạn có chắc chắn muốn xóa vĩnh viễn giao dịch này?")) return;
+    toast("Đang xóa...");
+    try {
+        const webhookUrl = (cmsDb.settings && cmsDb.settings.d1Url) ? cmsDb.settings.d1Url.replace(/\/$/, '') : "";
+        const webhookSecret = (cmsDb.settings && cmsDb.settings.d1Secret) ? cmsDb.settings.d1Secret : "";
+        const delRes = await fetch(`${webhookUrl}/api/admin/transactions/delete_batch`, {
+            method: 'POST',
+            headers: { 
+                "Content-Type": "application/json",
+                "Authorization": webhookSecret ? 'Bearer ' + webhookSecret : ""
+            },
+            body: JSON.stringify({ ids: [id] })
+        });
+        if(delRes.ok) {
+            toast("Đã xóa giao dịch!");
+            fetchTransactions();
+        } else {
+            toast("Lỗi khi xóa", "err");
+        }
+    } catch(e) { toast("Lỗi mạng", "err"); }
+}
+
+async function deleteOutlierBatch() {
+    if(!confirm("Hủy diệt TOÀN BỘ các giao dịch ngoài luồng hiện tại? Hành động này không thể hoàn tác!")) return;
+    toast("Đang dọn rác...");
+    try {
+        const webhookUrl = (cmsDb.settings && cmsDb.settings.d1Url) ? cmsDb.settings.d1Url.replace(/\/$/, '') : "";
+        const webhookSecret = (cmsDb.settings && cmsDb.settings.d1Secret) ? cmsDb.settings.d1Secret : "";
+        
+        const res = await fetch(`${webhookUrl}/api/admin/transactions?status=all`, {
+            headers: webhookSecret ? { 'Authorization': 'Bearer ' + webhookSecret } : {}
+        });
+        const data = await res.json();
+        let list = data.transactions || data.reviews || [];
+        list = list.filter(t => !validAmts.has(Number(t.amount)));
+        const ids = list.map(t => t.id);
+        
+        if(ids.length === 0) return toast("Không còn rác để xóa!");
+        
+        const delRes = await fetch(`${webhookUrl}/api/admin/transactions/delete_batch`, {
+            method: 'POST',
+            headers: { 
+                "Content-Type": "application/json",
+                "Authorization": webhookSecret ? 'Bearer ' + webhookSecret : ""
+            },
+            body: JSON.stringify({ ids })
+        });
+        
+        if(delRes.ok) {
+            toast(`Đã xóa sạch ${ids.length} giao dịch rác!`);
+            fetchTransactions();
+        } else {
+            toast("Lỗi khi xóa rác D1", "err");
+        }
+    } catch(e) { toast("Lỗi mạng", "err"); }
+}
+
 function switchLinkMode(mode) {
  curLinkTab = mode;
  document.getElementById('btn-ls-pool').classList.toggle('active', mode === 'pool');
@@ -1194,12 +1312,12 @@ function renderLinks() {
    container.innerHTML = `<div class="border border-dashed border-slate-300 p-8 rounded-2xl text-center text-slate-400 font-bold bg-white lg:text-base">Hệ thống chưa có Link nào</div>`; 
       return; 
  }
- 
+
  linkPoolDb.forEach(pool => {
      const children = linksDb.filter(x => x.orig === pool.url);
      pool.used = children.length; 
  });
- 
+
  if(curLinkListView === 'compact') {
    container.innerHTML = linkPoolDb.map((p, i) => {
          const isFull = p.used >= p.max;
@@ -1228,7 +1346,7 @@ function renderLinks() {
          }
       grps[k].children.push(l);
      }
-  container.innerHTML=Object.values(grps).map(g=>{
+ container.innerHTML=Object.values(grps).map(g=>{
         const isLx=g.orig.includes("liangxin"),isDj=g.orig.includes("djjc");
         const badge=isLx?`<span class="badge-lx">Liangxin</span>`:isDj?`<span class="badge-dj">DJJC</span>`:`<span class="badge-ot">Other</span>`;
         const sorted=[...g.children].sort((a,b)=>(parseInt(a.linkIndex||a.machine)||1)-(parseInt(b.linkIndex||b.machine)||1));
@@ -1278,9 +1396,9 @@ async function addLinkToPool() {
  const remainGb = document.getElementById("poolRemainGb").value.trim();
  const exp = document.getElementById("poolExp").value.trim();
  const max = parseInt(document.getElementById("poolMax").value);
- 
+
  if(!orig || !max) return toast("Nhập URL gốc và Max thiết bị!", "err");
- 
+
  let exists = linkPoolDb.find(p => p.url === orig);
  if(exists) {
      exists.gb = gb; exists.remainGb = remainGb||"0"; exists.exp = exp; exists.max = max;
@@ -1290,7 +1408,7 @@ async function addLinkToPool() {
       toast("Đã thêm vào Kho tự động bốc!");
  }
  await apP("/api/link_pool", linkPoolDb);
- 
+
  let masked="";
  try{
   const u=new URL(orig);let qs=u.search;
@@ -1301,11 +1419,11 @@ async function addLinkToPool() {
  if(masked) {
   const linkExists = linksDb.find(x => x.orig === orig && x.email === "Nguồn Hệ Thống (Auto)");
   if(!linkExists) {
-   linksDb.unshift({id:"LNK-"+Date.now(),orig,masked,email:"Nguồn Hệ Thống (Auto)",expDate:exp,linkIndex:"1",isLocked:false,date:getNowStr()});
+  linksDb.unshift({id:"LNK-"+Date.now(),orig,masked,email:"Nguồn Hệ Thống (Auto)",expDate:exp,linkIndex:"1",isLocked:false,date:getNowStr()});
        await apP("/api/links",linksDb);
   }
  }
- 
+
  ["poolOrig","poolGb","poolRemainGb","poolExp","poolMax"].forEach(id => document.getElementById(id).value = "");
  renderLinks();
  addSysLog("Nạp Kho Tổng", `Thành công. URL: ${orig.substring(0,20)}...`);
@@ -1360,13 +1478,13 @@ async function createLink(){
   else if(orig.includes("djjc.cfd")) masked=PD+"/v2/VPNTrinhHg"+qs+"#VPNTrinhHg";
   else return toast("Domain không hỗ trợ!","err");
  }catch{return toast("Link không hợp lệ!","err");}
- 
+
  let exists = linkPoolDb.find(p => p.url === orig);
  if(!exists) {
      linkPoolDb.push({ id: "POOL-" + Date.now(), url: orig, gb: "", remainGb: "", exp: expDate, max: 30 });
       await apP("/api/link_pool", linkPoolDb);
  }
- 
+
  linksDb.unshift({id:"LNK-"+Date.now(),orig,masked,email,expDate,linkIndex:idx,isLocked:false,date:getNowStr()});
  toast("Đang lưu link...");await apP("/api/links",linksDb);toast("Đã tạo link ẩn! Nhớ Đồng bộ GitHub.");
  ["lkOrig","lkEmail","lkExp","lkIdx"].forEach(f=>document.getElementById(f).value="");
@@ -1376,17 +1494,18 @@ async function createLink(){
 async function delPool(url) {
  linkPoolDb = linkPoolDb.filter(p => p.url !== url);
  renderLinks();
- toast("Đang xóa..."); await apP("/api/link_pool", linkPoolDb); toast("Đã xóa khỏi Kho");
+ toast("Đang xóa...");
+ await apP("/api/link_pool", linkPoolDb); toast("Đã xóa khỏi Kho");
  addSysLog("Xóa Nguồn", "Đã xóa 1 Node khỏi kho tổng.");
 }
 
 async function autoMigrateLinks(isAuto = false) {
  if(!isAuto && !confirm("Hệ thống sẽ quét các Node sắp hết hạn (<4 tiếng) hoặc sắp hết dung lượng (<100GB) và TỰ ĐỘNG LUÂN CHUYỂN sang Pool khác. Chạy?")) return;
  if(!isAuto) toast("Đang phân tích Node...");
- 
+
  let changed = 0;
  const nowMs = getAdjustedTime().getTime();
- 
+
  for(const l of linksDb) {
      if(l.email === "Nguồn Hệ Thống (Auto)") continue;
      const currentPool = linkPoolDb.find(p => p.url === l.orig);
@@ -1401,9 +1520,9 @@ async function autoMigrateLinks(isAuto = false) {
         }
      }
   if(currentPool.remainGb) {
-     if(parseFloat(currentPool.remainGb) < 100) needsMigration = true;
+    if(parseFloat(currentPool.remainGb) < 100) needsMigration = true;
      }
- 
+
     if(needsMigration) {
         let newPool = linkPoolDb.find(p => {
              const childrenCount = linksDb.filter(x => x.orig === p.url).length;
@@ -1420,7 +1539,7 @@ async function autoMigrateLinks(isAuto = false) {
         }
      }
  }
- 
+
  if(changed > 0) {
      await apP("/api/links", linksDb);
      if(!isAuto) { renderLinks(); toast(`Đã luân chuyển thành công ${changed} Node nghẽn!`); }
@@ -1444,7 +1563,7 @@ function renderOrd(){
  ["success","pending","failed"].forEach(t=>{const el=document.getElementById("cnt-"+t);if(el) el.textContent=counts[t];});
  const filtered=ordersDb.filter(o=>o.status===curOrdTab);
  if(!filtered.length){tb.innerHTML=`<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold lg:text-base">Không có đơn nào</div>`;return;}
- 
+
  const groups={};
  filtered.forEach(o=>{
   const dc=getDateCreated(o); 
@@ -1462,9 +1581,9 @@ function renderOrd(){
       const displayPkg=o.pkg?o.pkg.split(" / ")[0]:(o.pkgName||"—");
       const dc=getDateCreated(o);
       let isExpiring=false,daysLeft=null,isExpiredSuccess=false;
-  if(o.status==="success"&&o.expDate){
+ if(o.status==="success"&&o.expDate){
         const expD=pd(o.expDate);
-    if(expD){daysLeft=Math.ceil((expD-now)/86400000);isExpiring=daysLeft>=0&&daysLeft<=3;isExpiredSuccess=daysLeft<0;}
+   if(expD){daysLeft=Math.ceil((expD-now)/86400000);isExpiring=daysLeft>=0&&daysLeft<=3;isExpiredSuccess=daysLeft<0;}
       }
       const isSuc=o.status==="success",isPen=o.status==="pending";
       const dot=isExpiredSuccess?'<div class="dot-gray"></div>':isSuc?'<div class="dot-green"></div>':isPen?'<div class="dot-yellow"></div>':'<div class="dot-red"></div>';
@@ -1484,8 +1603,8 @@ function renderOrd(){
             ${dot}
             <span class="font-bold text-[10px] lg:text-xs text-slate-400">#${ordersDb.indexOf(o)+1}</span>
             <span class="font-mono font-extrabold text-indigo-600 text-xs md:text-sm lg:text-base cp truncate order-id-text" onclick="cp('${o.id}')">${o.id}</span>
-         ${nicknameHTML}${badgePending}${badgeUpgrade}
-         ${isExpiredSuccess?`<span class="text-[9px] lg:text-xs font-black bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1 shrink-0">ĐÃ HẾT HẠN</span>`:""}
+        ${nicknameHTML}${badgePending}${badgeUpgrade}
+        ${isExpiredSuccess?`<span class="text-[9px] lg:text-xs font-black bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1 shrink-0">ĐÃ HẾT HẠN</span>`:""}
           </div>
           <div class="font-bold text-slate-800 text-[11px] md:text-xs lg:text-sm cp truncate pl-5 order-email-text" onclick="cp('${o.email||''}')">${o.email||"—"}</div>
           <div class="text-[10px] md:text-[11px] lg:text-sm text-slate-500 mt-0.5 font-medium pl-5 order-meta-text">Zalo: <span class="font-bold text-slate-700 cp" onclick="cp('${o.zalo||''}')">${o.zalo||"Không có"}</span></div>
@@ -1494,8 +1613,8 @@ function renderOrd(){
         <div class="flex flex-col items-end gap-2 shrink-0 border-t border-slate-100 md:border-0 pt-2 md:pt-0 mt-1 md:mt-0">
        ${o.date?`<span class="text-[10px] lg:text-xs text-slate-400 font-semibold whitespace-nowrap">${fmtCardDate(o.date)}</span>`:""}
           <div class="flex gap-1.5 shrink-0 mt-1">
-        ${(o.status==="pending")?`<button onclick="pushFulfillment('${o.id}')" title="Ép hệ thống cấp link" class="text-purple-600 font-bold px-3 py-1.5 bg-purple-50 border border-purple-100 rounded-lg text-xs lg:text-sm hover:bg-purple-600 hover:text-white transition shadow-sm"><i class="fas fa-rocket"></i></button>`:""}
-        ${(o.status==="success"&&o.expDate&&!isExpiredSuccess)?`<button onclick="sendExpMail('${o.id}')" title="Nhắc hết hạn" class="text-amber-500 font-bold px-3 py-1.5 bg-amber-50 border border-amber-100 rounded-lg text-xs lg:text-sm hover:bg-amber-500 hover:text-white transition shadow-sm"><i class="fas fa-clock"></i></button>`:""}
+       ${(o.status==="pending")?`<button onclick="pushFulfillment('${o.id}')" title="Ép hệ thống cấp link" class="text-purple-600 font-bold px-3 py-1.5 bg-purple-50 border border-purple-100 rounded-lg text-xs lg:text-sm hover:bg-purple-600 hover:text-white transition shadow-sm"><i class="fas fa-rocket"></i></button>`:""}
+       ${(o.status==="success"&&o.expDate&&!isExpiredSuccess)?`<button onclick="sendExpMail('${o.id}')" title="Nhắc hết hạn" class="text-amber-500 font-bold px-3 py-1.5 bg-amber-50 border border-amber-100 rounded-lg text-xs lg:text-sm hover:bg-amber-500 hover:text-white transition shadow-sm"><i class="fas fa-clock"></i></button>`:""}
             <button onclick="sendZaloMail('${o.id}')" title="Nhắc Zalo khách hàng" class="text-blue-500 font-bold px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg text-xs lg:text-sm hover:bg-blue-500 hover:text-white transition shadow-sm"><i class="fas fa-comment-dots"></i></button>
             <button onclick="openOrdModal('${o.id}')" class="text-indigo-600 font-bold px-4 py-1.5 bg-indigo-50 border border-indigo-100 rounded-lg text-xs lg:text-sm hover:bg-indigo-600 hover:text-white transition shadow-sm"><i class="fas fa-pen md:mr-1.5"></i><span class="hidden md:inline">Sửa</span></button>
             <button onclick="delOrd('${o.id}')" class="text-red-500 font-bold px-3 py-1.5 bg-red-50 border border-red-100 rounded text-xs lg:text-sm hover:bg-red-500 hover:text-white transition shadow-sm"><i class="fas fa-trash"></i></button>
@@ -1543,7 +1662,7 @@ function openOrdModal(id){
  document.getElementById("mOReason").value=o.reason||"";
  document.getElementById("mOStatus").value=o.status||"pending";
  document.getElementById("mOMethod").value=o.method&&o.method.includes("Alipay")?"Alipay":o.method&&o.method.includes("Weixin")?"Weixin":"Ngân hàng VN";
- 
+
  const sel=document.getElementById("mOPkg");
  sel.innerHTML = PKGS.map((p,i)=>`<option value="${i}">${p}</option>`).join("");
  let matched = false;
@@ -1559,12 +1678,12 @@ function openOrdModal(id){
           sel.value = "-1";
       }
  }
- 
+
  if(!document.getElementById("mOExp").value) {
      let days = parseInt(o.days);
      if(!days || isNaN(days)) {
          days = PKG_DAYS[sel.selectedIndex > -1 ? sel.selectedIndex : 0] || 30;
-        document.getElementById("mODays").value = days;
+       document.getElementById("mODays").value = days;
      }
      let baseDate = getAdjustedTime();
     if(o.createdTs) {
@@ -1573,10 +1692,10 @@ function openOrdModal(id){
          const parsed = pd(normalizeDateStr(o.date));
         if(parsed) baseDate = parsed;
      }
-    baseDate.setDate(baseDate.getDate() + days);
-    document.getElementById("mOExp").value = formatDateTZ(baseDate);
+   baseDate.setDate(baseDate.getDate() + days);
+   document.getElementById("mOExp").value = formatDateTZ(baseDate);
  }
- 
+
  if(!id) {
      sel.selectedIndex = 0;
  document.getElementById("mOPkg").value = "0";
@@ -1590,12 +1709,12 @@ async function saveOrd(){
  const id=document.getElementById("mOId").value.trim();if(!id) return toast("Mã đơn rỗng!","err");
  let o=ordersDb.find(x=>x.id===id);
  if(!o){o={id,dateCreated:todayTZ(),date:getNowStr(), createdTs: Date.now()};ordersDb.unshift(o);} 
- 
+
  const pkgVal = document.getElementById("mOPkg").value;
  const pkgTxt = pkgVal === "-1" ? (o.pkg || "Gói Custom") : PKGS[pkgVal];
  const pkgNameStr = pkgVal === "-1" ? (o.pkgName || "Gói Custom") : pkgTxt.split(" - ")[0];
  const status=document.getElementById("mOStatus").value;
- 
+
  Object.assign(o,{
  email:document.getElementById("mOEmail").value.trim(),
  nickname:document.getElementById("mONickname").value.trim(),
@@ -1613,15 +1732,15 @@ async function saveOrd(){
  reason:document.getElementById("mOReason").value.trim()
  });
  renderOrd();cm("mOrd");toast("Đang lưu & bắn tỉa...");await apP("/api/orders",ordersDb);toast("Đã lưu!");
- 
+
  if(document.getElementById("mOSendMail").checked && o.email && (status==="success"||status==="failed")){
   if(!isMailMaster()) { // CHECK QUYỀN GỬI MAIL
       toast("Đang ở chế độ SLAVE, bỏ qua lệnh gửi Mail!", "warn");
   } else {
        const subj=status==="success"?"VPN Trinh Hg - Kích hoạt thành công":"VPN Trinh Hg - Kích hoạt thất bại";
        const html=status==="success"?buildSuccessMailHtml(o):buildFailedMailHtml(o);
-  fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:o.email,subject:subj,html})});
-  addMailLog(status==="success"?"Kích hoạt thành công":"Kích hoạt thất bại",o.email,o.id);
+ fetch(MAIL_API,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:o.email,subject:subj,html})});
+ addMailLog(status==="success"?"Kích hoạt thành công":"Kích hoạt thất bại",o.email,o.id);
   }
  }
 }
@@ -1770,7 +1889,7 @@ async function sortAllLinks(){
       const origTok = getT(k);
       let idx1Link = null;
       const others = [];
- 
+
       for(const l of arr) {
         if(!idx1Link && getT(l.masked) === origTok && origTok !== "") {
           idx1Link = l;
@@ -1778,19 +1897,19 @@ async function sortAllLinks(){
        others.push(l);
         }
       }
- 
+
    others.sort((a,b)=>{
         const da=pd(a.expDate),db_=pd(b.expDate);
      if(da&&db_) return da-db_;
         if(da) return -1; if(db_) return 1;
         return 0;
       });
- 
+
       if(idx1Link) {
      idx1Link.linkIndex = "1";
         delete idx1Link.machine;
       }
- 
+
       let n = 2;
       for(const l of others){ l.linkIndex=String(n); delete l.machine; n++; }
    }
