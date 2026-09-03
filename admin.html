@@ -1,4 +1,4 @@
-<!-- v2.0 - Adaptive Incremental Polling & Tab Xóa - 2026-08-26 -->
+<!-- v2.1 - Adaptive Incremental Polling, Cursor Pagination, Canonical ID & Tab Xóa - 2026-09-03 -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -564,6 +564,7 @@ let isTxPolling = false;
 let txPollTimer = null;
 let txPollFails = 0;
 let selectedTxIds = new Set();
+let isTxLoadingOlder = false;
 
 let ordersDb=[],dataRequestsDb=[],linksDb=[],deadLinksDb=[],cmsDb={},devicesDb=[], linkPoolDb=[];
 let myDev="",curCms="android",curOrdTab="success", curLinkTab="pool", curLinkListView="compact", curTxTab="all";
@@ -1223,6 +1224,46 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 
+async function loadOlderTransactions() {
+    if(isTxLoadingOlder || !txOldestId) return;
+    isTxLoadingOlder = true;
+    const btn = document.getElementById('btnLoadOlderTx');
+    if(btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tải...';
+
+    try {
+        const webhookUrl = (cmsDb.settings && cmsDb.settings.d1Url) ? cmsDb.settings.d1Url.replace(/\/$/, '') : "";
+        const webhookSecret = (cmsDb.settings && cmsDb.settings.d1Secret) ? cmsDb.settings.d1Secret : "";
+        
+        const res = await fetch(`${webhookUrl}/api/admin/transactions?status=all&before_id=${txOldestId}&limit=50`, {
+            headers: webhookSecret ? { 'Authorization': 'Bearer ' + webhookSecret } : {}
+        });
+        
+        if(!res.ok) throw new Error("API error");
+        const data = await res.json();
+        const list = data.transactions || data.reviews || [];
+        
+        if(list.length > 0) {
+            const newMinId = Math.min(...list.map(t => t.id));
+            if(newMinId < txOldestId) txOldestId = newMinId;
+            
+            const map = new Map();
+            txData.forEach(t => map.set(t.id, t));
+            list.forEach(t => map.set(t.id, t));
+            txData = Array.from(map.values()).sort((a,b) => b.id - a.id);
+            
+            renderTransactions();
+        } else {
+            if(btn) btn.innerHTML = 'Đã tải hết dữ liệu';
+            if(btn) btn.disabled = true;
+            setTimeout(() => { if(btn) btn.style.display = 'none'; }, 2000);
+        }
+    } catch(e) {
+        toast("Lỗi tải thêm giao dịch", "err");
+        if(btn) btn.innerHTML = '<i class="fas fa-chevron-down mr-2"></i>Tải lại';
+    }
+    isTxLoadingOlder = false;
+}
+
 function toggleTxSelect(id) {
     if(selectedTxIds.has(id)) selectedTxIds.delete(id);
     else selectedTxIds.add(id);
@@ -1324,6 +1365,15 @@ function renderTransactions() {
       ` + htmlStr;
   }
   
+  if (list.length > 0 && curTxTab === 'all') {
+      htmlStr += `
+      <div class="mt-4 text-center">
+          <button id="btnLoadOlderTx" onclick="loadOlderTransactions()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-6 rounded-xl transition text-sm shadow-sm">
+              <i class="fas fa-chevron-down mr-2"></i>Tải thêm giao dịch cũ
+          </button>
+      </div>`;
+  }
+  
   tb.innerHTML = htmlStr;
 }
 
@@ -1367,7 +1417,7 @@ async function approveTransaction(txId, orderId) {
   oid = prompt("Nhập chính xác Mã Đơn Hàng (DHXXXXXXXXXX) muốn chốt cho giao dịch này:");
   if (!oid) return;
  }
- oid = oid.trim().toUpperCase();
+ oid = oid.trim().toUpperCase().replace(/[-_.\s]/g, ""); // Dùng Canonical ID chuẩn hóa
  toast("Đang nã lệnh duyệt...");
  try {
   const webhookUrl = (cmsDb.settings && cmsDb.settings.d1Url) ? cmsDb.settings.d1Url.replace(/\/$/, '') : API;
