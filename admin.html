@@ -1,4 +1,4 @@
-<!-- v2.3 - Hub & Spoke Kế Toán Mù, Tách bảng Sync, Bảng Giao Dịch Table Format 60,000VND - 2026-09-10 -->
+<!-- v2.4 - Hub & Spoke Kế Toán Mù, Bảng Giao Dịch Chuẩn, Dynamic Workers, Blur Sub Link - 2026-09-10 -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -53,8 +53,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc;color:#0f172a
 input:checked+.toggle-slider{background:#4f46e5;}
 input:checked+.toggle-slider::before{transform:translateX(22px);}
 .log-table{width:100%;border-collapse:collapse;font-size:12px;}
-.log-table th{background:#f1f5f9;padding:9px 12px;text-align:left;font-weight:800;color:#475569;border-bottom:2px solid #e2e8f0;white-space:nowrap;}
-.log-table td{padding:8px 12px;border-bottom:1px solid #f1f5f9;color:#334155;vertical-align:middle;}
+.log-table th{background:#f1f5f9;padding:12px 14px;text-align:left;font-weight:800;color:#334155;border-bottom:2px solid #e2e8f0;white-space:nowrap;}
+.log-table td{padding:12px 14px;border-bottom:1px solid #f1f5f9;color:#475569;vertical-align:middle;}
 .log-table tr:hover td{background:#f8fafc;}
 .settings-sub-tab{padding:6px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;color:#64748b;white-space:nowrap;flex-shrink:0;}
 .settings-sub-tab.active{background:white;color:#4f46e5;box-shadow:0 1px 4px rgba(0,0,0,.1);}
@@ -81,10 +81,10 @@ html.has-session #main { display: block !important; }
  const _sk = window.location.hostname.replace(/\./g,"_");
  let _admHasSession = false;
  for(let i=0; i<localStorage.length; i++) {
- if(localStorage.key(i).includes(_sk + '_adm_dev')) _admHasSession = true;
+    if(localStorage.key(i).includes(_sk + '_adm_dev')) _admHasSession = true;
  }
  if(_admHasSession) {
- document.documentElement.classList.add('has-session');
+    document.documentElement.classList.add('has-session');
  }
 </script>
 </head>
@@ -139,15 +139,15 @@ html.has-session #main { display: block !important; }
   </div>
  
   <div class="flex justify-start gap-2 mb-4 bg-white p-1.5 rounded-xl border border-slate-100 shadow-sm overflow-x-auto flex-nowrap scroll-hide">
-      <button onclick="switchTxTab('giamsat')" id="tx-giamsat" class="tab-btn active bg-indigo-600 text-white px-3 py-2 rounded-lg font-bold text-xs shrink-0 whitespace-nowrap"><i class="fas fa-list-check mr-1"></i>Bảng Giám Sát Đơn Hàng</button>
-      <button onclick="switchTxTab('raw')" id="tx-raw" class="tab-btn text-slate-600 px-3 py-2 rounded-lg font-bold text-xs shrink-0 whitespace-nowrap"><i class="fas fa-file-invoice mr-1"></i>Giao Dịch Thô (Raw)</button>
+      <button onclick="switchTxTab('giamsat')" id="tx-giamsat" class="tab-btn active bg-indigo-600 text-white px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap"><i class="fas fa-list-check mr-1.5"></i>Bảng Giám Sát Đơn Hàng</button>
+      <button onclick="switchTxTab('raw')" id="tx-raw" class="tab-btn text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap"><i class="fas fa-file-invoice mr-1.5"></i>Giao Dịch Thô (Raw)</button>
   </div>
  
   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden w-full min-w-0">
       <div class="overflow-x-auto">
           <table class="log-table w-full text-left" id="transTable">
               <thead id="transHead">
-                  <!-- Headers will be rendered via JS based on selected tab -->
+                  <!-- Headers -->
               </thead>
               <tbody id="transBody">
                   <tr><td colspan="7" class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-indigo-500"></i></td></tr>
@@ -191,23 +191,23 @@ html.has-session #main { display: block !important; }
         <div class="absolute top-0 right-0 flex items-stretch h-[28px] overflow-hidden rounded-bl-xl shadow-sm border-b border-l border-slate-200">
            <div id="sysUptimeBox" class="bg-blue-50 text-blue-600 text-[10px] font-bold px-3 flex items-center border-r border-slate-200 transition-colors">
                <i class="fas fa-satellite-dish mr-1 animate-pulse"></i> Uptime <span id="autoNextRunText" class="ml-1 font-mono">00:00:00</span>
-           </div>
+          </div>
            <button onclick="autoMigrateLinks()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border-r border-slate-200 text-[10px] font-bold px-3 transition flex items-center cursor-pointer outline-none">
                <i class="fas fa-random mr-1"></i> CHUYỂN NODE NGHẼN
        </button>
            <div class="bg-indigo-50 text-indigo-600 text-[10px] font-extrabold px-3 flex items-center">
                HỆ THỐNG AUTO
-           </div>
+          </div>
         </div>
  
         <h3 class="font-extrabold text-indigo-700 mb-4 text-sm mt-3"><i class="fas fa-server mr-1"></i>Nhập Nguồn Link Mới Vào Kho (Tự sinh Link #1)</h3>
  
         <div class="mb-3"><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Link Gốc (Liangxin / Djjc)</label><input id="poolOrig" type="text" placeholder="https://liangxin..." class="w-full p-2 lg:p-3 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 lg:gap-4 mb-4">
-     <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Tổng dung lượng (GB)</label><input id="poolGb" type="number" placeholder="VD: 1000" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
-     <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Còn lại (GB)</label><input id="poolRemainGb" type="number" placeholder="VD: 1000" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
-     <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Hết hạn</label><input id="poolExp" type="text" placeholder="DD/MM/YYYY hoặc Lifetime" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
-     <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Max thiết bị</label><input id="poolMax" type="number" min="1" placeholder="VD: 20" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
+    <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Tổng dung lượng (GB)</label><input id="poolGb" type="number" placeholder="VD: 1000" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
+    <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Còn lại (GB)</label><input id="poolRemainGb" type="number" placeholder="VD: 1000" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
+    <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Hết hạn</label><input id="poolExp" type="text" placeholder="DD/MM/YYYY hoặc Lifetime" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
+    <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Max thiết bị</label><input id="poolMax" type="number" min="1" placeholder="VD: 20" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
         </div>
         <button onclick="addLinkToPool()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 lg:py-3 rounded-xl shadow-md transition w-full text-xs lg:text-base"><i class="fas fa-plus-circle mr-2"></i>LƯU VÀO KHO TỔNG & TẠO LINK #1</button>
       </div>
@@ -217,9 +217,9 @@ html.has-session #main { display: block !important; }
       <h3 class="font-extrabold text-slate-700 mb-3 text-sm"><i class="fas fa-magic mr-1"></i>Tạo Link Ẩn (Tự động nạp vào Kho nếu chưa có)</h3>
       <div class="mb-3"><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Link Gốc (Liangxin / Djjc)</label><input id="lkOrig" type="text" placeholder="https://liangxin..." class="w-full p-2 lg:p-3 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-4 mb-4">
-   <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Email khách</label><input id="lkEmail" type="text" placeholder="khach@email.com" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
-   <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Hết hạn</label><input id="lkExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
-   <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Index Máy</label><input id="lkIdx" type="number" min="1" placeholder="1, 2..." class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
+  <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Email khách</label><input id="lkEmail" type="text" placeholder="khach@email.com" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
+  <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Hết hạn</label><input id="lkExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
+  <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Index Máy</label><input id="lkIdx" type="number" min="1" placeholder="1, 2..." class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
       </div>
       <button onclick="createLink()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-6 py-2.5 lg:py-3 rounded-xl shadow-md transition w-full text-xs lg:text-base"><i class="fas fa-mask mr-2"></i>TẠO LINK ẨN</button>
   </div>
@@ -284,7 +284,7 @@ html.has-session #main { display: block !important; }
       <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Cài đặt hệ thống</h2>
       <div class="bg-slate-100 p-1 rounded-xl flex gap-1 self-start flex-wrap scroll-hide overflow-x-auto">
         <div class="settings-sub-tab active" id="stab-mail" onclick="switchSettingsTab('mail')"><i class="fas fa-paper-plane mr-1.5"></i>Tự Động & Mail</div>
-        <div class="settings-sub-tab" id="stab-sync" onclick="switchSettingsTab('sync')"><i class="fas fa-satellite-dish mr-1.5"></i>Bắn Tỉa 3 Web</div>
+        <div class="settings-sub-tab" id="stab-sync" onclick="switchSettingsTab('sync')"><i class="fas fa-satellite-dish mr-1.5"></i>Bắn Tỉa & Bảo Mật</div>
         <div class="settings-sub-tab" id="stab-log" onclick="switchSettingsTab('log')"><i class="fas fa-list-alt mr-1.5"></i>Nhật ký</div>
         <div class="settings-sub-tab" id="stab-dev" onclick="switchSettingsTab('dev')"><i class="fas fa-laptop mr-1.5"></i>Thiết bị</div>
         <div class="settings-sub-tab" id="stab-time" onclick="switchSettingsTab('time')"><i class="fas fa-clock mr-1.5"></i>Thời gian</div>
@@ -377,30 +377,20 @@ html.has-session #main { display: block !important; }
   </div>
  
   <div id="settings-view-sync" class="hidden">
-      <div class="flex items-center justify-between mb-4 bg-white p-4 rounded-xl border border-indigo-100 shadow-sm">
-          <div>
-              <h3 class="font-extrabold text-indigo-700 text-base"><i class="fas fa-satellite-dish mr-2"></i>Bật/Tắt Hệ Thống Bắn Tỉa Đồng Bộ</h3>
-              <p class="text-xs text-slate-500 mt-1">Chỉ đồng bộ: Đơn Hàng. <strong class="text-red-500">Link Ẩn tự sinh không bắn tỉa qua lại.</strong></p>
-          </div>
-          <label class="toggle-wrap shrink-0 mt-0.5">
-            <input type="checkbox" id="toggleCrossSync" onchange="saveSyncSetting()">
-            <span class="toggle-slider"></span>
-          </label>
-      </div>
-
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+          
           <!-- Bảng 1: Worker URL -->
           <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
-            <div class="font-bold text-sm text-slate-800 mb-1 border-b border-slate-100 pb-2">Worker URL 3 Website</div>
-            <div class="space-y-3 mt-3">
-              <div><label class="block font-bold text-[10px] text-slate-600 mb-1">Worker Web 1</label><input id="syncW1" type="text" placeholder="https://worker-web1..." class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] bg-slate-50"></div>
-              <div><label class="block font-bold text-[10px] text-slate-600 mb-1">Worker Web 2</label><input id="syncW2" type="text" placeholder="https://worker-web2..." class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] bg-slate-50"></div>
-              <div><label class="block font-bold text-[10px] text-slate-600 mb-1">Worker Web 3</label><input id="syncW3" type="text" placeholder="https://worker-web3..." class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] bg-slate-50"></div>
+            <div class="flex justify-between items-center mb-1 border-b border-slate-100 pb-2">
+                <div class="font-bold text-sm text-slate-800">Worker URL Vệ Tinh</div>
+                <button onclick="addSyncWorker()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100 transition"><i class="fas fa-plus"></i> Thêm</button>
             </div>
-            <button onclick="saveSyncSetting()" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs shadow-md transition">Lưu Cấu Hình</button>
+            <p class="text-[10px] text-slate-500 mt-1 mb-2 leading-relaxed">Chỉ đồng bộ: Đơn Hàng. Tự động bắn dữ liệu qua các web đang bật.</p>
+            <div id="syncWorkerList" class="space-y-3 mt-3 max-h-48 overflow-y-auto pr-1"></div>
+            <button onclick="saveSyncSetting()" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs shadow-md transition">Lưu Thay Đổi Bảng Này</button>
           </div>
 
-          <!-- Bảng 2: Định Tuyến -->
+          <!-- Bảng 2: Định Tuyến & Bảo Mật -->
           <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
             <div class="font-bold text-sm text-slate-800 mb-1 border-b border-slate-100 pb-2">Định Tuyến Ô Dán Link Sub Ẩn</div>
             <p class="text-[10px] text-slate-500 mt-1 mb-2 leading-relaxed">Nhập chính xác chuỗi Domain để Worker dán Link ẩn vào đúng Ô (info1, info2, info3).</p>
@@ -409,7 +399,19 @@ html.has-session #main { display: block !important; }
               <div><label class="block font-bold text-[10px] text-slate-600 mb-1">Định tuyến Ô Web 2 (info2)</label><input id="routeWeb2" type="text" placeholder="VD: onepiecechapter" class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] bg-slate-50"></div>
               <div><label class="block font-bold text-[10px] text-slate-600 mb-1">Định tuyến Ô Web 3 (info3)</label><input id="routeWeb3" type="text" placeholder="VD: lucastanora" class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] bg-slate-50"></div>
             </div>
-            <button onclick="saveSyncSetting()" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs shadow-md transition">Lưu Cấu Hình</button>
+            
+            <div class="flex items-center justify-between mt-4 border-t border-slate-100 pt-4">
+                <div>
+                    <div class="font-bold text-sm text-slate-800">Làm mờ Link Sub (All Web)</div>
+                    <div class="text-[10px] text-slate-500">Giấu link phụ, hiển thị text dự phòng bảo mật.</div>
+                </div>
+                <label class="toggle-wrap shrink-0 mt-0.5">
+                    <input type="checkbox" id="toggleBlurSubLinks" onchange="saveSyncSetting()">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <button onclick="saveSyncSetting()" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs shadow-md transition">Lưu Thay Đổi Bảng Này</button>
           </div>
 
           <!-- Bảng 3: D1 Center -->
@@ -420,7 +422,7 @@ html.has-session #main { display: block !important; }
               <div><label class="block font-bold text-[10px] text-slate-600 mb-1">D1 Webhook URL</label><input id="syncD1Url" type="text" placeholder="https://payment-webhook..." class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] bg-slate-50"></div>
               <div><label class="block font-bold text-[10px] text-slate-600 mb-1">D1 Secret Token</label><input id="syncD1Secret" type="password" placeholder="***" class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] bg-slate-50"></div>
             </div>
-            <button onclick="saveSyncSetting()" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs shadow-md transition">Lưu Cấu Hình</button>
+            <button onclick="saveSyncSetting()" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs shadow-md transition">Lưu Thay Đổi Bảng Này</button>
           </div>
       </div>
   </div> 
@@ -564,14 +566,14 @@ const GH_REPO="trinhhg/vpntrinhhg3";
 const MAIL_API="https://script.google.com/macros/s/AKfycbyQjEln9By0HuUPtboqJpb1INI6rRp52BxvHR8HaE5fs8qojfgau1R_27P4RyLLxXIp/exec";
  
 const PKGS=[
-  "Gói 1 tháng - 60.000đ / $2.5 / ¥15.5 (100GB)",
-  "Gói 1 tháng - 70.000đ / $3 / ¥18 (500GB)",
-  "Gói 1 tháng - 80.000đ / $3.5 / ¥20.5 (1000GB)",
-  "Gói Cao Cấp - 200.000đ / $8 / ¥50 (3000GB)",
-  "Gói 1 Năm - 710.000đ / $27 / ¥177.5 (200GB/tháng)",
-  "Không Giới Hạn - 200.000đ / $8 / ¥52 (200GB)",
-  "Không Giới Hạn - 399.000đ / $16 / ¥102 (1000GB)",
-  "Không Giới Hạn - 999.000đ / $40 / ¥256 (5000GB)"
+  "Gói 1 tháng - 60,000VND / $2.5 / ¥15.5 (100GB)",
+  "Gói 1 tháng - 70,000VND / $3 / ¥18 (500GB)",
+  "Gói 1 tháng - 80,000VND / $3.5 / ¥20.5 (1000GB)",
+  "Gói Cao Cấp - 200,000VND / $8 / ¥50 (3000GB)",
+  "Gói 1 Năm - 710,000VND / $27 / ¥177.5 (200GB/tháng)",
+  "Không Giới Hạn - 200,000VND / $8 / ¥52 (200GB)",
+  "Không Giới Hạn - 399,000VND / $16 / ¥102 (1000GB)",
+  "Không Giới Hạn - 999,000VND / $40 / ¥256 (5000GB)"
 ];
 const PKG_DAYS=[30,30,30,30,365,0,0,0];
  
@@ -751,17 +753,20 @@ async function apP(p,data){
   sysHasError = true; toast("Mất kết nối nội bộ: " + e.message, "err");
  }
  
- // Bắn Tỉa Cross Sync - Dựa vào toggle Bật/Tắt
+ // Bắn Tỉa Cross Sync - Dựa vào Array Động
  const syncSettings = (cmsDb && cmsDb.settings) ? cmsDb.settings : {};
  if (syncSettings.crossSyncEnabled && !localOnly.includes(p) && CROSS_SYNC_PATHS.includes(p)) {
-  const rawTargets = [syncSettings.syncW1, syncSettings.syncW2, syncSettings.syncW3].filter(u => u && u.trim());
+  let targets = [];
+  if (syncSettings.syncWorkers && Array.isArray(syncSettings.syncWorkers)) {
+      targets = syncSettings.syncWorkers.filter(w => w.active && w.url).map(w => w.url.replace(/\/$/, ""));
+  }
   const currentHost = window.location.hostname;
-  const externalTargets = rawTargets.filter(url => !url.includes(currentHost));
+  const externalTargets = targets.filter(url => !url.includes(currentHost));
  
   if (externalTargets.length > 0) {
    Promise.allSettled(
     externalTargets.map(base => {
-         const url = base.replace(/\/$/, "") + p;
+         const url = base + p;
          return fetch(url, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data)});
         })
       ).then(results => {
@@ -779,14 +784,14 @@ function getSysLog(){return (cmsDb.settings && cmsDb.settings.sysLog) ? cmsDb.se
 async function addMailLog(type,email,orderId=""){
  const logs=getMailLog(); const ts = getNowStr();
  logs.unshift({type,email,orderId,ts});
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  cmsDb.settings.mailLog=logs.slice(0,100);
  renderMailLog(); await apP("/api/cms",cmsDb);
 }
 async function addSysLog(action, result){
  const logs=getSysLog(); const ts = getNowStr();
  logs.unshift({action,result,ts});
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  cmsDb.settings.sysLog=logs.slice(0,100);
  renderSysLog(); await apP("/api/cms",cmsDb);
 }
@@ -805,11 +810,11 @@ function renderSysLog(){
 }
  
 async function clearMailLog(){
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  cmsDb.settings.mailLog=[]; renderMailLog(); await apP("/api/cms",cmsDb); toast("Đã xóa nhật ký Mail!");
 }
 async function clearSysLog(){
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  cmsDb.settings.sysLog=[]; renderSysLog(); await apP("/api/cms",cmsDb); toast("Đã xóa nhật ký Hệ Thống!");
 }
  
@@ -822,13 +827,13 @@ function switchLogTab(tab){
 }
  
 async function saveEmailRoleUI(role) {
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  cmsDb.settings.emailRole = role;
  await apP("/api/cms", cmsDb);
  toast("Đã lưu quyền Bắn Mail: " + role.toUpperCase());
 }
 async function saveAutoRoleUI(role) {
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  cmsDb.settings.autoRole = role;
  await apP("/api/cms", cmsDb);
  toast("Đã lưu quyền Tự động hóa: " + role.toUpperCase());
@@ -840,7 +845,7 @@ async function saveAutoMailSetting(){
  document.getElementById("toggleAutoMail").checked = false; 
       return toast("Web này đang là Slave Email, không được bật Auto Mail!", "err"); 
  }
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  cmsDb.settings.autoMailEnabled = val;
  document.getElementById("autoMailStatus").textContent="Trạng thái: "+(val?"✅ Đang bật (Phụ thuộc Cronjob)":"⏸ Đang tắt");
  await apP("/api/cms", cmsDb);
@@ -849,7 +854,7 @@ async function saveAutoMailSetting(){
  
 async function saveTimezone(){
  const val = document.getElementById("selTimezone").value;
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  cmsDb.settings.tz = val;
  await apP("/api/cms", cmsDb);
  toast("Đã lưu Múi giờ thực tế: " + val);
@@ -884,12 +889,21 @@ function saveSimTime() {
 function loadSyncSettingUI(){
  const s = (cmsDb && cmsDb.settings) ? cmsDb.settings : {};
  document.getElementById("toggleCrossSync").checked = s.crossSyncEnabled || false;
- document.getElementById("syncW1").value = s.syncW1 || "";
- document.getElementById("syncW2").value = s.syncW2 || "";
- document.getElementById("syncW3").value = s.syncW3 || "";
+ 
+ // Migrate old settings if needed
+ if (!s.syncWorkers) {
+     s.syncWorkers = [];
+     if(s.syncW1) s.syncWorkers.push({url: s.syncW1, active: true});
+     if(s.syncW2) s.syncWorkers.push({url: s.syncW2, active: true});
+     if(s.syncW3) s.syncWorkers.push({url: s.syncW3, active: true});
+ }
+ renderSyncWorkers();
+ 
  document.getElementById("routeWeb1").value = s.routeWeb1 || "";
  document.getElementById("routeWeb2").value = s.routeWeb2 || "";
  document.getElementById("routeWeb3").value = s.routeWeb3 || "";
+ document.getElementById("toggleBlurSubLinks").checked = s.blurSubLinks || false;
+ 
  document.getElementById("syncD1Url").value = s.d1Url || "";
  document.getElementById("syncD1Secret").value = s.d1Secret || "";
  
@@ -908,22 +922,53 @@ function loadSyncSettingUI(){
  document.getElementById("toggleSimTime").checked = isSim;
  document.getElementById("simTimeInputs").classList.toggle('hidden', !isSim);
 }
+
+function renderSyncWorkers() {
+    const container = document.getElementById("syncWorkerList");
+    const arr = cmsDb?.settings?.syncWorkers || [];
+    container.innerHTML = arr.map((w, i) => `
+        <div class="flex items-center gap-2 mb-3">
+            <input type="text" id="syncW_${i}" value="${w.url}" placeholder="https://worker..." class="w-full p-2.5 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50">
+            <label class="toggle-wrap shrink-0 mt-0.5"><input type="checkbox" id="syncWActive_${i}" ${w.active?'checked':''}><span class="toggle-slider"></span></label>
+            <button onclick="removeSyncWorker(${i})" class="shrink-0 bg-red-50 text-red-500 p-2.5 rounded-xl hover:bg-red-500 hover:text-white transition"><i class="fas fa-trash"></i></button>
+        </div>
+    `).join("");
+}
+
+function addSyncWorker() {
+    if(!cmsDb.settings.syncWorkers) cmsDb.settings.syncWorkers = [];
+    cmsDb.settings.syncWorkers.push({url: "", active: true});
+    renderSyncWorkers();
+}
+
+function removeSyncWorker(i) {
+    cmsDb.settings.syncWorkers.splice(i, 1);
+    renderSyncWorkers();
+}
  
 async function saveSyncSetting(){
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  cmsDb.settings.crossSyncEnabled = document.getElementById("toggleCrossSync").checked;
- cmsDb.settings.syncW1 = document.getElementById("syncW1").value.trim();
- cmsDb.settings.syncW2 = document.getElementById("syncW2").value.trim();
- cmsDb.settings.syncW3 = document.getElementById("syncW3").value.trim();
+ 
+ const arr = cmsDb.settings.syncWorkers || [];
+ for(let i=0; i<arr.length; i++) {
+     arr[i].url = document.getElementById(`syncW_${i}`).value.trim();
+     arr[i].active = document.getElementById(`syncWActive_${i}`).checked;
+ }
+ cmsDb.settings.syncWorkers = arr.filter(w => w.url !== ""); 
+ 
  cmsDb.settings.routeWeb1 = document.getElementById("routeWeb1").value.trim();
  cmsDb.settings.routeWeb2 = document.getElementById("routeWeb2").value.trim();
  cmsDb.settings.routeWeb3 = document.getElementById("routeWeb3").value.trim();
+ cmsDb.settings.blurSubLinks = document.getElementById("toggleBlurSubLinks").checked;
+ 
  cmsDb.settings.d1Url = document.getElementById("syncD1Url").value.trim();
  cmsDb.settings.d1Secret = document.getElementById("syncD1Secret").value.trim();
  
  toast("Đang lưu cấu hình...");
  await apP("/api/cms", cmsDb);
  toast("Đã lưu cấu hình Hệ Thống & Bắn Tỉa!");
+ renderSyncWorkers();
 }
  
 let sysUptimeInterval = null;
@@ -1070,7 +1115,7 @@ async function fetchAll(msg=false){
  if(!Array.isArray(linkPoolDb)) linkPoolDb=[];
  if(typeof cmsDb!=="object"||Array.isArray(cmsDb)) cmsDb={};
  if(!cmsDb.link_origins) cmsDb.link_origins={};
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncW1:"",syncW2:"",syncW3:"",autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  for(let k in cmsDb){if(k!=="promo_templates"&&k!=="link_origins"&&k!=="settings") cmsDb[k]=reverseShortcodes(cmsDb[k]);}
  
  let poolChanged = false;
@@ -1302,32 +1347,41 @@ function renderTransactions() {
   if (curTxTab === 'giamsat') {
       tHead.innerHTML = `
           <tr>
+              <th>#</th>
               <th>Mã Đơn</th>
               <th>Email & Tên</th>
               <th>Tiền Thu & Gói</th>
               <th>Nguồn Web</th>
-              <th>Mã Regex Ck</th>
+              <th>Mã CK</th>
               <th>Trạng Thái</th>
           </tr>
       `;
-      // Giám sát: Chỉ hiển thị những giao dịch đã được match hoặc có liên quan đến order
       const list = txData.filter(t => t.order_id || t.matchedOrder);
       if (list.length === 0) {
-          htmlStr = '<tr><td colspan="6" class="text-center py-8 text-slate-400 font-bold">Chưa có đơn hàng nào được ghi nhận</td></tr>';
+          htmlStr = '<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold">Chưa có đơn hàng nào được ghi nhận</td></tr>';
       } else {
-          htmlStr = list.map(tx => {
+          htmlStr = list.map((tx, i) => {
               const oId = tx.matchedOrder?.order_id || tx.order_id;
-              const email = tx.matchedOrder?.email || "Khách Vãng Lai";
-              const targetWeb = tx.matchedOrder?.target_web || "Web ?";
-              const amountFormat = `${Number(tx.amount).toLocaleString('en-US')}VND`;
               
-              // Kiểm tra xem mã thô gửi lên có match với Order ID đang lưu ko
-              const regexExtracted = extractOrderFromRaw(tx.notification || tx.content);
-              let regexBadge = `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold">Lạc Danh</span>`;
-              if (regexExtracted === oId) {
-                  regexBadge = `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold"><i class="fas fa-check mr-1"></i>Khớp: ${regexExtracted}</span>`;
-              } else if (regexExtracted) {
-                  regexBadge = `<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-[10px] font-bold">Sai: ${regexExtracted}</span>`;
+              // Móc thông tin từ Local KV Orders nếu D1 ko có
+              const oInfo = ordersDb.find(o => normalizeOrderId(o.id) === normalizeOrderId(oId));
+              const email = oInfo?.email || tx.matchedOrder?.email || "Chưa xác định";
+              const name = oInfo?.nickname || "";
+              const emailNameHtml = name ? `${email} <br><span class="text-[10px] text-amber-600 font-bold mt-0.5 inline-block px-1.5 py-0.5 bg-amber-50 rounded">${name}</span>` : email;
+              
+              const targetWeb = oInfo?.target_web || tx.matchedOrder?.target_web || "Web ?";
+              const qtyInfo = oInfo?.days ? ` (${oInfo.days}n)` : "";
+              const amountFormat = `${Number(tx.amount).toLocaleString('en-US')}VND<span class="text-[10px] text-slate-400 font-normal">${qtyInfo}</span>`;
+              
+              // Regex Khớp Mã CK
+              const rawRegex = extractOrderFromRaw(tx.notification || tx.content);
+              let ckBadge = `<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded text-[10px] font-bold">Trống</span>`;
+              if (rawRegex) {
+                  if (rawRegex === oId) {
+                      ckBadge = `<span class="text-green-600 font-bold text-xs"><i class="fas fa-check mr-1"></i>${rawRegex}</span>`;
+                  } else {
+                      ckBadge = `<span class="text-red-600 font-bold text-xs"><i class="fas fa-times mr-1"></i>${rawRegex}</span>`;
+                  }
               }
 
               let statusBadge = '';
@@ -1337,12 +1391,13 @@ function renderTransactions() {
               else statusBadge = `<span class="bg-orange-100 text-orange-700 px-2 py-1 rounded text-[10px] font-bold">${tx.status}</span>`;
 
               return `
-              <tr>
-                  <td class="font-mono font-bold text-indigo-600">${oId}</td>
-                  <td class="font-bold text-slate-700">${email}</td>
-                  <td class="font-bold text-slate-800">${amountFormat}</td>
+              <tr class="hover:bg-slate-50 transition">
+                  <td class="text-xs font-bold text-slate-400">${i + 1}</td>
+                  <td class="font-mono font-black text-indigo-600">${oId}</td>
+                  <td class="font-bold text-slate-700 text-xs">${emailNameHtml}</td>
+                  <td class="font-black text-slate-800">${amountFormat}</td>
                   <td class="text-xs font-bold text-slate-500">${targetWeb}</td>
-                  <td>${regexBadge}</td>
+                  <td>${ckBadge}</td>
                   <td>${statusBadge}</td>
               </tr>
               `;
@@ -1354,37 +1409,38 @@ function renderTransactions() {
           <tr>
               <th>ID Tx</th>
               <th>Thời Gian</th>
-              <th>Biến Động Số Dư</th>
+              <th>Số Tiền</th>
               <th>Nội Dung Thô (Raw)</th>
               <th>Trạng Thái Hiện Tại</th>
               <th>Hành Động</th>
           </tr>
       `;
-      // Hiển thị toàn bộ txData mới nhất
-      htmlStr = txData.map(tx => {
-          let statusBadge = '';
-          if(tx.status === 'success' || tx.status === 'paid') statusBadge = `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold">success</span>`;
-          else if(tx.status === 'rejected' || tx.status.includes('invalid') || tx.status === 'failed') statusBadge = `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold">failed</span>`;
-          else statusBadge = `<span class="bg-orange-100 text-orange-700 px-2 py-1 rounded text-[10px] font-bold">${tx.status}</span>`;
-          
-          let actions = '';
-          if (tx.status !== 'success' && tx.status !== 'paid' && tx.status !== 'rejected') {
-              actions = `<button onclick="approveTransaction(${tx.id}, null)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg shadow text-xs whitespace-nowrap"><i class="fas fa-bolt mr-1"></i>Ép Khớp</button>`;
-          } else {
-              actions = `<span class="text-xs text-slate-400 font-bold">Đã chốt</span>`;
-          }
+      // Lọc các giao dịch CHƯA CHỐT vào tab này (mồ côi, sai số tiền, sai status...)
+      const list = txData.filter(t => !['success', 'paid', 'rejected'].includes(t.status));
+      
+      if (list.length === 0) {
+          htmlStr = '<tr><td colspan="6" class="text-center py-8 text-slate-400 font-bold">Tất cả giao dịch đã được xử lý gọn gàng!</td></tr>';
+      } else {
+          htmlStr = list.map(tx => {
+              let statusBadge = '';
+              if(tx.status === 'success' || tx.status === 'paid') statusBadge = `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold">success</span>`;
+              else if(tx.status === 'rejected' || tx.status.includes('invalid') || tx.status === 'failed') statusBadge = `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold">failed</span>`;
+              else statusBadge = `<span class="bg-orange-100 text-orange-700 px-2 py-1 rounded text-[10px] font-bold">${tx.status}</span>`;
+              
+              let actions = `<button onclick="approveTransaction(${tx.id}, null)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg shadow text-xs whitespace-nowrap"><i class="fas fa-bolt mr-1"></i> Ép Khớp</button>`;
 
-          return `
-          <tr>
-              <td class="text-xs text-slate-400 font-bold">#${tx.id}</td>
-              <td class="text-xs text-slate-500">${tx.created_at}</td>
-              <td class="font-black text-slate-800">${Number(tx.amount).toLocaleString('en-US')}VND</td>
-              <td class="font-mono text-[10px] text-slate-600 bg-slate-50 p-1.5 rounded truncate max-w-[200px]" title="${tx.notification || tx.content}">${tx.notification || tx.content}</td>
-              <td>${statusBadge}</td>
-              <td>${actions}</td>
-          </tr>
-          `;
-      }).join('');
+              return `
+              <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                  <td class="text-xs text-slate-500 font-bold">#${tx.id}</td>
+                  <td class="text-xs text-slate-500">${tx.created_at}</td>
+                  <td class="font-black text-slate-800">${Number(tx.amount).toLocaleString('en-US')}VND</td>
+                  <td class="font-mono text-[11px] text-slate-600 bg-slate-50 p-2 rounded whitespace-normal break-words min-w-[250px] leading-relaxed">${tx.notification || tx.content}</td>
+                  <td>${statusBadge}</td>
+                  <td>${actions}</td>
+              </tr>
+              `;
+          }).join('');
+      }
   }
  
   tb.innerHTML = htmlStr;
@@ -1395,13 +1451,18 @@ function renderTransactions() {
               <i class="fas fa-chevron-down mr-2"></i>Tải thêm giao dịch cũ
           </button>
       `;
+  } else {
+      tFoot.innerHTML = '';
   }
 }
  
 async function approveTransaction(txId, orderId) {
  let oid = orderId;
  if (!oid) {
-  oid = prompt("Tính năng ÉP KHỚP (Force Match)\nNhập chính xác Mã Đơn Hàng (DHXXXXXXXXXX) muốn chốt cho giao dịch này:\n\n*Hệ thống sẽ tự động cập nhật trạng thái Success và nã lệnh Cấp Link Auto.");
+  // Lấy sẵn mã Regex nếu có để m đỡ gõ tay
+  const tx = txData.find(t => t.id === txId);
+  const suggestedId = extractOrderFromRaw(tx?.notification || tx?.content) || "";
+  oid = prompt("Tính năng ÉP KHỚP (Force Match)\nNhập chính xác Mã Đơn Hàng (DHXXXXXXXXXX) muốn chốt cho giao dịch này:\n\n*Hệ thống sẽ tự động cập nhật trạng thái Success và nã lệnh Cấp Link Auto.", suggestedId);
   if (!oid) return;
  }
  oid = oid.trim().toUpperCase().replace(/[-_.\s]/g, ""); // Dùng Canonical ID chuẩn hóa
@@ -1716,11 +1777,10 @@ function renderOrd(){
  const tb=document.getElementById("ordBody");
  const counts={success:0,pending:0,failed:0};
  ordersDb.forEach(o=>{
-     // Tự động map status nếu db đang dùng chuẩn cũ (để an toàn hiển thị)
      let st = o.status;
      if(st === 'paid') st = 'success';
      if(st === 'rejected') st = 'failed';
-     if(counts[st]!==undefined) counts[st]++;
+    if(counts[st]!==undefined) counts[st]++;
  });
  ["success","pending","failed"].forEach(t=>{const el=document.getElementById("cnt-"+t);if(el) el.textContent=counts[t];});
  
@@ -1754,7 +1814,7 @@ function renderOrd(){
       let st = o.status;
       if(st === 'paid') st = 'success';
       if(st === 'rejected') st = 'failed';
-
+ 
  if(st==="success"&&o.expDate){
         const expD=pd(o.expDate);
  if(expD){daysLeft=Math.ceil((expD-now)/86400000);isExpiring=daysLeft>=0&&daysLeft<=3;isExpiredSuccess=daysLeft<0;}
@@ -1777,18 +1837,18 @@ function renderOrd(){
             ${dot}
             <span class="font-bold text-[10px] lg:text-xs text-slate-400">#${ordersDb.indexOf(o)+1}</span>
             <span class="font-mono font-extrabold text-indigo-600 text-xs md:text-sm lg:text-base cp truncate order-id-text" onclick="cp('${o.id}')">${o.id}</span>
-      ${nicknameHTML}${badgePending}${badgeUpgrade}
-      ${isExpiredSuccess?`<span class="text-[9px] lg:text-xs font-black bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1 shrink-0">ĐÃ HẾT HẠN</span>`:""}
+     ${nicknameHTML}${badgePending}${badgeUpgrade}
+     ${isExpiredSuccess?`<span class="text-[9px] lg:text-xs font-black bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1 shrink-0">ĐÃ HẾT HẠN</span>`:""}
           </div>
           <div class="font-bold text-slate-800 text-[11px] md:text-xs lg:text-sm cp truncate pl-5 order-email-text" onclick="cp('${o.email||''}')">${o.email||"—"}</div>
           <div class="text-[10px] md:text-[11px] lg:text-sm text-slate-500 mt-0.5 font-medium pl-5 order-meta-text">Zalo: <span class="font-bold text-slate-700 cp" onclick="cp('${o.zalo||''}')">${o.zalo||"Không có"}</span></div>
           <div class="text-[10px] md:text-[11px] lg:text-sm text-slate-500 mt-0.5 font-medium truncate pl-5 order-meta-text">${conciseInfo}${daysLeft!==null&&daysLeft>=0?` <span class="font-black ${daysLeft<=1?'text-red-600':'text-orange-500'}">(còn ${daysLeft}n)</span>`:""}</div>
         </div>
         <div class="flex flex-col items-end gap-2 shrink-0 border-t border-slate-100 md:border-0 pt-2 md:pt-0 mt-1 md:mt-0">
-     ${o.date?`<span class="text-[10px] lg:text-xs text-slate-400 font-semibold whitespace-nowrap">${fmtCardDate(o.date)}</span>`:""}
+    ${o.date?`<span class="text-[10px] lg:text-xs text-slate-400 font-semibold whitespace-nowrap">${fmtCardDate(o.date)}</span>`:""}
           <div class="flex gap-1.5 shrink-0 mt-1">
-     ${(st==="pending")?`<button onclick="pushFulfillment('${o.id}')" title="Ép hệ thống cấp link" class="text-purple-600 font-bold px-3 py-1.5 bg-purple-50 border border-purple-100 rounded-lg text-xs lg:text-sm hover:bg-purple-600 hover:text-white transition shadow-sm"><i class="fas fa-rocket"></i></button>`:""}
-     ${(st==="success"&&o.expDate&&!isExpiredSuccess)?`<button onclick="sendExpMail('${o.id}')" title="Nhắc hết hạn" class="text-amber-500 font-bold px-3 py-1.5 bg-amber-50 border border-amber-100 rounded-lg text-xs lg:text-sm hover:bg-amber-500 hover:text-white transition shadow-sm"><i class="fas fa-clock"></i></button>`:""}
+    ${(st==="pending")?`<button onclick="pushFulfillment('${o.id}')" title="Ép hệ thống cấp link" class="text-purple-600 font-bold px-3 py-1.5 bg-purple-50 border border-purple-100 rounded-lg text-xs lg:text-sm hover:bg-purple-600 hover:text-white transition shadow-sm"><i class="fas fa-rocket"></i></button>`:""}
+    ${(st==="success"&&o.expDate&&!isExpiredSuccess)?`<button onclick="sendExpMail('${o.id}')" title="Nhắc hết hạn" class="text-amber-500 font-bold px-3 py-1.5 bg-amber-50 border border-amber-100 rounded-lg text-xs lg:text-sm hover:bg-amber-500 hover:text-white transition shadow-sm"><i class="fas fa-clock"></i></button>`:""}
             <button onclick="sendZaloMail('${o.id}')" title="Nhắc Zalo khách hàng" class="text-blue-500 font-bold px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg text-xs lg:text-sm hover:bg-blue-500 hover:text-white transition shadow-sm"><i class="fas fa-comment-dots"></i></button>
             <button onclick="openOrdModal('${o.id}')" class="text-indigo-600 font-bold px-4 py-1.5 bg-indigo-50 border border-indigo-100 rounded-lg text-xs lg:text-sm hover:bg-indigo-600 hover:text-white transition shadow-sm"><i class="fas fa-pen md:mr-1.5"></i><span class="hidden md:inline">Sửa</span></button>
             <button onclick="delOrd('${o.id}')" class="text-red-500 font-bold px-3 py-1.5 bg-red-50 border border-red-100 rounded text-xs lg:text-sm hover:bg-red-500 hover:text-white transition shadow-sm"><i class="fas fa-trash"></i></button>
@@ -1834,12 +1894,12 @@ function openOrdModal(id){
  document.getElementById("mOLink2").value=o.info2||"";
  document.getElementById("mOLink3").value=o.info3||"";
  document.getElementById("mOReason").value=o.reason||"";
-
+ 
  let st = o.status;
  if(st === 'paid') st = 'success';
  if(st === 'rejected') st = 'failed';
  document.getElementById("mOStatus").value=st||"pending";
-
+ 
  document.getElementById("mOMethod").value=o.method&&o.method.includes("Alipay")?"Alipay":o.method&&o.method.includes("Weixin")?"Weixin":"Ngân hàng VN";
  
  const sel=document.getElementById("mOPkg");
@@ -1849,7 +1909,7 @@ function openOrdModal(id){
       for(let i=0; i<sel.options.length; i++){
           const optText = sel.options[i].text;
           if(o.pkgName && optText.includes(o.pkgName) && (!o.pkgData || optText.includes(o.pkgData))) {
-         sel.selectedIndex = i; matched = true; break;
+        sel.selectedIndex = i; matched = true; break;
           }
       }
       if(!matched) {
@@ -1862,7 +1922,7 @@ function openOrdModal(id){
      let days = parseInt(o.days);
      if(!days || isNaN(days)) {
          days = PKG_DAYS[sel.selectedIndex > -1 ? sel.selectedIndex : 0] || 30;
-     document.getElementById("mODays").value = days;
+    document.getElementById("mODays").value = days;
      }
      let baseDate = getAdjustedTime();
     if(o.createdTs) {
@@ -2196,7 +2256,7 @@ function reverseShortcodes(html){
  return t.replace(/\n\n+/g,"\n");
 }
 function updatePreview(){document.getElementById("cmsPreview").innerHTML=parseShortcodes(document.getElementById("cmsRaw").value);}
-async function saveCms(){cmsDb[curCms]=document.getElementById("cmsRaw").value;toast("Đang lưu CMS & bắn tỉa sang 3 web...");await apP("/api/cms",cmsDb);toast("Đã lưu Hướng dẫn lên hệ thống!");}
+async function saveCms(){cmsDb[curCms]=document.getElementById("cmsRaw").value;toast("Đang lưu CMS & bắn tỉa sang các web vệ tinh...");await apP("/api/cms",cmsDb);toast("Đã lưu Hướng dẫn lên hệ thống!");}
  
 function switchSettingsTab(tab){
  ["mail","sync","log","dev","time"].forEach(t=>{
