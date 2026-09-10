@@ -1,4 +1,4 @@
-<!-- v2.4 - Hub & Spoke Kế Toán Mù, Bảng Giao Dịch Chuẩn, Dynamic Workers, Blur Sub Link - 2026-09-10 -->
+<!-- v2.4 - Fix null properties error, Add 6 routing and blur inputs - 2026-09-10 -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -81,10 +81,10 @@ html.has-session #main { display: block !important; }
  const _sk = window.location.hostname.replace(/\./g,"_");
  let _admHasSession = false;
  for(let i=0; i<localStorage.length; i++) {
-    if(localStorage.key(i).includes(_sk + '_adm_dev')) _admHasSession = true;
+   if(localStorage.key(i).includes(_sk + '_adm_dev')) _admHasSession = true;
  }
  if(_admHasSession) {
-    document.documentElement.classList.add('has-session');
+   document.documentElement.classList.add('has-session');
  }
 </script>
 </head>
@@ -392,25 +392,22 @@ html.has-session #main { display: block !important; }
 
           <!-- Bảng 2: Định Tuyến & Bảo Mật -->
           <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
-            <div class="font-bold text-sm text-slate-800 mb-1 border-b border-slate-100 pb-2">Định Tuyến Ô Dán Link Sub Ẩn</div>
-            <p class="text-[10px] text-slate-500 mt-1 mb-2 leading-relaxed">Nhập chính xác chuỗi Domain để Worker dán Link ẩn vào đúng Ô (info1, info2, info3).</p>
+            <div class="font-bold text-sm text-slate-800 mb-1 border-b border-slate-100 pb-2">Định Tuyến & Làm Mờ (Blur)</div>
+            <p class="text-[10px] text-slate-500 mt-1 mb-3 leading-relaxed">Nhập Domain để dán Link, và nhập Domain nếu muốn làm mờ Link Sub đó trên trang chủ.</p>
             <div class="space-y-3">
-              <div><label class="block font-bold text-[10px] text-slate-600 mb-1">Định tuyến Ô Web 1 (info1)</label><input id="routeWeb1" type="text" placeholder="VD: doicucden" class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] bg-slate-50"></div>
-              <div><label class="block font-bold text-[10px] text-slate-600 mb-1">Định tuyến Ô Web 2 (info2)</label><input id="routeWeb2" type="text" placeholder="VD: onepiecechapter" class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] bg-slate-50"></div>
-              <div><label class="block font-bold text-[10px] text-slate-600 mb-1">Định tuyến Ô Web 3 (info3)</label><input id="routeWeb3" type="text" placeholder="VD: lucastanora" class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] bg-slate-50"></div>
+              <div class="grid grid-cols-2 gap-2">
+                  <div><label class="block font-bold text-[10px] text-slate-600 mb-1">Dán Link Web 1</label><input id="routeWeb1" type="text" placeholder="VD: doicucden" class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] bg-slate-50"></div>
+                  <div><label class="block font-bold text-[10px] text-red-500 mb-1">Làm Mờ Web 1</label><input id="blurWeb1" type="text" placeholder="VD: doicucden" class="w-full p-2 border border-red-200 rounded-xl outline-none focus:border-red-500 font-mono text-[11px] bg-red-50"></div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                  <div><label class="block font-bold text-[10px] text-slate-600 mb-1">Dán Link Web 2</label><input id="routeWeb2" type="text" placeholder="VD: onepiece" class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] bg-slate-50"></div>
+                  <div><label class="block font-bold text-[10px] text-red-500 mb-1">Làm Mờ Web 2</label><input id="blurWeb2" type="text" placeholder="VD: onepiece" class="w-full p-2 border border-red-200 rounded-xl outline-none focus:border-red-500 font-mono text-[11px] bg-red-50"></div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                  <div><label class="block font-bold text-[10px] text-slate-600 mb-1">Dán Link Web 3</label><input id="routeWeb3" type="text" placeholder="VD: lucastanora" class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] bg-slate-50"></div>
+                  <div><label class="block font-bold text-[10px] text-red-500 mb-1">Làm Mờ Web 3</label><input id="blurWeb3" type="text" placeholder="VD: lucastanora" class="w-full p-2 border border-red-200 rounded-xl outline-none focus:border-red-500 font-mono text-[11px] bg-red-50"></div>
+              </div>
             </div>
-            
-            <div class="flex items-center justify-between mt-4 border-t border-slate-100 pt-4">
-                <div>
-                    <div class="font-bold text-sm text-slate-800">Làm mờ Link Sub (All Web)</div>
-                    <div class="text-[10px] text-slate-500">Giấu link phụ, hiển thị text dự phòng bảo mật.</div>
-                </div>
-                <label class="toggle-wrap shrink-0 mt-0.5">
-                    <input type="checkbox" id="toggleBlurSubLinks" onchange="saveSyncSetting()">
-                    <span class="toggle-slider"></span>
-                </label>
-            </div>
-
             <button onclick="saveSyncSetting()" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs shadow-md transition">Lưu Thay Đổi Bảng Này</button>
           </div>
 
@@ -784,14 +781,14 @@ function getSysLog(){return (cmsDb.settings && cmsDb.settings.sysLog) ? cmsDb.se
 async function addMailLog(type,email,orderId=""){
  const logs=getMailLog(); const ts = getNowStr();
  logs.unshift({type,email,orderId,ts});
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  cmsDb.settings.mailLog=logs.slice(0,100);
  renderMailLog(); await apP("/api/cms",cmsDb);
 }
 async function addSysLog(action, result){
  const logs=getSysLog(); const ts = getNowStr();
  logs.unshift({action,result,ts});
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  cmsDb.settings.sysLog=logs.slice(0,100);
  renderSysLog(); await apP("/api/cms",cmsDb);
 }
@@ -810,11 +807,11 @@ function renderSysLog(){
 }
  
 async function clearMailLog(){
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  cmsDb.settings.mailLog=[]; renderMailLog(); await apP("/api/cms",cmsDb); toast("Đã xóa nhật ký Mail!");
 }
 async function clearSysLog(){
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  cmsDb.settings.sysLog=[]; renderSysLog(); await apP("/api/cms",cmsDb); toast("Đã xóa nhật ký Hệ Thống!");
 }
  
@@ -827,13 +824,13 @@ function switchLogTab(tab){
 }
  
 async function saveEmailRoleUI(role) {
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  cmsDb.settings.emailRole = role;
  await apP("/api/cms", cmsDb);
  toast("Đã lưu quyền Bắn Mail: " + role.toUpperCase());
 }
 async function saveAutoRoleUI(role) {
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  cmsDb.settings.autoRole = role;
  await apP("/api/cms", cmsDb);
  toast("Đã lưu quyền Tự động hóa: " + role.toUpperCase());
@@ -842,10 +839,11 @@ async function saveAutoRoleUI(role) {
 async function saveAutoMailSetting(){
  const val=document.getElementById("toggleAutoMail").checked;
  if(val && !isMailMaster()) { 
- document.getElementById("toggleAutoMail").checked = false; 
+ const el = document.getElementById("toggleAutoMail");
+ if (el) el.checked = false; 
       return toast("Web này đang là Slave Email, không được bật Auto Mail!", "err"); 
  }
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  cmsDb.settings.autoMailEnabled = val;
  document.getElementById("autoMailStatus").textContent="Trạng thái: "+(val?"✅ Đang bật (Phụ thuộc Cronjob)":"⏸ Đang tắt");
  await apP("/api/cms", cmsDb);
@@ -854,7 +852,7 @@ async function saveAutoMailSetting(){
  
 async function saveTimezone(){
  const val = document.getElementById("selTimezone").value;
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  cmsDb.settings.tz = val;
  await apP("/api/cms", cmsDb);
  toast("Đã lưu Múi giờ thực tế: " + val);
@@ -888,7 +886,8 @@ function saveSimTime() {
  
 function loadSyncSettingUI(){
  const s = (cmsDb && cmsDb.settings) ? cmsDb.settings : {};
- document.getElementById("toggleCrossSync").checked = s.crossSyncEnabled || false;
+ const elCrossSync = document.getElementById("toggleCrossSync");
+ if(elCrossSync) elCrossSync.checked = s.crossSyncEnabled || false;
  
  // Migrate old settings if needed
  if (!s.syncWorkers) {
@@ -899,32 +898,43 @@ function loadSyncSettingUI(){
  }
  renderSyncWorkers();
  
- document.getElementById("routeWeb1").value = s.routeWeb1 || "";
- document.getElementById("routeWeb2").value = s.routeWeb2 || "";
- document.getElementById("routeWeb3").value = s.routeWeb3 || "";
- document.getElementById("toggleBlurSubLinks").checked = s.blurSubLinks || false;
+ ['routeWeb1', 'routeWeb2', 'routeWeb3', 'blurWeb1', 'blurWeb2', 'blurWeb3', 'syncD1Url', 'syncD1Secret', 'selTimezone'].forEach(id => {
+     const el = document.getElementById(id);
+     if(el) el.value = s[id] || "";
+ });
  
- document.getElementById("syncD1Url").value = s.d1Url || "";
- document.getElementById("syncD1Secret").value = s.d1Secret || "";
- 
- document.getElementById("selTimezone").value = s.tz || "VN";
  const on = s.autoMailEnabled || false;
- document.getElementById("toggleAutoMail").checked = on;
- document.getElementById("autoMailStatus").textContent = "Trạng thái: " + (on ? "✅ Đang bật (Phụ thuộc Cronjob)" : "⏸ Đang tắt");
+ const elToggleAutoMail = document.getElementById("toggleAutoMail");
+ if(elToggleAutoMail) elToggleAutoMail.checked = on;
+ const elStatus = document.getElementById("autoMailStatus");
+ if(elStatus) elStatus.textContent = "Trạng thái: " + (on ? "✅ Đang bật (Phụ thuộc Cronjob)" : "⏸ Đang tắt");
  
- if (s.emailRole === 'master') { document.querySelector('input[name="emailRoleRad"][value="master"]').checked = true; }
- else { document.querySelector('input[name="emailRoleRad"][value="slave"]').checked = true; }
+ if (s.emailRole === 'master') { 
+     const e = document.querySelector('input[name="emailRoleRad"][value="master"]');
+     if(e) e.checked = true; 
+ } else { 
+     const e = document.querySelector('input[name="emailRoleRad"][value="slave"]');
+     if(e) e.checked = true; 
+ }
  
- if (s.autoRole === 'master') { document.querySelector('input[name="autoRoleRad"][value="master"]').checked = true; }
- else { document.querySelector('input[name="autoRoleRad"][value="slave"]').checked = true; }
+ if (s.autoRole === 'master') { 
+     const e = document.querySelector('input[name="autoRoleRad"][value="master"]');
+     if(e) e.checked = true; 
+ } else { 
+     const e = document.querySelector('input[name="autoRoleRad"][value="slave"]');
+     if(e) e.checked = true; 
+ }
  
  const isSim = s.simMode || false;
- document.getElementById("toggleSimTime").checked = isSim;
- document.getElementById("simTimeInputs").classList.toggle('hidden', !isSim);
+ const elToggleSim = document.getElementById("toggleSimTime");
+ if(elToggleSim) elToggleSim.checked = isSim;
+ const elSimInputs = document.getElementById("simTimeInputs");
+ if(elSimInputs) elSimInputs.classList.toggle('hidden', !isSim);
 }
 
 function renderSyncWorkers() {
     const container = document.getElementById("syncWorkerList");
+    if(!container) return;
     const arr = cmsDb?.settings?.syncWorkers || [];
     container.innerHTML = arr.map((w, i) => `
         <div class="flex items-center gap-2 mb-3">
@@ -947,23 +957,24 @@ function removeSyncWorker(i) {
 }
  
 async function saveSyncSetting(){
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
- cmsDb.settings.crossSyncEnabled = document.getElementById("toggleCrossSync").checked;
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ 
+ const elCrossSync = document.getElementById("toggleCrossSync");
+ if(elCrossSync) cmsDb.settings.crossSyncEnabled = elCrossSync.checked;
  
  const arr = cmsDb.settings.syncWorkers || [];
  for(let i=0; i<arr.length; i++) {
-     arr[i].url = document.getElementById(`syncW_${i}`).value.trim();
-     arr[i].active = document.getElementById(`syncWActive_${i}`).checked;
+     const wUrl = document.getElementById(`syncW_${i}`);
+     const wActive = document.getElementById(`syncWActive_${i}`);
+     if(wUrl) arr[i].url = wUrl.value.trim();
+     if(wActive) arr[i].active = wActive.checked;
  }
  cmsDb.settings.syncWorkers = arr.filter(w => w.url !== ""); 
  
- cmsDb.settings.routeWeb1 = document.getElementById("routeWeb1").value.trim();
- cmsDb.settings.routeWeb2 = document.getElementById("routeWeb2").value.trim();
- cmsDb.settings.routeWeb3 = document.getElementById("routeWeb3").value.trim();
- cmsDb.settings.blurSubLinks = document.getElementById("toggleBlurSubLinks").checked;
- 
- cmsDb.settings.d1Url = document.getElementById("syncD1Url").value.trim();
- cmsDb.settings.d1Secret = document.getElementById("syncD1Secret").value.trim();
+ ['routeWeb1', 'routeWeb2', 'routeWeb3', 'blurWeb1', 'blurWeb2', 'blurWeb3', 'syncD1Url', 'syncD1Secret'].forEach(id => {
+     const el = document.getElementById(id);
+     if(el) cmsDb.settings[id] = el.value.trim();
+ });
  
  toast("Đang lưu cấu hình...");
  await apP("/api/cms", cmsDb);
@@ -1099,7 +1110,8 @@ function go(id){
  if(id==="t-lnk") switchLinkMode(curLinkTab);
  if(id==="t-trans") {
   lsSetT("D1Viewed");
- document.getElementById('transBadge').classList.add('hidden');
+ const elBadge = document.getElementById('transBadge');
+ if(elBadge) elBadge.classList.add('hidden');
     // Khi mở tab, nếu chưa có dữ liệu thì load lần đầu, nếu có rồi thì chỉ render
     if(txData.length === 0) initialLoadTransactions();
     else renderTransactions();
@@ -1115,7 +1127,7 @@ async function fetchAll(msg=false){
  if(!Array.isArray(linkPoolDb)) linkPoolDb=[];
  if(typeof cmsDb!=="object"||Array.isArray(cmsDb)) cmsDb={};
  if(!cmsDb.link_origins) cmsDb.link_origins={};
- if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],blurSubLinks:false,autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
+ if(!cmsDb.settings) cmsDb.settings={crossSyncEnabled:false,syncWorkers:[],autoMailEnabled:false,autoMailSentDate:"",mailLog:[], sysLog:[], emailRole:"slave", autoRole:"slave", tz:"VN"};
  for(let k in cmsDb){if(k!=="promo_templates"&&k!=="link_origins"&&k!=="settings") cmsDb[k]=reverseShortcodes(cmsDb[k]);}
  
  let poolChanged = false;
@@ -1168,8 +1180,11 @@ function updateTxBadge() {
   ).length;
  
   if(actionableCount > 0 && document.getElementById("t-trans").classList.contains("hidden")) {
-   document.getElementById('transBadge').innerText = actionableCount;
-   document.getElementById('transBadge').classList.remove('hidden');
+   const elBadge = document.getElementById('transBadge');
+   if(elBadge) {
+       elBadge.innerText = actionableCount;
+       elBadge.classList.remove('hidden');
+   }
   }
 }
  
@@ -1177,7 +1192,7 @@ async function initialLoadTransactions(force = false) {
     if(!force && txData.length > 0) return; // Đã load rồi thì thôi
     const tb = document.getElementById("transBody");
   if(document.getElementById("t-trans").classList.contains("hidden") === false) {
-        tb.innerHTML = '<tr><td colspan="7" class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-indigo-500"></i></td></tr>';
+        if(tb) tb.innerHTML = '<tr><td colspan="7" class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-indigo-500"></i></td></tr>';
     }
  
     try {
@@ -1208,7 +1223,7 @@ async function initialLoadTransactions(force = false) {
       scheduleTxPoll(); // Khởi động nhịp tim
     } catch(e) {
       if(document.getElementById("t-trans").classList.contains("hidden") === false) {
-          tb.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold">Lỗi tải D1: ${e.message}</td></tr>`;
+          if(tb) tb.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold">Lỗi tải D1: ${e.message}</td></tr>`;
         }
       scheduleTxPoll(); // Cứ cho nó poll để tự hồi phục
     }
@@ -1336,6 +1351,8 @@ function renderTransactions() {
   const tb = document.getElementById("transBody");
   const tFoot = document.getElementById("transFooter");
   
+  if(!tHead || !tb || !tFoot) return;
+
   if (!txData || txData.length === 0) {
       tb.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold">Không có giao dịch nào</td></tr>';
       tFoot.innerHTML = '';
