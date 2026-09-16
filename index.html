@@ -1,4 +1,4 @@
-<!-- v2.4 - Fix portal layout, add Upgrade row, fix icon scroll - 2026-09-16 -->
+<!-- v2.5 - Xóa hiển thị ngày giờ hết hạn kèm link VPN - 2026-09-16 -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -100,7 +100,7 @@ html.has-user-session #view-portal { display: block !important; }
      try {
          let _p = JSON.parse(_usrSess);
          if (new Date().getTime() - _p.time < 24*3600*1000) {
-          document.documentElement.classList.add('has-user-session');
+         document.documentElement.classList.add('has-user-session');
          }
      } catch(e){}
  }
@@ -239,11 +239,11 @@ html.has-user-session #view-portal { display: block !important; }
                <div class="absolute top-0 left-0 w-1.5 h-full bg-red-500"></div>
                <div class="w-10 h-10 md:w-12 md:h-12 bg-red-100 rounded-full flex items-center justify-center shrink-0 shadow-inner">
                  <i class="fas fa-user-shield text-red-500 text-lg md:text-2xl animate-pulse"></i>
-             </div>
+            </div>
                <div class="flex-1">
-                 <h4 id="securityAlertTitle" class="text-red-700 font-extrabold text-xs md:text-sm uppercase tracking-wide mb-1">Cảnh báo bảo mật</h4>
+                <h4 id="securityAlertTitle" class="text-red-700 font-extrabold text-xs md:text-sm uppercase tracking-wide mb-1">Cảnh báo bảo mật</h4>
                  <p id="securityAlertDesc" class="text-red-800 font-medium text-[11px] md:text-[13px] leading-relaxed">Bắt buộc giữ bí mật <span class="text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100">Email</span> và <span class="text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100">Mã đơn hàng</span> để tránh bị lộ Link VPN.</p>
-             </div>
+            </div>
           </div>
           </div>
           
@@ -261,20 +261,20 @@ html.has-user-session #view-portal { display: block !important; }
                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-clock text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="exp_date_label">HSD:</span><span id="displayExp" class="font-bold text-slate-800 text-[11px] md:text-xs truncate"></span></div>
                <div class="flex items-center gap-2 min-w-0 mt-1">
                  <i class="fas fa-arrow-up text-blue-500 w-4 text-center"></i>
-                 <span class="text-[11px] md:text-xs text-slate-500 shrink-0">Nâng cấp:</span>
-                 <span id="displayUpgradeStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span>
-               </div>
+                <span class="text-[11px] md:text-xs text-slate-500 shrink-0">Nâng cấp:</span>
+                <span id="displayUpgradeStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span>
+              </div>
                <div class="flex items-center gap-2 min-w-0 mt-1">
                  <i class="fas fa-check-circle text-green-500 w-4 text-center"></i>
-                 <span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="status_lbl">Trạng thái:</span>
-                 <span id="displayStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span>
-               </div>
+                <span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="status_lbl">Trạng thái:</span>
+                <span id="displayStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span>
+              </div>
           </div>
           </div>
           <div class="mt-4 flex justify-center border-t border-slate-100 pt-4">
             <button id="btnRequestData" onclick="requestDataCheck()" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs hover:scale-105 transition shadow-sm flex items-center justify-center btn-heartbeat outline-none">
                  <i class="fas fa-chart-pie mr-1.5"></i><span data-i18n="btn_check_data">Kiểm tra dung lượng</span>
-           </button>
+          </button>
           </div>
           </div>
           
@@ -283,7 +283,7 @@ html.has-user-session #view-portal { display: block !important; }
               <h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL:</h3>
               <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
              <input type="text" id="subLink1" readonly value="********" class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
-            <button onclick="copyToClipboard('subLink1',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button>
+           <button onclick="copyToClipboard('subLink1',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button>
           </div>
               <div id="subDate1" class="text-[10px] font-bold text-slate-500 mt-1.5 ml-1"></div>
           </div>
@@ -292,7 +292,7 @@ html.has-user-session #view-portal { display: block !important; }
               <h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL dự phòng 2:</h3>
               <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
              <input type="text" id="subLink2" readonly value="********" class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
-            <button onclick="copyToClipboard('subLink2',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button>
+           <button onclick="copyToClipboard('subLink2',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button>
           </div>
               <div id="subDate2" class="text-[10px] font-bold text-slate-500 mt-1.5 ml-1"></div>
           </div>
@@ -301,7 +301,7 @@ html.has-user-session #view-portal { display: block !important; }
               <h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL dự phòng 3:</h3>
               <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
              <input type="text" id="subLink3" readonly value="********" class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
-            <button onclick="copyToClipboard('subLink3',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button>
+           <button onclick="copyToClipboard('subLink3',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button>
           </div>
               <div id="subDate3" class="text-[10px] font-bold text-slate-500 mt-1.5 ml-1"></div>
           </div>
@@ -478,7 +478,7 @@ html.has-user-session #view-portal { display: block !important; }
         <div class="grid lg:grid-cols-2 gap-6">
           <div class="bg-white border border-slate-200 p-5 md:p-8 rounded-3xl flex flex-col shadow-sm">
             <div class="bg-indigo-50 px-5 py-4 rounded-xl mb-5 flex justify-between items-center border border-indigo-100">
-               <div><p class="text-sm font-black text-slate-800 uppercase" id="selectedPackageName"></p><p class="text-xs font-bold text-slate-500 mt-0.5" id="selectedPackageData"></p></div>
+              <div><p class="text-sm font-black text-slate-800 uppercase" id="selectedPackageName"></p><p class="text-xs font-bold text-slate-500 mt-0.5" id="selectedPackageData"></p></div>
               <p class="text-lg md:text-xl font-black text-indigo-600" id="selectedPackagePrice"></p>
           </div>
             
@@ -515,9 +515,9 @@ html.has-user-session #view-portal { display: block !important; }
           </div>
            <div id="customDurWrap" class="hidden mt-3">
                <div class="flex items-center gap-2 bg-indigo-50 p-2 rounded-lg border border-indigo-100">
-               <label class="text-xs font-bold text-indigo-800 whitespace-nowrap pl-1" data-i18n="input_months">Nhập số tháng:</label>
-               <input type="number" id="customDurInput" min="1" max="120" value="2" oninput="calculateTotal()" class="w-full p-2 text-sm border border-slate-300 rounded outline-none focus:border-indigo-500 font-bold bg-white text-center text-slate-800">
-           </div>
+              <label class="text-xs font-bold text-indigo-800 whitespace-nowrap pl-1" data-i18n="input_months">Nhập số tháng:</label>
+              <input type="number" id="customDurInput" min="1" max="120" value="2" oninput="calculateTotal()" class="w-full p-2 text-sm border border-slate-300 rounded outline-none focus:border-indigo-500 font-bold bg-white text-center text-slate-800">
+          </div>
           </div>
              <div id="priceCalculation" class="mt-3 text-sm font-black text-indigo-700 bg-indigo-50 border border-indigo-100 p-2.5 rounded-lg text-center"></div>
           </div>
@@ -614,14 +614,14 @@ const obs=new IntersectionObserver(entries => {
     entries.forEach(e => {
         const s = document.getElementById('floatingSocials');
         if(!s) return;
-  if(e.isIntersecting){
+ if(e.isIntersecting){
        s.style.opacity = '0';
-      s.style.pointerEvents = 'none';
-      s.style.transform = 'translateY(20px)';
+     s.style.pointerEvents = 'none';
+     s.style.transform = 'translateY(20px)';
         } else {
        s.style.opacity = '1';
-      s.style.pointerEvents = 'auto';
-      s.style.transform = 'translateY(0)';
+     s.style.pointerEvents = 'auto';
+     s.style.transform = 'translateY(0)';
         }
     });
 }, { threshold: 0.1 });
@@ -718,7 +718,7 @@ const i18n={
  btn_create_order:"创建支付二维码",btn_paid:"我已付款",
      month_lbl:"个月",choose_dur:"选择时长：",input_months:"输入月数:",choose_method:"支付方式:",auto_badge:"自动 24/24",
   email_warning:"请输入有效邮箱，激活链接将发送到此地址。",
-    guide_title:"付款说明",guide_desc:"1.填写邮箱，选择时长和付款方式，然后创建订单。<br><br>2.不适用退款政策，请在购买前仔细阅读。", guide_desc_upgrade:"3. 升级仅增加流量和设备数，不延长使用时间。",
+   guide_title:"付款说明",guide_desc:"1.填写邮箱，选择时长和付款方式，然后创建订单。<br><br>2.不适用退款政策，请在购买前仔细阅读。", guide_desc_upgrade:"3. 升级仅增加流量和设备数，不延长使用时间。",
  guide_empty:"<p class='text-center py-8 text-slate-400'>教程更新中...</p>",
     promo_title:"🚀无限游戏与浏览！",
      promo_desc:"流畅访问: <b class='text-yellow-300'>TikTok, Facebook, Messenger, Zalo, YouTube...</b><br>低延迟: <b class='text-green-300'>王者荣耀, 原神...</b>",
@@ -782,10 +782,10 @@ async function apiGet(path){
           if (shield) {
               let parsed = JSON.parse(shield);
               if (Date.now() < parsed.expire) {
-                 order.pendingUpgrade = parsed.pendingUpgrade;
-                 order.isUpgrade = true;
+                order.pendingUpgrade = parsed.pendingUpgrade;
+                order.isUpgrade = true;
               } else {
-                 localStorage.removeItem('shield_pending_' + order.id);
+                localStorage.removeItem('shield_pending_' + order.id);
               }
           }
       });
@@ -972,10 +972,10 @@ function startUpgrade() {
 }
  
 function startRenew() {
-   disableUpgradeMode();
+  disableUpgradeMode();
     isRenewMode = true;
-   switchPortalTab('p-store', true);
-   showToast(i18n[lang].select_renew_pkg || "Vui lòng chọn gói để gia hạn", "info");
+  switchPortalTab('p-store', true);
+  showToast(i18n[lang].select_renew_pkg || "Vui lòng chọn gói để gia hạn", "info");
 }
  
 function openCheckout(id){
@@ -1017,9 +1017,9 @@ function selectDuration(m){
  ab.classList.add('!bg-indigo-600','!text-white','border-transparent','active');
   
   if(m === 'custom') {
-  document.getElementById('customDurWrap').classList.remove('hidden');
+ document.getElementById('customDurWrap').classList.remove('hidden');
   } else {
-  document.getElementById('customDurWrap').classList.add('hidden');
+ document.getElementById('customDurWrap').classList.add('hidden');
   }
   calculateTotal();
 }
@@ -1150,12 +1150,12 @@ async function submitOrder(e){
     let zaloStore = cusZaloVal || 'Không nhập';
  
     pendingDraftOrder = {
-   id:currentOrderId,email:document.getElementById('cusEmail').value.trim(),zalo:zaloStore,
-   method:mname,pkgName:currentPackage.vi.name,pkgData:currentPackage.data,
-   pkg:`${currentPackage.vi.name} (${cy2}) - ${fp} (${currentPackage.data})`,
-   totalVnd:currentTotalVnd,needSupport:document.getElementById('needSupport').checked,
-   status:'pending',date:fmtFullTime(new Date()), createdTs: nowTs, 
-   expDate:'',daysLeft:'',info:'',info2:'',info3:'',nickname:'',reason:'',
+  id:currentOrderId,email:document.getElementById('cusEmail').value.trim(),zalo:zaloStore,
+  method:mname,pkgName:currentPackage.vi.name,pkgData:currentPackage.data,
+  pkg:`${currentPackage.vi.name} (${cy2}) - ${fp} (${currentPackage.data})`,
+  totalVnd:currentTotalVnd,needSupport:document.getElementById('needSupport').checked,
+  status:'pending',date:fmtFullTime(new Date()), createdTs: nowTs, 
+  expDate:'',daysLeft:'',info:'',info2:'',info3:'',nickname:'',reason:'',
     isRenew: isRenewMode, targetOrderId: isRenewMode ? oCache.id : null, sourceWeb: currentTargetWeb
     };
     
@@ -1244,11 +1244,11 @@ async function confirmPaid(){
          
          // Lá chắn pendingUpgrade chặn KV đè
         localStorage.setItem('shield_pending_' + o.id, JSON.stringify({
-            pendingUpgrade: pendingDraftUpgrade,
+           pendingUpgrade: pendingDraftUpgrade,
              expire: Date.now() + 300000
          }));
  
-     updatePortalInfo(o);
+    updatePortalInfo(o);
      }
      
      try {
@@ -1313,9 +1313,9 @@ function isOrderExpired(expDateStr) {
     const parts = expDateStr.split("/");
     if(parts.length === 3) {
         const d = new Date();
-        d.setFullYear(parseInt(parts[2]));
-        d.setMonth(parseInt(parts[1]) - 1);
-        d.setDate(parseInt(parts[0]));
+       d.setFullYear(parseInt(parts[2]));
+       d.setMonth(parseInt(parts[1]) - 1);
+       d.setDate(parseInt(parts[0]));
         d.setHours(23, 59, 59);
         return Date.now() > d.getTime();
     }
@@ -1412,13 +1412,13 @@ function updatePortalInfo(o){
         const dt = document.getElementById(obj.dtEl);
         if (inp && dt) {
             if (blurConf[obj.blurKey]) {
-              inp.value = i18n[lang].web3_maintenance;
-              inp.classList.add('blur-link');
-              dt.innerText = "";
+             inp.value = i18n[lang].web3_maintenance;
+             inp.classList.add('blur-link');
+             dt.innerText = "";
             } else {
              inp.value = obj.realVal || "";
              inp.classList.remove('blur-link');
-             dt.innerText = obj.realVal ? subDateText : "";
+             dt.innerText = ""; // Fix v2.5: Không hiển thị date hết hạn của link
             }
         }
     });
@@ -1429,11 +1429,11 @@ function updatePortalInfo(o){
     if (lastReq && Date.now() - parseInt(lastReq) < 300000) {
      dataBtn.innerHTML = `<i class="fas fa-check-circle mr-1.5"></i> ${lang==='vi'?'Đã gửi yêu cầu':lang==='en'?'Request sent':'请求已发送'}`;
       dataBtn.disabled = true;
-    dataBtn.classList.remove('btn-heartbeat');
+   dataBtn.classList.remove('btn-heartbeat');
     } else {
      dataBtn.innerHTML = `<i class="fas fa-chart-pie mr-1.5"></i><span data-i18n="btn_check_data">${i18n[lang].btn_check_data}</span>`;
       dataBtn.disabled = false;
-    dataBtn.classList.add('btn-heartbeat');
+   dataBtn.classList.add('btn-heartbeat');
     }
  
   };
@@ -1441,8 +1441,8 @@ function updatePortalInfo(o){
   if (o.status === 'success') {
       if (lastPkg && lastPkg !== o.pkg && !o.pendingUpgrade) {
       if(upgradeBadge) {
-        upgradeBadge.classList.remove('hidden');
-        upgradeBadge.className = "absolute top-0 right-0 bg-red-600 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md z-10";
+       upgradeBadge.classList.remove('hidden');
+       upgradeBadge.className = "absolute top-0 right-0 bg-red-600 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md z-10";
       }
       }
  localStorage.setItem(lastPkgCacheKey, o.pkg);
@@ -1451,24 +1451,24 @@ function updatePortalInfo(o){
   if (o.status === 'success' && o.pendingUpgrade) {
       const isManual = o.method && (o.method.includes('Alipay') || o.method.includes('WeChat'));
       if (isManual) {
-      document.getElementById('portalContentManual').classList.remove('hidden');
+     document.getElementById('portalContentManual').classList.remove('hidden');
       } else {
-      document.getElementById('portalContentPending').classList.remove('hidden');
-      document.getElementById('pendingTitleUI').innerText = i18n[lang].checking_upgrade;
+     document.getElementById('portalContentPending').classList.remove('hidden');
+     document.getElementById('pendingTitleUI').innerText = i18n[lang].checking_upgrade;
             
             let startTime = o.pendingUpgrade.ts;
             let endTime = startTime + 300000; 
          
          if(Date.now() >= endTime) {
-        document.getElementById('portalContentPending').classList.add('hidden');
-        document.getElementById('portalContentSuccess').classList.remove('hidden');
+       document.getElementById('portalContentPending').classList.add('hidden');
+       document.getElementById('portalContentSuccess').classList.remove('hidden');
           popFields();
-        if(!globalPollInterval) startGlobalPolling(o.id);
+       if(!globalPollInterval) startGlobalPolling(o.id);
              } else {
-         isUpgradePending = true;
-           pendingEndTime = endTime;
-        document.getElementById('pendingActiveState').classList.remove('hidden');
-        startPendingPolling();
+        isUpgradePending = true;
+          pendingEndTime = endTime;
+       document.getElementById('pendingActiveState').classList.remove('hidden');
+       startPendingPolling();
              }
       }
       return; 
@@ -1485,22 +1485,22 @@ function updatePortalInfo(o){
   else if(o.status === 'pending'){
       const isManual = o.method && (o.method.includes('Alipay') || o.method.includes('WeChat'));
       if (isManual) {
-      document.getElementById('portalContentManual').classList.remove('hidden');
-      if(!globalPollInterval) startGlobalPolling(o.id);
+     document.getElementById('portalContentManual').classList.remove('hidden');
+     if(!globalPollInterval) startGlobalPolling(o.id);
       } else {
-     document.getElementById('portalContentPending').classList.remove('hidden');
-     document.getElementById('pendingTitleUI').innerText = i18n[lang].checking_tx;
+    document.getElementById('portalContentPending').classList.remove('hidden');
+    document.getElementById('pendingTitleUI').innerText = i18n[lang].checking_tx;
          
          let startTime = o.createdTs || parseOrderDate(o.date);
          let endTime = startTime + 300000;
         
          if(Date.now() >= endTime) {
-     document.getElementById('pendingTimeoutState').classList.remove('hidden');
-     if(!globalPollInterval) startGlobalPolling(o.id); 
+    document.getElementById('pendingTimeoutState').classList.remove('hidden');
+    if(!globalPollInterval) startGlobalPolling(o.id); 
           } else {
-          pendingEndTime = endTime;
-     document.getElementById('pendingActiveState').classList.remove('hidden');
-     startPendingPolling();
+         pendingEndTime = endTime;
+    document.getElementById('pendingActiveState').classList.remove('hidden');
+    startPendingPolling();
           }
       }
   }
@@ -1575,8 +1575,8 @@ async function login(isManualRefresh=false,isAutoPoll=false){
  
  localStorage.setItem(SESSION_KEY,JSON.stringify({id:o.id,time:new Date().getTime()}));
  if(!isManualRefresh&&!isAutoPoll){
-   showToast(i18n[lang].login_success,'info');
-   window.history.pushState(null, '', '/login.html');
+  showToast(i18n[lang].login_success,'info');
+  window.history.pushState(null, '', '/login.html');
  }
  document.getElementById('view-store').classList.remove('active');document.getElementById('view-portal').classList.add('active');
  document.getElementById('userMenu').classList.remove('hidden');document.getElementById('checkoutSection').classList.add('hidden');
@@ -1599,22 +1599,22 @@ function switchPortalTab(tabId, isFromUpgrade = false){
  if(!isFromUpgrade) disableUpgradeMode();
  document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
  document.querySelectorAll('.desktop-tab-btn').forEach(el=>{
-    el.classList.remove('active','text-white','bg-indigo-600');
-    el.classList.add('text-slate-600', 'hover:bg-slate-100');
+   el.classList.remove('active','text-white','bg-indigo-600');
+   el.classList.add('text-slate-600', 'hover:bg-slate-100');
  });
  document.querySelectorAll('.mobile-tab-btn').forEach(el=>{
-    el.classList.remove('active','text-indigo-600','bg-[#e0e7ff]');
-    el.classList.add('text-slate-500');
+   el.classList.remove('active','text-indigo-600','bg-[#e0e7ff]');
+   el.classList.add('text-slate-500');
  });
  document.getElementById(tabId).classList.add('active');
   const id=tabId.replace('p-','');
  document.querySelectorAll('.desktop-tab-btn.btn-nav-'+tabId).forEach(el=>{
-    el.classList.add('active','bg-indigo-600','text-white');
-    el.classList.remove('text-slate-600', 'hover:bg-slate-100');
+   el.classList.add('active','bg-indigo-600','text-white');
+   el.classList.remove('text-slate-600', 'hover:bg-slate-100');
  });
  document.querySelectorAll('.mobile-tab-btn.btn-nav-'+tabId).forEach(el=>{
-    el.classList.add('active','text-indigo-600','bg-[#e0e7ff]');
-    el.classList.remove('text-slate-500');
+   el.classList.add('active','text-indigo-600','bg-[#e0e7ff]');
+   el.classList.remove('text-slate-500');
  });
 }
  
@@ -1673,15 +1673,15 @@ window.onload = async function() {
               await login(true);
           } else {
         localStorage.removeItem(SESSION_KEY);
-             logout();
+              logout();
           }
       } catch(e) {
     localStorage.removeItem(SESSION_KEY);
           logout();
       }
   } else {
-    document.getElementById('view-store').classList.add('active'); // Fix blank screen on first load
- renderPackages('all');
+   document.getElementById('view-store').classList.add('active'); // Fix blank screen on first load
+  renderPackages('all');
   }
   
   const footer = document.getElementById('footerArea');
