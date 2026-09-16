@@ -1,4 +1,4 @@
-<!-- v2.3 - Fix logic loopholes, Expiry Red Color, Strict Targets, Upgrade badging, Translations and Email Format - 2026-09-16 -->
+<!-- v2.4 - Fix portal layout, add Upgrade row, fix icon scroll - 2026-09-16 -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -44,13 +44,13 @@ details>summary::-webkit-details-marker{display:none;}
 .dur-btn { transition: all 0.2s; }
 .dur-btn.active { background-color: #4f46e5 !important; color: white !important; border-color: #4f46e5 !important; box-shadow: 0 4px 10px rgba(79,70,229,0.3); }
  
-/* Hiệu ứng Marquee cho Dock Icon */
+/* Hiệu ứng Marquee cho Dock Icon - Fixed scroll stutter */
 .dock-wrapper { width: 100%; overflow: hidden; padding: 30px 0; margin-bottom: 0; position: relative; }
 .dock-wrapper::before, .dock-wrapper::after { content: ""; position: absolute; top: 0; width: 40px; height: 100%; z-index: 20; pointer-events: none; }
 .dock-wrapper::before { left: 0; background: linear-gradient(to right, #f8fafc, transparent); }
 .dock-wrapper::after { right: 0; background: linear-gradient(to left, #f8fafc, transparent); }
  
-.dock-marquee { display: flex; width: max-content; animation: scrollX 20s linear infinite; padding: 0; gap: 12px; align-items: center; }
+.dock-marquee { display: flex; width: max-content; animation: scrollX 20s linear infinite; }
 .dock-marquee:hover { animation-play-state: paused; }
 @keyframes scrollX { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
  
@@ -100,14 +100,13 @@ html.has-user-session #view-portal { display: block !important; }
      try {
          let _p = JSON.parse(_usrSess);
          if (new Date().getTime() - _p.time < 24*3600*1000) {
-           document.documentElement.classList.add('has-user-session');
+          document.documentElement.classList.add('has-user-session');
          }
      } catch(e){}
  }
 </script>
 </head>
 <body class="min-h-screen flex flex-col w-full overflow-x-hidden">
-<!-- Z-Index and Top offset modified to fix overlaying Header -->
 <div id="toastContainer" class="fixed top-[90px] md:top-[100px] right-5 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
  
 <div id="floatingSocials" class="fixed bottom-24 md:bottom-6 right-4 md:right-6 flex flex-col gap-3 z-40 transition-all duration-500">
@@ -260,14 +259,15 @@ html.has-user-session #view-portal { display: block !important; }
           </div>
                <div class="flex flex-col gap-2.5">
                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-clock text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="exp_date_label">HSD:</span><span id="displayExp" class="font-bold text-slate-800 text-[11px] md:text-xs truncate"></span></div>
-               <!-- Nâng cấp cấu trúc hiển thị trạng thái và badge nâng gói (Issue 6) -->
-               <div class="flex items-center gap-2 min-w-0 items-start mt-1">
-                 <i class="fas fa-check-circle text-green-500 w-4 text-center mt-1"></i>
-                 <span class="text-[11px] md:text-xs text-slate-500 shrink-0 pt-0.5" data-i18n="status_lbl">Trạng thái:</span>
-                 <div class="flex flex-col items-start gap-1">
-                    <span id="displayStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span>
-                    <div id="displayUpgradeBadge"></div>
-                 </div>
+               <div class="flex items-center gap-2 min-w-0 mt-1">
+                 <i class="fas fa-arrow-up text-blue-500 w-4 text-center"></i>
+                 <span class="text-[11px] md:text-xs text-slate-500 shrink-0">Nâng cấp:</span>
+                 <span id="displayUpgradeStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span>
+               </div>
+               <div class="flex items-center gap-2 min-w-0 mt-1">
+                 <i class="fas fa-check-circle text-green-500 w-4 text-center"></i>
+                 <span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="status_lbl">Trạng thái:</span>
+                 <span id="displayStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span>
                </div>
           </div>
           </div>
@@ -328,7 +328,6 @@ html.has-user-session #view-portal { display: block !important; }
         <div class="flex-1"><h3 class="text-xl md:text-3xl font-black mb-3" data-i18n="promo_title">🚀 Chơi Game & Lướt Mạng Không Giới Hạn!</h3><p class="text-sm font-medium opacity-90" data-i18n="promo_desc">Hỗ trợ: <b class="text-yellow-300">TikTok, Facebook, Messenger, Instagram, Zalo, YouTube...</b><br>Ping thấp: <b class="text-green-300">Liên Quân Mobile, Genshin Impact...</b></p></div>
         <i class="fas fa-rocket text-6xl opacity-80 hidden md:block"></i>
       </div>
-      <!-- Fix Issue 4: Center Alignment Tabs -->
       <div class="flex justify-center gap-2 mb-6 bg-white p-1.5 rounded-xl w-fit max-w-full mx-auto border border-slate-100 shadow-sm overflow-x-auto flex-nowrap pkg-filters">
         <button onclick="renderPackages('all')" id="ptab-all" class="tab-btn active text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_all">Tất cả</button>
         <button onclick="renderPackages('travel')" id="ptab-travel" class="tab-btn text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_travel">Du lịch</button>
@@ -364,11 +363,27 @@ html.has-user-session #view-portal { display: block !important; }
       <p class="text-xs md:text-base text-slate-600 font-medium mb-5" data-i18n="hero_desc">Hệ thống VPN tự động hóa 100%. Nhận Link VPN chỉ trong <b class="text-indigo-600 font-black">5 phút</b> không cần đợi Admin duyệt.</p>
       
       <!-- Dock Icon Xịn Xò with Marquee & Hover -->
-      <!-- Fix Issue 7: Clone icon blocks 4 times to avoid visual stutter during loop -->
+      <!-- Fix Issue 7: Clone icon blocks in exactly 2 halves for seamless loop -->
       <div class="dock-wrapper">
         <div class="dock-marquee">
-          <!-- Cụm 1 -->
-          <div class="flex gap-3 items-center">
+          <!-- NỬA 1 -->
+          <div class="flex gap-3 items-center pr-3">
+            <a href="https://www.facebook.com/" target="_blank" class="dock-icon bg-fb"><i class="fab fa-facebook-f"></i></a>
+            <a href="https://messenger.com/" target="_blank" class="dock-icon bg-mess"><i class="fab fa-facebook-messenger"></i></a>
+            <a href="https://telegram.org/" target="_blank" class="dock-icon bg-tele"><i class="fab fa-telegram-plane"></i></a>
+            <a href="https://whatsapp.com/" target="_blank" class="dock-icon bg-wa"><i class="fab fa-whatsapp"></i></a>
+            <a href="https://discord.com/" target="_blank" class="dock-icon bg-discord"><i class="fab fa-discord"></i></a>
+            <a href="https://tiktok.com/" target="_blank" class="dock-icon bg-tiktok"><i class="fab fa-tiktok"></i></a>
+            <a href="https://instagram.com/" target="_blank" class="dock-icon bg-insta"><i class="fab fa-instagram"></i></a>
+            <a href="https://twitter.com/" target="_blank" class="dock-icon bg-x"><i class="fab fa-x-twitter"></i></a>
+            <a href="https://threads.net/" target="_blank" class="dock-icon bg-threads"><i class="fab fa-threads"></i></a>
+            <a href="https://youtube.com/" target="_blank" class="dock-icon bg-youtube"><i class="fab fa-youtube"></i></a>
+            <a href="https://reddit.com/" target="_blank" class="dock-icon bg-reddit"><i class="fab fa-reddit-alien"></i></a>
+            <a href="https://soundcloud.com/" target="_blank" class="dock-icon bg-sc"><i class="fab fa-soundcloud"></i></a>
+            <a href="https://locket.camera/" target="_blank" class="dock-icon bg-locket"><i class="fas fa-heart"></i></a>
+            <a href="https://netflix.com/" target="_blank" class="dock-icon bg-netflix"><img src="https://images.ctfassets.net/4cd45et68cgf/Rx83JoRDMkYNlMC9MKzcB/2b14d5a59fc3937afd3f03191e19502d/Netflix-Symbol.png?w=700&h=456" class="w-[70%] h-[70%] object-contain" alt="Netflix"></a>
+            <a href="https://spotify.com/" target="_blank" class="dock-icon bg-spotify"><i class="fab fa-spotify"></i></a>
+            <!-- Clone 2 trong Nửa 1 -->
             <a href="https://www.facebook.com/" target="_blank" class="dock-icon bg-fb"><i class="fab fa-facebook-f"></i></a>
             <a href="https://messenger.com/" target="_blank" class="dock-icon bg-mess"><i class="fab fa-facebook-messenger"></i></a>
             <a href="https://telegram.org/" target="_blank" class="dock-icon bg-tele"><i class="fab fa-telegram-plane"></i></a>
@@ -385,8 +400,8 @@ html.has-user-session #view-portal { display: block !important; }
             <a href="https://netflix.com/" target="_blank" class="dock-icon bg-netflix"><img src="https://images.ctfassets.net/4cd45et68cgf/Rx83JoRDMkYNlMC9MKzcB/2b14d5a59fc3937afd3f03191e19502d/Netflix-Symbol.png?w=700&h=456" class="w-[70%] h-[70%] object-contain" alt="Netflix"></a>
             <a href="https://spotify.com/" target="_blank" class="dock-icon bg-spotify"><i class="fab fa-spotify"></i></a>
           </div>
-          <!-- Cụm 2 -->
-          <div class="flex gap-3 items-center">
+          <!-- NỬA 2 -->
+          <div class="flex gap-3 items-center pr-3">
             <a href="https://www.facebook.com/" target="_blank" class="dock-icon bg-fb"><i class="fab fa-facebook-f"></i></a>
             <a href="https://messenger.com/" target="_blank" class="dock-icon bg-mess"><i class="fab fa-facebook-messenger"></i></a>
             <a href="https://telegram.org/" target="_blank" class="dock-icon bg-tele"><i class="fab fa-telegram-plane"></i></a>
@@ -402,27 +417,7 @@ html.has-user-session #view-portal { display: block !important; }
             <a href="https://locket.camera/" target="_blank" class="dock-icon bg-locket"><i class="fas fa-heart"></i></a>
             <a href="https://netflix.com/" target="_blank" class="dock-icon bg-netflix"><img src="https://images.ctfassets.net/4cd45et68cgf/Rx83JoRDMkYNlMC9MKzcB/2b14d5a59fc3937afd3f03191e19502d/Netflix-Symbol.png?w=700&h=456" class="w-[70%] h-[70%] object-contain" alt="Netflix"></a>
             <a href="https://spotify.com/" target="_blank" class="dock-icon bg-spotify"><i class="fab fa-spotify"></i></a>
-          </div>
-          <!-- Cụm 3 -->
-          <div class="flex gap-3 items-center">
-            <a href="https://www.facebook.com/" target="_blank" class="dock-icon bg-fb"><i class="fab fa-facebook-f"></i></a>
-            <a href="https://messenger.com/" target="_blank" class="dock-icon bg-mess"><i class="fab fa-facebook-messenger"></i></a>
-            <a href="https://telegram.org/" target="_blank" class="dock-icon bg-tele"><i class="fab fa-telegram-plane"></i></a>
-            <a href="https://whatsapp.com/" target="_blank" class="dock-icon bg-wa"><i class="fab fa-whatsapp"></i></a>
-            <a href="https://discord.com/" target="_blank" class="dock-icon bg-discord"><i class="fab fa-discord"></i></a>
-            <a href="https://tiktok.com/" target="_blank" class="dock-icon bg-tiktok"><i class="fab fa-tiktok"></i></a>
-            <a href="https://instagram.com/" target="_blank" class="dock-icon bg-insta"><i class="fab fa-instagram"></i></a>
-            <a href="https://twitter.com/" target="_blank" class="dock-icon bg-x"><i class="fab fa-x-twitter"></i></a>
-            <a href="https://threads.net/" target="_blank" class="dock-icon bg-threads"><i class="fab fa-threads"></i></a>
-            <a href="https://youtube.com/" target="_blank" class="dock-icon bg-youtube"><i class="fab fa-youtube"></i></a>
-            <a href="https://reddit.com/" target="_blank" class="dock-icon bg-reddit"><i class="fab fa-reddit-alien"></i></a>
-            <a href="https://soundcloud.com/" target="_blank" class="dock-icon bg-sc"><i class="fab fa-soundcloud"></i></a>
-            <a href="https://locket.camera/" target="_blank" class="dock-icon bg-locket"><i class="fas fa-heart"></i></a>
-            <a href="https://netflix.com/" target="_blank" class="dock-icon bg-netflix"><img src="https://images.ctfassets.net/4cd45et68cgf/Rx83JoRDMkYNlMC9MKzcB/2b14d5a59fc3937afd3f03191e19502d/Netflix-Symbol.png?w=700&h=456" class="w-[70%] h-[70%] object-contain" alt="Netflix"></a>
-            <a href="https://spotify.com/" target="_blank" class="dock-icon bg-spotify"><i class="fab fa-spotify"></i></a>
-          </div>
-          <!-- Cụm 4 -->
-          <div class="flex gap-3 items-center">
+            <!-- Clone 2 trong Nửa 2 -->
             <a href="https://www.facebook.com/" target="_blank" class="dock-icon bg-fb"><i class="fab fa-facebook-f"></i></a>
             <a href="https://messenger.com/" target="_blank" class="dock-icon bg-mess"><i class="fab fa-facebook-messenger"></i></a>
             <a href="https://telegram.org/" target="_blank" class="dock-icon bg-tele"><i class="fab fa-telegram-plane"></i></a>
@@ -470,7 +465,6 @@ html.has-user-session #view-portal { display: block !important; }
       </div>
     </div>
  
-    <!-- Căn giữa tab filter ở Store -->
     <div class="flex justify-center gap-2 mb-6 bg-white p-1.5 rounded-xl w-fit max-w-full mx-auto border border-slate-100 shadow-sm overflow-x-auto flex-nowrap pkg-filters">
       <button onclick="renderPackages('all')" id="htab-all" class="tab-btn active text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap shrink-0" data-i18n="tab_all">Tất cả</button>
       <button onclick="renderPackages('travel')" id="htab-travel" class="tab-btn text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap shrink-0" data-i18n="tab_travel">Du lịch</button>
@@ -1362,38 +1356,44 @@ function updatePortalInfo(o){
  document.getElementById('displayEmail').innerText = maskEmailStr(o.email);
     
     let pName = o.pkgName || "Gói VPN";
-    let pPrice = (o.totalVnd ? Number(o.totalVnd).toLocaleString('en-US') + 'VND' : '');
-    let upgradeTagInline = o.isUpgrade ? `<span class="bg-purple-100 text-purple-700 text-[10px] font-black px-2 py-0.5 rounded ml-2 shadow-sm border border-purple-200">NÂNG GÓI</span>` : '';
- document.getElementById('displayPkg').innerHTML = (pPrice ? `${pName} - ${pPrice}` : pName) + upgradeTagInline;
+    let pPrice = "";
+    if (o.totalVnd) {
+        pPrice = Number(o.totalVnd).toLocaleString('en-US') + 'VND';
+    } else {
+        let foundPkg = pkgs.find(p => p.vi && p.vi.name === pName);
+        if (foundPkg) pPrice = foundPkg.vnd.toLocaleString('en-US') + 'VND';
+    }
+ document.getElementById('displayPkg').innerHTML = pPrice ? `${pName} - ${pPrice}` : pName;
     
  document.getElementById('displayExp').innerText = o.expDate || i18n[lang].unknown;
  
     let isExpired = isOrderExpired(o.expDate);
-    let statusText = o.isUpgrade ? i18n[lang].active_upgrade : i18n[lang].active;
+    let statusText = i18n[lang].active; // "Đã kích hoạt"
     let statusClass = "bg-green-100 text-green-700";
     
     if (isExpired) {
-        statusText = i18n[lang].expired_lbl;
-        statusClass = "bg-red-100 text-red-700"; // Fix 1: Red for expired
+        statusText = i18n[lang].expired_lbl; // "Đã hết hạn"
+        statusClass = "bg-red-100 text-red-700"; 
     }
- 
  document.getElementById('displayStatus').innerText = statusText;
  document.getElementById('displayStatus').className = `text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap ${statusClass}`;
  
-    // Fix 6: Upgrade Badge dưới trạng thái
-    let badgeHtml = "";
+    // Nâng cấp logic
+    let upgText = "Không";
+    let upgClass = "bg-slate-100 text-slate-500";
     if (o.pendingUpgrade) {
-        badgeHtml = `<span class="bg-yellow-100 text-yellow-700 text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap shadow-sm mt-1">Đang duyệt nâng gói</span>`;
+        upgText = "Đang xác minh nâng gói";
+        upgClass = "bg-yellow-100 text-yellow-700";
     } else if (o.upgradeStatus === 'failed') {
-        badgeHtml = `<span class="bg-red-100 text-red-700 text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap shadow-sm mt-1 border border-red-200">Từ chối nâng gói</span>`;
+        upgText = "Từ chối nâng gói";
+        upgClass = "bg-red-100 text-red-700";
     } else if (o.isUpgrade) {
-         if(isExpired) {
-            badgeHtml = `<span class="bg-gray-100 text-gray-500 text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap shadow-sm mt-1 border border-gray-200">Đã nâng gói (Hết hạn)</span>`;
-         } else {
-            badgeHtml = `<span class="bg-purple-100 text-purple-700 text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap shadow-sm mt-1 border border-purple-200 shadow-purple-500/20">Đã kích hoạt Nâng gói</span>`;
-         }
+        upgText = "Nâng gói thành công";
+        upgClass = "bg-green-100 text-green-700";
     }
-    document.getElementById('displayUpgradeBadge').innerHTML = badgeHtml;
+    
+    document.getElementById('displayUpgradeStatus').innerText = upgText;
+    document.getElementById('displayUpgradeStatus').className = `text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap ${upgClass}`;
  
     let subTimeStr = (o.date && o.date.includes(" - ")) ? o.date.split(" - ")[0] : "";
     let subDateText = o.expDate ? `${subTimeStr ? subTimeStr + " - " : ""}${o.expDate}` : "Vĩnh viễn";
