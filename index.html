@@ -1,4 +1,4 @@
-<!-- v2.1 - Fix logic loopholes, Layout header, UI Grid, and Security links - 2026-09-16 -->
+<!-- v2.2 - Fix logic loopholes, Renew, Expired, Blur, and Z-Index - 2026-09-16 -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -107,7 +107,7 @@ html.has-user-session #view-portal { display: block !important; }
 </script>
 </head>
 <body class="min-h-screen flex flex-col w-full overflow-x-hidden">
-<div id="toastContainer" class="fixed top-[90px] md:top-[100px] right-5 z-10 flex flex-col gap-3 pointer-events-none"></div>
+<div id="toastContainer" class="fixed top-[15px] md:top-[15px] right-5 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
  
 <div id="floatingSocials" class="fixed bottom-24 md:bottom-6 right-4 md:right-6 flex flex-col gap-3 z-40 transition-all duration-500">
   <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="w-12 h-12 bg-wechat text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.0s"><i class="fab fa-weixin"></i></button>
@@ -299,7 +299,7 @@ html.has-user-session #view-portal { display: block !important; }
  
             <div class="mt-4 grid grid-cols-2 gap-3 border-t border-green-300 pt-4">
             <button onclick="startUpgrade()" class="w-full bg-amber-500 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-amber-600 transition flex items-center justify-center shadow-md"><i class="fas fa-arrow-up mr-1.5"></i> NÂNG GÓI</button>
-            <button onclick="switchPortalTab('p-store');" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center shadow-md"><i class="fas fa-redo-alt mr-1.5"></i> <span data-i18n="btn_renew">GIA HẠN</span></button>
+            <button onclick="startRenew();" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center shadow-md"><i class="fas fa-redo-alt mr-1.5"></i> <span data-i18n="btn_renew">GIA HẠN</span></button>
           </div>
           </div>
         </div>
@@ -356,7 +356,26 @@ html.has-user-session #view-portal { display: block !important; }
       <!-- Dock Icon Xịn Xò with Marquee & Hover -->
       <div class="dock-wrapper">
         <div class="dock-marquee">
-          <!-- Bọc Icon x2 để hiệu ứng Loop lặp lại hoàn hảo -->
+          <!-- Bọc Icon x3 để hiệu ứng Loop lặp lại hoàn hảo -->
+          <div class="flex gap-3 items-center">
+            <a href="https://www.facebook.com/" target="_blank" class="dock-icon bg-fb"><i class="fab fa-facebook-f"></i></a>
+            <a href="https://messenger.com/" target="_blank" class="dock-icon bg-mess"><i class="fab fa-facebook-messenger"></i></a>
+            <a href="https://telegram.org/" target="_blank" class="dock-icon bg-tele"><i class="fab fa-telegram-plane"></i></a>
+            <a href="https://whatsapp.com/" target="_blank" class="dock-icon bg-wa"><i class="fab fa-whatsapp"></i></a>
+            <a href="https://discord.com/" target="_blank" class="dock-icon bg-discord"><i class="fab fa-discord"></i></a>
+            <a href="https://tiktok.com/" target="_blank" class="dock-icon bg-tiktok"><i class="fab fa-tiktok"></i></a>
+            <a href="https://instagram.com/" target="_blank" class="dock-icon bg-insta"><i class="fab fa-instagram"></i></a>
+            <a href="https://twitter.com/" target="_blank" class="dock-icon bg-x"><i class="fab fa-x-twitter"></i></a>
+            <a href="https://threads.net/" target="_blank" class="dock-icon bg-threads"><i class="fab fa-threads"></i></a>
+            <a href="https://youtube.com/" target="_blank" class="dock-icon bg-youtube"><i class="fab fa-youtube"></i></a>
+            <a href="https://reddit.com/" target="_blank" class="dock-icon bg-reddit"><i class="fab fa-reddit-alien"></i></a>
+            <a href="https://soundcloud.com/" target="_blank" class="dock-icon bg-sc"><i class="fab fa-soundcloud"></i></a>
+            <a href="https://locket.camera/" target="_blank" class="dock-icon bg-locket"><i class="fas fa-heart"></i></a>
+            <a href="https://netflix.com/" target="_blank" class="dock-icon bg-netflix">
+               <img src="https://images.ctfassets.net/4cd45et68cgf/Rx83JoRDMkYNlMC9MKzcB/2b14d5a59fc3937afd3f03191e19502d/Netflix-Symbol.png?w=700&h=456" class="w-[70%] h-[70%] object-contain" alt="Netflix">
+            </a>
+            <a href="https://spotify.com/" target="_blank" class="dock-icon bg-spotify"><i class="fab fa-spotify"></i></a>
+          </div>
           <div class="flex gap-3 items-center">
             <a href="https://www.facebook.com/" target="_blank" class="dock-icon bg-fb"><i class="fab fa-facebook-f"></i></a>
             <a href="https://messenger.com/" target="_blank" class="dock-icon bg-mess"><i class="fab fa-facebook-messenger"></i></a>
@@ -528,6 +547,7 @@ let currentTotalVnd=0, currentTotalCny=0, currentTotalUsd=0;
 let currentDurationMode = 1; // 1, 3, 6, 12 or 'custom'
  
 let isUpgradeMode = false;
+let isRenewMode = false;
 let upgradeConfirmed = false;
 let baseOrderPriceVnd = 0;
 let baseOrderPriceUsd = 0;
@@ -551,6 +571,7 @@ function fmtFullTime(d) {
  
 function disableUpgradeMode() {
     isUpgradeMode = false;
+    isRenewMode = false;
     upgradeConfirmed = false;
     baseOrderPriceVnd = 0;
     baseOrderPriceUsd = 0;
@@ -599,7 +620,7 @@ const i18n={
  btn_create_order:"TẠO MÃ QR CHUYỂN KHOẢN",btn_paid:"TÔI ĐÃ CHUYỂN KHOẢN",
  month_lbl:"Tháng",choose_dur:"Chọn thời gian:",input_months:"Nhập số tháng:",choose_method:"Phương thức thanh toán:",auto_badge:"Tự động 24/24",
  email_warning:"Vui lòng nhập đúng Email — mail kích hoạt sẽ gửi về đây.",
- guide_title:"Hướng dẫn Thanh toán",guide_desc:"1. Điền Email, chọn thời gian & phương thức, sau đó tạo đơn để lấy mã QR.<br><br><b class='text-red-600'>2. Không áp dụng hoàn tiền, khách hàng vui lòng đọc kỹ điều kiện này khi mua hàng.</b>",
+ guide_title:"Hướng dẫn Thanh toán",guide_desc:"1. Điền Email, chọn thời gian & phương thức, sau đó tạo đơn để lấy mã QR.<br><br>2. Không áp dụng hoàn tiền, khách hàng vui lòng đọc kỹ điều kiện này khi mua hàng.", guide_desc_upgrade:"3. Nâng gói chỉ nâng số GB và giới hạn thiết bị, không kéo dài hạn sử dụng.",
  guide_empty:"<p class='text-center py-8 text-slate-400'>Đang cập nhật hướng dẫn...</p>",
     promo_title:"🚀 Chơi Game & Lướt Mạng Không Giới Hạn!",
     promo_desc:"Hỗ trợ: <b class='text-yellow-300'>TikTok, Facebook, Messenger, Instagram, Zalo, YouTube...</b><br>Ping thấp: <b class='text-green-300'>Liên Quân Mobile, Genshin Impact...</b>",
@@ -619,7 +640,7 @@ const i18n={
  pending_timeout:"Chưa nhận được thanh toán",
  pending_manual_title:"Đơn hàng đang chờ Admin duyệt",
  pending_manual_desc:"Vui lòng nhắn tin cho Admin cùng với biên lai để được kích hoạt sớm nhất.", failed_title:"Đơn hàng bị từ chối",
- bank_owner: "Chủ TK:", bank_name: "Ngân hàng:", bank_num: "Số TK:", click_copy: "(NHẤP VÀO MÃ ĐỂ COPY - BẮT BUỘC)", input_manual: "Vui lòng tự nhập nội dung chuyển khoản!", upgrade_confirm_title: "Xác nhận nâng gói", upgrade_confirm_desc: "Vui lòng kiểm tra số tiền chênh lệch và thông tin gói mới. Bấm <b>TẠO MÃ QR CHUYỂN KHOẢN</b> để tạo mã.", req_wait: "Yêu cầu đang chờ xử lý. Vui lòng quay lại sau!", req_sent: "Đã gửi yêu cầu! Vui lòng chờ Email báo cáo.", req_err: "Có lỗi xảy ra, vui lòng thử lại!", select_higher: "Vui lòng chọn gói cao hơn gói hiện tại để nâng cấp", copy_success: "Đã Copy!", not_found: "Không tìm thấy Đơn hàng/Email!", login_success: "Vào cổng thành công!", sending: "Đang gửi...", checking_upgrade: "ĐANG KIỂM TRA GIAO DỊCH NÂNG GÓI...", checking_tx: "ĐANG KIỂM TRA GIAO DỊCH...", admin_rejected: "Admin từ chối giao dịch", unknown: "Chưa xác định", active_upgrade: "Đã kích hoạt - Nâng gói", active: "Đã kích hoạt", web3_maintenance: "Link dự phòng sẽ được Admin mở khi web bảo trì", badge_upgrade_success: "🎉 NÂNG GÓI THÀNH CÔNG"
+ bank_owner: "Chủ TK:", bank_name: "Ngân hàng:", bank_num: "Số TK:", click_copy: "(NHẤP VÀO MÃ ĐỂ COPY - BẮT BUỘC)", input_manual: "Vui lòng tự nhập nội dung chuyển khoản!", upgrade_confirm_title: "Xác nhận nâng gói", upgrade_confirm_desc: "Vui lòng kiểm tra số tiền chênh lệch và thông tin gói mới. Bấm <b>TẠO MÃ QR CHUYỂN KHOẢN</b> để tạo mã.", req_wait: "Yêu cầu đang chờ xử lý. Vui lòng quay lại sau!", req_sent: "Đã gửi yêu cầu! Vui lòng chờ Email báo cáo.", req_err: "Có lỗi xảy ra, vui lòng thử lại!", select_higher: "Vui lòng chọn gói cao hơn gói hiện tại để nâng cấp", copy_success: "Đã Copy!", not_found: "Không tìm thấy Đơn hàng/Email!", login_success: "Vào cổng thành công!", sending: "Đang gửi...", checking_upgrade: "ĐANG KIỂM TRA GIAO DỊCH NÂNG GÓI...", checking_tx: "ĐANG KIỂM TRA GIAO DỊCH...", admin_rejected: "Admin từ chối giao dịch", unknown: "Chưa xác định", active_upgrade: "Đã kích hoạt - Nâng gói", active: "Đã kích hoạt", web3_maintenance: "Link dự phòng sẽ được Admin mở khi web bảo trì", badge_upgrade_success: "🎉 NÂNG GÓI THÀNH CÔNG", select_renew_pkg: "Vui lòng chọn gói để gia hạn"
 },
   en:{brand:"VPN Trinh Hg",search_placeholder:"Order ID or Email...",btn_logout:"Exit",
  tab_p_home:"Home",tab_p_store:"Store",tab_p_guide:"Guide",
@@ -636,7 +657,7 @@ const i18n={
  btn_create_order:"CREATE PAYMENT QR",btn_paid:"I HAVE PAID",
  month_lbl:"Mths",choose_dur:"Duration:",input_months:"Input months:",choose_method:"Payment method:",auto_badge:"Auto 24/24",
  email_warning:"Please enter a valid Email. Activation link will be sent here.",
- guide_title:"Payment Instructions",guide_desc:"1. Fill Email, choose duration & method, then create order.<br><br><b class='text-red-600'>2. No refunds apply, please read this condition carefully.</b>",
+ guide_title:"Payment Instructions",guide_desc:"1. Fill Email, choose duration & method, then create order.<br><br>2. No refunds apply, please read this condition carefully.", guide_desc_upgrade:"3. Upgrading only increases Data and Devices, it does not extend duration.",
  guide_empty:"<p class='text-center py-8 text-slate-400'>Guide updating...</p>",
     promo_title:"🚀 Unlimited Gaming & Browsing!",
  promo_desc:"Smooth: <b class='text-yellow-300'>TikTok, Facebook, Messenger, Instagram, Zalo, YouTube...</b><br>Low ping: <b class='text-green-300'>Arena of Valor, Genshin Impact...</b>",
@@ -655,7 +676,7 @@ const i18n={
  pending_timeout:"Payment not received",
  pending_manual_title:"Order pending approval",
  pending_manual_desc:"Please message Admin with receipt for fast activation.", failed_title:"Order Rejected",
- bank_owner: "Acc Name:", bank_name: "Bank:", bank_num: "Acc No:", click_copy: "(CLICK MEMO TO COPY - REQUIRED)", input_manual: "Manually enter amount & Memo!", upgrade_confirm_title: "Confirm Upgrade", upgrade_confirm_desc: "Please verify the price difference and new package info. Click <b>CREATE PAYMENT QR</b> to proceed.", req_wait: "Request pending. Try again later!", req_sent: "Request sent! Please check your email later.", req_err: "Error occurred, please try again.", select_higher: "Please select a higher package to upgrade", copy_success: "Copied!", not_found: "Order/Email not found!", login_success: "Login success!", sending: "Sending...", checking_upgrade: "CHECKING UPGRADE TRANSACTION...", checking_tx: "CHECKING TRANSACTION...", admin_rejected: "Transaction rejected by Admin", unknown: "Unknown", active_upgrade: "Active - Upgraded", active: "Active", web3_maintenance: "Backup link will be opened by Admin during maintenance", badge_upgrade_success: "🎉 UPGRADE SUCCESS"
+ bank_owner: "Acc Name:", bank_name: "Bank:", bank_num: "Acc No:", click_copy: "(CLICK MEMO TO COPY - REQUIRED)", input_manual: "Manually enter amount & Memo!", upgrade_confirm_title: "Confirm Upgrade", upgrade_confirm_desc: "Please verify the price difference and new package info. Click <b>CREATE PAYMENT QR</b> to proceed.", req_wait: "Request pending. Try again later!", req_sent: "Request sent! Please check your email later.", req_err: "Error occurred, please try again.", select_higher: "Please select a higher package to upgrade", copy_success: "Copied!", not_found: "Order/Email not found!", login_success: "Login success!", sending: "Sending...", checking_upgrade: "CHECKING UPGRADE TRANSACTION...", checking_tx: "CHECKING TRANSACTION...", admin_rejected: "Transaction rejected by Admin", unknown: "Unknown", active_upgrade: "Active - Upgraded", active: "Active", web3_maintenance: "Backup link will be opened by Admin during maintenance", badge_upgrade_success: "🎉 UPGRADE SUCCESS", select_renew_pkg: "Please select a package to renew"
 },
   zh:{brand:"VPN Trinh Hg",search_placeholder:"输入订单号或邮箱...",btn_logout:"退出",
      tab_p_home:"主页",tab_p_store:"商店",tab_p_guide:"指南",
@@ -671,7 +692,7 @@ const i18n={
  btn_create_order:"创建支付二维码",btn_paid:"我已付款",
      month_lbl:"个月",choose_dur:"选择时长：",input_months:"输入月数:",choose_method:"支付方式:",auto_badge:"自动 24/24",
   email_warning:"请输入有效邮箱，激活链接将发送到此地址。",
-    guide_title:"付款说明",guide_desc:"1.填写邮箱，选择时长和付款方式，然后创建订单。<br><br><b class='text-red-600'>2. 不适用退款政策，请在购买前仔细阅读。</b>",
+    guide_title:"付款说明",guide_desc:"1.填写邮箱，选择时长和付款方式，然后创建订单。<br><br>2. 不适用退款政策，请在购买前仔细阅读。", guide_desc_upgrade:"3. 升级仅增加流量和设备数，不延长使用时间。",
  guide_empty:"<p class='text-center py-8 text-slate-400'>教程更新中...</p>",
     promo_title:"🚀无限游戏与浏览！",
      promo_desc:"流畅访问: <b class='text-yellow-300'>TikTok, Facebook, Messenger, Zalo, YouTube...</b><br>低延迟: <b class='text-green-300'>王者荣耀, 原神...</b>",
@@ -689,7 +710,7 @@ const i18n={
  pending_wait:"自动处理中，请稍候。",
  pending_timeout:"未收到付款", pending_manual_title:"订单待管理员审核",
  pending_manual_desc:"请发送付款截图给管理员以快速激活。", failed_title:"订单被拒绝",
- bank_owner: "账户名:", bank_name: "银行:", bank_num: "账号:", click_copy: "(点击复制备注 - 必填)", input_manual: "请手动输入金额和订单号！", upgrade_confirm_title: "确认升级", upgrade_confirm_desc: "请核对差价及新套餐信息。点击 <b>创建支付二维码</b>继续。", req_wait: "请求待处理，请稍后再试！", req_sent: "请求已发送！请稍后检查您的电子邮件。", req_err: "发生错误，请重试！", select_higher: "请选择更高的套餐进行升级", copy_success: "已复制！", not_found: "未找到订单/邮箱！", login_success: "登录成功！", sending: "发送中...", checking_upgrade: "正在检查升级交易...", checking_tx: "正在检查交易...", admin_rejected: "管理员拒绝了交易", unknown: "未知", active_upgrade: "已激活 - 已升级", active: "已激活", web3_maintenance: "备用链接将在网站维护时由管理员开放", badge_upgrade_success: "🎉 升级成功"
+ bank_owner: "账户名:", bank_name: "银行:", bank_num: "账号:", click_copy: "(点击复制备注 - 必填)", input_manual: "请手动输入金额和订单号！", upgrade_confirm_title: "确认升级", upgrade_confirm_desc: "请核对差价及新套餐信息。点击 <b>创建支付二维码</b>继续。", req_wait: "请求待处理，请稍后再试！", req_sent: "请求已发送！请稍后检查您的电子邮件。", req_err: "发生错误，请重试！", select_higher: "请选择更高的套餐进行升级", copy_success: "已复制！", not_found: "未找到订单/邮箱！", login_success: "登录成功！", sending: "发送中...", checking_upgrade: "正在检查升级交易...", checking_tx: "正在检查交易...", admin_rejected: "管理员拒绝了交易", unknown: "未知", active_upgrade: "已激活 - 已升级", active: "已激活", web3_maintenance: "备用链接将在网站维护时由管理员开放", badge_upgrade_success: "🎉 升级成功", select_renew_pkg: "请选择续订套餐"
 }
 };
  
@@ -887,11 +908,18 @@ function startUpgrade() {
     }
  if(!baseOrderPriceVnd) { baseOrderPriceVnd = 60000; baseOrderPriceUsd = 2.5; baseOrderPriceCny = 15.5; }
  
- switchPortalTab('p-store');
+ switchPortalTab('p-store', true);
  renderPackages('all');
  showToast(i18n[lang].select_higher, "info");
 }
  
+function startRenew() {
+    disableUpgradeMode();
+    isRenewMode = true;
+    switchPortalTab('p-store', true);
+    showToast(i18n[lang].select_renew_pkg || "Vui lòng chọn gói để gia hạn", "info");
+}
+
 function openCheckout(id){
  currentPackage=pkgs.find(p=>p.id===id);
   const co=document.getElementById('checkoutSection');
@@ -995,12 +1023,17 @@ function renderPaymentBox(){
  btn.innerHTML=l.btn_create_order;
  btn.className='w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md shrink-0';
   
+  let guideHtml = l.guide_desc;
+  if (isUpgradeMode) {
+      guideHtml += "<br><br>" + l.guide_desc_upgrade;
+  }
+
   if(!currentOrderId && !isUpgradeMode){
- col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 border-b pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4><p class="text-sm text-slate-600 leading-relaxed">${l.guide_desc}</p></div>`;return;
+ col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 border-b pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4><p class="text-sm text-slate-600 leading-relaxed">${guideHtml}</p></div>`;return;
   }
   
   if(isUpgradeMode && !upgradeConfirmed) {
- col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-purple-700 border-b pb-2"><i class="fas fa-arrow-up mr-2"></i>${l.upgrade_confirm_title}</h4><p class="text-sm text-slate-600">${l.upgrade_confirm_desc}</p></div>`;
+ col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-purple-700 border-b pb-2"><i class="fas fa-arrow-up mr-2"></i>${l.upgrade_confirm_title}</h4><p class="text-sm text-slate-600 mb-4">${l.upgrade_confirm_desc}</p><h4 class="font-extrabold text-base mb-2 text-indigo-700 border-b pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4><p class="text-sm text-slate-600 leading-relaxed">${guideHtml}</p></div>`;
    return;
   }
  
@@ -1063,7 +1096,8 @@ async function submitOrder(e){
     pkg:`${currentPackage.vi.name} (${cy2}) - ${fp} (${currentPackage.data})`,
     totalVnd:currentTotalVnd,needSupport:document.getElementById('needSupport').checked,
     status:'pending',date:fmtFullTime(new Date()), createdTs: nowTs, 
-    expDate:'',daysLeft:'',info:'',info2:'',info3:'',nickname:'',reason:''
+    expDate:'',daysLeft:'',info:'',info2:'',info3:'',nickname:'',reason:'',
+    isRenew: isRenewMode, targetOrderId: isRenewMode ? oCache.id : null, sourceWeb: currentTargetWeb
     };
     
    renderPaymentBox();
@@ -1231,9 +1265,6 @@ function updatePortalInfo(o){
   isUpgradePending = false; 
  
   const popFields = () => {
- document.getElementById('subLink1').value = o.info1 || o.info || '';
- document.getElementById('subLink2').value = o.info2 || '';
- document.getElementById('subLink3').value = o.info3 || '';
  document.getElementById('displayOrderId').innerText = o.id;
  document.getElementById('displayEmail').innerText = maskEmailStr(o.email);
     
@@ -1243,7 +1274,23 @@ function updatePortalInfo(o){
  document.getElementById('displayPkg').innerHTML = (pPrice ? `${pName} - ${pPrice}` : pName) + upgradeTag;
     
  document.getElementById('displayExp').innerText = o.expDate || i18n[lang].unknown;
- document.getElementById('displayStatus').innerText = o.isUpgrade ? i18n[lang].active_upgrade : i18n[lang].active;
+
+    // Check expDate vs current time
+    let isExpired = false;
+    if (o.expDate && o.expDate !== i18n[lang].lifetime_lbl && o.expDate !== "Vĩnh viễn") {
+        const expTs = parseOrderDate(o.expDate);
+        if (Date.now() > expTs) isExpired = true;
+    }
+
+    let statusText = o.isUpgrade ? i18n[lang].active_upgrade : i18n[lang].active;
+    let statusClass = "bg-green-100 text-green-700";
+    if (isExpired) {
+        statusText = i18n[lang].expired_lbl;
+        statusClass = "bg-gray-100 text-gray-500";
+    }
+
+ document.getElementById('displayStatus').innerText = statusText;
+ document.getElementById('displayStatus').className = `text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap ${statusClass}`;
  
     let subTimeStr = (o.date && o.date.includes(" - ")) ? o.date.split(" - ")[0] : "";
     let subDateText = o.expDate ? `${subTimeStr ? subTimeStr + " - " : ""}${o.expDate}` : "Vĩnh viễn";
@@ -1251,25 +1298,23 @@ function updatePortalInfo(o){
     const blurConf = cmsCache?.settings || {};
  
     const linksObj = [
-        { el: 'subLink1', blurKey: 'blurWeb1', dtEl: 'subDate1' },
-        { el: 'subLink2', blurKey: 'blurWeb2', dtEl: 'subDate2' },
-        { el: 'subLink3', blurKey: 'blurWeb3', dtEl: 'subDate3' }
+        { el: 'subLink1', blurKey: 'blurWeb1', dtEl: 'subDate1', realVal: o.info1 || o.info || '' },
+        { el: 'subLink2', blurKey: 'blurWeb2', dtEl: 'subDate2', realVal: o.info2 || '' },
+        { el: 'subLink3', blurKey: 'blurWeb3', dtEl: 'subDate3', realVal: o.info3 || '' }
     ];
  
   linksObj.forEach(obj => {
         const inp = document.getElementById(obj.el);
         const dt = document.getElementById(obj.dtEl);
         if (inp && dt) {
-            if (obj.blurKey === 'blurWeb3' && blurConf[obj.blurKey]) {
+            if (blurConf[obj.blurKey]) {
                inp.value = i18n[lang].web3_maintenance;
                inp.classList.add('blur-link');
                dt.innerText = "";
-            } else if (blurConf[obj.blurKey] && inp.value) {
-              inp.classList.add('blur-link');
-              dt.innerText = inp.value ? subDateText : "";
             } else {
+              inp.value = obj.realVal;
               inp.classList.remove('blur-link');
-              dt.innerText = inp.value ? subDateText : "";
+              dt.innerText = obj.realVal ? subDateText : "";
             }
         }
     });
@@ -1446,15 +1491,27 @@ async function login(isManualRefresh=false,isAutoPoll=false){
  document.body.classList.remove('checkout-active');
 }
  
-function switchPortalTab(tabId){
+function switchPortalTab(tabId, isFromUpgrade = false){
+ if(!isFromUpgrade) disableUpgradeMode();
  document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
- document.querySelectorAll('.desktop-tab-btn').forEach(el=>{el.classList.remove('active','text-white','bg-indigo-600');el.classList.add('text-slate-600');});
- document.querySelectorAll('.mobile-tab-btn').forEach(el=>{el.classList.remove('active','text-indigo-600','bg-[#e0e7ff]');el.classList.add('text-slate-500');});
+ document.querySelectorAll('.desktop-tab-btn').forEach(el=>{
+     el.classList.remove('active','text-white','bg-indigo-600');
+     el.classList.add('text-slate-600', 'hover:bg-slate-100');
+ });
+ document.querySelectorAll('.mobile-tab-btn').forEach(el=>{
+     el.classList.remove('active','text-indigo-600','bg-[#e0e7ff]');
+     el.classList.add('text-slate-500');
+ });
  document.getElementById(tabId).classList.add('active');
   const id=tabId.replace('p-','');
- document.querySelectorAll('.desktop-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','bg-indigo-600','text-white');el.classList.remove('text-slate-600');});
- document.querySelectorAll('.mobile-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','text-indigo-600','bg-[#e0e7ff]');el.classList.remove('text-slate-500');});
- if(tabId === 'p-store') disableUpgradeMode();
+ document.querySelectorAll('.desktop-tab-btn.btn-nav-'+tabId).forEach(el=>{
+     el.classList.add('active','bg-indigo-600','text-white');
+     el.classList.remove('text-slate-600', 'hover:bg-slate-100');
+ });
+ document.querySelectorAll('.mobile-tab-btn.btn-nav-'+tabId).forEach(el=>{
+     el.classList.add('active','text-indigo-600','bg-[#e0e7ff]');
+     el.classList.remove('text-slate-500');
+ });
 }
  
 function logout(){
@@ -1468,9 +1525,9 @@ function logout(){
  disableUpgradeMode();
  if(globalPollInterval) clearInterval(globalPollInterval);
  stopPendingPolling();
- document.documentElement.classList.remove('has-session');
- document.documentElement.classList.remove('has-user-session');
+ document.documentElement.classList.remove('has-session', 'has-user-session');
  document.body.classList.remove('checkout-active');
+ window.scrollTo(0,0);
 }
  
 function parseShortcodes(text) {
