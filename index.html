@@ -1,4 +1,4 @@
-<!-- v2.0 - Fix Features Grid, Responsive Header, Marquee Dock, F5 Blink, Realtime 3s, Base64 WeChat, i18n Full - 2026-09-15 -->
+<!-- v2.1 - Fix logic loopholes, Layout header, UI Grid, and Security links - 2026-09-16 -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -80,7 +80,7 @@ details>summary::-webkit-details-marker{display:none;}
 html.has-session #view-store { display: none !important; }
 html.has-session #hdr { display: flex !important; }
 html.has-session #main { display: block !important; } 
-
+ 
 html.has-user-session #view-store { display: none !important; }
 html.has-user-session #view-portal { display: block !important; }
  
@@ -91,23 +91,23 @@ html.has-user-session #view-portal { display: block !important; }
  const _sk = window.location.hostname.replace(/\./g,"_");
  let _admHasSession = false;
  for(let i=0; i<localStorage.length; i++) {
-   if(localStorage.key(i).includes(_sk + '_adm_dev')) _admHasSession = true;
+  if(localStorage.key(i).includes(_sk + '_adm_dev')) _admHasSession = true;
  }
  if(_admHasSession) { document.documentElement.classList.add('has-session'); }
-
+ 
  let _usrSess = localStorage.getItem('vpn_portal_session_24h');
  if(_usrSess) {
      try {
          let _p = JSON.parse(_usrSess);
          if (new Date().getTime() - _p.time < 24*3600*1000) {
-             document.documentElement.classList.add('has-user-session');
+            document.documentElement.classList.add('has-user-session');
          }
      } catch(e){}
  }
 </script>
 </head>
 <body class="min-h-screen flex flex-col w-full overflow-x-hidden">
-<div id="toastContainer" class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+<div id="toastContainer" class="fixed top-[90px] md:top-[100px] right-5 z-10 flex flex-col gap-3 pointer-events-none"></div>
  
 <div id="floatingSocials" class="fixed bottom-24 md:bottom-6 right-4 md:right-6 flex flex-col gap-3 z-40 transition-all duration-500">
   <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="w-12 h-12 bg-wechat text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.0s"><i class="fab fa-weixin"></i></button>
@@ -122,39 +122,38 @@ html.has-user-session #view-portal { display: block !important; }
        <h3 class="font-extrabold text-xl text-slate-800 mb-2">WeChat Hỗ trợ</h3>
        <p class="text-xs text-slate-500 mb-4">Lưu ảnh hoặc dùng chức năng quét mã của WeChat để thêm Admin.</p>
        <div class="bg-slate-50 p-2 rounded-2xl mb-4 border border-slate-200 shadow-inner overflow-hidden flex justify-center">
-          <!-- Base64 Image Placeholder cho WeChat QR -->
-          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2Y4ZmFmYyIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM5NGExYjIiPlFSIENvZGU8L3RleHQ+PC9zdmc+" alt="WeChat QR" class="max-w-[250px] w-full h-auto rounded-xl object-contain">
+          <img src="https://i.pinimg.com/736x/93/29/1e/93291e3f736f05f2f5722ecbcb7ca428.jpg" alt="WeChat QR" class="max-w-[250px] w-full h-auto rounded-xl object-contain">
        </div>
        <button onclick="document.getElementById('wechatModal').classList.add('hidden')" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl hover:bg-slate-900 transition">ĐÓNG BẢNG NÀY</button>
    </div>
 </div>
  
 <nav id="mainNav" class="glass-ui fixed top-0 w-full z-[70] border-b border-slate-200 py-3">
-  <div class="max-w-7xl mx-auto px-4 w-full flex flex-col md:flex-row items-center justify-between gap-3">
+  <div class="max-w-[1400px] mx-auto px-4 w-full flex flex-col md:flex-row items-center justify-between gap-3">
     
     <!-- Mobile: Dòng 1 (Brand & Lang), Desktop: Trái (Brand) -->
-    <div class="flex items-center justify-between w-full md:w-1/3 shrink-0">
+    <div class="flex items-center justify-between w-full md:w-auto shrink-0">
       <div class="font-extrabold text-xl md:text-2xl tracking-tighter cursor-pointer text-indigo-700" onclick="logout()">
         <span data-i18n="brand">VPN Trinh Hg</span>
       </div>
       <!-- Controls on mobile -->
       <div class="flex md:hidden items-center gap-2">
         <select id="langSelectMobile" onchange="changeLanguage(this.value)" class="bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-lg px-2 py-1.5 text-xs font-bold outline-none">
-          <option value="vi">🇻🇳</option><option value="en">🇬🇧</option><option value="zh">🇨🇳</option>
+          <option value="vi">🇻🇳 VN</option><option value="en">🇬🇧 EN</option><option value="zh">🇨🇳 CN</option>
         </select>
       </div>
     </div>
     
     <!-- Mobile: Dòng 2 (Search Bar), Desktop: Giữa -->
-    <div class="flex-1 w-full md:w-1/3 flex items-center justify-center mx-0 md:mx-4">
-      <div class="w-full relative shadow-sm min-w-0">
-        <input type="text" id="loginInput" onkeyup="if(event.key==='Enter')login()" class="w-full bg-white border-2 border-indigo-100 rounded-full pl-5 pr-12 py-2.5 text-sm outline-none font-bold text-slate-700 focus:border-indigo-400 transition" placeholder="Nhập Mã Đơn hoặc Email..." data-i18n-placeholder="search_placeholder">
+    <div class="flex-1 w-full md:flex-1 flex items-center justify-center mx-0 md:mx-2">
+      <div class="w-full relative min-w-0">
+        <input type="text" id="loginInput" onkeyup="if(event.key==='Enter')login()" class="w-full bg-white border-2 border-indigo-100 rounded-full pl-5 pr-12 py-2.5 text-sm outline-none font-bold text-slate-700 focus:border-indigo-400 transition shadow-sm" placeholder="Nhập Mã Đơn hoặc Email..." data-i18n-placeholder="search_placeholder">
         <button onclick="login()" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 bg-indigo-600 rounded-full text-white hover:bg-indigo-700 flex items-center justify-center transition shadow-sm"><i class="fas fa-search text-xs"></i></button>
       </div>
     </div>
  
     <!-- Desktop Controls -->
-    <div class="hidden md:flex items-center justify-end w-1/3 gap-3 shrink-0">
+    <div class="hidden md:flex items-center justify-end w-auto gap-3 shrink-0">
       <div id="desktopPortalNav" class="hidden items-center gap-2 shrink-0 opacity-0 w-0 overflow-hidden whitespace-nowrap transition-all duration-500">
         <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition flex items-center"><i class="fas fa-tv mr-2"></i><span data-i18n="tab_p_home">Trang chủ</span></button>
         <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition flex items-center"><i class="fas fa-shopping-cart mr-2"></i><span data-i18n="tab_p_store">Cửa hàng</span></button>
@@ -164,7 +163,7 @@ html.has-user-session #view-portal { display: block !important; }
         <option value="vi">VN - Tiếng Việt</option><option value="en">EN - English</option><option value="zh">CN - 中文</option>
       </select>
       <div id="userMenu" class="hidden">
-        <button onclick="logout()" class="text-sm bg-red-50 text-red-600 font-bold px-4 py-2 rounded-xl hover:bg-red-100 transition shadow-sm"><i class="fas fa-sign-out-alt md:mr-1"></i><span class="hidden md:inline" data-i18n="btn_logout">Thoát</span></button>
+        <button onclick="logout()" class="text-sm bg-red-50 text-red-600 font-bold px-4 py-2 rounded-xl hover:bg-red-100 transition shadow-sm flex items-center justify-center whitespace-nowrap"><i class="fas fa-sign-out-alt md:mr-1"></i><span class="hidden md:inline" data-i18n="btn_logout">Thoát</span></button>
       </div>
     </div>
   </div>
@@ -179,7 +178,7 @@ html.has-user-session #view-portal { display: block !important; }
   </div>
 </div>
  
-<main class="flex-grow z-10 px-2 md:px-4 py-4 md:py-6 max-w-7xl mx-auto w-full overflow-x-hidden">
+<main class="flex-grow z-10 px-2 md:px-4 py-4 md:py-6 max-w-[1400px] mx-auto w-full overflow-x-hidden">
   
   <div id="view-portal" class="view-section mb-20 w-full">
     <div id="p-home" class="portal-tab-content active w-full">
@@ -192,12 +191,12 @@ html.has-user-session #view-portal { display: block !important; }
             <h4 id="pendingTitleUI" class="font-extrabold text-indigo-800 text-sm md:text-lg uppercase">Đang kiểm tra giao dịch...</h4>
             <div class="my-5">
               <span id="countdownTimer" class="font-mono text-5xl md:text-6xl font-black text-indigo-600 bg-white px-6 py-3 rounded-2xl shadow-inner border-2 border-indigo-100">05:00</span>
-           </div>
-            <p class="text-indigo-700 text-sm md:text-base font-bold mb-2 animate-pulse" data-i18n="pending_wait">Hệ thống xử lý tự động, vui lòng đợi trong ít phút.</p>
+          </div>
+            <p id="pendingWaitText" class="text-indigo-700 text-sm md:text-base font-bold mb-2 animate-pulse">Hệ thống xử lý tự động, vui lòng đợi trong ít phút.</p>
           </div>
           <div id="pendingTimeoutState" class="hidden w-full mb-2">
             <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-3"></i>
-            <h4 class="font-extrabold text-red-700 text-sm md:text-lg uppercase" data-i18n="pending_timeout">Chưa nhận được thanh toán</h4>
+            <h4 id="pendingTimeoutTitle" class="font-extrabold text-red-700 text-sm md:text-lg uppercase">Chưa nhận được thanh toán</h4>
             <p class="text-red-600 text-sm md:text-base font-bold mt-1 mb-2">Đã quá thời gian tự động duyệt. Bạn đã chuyển khoản chưa?</p>
           </div>
           <div class="w-full flex flex-col items-center mt-2 border-t border-indigo-100 pt-4">
@@ -239,13 +238,13 @@ html.has-user-session #view-portal { display: block !important; }
               <div class="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 p-4 md:p-5 rounded-2xl shadow-sm flex flex-col md:flex-row items-center gap-4 w-full text-center md:text-left relative overflow-hidden">
                <div class="absolute top-0 left-0 w-1.5 h-full bg-red-500"></div>
                <div class="w-10 h-10 md:w-12 md:h-12 bg-red-100 rounded-full flex items-center justify-center shrink-0 shadow-inner">
-                  <i class="fas fa-user-shield text-red-500 text-lg md:text-2xl animate-pulse"></i>
-               </div>
+                 <i class="fas fa-user-shield text-red-500 text-lg md:text-2xl animate-pulse"></i>
+              </div>
                <div class="flex-1">
-                   <h4 class="text-red-700 font-extrabold text-xs md:text-sm uppercase tracking-wide mb-1" data-i18n="security_alert">Cảnh báo bảo mật</h4>
-                   <p class="text-red-800 font-medium text-[11px] md:text-[13px] leading-relaxed" data-i18n="security_desc">Bắt buộc giữ bí mật <span class="text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100">Email</span> và <span class="text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100">Mã đơn hàng</span> để tránh bị lộ Link VPN.</p>
-               </div>
-           </div>
+                  <h4 id="securityAlertTitle" class="text-red-700 font-extrabold text-xs md:text-sm uppercase tracking-wide mb-1">Cảnh báo bảo mật</h4>
+                  <p id="securityAlertDesc" class="text-red-800 font-medium text-[11px] md:text-[13px] leading-relaxed">Bắt buộc giữ bí mật <span class="text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100">Email</span> và <span class="text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100">Mã đơn hàng</span> để tránh bị lộ Link VPN.</p>
+              </div>
+          </div>
           </div>
           
           <!-- INFO CARD -->
@@ -254,19 +253,19 @@ html.has-user-session #view-portal { display: block !important; }
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                <div class="flex flex-col gap-2.5">
-                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-envelope text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 shrink-0">Email:</span><span id="displayEmail" class="font-bold text-slate-800 text-[11px] md:text-xs truncate"></span></div>
-                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-hashtag text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="order_id_label">Mã đơn:</span><span id="displayOrderId" class="font-mono font-black text-indigo-600 text-xs md:text-sm"></span></div>
-                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-box text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="pkg_name_label">Gói VPN:</span><span id="displayPkg" class="font-bold text-slate-800 text-[11px] md:text-xs truncate"></span></div>
-            </div>
+               <div class="flex items-center gap-2 min-w-0"><i class="fas fa-envelope text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 shrink-0">Email:</span><span id="displayEmail" class="font-bold text-slate-800 text-[11px] md:text-xs truncate"></span></div>
+               <div class="flex items-center gap-2 min-w-0"><i class="fas fa-hashtag text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="order_id_label">Mã đơn:</span><span id="displayOrderId" class="font-mono font-black text-indigo-600 text-xs md:text-sm"></span></div>
+               <div class="flex items-center gap-2 min-w-0"><i class="fas fa-box text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="pkg_name_label">Gói VPN:</span><span id="displayPkg" class="font-bold text-slate-800 text-[11px] md:text-xs truncate"></span></div>
+           </div>
                <div class="flex flex-col gap-2.5">
-                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-clock text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="exp_date_label">HSD:</span><span id="displayExp" class="font-bold text-slate-800 text-[11px] md:text-xs truncate"></span></div>
-                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-check-circle text-green-500 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="status_lbl">Trạng thái:</span><span id="displayStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded bg-green-100 text-green-700 uppercase whitespace-nowrap"></span></div>
-            </div>
+               <div class="flex items-center gap-2 min-w-0"><i class="fas fa-clock text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="exp_date_label">HSD:</span><span id="displayExp" class="font-bold text-slate-800 text-[11px] md:text-xs truncate"></span></div>
+               <div class="flex items-center gap-2 min-w-0"><i class="fas fa-check-circle text-green-500 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="status_lbl">Trạng thái:</span><span id="displayStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded bg-green-100 text-green-700 uppercase whitespace-nowrap"></span></div>
+           </div>
           </div>
           <div class="mt-4 flex justify-center border-t border-slate-100 pt-4">
-             <button id="btnRequestData" onclick="requestDataCheck()" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs hover:scale-105 transition shadow-sm flex items-center justify-center btn-heartbeat outline-none">
+            <button id="btnRequestData" onclick="requestDataCheck()" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs hover:scale-105 transition shadow-sm flex items-center justify-center btn-heartbeat outline-none">
                  <i class="fas fa-chart-pie mr-1.5"></i><span data-i18n="btn_check_data">Kiểm tra dung lượng</span>
-             </button>
+            </button>
           </div>
           </div>
           
@@ -274,33 +273,33 @@ html.has-user-session #view-portal { display: block !important; }
             <div class="w-full">
               <h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL:</h3>
               <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
-              <input type="text" id="subLink1" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
-              <button onclick="copyToClipboard('subLink1',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button>
-            </div>
+             <input type="text" id="subLink1" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+             <button onclick="copyToClipboard('subLink1',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button>
+           </div>
               <div id="subDate1" class="text-[10px] font-bold text-slate-500 mt-1.5 ml-1"></div>
           </div>
             
             <div id="subLink2Wrap" class="w-full mt-2 border-t border-green-200/50 pt-3">
               <h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL dự phòng 2:</h3>
               <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
-              <input type="text" id="subLink2" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
-              <button onclick="copyToClipboard('subLink2',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button>
-            </div>
+             <input type="text" id="subLink2" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+             <button onclick="copyToClipboard('subLink2',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button>
+           </div>
               <div id="subDate2" class="text-[10px] font-bold text-slate-500 mt-1.5 ml-1"></div>
           </div>
  
           <div id="subLink3Wrap" class="w-full mt-2 border-t border-green-200/50 pt-3">
               <h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL dự phòng 3:</h3>
               <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
-              <input type="text" id="subLink3" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
-              <button onclick="copyToClipboard('subLink3',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button>
-            </div>
+             <input type="text" id="subLink3" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+             <button onclick="copyToClipboard('subLink3',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button>
+           </div>
               <div id="subDate3" class="text-[10px] font-bold text-slate-500 mt-1.5 ml-1"></div>
           </div>
  
             <div class="mt-4 grid grid-cols-2 gap-3 border-t border-green-300 pt-4">
             <button onclick="startUpgrade()" class="w-full bg-amber-500 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-amber-600 transition flex items-center justify-center shadow-md"><i class="fas fa-arrow-up mr-1.5"></i> NÂNG GÓI</button>
-            <button onclick="disableUpgradeMode(); switchPortalTab('p-store');" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center shadow-md"><i class="fas fa-redo-alt mr-1.5"></i> <span data-i18n="btn_renew">GIA HẠN</span></button>
+            <button onclick="switchPortalTab('p-store');" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center shadow-md"><i class="fas fa-redo-alt mr-1.5"></i> <span data-i18n="btn_renew">GIA HẠN</span></button>
           </div>
           </div>
         </div>
@@ -372,7 +371,6 @@ html.has-user-session #view-portal { display: block !important; }
             <a href="https://reddit.com/" target="_blank" class="dock-icon bg-reddit"><i class="fab fa-reddit-alien"></i></a>
             <a href="https://soundcloud.com/" target="_blank" class="dock-icon bg-sc"><i class="fab fa-soundcloud"></i></a>
             <a href="https://locket.camera/" target="_blank" class="dock-icon bg-locket"><i class="fas fa-heart"></i></a>
-            <!-- Sửa icon Netflix -->
             <a href="https://netflix.com/" target="_blank" class="dock-icon bg-netflix">
                <img src="https://images.ctfassets.net/4cd45et68cgf/Rx83JoRDMkYNlMC9MKzcB/2b14d5a59fc3937afd3f03191e19502d/Netflix-Symbol.png?w=700&h=456" class="w-[70%] h-[70%] object-contain" alt="Netflix">
             </a>
@@ -401,16 +399,16 @@ html.has-user-session #view-portal { display: block !important; }
       </div>
     </div>
  
-    <!-- TÍNH NĂNG NỔI BẬT (Bỏ scroll ngang trên Mobile, dùng grid/flex-col) -->
-    <div class="flex flex-col md:grid md:grid-cols-3 gap-4 md:gap-5 mb-10 w-full no-invert">
-      <div class="w-full bg-gradient-to-br from-indigo-500 to-indigo-700 p-5 md:p-6 rounded-[1.5rem] text-white shadow-md flex flex-col justify-center relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
+    <!-- TÍNH NĂNG NỔI BẬT (Bỏ scroll ngang trên Mobile, dùng grid) -->
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 mb-10 w-full no-invert">
+      <div class="col-span-2 md:col-span-1 w-full bg-gradient-to-br from-indigo-500 to-indigo-700 p-5 md:p-6 rounded-[1.5rem] text-white shadow-md flex flex-col justify-center relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
          <div class="absolute -right-4 -bottom-4 text-indigo-400/40 text-6xl md:text-8xl group-hover:rotate-12 transition-transform duration-500"><i class="fas fa-globe-asia"></i></div>
          <div class="relative z-10">
             <h3 class="text-lg md:text-2xl font-black mb-1.5 md:mb-2" data-i18n="feat_1">Mở khóa mọi nền tảng</h3>
             <p class="text-indigo-100 text-[11px] md:text-sm font-medium opacity-95 leading-relaxed" data-i18n="feat_1_desc">Truy cập mượt mà Facebook, TikTok, Netflix xuyên quốc gia mà không gặp rào cản địa lý.</p>
          </div>
       </div>
-      <div class="w-full bg-white p-5 md:p-6 rounded-[1.5rem] border border-slate-100 shadow-sm flex flex-col justify-center hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden group">
+      <div class="col-span-1 w-full bg-white p-5 md:p-6 rounded-[1.5rem] border border-slate-100 shadow-sm flex flex-col justify-center hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden group">
          <div class="absolute -right-4 -bottom-4 text-amber-100 text-6xl md:text-8xl group-hover:-rotate-12 transition-transform duration-500"><i class="fas fa-bolt"></i></div>
          <div class="relative z-10">
            <div class="w-10 h-10 md:w-12 md:h-12 bg-amber-50 rounded-2xl flex items-center justify-center mb-2 md:mb-3"><i class="fas fa-bolt text-xl md:text-2xl text-amber-500"></i></div>
@@ -418,7 +416,7 @@ html.has-user-session #view-portal { display: block !important; }
            <p class="text-[11px] md:text-sm text-slate-500 font-medium leading-relaxed" data-i18n="feat_2_desc">Độ trễ thấp, tối ưu tuyệt đối cho Game Mobile & Stream video chuẩn 4K.</p>
          </div>
       </div>
-      <div class="w-full bg-white p-5 md:p-6 rounded-[1.5rem] border border-slate-100 shadow-sm flex flex-col justify-center hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden group">
+      <div class="col-span-1 w-full bg-white p-5 md:p-6 rounded-[1.5rem] border border-slate-100 shadow-sm flex flex-col justify-center hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden group">
          <div class="absolute -right-4 -bottom-4 text-emerald-50 text-6xl md:text-8xl group-hover:rotate-12 transition-transform duration-500"><i class="fas fa-user-secret"></i></div>
          <div class="relative z-10">
            <div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-2 md:mb-3"><i class="fas fa-user-secret text-xl md:text-2xl text-emerald-500"></i></div>
@@ -441,7 +439,7 @@ html.has-user-session #view-portal { display: block !important; }
         <div class="grid lg:grid-cols-2 gap-6">
           <div class="bg-white border border-slate-200 p-5 md:p-8 rounded-3xl flex flex-col shadow-sm">
             <div class="bg-indigo-50 px-5 py-4 rounded-xl mb-5 flex justify-between items-center border border-indigo-100">
-         <div><p class="text-sm font-black text-slate-800 uppercase" id="selectedPackageName"></p><p class="text-xs font-bold text-slate-500 mt-0.5" id="selectedPackageData"></p></div>
+        <div><p class="text-sm font-black text-slate-800 uppercase" id="selectedPackageName"></p><p class="text-xs font-bold text-slate-500 mt-0.5" id="selectedPackageData"></p></div>
               <p class="text-lg md:text-xl font-black text-indigo-600" id="selectedPackagePrice"></p>
           </div>
             
@@ -463,7 +461,7 @@ html.has-user-session #view-portal { display: block !important; }
              <label class="flex items-start gap-2 cursor-pointer">
              <input type="checkbox" id="needSupport" onchange="toggleZalo()" checked class="mt-1 w-4 h-4 accent-indigo-600">
               <span class="font-bold text-xs md:text-sm text-slate-800 pt-0.5" data-i18n="need_support">Cần Hỗ trợ Cài đặt (Zalo/Tele)</span>
-         </label>
+        </label>
              <input type="text" id="cusZalo" required class="w-full border border-slate-300 rounded-lg p-2.5 mt-3 outline-none text-xs text-slate-800" placeholder="Nhập Zalo / Telegram...">
           </div>
             
@@ -478,9 +476,9 @@ html.has-user-session #view-portal { display: block !important; }
           </div>
            <div id="customDurWrap" class="hidden mt-3">
                <div class="flex items-center gap-2 bg-indigo-50 p-2 rounded-lg border border-indigo-100">
-                 <label class="text-xs font-bold text-indigo-800 whitespace-nowrap pl-1" data-i18n="input_months">Nhập số tháng:</label>
-                 <input type="number" id="customDurInput" min="1" max="120" value="2" oninput="calculateTotal()" class="w-full p-2 text-sm border border-slate-300 rounded outline-none focus:border-indigo-500 font-bold bg-white text-center text-slate-800">
-             </div>
+                <label class="text-xs font-bold text-indigo-800 whitespace-nowrap pl-1" data-i18n="input_months">Nhập số tháng:</label>
+                <input type="number" id="customDurInput" min="1" max="120" value="2" oninput="calculateTotal()" class="w-full p-2 text-sm border border-slate-300 rounded outline-none focus:border-indigo-500 font-bold bg-white text-center text-slate-800">
+            </div>
           </div>
              <div id="priceCalculation" class="mt-3 text-sm font-black text-indigo-700 bg-indigo-50 border border-indigo-100 p-2.5 rounded-lg text-center"></div>
           </div>
@@ -500,7 +498,7 @@ html.has-user-session #view-portal { display: block !important; }
 </main>
  
 <footer id="footerArea" class="bg-white border-t border-slate-200 py-6 z-10 w-full mt-auto">
-  <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+  <div class="max-w-[1400px] mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
     <p class="text-xs font-bold text-slate-500">© 2026 VPN Trinh Hg. All rights reserved.</p>
     <div class="flex flex-wrap justify-center gap-2">
       <a href="https://zalo.me/0917678211" target="_blank" class="bg-[#0068ff]/10 text-[#0068ff] px-3 py-2 rounded-xl font-bold text-xs hover:bg-[#0068ff]/20 transition"><i class="fas fa-phone mr-1"></i>Zalo Support</a>
@@ -573,14 +571,14 @@ const obs=new IntersectionObserver(entries => {
     entries.forEach(e => {
         const s = document.getElementById('floatingSocials');
         if(!s) return;
-    if(e.isIntersecting){
-        s.style.opacity = '0';
-        s.style.pointerEvents = 'none';
-        s.style.transform = 'translateY(20px)';
+   if(e.isIntersecting){
+       s.style.opacity = '0';
+       s.style.pointerEvents = 'none';
+       s.style.transform = 'translateY(20px)';
         } else {
-        s.style.opacity = '1';
-        s.style.pointerEvents = 'auto';
-        s.style.transform = 'translateY(0)';
+       s.style.opacity = '1';
+       s.style.pointerEvents = 'auto';
+       s.style.transform = 'translateY(0)';
         }
     });
 }, { threshold: 0.1 });
@@ -605,8 +603,7 @@ const i18n={
  guide_empty:"<p class='text-center py-8 text-slate-400'>Đang cập nhật hướng dẫn...</p>",
     promo_title:"🚀 Chơi Game & Lướt Mạng Không Giới Hạn!",
     promo_desc:"Hỗ trợ: <b class='text-yellow-300'>TikTok, Facebook, Messenger, Instagram, Zalo, YouTube...</b><br>Ping thấp: <b class='text-green-300'>Liên Quân Mobile, Genshin Impact...</b>",
- data_label:"Dung lượng: ",dev_label:"Giới hạn thiết bị: ",
-dev_unlimited_label:"Không giới hạn thiết bị",speed_label:"Băng thông lên đến 3Gbps",
+ data_label:"Dung lượng: ",dev_label:"Giới hạn thiết bị: ", dev_unlimited_label:"Không giới hạn thiết bị",speed_label:"Băng thông lên đến 3Gbps",
     btn_buy:"Đăng ký Gói Này",btn_contact:"Liên hệ Admin",
      copy_memo:"Nội dung chuyển khoản:",copy_amount:"Số tiền:",need_support:"Cần Hỗ trợ Cài đặt (Zalo/Tele)",
    faq_title:"Câu hỏi thường gặp (FAQ)",
@@ -617,17 +614,12 @@ dev_unlimited_label:"Không giới hạn thiết bị",speed_label:"Băng thông
    refund_q:"Hoàn tiền",refund_a:"Website không áp dụng hoàn tiền cho đơn hàng đã mua, khách hàng vui lòng chú ý và cân nhắc khi thanh toán.",
  status_pending:"Chờ duyệt",status_success:"Thành công",status_failed:"Từ chối",lifetime_lbl:"Vĩnh viễn",days_lbl:" Ngày",expired_lbl:"Đã hết hạn",
  btn_check_data:"Kiểm tra dung lượng",
- security_alert:"Cảnh báo bảo mật",
-security_desc:"Bắt buộc giữ bí mật <span class='text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100'>Email</span> và <span class='text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100'>Mã đơn hàng</span> để tránh bị lộ Link VPN.",
+ security_alert:"Cảnh báo bảo mật", security_desc:"Bắt buộc giữ bí mật <span class='text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100'>Email</span> và <span class='text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100'>Mã đơn hàng</span> để tránh bị lộ Link VPN.",
  pending_wait:"Hệ thống xử lý tự động, vui lòng đợi trong ít phút.",
  pending_timeout:"Chưa nhận được thanh toán",
  pending_manual_title:"Đơn hàng đang chờ Admin duyệt",
- pending_manual_desc:"Vui lòng nhắn tin cho Admin cùng với biên lai để được kích hoạt sớm nhất.",
-failed_title:"Đơn hàng bị từ chối",
- bank_owner: "Chủ TK:", bank_name: "Ngân hàng:", bank_num: "Số TK:",
-click_copy: "(NHẤP VÀO MÃ ĐỂ COPY - BẮT BUỘC)", input_manual: "Vui lòng tự nhập nội dung chuyển khoản!", upgrade_confirm_title: "Xác nhận nâng gói", upgrade_confirm_desc: "Vui lòng kiểm tra số tiền chênh lệch và thông tin gói mới. Bấm <b>TẠO MÃ QR CHUYỂN KHOẢN</b> để tạo mã.", req_wait: "Yêu cầu đang chờ xử lý. Vui lòng quay lại sau!", req_sent: "Đã gửi yêu cầu! Vui lòng chờ Email báo cáo.",
-req_err: "Có lỗi xảy ra, vui lòng thử lại!", select_higher: "Vui lòng chọn gói cao hơn gói hiện tại để nâng cấp", copy_success: "Đã Copy!", not_found: "Không tìm thấy Đơn hàng/Email!",
-login_success: "Vào cổng thành công!", sending: "Đang gửi...", checking_upgrade: "ĐANG KIỂM TRA GIAO DỊCH NÂNG GÓI...", checking_tx: "ĐANG KIỂM TRA GIAO DỊCH...", admin_rejected: "Admin từ chối giao dịch", unknown: "Chưa xác định", active_upgrade: "Đã kích hoạt - Nâng gói", active: "Đã kích hoạt", web3_maintenance: "Link dự phòng sẽ được Admin mở khi web bảo trì", badge_upgrade_success: "🎉 NÂNG GÓI THÀNH CÔNG"
+ pending_manual_desc:"Vui lòng nhắn tin cho Admin cùng với biên lai để được kích hoạt sớm nhất.", failed_title:"Đơn hàng bị từ chối",
+ bank_owner: "Chủ TK:", bank_name: "Ngân hàng:", bank_num: "Số TK:", click_copy: "(NHẤP VÀO MÃ ĐỂ COPY - BẮT BUỘC)", input_manual: "Vui lòng tự nhập nội dung chuyển khoản!", upgrade_confirm_title: "Xác nhận nâng gói", upgrade_confirm_desc: "Vui lòng kiểm tra số tiền chênh lệch và thông tin gói mới. Bấm <b>TẠO MÃ QR CHUYỂN KHOẢN</b> để tạo mã.", req_wait: "Yêu cầu đang chờ xử lý. Vui lòng quay lại sau!", req_sent: "Đã gửi yêu cầu! Vui lòng chờ Email báo cáo.", req_err: "Có lỗi xảy ra, vui lòng thử lại!", select_higher: "Vui lòng chọn gói cao hơn gói hiện tại để nâng cấp", copy_success: "Đã Copy!", not_found: "Không tìm thấy Đơn hàng/Email!", login_success: "Vào cổng thành công!", sending: "Đang gửi...", checking_upgrade: "ĐANG KIỂM TRA GIAO DỊCH NÂNG GÓI...", checking_tx: "ĐANG KIỂM TRA GIAO DỊCH...", admin_rejected: "Admin từ chối giao dịch", unknown: "Chưa xác định", active_upgrade: "Đã kích hoạt - Nâng gói", active: "Đã kích hoạt", web3_maintenance: "Link dự phòng sẽ được Admin mở khi web bảo trì", badge_upgrade_success: "🎉 NÂNG GÓI THÀNH CÔNG"
 },
   en:{brand:"VPN Trinh Hg",search_placeholder:"Order ID or Email...",btn_logout:"Exit",
  tab_p_home:"Home",tab_p_store:"Store",tab_p_guide:"Guide",
@@ -648,26 +640,22 @@ login_success: "Vào cổng thành công!", sending: "Đang gửi...", checking_
  guide_empty:"<p class='text-center py-8 text-slate-400'>Guide updating...</p>",
     promo_title:"🚀 Unlimited Gaming & Browsing!",
  promo_desc:"Smooth: <b class='text-yellow-300'>TikTok, Facebook, Messenger, Instagram, Zalo, YouTube...</b><br>Low ping: <b class='text-green-300'>Arena of Valor, Genshin Impact...</b>",
- data_label:"Data: ",dev_label:"Device limit: ",
-dev_unlimited_label:"Unlimited devices",speed_label:"Bandwidth up to 3Gbps",
+ data_label:"Data: ",dev_label:"Device limit: ", dev_unlimited_label:"Unlimited devices",speed_label:"Bandwidth up to 3Gbps",
  btn_buy:"Subscribe Now",btn_contact:"Contact Admin",
  copy_memo:"Transfer Memo:",copy_amount:"Amount:",need_support:"Need Setup Support",
  faq_title:"FAQ",faq_1_q:"Where is the setup guide?",faq_1_a:"Enter Order ID in the search bar above.",
     faq_2_q:"What apps does VPN support?",faq_2_a:"TikTok, Facebook, Messenger, Instagram, Telegram, Zalo, YouTube...",
  faq_3_q:"Payment methods?",faq_3_a:"Vietnam Bank, Alipay, Weixin.",
      faq_4_q:"Can I change my device?",faq_4_a:"Yes. Re-enter your Order ID to get the config link.",
-   refund_q:"Refund Policy",refund_a:"We do not offer refunds for purchased orders, please consider carefully before paying.",
+  refund_q:"Refund Policy",refund_a:"We do not offer refunds for purchased orders, please consider carefully before paying.",
  status_pending:"Pending",status_success:"Active",status_failed:"Rejected",lifetime_lbl:"Lifetime",days_lbl:" Days",expired_lbl:"Expired",
  btn_check_data:"Check Data Usage",
- security_alert:"Security Alert",
-security_desc:"Keep your <span class='text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100'>Email</span> and <span class='text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100'>Order ID</span> secret to prevent link theft.",
+ security_alert:"Security Alert", security_desc:"Keep your <span class='text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100'>Email</span> and <span class='text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100'>Order ID</span> secret to prevent link theft.",
  pending_wait:"Automated processing, please wait a few minutes.",
  pending_timeout:"Payment not received",
  pending_manual_title:"Order pending approval",
  pending_manual_desc:"Please message Admin with receipt for fast activation.", failed_title:"Order Rejected",
- bank_owner: "Acc Name:", bank_name: "Bank:", bank_num: "Acc No:",
-click_copy: "(CLICK MEMO TO COPY - REQUIRED)", input_manual: "Manually enter amount & Memo!", upgrade_confirm_title: "Confirm Upgrade", upgrade_confirm_desc: "Please verify the price difference and new package info. Click <b>CREATE PAYMENT QR</b> to proceed.", req_wait: "Request pending. Try again later!", req_sent: "Request sent! Please check your email later.", req_err: "Error occurred, please try again.",
-select_higher: "Please select a higher package to upgrade", copy_success: "Copied!", not_found: "Order/Email not found!", login_success: "Login success!", sending: "Sending...", checking_upgrade: "CHECKING UPGRADE TRANSACTION...", checking_tx: "CHECKING TRANSACTION...", admin_rejected: "Transaction rejected by Admin", unknown: "Unknown", active_upgrade: "Active - Upgraded", active: "Active", web3_maintenance: "Backup link will be opened by Admin during maintenance", badge_upgrade_success: "🎉 UPGRADE SUCCESS"
+ bank_owner: "Acc Name:", bank_name: "Bank:", bank_num: "Acc No:", click_copy: "(CLICK MEMO TO COPY - REQUIRED)", input_manual: "Manually enter amount & Memo!", upgrade_confirm_title: "Confirm Upgrade", upgrade_confirm_desc: "Please verify the price difference and new package info. Click <b>CREATE PAYMENT QR</b> to proceed.", req_wait: "Request pending. Try again later!", req_sent: "Request sent! Please check your email later.", req_err: "Error occurred, please try again.", select_higher: "Please select a higher package to upgrade", copy_success: "Copied!", not_found: "Order/Email not found!", login_success: "Login success!", sending: "Sending...", checking_upgrade: "CHECKING UPGRADE TRANSACTION...", checking_tx: "CHECKING TRANSACTION...", admin_rejected: "Transaction rejected by Admin", unknown: "Unknown", active_upgrade: "Active - Upgraded", active: "Active", web3_maintenance: "Backup link will be opened by Admin during maintenance", badge_upgrade_success: "🎉 UPGRADE SUCCESS"
 },
   zh:{brand:"VPN Trinh Hg",search_placeholder:"输入订单号或邮箱...",btn_logout:"退出",
      tab_p_home:"主页",tab_p_store:"商店",tab_p_guide:"指南",
@@ -697,17 +685,11 @@ select_higher: "Please select a higher package to upgrade", copy_success: "Copie
      refund_q:"退款政策",refund_a:"网站对已购订单不实行退款，请在付款时谨慎考虑。",
  status_pending:"待处理",status_success:"已激活",status_failed:"已拒绝",lifetime_lbl:"永久",days_lbl:"天",expired_lbl:"已过期",
  btn_check_data:"检查流量",
- security_alert:"安全警告",
-security_desc:"请务必保密您的 <span class='text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100'>邮箱</span> 和 <span class='text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100'>订单号</span>，以防链接被盗。",
+ security_alert:"安全警告", security_desc:"请务必保密您的 <span class='text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100'>邮箱</span> 和 <span class='text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100'>订单号</span>，以防链接被盗。",
  pending_wait:"自动处理中，请稍候。",
- pending_timeout:"未收到付款",
-pending_manual_title:"订单待管理员审核",
- pending_manual_desc:"请发送付款截图给管理员以快速激活。",
-failed_title:"订单被拒绝",
- bank_owner: "账户名:", bank_name: "银行:", bank_num: "账号:",
-click_copy: "(点击复制备注 - 必填)", input_manual: "请手动输入金额和订单号！",
-upgrade_confirm_title: "确认升级", upgrade_confirm_desc: "请核对差价及新套餐信息。点击 <b>创建支付二维码</b>继续。", req_wait: "请求待处理，请稍后再试！", req_sent: "请求已发送！请稍后检查您的电子邮件。", req_err: "发生错误，请重试！",
-select_higher: "请选择更高的套餐进行升级", copy_success: "已复制！", not_found: "未找到订单/邮箱！", login_success: "登录成功！", sending: "发送中...", checking_upgrade: "正在检查升级交易...", checking_tx: "正在检查交易...", admin_rejected: "管理员拒绝了交易", unknown: "未知", active_upgrade: "已激活 - 已升级", active: "已激活", web3_maintenance: "备用链接将在网站维护时由管理员开放", badge_upgrade_success: "🎉 升级成功"
+ pending_timeout:"未收到付款", pending_manual_title:"订单待管理员审核",
+ pending_manual_desc:"请发送付款截图给管理员以快速激活。", failed_title:"订单被拒绝",
+ bank_owner: "账户名:", bank_name: "银行:", bank_num: "账号:", click_copy: "(点击复制备注 - 必填)", input_manual: "请手动输入金额和订单号！", upgrade_confirm_title: "确认升级", upgrade_confirm_desc: "请核对差价及新套餐信息。点击 <b>创建支付二维码</b>继续。", req_wait: "请求待处理，请稍后再试！", req_sent: "请求已发送！请稍后检查您的电子邮件。", req_err: "发生错误，请重试！", select_higher: "请选择更高的套餐进行升级", copy_success: "已复制！", not_found: "未找到订单/邮箱！", login_success: "登录成功！", sending: "发送中...", checking_upgrade: "正在检查升级交易...", checking_tx: "正在检查交易...", admin_rejected: "管理员拒绝了交易", unknown: "未知", active_upgrade: "已激活 - 已升级", active: "已激活", web3_maintenance: "备用链接将在网站维护时由管理员开放", badge_upgrade_success: "🎉 升级成功"
 }
 };
  
@@ -743,6 +725,20 @@ async function apiGet(path){
         const local = JSON.parse(localStorage.getItem(DB_KEY)) || [];
         const remoteIds = new Set(d.map(x => x.id));
       local.forEach(lo => { if(!remoteIds.has(lo.id)) d.unshift(lo); });
+      
+      // Lá chắn pendingUpgrade
+      d.forEach(order => {
+          let shield = localStorage.getItem('shield_pending_' + order.id);
+          if (shield) {
+              let parsed = JSON.parse(shield);
+              if (Date.now() < parsed.expire) {
+                  order.pendingUpgrade = parsed.pendingUpgrade;
+                  order.isUpgrade = true;
+              } else {
+                  localStorage.removeItem('shield_pending_' + order.id);
+              }
+          }
+      });
     }
  
  localStorage.setItem(path==='/api/orders'?DB_KEY:path.replace(/\//g,'_'),JSON.stringify(d));
@@ -777,6 +773,17 @@ function changeLanguage(val){
  document.querySelectorAll('.dur-btn span').forEach(s=>s.innerText=i18n[lang].month_lbl);
     calculateTotal();
   }
+  
+  // Set dynamic texts
+  const pw = document.getElementById('pendingWaitText');
+  if(pw) pw.innerText = i18n[lang].pending_wait;
+  const pt = document.getElementById('pendingTimeoutTitle');
+  if(pt) pt.innerText = i18n[lang].pending_timeout;
+  const sa = document.getElementById('securityAlertTitle');
+  if(sa) sa.innerText = i18n[lang].security_alert;
+  const sd = document.getElementById('securityAlertDesc');
+  if(sd) sd.innerHTML = i18n[lang].security_desc;
+
   if(oCache) updatePortalInfo(oCache);
  window.scrollTo(0,cy);
 }
@@ -882,7 +889,7 @@ function startUpgrade() {
  
  switchPortalTab('p-store');
  renderPackages('all');
-  showToast(i18n[lang].select_higher, "info");
+ showToast(i18n[lang].select_higher, "info");
 }
  
 function openCheckout(id){
@@ -914,6 +921,7 @@ function openCheckout(id){
  calculateTotal();
  if(document.getElementById('needSupport').checked)document.getElementById('cusZalo').classList.remove('hidden');
  document.body.classList.add('checkout-active');
+ renderPaymentBox();
 }
  
 function selectDuration(m){
@@ -924,9 +932,9 @@ function selectDuration(m){
  ab.classList.add('!bg-indigo-600','!text-white','border-transparent','active');
   
   if(m === 'custom') {
-    document.getElementById('customDurWrap').classList.remove('hidden');
+   document.getElementById('customDurWrap').classList.remove('hidden');
   } else {
-    document.getElementById('customDurWrap').classList.add('hidden');
+   document.getElementById('customDurWrap').classList.add('hidden');
   }
   calculateTotal();
 }
@@ -1015,7 +1023,7 @@ function renderPaymentBox(){
  </div>${paidBtnHTML}</div>`;
   }else{
     const isAli=m==='alipay';
-    const imgSrc=isAli?'https://i.pinimg.com/736x/44/57/9d/44579dfb5241614ddc897a21ce34e233.jpg':'https://i.pinimg.com/736x/28/b2/95/28b29577c6229ec943e8e13afe241db3.jpg';
+    const imgSrc=isAli?'https://i.pinimg.com/736x/44/57/9d/44579dfb5241614ddc897a21ce34e233.jpg':'https://i.pinimg.com/736x/22/f8/67/22f86738297318826838424d3c09645c.jpg';
     const methodDisplay = isAli ? 'Alipay <i class="fas fa-qrcode text-sm ml-1"></i>' : 'Weixin <i class="fas fa-qrcode text-sm ml-1"></i>';
     const methodClass = isAli ? 'text-blue-600' : 'text-green-600';
  col.innerHTML=`<div class="text-center w-full"><h4 class="font-extrabold text-lg mb-4 ${methodClass}">${methodDisplay}</h4>
@@ -1050,12 +1058,12 @@ async function submitOrder(e){
     let zaloStore = cusZaloVal || 'Không nhập';
  
     pendingDraftOrder = {
-     id:currentOrderId,email:document.getElementById('cusEmail').value.trim(),zalo:zaloStore,
-     method:mname,pkgName:currentPackage.vi.name,pkgData:currentPackage.data,
-     pkg:`${currentPackage.vi.name} (${cy2}) - ${fp} (${currentPackage.data})`,
-     totalVnd:currentTotalVnd,needSupport:document.getElementById('needSupport').checked,
-     status:'pending',date:fmtFullTime(new Date()), createdTs: nowTs, 
-     expDate:'',daysLeft:'',info:'',info2:'',info3:'',nickname:'',reason:''
+    id:currentOrderId,email:document.getElementById('cusEmail').value.trim(),zalo:zaloStore,
+    method:mname,pkgName:currentPackage.vi.name,pkgData:currentPackage.data,
+    pkg:`${currentPackage.vi.name} (${cy2}) - ${fp} (${currentPackage.data})`,
+    totalVnd:currentTotalVnd,needSupport:document.getElementById('needSupport').checked,
+    status:'pending',date:fmtFullTime(new Date()), createdTs: nowTs, 
+    expDate:'',daysLeft:'',info:'',info2:'',info3:'',nickname:'',reason:''
     };
     
    renderPaymentBox();
@@ -1106,18 +1114,18 @@ async function confirmPaid(){
   const webhookSecret = (cmsCache.settings && cmsCache.settings.syncD1Secret) ? cmsCache.settings.syncD1Secret : "";
  
   if (!isUpgradeMode && pendingDraftOrder) {
-   pendingDraftOrder.createdTs = Date.now();
-   db.unshift(pendingDraftOrder);
+  pendingDraftOrder.createdTs = Date.now();
+  db.unshift(pendingDraftOrder);
      await apiPost('/api/orders', db);
      
-   updatePortalInfo(pendingDraftOrder);
+  updatePortalInfo(pendingDraftOrder);
  
      try {
       fetch(webhookUrl + "/api/orders", {
              method: "POST",
              headers: { "Content-Type": "application/json", "Authorization": "Bearer " + webhookSecret },
              body: JSON.stringify({ orderId: currentOrderId, totalVnd: currentTotalVnd, targetWeb: currentTargetWeb, email: pendingDraftOrder.email })
-      }).catch(()=>{});
+     }).catch(()=>{});
      } catch(err) {}
  
      pendingDraftOrder = null;
@@ -1127,7 +1135,14 @@ async function confirmPaid(){
       o.pendingUpgrade = pendingDraftUpgrade;
          o.isUpgrade = true;
          await apiPost('/api/orders', db);
-       updatePortalInfo(o);
+         
+         // Lá chắn pendingUpgrade chặn KV đè
+         localStorage.setItem('shield_pending_' + o.id, JSON.stringify({
+             pendingUpgrade: pendingDraftUpgrade,
+             expire: Date.now() + 300000
+         }));
+
+      updatePortalInfo(o);
      }
      
      try {
@@ -1135,13 +1150,13 @@ async function confirmPaid(){
              method: "POST",
              headers: { "Content-Type": "application/json", "Authorization": "Bearer " + webhookSecret },
              body: JSON.stringify({ orderId: oCache.id, totalVnd: currentTotalVnd, isUpgrade: true, targetWeb: currentTargetWeb, email: o?.email || "" })
-      }).catch(()=>{});
+     }).catch(()=>{});
  
       fetch(webhookUrl + "/api/upgrades", {
              method: "POST",
              headers: { "Content-Type": "application/json", "Authorization": "Bearer " + webhookSecret },
              body: JSON.stringify({ orderId: oCache.id, targetPackageId: currentPackage.id, amount: currentTotalVnd })
-      }).catch(()=>{});
+     }).catch(()=>{});
      } catch(err) {}
      
    pendingDraftUpgrade = null;
@@ -1174,11 +1189,11 @@ function parseOrderDate(dateStr) {
      const dateParts = parts[1].split("/");
      if (timeParts.length >= 2 && dateParts.length === 3) {
          const d = new Date();
-   d.setFullYear(parseInt(dateParts[2]));
-   d.setMonth(parseInt(dateParts[1]) - 1);
-   d.setDate(parseInt(dateParts[0]));
-   d.setHours(parseInt(timeParts[0]));
-   d.setMinutes(parseInt(timeParts[1]));
+  d.setFullYear(parseInt(dateParts[2]));
+  d.setMonth(parseInt(dateParts[1]) - 1);
+  d.setDate(parseInt(dateParts[0]));
+  d.setHours(parseInt(timeParts[0]));
+  d.setMinutes(parseInt(timeParts[1]));
      d.setSeconds(0);
          return d.getTime();
      }
@@ -1241,20 +1256,20 @@ function updatePortalInfo(o){
         { el: 'subLink3', blurKey: 'blurWeb3', dtEl: 'subDate3' }
     ];
  
-   linksObj.forEach(obj => {
+  linksObj.forEach(obj => {
         const inp = document.getElementById(obj.el);
         const dt = document.getElementById(obj.dtEl);
         if (inp && dt) {
             if (obj.blurKey === 'blurWeb3' && blurConf[obj.blurKey]) {
-                inp.value = i18n[lang].web3_maintenance;
-                inp.classList.remove('blur-link');
-                dt.innerText = "";
-            } else if (blurConf[obj.blurKey] && inp.value) {
+               inp.value = i18n[lang].web3_maintenance;
                inp.classList.add('blur-link');
-               dt.innerText = inp.value ? subDateText : "";
+               dt.innerText = "";
+            } else if (blurConf[obj.blurKey] && inp.value) {
+              inp.classList.add('blur-link');
+              dt.innerText = inp.value ? subDateText : "";
             } else {
-               inp.classList.remove('blur-link');
-               dt.innerText = inp.value ? subDateText : "";
+              inp.classList.remove('blur-link');
+              dt.innerText = inp.value ? subDateText : "";
             }
         }
     });
@@ -1263,13 +1278,13 @@ function updatePortalInfo(o){
     const lastReq = localStorage.getItem(cdKey);
     const dataBtn = document.getElementById('btnRequestData');
     if (lastReq && Date.now() - parseInt(lastReq) < 300000) {
-      dataBtn.innerHTML = `<i class="fas fa-check-circle mr-1.5"></i> ${lang==='vi'?'Đã gửi yêu cầu':lang==='en'?'Request sent':'请求已发送'}`;
+     dataBtn.innerHTML = `<i class="fas fa-check-circle mr-1.5"></i> ${lang==='vi'?'Đã gửi yêu cầu':lang==='en'?'Request sent':'请求已发送'}`;
       dataBtn.disabled = true;
-      dataBtn.classList.remove('btn-heartbeat');
+     dataBtn.classList.remove('btn-heartbeat');
     } else {
-      dataBtn.innerHTML = `<i class="fas fa-chart-pie mr-1.5"></i><span data-i18n="btn_check_data">${i18n[lang].btn_check_data}</span>`;
+     dataBtn.innerHTML = `<i class="fas fa-chart-pie mr-1.5"></i><span data-i18n="btn_check_data">${i18n[lang].btn_check_data}</span>`;
       dataBtn.disabled = false;
-      dataBtn.classList.add('btn-heartbeat');
+     dataBtn.classList.add('btn-heartbeat');
     }
  
   };
@@ -1277,8 +1292,8 @@ function updatePortalInfo(o){
   if (o.status === 'success') {
       if (lastPkg && lastPkg !== o.pkg && !o.pendingUpgrade) {
       if(upgradeBadge) {
-          upgradeBadge.classList.remove('hidden');
-          upgradeBadge.className = "absolute top-0 right-0 bg-red-600 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md z-10";
+         upgradeBadge.classList.remove('hidden');
+         upgradeBadge.className = "absolute top-0 right-0 bg-red-600 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md z-10";
       }
       }
  localStorage.setItem(lastPkgCacheKey, o.pkg);
@@ -1287,24 +1302,24 @@ function updatePortalInfo(o){
   if (o.status === 'success' && o.pendingUpgrade) {
       const isManual = o.method && (o.method.includes('Alipay') || o.method.includes('WeChat'));
       if (isManual) {
-        document.getElementById('portalContentManual').classList.remove('hidden');
+       document.getElementById('portalContentManual').classList.remove('hidden');
       } else {
-        document.getElementById('portalContentPending').classList.remove('hidden');
-        document.getElementById('pendingTitleUI').innerText = i18n[lang].checking_upgrade;
+       document.getElementById('portalContentPending').classList.remove('hidden');
+       document.getElementById('pendingTitleUI').innerText = i18n[lang].checking_upgrade;
             
             let startTime = o.pendingUpgrade.ts;
             let endTime = startTime + 300000; 
          
-          if(Date.now() >= endTime) {
-          document.getElementById('portalContentPending').classList.add('hidden');
-          document.getElementById('portalContentSuccess').classList.remove('hidden');
-           popFields();
-          if(!globalPollInterval) startGlobalPolling(o.id);
+         if(Date.now() >= endTime) {
+         document.getElementById('portalContentPending').classList.add('hidden');
+         document.getElementById('portalContentSuccess').classList.remove('hidden');
+          popFields();
+         if(!globalPollInterval) startGlobalPolling(o.id);
              } else {
-           isUpgradePending = true;
-             pendingEndTime = endTime;
-          document.getElementById('pendingActiveState').classList.remove('hidden');
-          startPendingPolling();
+          isUpgradePending = true;
+            pendingEndTime = endTime;
+         document.getElementById('pendingActiveState').classList.remove('hidden');
+         startPendingPolling();
              }
       }
       return; 
@@ -1321,22 +1336,22 @@ function updatePortalInfo(o){
   else if(o.status === 'pending'){
       const isManual = o.method && (o.method.includes('Alipay') || o.method.includes('WeChat'));
       if (isManual) {
-        document.getElementById('portalContentManual').classList.remove('hidden');
-        if(!globalPollInterval) startGlobalPolling(o.id);
+       document.getElementById('portalContentManual').classList.remove('hidden');
+       if(!globalPollInterval) startGlobalPolling(o.id);
       } else {
-       document.getElementById('portalContentPending').classList.remove('hidden');
-       document.getElementById('pendingTitleUI').innerText = i18n[lang].checking_tx;
-          
-          let startTime = o.createdTs || parseOrderDate(o.date);
-          let endTime = startTime + 300000;
+      document.getElementById('portalContentPending').classList.remove('hidden');
+      document.getElementById('pendingTitleUI').innerText = i18n[lang].checking_tx;
          
+         let startTime = o.createdTs || parseOrderDate(o.date);
+         let endTime = startTime + 300000;
+        
          if(Date.now() >= endTime) {
-       document.getElementById('pendingTimeoutState').classList.remove('hidden');
-       if(!globalPollInterval) startGlobalPolling(o.id); 
+      document.getElementById('pendingTimeoutState').classList.remove('hidden');
+      if(!globalPollInterval) startGlobalPolling(o.id); 
           } else {
-            pendingEndTime = endTime;
-       document.getElementById('pendingActiveState').classList.remove('hidden');
-       startPendingPolling();
+           pendingEndTime = endTime;
+      document.getElementById('pendingActiveState').classList.remove('hidden');
+      startPendingPolling();
           }
       }
   }
@@ -1351,7 +1366,7 @@ function startPendingPolling() {
  if(!Array.isArray(db)) return;
        let o = db.find(x => x.id === oCache.id);
        if(o && (o.status !== oCache.status || JSON.stringify(o.pendingUpgrade) !== JSON.stringify(oCache.pendingUpgrade) || o.pkg !== oCache.pkg)) {
-   updatePortalInfo(o);
+  updatePortalInfo(o);
        }
   }).catch(()=>{});
   }, 3000);
@@ -1410,7 +1425,10 @@ async function login(isManualRefresh=false,isAutoPoll=false){
   }
  
  localStorage.setItem(SESSION_KEY,JSON.stringify({id:o.id,time:new Date().getTime()}));
- if(!isManualRefresh&&!isAutoPoll)showToast(i18n[lang].login_success,'info');
+ if(!isManualRefresh&&!isAutoPoll){
+    showToast(i18n[lang].login_success,'info');
+    window.history.pushState(null, '', '/login.html');
+ }
  document.getElementById('view-store').classList.remove('active');document.getElementById('view-portal').classList.add('active');
  document.getElementById('userMenu').classList.remove('hidden');document.getElementById('checkoutSection').classList.add('hidden');
   const dn=document.getElementById('desktopPortalNav');dn.classList.remove('hidden','opacity-0','w-0');dn.classList.add('md:flex','opacity-100','w-auto');
@@ -1436,10 +1454,12 @@ function switchPortalTab(tabId){
   const id=tabId.replace('p-','');
  document.querySelectorAll('.desktop-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','bg-indigo-600','text-white');el.classList.remove('text-slate-600');});
  document.querySelectorAll('.mobile-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','text-indigo-600','bg-[#e0e7ff]');el.classList.remove('text-slate-500');});
+ if(tabId === 'p-store') disableUpgradeMode();
 }
  
 function logout(){
  localStorage.removeItem(SESSION_KEY);
+ window.history.pushState(null, '', '/');
  document.getElementById('view-portal').classList.remove('active');document.getElementById('view-store').classList.add('active');
  document.getElementById('userMenu').classList.add('hidden');document.getElementById('loginInput').value='';
  document.getElementById('mobileNavWrapper').classList.add('hidden');
@@ -1488,17 +1508,18 @@ window.onload = async function() {
       try {
           const d = JSON.parse(session);
           if (new Date().getTime() - d.time < 24 * 3600 * 1000) {
-          document.getElementById('loginInput').value = d.id;
+         document.getElementById('loginInput').value = d.id;
               await login(true);
           } else {
-          localStorage.removeItem(SESSION_KEY);
-              logout();
+         localStorage.removeItem(SESSION_KEY);
+             logout();
           }
       } catch(e) {
-      localStorage.removeItem(SESSION_KEY);
+     localStorage.removeItem(SESSION_KEY);
           logout();
       }
   } else {
+     document.getElementById('view-store').classList.add('active'); // Fix blank screen on first load
  renderPackages('all');
   }
   
