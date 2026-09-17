@@ -1,4 +1,4 @@
-<!-- v2.7 - Fix manifest.json chuẩn PWA và thêm apple-touch-icon - 2026-09-17 -->
+<!-- v2.8 - Fix package name format, empty Zalo, accumulation logic, UI link blur, source web var - 2026-09-17 -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -52,7 +52,7 @@ details>summary::-webkit-details-marker{display:none;}
  
 /* Hiệu ứng Marquee cho Dock Icon - Fixed scroll stutter */
 .dock-wrapper { width: 100%; overflow: hidden; padding: 30px 0; margin-bottom: 0; position: relative; }
-.dock-wrapper::before, .dock-wrapper::after { content: ""; position: absolute; top: 0; width: 40px; height: 100%; z-index: 20; pointer-events: none; }
+.dock-wrapper::before, .dock-wrapper::after { content: absolute; position: absolute; top: 0; width: 40px; height: 100%; z-index: 20; pointer-events: none; }
 .dock-wrapper::before { left: 0; background: linear-gradient(to right, #f8fafc, transparent); }
 .dock-wrapper::after { right: 0; background: linear-gradient(to left, #f8fafc, transparent); }
  
@@ -277,7 +277,7 @@ html.has-user-session #view-portal { display: block !important; }
             <div class="w-full">
               <h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL:</h3>
               <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
-             <input type="text" id="subLink1" readonly value="********" class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+             <input type="text" id="subLink1" readonly value="********" class="blur-link w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
            <button onclick="copyToClipboard('subLink1',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button>
           </div>
               <div id="subDate1" class="text-[10px] font-bold text-slate-500 mt-1.5 ml-1"></div>
@@ -286,7 +286,7 @@ html.has-user-session #view-portal { display: block !important; }
             <div id="subLink2Wrap" class="w-full mt-2 border-t border-green-200/50 pt-3">
               <h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL dự phòng 2:</h3>
               <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
-             <input type="text" id="subLink2" readonly value="********" class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+             <input type="text" id="subLink2" readonly value="********" class="blur-link w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
            <button onclick="copyToClipboard('subLink2',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button>
           </div>
               <div id="subDate2" class="text-[10px] font-bold text-slate-500 mt-1.5 ml-1"></div>
@@ -295,7 +295,7 @@ html.has-user-session #view-portal { display: block !important; }
           <div id="subLink3Wrap" class="w-full mt-2 border-t border-green-200/50 pt-3">
               <h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL dự phòng 3:</h3>
               <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
-             <input type="text" id="subLink3" readonly value="********" class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+             <input type="text" id="subLink3" readonly value="********" class="blur-link w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
            <button onclick="copyToClipboard('subLink3',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button>
           </div>
               <div id="subDate3" class="text-[10px] font-bold text-slate-500 mt-1.5 ml-1"></div>
@@ -571,16 +571,12 @@ let baseOrderPriceCny = 0;
 let pendingDraftOrder = null;
 let pendingDraftUpgrade = null;
  
-// Bắt Domain Tuyệt Đối theo Mental Dry-Run
-let currentTargetWeb = "web3";
-const hnStrict = window.location.hostname;
-if (hnStrict === "vpntrinhhg.pages.dev") {
-    currentTargetWeb = "web1";
-} else if (hnStrict === "vpntrinhhg2.pages.dev") {
-    currentTargetWeb = "web2";
-} else if (hnStrict === "vpntrinhhg3.pages.dev") {
-    currentTargetWeb = "web3";
-}
+// QUY ƯỚC RÕ RÀNG (KHÔNG ẢNH HƯỞNG CODE):
+// - https://vpntrinhhg.pages.dev/ là web 1
+// - https://vpntrinhhg2.pages.dev/ là web 2
+// - https://vpntrinhhg3.pages.dev/ là web 3
+// Hãy tự sửa chuỗi dưới đây thành "web 1", "web 2", hoặc "web 3" tương ứng với domain bạn đang deploy
+let currentTargetWeb = "Nhập link doamin web để xác định nguồn web";
  
 function fmtFullTime(d) {
     return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0') + ' - ' + d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
@@ -1137,22 +1133,70 @@ async function submitOrder(e){
     const ch='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';currentOrderId='DH';for(let i=0;i<10;i++)currentOrderId+=ch.charAt(Math.floor(Math.random()*ch.length));
    
     const fp=lang==='vi'?`${currentTotalVnd.toLocaleString('en-US')}VND`:lang==='en'?`$${currentTotalUsd}`:`¥${currentTotalCny}`;
-    const cy2=currentMultiplier+' Tháng';
     const mn=document.getElementById('payMethod').value;
     const mname=mn==='bank'?'Ngân hàng VN':mn==='alipay'?'Alipay':'WeChat';
     const nowTs = Date.now();
     
+    // Vấn đề 2: Bắt buộc đẩy lên chuỗi rỗng "" nếu khách ko nhập số Zalo
     let cusZaloVal = document.getElementById('cusZalo').value.trim();
-    let zaloStore = cusZaloVal || 'Không nhập';
+    let zaloStore = cusZaloVal || "";
  
+    // Vấn đề 4C: Tính HSD cộng dồn nếu có hạn cũ chưa hết
+    let db=await apiGet('/api/orders');if(!Array.isArray(db))db=[];
+    let emailInput = document.getElementById('cusEmail').value.trim().toLowerCase();
+    
+    let targetOrder = null;
+    if (isRenewMode && oCache) {
+        targetOrder = oCache;
+    } else {
+        let existingOrder = db.find(x => x.email && x.email.toLowerCase() === emailInput && x.status === 'success' && !isOrderExpired(x.expDate));
+        if (existingOrder) {
+            targetOrder = existingOrder;
+        }
+    }
+    
+    let calculatedExp = '';
+    if (targetOrder && targetOrder.expDate && targetOrder.expDate !== 'Vĩnh viễn') {
+        let parts = targetOrder.expDate.split("/");
+        if (parts.length === 3) {
+            let d = new Date();
+            d.setFullYear(parseInt(parts[2]));
+            d.setMonth(parseInt(parts[1]) - 1);
+            d.setDate(parseInt(parts[0]));
+            d.setHours(23, 59, 59);
+
+            if (d.getTime() > Date.now()) {
+                if (currentPackage.time !== 'lifetime') {
+                    d.setMonth(d.getMonth() + currentMultiplier);
+                    calculatedExp = d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
+                } else {
+                    calculatedExp = 'Vĩnh viễn';
+                }
+            }
+        }
+    }
+
+    if (!calculatedExp) {
+        if (currentPackage.time === 'lifetime') {
+            calculatedExp = 'Vĩnh viễn';
+        } else {
+            let d = new Date();
+            d.setMonth(d.getMonth() + currentMultiplier);
+            calculatedExp = d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
+        }
+    }
+
+    // Vấn đề 1: Sửa logic nối chuỗi lưu thông tin gói
+    let pkgString = `${currentPackage.vi.name} - ${fp} • HSD:`;
+
     pendingDraftOrder = {
  id:currentOrderId,email:document.getElementById('cusEmail').value.trim(),zalo:zaloStore,
  method:mname,pkgName:currentPackage.vi.name,pkgData:currentPackage.data,
- pkg:`${currentPackage.vi.name} (${cy2}) - ${fp} (${currentPackage.data})`,
+ pkg:pkgString,
  totalVnd:currentTotalVnd,needSupport:document.getElementById('needSupport').checked,
  status:'pending',date:fmtFullTime(new Date()), createdTs: nowTs, 
- expDate:'',daysLeft:'',info:'',info2:'',info3:'',nickname:'',reason:'',
-    isRenew: isRenewMode, targetOrderId: isRenewMode ? oCache.id : null, sourceWeb: currentTargetWeb
+ expDate:calculatedExp,daysLeft:'',info:'',info2:'',info3:'',nickname:'',reason:'',
+    isRenew: isRenewMode, targetOrderId: targetOrder ? targetOrder.id : null, sourceWeb: currentTargetWeb
     };
     
    renderPaymentBox();
@@ -1402,19 +1446,19 @@ function updatePortalInfo(o){
         { el: 'subLink3', blurKey: 'blurWeb3', dtEl: 'subDate3', realVal: o.info3 || '' }
     ];
  
-  // Fix 5: Không lôi URL thật ra gán tạm thời tránh flash trước khi blur
+  // Vấn đề 4D: Gỡ class blur và dán URL thật chỉ được Javascript thực thi
   linksObj.forEach(obj => {
         const inp = document.getElementById(obj.el);
         const dt = document.getElementById(obj.dtEl);
         if (inp && dt) {
             if (blurConf[obj.blurKey]) {
              inp.value = i18n[lang].web3_maintenance;
-            inp.classList.add('blur-link');
-            dt.innerText = "";
+             inp.classList.add('blur-link');
+             dt.innerText = "";
             } else {
-             inp.value = obj.realVal || "";
-            inp.classList.remove('blur-link');
-            dt.innerText = ""; // Fix v2.5: Không hiển thị date hết hạn của link
+             inp.value = obj.realVal || "********";
+             if (obj.realVal && obj.realVal !== "********") inp.classList.remove('blur-link');
+             dt.innerText = "";
             }
         }
     });
@@ -1514,7 +1558,7 @@ function startPendingPolling() {
   updatePortalInfo(o);
        }
   }).catch(()=>{});
-  }, 3000);
+  }, 1500); // Vấn đề 4D: Giảm thời gian quét trạng thái đơn hàng
 }
  
 function stopPendingPolling() {
@@ -1554,7 +1598,7 @@ function startGlobalPolling(orderId) {
  if(!Array.isArray(db)) return;
     let o = db.find(x => x.id === orderId);
     if(o) updatePortalInfo(o);
-  }, 3000);
+  }, 1500); // Vấn đề 4D: Giảm thời gian quét trạng thái đơn hàng
 }
  
 async function login(isManualRefresh=false,isAutoPoll=false){
