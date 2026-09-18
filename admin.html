@@ -1,4 +1,4 @@
-<!-- v3.0 - Fix Zalo empty rendering, Upgrade checkboxes, Add Upgrade Badges - 2026-09-17 -->
+<!-- v3.1 - Fix Sync Pause, F5 Login, T-Lnk Grid & Blur Logic - 2026-09-18 -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -114,7 +114,6 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
 </header>
  
 <main id="main" class="hidden max-w-7xl mx-auto p-2 md:p-4 w-full min-w-0">
- <!-- Fix Layout Menu Chính Mobile -> 4 cột row 1, custom row 2 -->
  <div class="grid grid-cols-4 md:flex gap-1 md:gap-2 mb-3">
  <button onclick="go('t-ord')" id="btn-t-ord" class="col-span-1 tab-btn flex flex-col md:flex-row items-center px-1 py-2 md:px-4 md:py-1.5 rounded-xl font-bold text-[9px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm justify-center gap-1"><i class="fas fa-box md:mr-1"></i><span>Đơn hàng</span></button>
  <button onclick="go('t-trans')" id="btn-t-trans" class="col-span-1 tab-btn flex flex-col md:flex-row items-center px-1 py-2 md:px-4 md:py-1.5 rounded-xl font-bold text-[9px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm justify-center gap-1 relative"><i class="fas fa-file-invoice-dollar md:mr-1"></i><span>Giao dịch</span><span id="transBadge" class="hidden absolute top-0.5 right-0.5 md:-top-1 md:-right-1 bg-red-500 text-white text-[8px] md:text-[9px] w-3 h-3 md:w-4 md:h-4 rounded-full flex items-center justify-center">!</span></button>
@@ -155,10 +154,10 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
           <table class="log-table w-full text-left" id="transTable">
              <thead id="transHead">
                <!-- Headers will be injected here -->
-            </thead>
+             </thead>
              <tbody id="transBody">
-               <tr><td colspan="9" class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-indigo-500"></i></td></tr>
-            </tbody>
+              <tr><td colspan="9" class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-indigo-500"></i></td></tr>
+             </tbody>
         </table>
       </div>
  </div>
@@ -177,25 +176,23 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
       <div class="min-w-0">
         <h2 class="text-lg md:text-xl lg:text-2xl font-bold text-slate-800">Quản lý Link Sub Ẩn</h2>
       </div>
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 w-full lg:w-auto">
-        <button id="btnRunGC" onclick="runGC()" class="col-span-1 bg-white text-red-600 hover:bg-red-50 font-bold px-3 py-2 rounded-xl text-xs lg:text-sm transition shadow-sm border border-slate-200"><i class="fas fa-broom mr-1"></i>Dọn KV</button>
-        <button onclick="rebuildAllMAP()" id="btnRebuildAll" class="col-span-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold px-3 py-2 rounded-xl text-xs lg:text-sm transition shadow-sm border border-emerald-100"><i class="fas fa-rotate mr-1"></i>Rebuild MAP</button>
-        <button onclick="sortAllLinks()" id="btnSortLinks" class="col-span-1 bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold px-3 py-2 rounded-xl text-xs lg:text-sm transition shadow-sm border border-purple-100"><i class="fas fa-sort-numeric-down mr-1"></i>Sắp xếp</button>
-        <button onclick="triggerGitHub()" id="btnTriggerGH" class="col-span-1 bg-blue-600 text-white hover:bg-blue-700 font-bold px-3 py-2 rounded-xl text-xs lg:text-sm transition shadow-md"><i class="fab fa-github mr-1"></i>Đồng bộ GH</button>
-      </div>
  </div>
  
- <div class="flex justify-center gap-4 mb-4">
-      <div id="btn-ls-manual" class="link-tab-btn active bg-white border border-slate-200 shadow-sm px-6 py-2 rounded-xl cursor-pointer text-slate-600 font-bold text-xs" onclick="switchLinkMode('manual')"><i class="fas fa-magic mr-1"></i>TẠO ẨN THỦ CÔNG</div>
-      <div id="btn-ls-pool" class="link-tab-btn bg-white border border-slate-200 shadow-sm px-6 py-2 rounded-xl cursor-pointer text-slate-600 font-bold text-xs" onclick="switchLinkMode('pool')"><i class="fas fa-plus-circle mr-1"></i>THÊM VÀO KHO TỔNG</div>
+ <div class="grid grid-cols-2 lg:grid-cols-6 gap-2 w-full mb-4">
+       <button id="btnRunGC" onclick="runGC()" class="bg-white text-red-600 hover:bg-red-50 font-bold py-2 rounded-xl text-xs lg:text-sm transition shadow-sm border border-slate-200"><i class="fas fa-broom mr-1"></i>Dọn KV</button>
+       <button onclick="rebuildAllMAP()" id="btnRebuildAll" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold py-2 rounded-xl text-xs lg:text-sm transition shadow-sm border border-emerald-100"><i class="fas fa-rotate mr-1"></i>Rebuild MAP</button>
+       <button onclick="sortAllLinks()" id="btnSortLinks" class="bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold py-2 rounded-xl text-xs lg:text-sm transition shadow-sm border border-purple-100"><i class="fas fa-sort-numeric-down mr-1"></i>Sắp xếp</button>
+       <button onclick="triggerGitHub()" id="btnTriggerGH" class="bg-blue-600 text-white hover:bg-blue-700 font-bold py-2 rounded-xl text-xs lg:text-sm transition shadow-md"><i class="fab fa-github mr-1"></i>Đồng bộ GH</button>
+       <button id="btn-ls-manual" onclick="switchLinkMode('manual')" class="link-tab-btn active bg-white border border-slate-200 shadow-sm rounded-xl text-slate-600 font-bold text-[10px] lg:text-xs py-2"><i class="fas fa-magic mr-1"></i>TẠO THỦ CÔNG</button>
+       <button id="btn-ls-pool" onclick="switchLinkMode('pool')" class="link-tab-btn bg-white border border-slate-200 shadow-sm rounded-xl text-slate-600 font-bold text-[10px] lg:text-xs py-2"><i class="fas fa-plus-circle mr-1"></i>THÊM NGUỒN</button>
  </div>
  
  <div id="panel-ls-manual" class="bg-white p-4 lg:p-6 rounded-2xl border border-slate-200 shadow-sm w-full min-w-0 mb-4 mt-3">
       <div class="mb-3"><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Link Gốc (Liangxin / Djjc)</label><input id="lkOrig" type="text" placeholder="https://liangxin..." class="w-full p-2 lg:p-3 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-4 mb-4">
-       <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Email khách</label><input id="lkEmail" type="text" placeholder="khach@email.com" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
-       <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Hết hạn</label><input id="lkExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
-       <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Index Máy</label><input id="lkIdx" type="number" min="1" placeholder="1, 2..." class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
+      <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Email khách</label><input id="lkEmail" type="text" placeholder="khach@email.com" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
+      <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Hết hạn</label><input id="lkExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
+      <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Index Máy</label><input id="lkIdx" type="number" min="1" placeholder="1, 2..." class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
       </div>
       <button onclick="createLink()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-6 py-2.5 lg:py-3 rounded-xl shadow-md transition w-full text-xs lg:text-base"><i class="fas fa-mask mr-2"></i>TẠO LINK ẨN</button>
  </div>
@@ -204,10 +201,10 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
       <div class="bg-white p-4 lg:p-6 rounded-2xl border border-indigo-200 shadow-sm mt-3">
         <div class="mb-3"><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Link Gốc (Liangxin / Djjc)</label><input id="poolOrig" type="text" placeholder="https://liangxin..." class="w-full p-2 lg:p-3 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] lg:text-sm bg-slate-50"></div>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 lg:gap-4 mb-4">
-         <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Tổng dung lượng (GB)</label><input id="poolGb" type="number" placeholder="VD: 1000" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
-         <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Còn lại (GB)</label><input id="poolRemainGb" type="number" placeholder="VD: 1000" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
-         <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Hết hạn</label><input id="poolExp" type="text" placeholder="DD/MM/YYYY hoặc Lifetime" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
-         <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Max thiết bị</label><input id="poolMax" type="number" min="1" placeholder="VD: 20" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
+        <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Tổng dung lượng (GB)</label><input id="poolGb" type="number" placeholder="VD: 1000" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
+        <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Còn lại (GB)</label><input id="poolRemainGb" type="number" placeholder="VD: 1000" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm"></div>
+        <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Hết hạn</label><input id="poolExp" type="text" placeholder="DD/MM/YYYY hoặc Lifetime" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
+        <div><label class="block font-bold text-[10px] lg:text-sm text-slate-700 mb-1">Max thiết bị</label><input id="poolMax" type="number" min="1" placeholder="VD: 20" class="w-full p-2 lg:p-3 border border-slate-200 bg-slate-50 rounded-xl outline-none focus:border-indigo-500 text-[11px] lg:text-sm text-center"></div>
         </div>
         <button onclick="addLinkToPool()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 lg:py-3 rounded-xl shadow-md transition w-full text-xs lg:text-base"><i class="fas fa-plus-circle mr-2"></i>LƯU VÀO KHO TỔNG & TẠO LINK #1</button>
       </div>
@@ -216,8 +213,8 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
  <div class="flex items-center justify-between border-t border-slate-200 pt-4 mb-3">
        <h3 class="font-extrabold text-slate-700 text-sm"><i class="fas fa-list mr-1"></i>Danh sách Link</h3>
        <div class="view-switcher">
-           <div id="btn-view-compact" class="view-btn active" onclick="switchLinkView('compact')">📄 KHO</div>
-           <div id="btn-view-detailed" class="view-btn" onclick="switchLinkView('detailed')">🌳 CÂY</div>
+           <div id="btn-view-detailed" class="view-btn active" onclick="switchLinkView('detailed')">CÂY</div>
+           <div id="btn-view-compact" class="view-btn" onclick="switchLinkView('compact')">KHO</div>
        </div>
  </div> 
  
@@ -284,61 +281,61 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
         <!-- Block 1: Role / Email -->
         <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 flex flex-col h-full">
             <div class="flex flex-col gap-4 pb-6 mb-6 border-b border-slate-100">
-            <div>
-               <label class="block font-extrabold text-sm text-slate-800">1. Quyền Bốc Node Tự Động (Auto-Fulfillment)</label>
+           <div>
+              <label class="block font-extrabold text-sm text-slate-800">1. Quyền Bốc Node Tự Động (Auto-Fulfillment)</label>
                  <p class="text-[11px] text-slate-500 mb-2">Hệ thống xử lý hoàn toàn ở Server-side. Công tắc này để cấu hình quyền xử lý.</p>
                <div class="grid grid-cols-2 gap-2">
-               <label class="radio-card p-2">
-               <input type="radio" name="autoRoleRad" value="master" onclick="saveAutoRoleUI('master')">
-                 <div class="card-bg"></div><i class="fas fa-check-circle check-icon text-sm top-2 right-2"></i>
-                 <div class="card-content text-center"><p class="font-bold text-sm">Master (Bật)</p></div>
-           </label>
-               <label class="radio-card p-2">
-               <input type="radio" name="autoRoleRad" value="slave" onclick="saveAutoRoleUI('slave')">
-                 <div class="card-bg"></div><i class="fas fa-check-circle check-icon text-sm top-2 right-2"></i>
-                 <div class="card-content text-center"><p class="font-bold text-sm">Slave (Tắt)</p></div>
-           </label>
-            </div>
-            </div>
-            <div>
-               <label class="block font-extrabold text-sm text-slate-800 mt-2">2. Quyền Gửi Email Tự Động</label>
+              <label class="radio-card p-2">
+              <input type="radio" name="autoRoleRad" value="master" onclick="saveAutoRoleUI('master')">
+                <div class="card-bg"></div><i class="fas fa-check-circle check-icon text-sm top-2 right-2"></i>
+                <div class="card-content text-center"><p class="font-bold text-sm">Master (Bật)</p></div>
+          </label>
+              <label class="radio-card p-2">
+              <input type="radio" name="autoRoleRad" value="slave" onclick="saveAutoRoleUI('slave')">
+                <div class="card-bg"></div><i class="fas fa-check-circle check-icon text-sm top-2 right-2"></i>
+                <div class="card-content text-center"><p class="font-bold text-sm">Slave (Tắt)</p></div>
+          </label>
+           </div>
+           </div>
+           <div>
+              <label class="block font-extrabold text-sm text-slate-800 mt-2">2. Quyền Gửi Email Tự Động</label>
                  <p class="text-[11px] text-slate-500 mb-2">Nếu bật Master, web này sẽ chịu trách nhiệm gửi Mail khi đơn thành công.</p>
                <div class="grid grid-cols-2 gap-2">
-               <label class="radio-card p-2">
-               <input type="radio" name="emailRoleRad" value="master" onclick="saveEmailRoleUI('master')">
-                 <div class="card-bg"></div><i class="fas fa-check-circle check-icon text-sm top-2 right-2"></i>
-                 <div class="card-content text-center"><p class="font-bold text-sm">Master (Gửi)</p></div>
-           </label>
-               <label class="radio-card p-2">
-               <input type="radio" name="emailRoleRad" value="slave" onclick="saveEmailRoleUI('slave')">
-                 <div class="card-bg"></div><i class="fas fa-check-circle check-icon text-sm top-2 right-2"></i>
-                 <div class="card-content text-center"><p class="font-bold text-sm">Slave (Tắt)</p></div>
-           </label>
-            </div>
-            </div>
+              <label class="radio-card p-2">
+              <input type="radio" name="emailRoleRad" value="master" onclick="saveEmailRoleUI('master')">
+                <div class="card-bg"></div><i class="fas fa-check-circle check-icon text-sm top-2 right-2"></i>
+                <div class="card-content text-center"><p class="font-bold text-sm">Master (Gửi)</p></div>
+          </label>
+              <label class="radio-card p-2">
+              <input type="radio" name="emailRoleRad" value="slave" onclick="saveEmailRoleUI('slave')">
+                <div class="card-bg"></div><i class="fas fa-check-circle check-icon text-sm top-2 right-2"></i>
+                <div class="card-content text-center"><p class="font-bold text-sm">Slave (Tắt)</p></div>
+          </label>
+           </div>
+           </div>
           </div>
             <div class="flex items-start justify-between gap-4 pb-4 border-b border-slate-100">
-            <div>
+           <div>
                <div class="font-bold text-sm lg:text-base text-slate-800">Tự động gửi mail nhắc hết hạn</div>
                <div class="text-xs lg:text-sm text-slate-500 mt-1">Gửi lúc 19:00 (giờ VN) — ngày D-2 và D-1 trước khi hết hạn</div>
-            </div>
+           </div>
              <label class="toggle-wrap shrink-0 mt-0.5">
-              <input type="checkbox" id="toggleAutoMail" onchange="saveAutoMailSetting()">
+             <input type="checkbox" id="toggleAutoMail" onchange="saveAutoMailSetting()">
               <span class="toggle-slider"></span>
-          </label>
+         </label>
           </div>
             <div class="pt-4 space-y-3 mt-auto">
               <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-3 text-xs text-indigo-700">
                 <p class="font-bold mb-1"><i class="fas fa-info-circle mr-1"></i>Cách hoạt động</p>
                 <ul class="space-y-1 text-[11px] font-medium list-disc pl-4">
-                 <li>Tính năng này đã được dời sang Cronjob Worker chạy ngầm để đảm bảo hoạt động 24/24. Bật công tắc này để Worker nhận lệnh.</li>
-                 <li>Chỉ gửi khi đơn hàng có đủ thông tin HSD</li>
-                 <li>Ngày D-2: mail ghi "Còn 2 ngày" + ngày hết hạn cụ thể</li>
-                 <li>Ngày D-1: mail ghi "Ngày mai hết hạn"</li>
-                 <li>Không gửi trùng 2 lần trong cùng ngày (tracked)</li>
-                 <li>Chạy tự động ngay cả khi admin không mở web hằng ngày lúc 19h Việt Nam.</li>
-               </ul>
-            </div>
+                <li>Tính năng này đã được dời sang Cronjob Worker chạy ngầm để đảm bảo hoạt động 24/24. Bật công tắc này để Worker nhận lệnh.</li>
+                <li>Chỉ gửi khi đơn hàng có đủ thông tin HSD</li>
+                <li>Ngày D-2: mail ghi "Còn 2 ngày" + ngày hết hạn cụ thể</li>
+                <li>Ngày D-1: mail ghi "Ngày mai hết hạn"</li>
+                <li>Không gửi trùng 2 lần trong cùng ngày (tracked)</li>
+                <li>Chạy tự động ngay cả khi admin không mở web hằng ngày lúc 19h Việt Nam.</li>
+              </ul>
+           </div>
               <div id="autoMailStatus" class="text-xs lg:text-sm text-slate-500 italic">Trạng thái: Đang kiểm tra...</div>
           </div>
           </div>
@@ -348,93 +345,93 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
             <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
               <div class="font-bold text-sm text-slate-800 mb-1 border-b border-slate-100 pb-2">Hướng dẫn Hệ Thống Link</div>
               <ul class="space-y-2 mt-3 text-[11px] text-slate-600 leading-relaxed font-medium">
-                 <li><b class="text-indigo-600">Tạo Link Ẩn (Thủ công):</b> Tự động tạo và nạp vào Kho nếu URL gốc chưa tồn tại trong Kho Tổng.</li>
-                 <li><b class="text-indigo-600">Nhập Nguồn Link Mới (Kho Tổng):</b> Đưa link gốc vào danh sách để hệ thống bốc tự động, đồng thời tự sinh sẵn Link #1 để tránh lỗi đồng bộ.</li>
-             </ul>
-           </div>
+                <li><b class="text-indigo-600">Tạo Link Ẩn (Thủ công):</b> Tự động tạo và nạp vào Kho nếu URL gốc chưa tồn tại trong Kho Tổng.</li>
+                <li><b class="text-indigo-600">Nhập Nguồn Link Mới (Kho Tổng):</b> Đưa link gốc vào danh sách để hệ thống bốc tự động, đồng thời tự sinh sẵn Link #1 để tránh lỗi đồng bộ.</li>
+            </ul>
+          </div>
  
             <!-- Block 3: Luân Chuyển Node Nghẽn -->
             <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 flex flex-col relative overflow-hidden">
               <div class="absolute top-0 right-0 flex items-stretch h-[28px] overflow-hidden rounded-bl-xl shadow-sm border-b border-l border-slate-200">
-                 <div id="sysUptimeBox" class="bg-blue-50 text-blue-600 text-[10px] font-bold px-3 flex items-center border-r border-slate-200 transition-colors">
-                     <i class="fas fa-satellite-dish mr-1 animate-pulse"></i> Uptime <span id="autoNextRunText" class="ml-1 font-mono">00:00:00</span>
-                 </div>
-             </div>
+                <div id="sysUptimeBox" class="bg-blue-50 text-blue-600 text-[10px] font-bold px-3 flex items-center border-r border-slate-200 transition-colors">
+                    <i class="fas fa-satellite-dish mr-1 animate-pulse"></i> Uptime <span id="autoNextRunText" class="ml-1 font-mono">00:00:00</span>
+                </div>
+            </div>
               <div class="font-bold text-sm text-slate-800 mb-1 pb-2 mt-4 border-b border-slate-100">Luân Chuyển Node Nghẽn</div>
               <p class="text-[10px] text-slate-500 mt-2 mb-4 leading-relaxed">Hệ thống sẽ quét và luân chuyển tài khoản tự động vào lúc 00h và 12h mỗi ngày (Phụ thuộc Worker Cronjob).</p>
               <div class="flex items-center justify-between mt-auto bg-slate-50 p-2 rounded-xl border border-slate-100">
-                 <div>
-                     <div class="font-bold text-[10px] md:text-xs text-slate-800">Auto Migrate</div>
-                     <div id="autoMigrateStatus" class="text-[9px] md:text-[10px] text-slate-500 mt-1">Đang hoạt động tự động thông qua Worker.</div>
-                 </div>
-                 <div class="flex items-center gap-3">
-                     <label class="toggle-wrap shrink-0"><input type="checkbox" id="toggleAutoMigrate" onchange="saveAutoMigrate()"><span class="toggle-slider"></span></label>
-                     <button onclick="autoMigrateLinks(false)" class="text-[10px] md:text-xs bg-rose-50 text-rose-600 font-bold px-2 py-1.5 md:px-3 md:py-2 rounded-lg hover:bg-rose-100 transition shadow-sm border border-rose-200"><i class="fas fa-random md:mr-1"></i> Chạy Thủ Công</button>
-                 </div>
-             </div>
-           </div>
+                <div>
+                    <div class="font-bold text-[10px] md:text-xs text-slate-800">Auto Migrate</div>
+                    <div id="autoMigrateStatus" class="text-[9px] md:text-[10px] text-slate-500 mt-1">Đang hoạt động tự động thông qua Worker.</div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="toggle-wrap shrink-0"><input type="checkbox" id="toggleAutoMigrate" onchange="saveAutoMigrate()"><span class="toggle-slider"></span></label>
+                    <button onclick="autoMigrateLinks(false)" class="text-[10px] md:text-xs bg-rose-50 text-rose-600 font-bold px-2 py-1.5 md:px-3 md:py-2 rounded-lg hover:bg-rose-100 transition shadow-sm border border-rose-200"><i class="fas fa-random md:mr-1"></i> Chạy Thủ Công</button>
+                </div>
+            </div>
+          </div>
  
             <!-- Block 4: D1 Webhook -->
             <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
               <div class="font-bold text-sm text-slate-800 mb-1 border-b border-slate-100 pb-2">Kết nối D1 Webhook</div>
               <p class="text-[10px] text-slate-500 mt-1 mb-2 leading-relaxed">Để lấy dữ liệu ngân hàng cho tab Giao Dịch D1 và Auto Fulfillment.</p>
               <div class="space-y-3">
-               <div><label class="block font-bold text-[10px] text-slate-600 mb-1">D1 Webhook URL</label><input id="syncD1Url" type="text" placeholder="https://payment-webhook..." class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] bg-slate-50"></div>
-               <div><label class="block font-bold text-[10px] text-slate-600 mb-1">D1 Secret Token</label><input id="syncD1Secret" type="password" placeholder="***" class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] bg-slate-50"></div>
-             </div>
-             <button onclick="saveSyncSetting()" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs shadow-md transition">Lưu D1 Data</button>
-           </div>
+              <div><label class="block font-bold text-[10px] text-slate-600 mb-1">D1 Webhook URL</label><input id="syncD1Url" type="text" placeholder="https://payment-webhook..." class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] bg-slate-50"></div>
+              <div><label class="block font-bold text-[10px] text-slate-600 mb-1">D1 Secret Token</label><input id="syncD1Secret" type="password" placeholder="***" class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-[11px] bg-slate-50"></div>
+            </div>
+            <button onclick="saveSyncSetting()" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs shadow-md transition">Lưu D1 Data</button>
+          </div>
           </div>
  
           <!-- Block 5: Worker Sync & Blur (Full Width in Grid) -->
           <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 lg:col-span-2">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-             <div>
+            <div>
                <div class="flex justify-between items-center mb-1 border-b border-slate-100 pb-2">
-                 <div class="font-bold text-sm text-slate-800">Worker URL Vệ Tinh</div>
-                 <button onclick="addSyncWorker()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100 transition"><i class="fas fa-plus"></i> Thêm</button>
-               </div>
+                <div class="font-bold text-sm text-slate-800">Worker URL Vệ Tinh</div>
+                <button onclick="addSyncWorker()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100 transition"><i class="fas fa-plus"></i> Thêm</button>
+              </div>
                 <p class="text-[10px] text-slate-500 mt-1 mb-2 leading-relaxed">Chỉ đồng bộ: Đơn Hàng. Tự động bắn dữ liệu qua các web đang bật.</p>
                <div id="syncWorkerList" class="space-y-3 mt-3 max-h-48 overflow-y-auto pr-1"></div>
-             </div>
+            </div>
  
-             <div>
+            <div>
                <div class="font-bold text-sm text-slate-800 mb-1 border-b border-slate-100 pb-2">Định Tuyến & Làm Mờ (Blur)</div>
                 <p class="text-[10px] text-slate-500 mt-1 mb-3 leading-relaxed">Nhập Domain để dán Link, và bật công tắc nếu muốn làm mờ Link Sub tương ứng trên trang chủ.</p>
                <div class="space-y-3">
-                 <div class="flex items-center justify-between bg-slate-50 border border-slate-200 p-2 rounded-xl">
-                   <div class="flex-1 mr-4">
-                       <label class="block font-bold text-[10px] text-slate-600 mb-1">Định tuyến Web 1</label>
-                       <input id="routeWeb1" type="text" oninput="checkBlur('1')" placeholder="VD: doicucden" class="w-full p-2 border border-slate-200 rounded-lg outline-none focus:border-indigo-500 font-mono text-[11px] bg-white">
-                   </div>
-                   <div class="flex flex-col items-center shrink-0">
-                       <label class="block font-bold text-[10px] text-slate-600 mb-1">Làm mờ</label>
-                       <label class="toggle-wrap"><input type="checkbox" id="blurWeb1" disabled><span class="toggle-slider"></span></label>
-                   </div>
-                 </div>
-                 <div class="flex items-center justify-between bg-slate-50 border border-slate-200 p-2 rounded-xl">
-                   <div class="flex-1 mr-4">
-                       <label class="block font-bold text-[10px] text-slate-600 mb-1">Định tuyến Web 2</label>
-                       <input id="routeWeb2" type="text" oninput="checkBlur('2')" placeholder="VD: onepiece" class="w-full p-2 border border-slate-200 rounded-lg outline-none focus:border-indigo-500 font-mono text-[11px] bg-white">
-                   </div>
-                   <div class="flex flex-col items-center shrink-0">
-                       <label class="block font-bold text-[10px] text-slate-600 mb-1">Làm mờ</label>
-                       <label class="toggle-wrap"><input type="checkbox" id="blurWeb2" disabled><span class="toggle-slider"></span></label>
-                   </div>
-                 </div>
-                 <div class="flex items-center justify-between bg-slate-50 border border-slate-200 p-2 rounded-xl">
-                   <div class="flex-1 mr-4">
-                       <label class="block font-bold text-[10px] text-slate-600 mb-1">Định tuyến Web 3</label>
-                       <input id="routeWeb3" type="text" oninput="checkBlur('3')" placeholder="VD: lucastanora" class="w-full p-2 border border-slate-200 rounded-lg outline-none focus:border-indigo-500 font-mono text-[11px] bg-white">
-                   </div>
-                   <div class="flex flex-col items-center shrink-0">
-                       <label class="block font-bold text-[10px] text-slate-600 mb-1">Làm mờ</label>
-                       <label class="toggle-wrap"><input type="checkbox" id="blurWeb3" disabled><span class="toggle-slider"></span></label>
-                   </div>
-                 </div>
-               </div>
-             </div>
-           </div>
+                <div class="flex items-center justify-between bg-slate-50 border border-slate-200 p-2 rounded-xl">
+                  <div class="flex-1 mr-4">
+                      <label class="block font-bold text-[10px] text-slate-600 mb-1">Định tuyến Web 1</label>
+                      <input id="routeWeb1" type="text" oninput="checkBlur('1')" placeholder="VD: doicucden" class="w-full p-2 border border-slate-200 rounded-lg outline-none focus:border-indigo-500 font-mono text-[11px] bg-white">
+                  </div>
+                  <div class="flex flex-col items-center shrink-0">
+                      <label class="block font-bold text-[10px] text-slate-600 mb-1">Làm mờ</label>
+                      <label class="toggle-wrap"><input type="checkbox" id="blurWeb1" disabled><span class="toggle-slider"></span></label>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between bg-slate-50 border border-slate-200 p-2 rounded-xl">
+                  <div class="flex-1 mr-4">
+                      <label class="block font-bold text-[10px] text-slate-600 mb-1">Định tuyến Web 2</label>
+                      <input id="routeWeb2" type="text" oninput="checkBlur('2')" placeholder="VD: onepiece" class="w-full p-2 border border-slate-200 rounded-lg outline-none focus:border-indigo-500 font-mono text-[11px] bg-white">
+                  </div>
+                  <div class="flex flex-col items-center shrink-0">
+                      <label class="block font-bold text-[10px] text-slate-600 mb-1">Làm mờ</label>
+                      <label class="toggle-wrap"><input type="checkbox" id="blurWeb2" disabled><span class="toggle-slider"></span></label>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between bg-slate-50 border border-slate-200 p-2 rounded-xl">
+                  <div class="flex-1 mr-4">
+                      <label class="block font-bold text-[10px] text-slate-600 mb-1">Định tuyến Web 3</label>
+                      <input id="routeWeb3" type="text" oninput="checkBlur('3')" placeholder="VD: lucastanora" class="w-full p-2 border border-slate-200 rounded-lg outline-none focus:border-indigo-500 font-mono text-[11px] bg-white">
+                  </div>
+                  <div class="flex flex-col items-center shrink-0">
+                      <label class="block font-bold text-[10px] text-slate-600 mb-1">Làm mờ</label>
+                      <label class="toggle-wrap"><input type="checkbox" id="blurWeb3" disabled><span class="toggle-slider"></span></label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
             <button onclick="saveSyncSetting()" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-xs shadow-md transition">LƯU CẤU HÌNH BẢNG NÀY</button>
           </div>
       </div>
@@ -478,7 +475,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
         <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
           <div class="overflow-x-auto">
             <table class="log-table">
-   <thead><tr><th>#</th><th>Loại mail</th><th>Email khách</th><th>Mã đơn</th><th>Thời gian</th></tr></thead>
+  <thead><tr><th>#</th><th>Loại mail</th><th>Email khách</th><th>Mã đơn</th><th>Thời gian</th></tr></thead>
              <tbody id="logTableBody"><tr><td colspan="5" class="text-center py-8 text-slate-400 italic text-sm">Chưa có nhật ký Mail</td></tr></tbody>
         </table>
           </div>
@@ -493,7 +490,7 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
         <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
           <div class="overflow-x-auto">
             <table class="log-table">
-   <thead><tr><th>#</th><th>Hành động</th><th>Kết quả</th><th>Thời gian</th></tr></thead>
+  <thead><tr><th>#</th><th>Hành động</th><th>Kết quả</th><th>Thời gian</th></tr></thead>
              <tbody id="sysLogTableBody"><tr><td colspan="4" class="text-center py-8 text-slate-400 italic text-sm">Chưa có hoạt động</td></tr></tbody>
         </table>
           </div>
@@ -514,17 +511,17 @@ input:checked+.toggle-slider::before{transform:translateX(22px);}
       <h3 id="mOrdTtl" class="text-base md:text-xl lg:text-2xl font-bold text-slate-800">Đơn hàng</h3>
       <div class="flex items-center gap-1 flex-wrap justify-end max-w-[60%]">
           <label class="flex items-center bg-yellow-50 text-yellow-700 px-2 py-1 rounded-full cursor-pointer shadow-sm border border-yellow-200">
-              <input type="checkbox" id="mOUpgVerify" onchange="syncUpg('verify')" class="w-3 h-3 mr-1 accent-yellow-600">
+             <input type="checkbox" id="mOUpgVerify" onchange="syncUpg('verify')" class="w-3 h-3 mr-1 accent-yellow-600">
               <span class="text-[9px] font-bold">Đang xác minh</span>
-          </label>
+         </label>
           <label class="flex items-center bg-green-50 text-green-700 px-2 py-1 rounded-full cursor-pointer shadow-sm border border-green-200">
-              <input type="checkbox" id="mOUpgSuccess" onchange="syncUpg('success')" class="w-3 h-3 mr-1 accent-green-600">
+             <input type="checkbox" id="mOUpgSuccess" onchange="syncUpg('success')" class="w-3 h-3 mr-1 accent-green-600">
               <span class="text-[9px] font-bold">Thành công</span>
-          </label>
+         </label>
           <label class="flex items-center bg-red-50 text-red-700 px-2 py-1 rounded-full cursor-pointer shadow-sm border border-red-200">
-              <input type="checkbox" id="mOUpgReject" onchange="syncUpg('reject')" class="w-3 h-3 mr-1 accent-red-600">
+             <input type="checkbox" id="mOUpgReject" onchange="syncUpg('reject')" class="w-3 h-3 mr-1 accent-red-600">
               <span class="text-[9px] font-bold">Từ chối</span>
-          </label>
+         </label>
       </div>
  </div>
  <div class="grid grid-cols-2 gap-2 mb-2">
@@ -638,6 +635,11 @@ let isTxLoadingOlder = false;
 let ordersDb=[],dataRequestsDb=[],linksDb=[],deadLinksDb=[],cmsDb={},devicesDb=[], linkPoolDb=[];
 let myDev="",curCms="android",curOrdTab="success", curLinkTab="manual", curLinkListView="detailed", curTxTab="giamsat";
 let sysHasError = false;
+
+// ==========================================
+// FIX SYNC STALE READS (Eventual Consistency)
+// ==========================================
+const syncPauses = {};
  
 const basePrices = [60000, 70000, 80000, 200000, 710000, 399000, 999000];
 const validAmts = new Set(basePrices);
@@ -706,7 +708,7 @@ function fmtNewDate(dStrOrObj) {
         dObj = dStrOrObj;
    }
  
-  if(isNaN(dObj.getTime())) return String(dStrOrObj);
+ if(isNaN(dObj.getTime())) return String(dStrOrObj);
  
    const hh = String(dObj.getHours()).padStart(2,'0');
    const mm = String(dObj.getMinutes()).padStart(2,'0');
@@ -744,13 +746,12 @@ const pd=s=>{
 function addDays(dateStr,days){const d=pd(normalizeDateStr(dateStr));if(!d||!days)return "";d.setDate(d.getDate()+days);return formatDateTZ(d);}
 function isExpiredDate(dateStr){const d=pd(normalizeDateStr(dateStr));if(!d)return false;return d.getTime()<getAdjustedTime().getTime();}
  
-// Tính mốc Lock cho Link Auto (Bằng Hết Hạn + Giờ tạo - 3 tiếng)
 function getLockTarget(expDateStr) {
    if(!expDateStr || expDateStr.includes("Lifetime") || expDateStr.includes("Vĩnh")) return null;
    const expD = pd(normalizeDateStr(expDateStr));
    if(!expD) return null;
    const now = getAdjustedTime();
-  expD.setHours(now.getHours() - 3, now.getMinutes(), 0, 0);
+ expD.setHours(now.getHours() - 3, now.getMinutes(), 0, 0);
    return expD.getTime();
 }
  
@@ -785,14 +786,14 @@ function toast(msg,type="ok"){
  
 function syncUpg(type) {
     if(type === 'verify' && document.getElementById('mOUpgVerify').checked) {
-        document.getElementById('mOUpgSuccess').checked = false;
-        document.getElementById('mOUpgReject').checked = false;
+       document.getElementById('mOUpgSuccess').checked = false;
+       document.getElementById('mOUpgReject').checked = false;
     } else if(type === 'success' && document.getElementById('mOUpgSuccess').checked) {
-        document.getElementById('mOUpgVerify').checked = false;
-        document.getElementById('mOUpgReject').checked = false;
+       document.getElementById('mOUpgVerify').checked = false;
+       document.getElementById('mOUpgReject').checked = false;
     } else if(type === 'reject' && document.getElementById('mOUpgReject').checked) {
-        document.getElementById('mOUpgVerify').checked = false;
-        document.getElementById('mOUpgSuccess').checked = false;
+       document.getElementById('mOUpgVerify').checked = false;
+       document.getElementById('mOUpgSuccess').checked = false;
     }
 }
  
@@ -801,47 +802,62 @@ function isAutoMaster() { return (cmsDb && cmsDb.settings && cmsDb.settings.auto
  
 async function apG(p,def){
  try{
- if(Date.now()-lsTime(p)<15000) return lsGet("a"+p)??def;
- const r=await fetch(API+p+"?_t="+Date.now());
- if(!r.ok) { sysHasError = true; throw 0; }
- sysHasError = false;
- const d=await r.json();lsSet("a"+p,d);lsSetT(p);return d;
- }catch{ sysHasError = true; return lsGet("a"+p)??def; }
+    // Fix Eventual Consistency: Bỏ qua fetch Network nếu Local vừa bị Update gần đây (trong 30s)
+    const isPaused = syncPauses[p] && Date.now() < syncPauses[p];
+    if(isPaused || Date.now()-lsTime(p)<15000) return lsGet("a"+p)??def;
+    
+    const r=await fetch(API+p+"?_t="+Date.now());
+    if(!r.ok) { sysHasError = true; throw 0; }
+    sysHasError = false;
+    
+    const d=await r.json();
+    lsSet("a"+p,d);
+    lsSetT(p);
+    return d;
+ }catch{ 
+    sysHasError = true; 
+    return lsGet("a"+p)??def; 
+ }
 }
  
 async function apP(p,data){
- lsSet("a"+p,data);lsSetT(p);
+ lsSet("a"+p,data);
+ lsSetT(p);
+ 
+ // Khóa Fetch Network 30 giây kể từ khi Update, để tránh đọc nhầm KV Data cũ của Cloudflare
+ syncPauses[p] = Date.now() + 30000;
+ 
  const localOnly = ["/api/links", "/api/deadlinks"];
  
  try {
- const r = await fetch(API+p, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data)});
- if(!r.ok) { sysHasError = true; toast("Lỗi lưu nội bộ: " + r.status, "err"); }
- else { sysHasError = false; }
+    const r = await fetch(API+p, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data)});
+    if(!r.ok) { sysHasError = true; toast("Lỗi lưu nội bộ: " + r.status, "err"); }
+    else { sysHasError = false; }
  } catch(e) {
- sysHasError = true; toast("Mất kết nối nội bộ: " + e.message, "err");
+    sysHasError = true; toast("Mất kết nối nội bộ: " + e.message, "err");
  }
  
  const syncSettings = (cmsDb && cmsDb.settings) ? cmsDb.settings : {};
  if (syncSettings.crossSyncEnabled && !localOnly.includes(p) && CROSS_SYNC_PATHS.includes(p)) {
- let targets = [];
- if (syncSettings.syncWorkers && Array.isArray(syncSettings.syncWorkers)) {
-      targets = syncSettings.syncWorkers.filter(w => w.active && w.url).map(w => w.url.replace(/\/$/, ""));
- }
- const currentHost = window.location.hostname;
- const externalTargets = targets.filter(url => !url.includes(currentHost));
- 
- if (externalTargets.length > 0) {
-  Promise.allSettled(
-   externalTargets.map(base => {
-         const url = base + p;
-         return fetch(url, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data)});
-        })
-      ).then(results => {
-        let errCnt = 0;
-  results.forEach(res => { if (res.status !== "fulfilled" || !res.value.ok) errCnt++; });
-        if (errCnt > 0) console.warn(`Có ${errCnt} web vệ tinh bị lỗi đồng bộ!`);
-      });
- }
+    let targets = [];
+    if (syncSettings.syncWorkers && Array.isArray(syncSettings.syncWorkers)) {
+         targets = syncSettings.syncWorkers.filter(w => w.active && w.url).map(w => w.url.replace(/\/$/, ""));
+    }
+    const currentHost = window.location.hostname;
+    const externalTargets = targets.filter(url => !url.includes(currentHost));
+    
+    if (externalTargets.length > 0) {
+     Promise.allSettled(
+      externalTargets.map(base => {
+             const url = base + p;
+             return fetch(url, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(data)});
+            })
+         ).then(results => {
+           let errCnt = 0;
+           results.forEach(res => { if (res.status !== "fulfilled" || !res.value.ok) errCnt++; });
+           if (errCnt > 0) console.warn(`Có ${errCnt} web vệ tinh bị lỗi đồng bộ!`);
+         });
+    }
  }
 }
  
@@ -969,8 +985,8 @@ function toggleSimTimeUI() {
  document.getElementById("simTimeInputs").classList.toggle('hidden', !isSim);
  if(!isSim) {
    if(cmsDb.settings) {
-   cmsDb.settings.simMode = false;
-   apP("/api/cms", cmsDb);
+  cmsDb.settings.simMode = false;
+  apP("/api/cms", cmsDb);
         }
         toast("Đã tắt Giả lập thời gian, chạy theo giờ thực tế");
  }
@@ -1001,8 +1017,15 @@ function checkBlur(idx) {
    const val = document.getElementById('routeWeb'+idx)?.value.trim();
    const chk = document.getElementById('blurWeb'+idx);
    if(chk) {
-        if(!val) { chk.checked = false; chk.disabled = true; }
-        else { chk.disabled = false; }
+        if(!val) { 
+            chk.checked = false; 
+            chk.disabled = true; 
+            // Fix bug Blur ảo: nếu xoá text URL thì ép update cmsDb thành false luôn
+            if (cmsDb && cmsDb.settings) cmsDb.settings['blurWeb'+idx] = false;
+        }
+        else { 
+            chk.disabled = false; 
+        }
    }
 }
  
@@ -1133,30 +1156,30 @@ window.onload=async function(){
  }
  
  myDev=lsGet("adm_dev")||"";
- if(!myDev){myDev="DEV-"+Math.random().toString(36).slice(2,11).toUpperCase();lsSet("adm_dev",myDev);}
- const cached=lsGet("a/api/devices")||[];
- if(cached.find&&cached.find(x=>x.id===myDev)){
- ordersDb=lsGet("a/api/orders")||[];dataRequestsDb=lsGet("a/api/data_requests")||[];
- linksDb=lsGet("a/api/links")||[];deadLinksDb=lsGet("a/api/deadlinks")||[];
- devicesDb=cached;
- linkPoolDb=lsGet("a/api/link_pool")||[];
- cmsDb=lsGet("a/api/cms")||{};if(!cmsDb.link_origins) cmsDb.link_origins={};
- 
- loginOK(false);setTimeout(()=>fetchAll(false),500);
- } else {
- devicesDb=await apG("/api/devices",[]);
- if(devicesDb.find&&devicesDb.find(x=>x.id===myDev)) {
-    loginOK(false);
- } else {
-    // FALLBACK AN TOÀN: Xóa phiên lỗi, trả lại UI cho Admin đăng nhập tay
-    lsDel("adm_dev");
-    document.documentElement.classList.remove('has-session');
-    if(loginBtn) {
-         loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>ĐĂNG NHẬP';
-         loginBtn.disabled = false;
-    }
-    if(_admHasSession) toast("Phiên đăng nhập hết hạn hoặc bị lỗi, vui lòng đăng nhập lại!", "warn");
+ if(!myDev){
+    myDev="DEV-"+Math.random().toString(36).slice(2,11).toUpperCase();
+    lsSet("adm_dev",myDev);
  }
+ 
+ // Ưu tiên load dựa vào LocalStorage nếu _admHasSession = true (Fix Desktop Refresh Login)
+ if(myDev && _admHasSession) {
+    loginOK(false);
+    setTimeout(() => fetchAll(false), 500);
+ } else {
+    // Initial Sync API nếu user dùng máy trắng (lần đầu vào)
+    devicesDb=await apG("/api/devices",[]);
+    if(devicesDb.find&&devicesDb.find(x=>x.id===myDev)) {
+       loginOK(false);
+       setTimeout(() => fetchAll(false), 500);
+    } else {
+       lsDel("adm_dev");
+       document.documentElement.classList.remove('has-session');
+       if(loginBtn) {
+           loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>ĐĂNG NHẬP';
+           loginBtn.disabled = false;
+       }
+       if(_admHasSession) toast("Phiên đăng nhập hết hạn hoặc bị lỗi, vui lòng đăng nhập lại!", "warn");
+    }
  }
 };
  
@@ -1206,7 +1229,7 @@ function loginOK(st=true){
  setInterval(()=>{
  if(document.getElementById("mOrd") && !document.getElementById("mOrd").classList.contains("hidden")) return;
  apG("/api/orders",[]).then(async f=>{
-  if(JSON.stringify(f)!==JSON.stringify(ordersDb)){
+ if(JSON.stringify(f)!==JSON.stringify(ordersDb)){
          ordersDb=f;
          await pollAutoFulfillment(); 
          renderOrd();
@@ -1357,7 +1380,7 @@ function updateTxBadge() {
   const elBadge = document.getElementById('transBadge');
   if(elBadge) {
     elBadge.innerText = actionableCount;
-   elBadge.classList.remove('hidden');
+  elBadge.classList.remove('hidden');
   }
  }
 }
@@ -1389,12 +1412,12 @@ async function initialLoadTransactions(force = false) {
         }
  
         if (!document.getElementById("t-trans").classList.contains("hidden")) {
-       renderTransactions();
+      renderTransactions();
         }
       updateTxBadge();
     scheduleTxPoll();
    } catch(e) {
-  if(document.getElementById("t-trans").classList.contains("hidden") === false) {
+ if(document.getElementById("t-trans").classList.contains("hidden") === false) {
           if(tb) tb.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-slate-400 font-bold">Lỗi tải D1: ${e.message}</td></tr>`;
         }
     scheduleTxPoll();
@@ -1425,13 +1448,13 @@ async function pollTransactions() {
            if(newMaxId > txLastSeenId) txLastSeenId = newMaxId;
  
             const map = new Map();
-       txData.forEach(t => map.set(t.id, t));
+      txData.forEach(t => map.set(t.id, t));
         list.forEach(t => map.set(t.id, t));
             txData = Array.from(map.values()).sort((a,b) => b.id - a.id);
  
-       updateTxBadge();
+      updateTxBadge();
             if (!document.getElementById("t-trans").classList.contains("hidden")) {
-           renderTransactions();
+          renderTransactions();
             }
         } else {
         txPollFails++;
@@ -1489,15 +1512,15 @@ function renderTransactions() {
  if (curTxTab === 'giamsat') {
       tHead.innerHTML = `
           <tr>
-           <th>STT</th>
-           <th>Mã Đơn</th>
-           <th>Giờ Tạo Đơn</th>
-           <th>Email Khách</th>
-           <th>Tiền Thu & SL</th>
-           <th>Nguồn Web</th>
-           <th>Mã CK (Regex)</th>
-           <th>Trạng Thái</th>
-           <th>Hành Động</th>
+          <th>STT</th>
+          <th>Mã Đơn</th>
+          <th>Giờ Tạo Đơn</th>
+          <th>Email Khách</th>
+          <th>Tiền Thu & SL</th>
+          <th>Nguồn Web</th>
+          <th>Mã CK (Regex)</th>
+          <th>Trạng Thái</th>
+          <th>Hành Động</th>
           </tr>
       `;
       htmlStr = txData.map((tx, i) => {
@@ -1544,19 +1567,19 @@ function renderTransactions() {
              <td class="font-mono font-black text-emerald-600 cp" onclick="cp('${oId}')">${oId}${upgradeBadge}</td>
              <td class="text-xs text-slate-600 font-medium whitespace-nowrap">${timeCreated}</td>
              <td class="text-xs font-bold text-slate-700 cp" onclick="cp('${email}')">${email}</td>
-           <td>${amountFormat}</td>
+          <td>${amountFormat}</td>
              <td class="text-xs font-bold text-slate-500">${targetWeb}</td>
-           <td>${ckBadge}</td>
-           <td>${statusBadge}</td>
-           <td>${actions}</td>
+          <td>${ckBadge}</td>
+          <td>${statusBadge}</td>
+          <td>${actions}</td>
           </tr>
           `;
       }).join('');
  } else {
       tHead.innerHTML = `
           <tr>
-           <th>STT</th>
-           <th>Thời Gian</th>
+          <th>STT</th>
+          <th>Thời Gian</th>
            <th>Số Tiền</th>
            <th>Nội Dung Thô</th>
           </tr>
@@ -1597,7 +1620,7 @@ async function approveTransaction(txId, orderId) {
  oid = oid.trim().toUpperCase().replace(/[-_.\s]/g, "");
  
  if(tx && tx.status === 'unmatched') {
-  if(!validAmts.has(Number(tx.amount))) {
+ if(!validAmts.has(Number(tx.amount))) {
         if(!confirm(`Số tiền ${tx.amount} VND không khớp với các mốc giá của hệ thống. Bạn vẫn muốn Ép Khớp?`)) return;
     }
  }
@@ -1719,11 +1742,11 @@ function renderLinks() {
             <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
                <div class="text-[10px] lg:text-xs font-bold text-slate-500 whitespace-nowrap">${dateBottom}</div>
                <div class="flex justify-end gap-2 shrink-0">
-                <button onclick="rebuildOneMAP('${l.id}')" title="Rebuild MAP" class="text-emerald-600 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-emerald-50 border border-emerald-100 rounded hover:bg-emerald-500 transition shadow-sm"><i class="fas fa-sync-alt"></i></button>
-                <button onclick="openLnkModal('${l.id}')" class="text-indigo-600 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-indigo-50 border border-indigo-100 rounded hover:bg-indigo-500 transition shadow-sm"><i class="fas fa-pen"></i></button>
-                <button onclick="toggleLock('${maskTok}',${isLocked})" class="${isLocked?"text-white bg-green-500 hover:bg-green-600":"text-orange-500 hover:text-white bg-orange-50 border-orange-100 border hover:bg-orange-500"} text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center rounded transition shadow-sm"><i class="fas ${isLocked?"fa-lock-open":"fa-lock"}"></i></button>
-                <button onclick="delLink('${l.id}')" class="text-red-500 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-red-50 border border-red-100 rounded hover:bg-red-500 transition shadow-sm"><i class="fas fa-trash"></i></button>
-             </div>
+               <button onclick="rebuildOneMAP('${l.id}')" title="Rebuild MAP" class="text-emerald-600 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-emerald-50 border border-emerald-100 rounded hover:bg-emerald-500 transition shadow-sm"><i class="fas fa-sync-alt"></i></button>
+               <button onclick="openLnkModal('${l.id}')" class="text-indigo-600 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-indigo-50 border border-indigo-100 rounded hover:bg-indigo-500 transition shadow-sm"><i class="fas fa-pen"></i></button>
+               <button onclick="toggleLock('${maskTok}',${isLocked})" class="${isLocked?"text-white bg-green-500 hover:bg-green-600":"text-orange-500 hover:text-white bg-orange-50 border-orange-100 border hover:bg-orange-500"} text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center rounded transition shadow-sm"><i class="fas ${isLocked?"fa-lock-open":"fa-lock"}"></i></button>
+               <button onclick="delLink('${l.id}')" class="text-red-500 hover:text-white text-[10px] lg:text-sm w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center bg-red-50 border border-red-100 rounded hover:bg-red-500 transition shadow-sm"><i class="fas fa-trash"></i></button>
+            </div>
           </div>
         </div>`;
  }).join("");
@@ -1972,13 +1995,13 @@ function renderOrd(){
       
       let badgeUpgrade = "";
       if (o.pendingUpgrade) {
-           badgeUpgrade = `<span class="bg-yellow-100 text-yellow-800 border border-yellow-200 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 shrink-0 uppercase">Xác minh Nâng gói</span>`;
+          badgeUpgrade = `<span class="bg-yellow-100 text-yellow-800 border border-yellow-200 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 shrink-0 uppercase">Xác minh Nâng gói</span>`;
       } else if (o.upgradeStatus === 'failed') {
-           badgeUpgrade = `<span class="bg-red-100 text-red-800 border border-red-200 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 shrink-0 uppercase">Từ chối Nâng gói</span>`;
+          badgeUpgrade = `<span class="bg-red-100 text-red-800 border border-red-200 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 shrink-0 uppercase">Từ chối Nâng gói</span>`;
       } else if (o.isUpgrade) {
-           badgeUpgrade = `<span class="bg-green-100 text-green-800 border border-green-200 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 shrink-0 uppercase">Nâng gói Thành công</span>`;
+          badgeUpgrade = `<span class="bg-green-100 text-green-800 border border-green-200 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 shrink-0 uppercase">Nâng gói Thành công</span>`;
       }
-
+ 
       const nicknameHTML = o.nickname ? `<span class="text-[9px] md:text-[10px] lg:text-xs font-black bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded ml-1 shrink-0"><i class="fas fa-user-tag mr-0.5"></i>${o.nickname}</span>` : "";
  
       const conciseInfo = `${displayPkg}${o.expDate ? ` • HSD: <span class="font-bold text-slate-700">${o.expDate}</span>` : ""}`;
@@ -2066,7 +2089,7 @@ function openOrdModal(id){
       for(let i=0; i<sel.options.length; i++){
           const optText = sel.options[i].text;
           if(o.pkgName && optText.includes(o.pkgName) && (!o.pkgData || optText.includes(o.pkgData))) {
-      sel.selectedIndex = i; matched = true; break;
+     sel.selectedIndex = i; matched = true; break;
           }
       }
       if(!matched) {
@@ -2130,7 +2153,7 @@ async function saveOrd(){
  info3:document.getElementById("mOLink3").value.trim(),
  reason:document.getElementById("mOReason").value.trim()
  });
-
+ 
  if (upgVerify) {
      o.isUpgrade = true;
      o.pendingUpgrade = o.pendingUpgrade || { ts: Date.now() };
@@ -2164,7 +2187,7 @@ async function saveOrd(){
  renderOrd();cm("mOrd");toast("Đang lưu & bắn tỉa...");await apP("/api/orders",ordersDb);toast("Đã lưu!");
  
  if(document.getElementById("mOSendMail").checked && o.email && (status==="success"||status==="failed")){
- if(!isMailMaster()) { 
+ if(!isMailMaster()) {
       toast("Đang ở chế độ SLAVE, bỏ qua lệnh gửi Mail!", "warn");
  } else {
        const subj=status==="success"?"VPN Trinh Hg - Kích hoạt thành công":"VPN Trinh Hg - Kích hoạt thất bại";
