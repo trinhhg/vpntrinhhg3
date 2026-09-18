@@ -1,4 +1,4 @@
-<!-- v2.8 - Fix package name format, empty Zalo, accumulation logic, UI link blur, source web var - 2026-09-17 -->
+<!-- v2.9 - Fix lỗi sync cmsCache, gỡ hardcode blur UI cho input dự phòng - 2026-09-18 -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -95,7 +95,7 @@ html.has-user-session #view-portal { display: block !important; }
      try {
          let _p = JSON.parse(_usrSess);
          if (new Date().getTime() - _p.time < 24*3600*1000) {
-        document.documentElement.classList.add('has-user-session');
+       document.documentElement.classList.add('has-user-session');
          }
      } catch(e){}
  }
@@ -234,11 +234,11 @@ html.has-user-session #view-portal { display: block !important; }
                <div class="absolute top-0 left-0 w-1.5 h-full bg-red-500"></div>
                <div class="w-10 h-10 md:w-12 md:h-12 bg-red-100 rounded-full flex items-center justify-center shrink-0 shadow-inner">
                  <i class="fas fa-user-shield text-red-500 text-lg md:text-2xl animate-pulse"></i>
-           </div>
+          </div>
                <div class="flex-1">
                 <h4 id="securityAlertTitle" class="text-red-700 font-extrabold text-xs md:text-sm uppercase tracking-wide mb-1">Cảnh báo bảo mật</h4>
                  <p id="securityAlertDesc" class="text-red-800 font-medium text-[11px] md:text-[13px] leading-relaxed">Bắt buộc giữ bí mật <span class="text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100">Email</span> và <span class="text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100">Mã đơn hàng</span> để tránh bị lộ Link VPN.</p>
-           </div>
+          </div>
           </div>
           </div>
           
@@ -256,20 +256,20 @@ html.has-user-session #view-portal { display: block !important; }
                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-clock text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="exp_date_label">HSD:</span><span id="displayExp" class="font-bold text-slate-800 text-[11px] md:text-xs truncate"></span></div>
                <div class="flex items-center gap-2 min-w-0 mt-1">
                  <i class="fas fa-arrow-up text-blue-500 w-4 text-center"></i>
-               <span class="text-[11px] md:text-xs text-slate-500 shrink-0">Nâng cấp:</span>
-               <span id="displayUpgradeStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span>
-             </div>
+              <span class="text-[11px] md:text-xs text-slate-500 shrink-0">Nâng cấp:</span>
+              <span id="displayUpgradeStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span>
+            </div>
                <div class="flex items-center gap-2 min-w-0 mt-1">
                  <i class="fas fa-check-circle text-green-500 w-4 text-center"></i>
-               <span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="status_lbl">Trạng thái:</span>
-               <span id="displayStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span>
-             </div>
+              <span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="status_lbl">Trạng thái:</span>
+              <span id="displayStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span>
+            </div>
           </div>
           </div>
           <div class="mt-4 flex justify-center border-t border-slate-100 pt-4">
             <button id="btnRequestData" onclick="requestDataCheck()" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs hover:scale-105 transition shadow-sm flex items-center justify-center btn-heartbeat outline-none">
                  <i class="fas fa-chart-pie mr-1.5"></i><span data-i18n="btn_check_data">Kiểm tra dung lượng</span>
-         </button>
+        </button>
           </div>
           </div>
           
@@ -277,7 +277,7 @@ html.has-user-session #view-portal { display: block !important; }
             <div class="w-full">
               <h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL:</h3>
               <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
-             <input type="text" id="subLink1" readonly value="********" class="blur-link w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+             <input type="text" id="subLink1" readonly value="********" class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
            <button onclick="copyToClipboard('subLink1',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button>
           </div>
               <div id="subDate1" class="text-[10px] font-bold text-slate-500 mt-1.5 ml-1"></div>
@@ -286,7 +286,7 @@ html.has-user-session #view-portal { display: block !important; }
             <div id="subLink2Wrap" class="w-full mt-2 border-t border-green-200/50 pt-3">
               <h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL dự phòng 2:</h3>
               <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
-             <input type="text" id="subLink2" readonly value="********" class="blur-link w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+             <input type="text" id="subLink2" readonly value="********" class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
            <button onclick="copyToClipboard('subLink2',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button>
           </div>
               <div id="subDate2" class="text-[10px] font-bold text-slate-500 mt-1.5 ml-1"></div>
@@ -295,7 +295,7 @@ html.has-user-session #view-portal { display: block !important; }
           <div id="subLink3Wrap" class="w-full mt-2 border-t border-green-200/50 pt-3">
               <h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Link Subscription URL dự phòng 3:</h3>
               <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
-             <input type="text" id="subLink3" readonly value="********" class="blur-link w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+             <input type="text" id="subLink3" readonly value="********" class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
            <button onclick="copyToClipboard('subLink3',true)" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button>
           </div>
               <div id="subDate3" class="text-[10px] font-bold text-slate-500 mt-1.5 ml-1"></div>
@@ -473,7 +473,7 @@ html.has-user-session #view-portal { display: block !important; }
         <div class="grid lg:grid-cols-2 gap-6">
           <div class="bg-white border border-slate-200 p-5 md:p-8 rounded-3xl flex flex-col shadow-sm">
             <div class="bg-indigo-50 px-5 py-4 rounded-xl mb-5 flex justify-between items-center border border-indigo-100">
-             <div><p class="text-sm font-black text-slate-800 uppercase" id="selectedPackageName"></p><p class="text-xs font-bold text-slate-500 mt-0.5" id="selectedPackageData"></p></div>
+            <div><p class="text-sm font-black text-slate-800 uppercase" id="selectedPackageName"></p><p class="text-xs font-bold text-slate-500 mt-0.5" id="selectedPackageData"></p></div>
               <p class="text-lg md:text-xl font-black text-indigo-600" id="selectedPackagePrice"></p>
           </div>
             
@@ -607,11 +607,11 @@ const obs=new IntersectionObserver(entries => {
         if(!s) return;
  if(e.isIntersecting){
        s.style.opacity = '0';
-    s.style.pointerEvents = 'none';
+   s.style.pointerEvents = 'none';
      s.style.transform = 'translateY(20px)';
         } else {
        s.style.opacity = '1';
-    s.style.pointerEvents = 'auto';
+   s.style.pointerEvents = 'auto';
      s.style.transform = 'translateY(0)';
         }
     });
@@ -773,10 +773,10 @@ async function apiGet(path){
           if (shield) {
               let parsed = JSON.parse(shield);
               if (Date.now() < parsed.expire) {
-               order.pendingUpgrade = parsed.pendingUpgrade;
-               order.isUpgrade = true;
+              order.pendingUpgrade = parsed.pendingUpgrade;
+              order.isUpgrade = true;
               } else {
-               localStorage.removeItem('shield_pending_' + order.id);
+              localStorage.removeItem('shield_pending_' + order.id);
               }
           }
       });
@@ -1033,7 +1033,7 @@ function calculateTotal(){
       currentTotalUsd = parseFloat(((currentPackage.usd - baseOrderPriceUsd) * currentMultiplier).toFixed(2));
     if(currentTotalVnd <= 0) currentTotalVnd = 0;
     
-   document.getElementById('upgradePriceNote').innerHTML = `Đơn giá nâng cấp: <b>${(currentPackage.vnd - baseOrderPriceVnd).toLocaleString('en-US')}VND / Tháng</b>`;
+  document.getElementById('upgradePriceNote').innerHTML = `Đơn giá nâng cấp: <b>${(currentPackage.vnd - baseOrderPriceVnd).toLocaleString('en-US')}VND / Tháng</b>`;
  document.getElementById('priceCalculation').innerText = `Thanh toán chênh lệch (${currentMultiplier} tháng): ${currentTotalVnd.toLocaleString('en-US')}VND`;
   } else {
  currentTotalVnd=currentPackage.vnd*currentMultiplier;
@@ -1151,7 +1151,7 @@ async function submitOrder(e){
     } else {
         let existingOrder = db.find(x => x.email && x.email.toLowerCase() === emailInput && x.status === 'success' && !isOrderExpired(x.expDate));
         if (existingOrder) {
-            targetOrder = existingOrder;
+           targetOrder = existingOrder;
         }
     }
     
@@ -1160,35 +1160,35 @@ async function submitOrder(e){
         let parts = targetOrder.expDate.split("/");
         if (parts.length === 3) {
             let d = new Date();
-            d.setFullYear(parseInt(parts[2]));
-            d.setMonth(parseInt(parts[1]) - 1);
-            d.setDate(parseInt(parts[0]));
-            d.setHours(23, 59, 59);
-
+           d.setFullYear(parseInt(parts[2]));
+           d.setMonth(parseInt(parts[1]) - 1);
+           d.setDate(parseInt(parts[0]));
+           d.setHours(23, 59, 59);
+ 
             if (d.getTime() > Date.now()) {
                 if (currentPackage.time !== 'lifetime') {
-                    d.setMonth(d.getMonth() + currentMultiplier);
-                    calculatedExp = d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
+                   d.setMonth(d.getMonth() + currentMultiplier);
+                   calculatedExp = d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
                 } else {
-                    calculatedExp = 'Vĩnh viễn';
+                   calculatedExp = 'Vĩnh viễn';
                 }
             }
         }
     }
-
+ 
     if (!calculatedExp) {
         if (currentPackage.time === 'lifetime') {
-            calculatedExp = 'Vĩnh viễn';
+           calculatedExp = 'Vĩnh viễn';
         } else {
-            let d = new Date();
-            d.setMonth(d.getMonth() + currentMultiplier);
-            calculatedExp = d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
+           let d = new Date();
+           d.setMonth(d.getMonth() + currentMultiplier);
+           calculatedExp = d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
         }
     }
-
+ 
     // Vấn đề 1: Sửa logic nối chuỗi lưu thông tin gói
     let pkgString = `${currentPackage.vi.name} - ${fp} • HSD:`;
-
+ 
     pendingDraftOrder = {
  id:currentOrderId,email:document.getElementById('cusEmail').value.trim(),zalo:zaloStore,
  method:mname,pkgName:currentPackage.vi.name,pkgData:currentPackage.data,
@@ -1284,11 +1284,11 @@ async function confirmPaid(){
          
          // Lá chắn pendingUpgrade chặn KV đè
         localStorage.setItem('shield_pending_' + o.id, JSON.stringify({
-          pendingUpgrade: pendingDraftUpgrade,
+         pendingUpgrade: pendingDraftUpgrade,
              expire: Date.now() + 300000
          }));
  
-   updatePortalInfo(o);
+  updatePortalInfo(o);
      }
      
      try {
@@ -1353,9 +1353,9 @@ function isOrderExpired(expDateStr) {
     const parts = expDateStr.split("/");
     if(parts.length === 3) {
         const d = new Date();
-      d.setFullYear(parseInt(parts[2]));
-      d.setMonth(parseInt(parts[1]) - 1);
-      d.setDate(parseInt(parts[0]));
+     d.setFullYear(parseInt(parts[2]));
+     d.setMonth(parseInt(parts[1]) - 1);
+     d.setDate(parseInt(parts[0]));
         d.setHours(23, 59, 59);
         return Date.now() > d.getTime();
     }
@@ -1432,8 +1432,8 @@ function updatePortalInfo(o){
         upgClass = "bg-green-100 text-green-700";
     }
     
-   document.getElementById('displayUpgradeStatus').innerText = upgText;
-   document.getElementById('displayUpgradeStatus').className = `text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap ${upgClass}`;
+  document.getElementById('displayUpgradeStatus').innerText = upgText;
+  document.getElementById('displayUpgradeStatus').className = `text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap ${upgClass}`;
  
     let subTimeStr = (o.date && o.date.includes(" - ")) ? o.date.split(" - ")[0] : "";
     let subDateText = o.expDate ? `${subTimeStr ? subTimeStr + " - " : ""}${o.expDate}` : "Vĩnh viễn";
@@ -1441,23 +1441,28 @@ function updatePortalInfo(o){
     const blurConf = cmsCache?.settings || {};
  
     const linksObj = [
-        { el: 'subLink1', blurKey: 'blurWeb1', dtEl: 'subDate1', realVal: o.info1 || o.info || '' },
-        { el: 'subLink2', blurKey: 'blurWeb2', dtEl: 'subDate2', realVal: o.info2 || '' },
-        { el: 'subLink3', blurKey: 'blurWeb3', dtEl: 'subDate3', realVal: o.info3 || '' }
+        { el: 'subLink1', blurKey: 'blurWeb1', routeKey: 'routeWeb1', dtEl: 'subDate1', realVal: o.info1 || o.info || '' },
+        { el: 'subLink2', blurKey: 'blurWeb2', routeKey: 'routeWeb2', dtEl: 'subDate2', realVal: o.info2 || '' },
+        { el: 'subLink3', blurKey: 'blurWeb3', routeKey: 'routeWeb3', dtEl: 'subDate3', realVal: o.info3 || '' }
     ];
  
-  // Vấn đề 4D: Gỡ class blur và dán URL thật chỉ được Javascript thực thi
+  // Vấn đề 4D (Fixed): Gỡ class blur và dán URL thật chỉ được Javascript thực thi sau khi pass điều kiện
   linksObj.forEach(obj => {
         const inp = document.getElementById(obj.el);
         const dt = document.getElementById(obj.dtEl);
         if (inp && dt) {
-            if (blurConf[obj.blurKey]) {
+            let isRouteMatch = true;
+            if (blurConf[obj.routeKey] && !currentTargetWeb.includes(blurConf[obj.routeKey])) {
+                isRouteMatch = false;
+            }
+
+            if (blurConf[obj.blurKey] && isRouteMatch) {
              inp.value = i18n[lang].web3_maintenance;
              inp.classList.add('blur-link');
              dt.innerText = "";
             } else {
              inp.value = obj.realVal || "********";
-             if (obj.realVal && obj.realVal !== "********") inp.classList.remove('blur-link');
+             inp.classList.remove('blur-link');
              dt.innerText = "";
             }
         }
@@ -1469,11 +1474,11 @@ function updatePortalInfo(o){
     if (lastReq && Date.now() - parseInt(lastReq) < 300000) {
      dataBtn.innerHTML = `<i class="fas fa-check-circle mr-1.5"></i> ${lang==='vi'?'Đã gửi yêu cầu':lang==='en'?'Request sent':'请求已发送'}`;
       dataBtn.disabled = true;
-  dataBtn.classList.remove('btn-heartbeat');
+ dataBtn.classList.remove('btn-heartbeat');
     } else {
      dataBtn.innerHTML = `<i class="fas fa-chart-pie mr-1.5"></i><span data-i18n="btn_check_data">${i18n[lang].btn_check_data}</span>`;
       dataBtn.disabled = false;
-  dataBtn.classList.add('btn-heartbeat');
+ dataBtn.classList.add('btn-heartbeat');
     }
  
   };
@@ -1481,8 +1486,8 @@ function updatePortalInfo(o){
   if (o.status === 'success') {
       if (lastPkg && lastPkg !== o.pkg && !o.pendingUpgrade) {
       if(upgradeBadge) {
-      upgradeBadge.classList.remove('hidden');
-      upgradeBadge.className = "absolute top-0 right-0 bg-red-600 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md z-10";
+     upgradeBadge.classList.remove('hidden');
+     upgradeBadge.className = "absolute top-0 right-0 bg-red-600 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md z-10";
       }
       }
  localStorage.setItem(lastPkgCacheKey, o.pkg);
@@ -1491,24 +1496,24 @@ function updatePortalInfo(o){
   if (o.status === 'success' && o.pendingUpgrade) {
       const isManual = o.method && (o.method.includes('Alipay') || o.method.includes('WeChat'));
       if (isManual) {
-    document.getElementById('portalContentManual').classList.remove('hidden');
+   document.getElementById('portalContentManual').classList.remove('hidden');
       } else {
-    document.getElementById('portalContentPending').classList.remove('hidden');
-    document.getElementById('pendingTitleUI').innerText = i18n[lang].checking_upgrade;
+   document.getElementById('portalContentPending').classList.remove('hidden');
+   document.getElementById('pendingTitleUI').innerText = i18n[lang].checking_upgrade;
             
             let startTime = o.pendingUpgrade.ts;
             let endTime = startTime + 300000; 
          
          if(Date.now() >= endTime) {
-      document.getElementById('portalContentPending').classList.add('hidden');
-      document.getElementById('portalContentSuccess').classList.remove('hidden');
+     document.getElementById('portalContentPending').classList.add('hidden');
+     document.getElementById('portalContentSuccess').classList.remove('hidden');
          popFields();
-      if(!globalPollInterval) startGlobalPolling(o.id);
+     if(!globalPollInterval) startGlobalPolling(o.id);
              } else {
-       isUpgradePending = true;
-         pendingEndTime = endTime;
-      document.getElementById('pendingActiveState').classList.remove('hidden');
-      startPendingPolling();
+      isUpgradePending = true;
+        pendingEndTime = endTime;
+     document.getElementById('pendingActiveState').classList.remove('hidden');
+     startPendingPolling();
              }
       }
       return; 
@@ -1525,22 +1530,22 @@ function updatePortalInfo(o){
   else if(o.status === 'pending'){
       const isManual = o.method && (o.method.includes('Alipay') || o.method.includes('WeChat'));
       if (isManual) {
-    document.getElementById('portalContentManual').classList.remove('hidden');
-    if(!globalPollInterval) startGlobalPolling(o.id);
+   document.getElementById('portalContentManual').classList.remove('hidden');
+   if(!globalPollInterval) startGlobalPolling(o.id);
       } else {
-   document.getElementById('portalContentPending').classList.remove('hidden');
-   document.getElementById('pendingTitleUI').innerText = i18n[lang].checking_tx;
+  document.getElementById('portalContentPending').classList.remove('hidden');
+  document.getElementById('pendingTitleUI').innerText = i18n[lang].checking_tx;
          
          let startTime = o.createdTs || parseOrderDate(o.date);
          let endTime = startTime + 300000;
         
          if(Date.now() >= endTime) {
-   document.getElementById('pendingTimeoutState').classList.remove('hidden');
-   if(!globalPollInterval) startGlobalPolling(o.id); 
+  document.getElementById('pendingTimeoutState').classList.remove('hidden');
+  if(!globalPollInterval) startGlobalPolling(o.id); 
           } else {
         pendingEndTime = endTime;
-   document.getElementById('pendingActiveState').classList.remove('hidden');
-   startPendingPolling();
+  document.getElementById('pendingActiveState').classList.remove('hidden');
+  startPendingPolling();
           }
       }
   }
@@ -1591,16 +1596,6 @@ function updateTimerUI(leftStr) {
   }
 }
  
-function startGlobalPolling(orderId) {
- if(globalPollInterval) clearInterval(globalPollInterval);
-  globalPollInterval = setInterval(async () => {
-    let db = await apiGet('/api/orders');
- if(!Array.isArray(db)) return;
-    let o = db.find(x => x.id === orderId);
-    if(o) updatePortalInfo(o);
-  }, 1500); // Vấn đề 4D: Giảm thời gian quét trạng thái đơn hàng
-}
- 
 async function login(isManualRefresh=false,isAutoPoll=false){
   const input=document.getElementById('loginInput').value.trim().toUpperCase();if(!input)return;
   
@@ -1624,10 +1619,12 @@ async function login(isManualRefresh=false,isAutoPoll=false){
  document.getElementById('mobileNavWrapper').classList.remove('hidden');
  if(!isAutoPoll&&!isManualRefresh)switchPortalTab('p-home');
  
+  // Vấn đề 2 (Fixed): Đẩy fetch cmsCache lên chạy TRƯỚC updatePortalInfo để đồng bộ dữ liệu ngay lập tức tránh flash blur UI
+  cmsCache=await apiGet('/api/cms');
+
   updatePortalInfo(o);
   if(!isAutoPoll) startGlobalPolling(o.id);
  
-  cmsCache=await apiGet('/api/cms');
  showGuide('android');
  
  renderPackages('all');
@@ -1639,22 +1636,22 @@ function switchPortalTab(tabId, isFromUpgrade = false){
  if(!isFromUpgrade) disableUpgradeMode();
  document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
  document.querySelectorAll('.desktop-tab-btn').forEach(el=>{
-  el.classList.remove('active','text-white','bg-indigo-600');
-  el.classList.add('text-slate-600', 'hover:bg-slate-100');
+ el.classList.remove('active','text-white','bg-indigo-600');
+ el.classList.add('text-slate-600', 'hover:bg-slate-100');
  });
  document.querySelectorAll('.mobile-tab-btn').forEach(el=>{
-  el.classList.remove('active','text-indigo-600','bg-[#e0e7ff]');
-  el.classList.add('text-slate-500');
+ el.classList.remove('active','text-indigo-600','bg-[#e0e7ff]');
+ el.classList.add('text-slate-500');
  });
  document.getElementById(tabId).classList.add('active');
   const id=tabId.replace('p-','');
  document.querySelectorAll('.desktop-tab-btn.btn-nav-'+tabId).forEach(el=>{
-  el.classList.add('active','bg-indigo-600','text-white');
-  el.classList.remove('text-slate-600', 'hover:bg-slate-100');
+ el.classList.add('active','bg-indigo-600','text-white');
+ el.classList.remove('text-slate-600', 'hover:bg-slate-100');
  });
  document.querySelectorAll('.mobile-tab-btn.btn-nav-'+tabId).forEach(el=>{
-  el.classList.add('active','text-indigo-600','bg-[#e0e7ff]');
-  el.classList.remove('text-slate-500');
+ el.classList.add('active','text-indigo-600','bg-[#e0e7ff]');
+ el.classList.remove('text-slate-500');
  });
 }
  
@@ -1720,7 +1717,7 @@ window.onload = async function() {
           logout();
       }
   } else {
-  document.getElementById('view-store').classList.add('active'); // Fix blank screen on first load
+ document.getElementById('view-store').classList.add('active'); // Fix blank screen on first load
  renderPackages('all');
   }
   
