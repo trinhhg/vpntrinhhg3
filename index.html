@@ -1,4 +1,4 @@
-<!-- v2.9 - Fix lỗi sync cmsCache, gỡ hardcode blur UI cho input dự phòng - 2026-09-18 -->
+<!-- v3.0 - Fix critical bugs: Global polling, try/catch login, D1 sync, calc HSD, blur UI - 2026-09-19 -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -95,7 +95,7 @@ html.has-user-session #view-portal { display: block !important; }
      try {
          let _p = JSON.parse(_usrSess);
          if (new Date().getTime() - _p.time < 24*3600*1000) {
-       document.documentElement.classList.add('has-user-session');
+      document.documentElement.classList.add('has-user-session');
          }
      } catch(e){}
  }
@@ -258,18 +258,18 @@ html.has-user-session #view-portal { display: block !important; }
                  <i class="fas fa-arrow-up text-blue-500 w-4 text-center"></i>
               <span class="text-[11px] md:text-xs text-slate-500 shrink-0">Nâng cấp:</span>
               <span id="displayUpgradeStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span>
-            </div>
+           </div>
                <div class="flex items-center gap-2 min-w-0 mt-1">
                  <i class="fas fa-check-circle text-green-500 w-4 text-center"></i>
               <span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="status_lbl">Trạng thái:</span>
               <span id="displayStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span>
-            </div>
+           </div>
           </div>
           </div>
           <div class="mt-4 flex justify-center border-t border-slate-100 pt-4">
             <button id="btnRequestData" onclick="requestDataCheck()" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs hover:scale-105 transition shadow-sm flex items-center justify-center btn-heartbeat outline-none">
                  <i class="fas fa-chart-pie mr-1.5"></i><span data-i18n="btn_check_data">Kiểm tra dung lượng</span>
-        </button>
+       </button>
           </div>
           </div>
           
@@ -473,7 +473,7 @@ html.has-user-session #view-portal { display: block !important; }
         <div class="grid lg:grid-cols-2 gap-6">
           <div class="bg-white border border-slate-200 p-5 md:p-8 rounded-3xl flex flex-col shadow-sm">
             <div class="bg-indigo-50 px-5 py-4 rounded-xl mb-5 flex justify-between items-center border border-indigo-100">
-            <div><p class="text-sm font-black text-slate-800 uppercase" id="selectedPackageName"></p><p class="text-xs font-bold text-slate-500 mt-0.5" id="selectedPackageData"></p></div>
+           <div><p class="text-sm font-black text-slate-800 uppercase" id="selectedPackageName"></p><p class="text-xs font-bold text-slate-500 mt-0.5" id="selectedPackageData"></p></div>
               <p class="text-lg md:text-xl font-black text-indigo-600" id="selectedPackagePrice"></p>
           </div>
             
@@ -571,13 +571,31 @@ let baseOrderPriceCny = 0;
 let pendingDraftOrder = null;
 let pendingDraftUpgrade = null;
  
-// QUY ƯỚC RÕ RÀNG (KHÔNG ẢNH HƯỞNG CODE):
-// - https://vpntrinhhg.pages.dev/ là web 1
-// - https://vpntrinhhg2.pages.dev/ là web 2
-// - https://vpntrinhhg3.pages.dev/ là web 3
-// Hãy tự sửa chuỗi dưới đây thành "web 1", "web 2", hoặc "web 3" tương ứng với domain bạn đang deploy
 let currentTargetWeb = "https://vpntrinhhg3.pages.dev/";
  
+const d1Map = {
+  t1: 'monthly_100gb', t2: 'monthly_500gb', c1: 'monthly_1000gb', c2: 'monthly_3000gb',
+  c3: 'yearly_300gb', d1: 'lifetime_200gb', d2: 'lifetime_1000gb', d3: 'lifetime_5000gb', custom: 'custom'
+};
+
+function startGlobalPolling(id) {
+    if (globalPollInterval) clearInterval(globalPollInterval);
+    globalPollInterval = setInterval(async () => {
+        try {
+            cmsCache = await apiGet('/api/cms');
+            const res = await fetch(`${API_URL}/api/order/${id}?_t=${Date.now()}`);
+            if (res.ok) {
+                const order = await res.json();
+                if (order && order.id) {
+                    if (JSON.stringify(order) !== JSON.stringify(oCache)) {
+                        updatePortalInfo(order);
+                    }
+                }
+            }
+        } catch (e) {}
+    }, 10000);
+}
+
 function fmtFullTime(d) {
     return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0') + ' - ' + d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
 }
@@ -607,11 +625,11 @@ const obs=new IntersectionObserver(entries => {
         if(!s) return;
  if(e.isIntersecting){
        s.style.opacity = '0';
-   s.style.pointerEvents = 'none';
+  s.style.pointerEvents = 'none';
      s.style.transform = 'translateY(20px)';
         } else {
        s.style.opacity = '1';
-   s.style.pointerEvents = 'auto';
+  s.style.pointerEvents = 'auto';
      s.style.transform = 'translateY(0)';
         }
     });
@@ -636,7 +654,7 @@ const i18n={
  guide_title:"Hướng dẫn Thanh toán",guide_desc:"1. Điền Email, chọn thời gian & phương thức, sau đó tạo đơn để lấy mã QR.<br><br>2. Không áp dụng hoàn tiền, khách hàng vui lòng đọc kỹ điều kiện này khi mua hàng.", guide_desc_upgrade:"3. Nâng gói chỉ nâng số GB và giới hạn thiết bị, không kéo dài hạn sử dụng.",
  guide_empty:"<p class='text-center py-8 text-slate-400'>Đang cập nhật hướng dẫn...</p>",
     promo_title:"🚀 Chơi Game & Lướt Mạng Không Giới Hạn!",
-    promo_desc:"Hỗ trợ: <b class='text-yellow-300'>TikTok, Facebook, Messenger, Instagram, Zalo, YouTube...</b><br>Ping thấp: <b class='text-green-300'>Liên Quân Mobile, Genshin Impact...</b>",
+    promo_desc:"Hỗ trợ: <b class='text-yellow-300'>TikTok, Facebook, Messenger, Instagram, Zalo, YouTube...</b><br>Ping thấp: <b class="text-green-300">Liên Quân Mobile, Genshin Impact...</b>",
  data_label:"Dung lượng: ",dev_label:"Giới hạn thiết bị: ",
  dev_unlimited_label:"Không giới hạn thiết bị",speed_label:"Băng thông lên đến 3Gbps",
     btn_buy:"Đăng ký Gói Này",btn_contact:"Liên hệ Admin",
@@ -654,8 +672,9 @@ const i18n={
  pending_wait:"Hệ thống xử lý tự động, vui lòng đợi trong ít phút.",
  pending_timeout:"Chưa nhận được thanh toán",
  pending_manual_title:"Đơn hàng đang chờ Admin duyệt",
- pending_manual_desc:"Vui lòng nhắn tin cho Admin cùng với biên lai để được kích hoạt sớm nhất.", failed_title:"Đơn hàng bị từ chối",
- bank_owner: "Chủ TK:", bank_name: "Ngân hàng:", bank_num: "Số TK:", click_copy: "(NHẤP VÀO MÃ ĐỂ COPY - BẮT BUỘC)", input_manual: "Vui lòng tự nhập nội dung chuyển khoản!", upgrade_confirm_title: "Xác nhận nâng gói", upgrade_confirm_desc: "Vui lòng kiểm tra số tiền chênh lệch và thông tin gói mới. Bấm <b>TẠO MÃ QR CHUYỂN KHOẢN</b> để tạo mã.", req_wait: "Yêu cầu đang chờ xử lý. Vui lòng quay lại sau!", req_sent: "Đã gửi yêu cầu! Vui lòng chờ Email báo cáo.", req_err: "Có lỗi xảy ra, vui lòng thử lại!", select_higher: "Vui lòng chọn gói cao hơn gói hiện tại để nâng cấp", copy_success: "Đã Copy!", not_found: "Không tìm thấy Đơn hàng/Email!", login_success: "Vào cổng thành công!", sending: "Đang gửi...", checking_upgrade: "ĐANG KIỂM TRA GIAO DỊCH NÂNG GÓI...", checking_tx: "ĐANG KIỂM TRA GIAO DỊCH...", admin_rejected: "Admin từ chối giao dịch", unknown: "Chưa xác định", active_upgrade: "Đã kích hoạt - Nâng gói", active: "Đã kích hoạt", web3_maintenance: "Link dự phòng sẽ được Admin mở khi web bảo trì", badge_upgrade_success: "🎉 NÂNG GÓI THÀNH CÔNG", select_renew_pkg: "Vui lòng chọn gói để gia hạn", dev_label_suffix: "Thiết bị", dev_custom: "Tùy chọn"
+ pending_manual_desc:"Vui lòng nhắn tin cho Admin cùng với biên lai để được kích hoạt sớm nhất.",
+failed_title:"Đơn hàng bị từ chối",
+ bank_owner: "Chủ TK:", bank_name: "Ngân hàng:", bank_num: "Số TK:", click_copy: "(NHẤP VÀO MÃ ĐỂ COPY - BẮT BUỘC)", input_manual: "Vui lòng tự nhập nội dung chuyển khoản!", upgrade_confirm_title: "Xác nhận nâng gói", upgrade_confirm_desc: "Vui lòng kiểm tra số tiền chênh lệch và thông tin gói mới. Bấm <b>TẠO MÃ QR CHUYỂN KHOẢN</b> để tạo mã.", req_wait: "Yêu cầu đang chờ xử lý. Vui lòng quay lại sau!", req_sent: "Đã gửi yêu cầu! Vui lòng chờ Email báo cáo.", req_err: "Có lỗi xảy ra, vui lòng thử lại!", select_higher: "Vui lòng chọn gói cao hơn gói hiện tại để nâng cấp", copy_success: "Đã Copy!", not_found: "Không tìm thấy Đơn hàng/Email!", login_success: "Vào cổng thành công!", sending: "Đang gửi...", checking_upgrade: "ĐANG KIỂM TRA GIAO DỊCH NÂNG GÓI...", checking_tx: "ĐANG KIỂM TRA GIAO DỊCH...", admin_rejected: "Admin từ chối giao dịch", unknown: "Chưa xác định", active_upgrade: "Đã kích hoạt - Nâng gói", active: "Đã kích hoạt", web3_maintenance: "Web bảo trì, vui lòng dùng link khác", badge_upgrade_success: "🎉 NÂNG GÓI THÀNH CÔNG", select_renew_pkg: "Vui lòng chọn gói để gia hạn", dev_label_suffix: "Thiết bị", dev_custom: "Tùy chọn"
 },
   en:{brand:"VPN Trinh Hg",search_placeholder:"Order ID or Email...",btn_logout:"Exit",
  tab_p_home:"Home",tab_p_store:"Store",tab_p_guide:"Guide",
@@ -693,7 +712,7 @@ const i18n={
  pending_timeout:"Payment not received",
  pending_manual_title:"Order pending approval",
  pending_manual_desc:"Please message Admin with receipt for fast activation.", failed_title:"Order Rejected",
- bank_owner: "Acc Name:", bank_name: "Bank:", bank_num: "Acc No:", click_copy: "(CLICK MEMO TO COPY - REQUIRED)", input_manual: "Manually enter amount & Memo!", upgrade_confirm_title: "Confirm Upgrade", upgrade_confirm_desc: "Please verify the price difference and new package info. Click <b>CREATE PAYMENT QR</b> to proceed.", req_wait: "Request pending. Try again later!", req_sent: "Request sent! Please check your email later.", req_err: "Error occurred, please try again.", select_higher: "Please select a higher package to upgrade", copy_success: "Copied!", not_found: "Order/Email not found!", login_success: "Login success!", sending: "Sending...", checking_upgrade: "CHECKING UPGRADE TRANSACTION...", checking_tx: "CHECKING TRANSACTION...", admin_rejected: "Transaction rejected by Admin", unknown: "Unknown", active_upgrade: "Active - Upgraded", active: "Active", web3_maintenance: "Backup link will be opened by Admin during maintenance", badge_upgrade_success: "🎉 UPGRADE SUCCESS", select_renew_pkg: "Please select a package to renew", dev_label_suffix: "Devices", dev_custom: "Custom"
+ bank_owner: "Acc Name:", bank_name: "Bank:", bank_num: "Acc No:", click_copy: "(CLICK MEMO TO COPY - REQUIRED)", input_manual: "Manually enter amount & Memo!", upgrade_confirm_title: "Confirm Upgrade", upgrade_confirm_desc: "Please verify the price difference and new package info. Click <b>CREATE PAYMENT QR</b> to proceed.", req_wait: "Request pending. Try again later!", req_sent: "Request sent! Please check your email later.", req_err: "Error occurred, please try again.", select_higher: "Please select a higher package to upgrade", copy_success: "Copied!", not_found: "Order/Email not found!", login_success: "Login success!", sending: "Sending...", checking_upgrade: "CHECKING UPGRADE TRANSACTION...", checking_tx: "CHECKING TRANSACTION...", admin_rejected: "Transaction rejected by Admin", unknown: "Unknown", active_upgrade: "Active - Upgraded", active: "Active", web3_maintenance: "Web is in maintenance, use other links", badge_upgrade_success: "🎉 UPGRADE SUCCESS", select_renew_pkg: "Please select a package to renew", dev_label_suffix: "Devices", dev_custom: "Custom"
 },
   zh:{brand:"VPN Trinh Hg",search_placeholder:"输入订单号或邮箱...",btn_logout:"退出",
      tab_p_home:"主页",tab_p_store:"商店",tab_p_guide:"指南",
@@ -729,7 +748,7 @@ const i18n={
  pending_timeout:"未收到付款",
  pending_manual_title:"订单待管理员审核",
  pending_manual_desc:"请发送付款截图给管理员以快速激活。", failed_title:"订单被拒绝",
- bank_owner: "账户名:", bank_name: "银行:", bank_num: "账号:", click_copy: "(点击复制备注 - 必填)", input_manual: "请手动输入金额和订单号！", upgrade_confirm_title: "确认升级", upgrade_confirm_desc: "请核对差价及新套餐信息。点击 <b>创建支付二维码</b>继续。", req_wait: "请求待处理，请稍后再试！", req_sent: "请求已发送！请稍后检查您的电子邮件。", req_err: "发生错误，请重试！", select_higher: "请选择更高的套餐进行升级", copy_success: "已复制！", not_found: "未找到订单/邮箱！", login_success: "登录成功！", sending: "发送中...", checking_upgrade: "正在检查升级交易...", checking_tx: "正在检查交易...", admin_rejected: "管理员拒绝了交易", unknown: "未知", active_upgrade: "已激活 - 已升级", active: "已激活", web3_maintenance: "备用链接将在网站维护时由管理员开放", badge_upgrade_success: "🎉 升级成功", select_renew_pkg: "请选择续订套餐", dev_label_suffix: "台设备", dev_custom: "自定义"
+ bank_owner: "账户名:", bank_name: "银行:", bank_num: "账号:", click_copy: "(点击复制备注 - 必填)", input_manual: "请手动输入金额和订单号！", upgrade_confirm_title: "确认升级", upgrade_confirm_desc: "请核对差价及新套餐信息。点击 <b>创建支付二维码</b>继续。", req_wait: "请求待处理，请稍后再试！", req_sent: "请求已发送！请稍后检查您的电子邮件。", req_err: "发生错误，请重试！", select_higher: "请选择更高的套餐进行升级", copy_success: "已复制！", not_found: "未找到订单/邮箱！", login_success: "登录成功！", sending: "发送中...", checking_upgrade: "正在检查升级交易...", checking_tx: "正在检查交易...", admin_rejected: "管理员拒绝了交易", unknown: "未知", active_upgrade: "已激活 - 已升级", active: "已激活", web3_maintenance: "网站维护中", badge_upgrade_success: "🎉 升级成功", select_renew_pkg: "请选择续订套餐", dev_label_suffix: "台设备", dev_custom: "自定义"
 }
 };
  
@@ -761,43 +780,28 @@ async function apiGet(path){
     const r=await fetch(API_URL+path+'?_t='+Date.now());
     if(!r.ok)throw new Error("HTTP "+r.status);
     const d=await r.json();
-    
-    if(path === '/api/orders') {
-        const local = JSON.parse(localStorage.getItem(DB_KEY)) || [];
-        const remoteIds = new Set(d.map(x => x.id));
-      local.forEach(lo => { if(!remoteIds.has(lo.id)) d.unshift(lo); });
-      
-      // Lá chắn pendingUpgrade
-      d.forEach(order => {
-          let shield = localStorage.getItem('shield_pending_' + order.id);
-          if (shield) {
-              let parsed = JSON.parse(shield);
-              if (Date.now() < parsed.expire) {
-              order.pendingUpgrade = parsed.pendingUpgrade;
-              order.isUpgrade = true;
-              } else {
-              localStorage.removeItem('shield_pending_' + order.id);
-              }
-          }
-      });
-    }
- 
- localStorage.setItem(path==='/api/orders'?DB_KEY:path.replace(/\//g,'_'),JSON.stringify(d));
+    localStorage.setItem(path==='/api/orders'?DB_KEY:path.replace(/\//g,'_'),JSON.stringify(d));
     return d;
   }catch(e){
     return JSON.parse(localStorage.getItem(path==='/api/orders'?DB_KEY:path.replace(/\//g,'_')))||(path==='/api/orders'?[]:{});
   }
 }
  
-const SYNC_APIS = [
- "https://vpntrinhhg3worker.lucastanora.workers.dev"
-];
- 
-async function apiPost(path, data) {
- localStorage.setItem(path === '/api/orders' ? DB_KEY : path.replace(/\//g,'_'), JSON.stringify(data));
- Promise.allSettled(
-    SYNC_APIS.map(url => fetch(url + path, { method: 'POST', body: JSON.stringify(data) }))
- ).catch(() => {});
+async function apiPostEndpoint(path, data, retries = 3) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const r = await fetch(API_URL + path, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (r.ok) return await r.json();
+            throw new Error(`HTTP ${r.status}`);
+        } catch (e) {
+            if (i === retries - 1) throw e;
+            await new Promise(res => setTimeout(res, 1000));
+        }
+    }
 }
  
 function changeLanguage(val){
@@ -983,9 +987,8 @@ function openCheckout(id){
  if(isUpgradeMode) {
  document.getElementById('checkoutTitle').innerText = i18n[lang].upgrade_confirm_title;
  document.getElementById('durationBlock').classList.remove('hidden');
-// Khôi phục chọn thời gian Nâng Gói
-     currentMultiplier = 1;
-     upgradeConfirmed = false;
+    currentMultiplier = 1;
+    upgradeConfirmed = false;
  document.getElementById('upgradePriceNote').classList.remove('hidden');
  } else {
  document.getElementById('checkoutTitle').innerText = i18n[lang].checkout_title;
@@ -1033,7 +1036,7 @@ function calculateTotal(){
       currentTotalUsd = parseFloat(((currentPackage.usd - baseOrderPriceUsd) * currentMultiplier).toFixed(2));
     if(currentTotalVnd <= 0) currentTotalVnd = 0;
     
-  document.getElementById('upgradePriceNote').innerHTML = `Đơn giá nâng cấp: <b>${(currentPackage.vnd - baseOrderPriceVnd).toLocaleString('en-US')}VND / Tháng</b>`;
+ document.getElementById('upgradePriceNote').innerHTML = `Đơn giá nâng cấp: <b>${(currentPackage.vnd - baseOrderPriceVnd).toLocaleString('en-US')}VND / Tháng</b>`;
  document.getElementById('priceCalculation').innerText = `Thanh toán chênh lệch (${currentMultiplier} tháng): ${currentTotalVnd.toLocaleString('en-US')}VND`;
   } else {
  currentTotalVnd=currentPackage.vnd*currentMultiplier;
@@ -1137,56 +1140,45 @@ async function submitOrder(e){
     const mname=mn==='bank'?'Ngân hàng VN':mn==='alipay'?'Alipay':'WeChat';
     const nowTs = Date.now();
     
-    // Vấn đề 2: Bắt buộc đẩy lên chuỗi rỗng "" nếu khách ko nhập số Zalo
     let cusZaloVal = document.getElementById('cusZalo').value.trim();
     let zaloStore = cusZaloVal || "";
  
-    // Vấn đề 4C: Tính HSD cộng dồn nếu có hạn cũ chưa hết
-    let db=await apiGet('/api/orders');if(!Array.isArray(db))db=[];
+    let db = await apiGet('/api/orders'); if(!Array.isArray(db)) db = [];
     let emailInput = document.getElementById('cusEmail').value.trim().toLowerCase();
     
     let targetOrder = null;
+    let maxExpTime = 0;
+    
     if (isRenewMode && oCache) {
         targetOrder = oCache;
+        maxExpTime = parseOrderDate(oCache.expDate + " - 23:59:59");
     } else {
-        let existingOrder = db.find(x => x.email && x.email.toLowerCase() === emailInput && x.status === 'success' && !isOrderExpired(x.expDate));
-        if (existingOrder) {
-           targetOrder = existingOrder;
+        let existingOrders = db.filter(x => x.email && x.email.toLowerCase() === emailInput && x.status === 'success' && !isOrderExpired(x.expDate));
+        for (let eo of existingOrders) {
+            let exp = parseOrderDate(eo.expDate + " - 23:59:59");
+            if (exp > maxExpTime) {
+                maxExpTime = exp;
+                targetOrder = eo;
+            }
         }
     }
     
     let calculatedExp = '';
-    if (targetOrder && targetOrder.expDate && targetOrder.expDate !== 'Vĩnh viễn') {
-        let parts = targetOrder.expDate.split("/");
-        if (parts.length === 3) {
-            let d = new Date();
-           d.setFullYear(parseInt(parts[2]));
-           d.setMonth(parseInt(parts[1]) - 1);
-           d.setDate(parseInt(parts[0]));
-           d.setHours(23, 59, 59);
- 
-            if (d.getTime() > Date.now()) {
-                if (currentPackage.time !== 'lifetime') {
-                   d.setMonth(d.getMonth() + currentMultiplier);
-                   calculatedExp = d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
-                } else {
-                   calculatedExp = 'Vĩnh viễn';
-                }
-            }
+    let monthsToAdd = currentPackage.time === 'lifetime' ? 0 : currentPackage.time * currentMultiplier;
+
+    if (currentPackage.time === 'lifetime') {
+        calculatedExp = 'Vĩnh viễn';
+    } else {
+        let baseDate = (maxExpTime > Date.now()) ? new Date(maxExpTime) : new Date();
+        let tempDate = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
+        let origDate = tempDate.getDate();
+        tempDate.setMonth(tempDate.getMonth() + monthsToAdd);
+        if (tempDate.getDate() < origDate) {
+            tempDate.setDate(0);
         }
+        calculatedExp = tempDate.getDate().toString().padStart(2,'0') + '/' + (tempDate.getMonth()+1).toString().padStart(2,'0') + '/' + tempDate.getFullYear();
     }
  
-    if (!calculatedExp) {
-        if (currentPackage.time === 'lifetime') {
-           calculatedExp = 'Vĩnh viễn';
-        } else {
-           let d = new Date();
-           d.setMonth(d.getMonth() + currentMultiplier);
-           calculatedExp = d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
-        }
-    }
- 
-    // Vấn đề 1: Sửa logic nối chuỗi lưu thông tin gói
     let pkgString = `${currentPackage.vi.name} - ${fp} • HSD:`;
  
     pendingDraftOrder = {
@@ -1194,7 +1186,8 @@ async function submitOrder(e){
  method:mname,pkgName:currentPackage.vi.name,pkgData:currentPackage.data,
  pkg:pkgString,
  totalVnd:currentTotalVnd,needSupport:document.getElementById('needSupport').checked,
- status:'pending',date:fmtFullTime(new Date()), createdTs: nowTs, 
+ status:'pending',date:fmtFullTime(new Date()),
+ createdTs: nowTs, 
  expDate:calculatedExp,daysLeft:'',info:'',info2:'',info3:'',nickname:'',reason:'',
     isRenew: isRenewMode, targetOrderId: targetOrder ? targetOrder.id : null, sourceWeb: currentTargetWeb
     };
@@ -1221,7 +1214,6 @@ async function confirmPaid(){
   
   const fp=lang==='vi'?`${currentTotalVnd.toLocaleString('en-US')}VND`:lang==='en'?`$${currentTotalUsd}`:`¥${currentTotalCny}`;
   const cy2=currentMultiplier+' Tháng';
-  const mn=document.getElementById('payMethod').value;
   const dispId = isUpgradeMode ? oCache.id : currentOrderId;
   const cusZaloVal = document.getElementById('cusZalo').value || 'Không nhập';
   
@@ -1255,57 +1247,50 @@ async function confirmPaid(){
       html: htmlAdmin
  })}).catch(()=>{});
  
-  let db=await apiGet('/api/orders');if(!Array.isArray(db))db=[];
-  const webhookUrl = (cmsCache.settings && cmsCache.settings.syncD1Url) ? cmsCache.settings.syncD1Url.replace(/\/$/, '') : API_URL;
-  const webhookSecret = (cmsCache.settings && cmsCache.settings.syncD1Secret) ? cmsCache.settings.syncD1Secret : "";
- 
   if (!isUpgradeMode && pendingDraftOrder) {
- pendingDraftOrder.createdTs = Date.now();
- db.unshift(pendingDraftOrder);
-     await apiPost('/api/orders', db);
+     pendingDraftOrder.createdTs = Date.now();
+     pendingDraftOrder.orderType = isRenewMode ? 'renew' : 'new';
+     pendingDraftOrder.targetPackageId = d1Map[currentPackage.id] || currentPackage.id;
      
- updatePortalInfo(pendingDraftOrder);
- 
      try {
-      fetch(webhookUrl + "/api/orders", {
-             method: "POST",
-             headers: { "Content-Type": "application/json", "Authorization": "Bearer " + webhookSecret },
-             body: JSON.stringify({ orderId: currentOrderId, totalVnd: currentTotalVnd, targetWeb: currentTargetWeb, email: pendingDraftOrder.email })
-    }).catch(()=>{});
-     } catch(err) {}
- 
+         await apiPostEndpoint('/api/order/create', pendingDraftOrder);
+         updatePortalInfo(pendingDraftOrder);
+     } catch (err) {
+         showToast('Lỗi mạng, vui lòng thử lại', 'error');
+         btn.innerHTML = `<i class="fas fa-check-circle mr-2"></i>${i18n[lang].btn_paid}`;
+         btn.disabled = false;
+         return;
+     }
      pendingDraftOrder = null;
   } else if (isUpgradeMode && pendingDraftUpgrade) {
-     let o = db.find(x => x.id === oCache.id);
-     if(o) {
-      o.pendingUpgrade = pendingDraftUpgrade;
-         o.isUpgrade = true;
-         await apiPost('/api/orders', db);
-         
-         // Lá chắn pendingUpgrade chặn KV đè
-        localStorage.setItem('shield_pending_' + o.id, JSON.stringify({
-         pendingUpgrade: pendingDraftUpgrade,
-             expire: Date.now() + 300000
-         }));
- 
-  updatePortalInfo(o);
-     }
+     let upgData = {
+         orderId: oCache.id,
+         upgrade: {
+             id: 'UPG' + Date.now(),
+             from: oCache.pkgName,
+             to: currentPackage.vi.name,
+             amount: currentTotalVnd,
+             status: 'pending',
+             ts: Date.now()
+         },
+         targetPackageId: d1Map[currentPackage.id] || currentPackage.id,
+         email: oCache.email
+     };
      
      try {
-      fetch(webhookUrl + "/api/orders", {
-             method: "POST",
-             headers: { "Content-Type": "application/json", "Authorization": "Bearer " + webhookSecret },
-             body: JSON.stringify({ orderId: oCache.id, totalVnd: currentTotalVnd, isUpgrade: true, targetWeb: currentTargetWeb, email: o?.email || "" })
-    }).catch(()=>{});
- 
-      fetch(webhookUrl + "/api/upgrades", {
-             method: "POST",
-             headers: { "Content-Type": "application/json", "Authorization": "Bearer " + webhookSecret },
-             body: JSON.stringify({ orderId: oCache.id, targetPackageId: currentPackage.id, amount: currentTotalVnd })
-    }).catch(()=>{});
-     } catch(err) {}
-     
-   pendingDraftUpgrade = null;
+         await apiPostEndpoint('/api/upgrade/create', upgData);
+         oCache.isUpgrade = true;
+         oCache.upgrades = oCache.upgrades || [];
+         oCache.upgrades.push(upgData.upgrade);
+         oCache.pendingUpgrade = upgData.upgrade; 
+         updatePortalInfo(oCache);
+     } catch(err) {
+         showToast('Lỗi mạng, vui lòng thử lại', 'error');
+         btn.innerHTML = `<i class="fas fa-check-circle mr-2"></i>${i18n[lang].btn_paid}`;
+         btn.disabled = false;
+         return;
+     }
+     pendingDraftUpgrade = null;
   }
   
  showToast(lang==='vi'?'Thành công!':'Success!','success');
@@ -1347,15 +1332,14 @@ function parseOrderDate(dateStr) {
   return Date.now() - 300000; 
 }
  
-// Issue 1: Expiry date fix parser
 function isOrderExpired(expDateStr) {
     if(!expDateStr || expDateStr === "Vĩnh viễn" || expDateStr.includes("Lifetime") || expDateStr.includes("永久")) return false;
     const parts = expDateStr.split("/");
     if(parts.length === 3) {
         const d = new Date();
-     d.setFullYear(parseInt(parts[2]));
-     d.setMonth(parseInt(parts[1]) - 1);
-     d.setDate(parseInt(parts[0]));
+    d.setFullYear(parseInt(parts[2]));
+    d.setMonth(parseInt(parts[1]) - 1);
+    d.setDate(parseInt(parts[0]));
         d.setHours(23, 59, 59);
         return Date.now() > d.getTime();
     }
@@ -1408,17 +1392,16 @@ function updatePortalInfo(o){
  document.getElementById('displayExp').innerText = o.expDate || i18n[lang].unknown;
  
     let isExpired = isOrderExpired(o.expDate);
-    let statusText = i18n[lang].active; // "Đã kích hoạt"
+    let statusText = i18n[lang].active; 
     let statusClass = "bg-green-100 text-green-700";
     
     if (isExpired) {
-        statusText = i18n[lang].expired_lbl; // "Đã hết hạn"
+        statusText = i18n[lang].expired_lbl;
         statusClass = "bg-red-100 text-red-700"; 
     }
  document.getElementById('displayStatus').innerText = statusText;
  document.getElementById('displayStatus').className = `text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap ${statusClass}`;
  
-    // Nâng cấp logic
     let upgText = "Không";
     let upgClass = "bg-slate-100 text-slate-500";
     if (o.pendingUpgrade) {
@@ -1432,8 +1415,8 @@ function updatePortalInfo(o){
         upgClass = "bg-green-100 text-green-700";
     }
     
-  document.getElementById('displayUpgradeStatus').innerText = upgText;
-  document.getElementById('displayUpgradeStatus').className = `text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap ${upgClass}`;
+ document.getElementById('displayUpgradeStatus').innerText = upgText;
+ document.getElementById('displayUpgradeStatus').className = `text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap ${upgClass}`;
  
     let subTimeStr = (o.date && o.date.includes(" - ")) ? o.date.split(" - ")[0] : "";
     let subDateText = o.expDate ? `${subTimeStr ? subTimeStr + " - " : ""}${o.expDate}` : "Vĩnh viễn";
@@ -1441,32 +1424,26 @@ function updatePortalInfo(o){
     const blurConf = cmsCache?.settings || {};
  
     const linksObj = [
-        { el: 'subLink1', blurKey: 'blurWeb1', routeKey: 'routeWeb1', dtEl: 'subDate1', realVal: o.info1 || o.info || '' },
-        { el: 'subLink2', blurKey: 'blurWeb2', routeKey: 'routeWeb2', dtEl: 'subDate2', realVal: o.info2 || '' },
-        { el: 'subLink3', blurKey: 'blurWeb3', routeKey: 'routeWeb3', dtEl: 'subDate3', realVal: o.info3 || '' }
+        { el: 'subLink1', blurKey: 'blurWeb1', dtEl: 'subDate1', realVal: o.info1 || o.info || '' },
+        { el: 'subLink2', blurKey: 'blurWeb2', dtEl: 'subDate2', realVal: o.info2 || '' },
+        { el: 'subLink3', blurKey: 'blurWeb3', dtEl: 'subDate3', realVal: o.info3 || '' }
     ];
  
-  // Vấn đề 4D (Fixed): Gỡ class blur và dán URL thật chỉ được Javascript thực thi sau khi pass điều kiện
   linksObj.forEach(obj => {
-        const inp = document.getElementById(obj.el);
-        const dt = document.getElementById(obj.dtEl);
-        if (inp && dt) {
-            let isRouteMatch = true;
-            if (blurConf[obj.routeKey] && !currentTargetWeb.includes(blurConf[obj.routeKey])) {
-                isRouteMatch = false;
-            }
-
-            if (blurConf[obj.blurKey] && isRouteMatch) {
+      const inp = document.getElementById(obj.el);
+      const dt = document.getElementById(obj.dtEl);
+      if (inp && dt) {
+          if (blurConf[obj.blurKey]) {
              inp.value = i18n[lang].web3_maintenance;
              inp.classList.add('blur-link');
              dt.innerText = "";
-            } else {
-             inp.value = obj.realVal || "********";
+          } else {
+             inp.value = obj.realVal || "Đang tạo link...";
              inp.classList.remove('blur-link');
              dt.innerText = "";
-            }
-        }
-    });
+          }
+      }
+  });
     
     const cdKey = 'data_req_' + o.id;
     const lastReq = localStorage.getItem(cdKey);
@@ -1486,8 +1463,8 @@ function updatePortalInfo(o){
   if (o.status === 'success') {
       if (lastPkg && lastPkg !== o.pkg && !o.pendingUpgrade) {
       if(upgradeBadge) {
-     upgradeBadge.classList.remove('hidden');
-     upgradeBadge.className = "absolute top-0 right-0 bg-red-600 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md z-10";
+    upgradeBadge.classList.remove('hidden');
+    upgradeBadge.className = "absolute top-0 right-0 bg-red-600 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md z-10";
       }
       }
  localStorage.setItem(lastPkgCacheKey, o.pkg);
@@ -1496,24 +1473,24 @@ function updatePortalInfo(o){
   if (o.status === 'success' && o.pendingUpgrade) {
       const isManual = o.method && (o.method.includes('Alipay') || o.method.includes('WeChat'));
       if (isManual) {
-   document.getElementById('portalContentManual').classList.remove('hidden');
+  document.getElementById('portalContentManual').classList.remove('hidden');
       } else {
-   document.getElementById('portalContentPending').classList.remove('hidden');
-   document.getElementById('pendingTitleUI').innerText = i18n[lang].checking_upgrade;
+  document.getElementById('portalContentPending').classList.remove('hidden');
+  document.getElementById('pendingTitleUI').innerText = i18n[lang].checking_upgrade;
             
             let startTime = o.pendingUpgrade.ts;
             let endTime = startTime + 300000; 
          
          if(Date.now() >= endTime) {
-     document.getElementById('portalContentPending').classList.add('hidden');
-     document.getElementById('portalContentSuccess').classList.remove('hidden');
+    document.getElementById('portalContentPending').classList.add('hidden');
+    document.getElementById('portalContentSuccess').classList.remove('hidden');
          popFields();
-     if(!globalPollInterval) startGlobalPolling(o.id);
+    if(!globalPollInterval) startGlobalPolling(o.id);
              } else {
       isUpgradePending = true;
         pendingEndTime = endTime;
-     document.getElementById('pendingActiveState').classList.remove('hidden');
-     startPendingPolling();
+    document.getElementById('pendingActiveState').classList.remove('hidden');
+    startPendingPolling();
              }
       }
       return; 
@@ -1530,22 +1507,22 @@ function updatePortalInfo(o){
   else if(o.status === 'pending'){
       const isManual = o.method && (o.method.includes('Alipay') || o.method.includes('WeChat'));
       if (isManual) {
-   document.getElementById('portalContentManual').classList.remove('hidden');
-   if(!globalPollInterval) startGlobalPolling(o.id);
+  document.getElementById('portalContentManual').classList.remove('hidden');
+  if(!globalPollInterval) startGlobalPolling(o.id);
       } else {
-  document.getElementById('portalContentPending').classList.remove('hidden');
-  document.getElementById('pendingTitleUI').innerText = i18n[lang].checking_tx;
+ document.getElementById('portalContentPending').classList.remove('hidden');
+ document.getElementById('pendingTitleUI').innerText = i18n[lang].checking_tx;
          
          let startTime = o.createdTs || parseOrderDate(o.date);
          let endTime = startTime + 300000;
         
          if(Date.now() >= endTime) {
-  document.getElementById('pendingTimeoutState').classList.remove('hidden');
-  if(!globalPollInterval) startGlobalPolling(o.id); 
+ document.getElementById('pendingTimeoutState').classList.remove('hidden');
+ if(!globalPollInterval) startGlobalPolling(o.id); 
           } else {
         pendingEndTime = endTime;
-  document.getElementById('pendingActiveState').classList.remove('hidden');
-  startPendingPolling();
+ document.getElementById('pendingActiveState').classList.remove('hidden');
+ startPendingPolling();
           }
       }
   }
@@ -1556,14 +1533,12 @@ function startPendingPolling() {
  stopPendingPolling();
  countdownTimerInterval = setInterval(() => { updateTimerUI(); }, 1000);
   checkOrderInterval = setInterval(() => {
- apiGet('/api/orders').then(db => {
- if(!Array.isArray(db)) return;
-       let o = db.find(x => x.id === oCache.id);
-       if(o && (o.status !== oCache.status || JSON.stringify(o.pendingUpgrade) !== JSON.stringify(oCache.pendingUpgrade) || o.pkg !== oCache.pkg)) {
+     fetch(`${API_URL}/api/order/${oCache.id}?_t=${Date.now()}`).then(r=>r.json()).then(o => {
+       if(o && o.id && (o.status !== oCache.status || JSON.stringify(o.pendingUpgrade) !== JSON.stringify(oCache.pendingUpgrade) || o.pkg !== oCache.pkg)) {
   updatePortalInfo(o);
        }
   }).catch(()=>{});
-  }, 1500); // Vấn đề 4D: Giảm thời gian quét trạng thái đơn hàng
+  }, 1500); 
 }
  
 function stopPendingPolling() {
@@ -1597,39 +1572,45 @@ function updateTimerUI(leftStr) {
 }
  
 async function login(isManualRefresh=false,isAutoPoll=false){
-  const input=document.getElementById('loginInput').value.trim().toUpperCase();if(!input)return;
-  
-  let db=await apiGet('/api/orders');if(!Array.isArray(db))db=[];
-  let o=db.find(x=>x.id.toUpperCase()===input||(x.email&&x.email.toUpperCase()===input));
-  
-  if(!o){
-     if(!isAutoPoll) showToast(i18n[lang].not_found,'error');
-     if(!isAutoPoll) logout();
-     return;
-  }
- 
- localStorage.setItem(SESSION_KEY,JSON.stringify({id:o.id,time:new Date().getTime()}));
- if(!isManualRefresh&&!isAutoPoll){
- showToast(i18n[lang].login_success,'info');
- window.history.pushState(null, '', '/login.html');
- }
- document.getElementById('view-store').classList.remove('active');document.getElementById('view-portal').classList.add('active');
- document.getElementById('userMenu').classList.remove('hidden');document.getElementById('checkoutSection').classList.add('hidden');
-  const dn=document.getElementById('desktopPortalNav');dn.classList.remove('hidden','opacity-0','w-0');dn.classList.add('md:flex','opacity-100','w-auto');
- document.getElementById('mobileNavWrapper').classList.remove('hidden');
- if(!isAutoPoll&&!isManualRefresh)switchPortalTab('p-home');
- 
-  // Vấn đề 2 (Fixed): Đẩy fetch cmsCache lên chạy TRƯỚC updatePortalInfo để đồng bộ dữ liệu ngay lập tức tránh flash blur UI
-  cmsCache=await apiGet('/api/cms');
+  try {
+     const input=document.getElementById('loginInput').value.trim().toUpperCase();if(!input)return;
+     
+     let db=await apiGet('/api/orders');if(!Array.isArray(db))db=[];
+     let o=db.find(x=>x.id.toUpperCase()===input||(x.email&&x.email.toUpperCase()===input));
+     
+     if(!o){
+         if(!isAutoPoll) showToast(i18n[lang].not_found,'error');
+         if(!isAutoPoll) logout();
+         return;
+     }
 
-  updatePortalInfo(o);
-  if(!isAutoPoll) startGlobalPolling(o.id);
- 
- showGuide('android');
- 
- renderPackages('all');
- if(!isManualRefresh&&!isAutoPoll)window.scrollTo({top:0,behavior:'smooth'});
- document.body.classList.remove('checkout-active');
+     localStorage.setItem(SESSION_KEY,JSON.stringify({id:o.id,time:new Date().getTime()}));
+     if(!isManualRefresh&&!isAutoPoll){
+         showToast(i18n[lang].login_success,'info');
+         window.history.pushState(null, '', '#portal');
+     }
+     
+     document.getElementById('view-store').classList.remove('active');document.getElementById('view-portal').classList.add('active');
+     document.getElementById('userMenu').classList.remove('hidden');document.getElementById('checkoutSection').classList.add('hidden');
+     const dn=document.getElementById('desktopPortalNav');dn.classList.remove('hidden','opacity-0','w-0');dn.classList.add('md:flex','opacity-100','w-auto');
+     document.getElementById('mobileNavWrapper').classList.remove('hidden');
+     if(!isAutoPoll&&!isManualRefresh)switchPortalTab('p-home');
+     
+     cmsCache=await apiGet('/api/cms');
+     
+     updatePortalInfo(o);
+     
+     if(!isAutoPoll) startGlobalPolling(o.id);
+     
+     showGuide('android');
+     
+     renderPackages('all');
+     if(!isManualRefresh&&!isAutoPoll)window.scrollTo({top:0,behavior:'smooth'});
+     document.body.classList.remove('checkout-active');
+  } catch(e) {
+     console.error(e);
+     if(!isAutoPoll) showToast('Lỗi đăng nhập', 'error');
+  }
 }
  
 function switchPortalTab(tabId, isFromUpgrade = false){
@@ -1706,18 +1687,18 @@ window.onload = async function() {
       try {
           const d = JSON.parse(session);
           if (new Date().getTime() - d.time < 24 * 3600 * 1000) {
-        document.getElementById('loginInput').value = d.id;
-              await login(true);
+       document.getElementById('loginInput').value = d.id;
+             await login(true);
           } else {
-        localStorage.removeItem(SESSION_KEY);
-              logout();
+       localStorage.removeItem(SESSION_KEY);
+             logout();
           }
       } catch(e) {
-    localStorage.removeItem(SESSION_KEY);
+   localStorage.removeItem(SESSION_KEY);
           logout();
       }
   } else {
- document.getElementById('view-store').classList.add('active'); // Fix blank screen on first load
+ document.getElementById('view-store').classList.add('active');
  renderPackages('all');
   }
   
@@ -1754,7 +1735,7 @@ async function requestDataCheck() {
       status: "pending",
       date: new Date().toLocaleString('vi-VN')
     });
-    await apiPost('/api/data_requests', reqs);
+    await apiPostEndpoint('/api/data_requests', reqs);
  
     const htmlAdmin = `<div style="font-family:sans-serif; max-width:500px; margin:auto; border:1px solid #e2e8f0; border-radius:10px; padding:20px;">
         <h2 style="color:#2563eb; margin-top:0;">📊 YÊU CẦU CHECK DUNG LƯỢNG!</h2>
