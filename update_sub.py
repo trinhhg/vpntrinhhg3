@@ -1,4 +1,4 @@
-# v2.2 - Full Singbox/Hiddify Config khớp sát config gốc + Batch Push
+# v2.3 - Full Singbox/Hiddify Config khớp sát config gốc + Batch Push
 """
 update_sub.py — VPN Trinh Hg
 GitHub Actions: Chạy 1 lần/ngày lúc 00:00 UTC
@@ -6,7 +6,7 @@ So sánh với config gốc Hiddify: selector, urltest, direct, block, dns-out,
 inbounds (mixed+tun), route rules đầy đủ, experimental cache+clash_api
 """
 
-import requests, base64, urllib.parse, re, datetime, yaml, json, sys, time
+import os, requests, base64, urllib.parse, re, datetime, yaml, json, sys, time
 
 WORKER_DOMAIN  = "https://vpntrinhhg3worker.lucastanora.workers.dev"
 API_LINKS      = f"{WORKER_DOMAIN}/api/links"
@@ -679,9 +679,9 @@ def parse_traffic(header: str) -> dict:
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 def update_all():
-    print("=== VPN Trinh Hg — update_sub.py v2.2 ===")
+    print("=== VPN Trinh Hg — update_sub.py v2.3 ===")
     try:
-        res = requests.get(API_LINKS, timeout=15); res.raise_for_status()
+        res = requests.get(API_LINKS, headers={"Authorization": f"Bearer {os.environ['WEB_API_SECRET2']}"}, timeout=15); res.raise_for_status()
         links_db = res.json()
     except Exception as e:
         print(f"[!] Lấy links thất bại: {e}"); sys.exit(1)
@@ -734,7 +734,7 @@ def update_all():
     if global_subs_payload:
         print(f"\n[+] Đang đẩy BATCH {len(global_subs_payload)} links lên KV...")
         try:
-            push_res = requests.post(API_BATCH_PUSH, json=global_subs_payload, timeout=30)
+            push_res = requests.post(API_BATCH_PUSH, json=global_subs_payload, headers={"Authorization": f"Bearer {os.environ['WEB_API_SECRET2']}"}, timeout=30)
             print(f"  [OK] Batch Push → HTTP {push_res.status_code}")
         except Exception as e: print(f"  [!] Lỗi Batch Push: {e}")
     else:
