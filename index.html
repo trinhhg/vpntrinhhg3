@@ -1,10 +1,10 @@
-<!-- v3.0 - Khách: gọi thẳng Worker (không cần proxy Pages), polling trạng thái, giữ đăng nhập 24h qua F5, blur/3 link từ server, guide dạng khối -->
+<!-- v3.1 - Khách: gọi thẳng Worker (không cần proxy Pages), polling trạng thái, giữ đăng nhập 24h qua F5, blur/3 link từ server, guide dạng khối -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>VPN Trinh Hg - Tốc độ & Bảo mật</title>
+<title>VPNTrinhHg – Lướt mượt như gió</title>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#ffffff">
 <link rel="apple-touch-icon" href="/icon-192.png">
@@ -52,6 +52,17 @@ details>summary::-webkit-details-marker{display:none;}
 .bg-insta{background:linear-gradient(45deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);}.bg-x{background:#000;border:1px solid #333;color:#fff!important;}
 .bg-threads{background:#000;border:1px solid #444;color:#fff!important;}.bg-youtube{background:linear-gradient(135deg,#FF0000,#c40000);}.bg-reddit{background:linear-gradient(135deg,#FF4500,#d13600);}
 .bg-locket{background:#FFD600;color:#000!important;}.bg-netflix{background:#000;color:#E50914!important;border:1px solid #333;}.bg-spotify{background:#1DB954;}.bg-wechat{background:#07C160;}.bg-sc{background:linear-gradient(135deg,#ff7700,#ff3300);}
+.loader-ring{position:relative;width:76px;height:76px;margin:0 auto 14px}
+.loader-ring::before,.loader-ring::after{content:"";position:absolute;inset:0;border-radius:50%}
+.loader-ring::before{border:6px solid #e0e7ff}
+.loader-ring::after{border:6px solid transparent;border-top-color:#4f46e5;border-right-color:#8b5cf6;animation:ringSpin 1s linear infinite}
+.loader-ring i{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#4f46e5;font-size:24px}
+.loader-ring.amber::before{border-color:#fef3c7}.loader-ring.amber::after{border-top-color:#f59e0b;border-right-color:#fb923c}.loader-ring.amber i{color:#d97706}
+@keyframes ringSpin{to{transform:rotate(360deg)}}
+@keyframes dotBlink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.dots span{display:inline-block;animation:dotBlink 1.4s infinite;font-weight:900}.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+.step-chip{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #fde68a;border-radius:12px;padding:8px 12px;font-size:12px;font-weight:700;color:#92400e;text-align:left}
+.step-chip b{background:#f59e0b;color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
 html.has-user-session #view-store{display:none!important;}
 html.has-user-session #view-portal{display:block!important;}
 @media (max-width:767px){body.checkout-active #floatingSocials{display:none!important;}}
@@ -61,7 +72,7 @@ html.has-user-session #view-portal{display:block!important;}
 </script>
 </head>
 <body class="min-h-screen flex flex-col w-full overflow-x-hidden">
-<div id="toastContainer" class="fixed top-[90px] md:top-[100px] right-5 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+<div id="toastContainer" class="fixed top-[90px] md:top-[100px] right-5 z-[9999] flex flex-col items-end gap-2 pointer-events-none"></div>
 
 <div id="floatingSocials" class="fixed bottom-24 md:bottom-6 right-4 md:right-6 flex flex-col gap-3 z-40 transition-all duration-500">
   <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="w-12 h-12 bg-wechat text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce"><i class="fab fa-weixin"></i></button>
@@ -119,29 +130,36 @@ html.has-user-session #view-portal{display:block!important;}
     <div id="p-home" class="portal-tab-content active w-full">
       <div class="bg-white p-4 md:p-8 rounded-3xl mb-8 shadow-sm border border-slate-200 w-full overflow-hidden">
 
-        <div id="portalContentPending" class="hidden bg-indigo-50 border border-indigo-200 p-6 rounded-xl flex flex-col items-center text-center mb-6">
+        <div id="portalContentPending" class="hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-indigo-200 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-sm">
           <div id="pendingActiveState" class="w-full">
-            <i class="fas fa-spinner fa-spin text-3xl text-indigo-500 mb-3"></i>
+            <div class="loader-ring"><i class="fas fa-shield-halved"></i></div>
             <h4 id="pendingTitleUI" class="font-extrabold text-indigo-800 text-sm md:text-lg uppercase">Đang kiểm tra giao dịch...</h4>
-            <div class="my-5"><span id="countdownTimer" class="font-mono text-5xl md:text-6xl font-black text-indigo-600 bg-white px-6 py-3 rounded-2xl shadow-inner border-2 border-indigo-100">05:00</span></div>
-            <p id="pendingWaitText" class="text-indigo-700 text-sm md:text-base font-bold mb-2 animate-pulse">Hệ thống xử lý tự động, vui lòng đợi trong ít phút.</p>
+            <div class="my-4"><span id="countdownTimer" class="font-mono text-4xl md:text-6xl font-black text-indigo-600 bg-white px-6 py-2 md:py-3 rounded-2xl shadow-inner border-2 border-indigo-100">05:00</span></div>
+            <div class="w-full max-w-xs mx-auto h-2 bg-indigo-100 rounded-full overflow-hidden mb-3"><div id="pendingBar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-1000" style="width:100%"></div></div>
+            <p id="pendingWaitText" class="text-indigo-700 text-sm md:text-base font-bold mb-1">Hệ thống xử lý tự động, vui lòng đợi trong ít phút.</p>
+            <div class="dots text-indigo-400 text-xl leading-none"><span>•</span><span>•</span><span>•</span></div>
           </div>
           <div id="pendingTimeoutState" class="hidden w-full mb-2">
             <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-3"></i>
             <h4 id="pendingTimeoutTitle" class="font-extrabold text-red-700 text-sm md:text-lg uppercase">Chưa nhận được thanh toán</h4>
             <p class="text-red-600 text-sm md:text-base font-bold mt-1 mb-2">Đã quá thời gian tự động duyệt. Bạn đã chuyển khoản chưa?</p>
           </div>
-          <div class="w-full flex flex-col items-center mt-2 border-t border-indigo-100 pt-4">
+          <div class="w-full flex flex-col items-center mt-3 border-t border-indigo-100 pt-4">
             <p class="text-slate-500 text-[11px] md:text-sm mb-3 font-medium px-4">Cần hỗ trợ? Hãy nhắn cho Admin.</p>
             <a href="https://zalo.me/0917678211" target="_blank" class="mx-auto bg-[#0068ff] text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition shadow-md"><i class="fas fa-comment-dots text-lg"></i> Nhắn Zalo Admin</a>
           </div>
         </div>
 
-        <div id="portalContentManual" class="hidden bg-yellow-50 border border-yellow-200 p-6 rounded-xl flex flex-col items-center text-center mb-6">
-          <i class="fas fa-hourglass-half text-3xl text-yellow-500 mb-3"></i>
-          <h4 class="font-extrabold text-yellow-800 text-sm md:text-lg uppercase" data-i18n="pending_manual_title">Đơn hàng đang chờ Admin duyệt</h4>
-          <p class="text-yellow-700 text-xs md:text-sm font-bold mt-1 mb-4" data-i18n="pending_manual_desc">Vui lòng nhắn tin cho Admin cùng với biên lai để được kích hoạt sớm nhất.</p>
-          <div class="flex gap-3">
+        <div id="portalContentManual" class="hidden bg-gradient-to-br from-amber-50 via-white to-orange-50 border border-amber-200 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-sm">
+          <div class="loader-ring amber"><i class="fas fa-hourglass-half"></i></div>
+          <h4 class="font-extrabold text-amber-800 text-sm md:text-lg uppercase" data-i18n="pending_manual_title">Đơn hàng đang chờ Admin duyệt</h4>
+          <p class="text-amber-700 text-xs md:text-sm font-bold mt-1 mb-4 max-w-md" data-i18n="pending_manual_desc">Vui lòng nhắn tin cho Admin cùng với biên lai để được kích hoạt sớm nhất.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full max-w-2xl mb-5">
+            <div class="step-chip"><b>1</b><span>Gửi biên lai cho Admin</span></div>
+            <div class="step-chip"><b>2</b><span>Admin kiểm tra &amp; duyệt</span></div>
+            <div class="step-chip"><b>3</b><span>Nhận link, tự cập nhật tại đây</span></div>
+          </div>
+          <div class="flex gap-3 flex-wrap justify-center">
             <a href="https://zalo.me/0917678211" target="_blank" class="bg-[#0068ff] text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-sm shadow-md hover:scale-105 transition"><i class="fas fa-comment-dots"></i> Zalo Admin</a>
             <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="bg-[#07C160] text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-sm shadow-md hover:scale-105 transition"><i class="fab fa-weixin"></i> WeChat</button>
           </div>
@@ -215,12 +233,7 @@ html.has-user-session #view-portal{display:block!important;}
     <div id="p-guide" class="portal-tab-content w-full">
       <div class="bg-white p-4 md:p-8 rounded-3xl mb-8 border border-slate-200 shadow-sm w-full">
         <h2 class="text-xl font-extrabold text-slate-800 mb-6 border-b border-slate-100 pb-4"><i class="fas fa-book-open text-indigo-500 mr-2"></i>Hướng dẫn Cài đặt</h2>
-        <div class="flex flex-wrap gap-2 mb-6 justify-center">
-          <button onclick="showGuide('android')" id="btn-dev-android" class="dev-btn bg-white border border-slate-200 px-5 py-2.5 rounded-xl font-bold flex items-center text-xs md:text-sm shadow-sm hover:bg-slate-50 transition"><i class="fab fa-android text-green-500 text-lg mr-2"></i>Android</button>
-          <button onclick="showGuide('windows')" id="btn-dev-windows" class="dev-btn bg-white border border-slate-200 px-5 py-2.5 rounded-xl font-bold flex items-center text-xs md:text-sm shadow-sm hover:bg-slate-50 transition"><i class="fab fa-windows text-blue-500 text-lg mr-2"></i>Windows</button>
-          <button onclick="showGuide('macos')" id="btn-dev-macos" class="dev-btn bg-white border border-slate-200 px-5 py-2.5 rounded-xl font-bold flex items-center text-xs md:text-sm shadow-sm hover:bg-slate-50 transition"><i class="fab fa-apple text-slate-800 text-lg mr-2"></i>MacOS</button>
-          <button onclick="showGuide('ios')" id="btn-dev-ios" class="dev-btn bg-white border border-slate-200 px-5 py-2.5 rounded-xl font-bold flex items-center text-xs md:text-sm shadow-sm hover:bg-slate-50 transition"><i class="fab fa-app-store-ios text-blue-400 text-lg mr-2"></i>iOS</button>
-        </div>
+        <div id="guideTabs" class="flex flex-wrap gap-2 mb-6 justify-center"></div>
         <div id="guideContent" class="hidden overflow-x-auto w-full"><div id="guideText" class="text-sm text-slate-800 leading-relaxed font-medium"></div></div>
       </div>
       <h3 class="text-xl font-extrabold text-center mb-6 text-slate-800" data-i18n="faq_title">Câu hỏi thường gặp (FAQ)</h3>
@@ -335,7 +348,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 
 const i18n={
  vi:{brand:"VPN Trinh Hg",search_placeholder:"Nhập Mã Đơn hoặc Email...",btn_logout:"Thoát",tab_p_home:"Trang chủ",tab_p_store:"Cửa hàng",tab_p_guide:"Hướng dẫn",pending_title:"Đơn hàng đang chờ Admin duyệt",btn_copy:"COPY LINK",btn_renew:"GIA HẠN",btn_watch_guide:"Chưa biết sử dụng? Xem hướng dẫn ngay!",order_id_label:"Mã Đơn:",pkg_name_label:"Gói VPN:",exp_date_label:"HSD:",status_lbl:"Trạng thái:",
-  hero_title:"Vượt rào cản. <span class='text-indigo-600'>Kết nối thế giới.</span>",hero_desc:"Hệ thống VPN tự động hóa 100%. Nhận Link VPN chỉ trong <b class='text-indigo-600 font-black'>5 phút</b> không cần đợi Admin duyệt.",
+  hero_title:"Chặn thì vượt. <span class='text-indigo-600'>Lướt mượt như gió.</span>",hero_desc:"Hệ thống VPN tự động hóa 100%. Nhận Link VPN chỉ trong <b class='text-indigo-600 font-black'>5 phút</b> không cần đợi Admin duyệt.",
   feat_1:"Mở khóa mọi nền tảng",feat_1_desc:"Truy cập mượt mà Facebook, TikTok, Netflix xuyên quốc gia mà không gặp rào cản địa lý.",feat_2:"Tốc độ cực cao",feat_2_desc:"Độ trễ thấp, tối ưu tuyệt đối cho Game Mobile & Stream video chuẩn 4K.",feat_3:"Không lưu Nhật ký",feat_3_desc:"Bảo mật tuyệt đối thông tin dữ liệu, ẩn danh hoàn toàn trên Internet.",
   tab_all:"Tất cả",tab_travel:"Du lịch",tab_cycle:"Chu kỳ",tab_usage:"Dung lượng",checkout_title:"Thanh toán Đơn hàng",email_placeholder:"Nhập Email nhận đơn",btn_create_order:"TẠO MÃ QR CHUYỂN KHOẢN",btn_paid:"TÔI ĐÃ CHUYỂN KHOẢN",
   month_lbl:"Tháng",choose_dur:"Chọn thời gian:",input_months:"Nhập số tháng:",choose_method:"Phương thức thanh toán:",auto_badge:"Tự động 24/24",email_warning:"Vui lòng nhập đúng Email — mail kích hoạt sẽ gửi về đây.",
@@ -350,7 +363,7 @@ const i18n={
   req_wait:"Yêu cầu đang chờ xử lý. Vui lòng quay lại sau!",req_sent:"Đã gửi yêu cầu! Vui lòng chờ Email báo cáo.",req_err:"Có lỗi xảy ra, vui lòng thử lại!",select_higher:"Vui lòng chọn gói cao hơn gói hiện tại để nâng cấp",copy_success:"Đã Copy!",not_found:"Không tìm thấy Đơn hàng/Email!",login_success:"Vào cổng thành công!",sending:"Đang gửi...",
   checking_upgrade:"ĐANG KIỂM TRA GIAO DỊCH NÂNG GÓI...",checking_tx:"ĐANG KIỂM TRA GIAO DỊCH...",admin_rejected:"Admin từ chối giao dịch",unknown:"Chưa xác định",active:"Đã kích hoạt",web3_maintenance:"Link dự phòng sẽ được Admin mở khi web bảo trì",badge_upgrade_success:"🎉 NÂNG GÓI THÀNH CÔNG",select_renew_pkg:"Vui lòng chọn gói để gia hạn",dev_label_suffix:"Thiết bị",dev_custom:"Tùy chọn",link_generating:"Đang tạo link, vui lòng chờ...",unavailable:"Không khả dụng",upg_none:"Không",upg_pending:"Đang xác minh nâng gói",upg_failed:"Từ chối nâng gói",upg_ok:"Nâng gói thành công",req_sent_btn:"Đã gửi yêu cầu"},
  en:{brand:"VPN Trinh Hg",search_placeholder:"Order ID or Email...",btn_logout:"Exit",tab_p_home:"Home",tab_p_store:"Store",tab_p_guide:"Guide",pending_title:"Order pending approval",btn_copy:"COPY URL",btn_renew:"RENEW",btn_watch_guide:"Don't know how? Read the guide now!",order_id_label:"Order ID:",pkg_name_label:"Plan:",exp_date_label:"Exp:",status_lbl:"Status:",
-  hero_title:"Break barriers. <span class='text-indigo-600'>Connect the world.</span>",hero_desc:"100% automated VPN system. Get your VPN link in <b class='text-indigo-600 font-black'>5 mins</b> without waiting.",
+  hero_title:"Blocked? Bypass it. <span class='text-indigo-600'>Smooth as the wind.</span>",hero_desc:"100% automated VPN system. Get your VPN link in <b class='text-indigo-600 font-black'>5 mins</b> without waiting.",
   feat_1:"Unblock everything",feat_1_desc:"Smoothly access Facebook, TikTok, Netflix globally without barriers.",feat_2:"High Speed",feat_2_desc:"Low latency, fully optimized for Mobile Gaming & 4K Streaming.",feat_3:"No-log Policy",feat_3_desc:"Absolute data privacy, completely anonymous on the Internet.",
   tab_all:"All",tab_travel:"Travel",tab_cycle:"Cycle",tab_usage:"Data",checkout_title:"Checkout",email_placeholder:"Enter your Email",btn_create_order:"CREATE PAYMENT QR",btn_paid:"I HAVE PAID",
   month_lbl:"Mths",choose_dur:"Duration:",input_months:"Input months:",choose_method:"Payment method:",auto_badge:"Auto 24/24",email_warning:"Please enter a valid Email. Activation link will be sent here.",
@@ -365,7 +378,7 @@ const i18n={
   req_wait:"Request pending. Try again later!",req_sent:"Request sent! Please check your email later.",req_err:"Error occurred, please try again.",select_higher:"Please select a higher package to upgrade",copy_success:"Copied!",not_found:"Order/Email not found!",login_success:"Login success!",sending:"Sending...",
   checking_upgrade:"CHECKING UPGRADE TRANSACTION...",checking_tx:"CHECKING TRANSACTION...",admin_rejected:"Transaction rejected by Admin",unknown:"Unknown",active:"Active",web3_maintenance:"Backup link will be opened by Admin during maintenance",badge_upgrade_success:"🎉 UPGRADE SUCCESS",select_renew_pkg:"Please select a package to renew",dev_label_suffix:"Devices",dev_custom:"Custom",link_generating:"Generating link, please wait...",unavailable:"Unavailable",upg_none:"None",upg_pending:"Verifying upgrade",upg_failed:"Upgrade rejected",upg_ok:"Upgrade success",req_sent_btn:"Request sent"},
  zh:{brand:"VPN Trinh Hg",search_placeholder:"输入订单号或邮箱...",btn_logout:"退出",tab_p_home:"主页",tab_p_store:"商店",tab_p_guide:"指南",pending_title:"订单处理中",btn_copy:"复制链接",btn_renew:"续费",btn_watch_guide:"不知如何使用？立即查看指南！",order_id_label:"订单号:",pkg_name_label:"套餐:",exp_date_label:"到期:",status_lbl:"状态:",
-  hero_title:"突破界限。<span class='text-indigo-600'>连接世界。</span>",hero_desc:"100%自动化VPN系统。<b class='text-indigo-600 font-black'>5分钟</b>内获取链接，无需等待审核。",
+  hero_title:"有墙就翻。<span class='text-indigo-600'>如风般顺滑。</span>",hero_desc:"100%自动化VPN系统。<b class='text-indigo-600 font-black'>5分钟</b>内获取链接，无需等待审核。",
   feat_1:"解锁所有平台",feat_1_desc:"无障碍访问Facebook, TikTok, Netflix全球内容。",feat_2:"极速网络",feat_2_desc:"超低延迟，完美支持移动游戏与4K视频流。",feat_3:"无日志记录",feat_3_desc:"绝对数据隐私，互联网上完全匿名。",
   tab_all:"全部",tab_travel:"旅游",tab_cycle:"周期",tab_usage:"流量",checkout_title:"结账",email_placeholder:"输入您的邮箱",btn_create_order:"创建支付二维码",btn_paid:"我已付款",
   month_lbl:"个月",choose_dur:"选择时长：",input_months:"输入月数:",choose_method:"支付方式:",auto_badge:"自动 24/24",email_warning:"请输入有效邮箱，激活链接将发送到此地址。",
@@ -402,24 +415,39 @@ const pkgs=[
  $('dockMarquee').innerHTML=half+half;
 })();
 
-// ---------- Guide dạng khối (dùng chung định dạng với Admin)
+// ---------- Guide dạng khối (cùng định dạng với Admin)
+const DEF_TABS=[{id:'android',name:'Android',ic:'fab fa-android',col:'text-green-500'},{id:'windows',name:'Windows',ic:'fab fa-windows',col:'text-blue-500'},{id:'macos',name:'MacOS',ic:'fab fa-apple',col:'text-slate-800'},{id:'ios',name:'iOS',ic:'fab fa-app-store-ios',col:'text-blue-400'}];
+let curGuide='android';
+const guideTabList=()=>{const t=cfgCache.guides&&cfgCache.guides._tabs;return Array.isArray(t)&&t.length?t:DEF_TABS;};
 function shortcodeToBlocks(t){return String(t||'').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const m=l.match(/^\[(HEADER|SUB|STEP|NOTE|BTN|IMG)\]\s*(.*)$/);if(!m)return{t:'text',x:l};const T=m[1].toLowerCase();if(T==='btn'){const p=m[2].split('|');return{t:'btn',x:(p[0]||'').trim(),u:(p[1]||'').trim()};}if(T==='img')return{t:'img',u:m[2].trim(),x:''};return{t:T,x:m[2]};});}
 const normGuide=g=>Array.isArray(g)?g:shortcodeToBlocks(g);
 const safeUrl=u=>/^https?:\/\//i.test(u||'')?u:'#';
-function renderBlocks(bl){let n=1,h='';for(const b of bl){const x=esc(b.x);
- if(b.t==='header'){n=1;h+=`<div style="background:linear-gradient(90deg,#4f46e5,#8b5cf6);display:inline-block;color:#fff;padding:8px 16px;border-radius:8px;font-weight:800;margin-bottom:12px;box-shadow:0 4px 10px rgba(79,70,229,.3)"><i class="fas fa-star" style="margin-right:8px"></i>${x}</div><br>`;}
- else if(b.t==='sub')h+=`<div style="display:inline-block;background:#e0e7ff;border-left:4px solid #4f46e5;padding:6px 12px;border-radius:4px;margin:15px 0 10px"><h3 style="font-size:14px;font-weight:800;color:#3730a3;margin:0">${x}</h3></div><br>`;
- else if(b.t==='step')h+=`<div style="display:flex;gap:8px;margin-bottom:10px;align-items:flex-start"><span style="background:#4f46e5;color:#fff;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:11px;font-weight:bold;flex-shrink:0">${n++}</span><p style="margin:0;color:#334155;line-height:20px">${x}</p></div>`;
- else if(b.t==='note')h+=`<div style="display:inline-block;max-width:100%;background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;padding:8px 12px;border-radius:6px;margin:10px 0"><p style="margin:0;color:#92400e;line-height:1.5"><b>⚠️ LƯU Ý:</b> ${x}</p></div><br>`;
- else if(b.t==='btn')h+=`<div style="display:inline-block;margin:10px 8px 10px 0"><a href="${esc(safeUrl(b.u))}" target="_blank" rel="noopener" style="display:inline-block;background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;padding:10px 20px;border-radius:10px;font-weight:bold;text-decoration:none;box-shadow:0 4px 15px rgba(109,40,217,.4)"><i class="fas fa-download" style="margin-right:8px"></i>${x||'TẢI VỀ'}</a></div>`;
- else if(b.t==='img')h+=`<img src="${esc(safeUrl(b.u))}" style="max-height:250px;width:auto;max-width:100%;object-fit:contain;border-radius:6px;border:1px solid #e2e8f0;margin:10px 0" />`;
- else h+=`<p style="margin:0 0 10px;color:#334155">${x}</p>`;}return h;}
+const bAlign=b=>b.al==='c'?'center':b.al==='r'?'right':'left';
+function bStyle(b){let st='';if(b.b)st+='font-weight:800;';if(b.i)st+='font-style:italic;';if(b.ul)st+=`text-decoration:underline;text-decoration-color:${b.ul==='red'?'#dc2626':'#0f172a'};text-underline-offset:3px;`;const z={s:'12px',m:'14px',l:'17px',xl:'22px'}[b.sz];if(z)st+=`font-size:${z};`;return st;}
+const bText=b=>esc(b.x).replace(/\n/g,'<br>');
+function guideScroll(id){const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});}
+function renderBlocks(bl,gid){
+ let n=1,h='';const g=gid||'g';
+ bl.forEach((b,idx)=>{const al=bAlign(b),st=bStyle(b),aid=`g-${g}-${idx}`;
+  if(b.t==='header'){n=1;h+=`<div id="${aid}" style="text-align:${al};margin-bottom:12px;scroll-margin-top:100px"><div style="background:linear-gradient(90deg,#4f46e5,#8b5cf6);display:inline-block;color:#fff;padding:8px 16px;border-radius:8px;font-weight:800;box-shadow:0 4px 10px rgba(79,70,229,.3);${st}"><i class="fas fa-star" style="margin-right:8px"></i>${bText(b)}</div></div>`;}
+  else if(b.t==='sub')h+=`<div id="${aid}" style="text-align:${al};margin:15px 0 10px;scroll-margin-top:100px"><div style="display:inline-block;background:#e0e7ff;border-left:4px solid #4f46e5;padding:6px 12px;border-radius:4px;font-weight:800;color:#3730a3;font-size:14px;${st}">${bText(b)}</div></div>`;
+  else if(b.t==='step'){const lb=(b.n!==undefined&&String(b.n).trim()!=='')?esc(b.n):n++;const jc=al==='center'?'center':al==='right'?'flex-end':'flex-start';h+=`<div style="display:flex;gap:8px;margin-bottom:10px;align-items:flex-start;justify-content:${jc}"><span style="background:#4f46e5;color:#fff;min-width:20px;height:20px;padding:0 5px;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:11px;font-weight:bold;flex-shrink:0">${lb}</span><p style="margin:0;color:#334155;line-height:20px;text-align:${al};${st}">${bText(b)}</p></div>`;}
+  else if(b.t==='note')h+=`<div style="text-align:${al};margin:10px 0"><div style="display:inline-block;max-width:100%;background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;padding:8px 12px;border-radius:6px;text-align:left"><p style="margin:0;color:#92400e;line-height:1.5;${st}"><b>⚠️ LƯU Ý:</b> ${bText(b)}</p></div></div>`;
+  else if(b.t==='btn')h+=`<div style="text-align:${al};margin:10px 0"><a href="${esc(safeUrl(b.u))}" target="_blank" rel="noopener" style="display:inline-block;background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;padding:10px 20px;border-radius:10px;font-weight:bold;text-decoration:none;box-shadow:0 4px 15px rgba(109,40,217,.4)"><i class="fas fa-download" style="margin-right:8px"></i>${esc(b.x||'TẢI VỀ')}</a></div>`;
+  else if(b.t==='img')h+=`<div style="text-align:${al}"><img src="${esc(safeUrl(b.u))}" style="max-height:250px;width:auto;max-width:100%;object-fit:contain;border-radius:6px;border:1px solid #e2e8f0;margin:10px 0" /></div>`;
+  else if(b.t==='spacer')h+=`<div style="height:${Math.max(4,Math.min(200,parseInt(b.h)||16))}px"></div>`;
+  else if(b.t==='divider')h+='<hr style="border:0;border-top:1px solid #e2e8f0;margin:16px 0">';
+  else if(b.t==='toc'){const items=bl.map((x,i)=>({x,i})).filter(o=>o.x.t==='header'||o.x.t==='sub');h+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;margin:12px 0"><div style="font-weight:800;color:#4f46e5;margin-bottom:8px;font-size:13px"><i class="fas fa-list-ul" style="margin-right:6px"></i>${esc(b.x||'Xem nhanh')}</div>${items.map(o=>`<a onclick="guideScroll('g-${g}-${o.i}')" style="display:block;cursor:pointer;padding:5px 0 5px ${o.x.t==='sub'?'16px':'0'};color:${o.x.t==='sub'?'#475569':'#3730a3'};font-weight:${o.x.t==='sub'?'600':'800'};font-size:13px"><i class="fas fa-angle-right" style="margin-right:6px;color:#818cf8"></i>${esc(o.x.x)}</a>`).join('')||'<span style="font-size:12px;color:#94a3b8">Chưa có mục nào</span>'}</div>`;}
+  else h+=`<p style="margin:0 0 10px;color:#334155;text-align:${al};${st}">${bText(b)}</p>`;});
+ return h;}
+function renderGuideTabs(){
+ $('guideTabs').innerHTML=guideTabList().map(t=>{const on=t.id===curGuide;const ic=t.img?`<img src="${esc(safeUrl(t.img))}" class="w-5 h-5 mr-2 rounded object-contain">`:`<i class="${esc(t.ic||'fas fa-book')} ${on?'':esc(t.col||'text-indigo-500')} text-lg mr-2"></i>`;
+  return `<button onclick="showGuide('${esc(t.id)}')" id="btn-dev-${esc(t.id)}" class="dev-btn ${on?'active bg-indigo-600 text-white border-indigo-600 shadow-lg scale-105':'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'} border-2 px-5 py-2.5 rounded-xl font-bold flex items-center text-xs md:text-sm transition">${ic}${esc(t.name)}${on?'<i class="fas fa-check-circle ml-2 text-xs opacity-80"></i>':''}</button>`;}).join('');}
 function showGuide(dev){
- document.querySelectorAll('.dev-btn').forEach(b=>b.classList.remove('active','border-indigo-500'));
- $('btn-dev-'+dev).classList.add('active','border-indigo-500');$('guideContent').classList.remove('hidden');
+ if(!guideTabList().some(t=>t.id===dev))dev=guideTabList()[0].id;curGuide=dev;renderGuideTabs();
+ $('guideContent').classList.remove('hidden');
  const bl=normGuide(cfgCache.guides&&cfgCache.guides[dev]);
- $('guideText').innerHTML=bl.length?renderBlocks(bl):i18n[lang].guide_empty;
-}
+ $('guideText').innerHTML=bl.length?renderBlocks(bl,dev):i18n[lang].guide_empty;}
 async function loadConfig(){try{const r=await fetch(WORKER_URL+'/api/public/config?_t='+Date.now(),{cache:'no-store'});if(r.ok){cfgCache=await r.json();}}catch(e){}}
 
 // ---------- API
@@ -427,7 +455,7 @@ async function wpost(path,body){const r=await fetch(WORKER_URL+path,{method:'POS
 async function wpostRetry(path,body,n=3){let last;for(let i=0;i<n;i++){try{last=await wpost(path,body);if(last.ok||last.status<500)return last;}catch(e){last={ok:false,status:0,data:{error:String(e)}};}await new Promise(r=>setTimeout(r,800*(i+1)));}return last;}
 
 function showToast(msg,type='success'){const c=$('toastContainer'),t=document.createElement('div');const bg=type==='error'?'bg-red-500':type==='info'?'bg-blue-500':'bg-green-500';const icon=type==='error'?'fa-times-circle':type==='info'?'fa-info-circle':'fa-check-circle';
- t.className=`${bg} text-white px-4 py-3 rounded-xl shadow-xl flex items-center transform transition-all duration-300 translate-x-full opacity-0 w-[90vw] max-w-sm mb-2`;
+ t.className=`${bg} text-white px-4 py-3 rounded-xl shadow-xl flex items-center transform transition-all duration-300 translate-x-full opacity-0 w-fit max-w-[90vw]`;
  t.innerHTML=`<i class="fas ${icon} mr-2 shrink-0"></i><span class="font-bold text-xs md:text-sm">${esc(msg)}</span>`;c.appendChild(t);setTimeout(()=>t.classList.remove('translate-x-full','opacity-0'),10);setTimeout(()=>{t.classList.add('translate-x-full','opacity-0');setTimeout(()=>t.remove(),300);},3000);}
 
 window.addEventListener('scroll',()=>{const nav=$('mainNav');if(window.scrollY>lastScrollY&&window.scrollY>80)nav.classList.add('nav-hidden');else nav.classList.remove('nav-hidden');lastScrollY=window.scrollY;});
@@ -559,8 +587,10 @@ function updatePortalInfo(o){
  const up=o.pendingUpgrade;
  if(up){if(manual)$('portalContentManual').classList.remove('hidden');else{const end=up.ts+300000;if(now<end){$('portalContentPending').classList.remove('hidden');$('pendingTitleUI').innerText=L.checking_upgrade;$('pendingActiveState').classList.remove('hidden');startTick(end,true);}}}
  if(o.upgradeStatus==='success'&&o.upgradedAt&&now-o.upgradedAt<864e5)$('upgradeSuccessBadge').classList.remove('hidden');}
+const sc=t=>t?t.charAt(0)+t.slice(1).toLowerCase():'';
+function pkgLine(o){const p=pkgs.find(x=>x.id===o.pkgId)||pkgs.find(x=>x.vi.name===o.pkgName&&x.data===o.pkgData);if(!p)return o.pkgName?sc(o.pkgName):'Gói VPN';return `${sc(p.vi.name)} – ${p.vnd.toLocaleString('en-US')}VND`;}
 function fillDashboard(o){
- const L=i18n[lang];$('displayOrderId').innerText=o.id;$('displayEmail').innerText=o.email||'—';$('displayPkg').innerText=o.pkgName?`${o.pkgName} (${o.pkgData})`:'Gói VPN';
+ const L=i18n[lang];$('displayOrderId').innerText=o.id;$('displayEmail').innerText=o.email||'—';$('displayPkg').innerText=pkgLine(o);
  $('displayExp').innerText=o.expDate||L.unknown;
  const life=/vĩnh viễn|lifetime|永久/i.test(o.expDate||'');let exp=false;
  const mm=String(o.expDate||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(!life&&mm)exp=Date.now()+skew>Date.UTC(+mm[3],mm[2]-1,+mm[1],16,59,59);
@@ -580,7 +610,7 @@ function fillDashboard(o){
 function startTick(end,isUpg){
  const tick=()=>{const left=Math.ceil((end-Date.now()-skew)/1000);
   if(left<=0){stopTick();if(isUpg)$('portalContentPending').classList.add('hidden');else{$('pendingActiveState').classList.add('hidden');$('pendingTimeoutState').classList.remove('hidden');}return;}
-  $('countdownTimer').innerText=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');};
+  $('countdownTimer').innerText=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');const bar=$('pendingBar');if(bar)bar.style.width=Math.max(0,Math.min(100,left/3))+'%';};
  tick();tickT=setInterval(tick,1000);}
 function stopTick(){if(tickT){clearInterval(tickT);tickT=null;}}
 
@@ -604,7 +634,7 @@ function enterPortal(o,auto){
  const dn=$('desktopPortalNav');dn.classList.remove('hidden','opacity-0','w-0');dn.classList.add('md:flex','opacity-100','w-auto');$('mobileNavWrapper').classList.remove('hidden');
  if(!auto)switchPortalTab('p-home');
  lastSig=JSON.stringify({...o,serverTime:0});updatePortalInfo(o);
- loadConfig().then(()=>{showGuide('android');if(oCache)updatePortalInfo(oCache);});
+ loadConfig().then(()=>{showGuide(curGuide);if(oCache)updatePortalInfo(oCache);});
  renderPackages('all');pollLoop();document.body.classList.remove('checkout-active');}
 
 async function login(auto=false){
@@ -629,7 +659,7 @@ function switchPortalTab(tabId,fromUpgrade=false){
  $(tabId).classList.add('active');
  document.querySelectorAll('.desktop-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','bg-indigo-600','text-white');el.classList.remove('text-slate-600','hover:bg-slate-100');});
  document.querySelectorAll('.mobile-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','text-indigo-600','bg-[#e0e7ff]');el.classList.remove('text-slate-500');});
- if(tabId==='p-guide'&&!$('guideText').innerHTML)showGuide('android');}
+ if(tabId==='p-guide'&&!$('guideText').innerHTML)showGuide(curGuide);}
 
 function logout(){
  localStorage.removeItem(SESSION_KEY);history.replaceState(null,'',location.pathname);
@@ -640,6 +670,7 @@ function logout(){
 
 window.onload=async function(){
  changeLanguage('vi');
+ if(location.hash==='#wechat')$('wechatModal').classList.remove('hidden');
  let s=null;try{s=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');}catch{}
  if(s&&Date.now()-s.time<864e5){$('loginInput').value=s.id;await login(true);}
  else{if(s)localStorage.removeItem(SESSION_KEY);document.documentElement.classList.remove('has-user-session');$('view-store').classList.add('active');renderPackages('all');}
