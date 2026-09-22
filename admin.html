@@ -336,7 +336,7 @@ const TABS=[["t-ord","fa-box","Đơn hàng"],["t-trans","fa-file-invoice-dollar"
 // ===================== TIỆN ÍCH =====================
 // ===================== TIỆN ÍCH GÓI / GIỜ / WEB =====================
 const PKG_DB={t1:{n:"Gói 1 tháng",d:"100GB",vnd:60000,cny:15.5,m:1},t2:{n:"Gói 1 tháng",d:"500GB",vnd:70000,cny:18,m:1},c1:{n:"Gói 1 tháng",d:"1000GB",vnd:80000,cny:20.5,m:1},c2:{n:"Gói Cao Cấp",d:"3000GB",vnd:200000,cny:50,m:1},c3:{n:"Gói 1 Năm",d:"300GB/tháng",vnd:799000,cny:199,m:12},d1:{n:"Không Giới Hạn",d:"200GB",vnd:200000,cny:52,m:0},d2:{n:"Không Giới Hạn",d:"1000GB",vnd:399000,cny:102,m:0},d3:{n:"Không Giới Hạn",d:"5000GB",vnd:999000,cny:256,m:0}};
-const VND_SEP="."; // đổi thành "," nếu muốn 60,000VND
+const VND_SEP=","; // đổi thành "," nếu muốn 60,000VND
 const fmtVnd=n=>String(Math.round(Number(n)||0)).replace(/\B(?=(\d{3})+(?!\d))/g,VND_SEP);
 const pkgOf=o=>PKG_DB[o.pkgId]||Object.values(PKG_DB).find(p=>p.n===o.pkgName&&p.d===o.pkgData)||null;
 const pkgLabel=o=>{const p=pkgOf(o);return p?`${p.n} - ${fmtVnd(p.vnd)}VND`:(o.pkgName||"—");};
