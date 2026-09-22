@@ -262,7 +262,7 @@ input,select,textarea{font-family:inherit;}
    </div>
    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
     <div class="font-bold text-sm text-slate-800 mb-1"><i class="fas fa-box text-indigo-500 mr-1"></i>4. Chuẩn hóa hiển thị gói VPN</div>
-    <p class="text-[11px] text-slate-500 mb-3">Đưa mọi kiểu cũ (Gói 1 tháng - 60,000VND (100GB), Gói 1 tháng - 60.000đ...) về <b>Gói 1 tháng - 60,000VND</b> và gắn mã gói chuẩn cho đơn cũ. Phần hiển thị trên Admin đã tự đúng, bảng này sửa luôn dữ liệu lưu trong KV.</p>
+    <p class="text-[11px] text-slate-500 mb-3">Đưa mọi kiểu cũ (Gói 1 tháng - 60,000VND (100GB), Gói 1 tháng - 60.000đ...) về <b>Gói 1 tháng - 60.000VND</b> và gắn mã gói chuẩn cho đơn cũ. Phần hiển thị trên Admin đã tự đúng, bảng này sửa luôn dữ liệu lưu trong KV.</p>
     <div class="flex gap-2 mb-3"><button onclick="migratePkg(false)" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2 rounded-lg text-xs hover:bg-slate-200">Quét thử</button><button onclick="migratePkg(true)" class="flex-1 bg-indigo-600 text-white font-bold py-2 rounded-lg text-xs hover:bg-indigo-700">Áp dụng</button></div>
     <div id="pkgReport" class="text-xs text-slate-600 space-y-1"></div>
    </div>
@@ -336,7 +336,7 @@ const TABS=[["t-ord","fa-box","Đơn hàng"],["t-trans","fa-file-invoice-dollar"
 // ===================== TIỆN ÍCH =====================
 // ===================== TIỆN ÍCH GÓI / GIỜ / WEB =====================
 const PKG_DB={t1:{n:"Gói 1 tháng",d:"100GB",vnd:60000,cny:15.5,m:1},t2:{n:"Gói 1 tháng",d:"500GB",vnd:70000,cny:18,m:1},c1:{n:"Gói 1 tháng",d:"1000GB",vnd:80000,cny:20.5,m:1},c2:{n:"Gói Cao Cấp",d:"3000GB",vnd:200000,cny:50,m:1},c3:{n:"Gói 1 Năm",d:"300GB/tháng",vnd:799000,cny:199,m:12},d1:{n:"Không Giới Hạn",d:"200GB",vnd:200000,cny:52,m:0},d2:{n:"Không Giới Hạn",d:"1000GB",vnd:399000,cny:102,m:0},d3:{n:"Không Giới Hạn",d:"5000GB",vnd:999000,cny:256,m:0}};
-const VND_SEP=","; // đổi thành "," nếu muốn 60,000VND
+const VND_SEP="."; // đổi thành "," nếu muốn 60,000VND
 const fmtVnd=n=>String(Math.round(Number(n)||0)).replace(/\B(?=(\d{3})+(?!\d))/g,VND_SEP);
 const pkgOf=o=>PKG_DB[o.pkgId]||Object.values(PKG_DB).find(p=>p.n===o.pkgName&&p.d===o.pkgData)||null;
 const pkgLabel=o=>{const p=pkgOf(o);return p?`${p.n} - ${fmtVnd(p.vnd)}VND`:(o.pkgName||"—");};
