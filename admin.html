@@ -1,4 +1,4 @@
-<!-- v4.0 - Admin: đăng nhập bằng token từ Worker (mật khẩu KHÔNG nằm trong HTML), lưu từng đơn, giao dịch qua Worker, nhật ký hợp nhất, CMS dạng khối, chuẩn hóa ngày giờ DD/MM/YY HH:MM -->
+<!-- v1 - Admin (đợt 1 nâng cấp): xóa giao dịch D1, reset tỷ giá CNY→VND, payment UI Alipay/Weixin, hỗ trợ gói giá cũ, Rà quét & Map lại link, System Quota, tab Dung lượng theo giá thực, Soạn mail: biến chèn nhanh + Lưu mẫu hệ thống. Đăng nhập bằng token từ Worker, lưu từng đơn, giao dịch qua Worker, nhật ký hợp nhất, CMS dạng khối, chuẩn hóa ngày giờ DD/MM/YY HH:MM -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -124,11 +124,17 @@ input,select,textarea{font-family:inherit;}
 
  <div id="t-lnk" class="hidden space-y-4 w-full min-w-0">
   <h2 class="text-lg md:text-2xl font-bold text-slate-800">Quản lý Link Sub Ẩn</h2>
-  <div class="grid grid-cols-2 lg:grid-cols-6 gap-2 w-full mb-2">
-   <button id="btnRunGC" onclick="runGC()" class="bg-white text-red-600 hover:bg-red-50 font-bold py-2 rounded-xl text-xs shadow-sm border border-slate-200"><i class="fas fa-broom mr-1"></i>Dọn KV</button>
-   <button id="btnRebuildAll" onclick="rebuildAllMAP()" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold py-2 rounded-xl text-xs shadow-sm border border-emerald-100"><i class="fas fa-rotate mr-1"></i>Rebuild MAP</button>
-   <button id="btnSortLinks" onclick="sortAllLinks()" class="bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold py-2 rounded-xl text-xs shadow-sm border border-purple-100"><i class="fas fa-sort-numeric-down mr-1"></i>Sắp xếp</button>
-   <button id="btnTriggerGH" onclick="triggerGitHub()" class="bg-blue-600 text-white hover:bg-blue-700 font-bold py-2 rounded-xl text-xs shadow-md"><i class="fab fa-github mr-1"></i>Đồng bộ GH</button>
+  <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm mb-2">
+   <div class="flex items-center justify-between flex-wrap gap-2 mb-2"><div class="font-extrabold text-slate-700 text-xs"><i class="fas fa-toolbox mr-1 text-slate-400"></i>BẢO TRÌ HỆ THỐNG</div></div>
+   <div class="grid grid-cols-2 lg:grid-cols-5 gap-2 w-full">
+    <button id="btnRunGC" onclick="runGC()" class="bg-white text-red-600 hover:bg-red-50 font-bold py-2 rounded-xl text-xs shadow-sm border border-slate-200"><i class="fas fa-broom mr-1"></i>Dọn KV</button>
+    <button id="btnRebuildAll" onclick="rebuildAllMAP()" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold py-2 rounded-xl text-xs shadow-sm border border-emerald-100"><i class="fas fa-rotate mr-1"></i>Rebuild MAP</button>
+    <button id="btnSortLinks" onclick="sortAllLinks()" class="bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold py-2 rounded-xl text-xs shadow-sm border border-purple-100"><i class="fas fa-sort-numeric-down mr-1"></i>Sắp xếp</button>
+    <button id="btnTriggerGH" onclick="triggerGitHub()" class="bg-blue-600 text-white hover:bg-blue-700 font-bold py-2 rounded-xl text-xs shadow-md"><i class="fab fa-github mr-1"></i>Đồng bộ GH</button>
+    <button id="btnRelink" onclick="openRelinkModal()" class="bg-amber-50 text-amber-700 hover:bg-amber-100 font-bold py-2 rounded-xl text-xs shadow-sm border border-amber-100"><i class="fas fa-magnifying-glass mr-1"></i>Rà quét &amp; Map lại</button>
+   </div>
+  </div>
+  <div class="grid grid-cols-2 gap-2 w-full mb-2">
    <button id="btn-ls-manual" onclick="switchLinkMode('manual')" class="link-tab-btn active bg-white border border-slate-200 shadow-sm rounded-xl text-slate-600 font-bold text-[11px] py-2"><i class="fas fa-magic mr-1"></i>TẠO THỦ CÔNG</button>
    <button id="btn-ls-pool" onclick="switchLinkMode('pool')" class="link-tab-btn bg-white border border-slate-200 shadow-sm rounded-xl text-slate-600 font-bold text-[11px] py-2"><i class="fas fa-plus-circle mr-1"></i>THÊM NGUỒN</button>
   </div>
@@ -179,10 +185,15 @@ input,select,textarea{font-family:inherit;}
 
  <div id="t-mail" class="hidden w-full min-w-0">
   <h2 class="text-lg md:text-2xl font-bold mb-1 text-slate-800">Soạn mail gửi khách</h2>
-  <p class="text-[11px] text-slate-500 mb-4">Dùng được các chỗ trống <b>{email}</b> <b>{orderId}</b> <b>{pkg}</b> <b>{exp}</b> trong nội dung, hệ thống tự thay theo từng người nhận.</p>
+  <p class="text-[11px] text-slate-500 mb-4">Dùng được các chỗ trống <b>{email}</b> <b>{orderId}</b> <b>{pkg}</b> <b>{exp}</b> trong nội dung, hệ thống tự thay theo từng người nhận. Bấm vào biến để chèn nhanh vào vị trí đang gõ.</p>
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
-    <div class="flex gap-2"><select id="mcPreset" class="flex-1 p-2 border border-slate-200 rounded-lg text-xs bg-white font-bold"><option value="maint">Mẫu: Thông báo bảo trì</option><option value="info">Mẫu: Thông báo chung</option><option value="promo">Mẫu: Ưu đãi / khuyến mãi</option></select><button onclick="mcLoadPreset()" class="bg-indigo-50 text-indigo-600 font-bold px-3 py-2 rounded-lg text-xs hover:bg-indigo-100">Nạp mẫu</button></div>
+    <div class="flex gap-2 flex-wrap">
+     <select id="mcPreset" class="flex-1 min-w-[140px] p-2 border border-slate-200 rounded-lg text-xs bg-white font-bold"></select>
+     <button onclick="mcLoadPreset()" class="bg-indigo-50 text-indigo-600 font-bold px-3 py-2 rounded-lg text-xs hover:bg-indigo-100">Nạp mẫu</button>
+     <button onclick="mcSaveTemplate()" class="bg-emerald-50 text-emerald-700 font-bold px-3 py-2 rounded-lg text-xs hover:bg-emerald-100"><i class="fas fa-floppy-disk mr-1"></i>Lưu mẫu</button>
+    </div>
+    <div id="mcVarBtns" class="flex flex-wrap gap-1.5"></div>
     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tiêu đề mail (subject)</label><input id="mcSubject" oninput="mc.subject=this.value" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none" placeholder="VPN Trinh Hg - ..."></div>
     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tiêu đề trên thanh màu (xuống dòng = 2 dòng)</label><textarea id="mcTitle" rows="2" oninput="mc.title=this.value;mcPreview()" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-bold uppercase"></textarea></div>
     <div class="grid grid-cols-3 gap-2 items-end"><div class="col-span-1"><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Màu thanh tiêu đề</label><select id="mcColor" onchange="mcPickColor(this.value)" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white"><option value="indigo">Tím chàm</option><option value="red">Đỏ</option><option value="green">Xanh lá</option><option value="blue">Xanh dương</option><option value="amber">Cam vàng</option><option value="purple">Tím</option><option value="custom">Tự chọn</option></select></div><div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Màu 1</label><input type="color" id="mcC1" oninput="mc.color='custom';$('mcColor').value='custom';mc.c1=this.value;mcPreview()" class="w-full h-9 border border-slate-200 rounded-lg"></div><div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Màu 2 (hiệu ứng chuyển)</label><input type="color" id="mcC2" oninput="mc.color='custom';$('mcColor').value='custom';mc.c2=this.value;mcPreview()" class="w-full h-9 border border-slate-200 rounded-lg"></div></div>
@@ -225,6 +236,10 @@ input,select,textarea{font-family:inherit;}
     </div>
     <button onclick="saveSettings()" class="lg:col-span-2 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-sm shadow-md">LƯU CẤU HÌNH</button>
    </div>
+   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mt-4">
+    <div class="flex items-center justify-between mb-1 border-b border-slate-100 pb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-gauge-high text-indigo-500 mr-1.5"></i>System Quota (chỉ web này)</div><button onclick="loadQuota()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-sync mr-1"></i>Làm mới</button></div>
+    <div id="quotaBody" class="pt-3 space-y-3 text-xs text-slate-500">Đang tải quota...</div>
+   </div>
   </div>
 
   <div id="settings-view-log" class="hidden">
@@ -262,7 +277,7 @@ input,select,textarea{font-family:inherit;}
    </div>
    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
     <div class="font-bold text-sm text-slate-800 mb-1"><i class="fas fa-box text-indigo-500 mr-1"></i>4. Chuẩn hóa hiển thị gói VPN</div>
-    <p class="text-[11px] text-slate-500 mb-3">Đưa mọi kiểu cũ (Gói 1 tháng - 60,000VND (100GB), Gói 1 tháng - 60.000đ...) về <b>Gói 1 tháng - 60.000VND</b> và gắn mã gói chuẩn cho đơn cũ. Phần hiển thị trên Admin đã tự đúng, bảng này sửa luôn dữ liệu lưu trong KV.</p>
+    <p class="text-[11px] text-slate-500 mb-3">Đưa mọi kiểu cũ (Gói 1 tháng - 60,000VND (100GB), Gói 1 tháng - 60.000đ...) về <b>Gói 1 tháng - 60.000VND</b> và gắn mã gói chuẩn cho đơn cũ. Đơn giá cũ (50.000/60.000/70.000) được nhận diện theo số tiền thực thu (totalVnd) và GIỮ NGUYÊN giá gốc, không bị quy về giá mới. Phần hiển thị trên Admin đã tự đúng, bảng này sửa luôn dữ liệu lưu trong KV.</p>
     <div class="flex gap-2 mb-3"><button onclick="migratePkg(false)" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2 rounded-lg text-xs hover:bg-slate-200">Quét thử</button><button onclick="migratePkg(true)" class="flex-1 bg-indigo-600 text-white font-bold py-2 rounded-lg text-xs hover:bg-indigo-700">Áp dụng</button></div>
     <div id="pkgReport" class="text-xs text-slate-600 space-y-1"></div>
    </div>
@@ -283,8 +298,13 @@ input,select,textarea{font-family:inherit;}
   <div class="mb-2"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Gói VPN</label><select id="mOPkg" onchange="autoFillDays()" class="w-full p-2 text-xs border rounded-lg font-bold text-indigo-700 bg-indigo-50 outline-none"></select></div>
   <div class="grid grid-cols-3 gap-2 mb-2">
    <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Trạng thái</label><select id="mOStatus" onchange="togSF()" class="w-full p-2 text-xs border rounded-lg font-bold outline-none"><option value="pending">Chờ duyệt</option><option value="success">Thành công</option><option value="failed">Từ chối</option></select></div>
-   <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Thanh toán</label><select id="mOMethod" class="w-full p-2 text-xs border rounded-lg font-bold outline-none"><option value="Ngân hàng VN">Bank VN</option><option value="Alipay">Alipay</option><option value="Weixin">Weixin</option></select></div>
+   <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Thanh toán</label><select id="mOMethod" onchange="togPayExtra()" class="w-full p-2 text-xs border rounded-lg font-bold outline-none"><option value="Ngân hàng VN">Bank VN</option><option value="Alipay">Alipay</option><option value="Weixin">Weixin</option></select></div>
    <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">HSD</label><input id="mOExp" type="text" class="w-full p-2 text-xs border rounded-lg outline-none text-center font-bold" placeholder="DD/MM/YYYY"></div>
+  </div>
+  <div id="payExtraBox" class="hidden mb-2 p-2 border border-sky-200 bg-sky-50 rounded-lg grid grid-cols-3 gap-2">
+   <div><label class="block font-bold text-[10px] text-sky-700 mb-0.5">Email khách (Ali/Wei)</label><input id="mOPayEmail" type="text" class="w-full p-2 text-[11px] border border-sky-200 bg-white rounded outline-none"></div>
+   <div><label class="block font-bold text-[10px] text-sky-700 mb-0.5">Số tiền đã nhận</label><input id="mOPayAmount" type="text" class="w-full p-2 text-[11px] border border-sky-200 bg-white rounded outline-none" placeholder="¥ hoặc VND"></div>
+   <div><label class="block font-bold text-[10px] text-sky-700 mb-0.5">Số tháng tương ứng</label><input id="mOPayMonths" type="number" min="1" class="w-full p-2 text-[11px] border border-sky-200 bg-white rounded outline-none text-center"></div>
   </div>
   <div class="grid grid-cols-2 gap-2 mb-2">
    <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">SĐT Zalo</label><input id="mOZalo" type="text" placeholder="0917..." class="w-full p-2 text-xs border rounded-lg outline-none bg-slate-50"></div>
@@ -322,6 +342,27 @@ input,select,textarea{font-family:inherit;}
  </div>
 </div>
 
+<div id="mRelink" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 md:p-4">
+ <div class="glass-card p-4 md:p-6 w-full max-w-3xl max-h-[95vh] overflow-y-auto min-w-0">
+  <div class="flex justify-between items-start mb-3"><h3 class="text-base md:text-xl font-bold text-slate-800"><i class="fas fa-magnifying-glass text-amber-500 mr-1"></i>Rà quét &amp; Map lại Link trong Đơn hàng</h3><button onclick="cm('mRelink')" class="text-slate-400 hover:text-slate-700"><i class="fas fa-xmark text-lg"></i></button></div>
+  <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 mb-3">
+   <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2 text-xs">
+    <div><label class="block font-bold text-slate-500 mb-1">Hành động</label>
+     <select id="rlAction" onchange="renderRelinkFilters()" class="w-full p-2 border border-slate-200 rounded-lg bg-white text-xs font-bold">
+      <option value="scan">Xóa link chết / không đúng trạng thái</option>
+      <option value="remap">Map lại (Chức năng 3)</option>
+     </select></div>
+    <div><label class="block font-bold text-slate-500 mb-1">Phạm vi</label><select id="rlScope" class="w-full p-2 border border-slate-200 rounded-lg bg-white text-xs"><option value="dead">Chỉ link đã chết / lỗi</option><option value="all">Toàn bộ Info1/2/3</option></select></div>
+    <div><label class="block font-bold text-slate-500 mb-1">Đơn hết hạn</label><select id="rlExpired" class="w-full p-2 border border-slate-200 rounded-lg bg-white text-xs"><option value="all">Tất cả</option><option value="expired">Chỉ đơn đã hết hạn</option><option value="active">Chỉ đơn còn hạn</option></select></div>
+    <div class="flex items-end"><label class="flex items-center gap-1.5 text-[11px] font-bold text-slate-600"><input type="checkbox" id="rlIncludeManual" class="w-3.5 h-3.5 accent-amber-600">Gồm cả ô đã sửa tay</label></div>
+   </div>
+   <button onclick="relinkScanRun()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm"><i class="fas fa-magnifying-glass mr-1"></i>1. RÀ QUÉT</button>
+  </div>
+  <div id="rlResult" class="text-xs text-slate-400 italic mb-3">Chưa quét — chọn bộ lọc rồi bấm Rà quét.</div>
+  <div id="rlActions" class="hidden flex gap-2"><button onclick="relinkApply()" class="flex-1 bg-indigo-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-md" id="rlApplyBtn">ÁP DỤNG CHO MỤC ĐÃ CHỌN</button></div>
+ </div>
+</div>
+
 <script>
 // ===================== CẤU HÌNH =====================
 const SITE_KEY=location.hostname.replace(/\./g,"_");
@@ -330,16 +371,26 @@ const PDS={1:"https://vpntrinhhg.pages.dev",2:"https://vpntrinhhg2.pages.dev",3:
 let PD=/pages\.dev$/.test(location.hostname)?location.origin:PDS[3];
 const GH_REPO="trinhhg/vpntrinhhg3";
 const MAIL_API="https://script.google.com/macros/s/AKfycbyQjEln9By0HuUPtboqJpb1INI6rRp52BxvHR8HaE5fs8qojfgau1R_27P4RyLLxXIp/exec";
-const PKG_LIST=[["t1","Gói 1 tháng - 60,000VND / $2.5 / ¥15.5 (100GB)",30],["t2","Gói 1 tháng - 70,000VND / $3 / ¥18 (500GB)",30],["c1","Gói 1 tháng - 80,000VND / $3.5 / ¥20.5 (1000GB)",30],["c2","Gói Cao Cấp - 200,000VND / $8 / ¥50 (3000GB)",30],["c3","Gói 1 Năm - 799,000VND / $30 / ¥199 (300GB/tháng)",365],["d1","Không Giới Hạn - 200,000VND / $8 / ¥52 (200GB)",0],["d2","Không Giới Hạn - 399,000VND / $16 / ¥102 (1000GB)",0],["d3","Không Giới Hạn - 999,000VND / $40 / ¥256 (5000GB)",0]];
+const PKG_LIST=[["t1","Gói 1 tháng - 60,000VND / $2.5 / ¥15.5 (100GB)",30],["t2","Gói 1 tháng - 70,000VND / $3 / ¥18 (500GB)",30],["c1","Gói 1 tháng - 80,000VND / $3.5 / ¥20.5 (1000GB)",30],["c2","Gói Cao Cấp - 200,000VND / $8 / ¥50 (3000GB)",30],["c3","Gói 1 Năm - 799,000VND / $30 / ¥199 (300GB/tháng)",365],["d1","Không Giới Hạn - 200,000VND / $8 / ¥52 (200GB)",0],["d2","Không Giới Hạn - 399,000VND / $16 / ¥102 (1000GB)",0],["d3","Không Giới Hạn - 999,000VND / $40 / ¥256 (5000GB)",0],["o1","[Giá cũ] Gói 1 tháng - 50,000VND (100GB)",30],["o2","[Giá cũ] Gói 1 tháng - 60,000VND (500GB)",30],["o3","[Giá cũ] Gói 1 tháng - 70,000VND (1000GB)",30]];
 const TABS=[["t-ord","fa-box","Đơn hàng"],["t-trans","fa-file-invoice-dollar","Giao dịch"],["t-data","fa-chart-pie","Dung lượng"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-cms","fa-book","H.Dẫn"],["t-mail","fa-envelope","Soạn mail"],["t-settings","fa-cog","Cài đặt"]];
 
 // ===================== TIỆN ÍCH =====================
 // ===================== TIỆN ÍCH GÓI / GIỜ / WEB =====================
-const PKG_DB={t1:{n:"Gói 1 tháng",d:"100GB",vnd:60000,cny:15.5,m:1},t2:{n:"Gói 1 tháng",d:"500GB",vnd:70000,cny:18,m:1},c1:{n:"Gói 1 tháng",d:"1000GB",vnd:80000,cny:20.5,m:1},c2:{n:"Gói Cao Cấp",d:"3000GB",vnd:200000,cny:50,m:1},c3:{n:"Gói 1 Năm",d:"300GB/tháng",vnd:799000,cny:199,m:12},d1:{n:"Không Giới Hạn",d:"200GB",vnd:200000,cny:52,m:0},d2:{n:"Không Giới Hạn",d:"1000GB",vnd:399000,cny:102,m:0},d3:{n:"Không Giới Hạn",d:"5000GB",vnd:999000,cny:256,m:0}};
+// PKG_DB: giá hiện tại (t1/t2/c1...) + giá cũ (o1/o2/o3) để hỗ trợ dữ liệu lịch sử — KHÔNG được tự quy đổi totalVnd của đơn cũ sang giá mới.
+const PKG_DB={t1:{n:"Gói 1 tháng",d:"100GB",vnd:60000,cny:15.5,m:1},t2:{n:"Gói 1 tháng",d:"500GB",vnd:70000,cny:18,m:1},c1:{n:"Gói 1 tháng",d:"1000GB",vnd:80000,cny:20.5,m:1},c2:{n:"Gói Cao Cấp",d:"3000GB",vnd:200000,cny:50,m:1},c3:{n:"Gói 1 Năm",d:"300GB/tháng",vnd:799000,cny:199,m:12},d1:{n:"Không Giới Hạn",d:"200GB",vnd:200000,cny:52,m:0},d2:{n:"Không Giới Hạn",d:"1000GB",vnd:399000,cny:102,m:0},d3:{n:"Không Giới Hạn",d:"5000GB",vnd:999000,cny:256,m:0},o1:{n:"Gói 1 tháng",d:"100GB",vnd:50000,cny:0,m:1,old:true},o2:{n:"Gói 1 tháng",d:"500GB",vnd:60000,cny:0,m:1,old:true},o3:{n:"Gói 1 tháng",d:"1000GB",vnd:70000,cny:0,m:1,old:true}};
 const VND_SEP=","; // đổi thành "," nếu muốn 60,000VND
 const fmtVnd=n=>String(Math.round(Number(n)||0)).replace(/\B(?=(\d{3})+(?!\d))/g,VND_SEP);
-const pkgOf=o=>PKG_DB[o.pkgId]||Object.values(PKG_DB).find(p=>p.n===o.pkgName&&p.d===o.pkgData)||null;
-const pkgLabel=o=>{const p=pkgOf(o);return p?`${p.n} - ${fmtVnd(p.vnd)}VND`:(o.pkgName||"—");};
+// Nhận diện gói theo totalVnd thực tế trước (đơn giá cũ vs mới cùng dung lượng khác nhau), rồi mới fallback theo tên/data lưu sẵn.
+const OLD_BY_DATA={"100GB":"o1","500GB":"o2","1000GB":"o3"};
+function pkgOf(o){
+ if(o.pkgId&&PKG_DB[o.pkgId])return PKG_DB[o.pkgId];
+ const total=Number(o.totalVnd)||0,data=String(o.pkgData||"").toUpperCase();
+ if(total>0&&OLD_BY_DATA[data]){const op=PKG_DB[OLD_BY_DATA[data]];const np=Object.values(PKG_DB).find(p=>!p.old&&p.d===data);
+  if(op&&total%op.vnd===0&&total/op.vnd<=36)return op;
+  if(np&&total%np.vnd===0&&total/np.vnd<=36)return np;}
+ return Object.values(PKG_DB).find(p=>!p.old&&p.n===o.pkgName&&p.d===o.pkgData)||Object.values(PKG_DB).find(p=>p.n===o.pkgName&&p.d===o.pkgData)||null;
+}
+const pkgLabel=o=>{const p=pkgOf(o);return p?`${p.n} - ${fmtVnd(p.vnd)}VND${p.old?" (giá cũ)":""}`:(o.pkgName||"—");};
 const nowMs=()=>Date.now()+((cmsDb.settings&&cmsDb.settings.simMode)?Number(cmsDb.settings.simOffset)||0:0);
 function webLabel(v,wu){const t=String(v||"")+" "+String(wu||"");if(/vpntrinhhg3|lucastanora/i.test(t))return "Web 3";if(/vpntrinhhg2|onepiece/i.test(t))return "Web 2";if(/vpntrinhhg\.|doicucden/i.test(t))return "Web 1";return v?String(v).replace(/^https?:\/\//,"").replace(/\/$/,""):"—";}
 function linkBottom(l){const ts=Number(l.createdTs)||Number(((l.id||"").match(/^LNK-(\d{13})/)||[])[1])||parseAny(l.date);const hm=ts?fmtBank(ts).slice(9):"";return esc(l.expDate||"Vĩnh viễn")+(hm?" "+hm:"");}
@@ -360,7 +411,7 @@ async function applySim(){
 async function clearSim(){const s=cmsDb.settings;s.simMode=false;s.simOffset=0;try{await saveCmsDb();$("simInput").value="";paintTimeUI();renderOrd();renderLinks();toast("Đã về giờ thực");logEvent("ok","Giờ hệ thống","Tắt giờ tùy chỉnh");}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
 async function migratePkg(apply){
  if(apply&&!confirm("Ghi đè cách lưu tên gói của các đơn trong KV? Nên bấm Quét thử trước."))return;$("pkgReport").innerHTML="Đang xử lý...";
- try{const j=await aj("/api/admin/migrate_pkg",{method:"POST",body:{apply}});$("pkgReport").innerHTML=(apply?'<div class="font-bold text-emerald-700 mb-1">✔ Đã áp dụng</div>':'<div class="font-bold text-slate-700 mb-1">Kết quả quét thử (chưa ghi gì)</div>')+`<div><b>Đơn hàng:</b> ${j.changed}/${j.total} bản ghi cần đổi${j.sample.length?`<div class="font-mono text-[10px] text-slate-500 pl-3">${j.sample.map(esc).join("<br>")}</div>`:""}</div>`;if(apply)fetchAll();}
+ try{const j=await aj("/api/admin/migrate_pkg",{method:"POST",body:{apply}});$("pkgReport").innerHTML=(apply?'<div class="font-bold text-emerald-700 mb-1">✔ Đã áp dụng</div>':'<div class="font-bold text-slate-700 mb-1">Kết quả quét thử (chưa ghi gì)</div>')+`<div><b>Đơn hàng:</b> ${j.changed}/${j.total} bản ghi cần đổi${j.oldPrice?` · <span class="text-amber-600 font-bold">${j.oldPrice} đơn giá cũ được giữ nguyên</span>`:""}${j.sample.length?`<div class="font-mono text-[10px] text-slate-500 pl-3">${j.sample.map(esc).join("<br>")}</div>`:""}</div>`;if(apply)fetchAll();}
  catch(e){$("pkgReport").innerHTML=`<span class="text-red-600">Lỗi: ${esc(e.message)}</span>`;}}
 
 // ===================== DOANH THU =====================
@@ -369,7 +420,8 @@ const REV_TABS=[["over","Tổng quan"],["pkg","Theo gói"],["pay","Thanh toán"]
 const payOf=o=>/alipay/i.test(o.method||"")?"Alipay":/weixin|wechat/i.test(o.method||"")?"Weixin":"Bank";
 const cnyRate=()=>Number(cmsDb.settings.cnyRate)||0;
 const shortN=v=>v>=1e6?(v/1e6).toFixed(v>=1e7?0:1).replace(/\.0$/,"")+"tr":v>=1e3?Math.round(v/1e3)+"k":String(Math.round(v));
-function revList(all){const r=cnyRate();return ordersDb.filter(o=>normSt(o.status)==="success").map(o=>{const p=pkgOf(o),pay=payOf(o),qty=Number(o.qty)||1,cny=pay==="Bank"?0:(p?p.cny*qty:0),vnd=pay==="Bank"?(Number(o.totalVnd)||(p?p.vnd*qty:0)):cny*r;return{o,p,pay,qty,cny,vnd,key:monthInfo(oTs(o)).key};}).filter(x=>all||revMonth==="all"||x.key===revMonth);}
+// revList: doanh thu luôn tính theo totalVnd thực tế của giao dịch (không suy diễn lại từ tên gói) — đúng yêu cầu D.
+function revList(all){const r=cnyRate();return ordersDb.filter(o=>normSt(o.status)==="success").map(o=>{const p=pkgOf(o),pay=payOf(o),qty=Number(o.qty)||1,cny=pay==="Bank"?0:(p?p.cny*qty:0),vnd=pay==="Bank"?(Number(o.totalVnd)||(p?p.vnd*qty:0)):(cny?cny*r:(Number(o.totalVnd)||0));return{o,p,pay,qty,cny,vnd,key:monthInfo(oTs(o)).key};}).filter(x=>all||revMonth==="all"||x.key===revMonth);}
 function costSum(all){const r=cnyRate(),a={total:0,by:{}};(cmsDb.costs||[]).filter(c=>all||revMonth==="all"||monthInfo(c.ts).key===revMonth).forEach(c=>{const v=c.cur==="CNY"?c.total*r:c.total,k=c.src||"Khác";a.total+=v;a.by[k]=(a.by[k]||0)+v;});return a;}
 const vbar=items=>{const mx=Math.max(1,...items.map(i=>i.v));return `<div class="flex items-end gap-1.5 h-44 overflow-x-auto pb-1">${items.map(i=>`<div class="flex flex-col items-center justify-end min-w-[40px] flex-1 h-full"><div class="text-[9px] font-bold text-slate-500 mb-0.5">${shortN(i.v)}</div><div class="w-full rounded-t-md bg-gradient-to-t from-indigo-600 to-violet-400" style="height:${Math.max(2,i.v/mx*100)}%"></div><div class="text-[9px] font-bold text-slate-600 mt-1 whitespace-nowrap">${esc(i.l)}</div></div>`).join("")}</div>`;};
 const hbar=(items,color)=>{const mx=Math.max(1,...items.map(i=>i.v));return items.map(i=>`<div class="mb-2"><div class="flex justify-between text-[11px] font-bold text-slate-600 mb-0.5"><span class="truncate pr-2">${esc(i.l)}</span><span class="shrink-0">${i.t||fmtVnd(i.v)+"đ"}</span></div><div class="h-2.5 bg-slate-100 rounded-full overflow-hidden"><div class="h-full rounded-full ${color||"bg-gradient-to-r from-indigo-500 to-violet-500"}" style="width:${Math.max(1.5,i.v/mx*100)}%"></div></div></div>`).join("")||'<div class="text-xs text-slate-400 italic">Chưa có dữ liệu</div>';};
@@ -389,17 +441,19 @@ function revOver(R,b){
  box("Doanh thu theo tháng (12 tháng gần nhất)",vbar(keys.map(k=>({l:monthLbl(k),v:mt[k].vnd}))))+
  box("Tỷ trọng theo phương thức (quy đổi VND)",hbar([{l:"Ngân hàng VN",v:by.Bank},{l:"Alipay",v:by.Alipay},{l:"Weixin",v:by.Weixin}]));}
 function revPkg(R,b){
- const g={};R.forEach(x=>{const k=x.p?x.p.n+"|"+x.p.vnd:"other|"+(x.o.pkgName||"?");const e=g[k]=g[k]||{l:x.p?`${x.p.n} - ${fmtVnd(x.p.vnd)}VND (${x.p.d})`:(x.o.pkgName||"Gói khác"),unit:x.p?x.p.vnd:0,n:0,vnd:0,q:{}};e.n++;e.vnd+=x.vnd;e.q[x.qty]=(e.q[x.qty]||0)+1;});
+ const g={};R.forEach(x=>{const k=x.p?x.p.n+"|"+x.p.vnd+"|"+(x.p.old?"o":"n"):"other|"+(x.o.pkgName||"?");const e=g[k]=g[k]||{l:x.p?`${x.p.n} - ${fmtVnd(x.p.vnd)}VND (${x.p.d})${x.p.old?" (giá cũ)":""}`:(x.o.pkgName||"Gói khác"),unit:x.p?x.p.vnd:0,n:0,vnd:0,q:{}};e.n++;e.vnd+=x.vnd;e.q[x.qty]=(e.q[x.qty]||0)+1;});
  const rows=Object.values(g).sort((a,c)=>c.vnd-a.vnd);
  b.innerHTML=box("Số lượng bán theo từng mức giá",`<div class="overflow-x-auto"><table class="log-table"><thead><tr><th>Gói / giá</th><th>Số đơn</th><th>Theo số tháng mua</th><th>Doanh thu</th></tr></thead><tbody>${rows.map(r=>`<tr><td class="font-bold text-slate-700">${esc(r.l)}</td><td class="font-black text-indigo-600">${r.n}</td><td class="text-xs">${Object.entries(r.q).sort((a,c)=>a[0]-c[0]).map(([q,n])=>`<span class="inline-block bg-slate-100 rounded px-1.5 py-0.5 mr-1 mb-0.5 font-bold">x${q}: ${n} đơn</span>`).join("")}</td><td class="font-black text-emerald-600 whitespace-nowrap">${fmtVnd(r.vnd)}đ</td></tr>`).join("")||'<tr><td colspan="4" class="text-center py-6 text-slate-400 italic">Chưa có đơn</td></tr>'}</tbody></table></div>`)+box("Biểu đồ doanh thu theo gói",hbar(rows.map(r=>({l:r.l,v:r.vnd}))))+box("Biểu đồ số đơn theo gói",hbar(rows.map(r=>({l:r.l,v:r.n,t:r.n+" đơn"})),"bg-gradient-to-r from-sky-500 to-cyan-400"));}
 function revPay(R,b){
  const rate=cnyRate(),m={Bank:{n:0,vnd:0,cny:0},Alipay:{n:0,vnd:0,cny:0},Weixin:{n:0,vnd:0,cny:0}};R.forEach(x=>{const e=m[x.pay];e.n++;e.vnd+=x.vnd;e.cny+=x.cny;});
  const total=m.Bank.vnd+m.Alipay.vnd+m.Weixin.vnd,cn=(t,k,c)=>`<div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm"><div class="font-bold text-sm ${c}">${t}</div><div class="text-[11px] text-slate-500 mb-1">${m[k].n} đơn</div>${k==="Bank"?`<div class="text-xl font-black text-slate-800">${fmtVnd(m[k].vnd)}đ</div>`:`<div class="text-xl font-black text-slate-800">¥${(Math.round(m[k].cny*100)/100).toLocaleString("en-US")}</div><div class="text-[11px] text-slate-500 mt-0.5">${rate?"≈ "+fmtVnd(m[k].vnd)+"đ":"chưa có tỷ giá"}</div>`}</div>`;
- b.innerHTML=box("Tỷ giá quy đổi CNY → VND",`<div class="flex flex-col sm:flex-row gap-2"><div class="flex-1 relative"><input id="rateInput" type="number" step="any" value="${rate||""}" placeholder="VD: 3600 (1 CNY = 3600 VND)" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-slate-50 outline-none pr-14"><span class="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400">VND/¥</span></div><button onclick="saveRate()" class="bg-indigo-600 text-white font-bold px-5 py-2.5 rounded-lg text-sm hover:bg-indigo-700 shadow-md">Xác nhận quy đổi</button></div><p class="text-[11px] text-slate-500 mt-2">Doanh thu Alipay/Weixin được tính theo giá gốc bằng CNY của gói (× số tháng) rồi nhân tỷ giá bạn nhập.</p>`)+
+ b.innerHTML=box("Tỷ giá quy đổi CNY → VND",`<div class="flex flex-col sm:flex-row gap-2"><div class="flex-1 relative"><input id="rateInput" type="number" step="any" value="${rate||""}" placeholder="VD: 3600 (1 CNY = 3600 VND)" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-slate-50 outline-none pr-14"><span class="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400">VND/¥</span></div><button onclick="saveRate()" class="bg-indigo-600 text-white font-bold px-5 py-2.5 rounded-lg text-sm hover:bg-indigo-700 shadow-md">Xác nhận quy đổi</button><button onclick="resetRate()" class="bg-red-50 text-red-600 border border-red-100 font-bold px-4 py-2.5 rounded-lg text-sm hover:bg-red-100">Reset về 0đ</button></div><p class="text-[11px] text-slate-500 mt-2">Doanh thu Alipay/Weixin được tính theo giá gốc bằng CNY của gói (× số tháng) rồi nhân tỷ giá bạn nhập.</p>`)+
  `<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">${cn("🏦 Ngân hàng VN","Bank","text-indigo-600")}${cn("🔵 Alipay","Alipay","text-sky-600")}${cn("🟢 Weixin","Weixin","text-emerald-600")}</div>`+
  `<div class="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl p-5 text-white shadow-lg"><div class="text-xs font-bold opacity-80 uppercase">Tổng tất cả phương thức (đã quy đổi VND)</div><div class="text-3xl font-black mt-1">${fmtVnd(total)}đ</div><div class="text-xs opacity-80 mt-1">${R.length} đơn thành công${!rate&&(m.Alipay.n+m.Weixin.n)?" · chưa có tỷ giá nên Alipay/Weixin chưa cộng":""}</div></div>`+
  box("So sánh phương thức",hbar([{l:"Ngân hàng VN",v:m.Bank.vnd},{l:"Alipay",v:m.Alipay.vnd},{l:"Weixin",v:m.Weixin.vnd}]));}
 async function saveRate(){const v=Number($("rateInput").value)||0;if(v<=0)return toast("Nhập tỷ giá lớn hơn 0","err");cmsDb.settings.cnyRate=v;try{await saveCmsDb();toast("Đã quy đổi theo tỷ giá "+fmtVnd(v)+" VND / ¥");renderRevenue();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
+// Reset tỷ giá về 0đ: ghi thẳng vào cmsDb.settings.cnyRate và lưu lên KV (tác động dữ liệu thật, không chỉ xóa chữ trên UI)
+async function resetRate(){if(!confirm("Reset tỷ giá CNY→VND về 0đ? Doanh thu Alipay/Weixin sẽ tạm không quy đổi được cho tới khi nhập tỷ giá mới."))return;cmsDb.settings.cnyRate=0;try{await saveCmsDb();toast("Đã reset tỷ giá về 0đ");logEvent("warn","Doanh thu","Reset tỷ giá CNY→VND về 0đ");renderRevenue();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
 function revRank(R,b){
  const mt=monthTotals(),keys=Object.keys(mt).sort(),chrono=keys.map((k,i)=>({...mt[k],prev:i?mt[keys[i-1]].vnd:null})),rank=[...chrono].sort((a,c)=>c.vnd-a.vnd),med=["🥇","🥈","🥉"];
  b.innerHTML=box("Xếp hạng doanh thu theo tháng",`<div class="space-y-2">${rank.map((r,i)=>{const d=r.prev?Math.round((r.vnd-r.prev)/r.prev*100):null;return `<div class="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-xl p-3"><div class="text-2xl w-9 text-center shrink-0">${med[i]||"#"+(i+1)}</div><div class="flex-1 min-w-0"><div class="flex justify-between font-bold text-sm text-slate-800"><span>Tháng ${monthLbl(r.k)}</span><span class="text-emerald-600">${fmtVnd(r.vnd)}đ</span></div><div class="h-2 bg-slate-200 rounded-full mt-1 overflow-hidden"><div class="h-full bg-gradient-to-r from-amber-400 to-orange-500" style="width:${Math.max(2,r.vnd/(rank[0].vnd||1)*100)}%"></div></div><div class="text-[11px] text-slate-500 mt-0.5">${r.n} đơn${d===null?"":` · <span class="${d>=0?"text-emerald-600":"text-red-500"} font-bold">${d>=0?"▲":"▼"} ${Math.abs(d)}% so với tháng trước</span>`}</div></div></div>`;}).join("")||'<div class="text-xs text-slate-400 italic">Chưa có dữ liệu</div>'}</div>`);}
@@ -419,6 +473,19 @@ async function delCost(id){if(!confirm("Xóa khoản chi phí này?"))return;cms
 // ===================== SOẠN MAIL TỰ DO =====================
 const MC_COLORS={indigo:["#4f46e5","#8b5cf6"],red:["#ef4444","#b91c1c"],green:["#10b981","#059669"],blue:["#2563eb","#6366f1"],amber:["#f59e0b","#d97706"],purple:["#7e22ce","#a855f7"]};
 const MC_BT=[["text","Đoạn văn","fa-paragraph"],["orderid","Mã đơn hàng","fa-hashtag"],["portal","Nút vào cổng","fa-arrow-up-right-from-square"],["support","Khối hỗ trợ","fa-headset"],["img","Ảnh","fa-image"],["divider","Đường kẻ","fa-minus"],["spacer","Cách dòng","fa-arrows-up-down"]];
+// Biến chèn nhanh: bấm nút -> chèn vào đúng vị trí con trỏ đang gõ trong ô Tiêu đề mail hoặc ô textarea khối đang chọn
+const MC_VARS=[["{email}","Email khách"],["{orderId}","Mã đơn hàng"],["{pkg}","Gói VPN"],["{exp}","Ngày hết hạn"]];
+let mcLastFocusEl=null;
+function mcTrackFocus(e){if(e&&e.target&&(e.target.tagName==="TEXTAREA"||e.target.tagName==="INPUT"))mcLastFocusEl=e.target;}
+document.addEventListener("focusin",mcTrackFocus);
+function mcInsertVar(v){
+ const el=mcLastFocusEl&&document.body.contains(mcLastFocusEl)?mcLastFocusEl:$("mcSubject");
+ const s=el.selectionStart??el.value.length,e=el.selectionEnd??el.value.length;
+ el.value=el.value.slice(0,s)+v+el.value.slice(e);el.focus();el.selectionStart=el.selectionEnd=s+v.length;
+ el.dispatchEvent(new Event("input",{bubbles:true}));}
+// Mẫu hệ thống: 5 mẫu cố định (khớp mail production) — admin có thể chỉnh nội dung/biến/màu rồi Lưu mẫu để làm mặc định cho các lần gửi thật tiếp theo, KHÔNG ảnh hưởng logic code (đơn thành công vẫn tự gửi mẫu kích hoạt thành công...).
+const MC_SYS_KEYS=["success","renew","upgrade","failed","exp","support","data"];
+const MC_SYS_NAMES={success:"[Hệ thống] Kích hoạt thành công",renew:"[Hệ thống] Gia hạn thành công",upgrade:"[Hệ thống] Nâng cấp thành công",failed:"[Hệ thống] Kích hoạt thất bại",exp:"[Hệ thống] Gói VPN sắp hết hạn",support:"[Hệ thống] Hỗ trợ cài đặt",data:"[Hệ thống] Báo cáo dung lượng"};
 const MC_PRESETS={
  maint:{subject:"VPN Trinh Hg - Thông báo bảo trì hệ thống",title:"THÔNG BÁO\nBẢO TRÌ HỆ THỐNG",color:"amber",blocks:[{t:"text",x:"Xin chào {email},"},{t:"text",x:"Hệ thống sẽ bảo trì từ [giờ bắt đầu] đến [giờ kết thúc] ngày [ngày]. Trong thời gian này dịch vụ có thể gián đoạn ngắn, rất mong bạn thông cảm."},{t:"orderid"},{t:"portal",x:"TRUY CẬP CỔNG KHÁCH HÀNG"},{t:"support"}]},
  info:{subject:"VPN Trinh Hg - Thông báo",title:"THÔNG BÁO\nTỪ VPN TRINH HG",color:"indigo",blocks:[{t:"text",x:"Xin chào {email},"},{t:"text",x:"Nội dung thông báo..."},{t:"orderid"},{t:"portal",x:"TRUY CẬP CỔNG KHÁCH HÀNG"},{t:"support"}]},
@@ -437,7 +504,11 @@ function mcBuild(rec){
   if(b.t==="spacer")return `<div style="height:${Math.max(4,Math.min(200,parseInt(b.h)||16))}px"></div>`;return "";}).join("");
  return mailShell(mc.c1,mc.c2,esc(mc.title).replace(/\n/g,"<br>"),inner);}
 function mcPreview(){$("mcPreview").innerHTML=mcBuild({email:"khachhang@gmail.com",id:"DHXXXXXXXXXX",pkg:"Gói 1 tháng - 60.000VND",exp:"30/10/2026"});}
+function mcRenderPresetOptions(){
+ const sys=cmsDb.mailSys||{};
+ $("mcPreset").innerHTML=`<optgroup label="Mẫu hệ thống (dùng khi gửi mail thật)">${MC_SYS_KEYS.map(k=>`<option value="sys:${k}">${esc(MC_SYS_NAMES[k])}${sys[k]?" · đã tùy chỉnh":""}</option>`).join("")}</optgroup><optgroup label="Mẫu soạn tự do">${Object.keys(MC_PRESETS).map(k=>`<option value="free:${k}">Mẫu: ${{maint:"Thông báo bảo trì",info:"Thông báo chung",promo:"Ưu đãi / khuyến mãi"}[k]}</option>`).join("")}</optgroup>`;}
 function mcRenderEditor(){
+ $("mcVarBtns").innerHTML=MC_VARS.map(([v,l])=>`<button type="button" onclick="mcInsertVar('${v}')" class="bg-indigo-50 text-indigo-600 font-mono font-bold text-[10px] px-2 py-1 rounded hover:bg-indigo-100" title="${l}">${v}</button>`).join("");
  $("mcSubject").value=mc.subject;$("mcTitle").value=mc.title;$("mcColor").value=mc.color;$("mcC1").value=mc.c1;$("mcC2").value=mc.c2;
  $("mcAddBtns").innerHTML=`<span class="text-[10px] font-bold text-slate-400 px-1">THÊM KHỐI:</span>`+MC_BT.map(([t,l,ic])=>`<button onclick="mcAdd('${t}')" class="bg-white border shadow-sm px-2 py-1 rounded text-[11px] font-bold text-slate-700 hover:bg-slate-50"><i class="fas ${ic} mr-1"></i>${l}</button>`).join("");
  $("mcList").innerHTML=mc.blocks.map((b,i)=>{const nm=(MC_BT.find(x=>x[0]===b.t)||[b.t,b.t])[1],txt=b.t==="text",ab=txt||b.t==="img"?[["l","fa-align-left"],["c","fa-align-center"],["r","fa-align-right"]].map(([a,ic])=>`<button onclick="mcSet(${i},'al','${a}',true)" class="w-6 h-6 rounded border text-[10px] ${(b.al||"l")===a?"bg-indigo-600 text-white border-indigo-600":"bg-white text-slate-500"}"><i class="fas ${ic}"></i></button>`).join(""):"";
@@ -450,8 +521,21 @@ function mcAdd(t){const nb={t,x:t==="portal"?"TRUY CẬP CỔNG KHÁCH HÀNG":""
 function mcMove(i,d){const j=i+d;if(j<0||j>=mc.blocks.length)return;[mc.blocks[i],mc.blocks[j]]=[mc.blocks[j],mc.blocks[i]];mcSel=j;mcRenderEditor();}
 function mcDel(i){mc.blocks.splice(i,1);mcSel=-1;mcRenderEditor();}
 function mcPickColor(k){mc.color=k;if(MC_COLORS[k]){mc.c1=MC_COLORS[k][0];mc.c2=MC_COLORS[k][1];}$("mcC1").value=mc.c1;$("mcC2").value=mc.c2;mcPreview();}
-function mcLoadPreset(){const p=MC_PRESETS[$("mcPreset").value]||MC_PRESETS.maint;mc={subject:p.subject,title:p.title,color:p.color,c1:MC_COLORS[p.color][0],c2:MC_COLORS[p.color][1],blocks:p.blocks.map(b=>({...b}))};mcSel=-1;mcRenderEditor();}
-function renderMailComposer(){if(!mc.blocks.length)mcLoadPreset();else mcRenderEditor();}
+let mcCurKey=null; // "sys:success" | "free:maint" | null (mail tự do chưa lưu)
+function mcLoadPreset(){
+ const v=$("mcPreset").value,[kind,key]=v.split(":");mcCurKey=v;
+ if(kind==="sys"){const sys=(cmsDb.mailSys||{})[key],tpl=sys||SYS_TPL_ADMIN[key];mc=tplToMc(tpl);}
+ else{const p=MC_PRESETS[key]||MC_PRESETS.maint;mc={subject:p.subject,title:p.title,color:p.color,c1:MC_COLORS[p.color][0],c2:MC_COLORS[p.color][1],blocks:p.blocks.map(b=>({...b}))};}
+ mcSel=-1;mcRenderEditor();}
+// Chuyển 1 mẫu hệ thống (dạng blocks giống mailSys) sang cấu trúc mc để soạn/preview trong UI này
+function tplToMc(tpl){return {subject:tpl.subject||"",title:(tpl.title||"").replace(/\\n/g,"\n"),color:"custom",c1:tpl.c1||"#4f46e5",c2:tpl.c2||"#8b5cf6",blocks:(tpl.blocks||[]).map(b=>({...b}))};}
+function mcToTpl(subject){return {subject,title:mc.title,c1:mc.c1,c2:mc.c2,ang:135,stop:100,blocks:mc.blocks.map(b=>({...b}))};}
+async function mcSaveTemplate(){
+ if(!mcCurKey)return toast("Chọn một mẫu hệ thống ở dropdown rồi mới Lưu mẫu được","err");
+ const [kind,key]=mcCurKey.split(":");
+ if(kind!=="sys")return toast("Chỉ lưu được cho Mẫu hệ thống — mẫu tự do dùng để soạn & gửi ngay bên dưới","err");
+ cmsDb.mailSys=cmsDb.mailSys||{};cmsDb.mailSys[key]=mcToTpl($("mcSubject").value.trim()||MC_SYS_NAMES[key]);
+ try{await saveCmsDb();toast("Đã lưu làm mẫu mặc định cho \""+MC_SYS_NAMES[key]+"\"");logEvent("ok","Soạn mail","Lưu mẫu hệ thống: "+key);mcRenderPresetOptions();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
 function mcScan(){
  const now=nowMs(),m=new Map();
  ordersDb.filter(o=>normSt(o.status)==="success"&&o.email).forEach(o=>{const life=isLife(o.expDate),end=life?Infinity:expEnd(o.expDate);if(!life&&(!end||end<now))return;const k=o.email.toLowerCase(),c=m.get(k);if(!c||oTs(o)>oTs(c))m.set(k,o);});
@@ -555,7 +639,7 @@ function go(id){
  $(id).classList.remove("hidden");const a=$("btn-"+id);a.classList.add("active");a.classList.remove("bg-white","text-slate-600");
  localStorage.setItem(SITE_KEY+"_lastTab",id);
  if(id==="t-dead")renderDead();if(id==="t-data")renderDataRequests();if(id==="t-lnk")switchLinkMode(curLinkTab);
- if(id==="t-settings"){loadSettingsUI();loadStatus();}
+ if(id==="t-settings"){loadSettingsUI();loadStatus();loadQuota();}
  if(id==="t-trans"){localStorage.setItem(SITE_KEY+"_txSeen",Date.now());$("transBadge").classList.add("hidden");if(curTxTab==="rev")renderRevenue();else renderTransactions();}
  if(id==="t-mail")renderMailComposer();}
 
@@ -595,6 +679,8 @@ function autoFillNickname(){const e=$("mOEmail").value.trim().toLowerCase();if(!
 function autoFillDays(){const p=PKG_LIST.find(x=>x[0]===$("mOPkg").value);if(!p)return;if(p[2]>0){$("mODays").value=p[2];recalcExpFromDays();}else{$("mODays").value="";$("mOExp").value="Vĩnh viễn";}}
 function recalcExpFromDays(){const d=parseInt($("mODays").value)||0;if(d)$("mOExp").value=dmyOf(nowMs()+d*864e5);}
 function togSF(){const s=$("mOStatus").value;$("fSuc").classList.toggle("hidden",s!=="success");$("fFail").classList.toggle("hidden",s!=="failed");}
+// C. Khi chọn Alipay/Weixin (chỉ 2 phương thức này) hiện thêm ô Email/Số tiền/Số tháng — không đổi UI của Bank VN
+function togPayExtra(){const m=$("mOMethod").value;$("payExtraBox").classList.toggle("hidden",!/alipay|weixin/i.test(m));}
 function syncUpg(t){const ids={verify:"mOUpgVerify",success:"mOUpgSuccess",reject:"mOUpgReject"};if($(ids[t]).checked)for(const k in ids)if(k!==t)$(ids[k]).checked=false;}
 const curUpg=()=>$("mOUpgVerify").checked?"verify":$("mOUpgSuccess").checked?"success":$("mOUpgReject").checked?"reject":"none";
 function readModal(){return{email:$("mOEmail").value.trim(),nickname:$("mONickname").value.trim(),zalo:$("mOZalo").value.trim(),method:$("mOMethod").value,status:$("mOStatus").value,expDate:$("mOExp").value.trim(),days:parseInt($("mODays").value)||"",reason:$("mOReason").value.trim(),info1:$("mOLink1").value.trim(),info2:$("mOLink2").value.trim(),info3:$("mOLink3").value.trim(),pkgId:$("mOPkg").value};}
@@ -606,6 +692,7 @@ function openOrdModal(id){
  $("mOUpgVerify").checked=!!o?.pendingUpgrade;$("mOUpgSuccess").checked=!!(o?.isUpgrade&&!o.pendingUpgrade&&o.upgradeStatus!=="failed");$("mOUpgReject").checked=o?.upgradeStatus==="failed";
  $("mOLink1").value=o?.info1||o?.info||"";$("mOLink2").value=o?.info2||"";$("mOLink3").value=o?.info3||"";$("mOReason").value=o?.reason||"";
  $("mOStatus").value=o?normSt(o.status):"pending";$("mOMethod").value=/alipay/i.test(o?.method||"")?"Alipay":/weixin|wechat/i.test(o?.method||"")?"Weixin":"Ngân hàng VN";
+ $("mOPayEmail").value=o?.email||"";$("mOPayAmount").value=o?.totalVnd||"";$("mOPayMonths").value=o?.qty||"";togPayExtra();
  const sel=$("mOPkg");sel.innerHTML=PKG_LIST.map(p=>`<option value="${p[0]}">${esc(p[1])}</option>`).join("");
  if(o){let pid=PKG_LIST.find(p=>p[0]===o.pkgId)?.[0];if(!pid)pid=PKG_LIST.find(p=>o.pkgName&&o.pkgData&&p[1].startsWith(o.pkgName)&&p[1].includes("("+o.pkgData+")"))?.[0];
   if(pid)sel.value=pid;else{sel.innerHTML+=`<option value="-1" selected>${esc(o.pkg||o.pkgName||"Gói custom")}</option>`;sel.value="-1";}}
@@ -615,6 +702,7 @@ async function saveOrd(){
  const id=normId($("mOId").value);if(!/^DH[A-Z0-9]{10}$/.test(id))return toast("Mã đơn phải dạng DH + 10 ký tự chữ/số","err");
  const cur=readModal(),body={id};
  for(const k in cur){if(modalNew?(cur[k]!==""&&cur[k]!=="-1"):cur[k]!==modalInit[k]){if(k==="pkgId"&&cur[k]==="-1")continue;body[k]=cur[k];}}
+ if(/alipay|weixin/i.test(cur.method)){const pe=$("mOPayEmail").value.trim(),pa=$("mOPayAmount").value.trim(),pm=$("mOPayMonths").value.trim();if(pe)body.email=pe;if(pa)body.totalVnd=pa;if(pm)body.qty=pm;}
  if(modalNew||curUpg()!==upgInit)body.upg=curUpg();
  if(modalNew&&!body.status)body.status="pending";
  const btn=$("btnSaveOrd");btn.disabled=true;
@@ -640,6 +728,16 @@ const mailFailed=o=>mailShell("#ef4444","#b91c1c","KÍCH HOẠT THẤT BẠI",`<
 const mailExp=(o,msg)=>mailShell("#f59e0b","#d97706","GÓI VPN SẮP HẾT HẠN",`<p style="font-size:15px;line-height:1.6;margin-top:0;text-align:center">Xin chào, Gói VPN <b>${esc(o.pkgName)}</b> của bạn ${msg}.</p>${mailIdBox("MÃ ĐƠN HÀNG HIỆN TẠI",o.id,"#d97706")}<p style="font-size:13px;color:#475569;text-align:center;margin:0">Gia hạn ngay để không bị gián đoạn dịch vụ.</p>${mailPortal("GIA HẠN NGAY TẠI WEBSITE")}${mailSupport()}`);
 const mailZalo=o=>mailShell("#2563eb","#1d4ed8","HỖ TRỢ CÀI ĐẶT",`<p style="font-size:15px;line-height:1.6;margin-top:0;text-align:center">Vui lòng liên hệ Admin qua Zalo để được hỗ trợ gói VPN mã đơn <b style="color:#2563eb">${esc(o.id)}</b> nhé!</p><div style="background:#fefce8;border:2px dashed #facc15;padding:20px;border-radius:12px;text-align:center"><p style="margin:0;font-size:13px;color:#a16207;font-weight:bold">ZALO ADMIN</p><p style="margin:10px 0 0;font-size:28px;font-weight:900;color:#ca8a04">0917678211</p></div>${mailPortal("TRUY CẬP CỔNG KHÁCH HÀNG")}${mailSupport()}`);
 const mailData=(r,gb)=>mailShell("#8b5cf6","#6d28d9","KẾT QUẢ TRA CỨU<br>DUNG LƯỢNG",`<p style="font-size:15px;line-height:1.6;margin-top:0;text-align:center">Đây là dung lượng của đơn hàng <b style="color:#7c3aed">${esc(r.orderId)}</b>.</p><div style="background:#f5f3ff;border:2px dashed #a78bfa;padding:20px;border-radius:12px;text-align:center"><p style="margin:0;font-size:12px;color:#6d28d9;font-weight:bold">DUNG LƯỢNG CÒN LẠI</p><p style="margin:10px 0 0;font-size:32px;font-weight:900;color:#7c3aed">${esc(gb)} GB</p></div><p style="font-size:13px;color:#475569;text-align:center;margin:12px 0 0">Nếu tốc độ chậm, có thể gói đã dùng hết dung lượng.</p>${mailPortal("TRUY CẬP CỔNG KHÁCH HÀNG")}${mailSupport()}`);
+// Mẫu hệ thống (bản admin xem/sửa) — khớp cấu trúc SYS_TPL bên worker để "Lưu mẫu" ghi đúng định dạng cmsDb.mailSys
+const SYS_TPL_ADMIN={
+ success:{subject:"VPN Trinh Hg - Kích hoạt thành công",title:"KÍCH HOẠT THÀNH CÔNG",c1:"#4f46e5",c2:"#8b5cf6",blocks:[{t:"text",x:"Xin chào, Gói VPN **{pkg}** của bạn đã sẵn sàng."},{t:"orderid",x:"MÃ ĐƠN HÀNG CỦA BẠN"},{t:"portal",x:"TRUY CẬP CỔNG KHÁCH HÀNG"},{t:"support"}]},
+ renew:{subject:"VPN Trinh Hg - Gia hạn thành công",title:"GIA HẠN THÀNH CÔNG",c1:"#4f46e5",c2:"#8b5cf6",blocks:[{t:"text",x:"Xin chào, Gói VPN **{pkg}** của bạn đã được gia hạn thành công."},{t:"orderid",x:"MÃ ĐƠN HÀNG CỦA BẠN"},{t:"portal",x:"TRUY CẬP CỔNG KHÁCH HÀNG"},{t:"support"}]},
+ upgrade:{subject:"VPN Trinh Hg - Nâng cấp thành công",title:"NÂNG CẤP THÀNH CÔNG",c1:"#4f46e5",c2:"#8b5cf6",blocks:[{t:"text",x:"Xin chào, Gói VPN **{pkg}** của bạn đã được nâng cấp thành công."},{t:"orderid",x:"MÃ ĐƠN HÀNG CỦA BẠN"},{t:"portal",x:"TRUY CẬP CỔNG KHÁCH HÀNG"},{t:"support"}]},
+ failed:{subject:"VPN Trinh Hg - Kích hoạt thất bại",title:"KÍCH HOẠT THẤT BẠI",c1:"#ef4444",c2:"#b91c1c",blocks:[{t:"text",x:"Xin chào, Gói VPN **{pkg}** của bạn không thể kích hoạt."},{t:"orderid",x:"MÃ ĐƠN HÀNG CỦA BẠN"},{t:"portal",x:"TRUY CẬP CỔNG KHÁCH HÀNG"},{t:"support"}]},
+ exp:{subject:"VPN Trinh Hg - Gói VPN sắp hết hạn",title:"GÓI VPN SẮP HẾT HẠN",c1:"#f59e0b",c2:"#d97706",blocks:[{t:"text",x:"Xin chào, Gói VPN **{pkg}** của bạn {expText}.",al:"c"},{t:"orderid",x:"MÃ ĐƠN HÀNG HIỆN TẠI"},{t:"portal",x:"GIA HẠN NGAY TẠI WEBSITE"},{t:"support"}]},
+ support:{subject:"VPN Trinh Hg - Hỗ trợ cài đặt",title:"HỖ TRỢ CÀI ĐẶT",c1:"#2563eb",c2:"#1d4ed8",blocks:[{t:"text",x:"Vui lòng liên hệ Admin qua Zalo để được hỗ trợ gói VPN mã đơn **{orderId}** nhé!",al:"c"},{t:"portal",x:"TRUY CẬP CỔNG KHÁCH HÀNG"},{t:"support"}]},
+ data:{subject:"VPN Trinh Hg - Báo cáo dung lượng {orderId}",title:"KẾT QUẢ TRA CỨU DUNG LƯỢNG",c1:"#8b5cf6",c2:"#6d28d9",blocks:[{t:"text",x:"Đây là dung lượng của đơn hàng **{orderId}**.",al:"c"},{t:"portal",x:"TRUY CẬP CỔNG KHÁCH HÀNG"},{t:"support"}]}
+};
 function sendExpMail(id){if(!isMailMaster())return toast("Đang ở chế độ SLAVE Email","err");const o=ordersDb.find(x=>x.id===id);if(!o?.email)return toast("Chưa có email","err");
  const dl=Math.ceil((expEnd(o.expDate)-nowMs())/864e5);const msg=dl<=1?"<b>ngày mai hết hạn</b>":`còn <b>${dl} ngày</b> (hết hạn <b>${esc(o.expDate)}</b>)`;
  sendMailClient(o.email,"VPN Trinh Hg - Gói VPN sắp hết hạn",mailExp(o,msg));logEvent("ok","Gửi mail","Nhắc hết hạn (thủ công) → "+o.email,o.id);toast("Đã gửi mail nhắc hết hạn");}
@@ -647,12 +745,20 @@ function sendZaloMail(id){if(!isMailMaster())return toast("Đang ở chế độ
  sendMailClient(o.email,"VPN Trinh Hg - Hỗ trợ cài đặt",mailZalo(o));logEvent("ok","Gửi mail","Hỗ trợ cài đặt → "+o.email,o.id);toast("Đã gửi mail nhắc Zalo");}
 
 // ===================== DUNG LƯỢNG =====================
+// H. Hiện "Gói: 60,000VND" (không hiện "Gói 1 tháng") + chia theo tháng giống tab Đơn hàng
 function renderDataRequests(){
  const tb=$("dataReqBody");if(!dataReqDb.length){tb.innerHTML=`<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold">Không có yêu cầu nào</div>`;return;}
- tb.innerHTML=dataReqDb.map((r,i)=>{const ok=r.status==="success";
-  return `<div class="${ok?"bg-slate-50 border-slate-200 opacity-60":"bg-white border-2 border-dashed border-indigo-400"} rounded-xl p-3 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-1">${ok?'<div class="dot-green"></div>':'<div class="dot-yellow"></div>'}<span class="font-mono font-extrabold text-indigo-600 text-sm cp" onclick="cp(${q(r.orderId)})">${esc(r.orderId)}</span></div><div class="font-bold text-slate-800 text-xs cp truncate pl-5" onclick="cp(${q(r.email)})">${esc(r.email)}</div><div class="text-[11px] text-slate-500 mt-1 pl-5">Gói: <b>${esc(r.pkgName)}</b> - ${fmtBank(r.ts||r.date)}</div></div>
-  <div class="flex gap-2 items-center"><div class="relative w-28"><input type="number" step="0.1" id="gb-input-${i}" placeholder="Số GB..." class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none font-bold bg-white text-center pr-8" ${ok?"disabled":""}><span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">GB</span></div>
-  <button onclick="sendDataReport(${i})" class="${ok?"bg-slate-300 text-slate-500 pointer-events-none":"bg-indigo-600 text-white hover:bg-indigo-700 shadow-md"} font-bold px-3 py-2 rounded-lg text-xs flex items-center"><i class="fas fa-paper-plane mr-1.5"></i>${ok?"Đã Gửi":"Gửi Khách"}</button><button onclick="delDataRequest(${i})" class="text-red-500 bg-red-50 border border-red-100 hover:bg-red-500 hover:text-white px-3 py-2 rounded-lg"><i class="fas fa-trash"></i></button></div></div>`;}).join("");}
+ const groups={};dataReqDb.forEach((r,i)=>{const mi=monthInfo(Number(r.ts)||parseAny(r.date));(groups[mi.key]=groups[mi.key]||{label:mi.label,items:[]}).items.push({r,i});});
+ let html="";
+ for(const key of Object.keys(groups).sort((a,b)=>b.localeCompare(a))){
+  const g=groups[key];html+=`<div class="month-header"><i class="far fa-calendar-alt text-indigo-400"></i><span>${g.label}</span><span class="month-count">${g.items.length} yêu cầu</span></div><div class="space-y-3 mb-6">`;
+  html+=g.items.map(({r,i})=>{const ok=r.status==="success";
+   const priceOnly=(()=>{const oi=ordersDb.find(o=>o.id===r.orderId);const p=oi?pkgOf(oi):null;return p?`${fmtVnd(p.vnd)}VND`:(r.pkgName||"—");})();
+   return `<div class="${ok?"bg-slate-50 border-slate-200 opacity-60":"bg-white border-2 border-dashed border-indigo-400"} rounded-xl p-3 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-1">${ok?'<div class="dot-green"></div>':'<div class="dot-yellow"></div>'}<span class="font-mono font-extrabold text-indigo-600 text-sm cp" onclick="cp(${q(r.orderId)})">${esc(r.orderId)}</span></div><div class="font-bold text-slate-800 text-xs cp truncate pl-5" onclick="cp(${q(r.email)})">${esc(r.email)}</div><div class="text-[11px] text-slate-500 mt-1 pl-5">Gói: <b>${esc(priceOnly)}</b> - ${fmtBank(r.ts||r.date)}</div></div>
+   <div class="flex gap-2 items-center"><div class="relative w-28"><input type="number" step="0.1" id="gb-input-${i}" placeholder="Số GB..." class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none font-bold bg-white text-center pr-8" ${ok?"disabled":""}><span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">GB</span></div>
+   <button onclick="sendDataReport(${i})" class="${ok?"bg-slate-300 text-slate-500 pointer-events-none":"bg-indigo-600 text-white hover:bg-indigo-700 shadow-md"} font-bold px-3 py-2 rounded-lg text-xs flex items-center"><i class="fas fa-paper-plane mr-1.5"></i>${ok?"Đã Gửi":"Gửi Khách"}</button><button onclick="delDataRequest(${i})" class="text-red-500 bg-red-50 border border-red-100 hover:bg-red-500 hover:text-white px-3 py-2 rounded-lg"><i class="fas fa-trash"></i></button></div></div>`;}).join("");
+  html+=`</div>`;}
+ tb.innerHTML=html;}
 async function sendDataReport(i){if(!isMailMaster())return toast("Đang ở chế độ SLAVE Email","err");const r=dataReqDb[i],gb=$("gb-input-"+i).value.trim();if(!gb)return toast("Nhập số GB!","err");
  sendMailClient(r.email,`VPN Trinh Hg - Báo cáo dung lượng ${r.orderId}`,mailData(r,gb));r.status="success";renderDataRequests();await aj("/api/data_requests",{method:"POST",body:dataReqDb});lastSig.d=JSON.stringify(dataReqDb);logEvent("ok","Gửi mail","Báo cáo dung lượng → "+r.email,r.orderId);toast("Đã báo cáo cho khách");}
 async function delDataRequest(i){dataReqDb.splice(i,1);renderDataRequests();await aj("/api/data_requests",{method:"POST",body:dataReqDb});lastSig.d=JSON.stringify(dataReqDb);}
@@ -674,6 +780,11 @@ async function loadTx(force){
  const active=!$("t-trans").classList.contains("hidden");
  txPollT=setTimeout(()=>{if(document.hidden)return loadTx();loadTx();},document.hidden?30000:Math.min(30000,(active?5000:20000)*(1+txFails)));}
 const kindBadge=k=>k==="upgrade"?`<span class="bg-purple-100 text-purple-700 border border-purple-200 px-2 py-0.5 rounded text-[9px] font-black uppercase ml-1">NÂNG CẤP</span>`:k==="renew"?`<span class="bg-sky-100 text-sky-700 border border-sky-200 px-2 py-0.5 rounded text-[9px] font-black uppercase ml-1">GIA HẠN</span>`:`<span class="bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded text-[9px] font-black uppercase ml-1">MỚI</span>`;
+// A. Nút Xóa (bảng đối soát + bảng thô), confirm trước khi xóa, xóa thật trong D1, refresh sau khi xóa
+async function deleteTx(id){
+ if(!confirm(`Xóa hẳn giao dịch #${id} khỏi D1? Hành động này không thể hoàn tác.`))return;
+ try{await aj("/api/admin/tx/"+id+"/delete",{method:"POST"});txData=txData.filter(t=>t.id!==id);renderTransactions();toast("Đã xóa giao dịch #"+id);logEvent("warn","admin","Xóa giao dịch D1","#"+id);await loadTx(true);}
+ catch(e){toast("Lỗi xóa: "+e.message,"err");}}
 function renderTransactions(){
  const th=$("transHead"),tb=$("transBody");if(curTxTab==="rev")return;
  if(!txData.length){tb.innerHTML='<tr><td colspan="9" class="text-center py-8 text-slate-400 font-bold">Không có giao dịch nào</td></tr>';return;}
@@ -682,16 +793,16 @@ function renderTransactions(){
   tb.innerHTML=txData.map((tx,i)=>{
    const oId=tx.order_id||"Trống",oi=ordersDb.find(o=>normId(o.id)===normId(oId)),mo=tx.matchedOrder||{};
    const email=oi?.email||mo.email||"Chưa xác định",tc=oi?fmtBank(oTs(oi)):(mo.created_at?fmtBank(mo.created_at):"—"),web=webLabel(oi?.sourceWeb||oi?.target_web||mo.target_web,mo.worker_url);
-   const amt=Number(tx.amount);let sl=1;for(const bp of[60000,70000,80000,200000])if(amt%bp===0&&amt/bp<=24){sl=amt/bp;break;}
+   const amt=Number(tx.amount);let sl=1;for(const bp of[60000,70000,80000,200000,50000])if(amt%bp===0&&amt/bp<=24){sl=amt/bp;break;}
    const rx=extractOrder(tx.notification||tx.content),s=tx.status;
    const badge=/^(success|paid)$/.test(s)?["emerald","success"]:s==="pending"?["orange","pending"]:s==="unmatched"?["slate","unmatched"]:/reject|invalid|failed/.test(s)?["rose","failed"]:["yellow",s];
    const kind=tx.kind||mo.order_type||(oi?.isUpgrade?"upgrade":"new");
    return `<tr><td class="text-xs font-bold text-slate-400">${i+1}</td><td class="font-mono font-black text-emerald-600 cp" onclick="cp(${q(oId)})">${esc(oId)}${kindBadge(kind)}</td><td class="text-xs text-slate-600 whitespace-nowrap">${tc}</td><td class="text-xs font-bold text-slate-700 cp" onclick="cp(${q(email)})">${esc(email)}</td>
    <td><span class="font-black text-rose-600 whitespace-nowrap">${amt.toLocaleString("en-US")}VND</span>${sl>1?` <span class="text-xs text-slate-500 font-bold">x${sl}</span>`:""}</td><td class="text-xs font-bold text-slate-500">${esc(web)}</td><td>${rx?`<span class="font-bold text-[11px] cp text-slate-700" onclick="cp('${rx}')">${rx}</span>`:'<span class="text-slate-400 font-bold text-xs">Trống</span>'}</td>
-   <td><span class="bg-${badge[0]}-100 text-${badge[0]}-700 border border-${badge[0]}-200 px-2 py-1 rounded text-[10px] font-bold uppercase" title="${esc(tx.review_note||"")}">${esc(badge[1])}</span></td><td>${/^(success|paid|rejected)$/.test(s)?"":`<button onclick="approveTransaction(${tx.id})" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg shadow text-xs whitespace-nowrap"><i class="fas fa-bolt mr-1"></i>Ép Khớp</button>`}</td></tr>`;}).join("");
+   <td><span class="bg-${badge[0]}-100 text-${badge[0]}-700 border border-${badge[0]}-200 px-2 py-1 rounded text-[10px] font-bold uppercase" title="${esc(tx.review_note||"")}">${esc(badge[1])}</span></td><td class="flex gap-1.5">${/^(success|paid|rejected)$/.test(s)?"":`<button onclick="approveTransaction(${tx.id})" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg shadow text-xs whitespace-nowrap"><i class="fas fa-bolt mr-1"></i>Ép Khớp</button>`}<button onclick="deleteTx(${tx.id})" title="Xóa hẳn khỏi D1" class="bg-red-50 text-red-600 border border-red-100 hover:bg-red-500 hover:text-white font-bold px-2.5 py-1.5 rounded-lg text-xs"><i class="fas fa-trash"></i></button></td></tr>`;}).join("");
  }else{
-  th.innerHTML="<tr><th>STT</th><th>Thời Gian</th><th>Số Tiền</th><th>Nội Dung Thô</th></tr>";
-  tb.innerHTML=txData.map((tx,i)=>`<tr><td class="text-xs text-slate-500 font-bold">${i+1}</td><td class="text-xs text-slate-600 whitespace-nowrap">${fmtBank(tx.created_at)}</td><td class="font-black text-rose-600 whitespace-nowrap">${Number(tx.amount).toLocaleString("en-US")}VND</td><td class="font-mono text-[11px] text-slate-600 bg-slate-50 whitespace-normal break-words min-w-[250px]">${esc(tx.notification||tx.content||"—")}</td></tr>`).join("");}}
+  th.innerHTML="<tr><th>STT</th><th>Thời Gian</th><th>Số Tiền</th><th>Nội Dung Thô</th><th></th></tr>";
+  tb.innerHTML=txData.map((tx,i)=>`<tr><td class="text-xs text-slate-500 font-bold">${i+1}</td><td class="text-xs text-slate-600 whitespace-nowrap">${fmtBank(tx.created_at)}</td><td class="font-black text-rose-600 whitespace-nowrap">${Number(tx.amount).toLocaleString("en-US")}VND</td><td class="font-mono text-[11px] text-slate-600 bg-slate-50 whitespace-normal break-words min-w-[250px]">${esc(tx.notification||tx.content||"—")}</td><td><button onclick="deleteTx(${tx.id})" title="Xóa hẳn khỏi D1" class="bg-red-50 text-red-600 border border-red-100 hover:bg-red-500 hover:text-white font-bold px-2.5 py-1.5 rounded-lg text-xs"><i class="fas fa-trash"></i></button></td></tr>`).join("");}}
 async function approveTransaction(id){
  const tx=txData.find(t=>t.id===id);let oid=extractOrder(tx?.notification||tx?.content)||tx?.order_id||"";
  if(oid){if(!confirm(`ÉP KHỚP giao dịch #${id} cho đơn ${oid}?\nHệ thống sẽ chuyển Success và cấp link.`))return;}else{oid=prompt("Nhập Mã Đơn (DHXXXXXXXXXX) muốn chốt cho giao dịch này:","");if(!oid)return;}
@@ -748,9 +859,11 @@ function openLnkModal(id){const l=linksDb.find(x=>x.id===id);if(!l)return;$("mLI
 async function saveLnkEdit(){const l=linksDb.find(x=>x.id===$("mLId").value);if(!l)return;const o=$("mLOrig").value.trim();if(!o)return toast("Link gốc rỗng!","err");
  Object.assign(l,{email:$("mLEmail").value.trim(),expDate:$("mLExp").value.trim(),linkIndex:$("mLIdx").value.trim(),orig:o});delete l.machine;cm("mLnk");renderLinks();try{await saveLinks();toast("Đã cập nhật! Nhớ Đồng bộ GitHub.");}catch(e){}}
 async function toggleLock(tok,locked){if(!tok)return;linksDb.forEach(l=>{if(getT(l.masked)===tok)l.isLocked=!locked;});renderLinks();try{await saveLinks();toast(locked?"Đã mở khóa":"Đã khóa");}catch(e){}}
+// E.6 fix: xóa link -> chuyển sang deadDb VÀ xóa khỏi linksDb trong CÙNG một lần ghi (Promise.all song song trước đây có thể race
+// khiến GET /api/links trả bản cũ nếu chạy trước khi PUT /api/deadlinks hoàn tất — chuyển sang tuần tự & đảm bảo linksDb luôn được lưu sau cùng).
 async function delLink(id){const l=linksDb.find(x=>x.id===id);if(!l||!confirm("Xóa link này? (giữ 48h trong tab Đã xóa)"))return;
- deadDb.unshift({...l,deadTs:nowMs(),deadDate:new Date(nowMs()).toISOString()});linksDb=linksDb.filter(x=>x.id!==id);renderLinks();
- try{await aj("/api/deadlinks",{method:"POST",body:deadDb});await saveLinks();toast("Đã xóa link");}catch(e){}}
+ deadDb.unshift({...l,deadTs:nowMs(),deadDate:new Date(nowMs()).toISOString()});linksDb=linksDb.filter(x=>x.id!==id);renderLinks();renderDead();
+ try{await aj("/api/deadlinks",{method:"POST",body:deadDb});await saveLinks();toast("Đã xóa link");}catch(e){toast("Lỗi xóa link: "+e.message,"err");}}
 async function sortAllLinks(){
  const b=$("btnSortLinks");b.disabled=true;
  const pe=s=>{const t=expEnd(s);return t||0;};
@@ -761,6 +874,30 @@ async function triggerGitHub(){const b=$("btnTriggerGH");b.disabled=true;try{awa
 async function runGC(){const b=$("btnRunGC");b.disabled=true;toast("Đang quét KV...");try{const r=await aj("/api/gc",{method:"POST"});await rebuildAllMAP();toast(`Dọn xong! Xóa ${r.deleted} key rác.`);}catch(e){toast("Lỗi GC: "+e.message,"err");}b.disabled=false;}
 async function rebuildAllMAP(){const b=$("btnRebuildAll");b.disabled=true;try{await saveLinks();toast("Đã Rebuild MAP (trạng thái khóa lấy từ danh sách link)");}catch(e){toast("Lỗi: "+e.message,"err");}b.disabled=false;}
 
+// ===================== RÀ QUÉT & MAP LẠI (E.3, F) =====================
+let rlLastItems=[],rlLastMode="scan";
+function openRelinkModal(){renderRelinkFilters();$("rlResult").innerHTML='<div class="text-xs text-slate-400 italic">Chưa quét — chọn bộ lọc rồi bấm Rà quét.</div>';$("rlActions").classList.add("hidden");$("mRelink").classList.remove("hidden");}
+function renderRelinkFilters(){const remap=$("rlAction").value==="remap";$("rlScope").parentElement.classList.toggle("opacity-40",remap);$("rlScope").disabled=remap;}
+async function relinkScanRun(){
+ const action=$("rlAction").value,body={action,scope:$("rlScope").value,expired:$("rlExpired").value,includeManual:$("rlIncludeManual").checked,mode:"scan"};
+ $("rlResult").innerHTML='<div class="text-xs text-slate-400"><i class="fas fa-spinner fa-spin mr-1"></i>Đang rà quét...</div>';$("rlActions").classList.add("hidden");
+ try{
+  const j=await aj("/api/admin/relink",{method:"POST",body});rlLastMode=action;rlLastItems=j.items||[];
+  if(!rlLastItems.length){$("rlResult").innerHTML='<div class="text-xs text-slate-400 italic">Không tìm thấy mục nào khớp bộ lọc.</div>';return;}
+  const rows=rlLastItems.map((it,i)=>{
+   const tag=action==="remap"?`<span class="text-emerald-600 font-mono">${esc((it.to||"").slice(0,50))}...</span>`:`${it.dead?'<span class="bg-red-100 text-red-700 text-[9px] font-black px-1.5 py-0.5 rounded">CHẾT</span>':'<span class="bg-slate-100 text-slate-500 text-[9px] font-black px-1.5 py-0.5 rounded">SỐNG</span>'}${it.manual?' <span class="bg-amber-100 text-amber-700 text-[9px] font-black px-1.5 py-0.5 rounded">ĐÃ SỬA TAY</span>':""}${it.expired?' <span class="bg-slate-200 text-slate-600 text-[9px] font-black px-1.5 py-0.5 rounded">HẾT HẠN</span>':""}`;
+   return `<label class="flex items-center gap-2 px-3 py-2 text-xs border-b border-slate-100 last:border-0 cursor-pointer hover:bg-slate-50"><input type="checkbox" class="rl-pick w-3.5 h-3.5 accent-amber-600" data-id="${esc(it.id)}" data-field="${esc(it.field)}" checked><span class="font-mono font-bold text-indigo-600">${esc(it.id)}</span><span class="text-slate-400">${esc(it.field)}</span><span class="text-slate-600 truncate flex-1">${esc(it.email||"")}</span>${tag}</label>`;}).join("");
+  $("rlResult").innerHTML=`<div class="text-[11px] font-bold text-slate-500 mb-2">${rlLastItems.length} mục khớp bộ lọc — bỏ chọn mục không muốn xử lý:</div><div class="border border-slate-200 rounded-xl max-h-72 overflow-y-auto divide-y divide-slate-100">${rows}</div>`;
+  $("rlApplyBtn").textContent=action==="remap"?"MAP LẠI CHO MỤC ĐÃ CHỌN":"XÓA LINK KHỎI ĐƠN (MỤC ĐÃ CHỌN)";
+  $("rlActions").classList.remove("hidden");
+ }catch(e){$("rlResult").innerHTML=`<span class="text-red-600 text-xs">Lỗi: ${esc(e.message)}</span>`;}}
+async function relinkApply(){
+ const picks=[...document.querySelectorAll(".rl-pick:checked")].map(el=>({id:el.dataset.id,field:el.dataset.field}));
+ if(!picks.length)return toast("Chưa chọn mục nào","err");
+ if(!confirm(`Áp dụng cho ${picks.length} mục đã chọn?`))return;
+ try{const j=await aj("/api/admin/relink",{method:"POST",body:{action:rlLastMode,mode:"apply",picks}});toast(`Đã xử lý ${j.applied} mục`);logEvent("ok","admin","Rà quét & Map lại link","áp dụng "+j.applied+" mục");cm("mRelink");fetchAll();}
+ catch(e){toast("Lỗi: "+e.message,"err");}}
+
 // ===================== ĐÃ XÓA (tự xóa hẳn sau 48h) =====================
 const deadLive=()=>deadDb.filter(l=>nowMs()-(Number(l.deadTs)||parseAny(l.deadDate)||nowMs())<=48*36e5);
 function renderDead(){
@@ -768,7 +905,8 @@ function renderDead(){
  tb.innerHTML=list.map((l,i)=>{const t=Number(l.deadTs)||parseAny(l.deadDate),left=Math.max(0,Math.ceil((t+48*36e5-nowMs())/36e5));
   return `<div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex flex-col gap-2"><div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="font-bold text-xs text-slate-400">#${i+1}</span><span class="font-bold text-slate-800 text-sm cp truncate" onclick="cp(${q(l.email)})">${esc(l.email||"—")}</span></div><button onclick="restoreLink(${q(l.id)})" class="text-emerald-600 font-bold px-3 py-1.5 bg-emerald-50 rounded-lg text-xs hover:bg-emerald-500 hover:text-white border border-emerald-100"><i class="fas fa-rotate-left mr-1"></i>Khôi phục</button></div>
   <div class="text-[10px] font-mono text-slate-500 break-all cp" onclick="cp(${q(l.orig)})">${esc(l.orig||"—")}</div><div class="text-[10px] font-mono text-indigo-500 break-all cp" onclick="cp(${q(l.masked)})">${esc(l.masked||"—")}</div><div class="text-xs text-slate-500 font-bold">Ngắt: ${fmtBank(t)} <span class="text-orange-500 ml-1">(tự xóa hẳn sau ${left}h)</span></div></div>`;}).join("");}
-async function restoreLink(id){const l=deadDb.find(x=>x.id===id);if(!l)return;const c={...l};delete c.deadDate;delete c.deadTs;linksDb.unshift(c);deadDb=deadDb.filter(x=>x.id!==id);renderDead();renderLinks();try{await Promise.all([saveLinks(),aj("/api/deadlinks",{method:"POST",body:deadDb})]);toast("Đã khôi phục! Nhớ Rebuild MAP.");}catch(e){}}
+async function restoreLink(id){const l=deadDb.find(x=>x.id===id);if(!l)return;const c={...l};delete c.deadDate;delete c.deadTs;linksDb.unshift(c);deadDb=deadDb.filter(x=>x.id!==id);renderDead();renderLinks();
+ try{await saveLinks();await aj("/api/deadlinks",{method:"POST",body:deadDb});toast("Đã khôi phục! Nhớ Rebuild MAP.");}catch(e){toast("Lỗi khôi phục: "+e.message,"err");}}
 async function clearDeadLinks(){if(!confirm("Xóa hẳn toàn bộ lịch sử đã xóa?"))return;deadDb=[];renderDead();try{await api("/api/deadlinks",{method:"DELETE"});toast("Đã xóa lịch sử");}catch(e){}}
 
 // ===================== HƯỚNG DẪN (khối, tab tự thêm) =====================
@@ -827,6 +965,7 @@ function cmsRow(b,i){
 function renderCmsEditor(){
  $("cmsList").innerHTML=curBlocks.length?curBlocks.map(cmsRow).join(""):`<div class="p-6 text-center text-slate-400 text-xs font-bold">Chưa có khối nào. Bấm "Thêm khối" ở trên.</div>`;
  $("cmsPreview").innerHTML=renderBlocks(curBlocks,curCms);}
+// J.5/J.6: block trống hoặc chỉ có dấu cách vẫn giữ nguyên — không dùng .trim() để loại bỏ khi lưu (xem saveCms)
 function cmsSet(i,k,v,rerender){curBlocks[i][k]=v;if(rerender)renderCmsEditor();else $("cmsPreview").innerHTML=renderBlocks(curBlocks,curCms);}
 function cmsUl(i){const b=curBlocks[i];b.ul=!b.ul?"black":b.ul==="black"?"red":"";renderCmsEditor();}
 function cmsAdd(t){const nb={t,x:"",u:""};if(t==="spacer")nb.h=16;if(t==="toc")nb.x="Xem nhanh";const at=cmsSel>=0?cmsSel+1:curBlocks.length;curBlocks.splice(at,0,nb);cmsSel=at;renderCmsEditor();}
@@ -836,12 +975,14 @@ function cmsDel(i){curBlocks.splice(i,1);cmsSel=-1;renderCmsEditor();}
 function cmsDS(e,i){cmsDrag=i;try{e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain",String(i));}catch(x){}}
 function cmsDrop(e,i){e.preventDefault();if(cmsDrag<0||cmsDrag===i)return;const [b]=curBlocks.splice(cmsDrag,1);curBlocks.splice(i,0,b);cmsSel=i;cmsDrag=-1;renderCmsEditor();}
 async function saveCms(){
- cmsEnsureTabs();guides[curCms]=curBlocks.filter(b=>["spacer","divider","toc"].includes(b.t)||(b.t==="img"?b.u:(b.x||b.u)));
+ cmsEnsureTabs();
+ // J.5/J.6: KHÔNG dùng .trim() hay bỏ block rỗng — mọi block admin đã thêm (kể cả chưa nhập gì, hoặc chỉ có dấu cách) đều được giữ nguyên.
+ guides[curCms]=curBlocks.slice();
  try{await aj("/api/guides",{method:"POST",body:guides});toast("Đã lưu hướng dẫn (đã đẩy sang các web vệ tinh)");logEvent("ok","Lưu hướng dẫn",curCms);}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
 
 // ===================== CÀI ĐẶT =====================
 const saveCmsDb=()=>{const s=cmsDb.settings;["syncD1Url","syncD1Secret","crossSyncEnabled","mailLog","sysLog","autoRole"].forEach(k=>delete s[k]);return aj("/api/cms",{method:"POST",body:cmsDb});};
-function switchSettingsTab(t){["setweb","log","dev","time"].forEach(x=>{$("settings-view-"+x).classList.toggle("hidden",x!==t);$("stab-"+x).classList.toggle("active",x===t);});if(t==="log")loadLogs();if(t==="dev")renderDev();if(t==="setweb"||t==="time")loadSettingsUI();}
+function switchSettingsTab(t){["setweb","log","dev","time"].forEach(x=>{$("settings-view-"+x).classList.toggle("hidden",x!==t);$("stab-"+x).classList.toggle("active",x===t);});if(t==="log")loadLogs();if(t==="dev")renderDev();if(t==="setweb"||t==="time")loadSettingsUI();if(t==="setweb")loadQuota();}
 function checkBlur(i){const has=$("routeWeb"+i).value.trim(),c=$("blurWeb"+i);if(!has){c.checked=false;c.disabled=true;}else c.disabled=false;}
 function renderRouteRows(){const s=cmsDb.settings;$("routeRows").innerHTML=[1,2,3].map(i=>`<div class="flex items-center justify-between bg-slate-50 border border-slate-200 p-2 rounded-xl"><div class="flex-1 mr-3"><label class="block font-bold text-[10px] text-slate-600 mb-1">Định tuyến Web ${i} → Link ${i}</label><input id="routeWeb${i}" type="text" oninput="checkBlur(${i})" value="${esc(s["routeWeb"+i]||"")}" placeholder="${["doicucden","onepiece","lucastanora"][i-1]}" class="w-full p-2 border border-slate-200 rounded-lg outline-none font-mono text-[11px] bg-white"></div><div class="flex flex-col items-center shrink-0"><label class="block font-bold text-[10px] text-slate-600 mb-1">Làm mờ</label><label class="toggle-wrap"><input type="checkbox" id="blurWeb${i}" ${s["blurWeb"+i]?"checked":""}><span class="toggle-slider"></span></label></div></div>`).join("");[1,2,3].forEach(checkBlur);}
 function renderSyncWorkers(){$("syncWorkerList").innerHTML=arr(cmsDb.settings.syncWorkers).map((w,i)=>`<div class="flex items-center gap-2"><input type="text" id="syncW_${i}" value="${esc(w.url)}" placeholder="https://worker..." class="w-full p-2 border border-slate-200 rounded-xl outline-none font-mono text-[11px] bg-slate-50"><label class="toggle-wrap"><input type="checkbox" id="syncWActive_${i}" ${w.active?"checked":""}><span class="toggle-slider"></span></label><button onclick="removeSyncWorker(${i})" class="shrink-0 bg-red-50 text-red-500 p-2.5 rounded-xl hover:bg-red-500 hover:text-white"><i class="fas fa-trash"></i></button></div>`).join("");}
@@ -865,6 +1006,28 @@ async function loadStatus(){
   $("statusBox").className="text-xs rounded-xl border p-3 space-y-1 "+(ok&&j.d1?"bg-emerald-50 border-emerald-200 text-emerald-700":"bg-red-50 border-red-200 text-red-700");
   $("statusBox").innerHTML=`<div><i class="fas ${ok?"fa-circle-check":"fa-triangle-exclamation"} mr-1"></i><b>Cron:</b> ${c?`chạy lần cuối ${fmtBank(c.ts)} (${Math.round(age/60000)} phút trước) — khóa ${c.locked}, luân chuyển ${c.migrated}, mail ${c.mails}`:"CHƯA từng chạy — kiểm tra Cron Trigger của Worker"}</div><div><i class="fas ${j.d1?"fa-circle-check":"fa-triangle-exclamation"} mr-1"></i><b>Kết nối D1:</b> ${j.d1?"OK":esc(j.d1Error||"lỗi")}</div><div><b>Web số:</b> ${j.web} · <b>ADMIN_PASSWORD:</b> ${j.hasPassword?"đã đặt":"CHƯA đặt"} · <b>WEB_API_SECRET2:</b> ${j.hasSecret2?"đã đặt":"CHƯA đặt"}</div>`;
  }catch(e){}}
+
+// ---- G. System Quota (chỉ hệ thống VPN này: KV, Worker, D1, Google Mail)
+const QUOTA_LIMITS={write:1000,read:100000,del:1000};
+function quotaBar(used,total,label){
+ const pct=total?Math.min(100,Math.round(used/total*100)):0,warn=pct>=90?"red":pct>=80?"amber":"emerald",
+  colMap={red:"bg-red-500",amber:"bg-amber-500",emerald:"bg-emerald-500"},txtMap={red:"text-red-600",amber:"text-amber-600",emerald:"text-emerald-600"};
+ return `<div><div class="flex justify-between text-[11px] font-bold mb-1"><span class="text-slate-600">${label}</span><span class="${txtMap[warn]}">${used.toLocaleString("en-US")} / ${total.toLocaleString("en-US")} — ${pct}%</span></div><div class="h-2 bg-slate-100 rounded-full overflow-hidden"><div class="h-full ${colMap[warn]} rounded-full" style="width:${pct}%"></div></div></div>`;}
+async function loadQuota(){
+ const el=$("quotaBody");if(!el)return;
+ try{
+  const j=await aj("/api/admin/quota",{soft:true});
+  if(!j||!j.ok){el.innerHTML='<div class="text-red-500 font-bold">Không lấy được quota (thiếu cấu hình CF_API_TOKEN / CF_ACCOUNT_ID ở Worker?)</div>';return;}
+  const resetIn=j.nextReset?Math.max(0,Math.round((j.nextReset-Date.now())/36e5)):null;
+  let html="";
+  if(j.kv)html+=box("Cloudflare KV (chỉ web này, hôm nay)",quotaBar(j.kv.write||0,QUOTA_LIMITS.write,"Write")+`<div class="h-2"></div>`+quotaBar(j.kv.read||0,QUOTA_LIMITS.read,"Read")+`<div class="h-2"></div>`+quotaBar(j.kv.delete||0,QUOTA_LIMITS.del,"Delete")+(resetIn!==null?`<div class="text-[10px] text-slate-400 mt-2">Reset sau ~${resetIn} giờ</div>`:""));
+  else if(j.err&&j.err.kv)html+=box("Cloudflare KV",`<div class="text-[11px] text-slate-400 italic">Chưa lấy được: ${esc(j.err.kv)}</div>`);
+  if(j.worker)html+=box("Cloudflare Worker (hôm nay)",`<div class="grid grid-cols-3 gap-2 text-center"><div><div class="text-lg font-black text-indigo-600">${(j.worker.requests||0).toLocaleString("en-US")}</div><div class="text-[10px] text-slate-400 font-bold">Requests</div></div><div><div class="text-lg font-black text-red-500">${(j.worker.errors||0).toLocaleString("en-US")}</div><div class="text-[10px] text-slate-400 font-bold">Errors</div></div><div><div class="text-lg font-black text-slate-600">${(j.worker.subrequests||0).toLocaleString("en-US")}</div><div class="text-[10px] text-slate-400 font-bold">Subrequests</div></div></div>`);
+  if(j.d1)html+=box("D1 Database (hôm nay)",`<div class="grid grid-cols-2 gap-2 text-center"><div><div class="text-lg font-black text-indigo-600">${(j.d1.rowsRead||0).toLocaleString("en-US")}</div><div class="text-[10px] text-slate-400 font-bold">Rows read</div></div><div><div class="text-lg font-black text-indigo-600">${(j.d1.rowsWritten||0).toLocaleString("en-US")}</div><div class="text-[10px] text-slate-400 font-bold">Rows written</div></div></div>`);
+  if(j.mail){const p=j.mail.limit?Math.round(j.mail.remaining/j.mail.limit*100):0;html+=box("Google Apps Script — Email",`<div class="text-[11px] text-slate-500 mb-1">Đây là quota <b>recipients</b> (người nhận), không phải số lượng email message.</div>${quotaBar(j.mail.limit-j.mail.remaining,j.mail.limit,"Recipients")}<div class="text-[10px] text-slate-400 mt-1">Còn lại: ${j.mail.remaining} / ${j.mail.limit}</div>`);}
+  else if(j.err&&j.err.mail)html+=box("Google Apps Script — Email",`<div class="text-[11px] text-slate-400 italic">Chưa lấy được: ${esc(j.err.mail)}</div>`);
+  el.innerHTML=html||'<div class="text-slate-400 italic">Chưa có dữ liệu quota.</div>';
+ }catch(e){el.innerHTML=`<span class="text-red-600">Lỗi tải quota: ${esc(e.message)}</span>`;}}
 
 // ---- nhật ký hợp nhất
 async function loadLogs(){try{logsData=await aj("/api/admin/logs");renderLogs();}catch(e){}}
@@ -892,9 +1055,9 @@ async function migrateDates(apply){
 let started=false;
 function startApp(fresh){
  $("loginWrap").classList.add("hidden");document.documentElement.classList.add("has-tok");$("hdr").classList.remove("hidden");$("hdr").style.display="flex";$("main").classList.remove("hidden");
- if(started){fetchAll();return;}started=true;buildTabs();
+ if(started){fetchAll();return;}started=true;buildTabs();mcRenderPresetOptions();
  go(localStorage.getItem(SITE_KEY+"_lastTab")||"t-ord");if(fresh)toast("Đăng nhập thành công!");
- fetchAll();loadTx(true);setInterval(pollMain,10000);setInterval(loadStatus,120000);setInterval(tickClocks,1000);
+ fetchAll();loadTx(true);loadQuota();setInterval(pollMain,10000);setInterval(loadStatus,120000);setInterval(tickClocks,1000);
  document.addEventListener("visibilitychange",()=>{if(!document.hidden){pollMain();loadTx();}});}
 window.onload=()=>{if(TOKEN)startApp(false);else{buildTabs();$("loginWrap").classList.remove("hidden");}};
 </script>
