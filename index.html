@@ -1,4 +1,4 @@
-<!-- v1 - Khách (đợt 1 nâng cấp): dark mode OLED (icon 1 nút ☀/🌙), dock icon quản lý được từ admin + kéo/vuốt/wheel mượt, đồng bộ UI trạng thái chờ (bank countdown / Alipay-Weixin chờ duyệt / timeout / manual), sửa countdown đè progress bar desktop, portal không hiện "Đang tạo link" khi chưa thực sự xử lý, Enter để tìm kiếm (giữ nguyên). Gọi thẳng Worker (không cần proxy Pages), polling trạng thái, giữ đăng nhập 24h qua F5, blur/3 link từ server, guide dạng khối -->
+<!-- v1.1 - Khách (đợt 1 nâng cấp): dark mode OLED (icon 1 nút ☀/🌙), dock icon quản lý được từ admin (URL + màu nền CSS tùy ý) + kéo/vuốt/wheel mượt, đồng bộ UI trạng thái chờ (bank countdown / Alipay-Weixin chờ duyệt / timeout / manual), sửa countdown đè progress bar desktop, portal không hiện "Đang tạo link" khi chưa thực sự xử lý, Enter để tìm kiếm (giữ nguyên). Gọi thẳng Worker (không cần proxy Pages), polling trạng thái, giữ đăng nhập 24h qua F5, blur/3 link từ server, guide dạng khối -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -456,8 +456,8 @@ const DOCK_DEFAULT=[['https://www.facebook.com/','bg-fb','fab fa-facebook-f'],['
 const DOCK_NF='https://images.ctfassets.net/4cd45et68cgf/Rx83JoRDMkYNlMC9MKzcB/2b14d5a59fc3937afd3f03191e19502d/Netflix-Symbol.png?w=700&h=456';
 function renderDock(){
  const list=(Array.isArray(cfgCache.dock)&&cfgCache.dock.length?cfgCache.dock:DOCK_DEFAULT);
- const one=list.map(it=>{const h=it.url||it[0],c=it.cls||it[1]||'bg-fb',ic=it.icon||it[2]||'fas fa-star',img=it.img||(ic==='IMG'?DOCK_NF:'');
-  return `<a href="${esc(h)}" target="_blank" class="dock-icon ${esc(c)}">${img?`<img src="${esc(img)}" class="w-[70%] h-[70%] object-contain" alt="">`:`<i class="${esc(ic)}"></i>`}</a>`;}).join('');
+ const one=list.map(it=>{const h=it.url||it[0],c=it.cls||it[1]||(it.bg?'':'bg-fb'),ic=it.icon||it[2]||'fas fa-star',img=it.img||(ic==='IMG'?DOCK_NF:''),bgStyle=it.bg?` style="background:${esc(it.bg)}"`:'';
+  return `<a href="${esc(h)}" target="_blank" class="dock-icon ${esc(c)}"${bgStyle}>${img?`<img src="${esc(img)}" class="w-[70%] h-[70%] object-contain" alt="">`:`<i class="${esc(ic)}"></i>`}</a>`;}).join('');
  $('dockMarquee').innerHTML=one+one;
  setupDockDrag();}
 // Kéo tay / vuốt / wheel mượt cho dải icon — không jank: dùng transform trực tiếp trong lúc kéo, chỉ bật lại animation khi thả ra.
