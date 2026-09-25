@@ -170,13 +170,12 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
             <div class="dots text-indigo-400 text-xl leading-none"><span>•</span><span>•</span><span>•</span></div>
           </div>
           <div id="pendingTimeoutState" class="hidden w-full mb-2">
-            <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-3"></i>
+            <div class="loader-ring red"><i class="fas fa-exclamation-triangle"></i></div>
             <h4 id="pendingTimeoutTitle" class="font-extrabold text-red-700 text-sm md:text-lg uppercase">Chưa nhận được thanh toán</h4>
-            <p id="pendingTimeoutDesc" class="text-red-600 text-sm md:text-base font-bold mt-1 mb-2">Đã quá thời gian tự động duyệt. Bạn đã chuyển khoản chưa?</p>
-          </div>
-          <div id="pendingManualWaitState" class="hidden w-full mb-2">
-            <div class="loader-ring sky"><i class="fas fa-hourglass-half"></i></div>
-            <h4 id="pendingManualWaitTitle" class="font-extrabold text-sky-700 text-sm md:text-lg uppercase">Đợi Admin duyệt</h4>
+            <p id="pendingTimeoutDesc" class="text-red-600 text-sm md:text-base font-bold mt-1 mb-4 max-w-md">Đã quá thời gian tự động duyệt. Bạn đã chuyển khoản chưa?</p>
+            <div class="w-full max-w-md mx-auto bg-white/80 border border-red-100 rounded-2xl px-4 py-3 shadow-sm">
+              <p class="text-slate-500 text-xs md:text-sm font-medium">Nếu bạn đã chuyển khoản, vui lòng kiểm tra lại thông tin giao dịch hoặc liên hệ Admin để được hỗ trợ.</p>
+            </div>
           </div>
           <div class="w-full flex flex-col items-center mt-3 border-t border-indigo-100 pt-4">
             <p id="pendingSupportText" class="text-slate-500 text-[11px] md:text-sm mb-3 font-medium px-4">Cần hỗ trợ? Hãy nhắn cho Admin.</p>
@@ -194,18 +193,21 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
             <div class="step-chip"><b>3</b><span>Nhận link, tự cập nhật tại đây</span></div>
           </div>
           <div class="flex gap-3 flex-wrap justify-center">
-            <a href="https://zalo.me/0917678211" target="_blank" class="bg-[#0068ff]/85 text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-sm shadow-md hover:scale-105 transition"><i class="fas fa-comment-dots"></i> Zalo Admin</a>
-            <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="bg-[#07C160]/85 text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-sm shadow-md hover:scale-105 transition"><i class="fab fa-weixin"></i> WeChat</button>
+            <a href="https://zalo.me/0917678211" target="_blank" class="bg-[#0068ff]/85 text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-sm shadow-md hover:scale-105 transition"><i class="fas fa-comment-dots"></i>Zalo Admin</a>
+            <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="bg-[#07C160]/85 text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-sm shadow-md hover:scale-105 transition"><i class="fab fa-weixin"></i>WeChat</button>
           </div>
         </div>
 
-        <div id="portalContentFailed" class="hidden bg-red-50 border border-red-200 p-6 rounded-xl flex flex-col items-center text-center mb-6">
-          <i class="fas fa-times-circle text-4xl text-red-500 mb-3"></i>
+        <div id="portalContentFailed" class="hidden bg-gradient-to-br from-red-50 via-white to-rose-50 border border-red-200 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-sm">
+          <div class="loader-ring red"><i class="fas fa-circle-xmark"></i></div>
           <h4 class="font-extrabold text-red-800 text-sm md:text-lg uppercase" data-i18n="failed_title">Đơn hàng bị từ chối</h4>
-          <p class="text-red-700 text-sm md:text-base font-bold mt-1 mb-2">Lý do: <span id="failReasonText" class="font-mono bg-white px-2 py-1 rounded border border-red-200"></span></p>
-          <div class="w-full flex flex-col items-center mt-4 border-t border-red-100 pt-4">
-            <p class="text-slate-600 text-[11px] md:text-sm mb-3 font-semibold px-4">Vui lòng liên hệ Admin để kiểm tra lại giao dịch này.</p>
-            <a href="https://zalo.me/0917678211" target="_blank" class="mx-auto bg-[#0068ff] text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition shadow-md"><i class="fas fa-comment-dots text-lg"></i> Nhắn Zalo Admin</a>
+          <p class="text-red-700 text-sm md:text-base font-bold mt-1 mb-4 max-w-md">Lý do: <span id="failReasonText" class="font-mono bg-white px-2 py-1 rounded border border-red-200"></span></p>
+          <div class="w-full max-w-md mx-auto bg-white/80 border border-red-100 rounded-2xl px-4 py-3 shadow-sm mb-4">
+            <p class="text-slate-600 text-xs md:text-sm font-semibold">Vui lòng liên hệ Admin để kiểm tra lại giao dịch này.</p>
+          </div>
+          <div class="w-full flex flex-col items-center mt-1 border-t border-red-100 pt-4">
+            <p class="text-slate-500 text-[11px] md:text-sm mb-3 font-medium px-4">Cần hỗ trợ? Hãy nhắn cho Admin.</p>
+            <a href="https://zalo.me/0917678211" target="_blank" class="mx-auto bg-[#0068ff] text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition shadow-md"><i class="fas fa-comment-dots text-lg"></i>Nhắn Zalo Admin</a>
           </div>
         </div>
 
