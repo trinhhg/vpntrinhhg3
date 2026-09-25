@@ -1,4 +1,4 @@
-<!-- v1.1 - Khách (đợt 1 nâng cấp): dark mode OLED (icon 1 nút ☀/🌙), dock icon quản lý được từ admin (URL + màu nền CSS tùy ý) + kéo/vuốt/wheel mượt, đồng bộ UI trạng thái chờ (bank countdown / Alipay-Weixin chờ duyệt / timeout / manual), sửa countdown đè progress bar desktop, portal không hiện "Đang tạo link" khi chưa thực sự xử lý, Enter để tìm kiếm (giữ nguyên). Gọi thẳng Worker (không cần proxy Pages), polling trạng thái, giữ đăng nhập 24h qua F5, blur/3 link từ server, guide dạng khối -->
+<!-- v1.2 - by chatgpt Khách (đợt 1 nâng cấp): dark mode OLED (icon 1 nút ☀/🌙), dock icon quản lý được từ admin (URL + màu nền CSS tùy ý) + kéo/vuốt/wheel mượt, đồng bộ UI trạng thái chờ (bank countdown / Alipay-Weixin chờ duyệt / timeout / manual), sửa countdown đè progress bar desktop, portal không hiện "Đang tạo link" khi chưa thực sự xử lý, Enter để tìm kiếm (giữ nguyên). Gọi thẳng Worker (không cần proxy Pages), polling trạng thái, giữ đăng nhập 24h qua F5, blur/3 link từ server, guide dạng khối -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -98,14 +98,12 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
 </head>
 <body class="min-h-screen flex flex-col w-full overflow-x-hidden">
 <div id="toastContainer" class="fixed top-[90px] md:top-[100px] right-5 z-[9999] flex flex-col items-end gap-2 pointer-events-none"></div>
-
 <div id="floatingSocials" class="fixed bottom-24 md:bottom-6 right-4 md:right-6 flex flex-col gap-3 z-40 transition-all duration-500">
   <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="w-12 h-12 bg-wechat text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce"><i class="fab fa-weixin"></i></button>
   <a href="https://t.me/hoaian57" target="_blank" class="w-12 h-12 bg-tele text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.1s"><i class="fab fa-telegram-plane"></i></a>
   <a href="https://www.facebook.com/trinh.hg.57" target="_blank" class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.2s"><i class="fab fa-facebook-messenger"></i></a>
   <a href="https://zalo.me/0917678211" target="_blank" class="w-12 h-12 bg-[#0068ff] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.3s"><span class="font-bold text-[14px]">Zalo</span></a>
 </div>
-
 <div id="wechatModal" class="hidden fixed inset-0 z-[99999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all" onclick="this.classList.add('hidden')">
   <div class="bg-white p-6 rounded-3xl text-center max-w-sm w-full shadow-2xl" onclick="event.stopPropagation()">
     <h3 class="font-extrabold text-xl text-slate-800 mb-2">WeChat Hỗ trợ</h3>
@@ -114,7 +112,6 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
     <button onclick="document.getElementById('wechatModal').classList.add('hidden')" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl hover:bg-slate-900 transition">ĐÓNG BẢNG NÀY</button>
   </div>
 </div>
-
 <nav id="mainNav" class="glass-ui fixed top-0 w-full z-[70] border-b border-slate-200 py-3">
   <div class="max-w-[1400px] mx-auto px-4 w-full flex flex-col md:flex-row items-center justify-between gap-3">
     <div class="flex items-center justify-between w-full md:w-auto shrink-0">
@@ -143,7 +140,6 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
   </div>
 </nav>
 <div class="h-[120px] md:h-[80px]"></div>
-
 <div id="mobileNavWrapper" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[60]">
   <div class="md:hidden bg-white/95 backdrop-blur-md shadow-lg rounded-full px-3 py-1.5 flex gap-2 border border-slate-200">
     <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home mobile-tab-btn active flex items-center justify-center text-slate-500 w-10 h-10 rounded-full transition"><i class="fas fa-tv text-lg"></i></button>
@@ -152,12 +148,10 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
     <button id="themeTogglePortal" onclick="toggleTheme()" title="Sáng / Tối" class="flex items-center justify-center"></button>
   </div>
 </div>
-
 <main class="flex-grow z-10 px-2 md:px-4 py-4 md:py-6 max-w-[1400px] mx-auto w-full overflow-x-hidden">
   <div id="view-portal" class="view-section mb-20 w-full">
     <div id="p-home" class="portal-tab-content active w-full">
       <div class="bg-white p-4 md:p-8 rounded-3xl mb-8 shadow-sm border border-slate-200 w-full overflow-hidden">
-
         <div id="portalContentPending" class="hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-indigo-200 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-sm">
           <div id="pendingActiveState" class="w-full">
             <div class="loader-ring"><i class="fas fa-shield-halved"></i></div>
@@ -170,7 +164,7 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
             <div class="dots text-indigo-400 text-xl leading-none"><span>•</span><span>•</span><span>•</span></div>
           </div>
           <div id="pendingTimeoutState" class="hidden w-full mb-2">
-            <div class="loader-ring red"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="loader-ring"><i class="fas fa-exclamation-triangle text-red-500"></i></div>
             <h4 id="pendingTimeoutTitle" class="font-extrabold text-red-700 text-sm md:text-lg uppercase">Chưa nhận được thanh toán</h4>
             <p id="pendingTimeoutDesc" class="text-red-600 text-sm md:text-base font-bold mt-1 mb-4 max-w-md">Đã quá thời gian tự động duyệt. Bạn đã chuyển khoản chưa?</p>
             <div class="w-full max-w-md mx-auto bg-white/80 border border-red-100 rounded-2xl px-4 py-3 shadow-sm">
@@ -182,7 +176,6 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
             <a href="https://zalo.me/0917678211" target="_blank" id="pendingZaloBtn" class="mx-auto bg-[#0068ff]/85 text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition shadow-md"><i class="fas fa-comment-dots text-lg"></i><span id="pendingZaloBtnTxt">Nhắn Zalo Admin</span></a>
           </div>
         </div>
-
         <div id="portalContentManual" class="hidden bg-gradient-to-br from-amber-50 via-white to-orange-50 border border-amber-200 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-sm">
           <div class="loader-ring amber"><i class="fas fa-hourglass-half"></i></div>
           <h4 class="font-extrabold text-amber-800 text-sm md:text-lg uppercase" data-i18n="pending_manual_title">Đơn hàng đang chờ Admin duyệt</h4>
@@ -193,13 +186,12 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
             <div class="step-chip"><b>3</b><span>Nhận link, tự cập nhật tại đây</span></div>
           </div>
           <div class="flex gap-3 flex-wrap justify-center">
-            <a href="https://zalo.me/0917678211" target="_blank" class="bg-[#0068ff]/85 text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-sm shadow-md hover:scale-105 transition"><i class="fas fa-comment-dots"></i>Zalo Admin</a>
-            <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="bg-[#07C160]/85 text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-sm shadow-md hover:scale-105 transition"><i class="fab fa-weixin"></i>WeChat</button>
+            <a href="https://zalo.me/0917678211" target="_blank" class="bg-[#0068ff]/85 text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-sm shadow-md hover:scale-105 transition"><i class="fas fa-comment-dots"></i> Zalo Admin</a>
+            <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="bg-[#07C160]/85 text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-sm shadow-md hover:scale-105 transition"><i class="fab fa-weixin"></i> WeChat</button>
           </div>
         </div>
-
         <div id="portalContentFailed" class="hidden bg-gradient-to-br from-red-50 via-white to-rose-50 border border-red-200 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-sm">
-          <div class="loader-ring red"><i class="fas fa-circle-xmark"></i></div>
+          <div class="loader-ring"><i class="fas fa-circle-xmark text-red-500"></i></div>
           <h4 class="font-extrabold text-red-800 text-sm md:text-lg uppercase" data-i18n="failed_title">Đơn hàng bị từ chối</h4>
           <p class="text-red-700 text-sm md:text-base font-bold mt-1 mb-4 max-w-md">Lý do: <span id="failReasonText" class="font-mono bg-white px-2 py-1 rounded border border-red-200"></span></p>
           <div class="w-full max-w-md mx-auto bg-white/80 border border-red-100 rounded-2xl px-4 py-3 shadow-sm mb-4">
@@ -210,7 +202,6 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
             <a href="https://zalo.me/0917678211" target="_blank" class="mx-auto bg-[#0068ff] text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition shadow-md"><i class="fas fa-comment-dots text-lg"></i>Nhắn Zalo Admin</a>
           </div>
         </div>
-
         <div id="portalContentSuccess" class="hidden w-full">
           <div class="mb-6 flex justify-center w-full">
             <div class="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 p-4 md:p-5 rounded-2xl shadow-sm flex flex-col md:flex-row items-center gap-4 w-full text-center md:text-left relative overflow-hidden">
@@ -222,7 +213,6 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
               </div>
             </div>
           </div>
-
           <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 mb-5 shadow-sm relative overflow-hidden">
             <div id="upgradeSuccessBadge" class="hidden absolute top-0 right-0 bg-red-600 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md z-10" data-i18n="badge_upgrade_success">🎉 NÂNG GÓI THÀNH CÔNG</div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
@@ -241,7 +231,6 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
               <button id="btnRequestData" onclick="requestDataCheck()" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs hover:scale-105 transition shadow-sm flex items-center justify-center btn-heartbeat outline-none"><i class="fas fa-chart-pie mr-1.5"></i><span data-i18n="btn_check_data">Kiểm tra dung lượng</span></button>
             </div>
           </div>
-
           <div class="bg-green-50 border-2 border-dashed border-green-500 p-4 md:p-6 rounded-2xl w-full space-y-4 relative" id="linkBoxes"></div>
         </div>
       </div>
@@ -251,7 +240,6 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
       <h3 class="text-xl font-extrabold text-center mb-6 text-slate-800" data-i18n="faq_title">Câu hỏi thường gặp (FAQ)</h3>
       <div id="faqPortalHomeContainer" class="space-y-3"></div>
     </div>
-
     <div id="p-store" class="portal-tab-content w-full">
       <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 md:p-8 mb-8 text-white shadow-lg flex flex-col md:flex-row items-center gap-6">
         <div class="flex-1"><h3 class="text-xl md:text-3xl font-black mb-3" data-i18n="promo_title"></h3><p class="text-sm font-medium opacity-90" data-i18n="promo_desc"></p></div>
@@ -265,7 +253,6 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
       </div>
       <div id="packagesContainerPortal" class="grid md:grid-cols-3 gap-4 md:gap-6 mb-10 w-full"></div>
     </div>
-
     <div id="p-guide" class="portal-tab-content w-full">
       <div class="bg-white p-4 md:p-8 rounded-3xl mb-8 border border-slate-200 shadow-sm w-full">
         <h2 class="text-xl font-extrabold text-slate-800 mb-6 border-b border-slate-100 pb-4"><i class="fas fa-book-open text-indigo-500 mr-2"></i>Hướng dẫn Cài đặt</h2>
@@ -276,14 +263,12 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
       <div id="faqPortalContainer" class="space-y-3"></div>
     </div>
   </div>
-
   <div id="view-store" class="view-section active mb-20 w-full">
     <div class="text-center mb-8 mt-2 md:mt-4 px-2 w-full">
       <h1 class="text-3xl md:text-5xl font-extrabold mb-3 text-slate-800 leading-tight" data-i18n="hero_title"></h1>
       <p class="text-xs md:text-base text-slate-600 font-medium mb-5" data-i18n="hero_desc"></p>
       <div class="dock-wrapper" id="dockWrapper"><div class="dock-marquee" id="dockMarquee"></div></div>
     </div>
-
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 mb-10 w-full">
       <div class="col-span-2 md:col-span-1 w-full bg-gradient-to-br from-indigo-500 to-indigo-700 p-5 md:p-6 rounded-[1.5rem] text-white shadow-md flex flex-col justify-center relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
         <div class="absolute -right-4 -bottom-4 text-indigo-400/40 text-6xl md:text-8xl group-hover:rotate-12 transition-transform duration-500"><i class="fas fa-globe-asia"></i></div>
@@ -298,7 +283,6 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
         <div class="relative z-10"><div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-2 md:mb-3"><i class="fas fa-user-secret text-xl md:text-2xl text-emerald-500"></i></div><h4 class="font-bold text-slate-800 text-lg md:text-2xl mb-1.5 md:mb-2" data-i18n="feat_3"></h4><p class="text-[11px] md:text-sm text-slate-500 font-medium leading-relaxed" data-i18n="feat_3_desc"></p></div>
       </div>
     </div>
-
     <div class="flex justify-center gap-2 mb-6 bg-white p-1.5 rounded-xl w-fit max-w-full mx-auto border border-slate-100 shadow-sm overflow-x-auto flex-nowrap pkg-filters">
       <button onclick="renderPackages('all')" id="htab-all" class="tab-btn active text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap shrink-0" data-i18n="tab_all">Tất cả</button>
       <button onclick="renderPackages('travel')" id="htab-travel" class="tab-btn text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap shrink-0" data-i18n="tab_travel">Du lịch</button>
@@ -306,7 +290,6 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
       <button onclick="renderPackages('usage')" id="htab-usage" class="tab-btn text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap shrink-0" data-i18n="tab_usage">Dung lượng</button>
     </div>
     <div id="packagesContainerHome" class="grid md:grid-cols-3 gap-4 md:gap-6 mb-10 w-full"></div>
-
     <div id="checkoutSection" class="hidden mt-6 scroll-mt-24 w-full">
       <div class="text-center mb-6"><h3 id="checkoutTitle" class="text-xl md:text-3xl font-extrabold text-slate-800" data-i18n="checkout_title">Thanh toán Đơn hàng</h3></div>
       <form id="orderForm" onsubmit="submitOrder(event)">
@@ -354,7 +337,6 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
     <div id="faqStoreContainer" class="space-y-3"></div>
   </div>
 </main>
-
 <footer id="footerArea" class="bg-white border-t border-slate-200 py-6 z-10 w-full mt-auto">
   <div class="max-w-[1400px] mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
     <p class="text-xs font-bold text-slate-500">© 2026 VPN Trinh Hg. All rights reserved.</p>
@@ -366,22 +348,18 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
     </div>
   </div>
 </footer>
-
 <script>
 // ===== CẤU HÌNH: địa chỉ Worker của web này (gọi thẳng, không qua proxy Pages) =====
 const WORKER_URL = "https://vpntrinhhg3worker.lucastanora.workers.dev";
 const SESSION_KEY = 'vpn_portal_session_24h', CACHE_KEY = 'vpn_portal_last_order';
 // Web đang chạy: dùng để admin biết đơn tạo từ web nào (web 1 / 2 / 3)
 const currentTargetWeb = location.origin + "/";
-
 let lang='vi', currentPackage=null, currentOrderId='', currentMultiplier=1, oCache=null, cfgCache={guides:{},blur:[false,false,false],dock:null};
 let currentTotalVnd=0, currentTotalCny=0, currentTotalUsd=0, currentDurationMode=1;
 let isUpgradeMode=false, isRenewMode=false, upgradeConfirmed=false, baseOrderPriceVnd=0, baseOrderPriceUsd=0, baseOrderPriceCny=0;
 let lastScrollY=0, pollT=null, tickT=null, skew=0, lastSig='';
-
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-
 // ---------- Y. Dark Mode OLED (chỉ 2 icon ☀/🌙 đổi qua lại trong CÙNG 1 nút, không thêm text)
 function paintThemeIcon(){
  const dark=document.documentElement.classList.contains('dark'),html=dark?'🌙':'☀';
@@ -391,7 +369,6 @@ function toggleTheme(){
  try{localStorage.setItem('vpn_theme',dark?'dark':'light');}catch(e){}
  paintThemeIcon();}
 paintThemeIcon();
-
 const i18n={
  vi:{brand:"VPN Trinh Hg",search_placeholder:"Nhập Mã Đơn hoặc Email...",btn_logout:"Thoát",tab_p_home:"Trang chủ",tab_p_store:"Cửa hàng",tab_p_guide:"Hướng dẫn",pending_title:"Đơn hàng đang chờ Admin duyệt",btn_copy:"COPY LINK",btn_renew:"GIA HẠN",btn_watch_guide:"Chưa biết sử dụng? Xem hướng dẫn ngay!",order_id_label:"Mã Đơn:",pkg_name_label:"Gói VPN:",exp_date_label:"HSD:",status_lbl:"Trạng thái:",
   hero_title:"Chặn thì vượt. <span class='text-indigo-600'>Lướt mượt như gió.</span>",hero_desc:"Hệ thống VPN tự động hóa 100%. Nhận Link VPN chỉ trong <b class='text-indigo-600 font-black'>5 phút</b> không cần đợi Admin duyệt.",
@@ -439,7 +416,6 @@ const i18n={
   req_wait:"请求待处理，请稍后再试！",req_sent:"请求已发送！请稍后检查您的电子邮件。",req_err:"发生错误，请重试！",select_higher:"请选择更高的套餐进行升级",copy_success:"已复制！",not_found:"未找到订单/邮箱！",login_success:"登录成功！",sending:"发送中...",
   checking_upgrade:"正在检查升级交易...",checking_tx:"正在检查交易...",admin_rejected:"管理员拒绝了交易",unknown:"未知",active:"已激活",web3_maintenance:"备用链接将在网站维护时由管理员开放",badge_upgrade_success:"🎉 升级成功",select_renew_pkg:"请选择续订套餐",dev_label_suffix:"台设备",dev_custom:"自定义",link_generating:"正在生成链接，请稍候...",unavailable:"不可用",upg_none:"无",upg_pending:"升级验证中",upg_failed:"升级被拒绝",upg_ok:"升级成功",req_sent_btn:"请求已发送"}
 };
-
 const pkgs=[
  {id:'t1',category:['cycle','travel'],vi:{name:'Gói 1 tháng',price:'60,000VND'},en:{name:'1 Month',price:'$2.50'},zh:{name:'1个月',price:'¥15.5'},usd:2.5,vnd:60000,cny:15.5,data:'100GB',dev:1,time:1,tag:{vi:'🔥 BÁN CHẠY',en:'🔥 BEST SELLER',zh:'🔥热销'},tag2:{vi:'✈️ Du lịch',en:'✈️ Travel',zh:'✈️ 旅游'}},
  {id:'t2',category:['cycle','travel'],vi:{name:'Gói 1 tháng',price:'70,000VND'},en:{name:'1 Month',price:'$3.00'},zh:{name:'1个月',price:'¥18'},usd:3,vnd:70000,cny:18,data:'500GB',dev:3,time:1,tag:{vi:'🔥 BÁN CHẠY',en:'🔥 BEST SELLER',zh:'🔥热销'},tag2:{vi:'✈️ Du lịch',en:'✈️ Travel',zh:'✈️ 旅游'}},
@@ -451,7 +427,6 @@ const pkgs=[
  {id:'d3',category:['usage'],vi:{name:'Không Giới Hạn',price:'999,000VND'},en:{name:'Unlimited',price:'$40.00'},zh:{name:'不限时',price:'¥256'},usd:40,vnd:999000,cny:256,data:'5000GB',dev:'unlimited',time:'lifetime'},
  {id:'custom',isCustom:true,category:['travel','cycle','usage'],vi:{name:'Gói Tùy Chọn',price:'Liên hệ Admin'},en:{name:'Custom',price:'Contact Admin'},zh:{name:'自定义',price:'联系管理员'},usd:0,vnd:0,cny:0,data:'100GB - 100,000GB',dev:'custom',time:1}
 ];
-
 // ---------- Dock icon: dùng danh sách từ Worker (cmsDb.settings.dock, quản lý ở Admin) nếu có, fallback về danh sách mặc định.
 // S: kéo/vuốt tay + wheel ngang mượt, không jank — dừng animation CSS khi người dùng đang tương tác, resume khi thả ra.
 const DOCK_DEFAULT=[['https://www.facebook.com/','bg-fb','fab fa-facebook-f'],['https://messenger.com/','bg-mess','fab fa-facebook-messenger'],['https://telegram.org/','bg-tele','fab fa-telegram-plane'],['https://whatsapp.com/','bg-wa','fab fa-whatsapp'],['https://discord.com/','bg-discord','fab fa-discord'],['https://tiktok.com/','bg-tiktok','fab fa-tiktok'],['https://instagram.com/','bg-insta','fab fa-instagram'],['https://twitter.com/','bg-x','fab fa-x-twitter'],['https://threads.net/','bg-threads','fab fa-threads'],['https://youtube.com/','bg-youtube','fab fa-youtube'],['https://reddit.com/','bg-reddit','fab fa-reddit-alien'],['https://soundcloud.com/','bg-sc','fab fa-soundcloud'],['https://locket.camera/','bg-locket','fas fa-heart'],['https://netflix.com/','bg-netflix','IMG'],['https://spotify.com/','bg-spotify','fab fa-spotify']];
@@ -479,7 +454,6 @@ function setupDockDrag(){
  wrap.addEventListener('touchend',onUp);
  wrap.addEventListener('wheel',e=>{if(Math.abs(e.deltaX)<Math.abs(e.deltaY)&&!e.shiftKey)return;e.preventDefault();wrap.classList.add('dragging');const m=/translateX\((-?[\d.]+)px\)/.exec(track.style.transform);let nx=(m?parseFloat(m[1]):0)-(e.deltaX||e.deltaY);const hw=halfWidth();if(hw){while(nx<-hw)nx+=hw;while(nx>0)nx-=hw;}setX(nx);
   clearTimeout(wrap._wheelT);wrap._wheelT=setTimeout(()=>{wrap.classList.remove('dragging');track.style.transform='';},500);},{passive:false});}
-
 // ---------- Guide dạng khối (cùng định dạng với Admin)
 const DEF_TABS=[{id:'android',name:'Android',ic:'fab fa-android',col:'text-green-500'},{id:'windows',name:'Windows',ic:'fab fa-windows',col:'text-blue-500'},{id:'macos',name:'MacOS',ic:'fab fa-apple',col:'text-slate-800'},{id:'ios',name:'iOS',ic:'fab fa-app-store-ios',col:'text-blue-400'}];
 let curGuide='android';
@@ -514,31 +488,25 @@ function showGuide(dev){
  const bl=normGuide(cfgCache.guides&&cfgCache.guides[dev]);
  $('guideText').innerHTML=bl.length?renderBlocks(bl,dev):i18n[lang].guide_empty;}
 async function loadConfig(){try{const r=await fetch(WORKER_URL+'/api/public/config?_t='+Date.now(),{cache:'no-store'});if(r.ok){cfgCache=await r.json();renderDock();}}catch(e){}}
-
 // ---------- API
 async function wpost(path,body){const r=await fetch(WORKER_URL+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});let d={};try{d=await r.json();}catch{}return{ok:r.ok,status:r.status,data:d};}
 async function wpostRetry(path,body,n=3){let last;for(let i=0;i<n;i++){try{last=await wpost(path,body);if(last.ok||last.status<500)return last;}catch(e){last={ok:false,status:0,data:{error:String(e)}};}await new Promise(r=>setTimeout(r,800*(i+1)));}return last;}
-
 function showToast(msg,type='success'){const c=$('toastContainer'),t=document.createElement('div');const bg=type==='error'?'bg-red-500':type==='info'?'bg-blue-500':'bg-green-500';const icon=type==='error'?'fa-times-circle':type==='info'?'fa-info-circle':'fa-check-circle';
  t.className=`${bg} text-white px-4 py-3 rounded-xl shadow-xl flex items-center transform transition-all duration-300 translate-x-full opacity-0 w-fit max-w-[90vw]`;
  t.innerHTML=`<i class="fas ${icon} mr-2 shrink-0"></i><span class="font-bold text-xs md:text-sm">${esc(msg)}</span>`;c.appendChild(t);setTimeout(()=>t.classList.remove('translate-x-full','opacity-0'),10);setTimeout(()=>{t.classList.add('translate-x-full','opacity-0');setTimeout(()=>t.remove(),300);},3000);}
-
 window.addEventListener('scroll',()=>{const nav=$('mainNav');if(window.scrollY>lastScrollY&&window.scrollY>80)nav.classList.add('nav-hidden');else nav.classList.remove('nav-hidden');lastScrollY=window.scrollY;});
 const obs=new IntersectionObserver(es=>es.forEach(e=>{const s=$('floatingSocials');if(!s)return;if(e.isIntersecting){s.style.opacity='0';s.style.pointerEvents='none';s.style.transform='translateY(20px)';}else{s.style.opacity='1';s.style.pointerEvents='auto';s.style.transform='translateY(0)';}}),{threshold:.1});
-
 function changeLanguage(val){
  const cy=window.scrollY;lang=val;$('langSelectMobile').value=val;$('langSelectDesktop').value=val;
  document.querySelectorAll('[data-i18n]').forEach(el=>el.innerHTML=i18n[lang][el.getAttribute('data-i18n')]||el.innerHTML);
  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>el.placeholder=i18n[lang][el.getAttribute('data-i18n-placeholder')]||el.placeholder);
  renderPackages('all');
  if(!$('checkoutSection').classList.contains('hidden')&&currentPackage){$('selectedPackageName').innerText=currentPackage[lang].name;$('selectedPackagePrice').innerText=currentPackage[lang].price;calculateTotal();}
- $('pendingWaitText').innerText=i18n[lang].pending_wait;$('pendingTimeoutTitle').innerText=i18n[lang].pending_timeout;$('pendingTimeoutDesc').innerText=i18n[lang].pending_timeout_desc;$('pendingSupportText').innerText=i18n[lang].pending_support_text;$('pendingZaloBtnTxt').innerText=i18n[lang].pending_zalo_btn;$('pendingManualWaitTitle').innerText=i18n[lang].pending_manual_wait_title;$('securityAlertTitle').innerText=i18n[lang].security_alert;$('securityAlertDesc').innerHTML=i18n[lang].security_desc;
+ $('pendingWaitText').innerText=i18n[lang].pending_wait;$('pendingTimeoutTitle').innerText=i18n[lang].pending_timeout;$('pendingTimeoutDesc').innerText=i18n[lang].pending_timeout_desc;$('pendingSupportText').innerText=i18n[lang].pending_support_text;$('pendingZaloBtnTxt').innerText=i18n[lang].pending_zalo_btn;$('securityAlertTitle').innerText=i18n[lang].security_alert;$('securityAlertDesc').innerHTML=i18n[lang].security_desc;
  if(oCache)updatePortalInfo(oCache);window.scrollTo(0,cy);}
-
 const faqHTML=['1','2','3','4'].map(n=>`<details class="bg-white rounded-2xl shadow-sm border border-slate-100 group cursor-pointer w-full transition-all" onclick="event.preventDefault();this.open=!this.open;"><summary class="font-bold text-indigo-700 text-sm flex justify-between items-center outline-none p-4 md:p-5"><span data-i18n="faq_${n}_q"></span><span class="transition group-open:rotate-180 text-slate-400"><i class="fas fa-chevron-down"></i></span></summary><div class="px-4 pb-4 md:px-5 md:pb-5"><p class="text-slate-600 text-xs" data-i18n="faq_${n}_a"></p></div></details>`).join('')+
  `<details class="bg-white rounded-2xl shadow-sm border border-slate-100 group cursor-pointer w-full transition-all" onclick="event.preventDefault();this.open=!this.open;"><summary class="font-bold text-indigo-700 text-sm flex justify-between items-center outline-none p-4 md:p-5"><span data-i18n="refund_q"></span><span class="transition group-open:rotate-180 text-slate-400"><i class="fas fa-chevron-down"></i></span></summary><div class="px-4 pb-4 md:px-5 md:pb-5"><p class="text-slate-600 text-xs" data-i18n="refund_a"></p></div></details>`;
 ['faqStoreContainer','faqPortalContainer','faqPortalHomeContainer'].forEach(id=>{const el=$(id);if(el)el.innerHTML=faqHTML;});
-
 // ---------- Cửa hàng
 function disableUpgradeMode(){isUpgradeMode=false;isRenewMode=false;upgradeConfirmed=false;baseOrderPriceVnd=baseOrderPriceUsd=baseOrderPriceCny=0;renderPackages('all');}
 function genHTML(pkg){
@@ -555,7 +523,6 @@ function genHTML(pkg){
 function renderPackages(filter){
  ['htab','ptab'].forEach(p=>['all','travel','cycle','usage'].forEach(t=>{const b=$(`${p}-${t}`);if(!b)return;if(t===filter){b.classList.add('active','bg-indigo-600','text-white');b.classList.remove('text-slate-600');}else{b.classList.remove('active','bg-indigo-600','text-white');b.classList.add('text-slate-600');}}));
  const html=pkgs.filter(p=>filter==='all'||p.category.includes(filter)).map(genHTML).join('');if($('packagesContainerHome'))$('packagesContainerHome').innerHTML=html;if($('packagesContainerPortal'))$('packagesContainerPortal').innerHTML=html;}
-
 function startUpgrade(){
  isUpgradeMode=true;isRenewMode=false;upgradeConfirmed=false;
  const cur=pkgs.find(p=>p.id===oCache.pkgId)||pkgs.find(p=>p.vi.name===oCache.pkgName&&p.data===oCache.pkgData);
@@ -594,7 +561,6 @@ function calculateTotal(){
 function toggleZalo(){const z=$('cusZalo');z.classList.toggle('hidden');z.required=!z.classList.contains('hidden')&&!(isUpgradeMode||isRenewMode);}
 async function copyText(t){try{await navigator.clipboard.writeText(t);}catch(e){try{const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);}catch(e2){}}showToast(i18n[lang].copy_success);}
 async function copyToClipboard(id){const e=$(id);if(e.dataset.locked)return;e.select();await copyText(e.value);}
-
 // ---------- V. Payment box: Alipay/Weixin dùng box "Đợi Admin duyệt" thay vì countdown ngân hàng
 function renderPaymentBox(){
  const col=$('checkoutRightCol'),m=$('payMethod').value,btn=$('btnConfirm'),l=i18n[lang];
@@ -612,13 +578,11 @@ function renderPaymentBox(){
   const ali=m==='alipay',img=ali?'https://i.pinimg.com/736x/44/57/9d/44579dfb5241614ddc897a21ce34e233.jpg':'https://i.pinimg.com/736x/22/f8/67/22f86738297318826838424d3c09645c.jpg';
   col.innerHTML=`<div class="text-center w-full"><h4 class="font-extrabold text-lg mb-1 ${ali?'text-blue-600':'text-green-600'}">${ali?'Alipay':'Weixin'} <i class="fas fa-qrcode text-sm ml-1"></i></h4><div class="inline-flex items-center gap-1.5 bg-sky-50 text-sky-700 border border-sky-100 px-3 py-1 rounded-full text-[11px] font-bold mb-3"><i class="fas fa-user-clock"></i>${l.pending_manual_wait_title}</div><div class="bg-slate-50 p-2 rounded-xl inline-block mb-4 border border-slate-100 shadow-sm"><img src="${img}" class="w-48 max-w-full h-auto mx-auto rounded-lg object-contain mix-blend-multiply"></div>
   <div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white p-2.5 rounded-xl border"><span class="text-slate-500">${l.bank_owner}</span><strong>TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white p-2.5 rounded-xl border"><span class="text-slate-500">${l.copy_amount}</span><strong class="text-red-500 font-black text-base">¥${currentTotalCny}</strong></div></div>${memo('text-2xl','uppercase')}</div>`;}}
-
 function submitOrder(e){
  e.preventDefault();if(!currentPackage)return;
  if(isUpgradeMode){upgradeConfirmed=true;}
  else if(!currentOrderId){const ch='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',a=new Uint8Array(10);crypto.getRandomValues(a);currentOrderId='DH'+[...a].map(x=>ch[x%36]).join('');}
  renderPaymentBox();}
-
 async function confirmPaid(){
  const btn=$('btnPaidConfirm');if(!btn||btn.disabled)return;const l=i18n[lang];
  const orig=btn.innerHTML;btn.innerHTML=`<i class="fas fa-spinner fa-spin mr-2"></i>${l.sending}`;btn.disabled=true;
@@ -633,19 +597,18 @@ async function confirmPaid(){
  isUpgradeMode=false;isRenewMode=false;upgradeConfirmed=false;currentOrderId='';
  localStorage.setItem(SESSION_KEY,JSON.stringify({id:o.id,time:Date.now()}));localStorage.setItem(CACHE_KEY,JSON.stringify(o));
  enterPortal(o,false);window.scrollTo({top:0,behavior:'smooth'});}
-
 // ---------- Portal
 function maskLink(v){return v;}
 // T/V/W: đồng bộ 1 hệ UI cho mọi trạng thái chờ — pending (bank countdown / alipay-wechat chờ duyệt), timeout, manual (đơn tạo tay chờ CK thủ công)
 function updatePortalInfo(o){
  oCache=o;skew=(o.serverTime||Date.now())-Date.now();const L=i18n[lang];
- ['portalContentPending','portalContentManual','pendingActiveState','pendingTimeoutState','pendingManualWaitState','portalContentSuccess','portalContentFailed'].forEach(id=>$(id).classList.add('hidden'));
+ ['portalContentPending','portalContentManual','pendingActiveState','pendingTimeoutState','portalContentSuccess','portalContentFailed'].forEach(id=>$(id).classList.add('hidden'));
  $('upgradeSuccessBadge').classList.add('hidden');stopTick();
  const manual=/alipay|weixin|wechat/i.test(o.method||''),now=Date.now()+skew;
  if(o.status==='failed'){$('portalContentFailed').classList.remove('hidden');$('failReasonText').innerText=o.reason||L.admin_rejected;return;}
  if(o.status==='pending'){
   if(manual){ // V: Alipay/WeChat -> "Đợi Admin duyệt" thay vì đếm ngược 5 phút của ngân hàng
-   $('portalContentPending').classList.remove('hidden');$('pendingManualWaitState').classList.remove('hidden');$('pendingTitleUI').innerText=L.pending_manual_wait_title;
+   $('portalContentManual').classList.remove('hidden');
    return;}
   $('portalContentPending').classList.remove('hidden');$('pendingTitleUI').innerText=L.checking_tx;
   const end=(o.createdTs||now)+300000;
@@ -656,7 +619,7 @@ function updatePortalInfo(o){
  const up=o.pendingUpgrade;
  if(up){
   const upManual=/alipay|weixin|wechat/i.test(up.method||o.method||'');
-  if(upManual){$('portalContentPending').classList.remove('hidden');$('pendingManualWaitState').classList.remove('hidden');$('pendingTitleUI').innerText=L.pending_manual_wait_title;}
+  if(upManual){$('portalContentManual').classList.remove('hidden');}
   else{const end=up.ts+300000;if(now<end){$('portalContentPending').classList.remove('hidden');$('pendingTitleUI').innerText=L.checking_upgrade;$('pendingActiveState').classList.remove('hidden');startTick(end,true);}}}
  if(o.upgradeStatus==='success'&&o.upgradedAt&&now-o.upgradedAt<864e5)$('upgradeSuccessBadge').classList.remove('hidden');}
 const sc=t=>t?t.charAt(0)+t.slice(1).toLowerCase():'';
@@ -682,14 +645,12 @@ function fillDashboard(o){
  const cd=localStorage.getItem('data_req_'+o.id),btn=$('btnRequestData');
  if(cd&&Date.now()-parseInt(cd)<300000){btn.innerHTML=`<i class="fas fa-check-circle mr-1.5"></i> ${L.req_sent_btn}`;btn.disabled=true;btn.classList.remove('btn-heartbeat');}
  else{btn.innerHTML=`<i class="fas fa-chart-pie mr-1.5"></i><span>${L.btn_check_data}</span>`;btn.disabled=false;btn.classList.add('btn-heartbeat');}}
-
 function startTick(end,isUpg){
  const tick=()=>{const left=Math.ceil((end-Date.now()-skew)/1000);
   if(left<=0){stopTick();if(isUpg)$('portalContentPending').classList.add('hidden');else{$('pendingActiveState').classList.add('hidden');$('pendingTimeoutState').classList.remove('hidden');}return;}
   $('countdownTimer').innerText=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');const bar=$('pendingBar');if(bar)bar.style.width=Math.max(0,Math.min(100,left/3))+'%';};
  tick();tickT=setInterval(tick,1000);}
 function stopTick(){if(tickT){clearInterval(tickT);tickT=null;}}
-
 // Polling: 3s khi đang chờ, 10s khi bình thường; dừng khi tab ẩn. Tự cập nhật khi Admin đổi trạng thái / hệ thống cấp link.
 async function refreshOrder(){
  if(!oCache)return;
@@ -703,7 +664,6 @@ async function refreshOrder(){
 function pollLoop(){clearTimeout(pollT);if(!oCache)return;const fast=oCache.status==='pending'||oCache.pendingUpgrade||[1,2,3].some(i=>oCache.status==='success'&&!oCache['info'+i]&&!oCache['blur'+i]);
  pollT=setTimeout(async()=>{if(!document.hidden)await refreshOrder();pollLoop();},fast?3000:10000);}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&oCache)refreshOrder();});
-
 function enterPortal(o,auto){
  $('view-store').classList.remove('active');$('view-portal').classList.add('active');$('userMenu').classList.remove('hidden');$('checkoutSection').classList.add('hidden');
  document.documentElement.classList.add('has-user-session');
@@ -712,7 +672,6 @@ function enterPortal(o,auto){
  lastSig=JSON.stringify({...o,serverTime:0});updatePortalInfo(o);
  loadConfig().then(()=>{showGuide(curGuide);if(oCache)updatePortalInfo(oCache);});
  renderPackages('all');pollLoop();document.body.classList.remove('checkout-active');}
-
 async function login(auto=false){
  if(auto&&auto.type)auto=false; // gọi từ onclick/onkeyup
  const input=$('loginInput').value.trim();if(!input)return;
@@ -726,7 +685,6 @@ async function login(auto=false){
  if(!auto){localStorage.setItem(SESSION_KEY,JSON.stringify({id:o.id,time:Date.now()}));showToast(i18n[lang].login_success,'info');history.replaceState(null,'','#portal');}
  localStorage.setItem(CACHE_KEY,JSON.stringify(o));enterPortal(o,auto);
  if(!auto)window.scrollTo({top:0,behavior:'smooth'});}
-
 function switchPortalTab(tabId,fromUpgrade=false){
  if(!fromUpgrade)disableUpgradeMode();
  document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
@@ -736,14 +694,12 @@ function switchPortalTab(tabId,fromUpgrade=false){
  document.querySelectorAll('.desktop-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','bg-indigo-600','text-white');el.classList.remove('text-slate-600','hover:bg-slate-100');});
  document.querySelectorAll('.mobile-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','text-indigo-600','bg-[#e0e7ff]');el.classList.remove('text-slate-500');});
  if(tabId==='p-guide'&&!$('guideText').innerHTML)showGuide(curGuide);}
-
 function logout(){
  localStorage.removeItem(SESSION_KEY);history.replaceState(null,'',location.pathname);
  $('view-portal').classList.remove('active');$('view-store').classList.add('active');$('userMenu').classList.add('hidden');$('loginInput').value='';$('mobileNavWrapper').classList.add('hidden');
  const dn=$('desktopPortalNav');dn.classList.remove('md:flex','opacity-100','w-auto');dn.classList.add('hidden','opacity-0','w-0');
  oCache=null;clearTimeout(pollT);stopTick();disableUpgradeMode();
  document.documentElement.classList.remove('has-user-session');document.body.classList.remove('checkout-active');window.scrollTo(0,0);}
-
 window.onload=async function(){
  changeLanguage('vi');renderDock();
  if(location.hash==='#wechat')$('wechatModal').classList.remove('hidden');
@@ -752,7 +708,6 @@ window.onload=async function(){
  else{if(s)localStorage.removeItem(SESSION_KEY);document.documentElement.classList.remove('has-user-session');$('view-store').classList.add('active');renderPackages('all');}
  loadConfig();
  const f=$('footerArea');if(f)obs.observe(f);};
-
 async function requestDataCheck(){
  if(!oCache)return;const L=i18n[lang],key='data_req_'+oCache.id,last=localStorage.getItem(key);
  if(last&&Date.now()-parseInt(last)<300000){showToast(L.req_wait,'info');return;}
