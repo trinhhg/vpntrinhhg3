@@ -597,7 +597,7 @@ function startRenew(){disableUpgradeMode();isRenewMode=true;switchPortalTab('p-s
 
 function openCheckout(id){
  currentPackage=pkgs.find(p=>p.id===id);const co=$('checkoutSection');
- if($('view-portal').classList.contains('active'))$('p-store').appendChild(co);else$('view-store').appendChild(co);
+if ($('view-portal').classList.contains('active')) $('p-store').appendChild(co); else $('view-store').appendChild(co);
  co.classList.remove('hidden');co.scrollIntoView({behavior:'smooth'});
  $('selectedPackageName').innerText=currentPackage[lang].name;$('selectedPackageData').innerText=currentPackage.data;$('selectedPackagePrice').innerText=currentPackage[lang].price;
  const hideEmail=isUpgradeMode||isRenewMode;$('emailBlock').classList.toggle('hidden',hideEmail);$('cusEmail').required=!hideEmail;
