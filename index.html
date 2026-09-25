@@ -216,29 +216,42 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
           </div>
         </div>
 
-        <!-- TRẠNG THÁI 3: TỪ CHỐI (Được nâng cấp UI/UX) -->
-        <div id="portalContentFailed" class="hidden bg-gradient-to-br from-red-50 via-white to-rose-50 border border-red-200 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-sm">
-          
-          <div class="relative w-16 h-16 flex items-center justify-center rounded-full bg-red-100 border-4 border-white shadow-sm mb-4 mx-auto">
-            <i class="fas fa-shield-xmark text-3xl text-red-500"></i>
-          </div>
-          
-          <h4 class="font-extrabold text-red-800 text-sm md:text-lg uppercase" data-i18n="failed_title">Đơn hàng bị từ chối</h4>
-          <p class="text-red-700 text-sm md:text-base font-bold mt-1 mb-4 max-w-md">Giao dịch không hợp lệ hoặc không thể xác minh.</p>
-          
-          <!-- Khung hiển thị lý do bo góc đồng bộ -->
-          <div class="w-full max-w-sm mx-auto bg-white/90 border border-red-200 rounded-2xl p-4 shadow-sm mb-5 text-left flex flex-col">
-            <span class="text-[11px] text-red-400 font-bold uppercase tracking-wider mb-1 flex items-center gap-1"><i class="fas fa-circle-exclamation"></i> Lý do</span>
-            <span id="failReasonText" class="font-mono text-red-800 font-semibold text-sm"></span>
-          </div>
-
-          <div class="w-full flex flex-col items-center mt-1 border-t border-red-100 pt-5">
-            <p class="text-slate-500 text-[11px] md:text-sm mb-3 font-medium px-4">Vui lòng liên hệ Admin để kiểm tra lại giao dịch này.</p>
-            <a href="https://zalo.me/0917678211" target="_blank" class="mx-auto bg-[#0068ff]/85 text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition shadow-md">
-              <i class="fas fa-comment-dots text-lg"></i> Nhắn Zalo Admin
-            </a>
-          </div>
+<!-- TRẠNG THÁI 3: TỪ CHỐI (Nâng cấp toàn diện UI/UX) -->
+    <div id="portalContentFailed" class="hidden relative overflow-hidden bg-gradient-to-br from-red-100 via-rose-50 to-red-100 border border-red-200 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-lg">
+      
+      <!-- Thanh line nổi bật ở viền trên tạo cảm giác premium -->
+      <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-red-500 to-rose-500"></div>
+      
+      <!-- Box Icon được làm lại cấu trúc, đổ bóng đa lớp và có animation điểm nhấn -->
+      <div class="relative w-20 h-20 flex items-center justify-center rounded-2xl bg-white border border-red-200 shadow-md mb-5 mx-auto transform rotate-3 hover:rotate-0 transition-transform duration-300">
+        <i class="fas fa-file-circle-xmark text-4xl text-red-500"></i>
+        <span class="absolute -top-2 -right-2 flex h-5 w-5">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-5 w-5 bg-red-500 border-2 border-white items-center justify-center shadow-sm">
+            <i class="fas fa-exclamation text-[10px] text-white"></i>
+          </span>
+        </span>
+      </div>
+      
+      <h4 class="font-black text-red-800 text-base md:text-xl uppercase tracking-wide" data-i18n="failed_title">Giao dịch bị từ chối</h4>
+      <p class="text-red-600 text-sm md:text-base font-semibold mt-1 mb-5">Hệ thống không thể xác minh thanh toán của bạn.</p>
+      
+      <!-- Box Lý do từ chối: Nền trắng inset shadow, mác đỏ lồi ra ngoài -->
+      <div class="w-full max-w-sm mx-auto bg-white border-2 border-red-100 rounded-2xl p-5 shadow-inner mb-6 text-left relative mt-2">
+        <div class="absolute -top-3.5 left-4 bg-gradient-to-r from-red-500 to-rose-500 text-white text-[11px] font-black uppercase px-3 py-1 rounded-lg shadow-sm tracking-wider flex items-center gap-1.5 border border-white">
+          <i class="fas fa-triangle-exclamation"></i> Lý do
         </div>
+        <!-- Set text mặc định "Chưa nhận được thanh toán" sẵn trong HTML -->
+        <span id="failReasonText" class="font-mono text-slate-700 font-bold text-sm md:text-base block mt-2 whitespace-normal break-words">Chưa nhận được thanh toán</span>
+      </div>
+
+      <div class="w-full flex flex-col items-center mt-2 pt-5 border-t border-red-200/60">
+        <p class="text-slate-600 text-xs md:text-sm mb-4 font-medium px-4">Đừng lo lắng! Hãy nhắn cho Admin kèm ảnh chụp giao dịch để được hỗ trợ kiểm tra tay.</p>
+        <a href="[https://zalo.me/0917678211](https://zalo.me/0917678211)" target="_blank" class="mx-auto bg-gradient-to-r from-[#0068ff] to-[#0055d4] text-white font-bold py-3.5 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition-all shadow-lg shadow-blue-500/30">
+          <i class="fas fa-comment-dots text-lg"></i> Nhắn Zalo Admin ngay
+        </a>
+      </div>
+    </div>
         <div id="portalContentSuccess" class="hidden w-full">
           <div class="mb-6 flex justify-center w-full">
             <div class="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 p-4 md:p-5 rounded-2xl shadow-sm flex flex-col md:flex-row items-center gap-4 w-full text-center md:text-left relative overflow-hidden">
