@@ -10,8 +10,10 @@
 <link rel="apple-touch-icon" href="/icon-192.png">
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+
 <style>
 *{box-sizing:border-box;}
 body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc;color:#0f172a;margin:0;overflow-x:hidden;}
@@ -40,12 +42,85 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc;color:#0f172a
 .ord-sub-tab.active{background:white;color:#4f46e5;box-shadow:0 1px 4px rgba(0,0,0,.1);}
 .ord-sub-tab .mac-dot{width:9px;height:9px;}
 @media (min-width:768px){.ord-sub-tab{padding:6px 14px;font-size:12px;gap:6px;}.ord-sub-tab .mac-dot{width:13px;height:13px;}}
-.toggle-wrap{position:relative;width:48px;height:26px;flex-shrink:0;display:inline-block;}
-.toggle-wrap input{opacity:0;width:0;height:0;}
-.toggle-wrap input:disabled+.toggle-slider{background:#e2e8f0;cursor:not-allowed;}
-.toggle-slider{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;border-radius:26px;transition:.3s;}
-.toggle-slider::before{position:absolute;content:"";height:20px;width:20px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
-input:checked+.toggle-slider{background:#4f46e5;}input:checked+.toggle-slider::before{transform:translateX(22px);}
+
+/* ===== TOGGLE SWITCH ===== */
+.toggle-wrap{
+    position:relative;
+    width:48px;
+    height:26px;
+    flex-shrink:0;
+    display:inline-block;
+    overflow:hidden;
+    border-radius:26px;
+}
+
+.toggle-wrap input{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    margin:0;
+    padding:0;
+    opacity:0;
+    cursor:pointer;
+    z-index:2;
+    appearance:none;
+    -webkit-appearance:none;
+}
+
+.toggle-wrap input:disabled{
+    cursor:not-allowed;
+}
+
+.toggle-wrap input:disabled + .toggle-slider{
+    background:#e2e8f0;
+    cursor:not-allowed;
+}
+
+.toggle-slider{
+    position:absolute;
+    cursor:pointer;
+    inset:0;
+    width:100%;
+    height:100%;
+    background:#cbd5e1;
+    border-radius:26px;
+    transition:.3s;
+    z-index:1;
+}
+
+.toggle-slider::before{
+    position:absolute;
+    content:"";
+    height:20px;
+    width:20px;
+    left:3px;
+    bottom:3px;
+    background:white;
+    border-radius:50%;
+    transition:.3s;
+    box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+
+.toggle-wrap input:checked + .toggle-slider{
+    background:#4f46e5;
+}
+
+.toggle-wrap input:checked + .toggle-slider::before{
+    transform:translateX(22px);
+}
+
+.toggle-wrap input:disabled + .toggle-slider::before{
+    background:#f8fafc;
+}
+
+.toggle-wrap input:focus-visible + .toggle-slider{
+    outline:2px solid #818cf8;
+    outline-offset:2px;
+}
+
+/* ===== END TOGGLE SWITCH ===== */
+
 .log-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;}
 .log-table th{background:#f8fafc;padding:12px 14px;text-align:left;font-weight:700;color:#64748b;border-bottom:2px solid #e2e8f0;white-space:nowrap;text-transform:uppercase;font-size:11px;}
 .log-table td{padding:11px 14px;border-bottom:1px solid #e2e8f0;color:#475569;vertical-align:middle;background:#fff;}
@@ -77,8 +152,10 @@ textarea.autog{resize:none;overflow:hidden;}
 .lb{position:fixed;inset:0;background:rgba(15,23,42,.88);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px;cursor:zoom-out;}
 .lb img{max-width:100%;max-height:100%;border-radius:8px;}
 </style>
+
 <script>try{if(localStorage.getItem(location.hostname.replace(/\./g,"_")+"_tok"))document.documentElement.classList.add('has-tok');}catch(e){}</script>
 </head>
+
 <body class="min-h-screen pb-20 overflow-x-hidden bg-slate-50">
 <div id="toastBox" class="toast"></div>
 
