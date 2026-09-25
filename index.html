@@ -485,16 +485,18 @@ function renderDock(){
  const list=(Array.isArray(cfgCache.dock)&&cfgCache.dock.length?cfgCache.dock:DOCK_DEFAULT);
  const one=list.map(it=>{const h=it.url||it[0],c=it.cls||it[1]||(it.bg?'':'bg-fb'),ic=it.icon||it[2]||'fas fa-star',img=it.img||(ic==='IMG'?DOCK_NF:''),bgStyle=it.bg?` style="background:${esc(it.bg)}"`:'';
   return `<a href="${esc(h)}" target="_blank" class="dock-icon ${esc(c)}"${bgStyle}>${img?`<img src="${esc(img)}" class="w-[70%] h-[70%] object-contain" alt="">`:`<i class="${esc(ic)}"></i>`}</a>`;}).join('');
- $('dockMarquee').innerHTML=one+one;
+ // Clone x4 để dải đủ dài lấp đầy mọi màn hình Desktop siêu rộng
+ $('dockMarquee').innerHTML=one+one+one+one;
  setupDockDrag();}
 // Kéo tay / vuốt / wheel mượt cho dải icon — không jank: dùng transform trực tiếp trong lúc kéo, chỉ bật lại animation khi thả ra.
 function setupDockDrag(){
  const wrap=$('dockWrapper'),track=$('dockMarquee');if(!wrap||!track)return;
  let dragging=false,startX=0,startScroll=0,curX=0;
  const setX=x=>{track.style.transform=`translateX(${x}px)`;};
- const halfWidth=()=>track.scrollWidth/2;
+ // Vì đã clone x4 nên 1 chu kỳ bằng độ rộng cuộn chia 4
+ const unitWidth=()=>track.scrollWidth/4;
  const onDown=x=>{dragging=true;wrap.classList.add('dragging');startX=x;const m=/translateX\((-?[\d.]+)px\)/.exec(track.style.transform);curX=m?parseFloat(m[1]):0;startScroll=curX;};
- const onMove=x=>{if(!dragging)return;let nx=startScroll+(x-startX);const hw=halfWidth();if(hw){while(nx<-hw)nx+=hw;while(nx>0)nx-=hw;}curX=nx;setX(nx);};
+ const onMove=x=>{if(!dragging)return;let nx=startScroll+(x-startX);const uw=unitWidth();if(uw){while(nx<=-uw)nx+=uw;while(nx>0)nx-=uw;}curX=nx;setX(nx);};
  const onUp=()=>{if(!dragging)return;dragging=false;wrap.classList.remove('dragging');track.style.transform='';};
  wrap.addEventListener('mousedown',e=>{onDown(e.clientX);e.preventDefault();});
  window.addEventListener('mousemove',e=>onMove(e.clientX));
@@ -502,7 +504,7 @@ function setupDockDrag(){
  wrap.addEventListener('touchstart',e=>onDown(e.touches[0].clientX),{passive:true});
  wrap.addEventListener('touchmove',e=>{if(dragging){onMove(e.touches[0].clientX);e.preventDefault();}},{passive:false});
  wrap.addEventListener('touchend',onUp);
- wrap.addEventListener('wheel',e=>{if(Math.abs(e.deltaX)<Math.abs(e.deltaY)&&!e.shiftKey)return;e.preventDefault();wrap.classList.add('dragging');const m=/translateX\((-?[\d.]+)px\)/.exec(track.style.transform);let nx=(m?parseFloat(m[1]):0)-(e.deltaX||e.deltaY);const hw=halfWidth();if(hw){while(nx<-hw)nx+=hw;while(nx>0)nx-=hw;}setX(nx);
+ wrap.addEventListener('wheel',e=>{if(Math.abs(e.deltaX)<Math.abs(e.deltaY)&&!e.shiftKey)return;e.preventDefault();wrap.classList.add('dragging');const m=/translateX\((-?[\d.]+)px\)/.exec(track.style.transform);let nx=(m?parseFloat(m[1]):0)-(e.deltaX||e.deltaY);const uw=unitWidth();if(uw){while(nx<=-uw)nx+=uw;while(nx>0)nx-=uw;}setX(nx);
   clearTimeout(wrap._wheelT);wrap._wheelT=setTimeout(()=>{wrap.classList.remove('dragging');track.style.transform='';},500);},{passive:false});}
 // ---------- Guide dạng khối (cùng định dạng với Admin)
 const DEF_TABS=[{id:'android',name:'Android',ic:'fab fa-android',col:'text-green-500'},{id:'windows',name:'Windows',ic:'fab fa-windows',col:'text-blue-500'},{id:'macos',name:'MacOS',ic:'fab fa-apple',col:'text-slate-800'},{id:'ios',name:'iOS',ic:'fab fa-app-store-ios',col:'text-blue-400'}];
