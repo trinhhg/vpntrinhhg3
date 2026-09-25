@@ -731,7 +731,7 @@ function fillDashboard(o){
 function startTick(end,isUpg){
  const tick=()=>{const left=Math.ceil((end-Date.now()-skew)/1000);
   if(left<=0){stopTick();if(isUpg)$('portalContentPending').classList.add('hidden');else{$('pendingActiveState').classList.add('hidden');$('pendingTimeoutState').classList.remove('hidden');}return;}
-  $('countdownTimer').innerText=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left\%60).padStart(2,'0');const bar=$('pendingBar');if(bar)bar.style.width=Math.max(0,Math.min(100,left/3))+'%';};
+  $('countdownTimer').innerText=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');const bar=$('pendingBar');if(bar)bar.style.width=Math.max(0,Math.min(100,left/3))+'%';};
  tick();tickT=setInterval(tick,1000);}
 function stopTick(){if(tickT){clearInterval(tickT);tickT=null;}}
 
