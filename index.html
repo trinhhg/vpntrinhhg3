@@ -1,4 +1,4 @@
-<!-- v1.2 - by chatgpt Khách (đợt 1 nâng cấp): dark mode OLED (icon 1 nút ☀/🌙), dock icon quản lý được từ admin (URL + màu nền CSS tùy ý) + kéo/vuốt/wheel mượt, đồng bộ UI trạng thái chờ (bank countdown / Alipay-Weixin chờ duyệt / timeout / manual), sửa countdown đè progress bar desktop, portal không hiện "Đang tạo link" khi chưa thực sự xử lý, Enter để tìm kiếm (giữ nguyên). Gọi thẳng Worker (không cần proxy Pages), polling trạng thái, giữ đăng nhập 24h qua F5, blur/3 link từ server, guide dạng khối -->
+<!-- v1.5 - Fix Dark Mode chuẩn Tailwind, FontAwesome toggle, Xóa UI rác - 2026-09-25 -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -15,8 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap" rel="stylesheet">
 <style>
-body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc;color:#0f172a;overflow-x:hidden;}
-.glass-ui{background:rgba(255,255,255,.95);backdrop-filter:blur(16px);}
+body{font-family:'Plus Jakarta Sans',sans-serif;overflow-x:hidden;}
 .view-section{display:none;animation:fadeUp .4s ease-out forwards;}
 .view-section.active{display:block;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
@@ -26,6 +25,7 @@ details>summary{list-style:none;}
 details>summary::-webkit-details-marker{display:none;}
 @keyframes borderPulse{0%{border-color:#fde047;box-shadow:0 0 0 0 rgba(253,224,71,.7)}70%{border-color:#eab308;box-shadow:0 0 0 10px rgba(253,224,71,0)}100%{border-color:#fde047;box-shadow:0 0 0 0 rgba(253,224,71,0)}}
 .highlight-copy{animation:borderPulse 2s infinite;background:#fef08a;color:#713f12;}
+html.dark .highlight-copy{background:#713f12;color:#fef08a;} 
 @keyframes btnHeartbeatPulse{0%{box-shadow:0 0 0 0 rgba(22,163,74,.6);transform:scale(1)}50%{box-shadow:0 0 0 12px rgba(22,163,74,0);transform:scale(1.02)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0);transform:scale(1)}}
 .btn-heartbeat{animation:btnHeartbeatPulse 1.5s infinite;}
 .pkg-filters::-webkit-scrollbar{height:0}
@@ -34,6 +34,7 @@ details>summary::-webkit-details-marker{display:none;}
 .nav-hidden{transform:translateY(-100%);}
 .desktop-tab-btn.active{background:#4f46e5;color:white!important;box-shadow:0 4px 15px rgba(79,70,229,.3);}
 .mobile-tab-btn.active{color:#4f46e5;background:#e0e7ff;}
+html.dark .mobile-tab-btn.active{color:#818cf8;background:#312e81;}
 #guideText{word-wrap:break-word;}
 .pkg-disabled{filter:grayscale(1);opacity:.6;pointer-events:none;}
 .blur-link{filter:blur(6px);transition:filter .3s cubic-bezier(.4,0,.2,1);cursor:pointer;}
@@ -57,46 +58,31 @@ details>summary::-webkit-details-marker{display:none;}
 .loader-ring{position:relative;width:76px;height:76px;margin:0 auto 14px}
 .loader-ring::before,.loader-ring::after{content:"";position:absolute;inset:0;border-radius:50%}
 .loader-ring::before{border:6px solid #e0e7ff}
+html.dark .loader-ring::before{border-color:#312e81}
 .loader-ring::after{border:6px solid transparent;border-top-color:#4f46e5;border-right-color:#8b5cf6;animation:ringSpin 1s linear infinite}
 .loader-ring i{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#4f46e5;font-size:24px}
-.loader-ring.amber::before{border-color:#fef3c7}.loader-ring.amber::after{border-top-color:#f59e0b;border-right-color:#fb923c}.loader-ring.amber i{color:#d97706}
-.loader-ring.sky::before{border-color:#e0f2fe}.loader-ring.sky::after{border-top-color:#0284c7;border-right-color:#38bdf8}.loader-ring.sky i{color:#0369a1}
+html.dark .loader-ring i{color:#818cf8}
+.loader-ring.amber::before{border-color:#fef3c7}
+html.dark .loader-ring.amber::before{border-color:#78350f}
+.loader-ring.amber::after{border-top-color:#f59e0b;border-right-color:#fb923c}
+.loader-ring.amber i{color:#d97706}
+html.dark .loader-ring.amber i{color:#fbbf24}
 @keyframes ringSpin{to{transform:rotate(360deg)}}
 @keyframes dotBlink{0%,80%,100%{opacity:.25}40%{opacity:1}}
 .dots span{display:inline-block;animation:dotBlink 1.4s infinite;font-weight:900}.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
-.step-chip{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #fde68a;border-radius:12px;padding:8px 12px;font-size:12px;font-weight:700;color:#92400e;text-align:left}
-.step-chip b{background:#f59e0b;color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
 html.has-user-session #view-store{display:none!important;}
 html.has-user-session #view-portal{display:block!important;}
 @media (max-width:767px){body.checkout-active #floatingSocials{display:none!important;}}
 .countdown-wrap{position:relative;width:100%;max-width:320px;margin:0 auto 12px;display:flex;flex-direction:column;align-items:center;gap:10px;}
 .countdown-wrap #countdownTimer{position:static;}
-.countdown-wrap .pbar-track{width:100%;max-width:280px;height:8px;background:#e0e7ff;border-radius:99px;overflow:hidden;}
-#themeToggleDesktop,#themeTogglePortal,#themeToggleMobile{width:38px;height:38px;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;transition:background .2s,transform .15s;}
-#themeToggleDesktop:hover,#themeTogglePortal:hover,#themeToggleMobile:hover{transform:scale(1.08);}
 html.dark{color-scheme:dark;}
-html.dark body{background:#000;color:#e5e7eb;}
-html.dark .glass-ui{background:rgba(10,10,10,.92);}
-html.dark #mainNav{border-color:#1a1a1a;}
-html.dark .bg-white{background-color:#0a0a0a!important;}
-html.dark .bg-slate-50,html.dark .bg-slate-100{background-color:#000!important;}
-html.dark .border-slate-100,html.dark .border-slate-200{border-color:#1f1f1f!important;}
-html.dark .text-slate-800,html.dark .text-slate-700{color:#e5e7eb!important;}
-html.dark .text-slate-600,html.dark .text-slate-500{color:#9ca3af!important;}
-html.dark .text-slate-400{color:#6b7280!important;}
-html.dark .bg-slate-50.border{background-color:#0a0a0a!important;}
-html.dark .shadow-sm,html.dark .shadow-md,html.dark .shadow-lg{box-shadow:0 4px 20px rgba(0,0,0,.6)!important;}
-html.dark #themeToggleDesktop,html.dark #themeTogglePortal,html.dark #themeToggleMobile{background:#111;color:#facc15;}
-html:not(.dark) #themeToggleDesktop,html:not(.dark) #themeTogglePortal,html:not(.dark) #themeToggleMobile{background:#e0e7ff;color:#4f46e5;}
-html.dark input,html.dark select,html.dark textarea{background-color:#0a0a0a!important;color:#e5e7eb!important;border-color:#262626!important;}
-html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!important;}
 </style>
 <script>
  try{const s=JSON.parse(localStorage.getItem('vpn_portal_session_24h')||'null');if(s&&Date.now()-s.time<864e5)document.documentElement.classList.add('has-user-session');}catch(e){}
  try{const t=localStorage.getItem('vpn_theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark');}catch(e){}
 </script>
 </head>
-<body class="min-h-screen flex flex-col w-full overflow-x-hidden">
+<body class="min-h-screen flex flex-col w-full overflow-x-hidden bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
 <div id="toastContainer" class="fixed top-[90px] md:top-[100px] right-5 z-[9999] flex flex-col items-end gap-2 pointer-events-none"></div>
 <div id="floatingSocials" class="fixed bottom-24 md:bottom-6 right-4 md:right-6 flex flex-col gap-3 z-40 transition-all duration-500">
   <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="w-12 h-12 bg-wechat text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce"><i class="fab fa-weixin"></i></button>
@@ -105,189 +91,183 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
   <a href="https://zalo.me/0917678211" target="_blank" class="w-12 h-12 bg-[#0068ff] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.3s"><span class="font-bold text-[14px]">Zalo</span></a>
 </div>
 <div id="wechatModal" class="hidden fixed inset-0 z-[99999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all" onclick="this.classList.add('hidden')">
-  <div class="bg-white p-6 rounded-3xl text-center max-w-sm w-full shadow-2xl" onclick="event.stopPropagation()">
-    <h3 class="font-extrabold text-xl text-slate-800 mb-2">WeChat Hỗ trợ</h3>
-    <p class="text-xs text-slate-500 mb-4">Lưu ảnh hoặc dùng chức năng quét mã của WeChat để thêm Admin.</p>
-    <div class="bg-slate-50 p-2 rounded-2xl mb-4 border border-slate-200 shadow-inner overflow-hidden flex justify-center"><img src="https://i.pinimg.com/736x/93/29/1e/93291e3f736f05f2f5722ecbcb7ca428.jpg" alt="WeChat QR" class="max-w-[250px] w-full h-auto rounded-xl object-contain"></div>
-    <button onclick="document.getElementById('wechatModal').classList.add('hidden')" class="w-full bg-slate-800 text-white font-bold py-3 rounded-xl hover:bg-slate-900 transition">ĐÓNG BẢNG NÀY</button>
+  <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl text-center max-w-sm w-full shadow-2xl" onclick="event.stopPropagation()">
+    <h3 class="font-extrabold text-xl text-slate-800 dark:text-slate-100 mb-2">WeChat Hỗ trợ</h3>
+    <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Lưu ảnh hoặc dùng chức năng quét mã của WeChat để thêm Admin.</p>
+    <div class="bg-slate-50 dark:bg-slate-900/50 p-2 rounded-2xl mb-4 border border-slate-200 dark:border-slate-700 shadow-inner overflow-hidden flex justify-center"><img src="https://i.pinimg.com/736x/93/29/1e/93291e3f736f05f2f5722ecbcb7ca428.jpg" alt="WeChat QR" class="max-w-[250px] w-full h-auto rounded-xl object-contain"></div>
+    <button onclick="document.getElementById('wechatModal').classList.add('hidden')" class="w-full bg-slate-800 dark:bg-slate-700 text-white font-bold py-3 rounded-xl hover:bg-slate-900 dark:hover:bg-slate-600 transition">ĐÓNG BẢNG NÀY</button>
   </div>
 </div>
-<nav id="mainNav" class="glass-ui fixed top-0 w-full z-[70] border-b border-slate-200 py-3">
+<nav id="mainNav" class="fixed top-0 w-full z-[70] border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md py-3 transition-colors duration-300">
   <div class="max-w-[1400px] mx-auto px-4 w-full flex flex-col md:flex-row items-center justify-between gap-3">
     <div class="flex items-center justify-between w-full md:w-auto shrink-0">
-      <div class="font-extrabold text-xl md:text-2xl tracking-tighter cursor-pointer text-indigo-700" onclick="logout()"><span data-i18n="brand">VPN Trinh Hg</span></div>
+      <div class="font-extrabold text-xl md:text-2xl tracking-tighter cursor-pointer text-indigo-700 dark:text-indigo-400" onclick="logout()"><span data-i18n="brand">VPN Trinh Hg</span></div>
       <div class="flex md:hidden items-center gap-2">
-        <button id="themeToggleMobile" onclick="toggleTheme()" title="Sáng / Tối"></button>
-        <select id="langSelectMobile" onchange="changeLanguage(this.value)" class="bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-lg px-2 py-1.5 text-xs font-bold outline-none"><option value="vi">🇻🇳 VN</option><option value="en">🇬🇧 EN</option><option value="zh">🇨🇳 CN</option></select>
+        <button id="themeToggleMobile" onclick="toggleTheme()" title="Sáng / Tối" class="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0 transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-yellow-400 dark:hover:bg-slate-700"></button>
+        <select id="langSelectMobile" onchange="changeLanguage(this.value)" class="bg-indigo-50 dark:bg-slate-800 text-indigo-700 dark:text-slate-200 border border-indigo-100 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs font-bold outline-none"><option value="vi">🇻🇳 VN</option><option value="en">🇬🇧 EN</option><option value="zh">🇨🇳 CN</option></select>
       </div>
     </div>
     <div class="flex-1 w-full md:flex-1 flex items-center justify-center mx-0 md:mx-2">
       <div class="w-full relative min-w-0">
-        <input type="text" id="loginInput" onkeyup="if(event.key==='Enter'){event.preventDefault();login();}" class="w-full bg-white border-2 border-indigo-100 rounded-full pl-5 pr-12 py-2.5 text-sm outline-none font-bold text-slate-700 focus:border-indigo-400 transition shadow-sm" placeholder="Nhập Mã Đơn hoặc Email..." data-i18n-placeholder="search_placeholder">
-        <button onclick="login()" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 bg-indigo-600 rounded-full text-white hover:bg-indigo-700 flex items-center justify-center transition shadow-sm"><i class="fas fa-search text-xs"></i></button>
+        <input type="text" id="loginInput" onkeyup="if(event.key==='Enter'){event.preventDefault();login();}" class="w-full bg-white dark:bg-slate-800 border-2 border-indigo-100 dark:border-slate-700 rounded-full pl-5 pr-12 py-2.5 text-sm outline-none font-bold text-slate-700 dark:text-slate-200 focus:border-indigo-400 dark:focus:border-indigo-500 transition shadow-sm" placeholder="Nhập Mã Đơn hoặc Email..." data-i18n-placeholder="search_placeholder">
+        <button onclick="login()" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 bg-indigo-600 dark:bg-indigo-500 rounded-full text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 flex items-center justify-center transition shadow-sm"><i class="fas fa-search text-xs"></i></button>
       </div>
     </div>
     <div class="hidden md:flex items-center justify-end w-auto gap-3 shrink-0">
       <div id="desktopPortalNav" class="hidden items-center gap-2 shrink-0 opacity-0 w-0 overflow-hidden whitespace-nowrap transition-all duration-500">
-        <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition flex items-center"><i class="fas fa-tv mr-2"></i><span data-i18n="tab_p_home">Trang chủ</span></button>
-        <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition flex items-center"><i class="fas fa-shopping-cart mr-2"></i><span data-i18n="tab_p_store">Cửa hàng</span></button>
-        <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition flex items-center"><i class="fas fa-book mr-2"></i><span data-i18n="tab_p_guide">Hướng dẫn</span></button>
+        <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center"><i class="fas fa-tv mr-2"></i><span data-i18n="tab_p_home">Trang chủ</span></button>
+        <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center"><i class="fas fa-shopping-cart mr-2"></i><span data-i18n="tab_p_store">Cửa hàng</span></button>
+        <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center"><i class="fas fa-book mr-2"></i><span data-i18n="tab_p_guide">Hướng dẫn</span></button>
       </div>
-      <select id="langSelectDesktop" onchange="changeLanguage(this.value)" class="bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-xl px-3 py-2 text-sm font-bold outline-none"><option value="vi">VN - Tiếng Việt</option><option value="en">EN - English</option><option value="zh">CN - 中文</option></select>
-      <button id="themeToggleDesktop" onclick="toggleTheme()" title="Sáng / Tối"></button>
-      <div id="userMenu" class="hidden"><button onclick="logout()" class="text-sm bg-red-50 text-red-600 font-bold px-4 py-2 rounded-xl hover:bg-red-100 transition shadow-sm flex items-center justify-center whitespace-nowrap"><i class="fas fa-sign-out-alt md:mr-1"></i><span class="hidden md:inline" data-i18n="btn_logout">Thoát</span></button></div>
+      <select id="langSelectDesktop" onchange="changeLanguage(this.value)" class="bg-indigo-50 dark:bg-slate-800 text-indigo-700 dark:text-slate-200 border border-indigo-100 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-bold outline-none"><option value="vi">VN - Tiếng Việt</option><option value="en">EN - English</option><option value="zh">CN - 中文</option></select>
+      <button id="themeToggleDesktop" onclick="toggleTheme()" title="Sáng / Tối" class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-yellow-400 dark:hover:bg-slate-700"></button>
+      <div id="userMenu" class="hidden"><button onclick="logout()" class="text-sm bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-bold px-4 py-2 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/50 transition shadow-sm flex items-center justify-center whitespace-nowrap"><i class="fas fa-sign-out-alt md:mr-1"></i><span class="hidden md:inline" data-i18n="btn_logout">Thoát</span></button></div>
     </div>
   </div>
 </nav>
 <div class="h-[120px] md:h-[80px]"></div>
 <div id="mobileNavWrapper" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[60]">
-  <div class="md:hidden bg-white/95 backdrop-blur-md shadow-lg rounded-full px-3 py-1.5 flex gap-2 border border-slate-200">
-    <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home mobile-tab-btn active flex items-center justify-center text-slate-500 w-10 h-10 rounded-full transition"><i class="fas fa-tv text-lg"></i></button>
-    <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store mobile-tab-btn flex items-center justify-center text-slate-500 w-10 h-10 rounded-full transition"><i class="fas fa-shopping-cart text-lg"></i></button>
-    <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide mobile-tab-btn flex items-center justify-center text-slate-500 w-10 h-10 rounded-full transition"><i class="fas fa-book text-lg"></i></button>
-    <button id="themeTogglePortal" onclick="toggleTheme()" title="Sáng / Tối" class="flex items-center justify-center"></button>
+  <div class="md:hidden bg-white/95 dark:bg-slate-800/95 backdrop-blur-md shadow-lg rounded-full px-3 py-1.5 flex gap-2 border border-slate-200 dark:border-slate-700">
+    <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home mobile-tab-btn active flex items-center justify-center text-slate-500 dark:text-slate-400 w-10 h-10 rounded-full transition"><i class="fas fa-tv text-lg"></i></button>
+    <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store mobile-tab-btn flex items-center justify-center text-slate-500 dark:text-slate-400 w-10 h-10 rounded-full transition"><i class="fas fa-shopping-cart text-lg"></i></button>
+    <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide mobile-tab-btn flex items-center justify-center text-slate-500 dark:text-slate-400 w-10 h-10 rounded-full transition"><i class="fas fa-book text-lg"></i></button>
   </div>
 </div>
 <main class="flex-grow z-10 px-2 md:px-4 py-4 md:py-6 max-w-[1400px] mx-auto w-full overflow-x-hidden">
   <div id="view-portal" class="view-section mb-20 w-full">
     <div id="p-home" class="portal-tab-content active w-full">
-      <div class="bg-white p-4 md:p-8 rounded-3xl mb-8 shadow-sm border border-slate-200 w-full overflow-hidden">
+      <div class="bg-white dark:bg-slate-800 p-4 md:p-8 rounded-3xl mb-8 shadow-sm border border-slate-200 dark:border-slate-700 w-full overflow-hidden">
         
-        <!-- TRẠNG THÁI 1: PENDING (Gồm Đang kiểm tra & Timeout) -->
-        <div id="portalContentPending" class="hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50 border border-indigo-200 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-sm">
+        <!-- TRẠNG THÁI 1: PENDING -->
+        <div id="portalContentPending" class="hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800 border border-indigo-200 dark:border-slate-700 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-sm">
           
           <div id="pendingActiveState" class="w-full">
             <div class="loader-ring"><i class="fas fa-shield-halved"></i></div>
-            <h4 id="pendingTitleUI" class="font-extrabold text-indigo-800 text-sm md:text-lg uppercase">Đang kiểm tra giao dịch...</h4>
+            <h4 id="pendingTitleUI" class="font-extrabold text-indigo-800 dark:text-indigo-400 text-sm md:text-lg uppercase">Đang kiểm tra giao dịch...</h4>
             <div class="countdown-wrap my-4">
-              <span id="countdownTimer" class="font-mono text-4xl md:text-6xl font-black text-indigo-600 bg-white px-6 py-2 md:py-3 rounded-2xl shadow-inner border-2 border-indigo-100">05:00</span>
-              <div class="w-full max-w-xs mx-auto h-2 bg-indigo-100 rounded-full overflow-hidden mt-3 mb-3">
+              <span id="countdownTimer" class="font-mono text-4xl md:text-6xl font-black text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-900 px-6 py-2 md:py-3 rounded-2xl shadow-inner border-2 border-indigo-100 dark:border-slate-700">05:00</span>
+              <div class="w-full max-w-xs mx-auto h-2 bg-indigo-100 dark:bg-slate-700 rounded-full overflow-hidden mt-3 mb-3">
                 <div id="pendingBar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-1000" style="width:100%"></div>
               </div>
             </div>
-            <p id="pendingWaitText" class="text-indigo-700 text-sm md:text-base font-bold mb-1">Hệ thống xử lý tự động, vui lòng đợi trong ít phút.</p>
-            <div class="dots text-indigo-400 text-xl leading-none"><span>•</span><span>•</span><span>•</span></div>
+            <p id="pendingWaitText" class="text-indigo-700 dark:text-indigo-300 text-sm md:text-base font-bold mb-1">Hệ thống xử lý tự động, vui lòng đợi trong ít phút.</p>
+            <div class="dots text-indigo-400 dark:text-indigo-500 text-xl leading-none"><span>•</span><span>•</span><span>•</span></div>
           </div>
 
-          <!-- Trạng thái Timeout: Nâng cấp UI/UX, đổi màu cam cảnh báo nhẹ -->
+          <!-- Trạng thái Timeout -->
           <div id="pendingTimeoutState" class="hidden w-full mb-2">
             <div class="flex flex-col items-center">
-              <div class="relative w-16 h-16 flex items-center justify-center rounded-full bg-orange-100 border-4 border-white shadow-sm mb-4 mx-auto">
-                <i class="fas fa-clock-rotate-left text-3xl text-orange-500"></i>
+              <div class="relative w-16 h-16 flex items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30 border-4 border-white dark:border-slate-800 shadow-sm mb-4 mx-auto">
+                <i class="fas fa-clock-rotate-left text-3xl text-orange-500 dark:text-orange-400"></i>
                 <span class="absolute -top-1 -right-1 flex h-4 w-4">
                   <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-4 w-4 bg-orange-500 border-2 border-white"></span>
+                  <span class="relative inline-flex rounded-full h-4 w-4 bg-orange-500 border-2 border-white dark:border-slate-800"></span>
                 </span>
               </div>
-              <h4 id="pendingTimeoutTitle" class="font-extrabold text-orange-700 text-sm md:text-lg uppercase">Chưa nhận được thanh toán</h4>
-              <p id="pendingTimeoutDesc" class="text-orange-600 text-sm md:text-base font-bold mt-1 mb-4">Đã quá thời gian tự động duyệt. Bạn đã chuyển khoản chưa?</p>
+              <h4 id="pendingTimeoutTitle" class="font-extrabold text-orange-700 dark:text-orange-400 text-sm md:text-lg uppercase">Chưa nhận được thanh toán</h4>
+              <p id="pendingTimeoutDesc" class="text-orange-600 dark:text-orange-300 text-sm md:text-base font-bold mt-1 mb-4">Đã quá thời gian tự động duyệt. Bạn đã chuyển khoản chưa?</p>
               
-              <!-- Khung hướng dẫn bo góc -->
-              <div class="w-full max-w-md mx-auto bg-white/80 border border-orange-200 rounded-2xl px-4 py-3 shadow-sm text-left">
+              <div class="w-full max-w-md mx-auto bg-white/80 dark:bg-slate-900/50 border border-orange-200 dark:border-orange-900/50 rounded-2xl px-4 py-3 shadow-sm text-left">
                 <div class="flex items-start gap-3">
                   <i class="fas fa-circle-info text-orange-400 mt-0.5"></i>
-                  <p class="text-orange-800 text-xs md:text-sm font-medium">Nếu bạn đã chuyển khoản, hệ thống có thể đang xử lý chậm. Vui lòng gửi biên lai cho Admin để được duyệt tay nhanh chóng.</p>
+                  <p class="text-orange-800 dark:text-orange-300 text-xs md:text-sm font-medium">Nếu bạn đã chuyển khoản, hệ thống có thể đang xử lý chậm. Vui lòng gửi biên lai cho Admin để được duyệt tay nhanh chóng.</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="w-full flex flex-col items-center mt-3 border-t border-indigo-100 pt-4">
-            <p id="pendingSupportText" class="text-slate-500 text-[11px] md:text-sm mb-3 font-medium px-4">Cần hỗ trợ? Hãy nhắn cho Admin.</p>
-            <a href="https://zalo.me/0917678211" target="_blank" id="pendingZaloBtn" class="mx-auto bg-[#0068ff]/85 text-white font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition shadow-md">
+          <div class="w-full flex flex-col items-center mt-3 border-t border-indigo-100 dark:border-slate-700 pt-4">
+            <p id="pendingSupportText" class="text-slate-500 dark:text-slate-400 text-[11px] md:text-sm mb-3 font-medium px-4">Cần hỗ trợ? Hãy nhắn cho Admin.</p>
+            <a href="https://zalo.me/0917678211" target="_blank" id="pendingZaloBtn" class="mx-auto bg-[#0068ff]/85 dark:bg-[#0068ff]/30 text-white dark:text-[#66a3ff] font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition shadow-md">
               <i class="fas fa-comment-dots text-lg"></i><span id="pendingZaloBtnTxt">Nhắn Zalo Admin</span>
             </a>
           </div>
         </div>
 
         <!-- TRẠNG THÁI 2: ĐỢI ADMIN DUYỆT -->
-        <div id="portalContentManual" class="hidden bg-gradient-to-br from-amber-50 via-white to-orange-50 border border-amber-200 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-sm">
+        <div id="portalContentManual" class="hidden bg-gradient-to-br from-amber-50 via-white to-orange-50 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800 border border-amber-200 dark:border-slate-700 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-sm">
           <div class="loader-ring amber"><i class="fas fa-hourglass-half"></i></div>
-          <h4 class="font-extrabold text-amber-800 text-sm md:text-lg uppercase" data-i18n="pending_manual_title">Đơn hàng đang chờ Admin duyệt</h4>
-          <p class="text-amber-700 text-xs md:text-sm font-bold mt-1 mb-4 max-w-md" data-i18n="pending_manual_desc">Vui lòng nhắn tin cho Admin cùng với biên lai để được kích hoạt sớm nhất.</p>
+          <h4 class="font-extrabold text-amber-800 dark:text-amber-400 text-sm md:text-lg uppercase" data-i18n="pending_manual_title">Đơn hàng đang chờ Admin duyệt</h4>
+          <p class="text-amber-700 dark:text-amber-300 text-xs md:text-sm font-bold mt-1 mb-4 max-w-md" data-i18n="pending_manual_desc">Vui lòng nhắn tin cho Admin cùng với biên lai để được kích hoạt sớm nhất.</p>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full max-w-2xl mb-5">
-            <div class="step-chip"><b>1</b><span>Gửi biên lai cho Admin</span></div>
-            <div class="step-chip"><b>2</b><span>Admin kiểm tra & duyệt</span></div>
-            <div class="step-chip"><b>3</b><span>Nhận link, tự cập nhật tại đây</span></div>
+            <div class="flex items-center gap-2 bg-white dark:bg-slate-900 border border-amber-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-amber-800 dark:text-amber-400 text-left"><b class="bg-amber-500 text-white w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0">1</b><span>Gửi biên lai cho Admin</span></div>
+            <div class="flex items-center gap-2 bg-white dark:bg-slate-900 border border-amber-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-amber-800 dark:text-amber-400 text-left"><b class="bg-amber-500 text-white w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0">2</b><span>Admin kiểm tra & duyệt</span></div>
+            <div class="flex items-center gap-2 bg-white dark:bg-slate-900 border border-amber-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-amber-800 dark:text-amber-400 text-left"><b class="bg-amber-500 text-white w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0">3</b><span>Nhận link, tự cập nhật</span></div>
           </div>
           <div class="flex gap-3 flex-wrap justify-center">
-            <a href="https://zalo.me/0917678211" target="_blank" class="bg-[#0068ff]/85 text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-sm shadow-md hover:scale-105 transition"><i class="fas fa-comment-dots"></i> Zalo Admin</a>
-            <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="bg-[#07C160]/85 text-white font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-sm shadow-md hover:scale-105 transition"><i class="fab fa-weixin"></i> WeChat</button>
+            <a href="https://zalo.me/0917678211" target="_blank" class="bg-[#0068ff]/85 dark:bg-[#0068ff]/30 text-white dark:text-[#66a3ff] font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-sm shadow-md hover:scale-105 transition"><i class="fas fa-comment-dots"></i> Zalo Admin</a>
+            <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="bg-[#07C160]/85 dark:bg-[#07C160]/30 text-white dark:text-[#20d877] font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-sm shadow-md hover:scale-105 transition"><i class="fab fa-weixin"></i> WeChat</button>
           </div>
         </div>
 
-<!-- TRẠNG THÁI 3: TỪ CHỐI (Nâng cấp toàn diện UI/UX) -->
-    <div id="portalContentFailed" class="hidden relative overflow-hidden bg-gradient-to-br from-red-100 via-rose-50 to-red-100 border border-red-200 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-lg">
-      
-      <!-- Thanh line nổi bật ở viền trên tạo cảm giác premium -->
-      <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-red-500 to-rose-500"></div>
-      
-      <!-- Box Icon được làm lại cấu trúc, đổ bóng đa lớp và có animation điểm nhấn -->
-      <div class="relative w-20 h-20 flex items-center justify-center rounded-2xl bg-white border border-red-200 shadow-md mb-5 mx-auto transform rotate-3 hover:rotate-0 transition-transform duration-300">
-        <i class="fas fa-file-circle-xmark text-4xl text-red-500"></i>
-        <span class="absolute -top-2 -right-2 flex h-5 w-5">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-5 w-5 bg-red-500 border-2 border-white items-center justify-center shadow-sm">
-            <i class="fas fa-exclamation text-[10px] text-white"></i>
-          </span>
-        </span>
-      </div>
-      
-      <h4 class="font-black text-red-800 text-base md:text-xl uppercase tracking-wide" data-i18n="failed_title">Giao dịch bị từ chối</h4>
-      <p class="text-red-600 text-sm md:text-base font-semibold mt-1 mb-5">Hệ thống không thể xác minh thanh toán của bạn.</p>
-      
-      <!-- Box Lý do từ chối: Nền trắng inset shadow, mác đỏ lồi ra ngoài -->
-      <div class="w-full max-w-sm mx-auto bg-white border-2 border-red-100 rounded-2xl p-5 shadow-inner mb-6 text-left relative mt-2">
-        <div class="absolute -top-3.5 left-4 bg-gradient-to-r from-red-500 to-rose-500 text-white text-[11px] font-black uppercase px-3 py-1 rounded-lg shadow-sm tracking-wider flex items-center gap-1.5 border border-white">
-          <i class="fas fa-triangle-exclamation"></i> Lý do
-        </div>
-        <!-- Set text mặc định "Chưa nhận được thanh toán" sẵn trong HTML -->
-        <span id="failReasonText" class="font-mono text-slate-700 font-bold text-sm md:text-base block mt-2 whitespace-normal break-words">Chưa nhận được thanh toán</span>
-      </div>
+        <!-- TRẠNG THÁI 3: TỪ CHỐI -->
+        <div id="portalContentFailed" class="hidden relative overflow-hidden bg-gradient-to-br from-red-100 via-rose-50 to-red-100 dark:from-red-900/20 dark:via-rose-900/10 dark:to-red-900/20 border border-red-200 dark:border-red-900/50 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-lg">
+          <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-red-500 to-rose-500"></div>
+          
+          <div class="relative w-20 h-20 flex items-center justify-center rounded-2xl bg-white dark:bg-slate-800 border border-red-200 dark:border-red-900/50 shadow-md mb-5 mx-auto transform rotate-3 hover:rotate-0 transition-transform duration-300">
+            <i class="fas fa-file-circle-xmark text-4xl text-red-500"></i>
+            <span class="absolute -top-2 -right-2 flex h-5 w-5">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-5 w-5 bg-red-500 border-2 border-white dark:border-slate-800 items-center justify-center shadow-sm">
+                <i class="fas fa-exclamation text-[10px] text-white"></i>
+              </span>
+            </span>
+          </div>
+          
+          <h4 class="font-black text-red-800 dark:text-red-400 text-base md:text-xl uppercase tracking-wide" data-i18n="failed_title">Giao dịch bị từ chối</h4>
+          <p class="text-red-600 dark:text-red-400 text-sm md:text-base font-semibold mt-1 mb-5">Hệ thống không thể xác minh thanh toán của bạn.</p>
+          
+          <div class="w-full max-w-sm mx-auto bg-white dark:bg-slate-900 border-2 border-red-100 dark:border-red-900/50 rounded-2xl p-5 shadow-inner mb-6 text-left relative mt-2">
+            <div class="absolute -top-3.5 left-4 bg-gradient-to-r from-red-500 to-rose-500 text-white text-[11px] font-black uppercase px-3 py-1 rounded-lg shadow-sm tracking-wider flex items-center gap-1.5 border border-white dark:border-slate-900">
+              <i class="fas fa-triangle-exclamation"></i> Lý do
+            </div>
+            <span id="failReasonText" class="font-mono text-slate-700 dark:text-slate-300 font-bold text-sm md:text-base block mt-2 whitespace-normal break-words">Chưa nhận được thanh toán</span>
+          </div>
 
-      <div class="w-full flex flex-col items-center mt-2 pt-5 border-t border-red-200/60">
-        <p class="text-slate-600 text-xs md:text-sm mb-4 font-medium px-4">Đừng lo lắng! Hãy nhắn cho Admin kèm ảnh chụp giao dịch để được hỗ trợ kiểm tra tay.</p>
-        <a href="[https://zalo.me/0917678211](https://zalo.me/0917678211)" target="_blank" class="mx-auto bg-gradient-to-r from-[#0068ff] to-[#0055d4] text-white font-bold py-3.5 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition-all shadow-lg shadow-blue-500/30">
-          <i class="fas fa-comment-dots text-lg"></i> Nhắn Zalo Admin ngay
-        </a>
-      </div>
-    </div>
+          <div class="w-full flex flex-col items-center mt-2 pt-5 border-t border-red-200/60 dark:border-red-900/30">
+            <p class="text-slate-600 dark:text-slate-400 text-xs md:text-sm mb-4 font-medium px-4">Đừng lo lắng! Hãy nhắn cho Admin kèm ảnh chụp giao dịch để được hỗ trợ kiểm tra tay.</p>
+            <a href="https://zalo.me/0917678211" target="_blank" class="mx-auto bg-gradient-to-r from-[#0068ff] to-[#0055d4] dark:from-[#0068ff]/30 dark:to-[#0055d4]/30 text-white dark:text-[#66a3ff] font-bold py-3.5 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition-all shadow-lg shadow-blue-500/30 dark:shadow-none">
+              <i class="fas fa-comment-dots text-lg"></i> Nhắn Zalo Admin ngay
+            </a>
+          </div>
+        </div>
+
         <div id="portalContentSuccess" class="hidden w-full">
           <div class="mb-6 flex justify-center w-full">
-            <div class="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 p-4 md:p-5 rounded-2xl shadow-sm flex flex-col md:flex-row items-center gap-4 w-full text-center md:text-left relative overflow-hidden">
+            <div class="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-900/30 p-4 md:p-5 rounded-2xl shadow-sm flex flex-col md:flex-row items-center gap-4 w-full text-center md:text-left relative overflow-hidden">
               <div class="absolute top-0 left-0 w-1.5 h-full bg-red-500"></div>
-              <div class="w-10 h-10 md:w-12 md:h-12 bg-red-100 rounded-full flex items-center justify-center shrink-0 shadow-inner"><i class="fas fa-user-shield text-red-500 text-lg md:text-2xl animate-pulse"></i></div>
+              <div class="w-10 h-10 md:w-12 md:h-12 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center shrink-0 shadow-inner"><i class="fas fa-user-shield text-red-500 dark:text-red-400 text-lg md:text-2xl animate-pulse"></i></div>
               <div class="flex-1">
-                <h4 id="securityAlertTitle" class="text-red-700 font-extrabold text-xs md:text-sm uppercase tracking-wide mb-1">Cảnh báo bảo mật</h4>
-                <p id="securityAlertDesc" class="text-red-800 font-medium text-[11px] md:text-[13px] leading-relaxed"></p>
+                <h4 id="securityAlertTitle" class="text-red-700 dark:text-red-400 font-extrabold text-xs md:text-sm uppercase tracking-wide mb-1">Cảnh báo bảo mật</h4>
+                <p id="securityAlertDesc" class="text-red-800 dark:text-red-300 font-medium text-[11px] md:text-[13px] leading-relaxed"></p>
               </div>
             </div>
           </div>
-          <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 mb-5 shadow-sm relative overflow-hidden">
-            <div id="upgradeSuccessBadge" class="hidden absolute top-0 right-0 bg-red-600 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md z-10" data-i18n="badge_upgrade_success">🎉 NÂNG GÓI THÀNH CÔNG</div>
+          <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 md:p-5 mb-5 shadow-sm relative overflow-hidden">
+            <div id="upgradeSuccessBadge" class="hidden absolute top-0 right-0 bg-red-600 dark:bg-red-500 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md z-10" data-i18n="badge_upgrade_success">🎉 NÂNG GÓI THÀNH CÔNG</div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
               <div class="flex flex-col gap-2.5">
-                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-envelope text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 shrink-0">Email:</span><span id="displayEmail" class="font-bold text-slate-800 text-[11px] md:text-xs truncate"></span></div>
-                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-hashtag text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="order_id_label">Mã đơn:</span><span id="displayOrderId" class="font-mono font-black text-indigo-600 text-xs md:text-sm"></span></div>
-                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-box text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="pkg_name_label">Gói VPN:</span><span id="displayPkg" class="font-bold text-slate-800 text-[11px] md:text-xs truncate"></span></div>
+                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-envelope text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0">Email:</span><span id="displayEmail" class="font-bold text-slate-800 dark:text-slate-200 text-[11px] md:text-xs truncate"></span></div>
+                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-hashtag text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0" data-i18n="order_id_label">Mã đơn:</span><span id="displayOrderId" class="font-mono font-black text-indigo-600 dark:text-indigo-400 text-xs md:text-sm"></span></div>
+                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-box text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0" data-i18n="pkg_name_label">Gói VPN:</span><span id="displayPkg" class="font-bold text-slate-800 dark:text-slate-200 text-[11px] md:text-xs truncate"></span></div>
               </div>
               <div class="flex flex-col gap-2.5">
-                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-clock text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="exp_date_label">HSD:</span><span id="displayExp" class="font-bold text-slate-800 text-[11px] md:text-xs truncate"></span></div>
-                <div class="flex items-center gap-2 min-w-0 mt-1"><i class="fas fa-arrow-up text-blue-500 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 shrink-0">Nâng cấp:</span><span id="displayUpgradeStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span></div>
-                <div class="flex items-center gap-2 min-w-0 mt-1"><i class="fas fa-check-circle text-green-500 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 shrink-0" data-i18n="status_lbl">Trạng thái:</span><span id="displayStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span></div>
+                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-clock text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0" data-i18n="exp_date_label">HSD:</span><span id="displayExp" class="font-bold text-slate-800 dark:text-slate-200 text-[11px] md:text-xs truncate"></span></div>
+                <div class="flex items-center gap-2 min-w-0 mt-1"><i class="fas fa-arrow-up text-blue-500 dark:text-blue-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0">Nâng cấp:</span><span id="displayUpgradeStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span></div>
+                <div class="flex items-center gap-2 min-w-0 mt-1"><i class="fas fa-check-circle text-green-500 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0" data-i18n="status_lbl">Trạng thái:</span><span id="displayStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span></div>
               </div>
             </div>
-            <div class="mt-4 flex justify-center border-t border-slate-100 pt-4">
+            <div class="mt-4 flex justify-center border-t border-slate-100 dark:border-slate-700 pt-4">
               <button id="btnRequestData" onclick="requestDataCheck()" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold px-6 py-2.5 rounded-xl text-xs hover:scale-105 transition shadow-sm flex items-center justify-center btn-heartbeat outline-none"><i class="fas fa-chart-pie mr-1.5"></i><span data-i18n="btn_check_data">Kiểm tra dung lượng</span></button>
             </div>
           </div>
-          <div class="bg-green-50 border-2 border-dashed border-green-500 p-4 md:p-6 rounded-2xl w-full space-y-4 relative" id="linkBoxes"></div>
+          <div class="bg-green-50 dark:bg-green-900/10 border-2 border-dashed border-green-500 dark:border-green-800 p-4 md:p-6 rounded-2xl w-full space-y-4 relative" id="linkBoxes"></div>
         </div>
       </div>
       <div class="flex justify-center mt-6 mb-8">
         <button onclick="switchPortalTab('p-guide')" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-black py-3 px-6 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center gap-2 text-xs md:text-sm max-w-[90vw] text-center"><i class="fas fa-question-circle text-lg"></i><span data-i18n="btn_watch_guide">Chưa biết sử dụng? Xem hướng dẫn ngay!</span></button>
       </div>
-      <h3 class="text-xl font-extrabold text-center mb-6 text-slate-800" data-i18n="faq_title">Câu hỏi thường gặp (FAQ)</h3>
+      <h3 class="text-xl font-extrabold text-center mb-6 text-slate-800 dark:text-slate-200" data-i18n="faq_title">Câu hỏi thường gặp (FAQ)</h3>
       <div id="faqPortalHomeContainer" class="space-y-3"></div>
     </div>
     <div id="p-store" class="portal-tab-content w-full">
@@ -295,28 +275,28 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
         <div class="flex-1"><h3 class="text-xl md:text-3xl font-black mb-3" data-i18n="promo_title"></h3><p class="text-sm font-medium opacity-90" data-i18n="promo_desc"></p></div>
         <i class="fas fa-rocket text-6xl opacity-80 hidden md:block"></i>
       </div>
-      <div class="flex justify-center gap-2 mb-6 bg-white p-1.5 rounded-xl w-fit max-w-full mx-auto border border-slate-100 shadow-sm overflow-x-auto flex-nowrap pkg-filters">
-        <button onclick="renderPackages('all')" id="ptab-all" class="tab-btn active text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_all">Tất cả</button>
-        <button onclick="renderPackages('travel')" id="ptab-travel" class="tab-btn text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_travel">Du lịch</button>
-        <button onclick="renderPackages('cycle')" id="ptab-cycle" class="tab-btn text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_cycle">Chu kỳ</button>
-        <button onclick="renderPackages('usage')" id="ptab-usage" class="tab-btn text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_usage">Dung lượng</button>
+      <div class="flex justify-center gap-2 mb-6 bg-white dark:bg-slate-800 p-1.5 rounded-xl w-fit max-w-full mx-auto border border-slate-100 dark:border-slate-700 shadow-sm overflow-x-auto flex-nowrap pkg-filters">
+        <button onclick="renderPackages('all')" id="ptab-all" class="tab-btn active text-slate-600 dark:text-slate-300 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_all">Tất cả</button>
+        <button onclick="renderPackages('travel')" id="ptab-travel" class="tab-btn text-slate-600 dark:text-slate-300 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_travel">Du lịch</button>
+        <button onclick="renderPackages('cycle')" id="ptab-cycle" class="tab-btn text-slate-600 dark:text-slate-300 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_cycle">Chu kỳ</button>
+        <button onclick="renderPackages('usage')" id="ptab-usage" class="tab-btn text-slate-600 dark:text-slate-300 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_usage">Dung lượng</button>
       </div>
       <div id="packagesContainerPortal" class="grid md:grid-cols-3 gap-4 md:gap-6 mb-10 w-full"></div>
     </div>
     <div id="p-guide" class="portal-tab-content w-full">
-      <div class="bg-white p-4 md:p-8 rounded-3xl mb-8 border border-slate-200 shadow-sm w-full">
-        <h2 class="text-xl font-extrabold text-slate-800 mb-6 border-b border-slate-100 pb-4"><i class="fas fa-book-open text-indigo-500 mr-2"></i>Hướng dẫn Cài đặt</h2>
+      <div class="bg-white dark:bg-slate-800 p-4 md:p-8 rounded-3xl mb-8 border border-slate-200 dark:border-slate-700 shadow-sm w-full">
+        <h2 class="text-xl font-extrabold text-slate-800 dark:text-slate-200 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4"><i class="fas fa-book-open text-indigo-500 mr-2"></i>Hướng dẫn Cài đặt</h2>
         <div id="guideTabs" class="flex flex-wrap gap-2 mb-6 justify-center"></div>
-        <div id="guideContent" class="hidden overflow-x-auto w-full"><div id="guideText" class="text-sm text-slate-800 leading-relaxed font-medium"></div></div>
+        <div id="guideContent" class="hidden overflow-x-auto w-full"><div id="guideText" class="text-sm text-slate-800 dark:text-slate-300 leading-relaxed font-medium"></div></div>
       </div>
-      <h3 class="text-xl font-extrabold text-center mb-6 text-slate-800" data-i18n="faq_title">Câu hỏi thường gặp (FAQ)</h3>
+      <h3 class="text-xl font-extrabold text-center mb-6 text-slate-800 dark:text-slate-200" data-i18n="faq_title">Câu hỏi thường gặp (FAQ)</h3>
       <div id="faqPortalContainer" class="space-y-3"></div>
     </div>
   </div>
   <div id="view-store" class="view-section active mb-20 w-full">
     <div class="text-center mb-8 mt-2 md:mt-4 px-2 w-full">
-      <h1 class="text-3xl md:text-5xl font-extrabold mb-3 text-slate-800 leading-tight" data-i18n="hero_title"></h1>
-      <p class="text-xs md:text-base text-slate-600 font-medium mb-5" data-i18n="hero_desc"></p>
+      <h1 class="text-3xl md:text-5xl font-extrabold mb-3 text-slate-800 dark:text-slate-100 leading-tight" data-i18n="hero_title"></h1>
+      <p class="text-xs md:text-base text-slate-600 dark:text-slate-400 font-medium mb-5" data-i18n="hero_desc"></p>
       <div class="dock-wrapper" id="dockWrapper"><div class="dock-marquee" id="dockMarquee"></div></div>
     </div>
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 mb-10 w-full">
@@ -324,77 +304,77 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
         <div class="absolute -right-4 -bottom-4 text-indigo-400/40 text-6xl md:text-8xl group-hover:rotate-12 transition-transform duration-500"><i class="fas fa-globe-asia"></i></div>
         <div class="relative z-10"><h3 class="text-lg md:text-2xl font-black mb-1.5 md:mb-2" data-i18n="feat_1"></h3><p class="text-indigo-100 text-[11px] md:text-sm font-medium opacity-95 leading-relaxed" data-i18n="feat_1_desc"></p></div>
       </div>
-      <div class="col-span-1 w-full bg-white p-5 md:p-6 rounded-[1.5rem] border border-slate-100 shadow-sm flex flex-col justify-center hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden group">
-        <div class="absolute -right-4 -bottom-4 text-amber-100 text-6xl md:text-8xl group-hover:-rotate-12 transition-transform duration-500"><i class="fas fa-bolt"></i></div>
-        <div class="relative z-10"><div class="w-10 h-10 md:w-12 md:h-12 bg-amber-50 rounded-2xl flex items-center justify-center mb-2 md:mb-3"><i class="fas fa-bolt text-xl md:text-2xl text-amber-500"></i></div><h4 class="font-bold text-slate-800 text-lg md:text-2xl mb-1.5 md:mb-2" data-i18n="feat_2"></h4><p class="text-[11px] md:text-sm text-slate-500 font-medium leading-relaxed" data-i18n="feat_2_desc"></p></div>
+      <div class="col-span-1 w-full bg-white dark:bg-slate-800 p-5 md:p-6 rounded-[1.5rem] border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col justify-center hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden group">
+        <div class="absolute -right-4 -bottom-4 text-amber-100 dark:text-amber-900/30 text-6xl md:text-8xl group-hover:-rotate-12 transition-transform duration-500"><i class="fas fa-bolt"></i></div>
+        <div class="relative z-10"><div class="w-10 h-10 md:w-12 md:h-12 bg-amber-50 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center mb-2 md:mb-3"><i class="fas fa-bolt text-xl md:text-2xl text-amber-500"></i></div><h4 class="font-bold text-slate-800 dark:text-slate-200 text-lg md:text-2xl mb-1.5 md:mb-2" data-i18n="feat_2"></h4><p class="text-[11px] md:text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed" data-i18n="feat_2_desc"></p></div>
       </div>
-      <div class="col-span-1 w-full bg-white p-5 md:p-6 rounded-[1.5rem] border border-slate-100 shadow-sm flex flex-col justify-center hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden group">
-        <div class="absolute -right-4 -bottom-4 text-emerald-50 text-6xl md:text-8xl group-hover:rotate-12 transition-transform duration-500"><i class="fas fa-user-secret"></i></div>
-        <div class="relative z-10"><div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-2 md:mb-3"><i class="fas fa-user-secret text-xl md:text-2xl text-emerald-500"></i></div><h4 class="font-bold text-slate-800 text-lg md:text-2xl mb-1.5 md:mb-2" data-i18n="feat_3"></h4><p class="text-[11px] md:text-sm text-slate-500 font-medium leading-relaxed" data-i18n="feat_3_desc"></p></div>
+      <div class="col-span-1 w-full bg-white dark:bg-slate-800 p-5 md:p-6 rounded-[1.5rem] border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col justify-center hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden group">
+        <div class="absolute -right-4 -bottom-4 text-emerald-50 dark:text-emerald-900/30 text-6xl md:text-8xl group-hover:rotate-12 transition-transform duration-500"><i class="fas fa-user-secret"></i></div>
+        <div class="relative z-10"><div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center mb-2 md:mb-3"><i class="fas fa-user-secret text-xl md:text-2xl text-emerald-500"></i></div><h4 class="font-bold text-slate-800 dark:text-slate-200 text-lg md:text-2xl mb-1.5 md:mb-2" data-i18n="feat_3"></h4><p class="text-[11px] md:text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed" data-i18n="feat_3_desc"></p></div>
       </div>
     </div>
-    <div class="flex justify-center gap-2 mb-6 bg-white p-1.5 rounded-xl w-fit max-w-full mx-auto border border-slate-100 shadow-sm overflow-x-auto flex-nowrap pkg-filters">
-      <button onclick="renderPackages('all')" id="htab-all" class="tab-btn active text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap shrink-0" data-i18n="tab_all">Tất cả</button>
-      <button onclick="renderPackages('travel')" id="htab-travel" class="tab-btn text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap shrink-0" data-i18n="tab_travel">Du lịch</button>
-      <button onclick="renderPackages('cycle')" id="htab-cycle" class="tab-btn text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap shrink-0" data-i18n="tab_cycle">Chu kỳ</button>
-      <button onclick="renderPackages('usage')" id="htab-usage" class="tab-btn text-slate-600 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap shrink-0" data-i18n="tab_usage">Dung lượng</button>
+    <div class="flex justify-center gap-2 mb-6 bg-white dark:bg-slate-800 p-1.5 rounded-xl w-fit max-w-full mx-auto border border-slate-100 dark:border-slate-700 shadow-sm overflow-x-auto flex-nowrap pkg-filters">
+      <button onclick="renderPackages('all')" id="htab-all" class="tab-btn active text-slate-600 dark:text-slate-300 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap shrink-0" data-i18n="tab_all">Tất cả</button>
+      <button onclick="renderPackages('travel')" id="htab-travel" class="tab-btn text-slate-600 dark:text-slate-300 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap shrink-0" data-i18n="tab_travel">Du lịch</button>
+      <button onclick="renderPackages('cycle')" id="htab-cycle" class="tab-btn text-slate-600 dark:text-slate-300 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap shrink-0" data-i18n="tab_cycle">Chu kỳ</button>
+      <button onclick="renderPackages('usage')" id="htab-usage" class="tab-btn text-slate-600 dark:text-slate-300 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm whitespace-nowrap shrink-0" data-i18n="tab_usage">Dung lượng</button>
     </div>
     <div id="packagesContainerHome" class="grid md:grid-cols-3 gap-4 md:gap-6 mb-10 w-full"></div>
     <div id="checkoutSection" class="hidden mt-6 scroll-mt-24 w-full">
-      <div class="text-center mb-6"><h3 id="checkoutTitle" class="text-xl md:text-3xl font-extrabold text-slate-800" data-i18n="checkout_title">Thanh toán Đơn hàng</h3></div>
+      <div class="text-center mb-6"><h3 id="checkoutTitle" class="text-xl md:text-3xl font-extrabold text-slate-800 dark:text-slate-200" data-i18n="checkout_title">Thanh toán Đơn hàng</h3></div>
       <form id="orderForm" onsubmit="submitOrder(event)">
         <div class="grid lg:grid-cols-2 gap-6">
-          <div class="bg-white border border-slate-200 p-5 md:p-8 rounded-3xl flex flex-col shadow-sm">
-            <div class="bg-indigo-50 px-5 py-4 rounded-xl mb-5 flex justify-between items-center border border-indigo-100">
-              <div><p class="text-sm font-black text-slate-800 uppercase" id="selectedPackageName"></p><p class="text-xs font-bold text-slate-500 mt-0.5" id="selectedPackageData"></p></div>
-              <p class="text-lg md:text-xl font-black text-indigo-600" id="selectedPackagePrice"></p>
+          <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-5 md:p-8 rounded-3xl flex flex-col shadow-sm">
+            <div class="bg-indigo-50 dark:bg-indigo-900/30 px-5 py-4 rounded-xl mb-5 flex justify-between items-center border border-indigo-100 dark:border-indigo-800/50">
+              <div><p class="text-sm font-black text-slate-800 dark:text-slate-200 uppercase" id="selectedPackageName"></p><p class="text-xs font-bold text-slate-500 dark:text-slate-400 mt-0.5" id="selectedPackageData"></p></div>
+              <p class="text-lg md:text-xl font-black text-indigo-600 dark:text-indigo-400" id="selectedPackagePrice"></p>
             </div>
-            <div id="upgradePriceNote" class="hidden bg-amber-50 border border-amber-200 p-3 rounded-xl mb-5 text-amber-800 text-[11px] md:text-xs font-bold text-center"></div>
+            <div id="upgradePriceNote" class="hidden bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 p-3 rounded-xl mb-5 text-amber-800 dark:text-amber-300 text-[11px] md:text-xs font-bold text-center"></div>
             <div id="emailBlock">
-              <input type="email" id="cusEmail" required placeholder="Nhập Email nhận đơn" data-i18n-placeholder="email_placeholder" class="w-full border border-slate-200 rounded-xl p-3.5 outline-none text-sm focus:border-indigo-500 mb-2 bg-slate-50 text-slate-800">
-              <div class="bg-red-50 border border-red-200 p-3 rounded-xl mb-5 flex items-start gap-2"><i class="fas fa-exclamation-triangle text-red-500 mt-0.5"></i><p class="text-[11px] md:text-xs text-red-700 font-bold" data-i18n="email_warning"></p></div>
+              <input type="email" id="cusEmail" required placeholder="Nhập Email nhận đơn" data-i18n-placeholder="email_placeholder" class="w-full border border-slate-200 dark:border-slate-700 rounded-xl p-3.5 outline-none text-sm focus:border-indigo-500 mb-2 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+              <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 p-3 rounded-xl mb-5 flex items-start gap-2"><i class="fas fa-exclamation-triangle text-red-500 mt-0.5"></i><p class="text-[11px] md:text-xs text-red-700 dark:text-red-400 font-bold" data-i18n="email_warning"></p></div>
             </div>
-            <label class="block font-bold text-xs text-slate-700 mb-2" data-i18n="choose_method">Phương thức thanh toán:</label>
+            <label class="block font-bold text-xs text-slate-700 dark:text-slate-300 mb-2" data-i18n="choose_method">Phương thức thanh toán:</label>
             <div class="grid grid-cols-4 gap-2 mb-4">
-              <button type="button" onclick="selectPayMethod('bank')" id="pay-btn-bank" class="col-span-2 pay-btn active bg-indigo-50 border-indigo-500 text-indigo-700 border-2 font-bold py-2.5 rounded-xl flex flex-col items-center gap-1 text-xs shadow-sm relative"><i class="fas fa-university text-xl"></i>Ngân hàng VN<span class="absolute -top-2.5 right-1 bg-green-100 border border-green-300 text-green-700 text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap" data-i18n="auto_badge">Tự động 24/24</span></button>
-              <button type="button" onclick="selectPayMethod('alipay')" id="pay-btn-alipay" class="col-span-1 pay-btn bg-white border-slate-200 text-slate-600 border-2 font-bold py-2.5 rounded-xl flex flex-col items-center gap-1 text-xs shadow-sm hover:bg-slate-50"><i class="fab fa-alipay text-xl text-blue-500"></i>Alipay</button>
-              <button type="button" onclick="selectPayMethod('wechat')" id="pay-btn-wechat" class="col-span-1 pay-btn bg-white border-slate-200 text-slate-600 border-2 font-bold py-2.5 rounded-xl flex flex-col items-center gap-1 text-xs shadow-sm hover:bg-slate-50"><i class="fab fa-weixin text-xl text-green-500"></i>Weixin</button>
+              <button type="button" onclick="selectPayMethod('bank')" id="pay-btn-bank" class="col-span-2 pay-btn active bg-indigo-50 dark:bg-indigo-900/40 border-indigo-500 dark:border-indigo-500 text-indigo-700 dark:text-indigo-400 border-2 font-bold py-2.5 rounded-xl flex flex-col items-center gap-1 text-xs shadow-sm relative"><i class="fas fa-university text-xl"></i>Ngân hàng VN<span class="absolute -top-2.5 right-1 bg-green-100 border border-green-300 text-green-700 text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap" data-i18n="auto_badge">Tự động 24/24</span></button>
+              <button type="button" onclick="selectPayMethod('alipay')" id="pay-btn-alipay" class="col-span-1 pay-btn bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 border-2 font-bold py-2.5 rounded-xl flex flex-col items-center gap-1 text-xs shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700"><i class="fab fa-alipay text-xl text-blue-500"></i>Alipay</button>
+              <button type="button" onclick="selectPayMethod('wechat')" id="pay-btn-wechat" class="col-span-1 pay-btn bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 border-2 font-bold py-2.5 rounded-xl flex flex-col items-center gap-1 text-xs shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700"><i class="fab fa-weixin text-xl text-green-500"></i>Weixin</button>
             </div>
             <input type="hidden" id="payMethod" value="bank">
-            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 mb-4">
-              <label class="flex items-start gap-2 cursor-pointer"><input type="checkbox" id="needSupport" onchange="toggleZalo()" checked class="mt-1 w-4 h-4 accent-indigo-600"><span class="font-bold text-xs md:text-sm text-slate-800 pt-0.5" data-i18n="need_support">Cần Hỗ trợ Cài đặt (Zalo/Tele)</span></label>
-              <input type="text" id="cusZalo" required class="w-full border border-slate-300 rounded-lg p-2.5 mt-3 outline-none text-xs text-slate-800" placeholder="Nhập Zalo / Telegram...">
+            <div class="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700 mb-4">
+              <label class="flex items-start gap-2 cursor-pointer"><input type="checkbox" id="needSupport" onchange="toggleZalo()" checked class="mt-1 w-4 h-4 accent-indigo-600"><span class="font-bold text-xs md:text-sm text-slate-800 dark:text-slate-200 pt-0.5" data-i18n="need_support">Cần Hỗ trợ Cài đặt (Zalo/Tele)</span></label>
+              <input type="text" id="cusZalo" required class="w-full border border-slate-300 dark:border-slate-600 rounded-lg p-2.5 mt-3 outline-none text-xs text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900" placeholder="Nhập Zalo / Telegram...">
             </div>
             <div id="durationBlock" class="mb-4">
-              <label class="block font-bold text-xs text-slate-700 mb-2" data-i18n="choose_dur">Chọn thời gian:</label>
+              <label class="block font-bold text-xs text-slate-700 dark:text-slate-300 mb-2" data-i18n="choose_dur">Chọn thời gian:</label>
               <div class="grid grid-cols-5 gap-2 text-center">
                 <button type="button" onclick="selectDuration(1)" id="dur-btn-1" class="dur-btn active bg-indigo-600 text-white border-transparent font-bold py-2 rounded-lg text-sm">1 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
-                <button type="button" onclick="selectDuration(3)" id="dur-btn-3" class="dur-btn bg-white border border-slate-200 text-slate-600 font-bold py-2 rounded-lg text-sm hover:bg-slate-50">3 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
-                <button type="button" onclick="selectDuration(6)" id="dur-btn-6" class="dur-btn bg-white border border-slate-200 text-slate-600 font-bold py-2 rounded-lg text-sm hover:bg-slate-50">6 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
-                <button type="button" onclick="selectDuration(12)" id="dur-btn-12" class="dur-btn bg-white border border-slate-200 text-slate-600 font-bold py-2 rounded-lg text-sm hover:bg-slate-50">12 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
-                <button type="button" onclick="selectDuration('custom')" id="dur-btn-custom" class="dur-btn bg-white border border-slate-200 text-slate-600 font-bold py-2 rounded-lg text-sm hover:bg-slate-50">X <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
+                <button type="button" onclick="selectDuration(3)" id="dur-btn-3" class="dur-btn bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-700">3 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
+                <button type="button" onclick="selectDuration(6)" id="dur-btn-6" class="dur-btn bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-700">6 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
+                <button type="button" onclick="selectDuration(12)" id="dur-btn-12" class="dur-btn bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-700">12 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
+                <button type="button" onclick="selectDuration('custom')" id="dur-btn-custom" class="dur-btn bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-700">X <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
               </div>
-              <div id="customDurWrap" class="hidden mt-3"><div class="flex items-center gap-2 bg-indigo-50 p-2 rounded-lg border border-indigo-100"><label class="text-xs font-bold text-indigo-800 whitespace-nowrap pl-1" data-i18n="input_months">Nhập số tháng:</label><input type="number" id="customDurInput" min="1" max="120" value="2" oninput="calculateTotal()" class="w-full p-2 text-sm border border-slate-300 rounded outline-none focus:border-indigo-500 font-bold bg-white text-center text-slate-800"></div></div>
-              <div id="priceCalculation" class="mt-3 text-sm font-black text-indigo-700 bg-indigo-50 border border-indigo-100 p-2.5 rounded-lg text-center"></div>
+              <div id="customDurWrap" class="hidden mt-3"><div class="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 p-2 rounded-lg border border-indigo-100 dark:border-indigo-800/50"><label class="text-xs font-bold text-indigo-800 dark:text-indigo-400 whitespace-nowrap pl-1" data-i18n="input_months">Nhập số tháng:</label><input type="number" id="customDurInput" min="1" max="120" value="2" oninput="calculateTotal()" class="w-full p-2 text-sm border border-slate-300 dark:border-slate-700 rounded outline-none focus:border-indigo-500 font-bold bg-white dark:bg-slate-900 text-center text-slate-800 dark:text-slate-200"></div></div>
+              <div id="priceCalculation" class="mt-3 text-sm font-black text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800/50 p-2.5 rounded-lg text-center"></div>
             </div>
-            <div class="sticky bottom-0 z-40 mt-auto pt-4 bg-white/90 backdrop-blur-md rounded-b-3xl pb-2"><button type="submit" id="btnConfirm" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md" data-i18n="btn_create_order">TẠO MÃ QR CHUYỂN KHOẢN</button></div>
+            <div class="sticky bottom-0 z-40 mt-auto pt-4 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md rounded-b-3xl pb-2"><button type="submit" id="btnConfirm" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md" data-i18n="btn_create_order">TẠO MÃ QR CHUYỂN KHOẢN</button></div>
           </div>
-          <div id="checkoutRightCol" class="bg-white border border-slate-200 p-5 md:p-8 rounded-3xl shadow-sm flex flex-col"></div>
+          <div id="checkoutRightCol" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-5 md:p-8 rounded-3xl shadow-sm flex flex-col"></div>
         </div>
       </form>
     </div>
-    <h3 class="text-xl font-extrabold text-center mt-16 mb-6 text-slate-800" data-i18n="faq_title">Câu hỏi thường gặp (FAQ)</h3>
+    <h3 class="text-xl font-extrabold text-center mt-16 mb-6 text-slate-800 dark:text-slate-200" data-i18n="faq_title">Câu hỏi thường gặp (FAQ)</h3>
     <div id="faqStoreContainer" class="space-y-3"></div>
   </div>
 </main>
-<footer id="footerArea" class="bg-white border-t border-slate-200 py-6 z-10 w-full mt-auto">
+<footer id="footerArea" class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 z-10 w-full mt-auto transition-colors duration-300">
   <div class="max-w-[1400px] mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
-    <p class="text-xs font-bold text-slate-500">© 2026 VPN Trinh Hg. All rights reserved.</p>
+    <p class="text-xs font-bold text-slate-500 dark:text-slate-400">© 2026 VPN Trinh Hg. All rights reserved.</p>
     <div class="flex flex-wrap justify-center gap-2">
-      <a href="https://zalo.me/0917678211" target="_blank" class="bg-[#0068ff]/10 text-[#0068ff] px-3 py-2 rounded-xl font-bold text-xs hover:bg-[#0068ff]/20 transition"><i class="fas fa-phone mr-1"></i>Zalo Support</a>
-      <a href="https://www.facebook.com/trinh.hg.57" target="_blank" class="bg-blue-50 text-blue-600 px-3 py-2 rounded-xl font-bold text-xs hover:bg-blue-100 transition"><i class="fab fa-facebook-messenger mr-1"></i>Mess Support</a>
-      <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="bg-green-50 text-[#07C160] px-3 py-2 rounded-xl font-bold text-xs hover:bg-green-100 transition"><i class="fab fa-weixin mr-1"></i>WeChat</button>
-      <a href="https://t.me/hoaian57" target="_blank" class="bg-sky-50 text-sky-600 px-3 py-2 rounded-xl font-bold text-xs hover:bg-sky-100 transition"><i class="fab fa-telegram-plane mr-1"></i>Telegram</a>
+      <a href="https://zalo.me/0917678211" target="_blank" class="bg-[#0068ff]/10 text-[#0068ff] dark:bg-[#0068ff]/20 dark:text-[#66a3ff] px-3 py-2 rounded-xl font-bold text-xs hover:bg-[#0068ff]/20 dark:hover:bg-[#0068ff]/30 transition"><i class="fas fa-phone mr-1"></i>Zalo Support</a>
+      <a href="https://www.facebook.com/trinh.hg.57" target="_blank" class="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 px-3 py-2 rounded-xl font-bold text-xs hover:bg-blue-100 dark:hover:bg-blue-900/50 transition"><i class="fab fa-facebook-messenger mr-1"></i>Mess Support</a>
+      <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="bg-green-50 text-[#07C160] dark:bg-green-900/30 dark:text-[#20d877] px-3 py-2 rounded-xl font-bold text-xs hover:bg-green-100 dark:hover:bg-green-900/50 transition"><i class="fab fa-weixin mr-1"></i>WeChat</button>
+      <a href="https://t.me/hoaian57" target="_blank" class="bg-sky-50 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400 px-3 py-2 rounded-xl font-bold text-xs hover:bg-sky-100 dark:hover:bg-sky-900/50 transition"><i class="fab fa-telegram-plane mr-1"></i>Telegram</a>
     </div>
   </div>
 </footer>
@@ -402,7 +382,6 @@ html.dark .bg-slate-100.p-1,html.dark .bg-slate-200{background-color:#111!import
 // ===== CẤU HÌNH: địa chỉ Worker của web này (gọi thẳng, không qua proxy Pages) =====
 const WORKER_URL = "https://vpntrinhhg3worker.lucastanora.workers.dev";
 const SESSION_KEY = 'vpn_portal_session_24h', CACHE_KEY = 'vpn_portal_last_order';
-// Web đang chạy: dùng để admin biết đơn tạo từ web nào (web 1 / 2 / 3)
 const currentTargetWeb = location.origin + "/";
 let lang='vi', currentPackage=null, currentOrderId='', currentMultiplier=1, oCache=null, cfgCache={guides:{},blur:[false,false,false],dock:null};
 let currentTotalVnd=0, currentTotalCny=0, currentTotalUsd=0, currentDurationMode=1;
@@ -410,18 +389,24 @@ let isUpgradeMode=false, isRenewMode=false, upgradeConfirmed=false, baseOrderPri
 let lastScrollY=0, pollT=null, tickT=null, skew=0, lastSig='';
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-// ---------- Y. Dark Mode OLED (chỉ 2 icon ☀/🌙 đổi qua lại trong CÙNG 1 nút, không thêm text)
+
 function paintThemeIcon(){
- const dark=document.documentElement.classList.contains('dark'),html=dark?'🌙':'☀';
- ['themeToggleDesktop','themeTogglePortal','themeToggleMobile'].forEach(id=>{const b=$(id);if(b)b.textContent=html;});}
+ const dark = document.documentElement.classList.contains('dark');
+ const html = dark ? '<i class="fas fa-sun text-yellow-400"></i>' : '<i class="fas fa-moon text-slate-600"></i>';
+ ['themeToggleDesktop','themeToggleMobile'].forEach(id=>{
+  const b=$(id);
+  if(b) b.innerHTML=html;
+ });
+}
 function toggleTheme(){
  const dark=document.documentElement.classList.toggle('dark');
  try{localStorage.setItem('vpn_theme',dark?'dark':'light');}catch(e){}
  paintThemeIcon();}
 paintThemeIcon();
+
 const i18n={
  vi:{brand:"VPN Trinh Hg",search_placeholder:"Nhập Mã Đơn hoặc Email...",btn_logout:"Thoát",tab_p_home:"Trang chủ",tab_p_store:"Cửa hàng",tab_p_guide:"Hướng dẫn",pending_title:"Đơn hàng đang chờ Admin duyệt",btn_copy:"COPY LINK",btn_renew:"GIA HẠN",btn_watch_guide:"Chưa biết sử dụng? Xem hướng dẫn ngay!",order_id_label:"Mã Đơn:",pkg_name_label:"Gói VPN:",exp_date_label:"HSD:",status_lbl:"Trạng thái:",
-  hero_title:"Chặn thì vượt. <span class='text-indigo-600'>Lướt mượt như gió.</span>",hero_desc:"Hệ thống VPN tự động hóa 100%. Nhận Link VPN chỉ trong <b class='text-indigo-600 font-black'>5 phút</b> không cần đợi Admin duyệt.",
+  hero_title:"Chặn thì vượt. <span class='text-indigo-600 dark:text-indigo-400'>Lướt mượt như gió.</span>",hero_desc:"Hệ thống VPN tự động hóa 100%. Nhận Link VPN chỉ trong <b class='text-indigo-600 dark:text-indigo-400 font-black'>5 phút</b> không cần đợi Admin duyệt.",
   feat_1:"Mở khóa mọi nền tảng",feat_1_desc:"Truy cập mượt mà Facebook, TikTok, Netflix xuyên quốc gia mà không gặp rào cản địa lý.",feat_2:"Tốc độ cực cao",feat_2_desc:"Độ trễ thấp, tối ưu tuyệt đối cho Game Mobile & Stream video chuẩn 4K.",feat_3:"Không lưu Nhật ký",feat_3_desc:"Bảo mật tuyệt đối thông tin dữ liệu, ẩn danh hoàn toàn trên Internet.",
   tab_all:"Tất cả",tab_travel:"Du lịch",tab_cycle:"Chu kỳ",tab_usage:"Dung lượng",checkout_title:"Thanh toán Đơn hàng",email_placeholder:"Nhập Email nhận đơn",btn_create_order:"TẠO MÃ QR CHUYỂN KHOẢN",btn_paid:"TÔI ĐÃ CHUYỂN KHOẢN",
   month_lbl:"Tháng",choose_dur:"Chọn thời gian:",input_months:"Nhập số tháng:",choose_method:"Phương thức thanh toán:",auto_badge:"Tự động 24/24",email_warning:"Vui lòng nhập đúng Email — mail kích hoạt sẽ gửi về đây.",
@@ -430,13 +415,13 @@ const i18n={
   data_label:"Dung lượng: ",dev_label:"Giới hạn thiết bị: ",dev_unlimited_label:"Không giới hạn thiết bị",speed_label:"Băng thông lên đến 3Gbps",btn_buy:"Đăng ký Gói Này",btn_contact:"Liên hệ Admin",copy_memo:"Nội dung chuyển khoản:",copy_amount:"Số tiền:",need_support:"Cần Hỗ trợ Cài đặt (Zalo/Tele)",
   faq_title:"Câu hỏi thường gặp (FAQ)",faq_1_q:"Làm sao lấy Link cài đặt?",faq_1_a:"Nhập Mã Đơn hoặc Email vào thanh tìm kiếm trên cùng.",faq_2_q:"VPN hỗ trợ những app nào?",faq_2_a:"TikTok, Facebook, Messenger, Instagram, Telegram, Zalo, YouTube... Nhắn Admin để test.",faq_3_q:"Có những phương thức thanh toán nào?",faq_3_a:"Ngân hàng VN (VietQR), Alipay, Weixin.",faq_4_q:"Đổi máy có dùng tiếp được không?",faq_4_a:"Có. Tra cứu lại Mã Đơn trên web.",
   refund_q:"Hoàn tiền",refund_a:"Website không áp dụng hoàn tiền cho đơn hàng đã mua, khách hàng vui lòng chú ý và cân nhắc khi thanh toán.",status_pending:"Chờ duyệt",status_success:"Thành công",status_failed:"Từ chối",lifetime_lbl:"Vĩnh viễn",days_lbl:" Ngày",expired_lbl:"Đã hết hạn",btn_check_data:"Kiểm tra dung lượng",security_alert:"Cảnh báo bảo mật",
-  security_desc:"Bắt buộc giữ bí mật <span class='text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100'>Email</span> và <span class='text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100'>Mã đơn hàng</span> để tránh bị lộ Link VPN.",
+  security_desc:"Bắt buộc giữ bí mật <span class='text-red-600 dark:text-red-400 font-black bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm border border-red-100 dark:border-red-900/50'>Email</span> và <span class='text-red-600 dark:text-red-400 font-black bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm border border-red-100 dark:border-red-900/50'>Mã đơn hàng</span> để tránh bị lộ Link VPN.",
   pending_wait:"Hệ thống xử lý tự động, vui lòng đợi trong ít phút.",pending_timeout:"Chưa nhận được thanh toán",pending_timeout_desc:"Đã quá thời gian tự động duyệt. Bạn đã chuyển khoản chưa?",pending_support_text:"Cần hỗ trợ? Hãy nhắn cho Admin.",pending_zalo_btn:"Nhắn Zalo Admin",pending_manual_wait_title:"Đợi Admin duyệt",pending_manual_title:"Đơn hàng đang chờ Admin duyệt",pending_manual_desc:"Vui lòng nhắn tin cho Admin cùng với biên lai để được kích hoạt sớm nhất.",failed_title:"Đơn hàng bị từ chối",
   bank_owner:"Chủ TK:",bank_name:"Ngân hàng:",bank_num:"Số TK:",click_copy:"(NHẤP VÀO MÃ ĐỂ COPY - BẮT BUỘC)",input_manual:"Vui lòng tự nhập nội dung chuyển khoản!",upgrade_confirm_title:"Xác nhận nâng gói",upgrade_confirm_desc:"Vui lòng kiểm tra số tiền chênh lệch và thông tin gói mới. Bấm <b>TẠO MÃ QR CHUYỂN KHOẢN</b> để tạo mã.",
   req_wait:"Yêu cầu đang chờ xử lý. Vui lòng quay lại sau!",req_sent:"Đã gửi yêu cầu! Vui lòng chờ Email báo cáo.",req_err:"Có lỗi xảy ra, vui lòng thử lại!",select_higher:"Vui lòng chọn gói cao hơn gói hiện tại để nâng cấp",copy_success:"Đã Copy!",not_found:"Không tìm thấy Đơn hàng/Email!",login_success:"Vào cổng thành công!",sending:"Đang gửi...",
   checking_upgrade:"ĐANG KIỂM TRA GIAO DỊCH NÂNG GÓI...",checking_tx:"ĐANG KIỂM TRA GIAO DỊCH...",admin_rejected:"Admin từ chối giao dịch",unknown:"Chưa xác định",active:"Đã kích hoạt",web3_maintenance:"Link dự phòng sẽ được Admin mở khi web bảo trì",badge_upgrade_success:"🎉 NÂNG GÓI THÀNH CÔNG",select_renew_pkg:"Vui lòng chọn gói để gia hạn",dev_label_suffix:"Thiết bị",dev_custom:"Tùy chọn",link_generating:"Đang tạo link, vui lòng chờ...",unavailable:"Không khả dụng",upg_none:"Không",upg_pending:"Đang xác minh nâng gói",upg_failed:"Từ chối nâng gói",upg_ok:"Nâng gói thành công",req_sent_btn:"Đã gửi yêu cầu"},
  en:{brand:"VPN Trinh Hg",search_placeholder:"Order ID or Email...",btn_logout:"Exit",tab_p_home:"Home",tab_p_store:"Store",tab_p_guide:"Guide",pending_title:"Order pending approval",btn_copy:"COPY URL",btn_renew:"RENEW",btn_watch_guide:"Don't know how? Read the guide now!",order_id_label:"Order ID:",pkg_name_label:"Plan:",exp_date_label:"Exp:",status_lbl:"Status:",
-  hero_title:"Blocked? Bypass it. <span class='text-indigo-600'>Smooth as the wind.</span>",hero_desc:"100% automated VPN system. Get your VPN link in <b class='text-indigo-600 font-black'>5 mins</b> without waiting.",
+  hero_title:"Blocked? Bypass it. <span class='text-indigo-600 dark:text-indigo-400'>Smooth as the wind.</span>",hero_desc:"100% automated VPN system. Get your VPN link in <b class='text-indigo-600 dark:text-indigo-400 font-black'>5 mins</b> without waiting.",
   feat_1:"Unblock everything",feat_1_desc:"Smoothly access Facebook, TikTok, Netflix globally without barriers.",feat_2:"High Speed",feat_2_desc:"Low latency, fully optimized for Mobile Gaming & 4K Streaming.",feat_3:"No-log Policy",feat_3_desc:"Absolute data privacy, completely anonymous on the Internet.",
   tab_all:"All",tab_travel:"Travel",tab_cycle:"Cycle",tab_usage:"Data",checkout_title:"Checkout",email_placeholder:"Enter your Email",btn_create_order:"CREATE PAYMENT QR",btn_paid:"I HAVE PAID",
   month_lbl:"Mths",choose_dur:"Duration:",input_months:"Input months:",choose_method:"Payment method:",auto_badge:"Auto 24/24",email_warning:"Please enter a valid Email. Activation link will be sent here.",
@@ -445,13 +430,13 @@ const i18n={
   data_label:"Data: ",dev_label:"Device limit: ",dev_unlimited_label:"Unlimited devices",speed_label:"Bandwidth up to 3Gbps",btn_buy:"Subscribe Now",btn_contact:"Contact Admin",copy_memo:"Transfer Memo:",copy_amount:"Amount:",need_support:"Need Setup Support",
   faq_title:"FAQ",faq_1_q:"Where is the setup guide?",faq_1_a:"Enter Order ID in the search bar above.",faq_2_q:"What apps does VPN support?",faq_2_a:"TikTok, Facebook, Messenger, Instagram, Telegram, Zalo, YouTube...",faq_3_q:"Payment methods?",faq_3_a:"Vietnam Bank, Alipay, Weixin.",faq_4_q:"Can I change my device?",faq_4_a:"Yes. Re-enter your Order ID to get the config link.",
   refund_q:"Refund Policy",refund_a:"We do not offer refunds for purchased orders, please consider carefully before paying.",status_pending:"Pending",status_success:"Active",status_failed:"Rejected",lifetime_lbl:"Lifetime",days_lbl:" Days",expired_lbl:"Expired",btn_check_data:"Check Data Usage",security_alert:"Security Alert",
-  security_desc:"Keep your <span class='text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100'>Email</span> and <span class='text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100'>Order ID</span> secret to prevent link theft.",
+  security_desc:"Keep your <span class='text-red-600 dark:text-red-400 font-black bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm border border-red-100 dark:border-red-900/50'>Email</span> and <span class='text-red-600 dark:text-red-400 font-black bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm border border-red-100 dark:border-red-900/50'>Order ID</span> secret to prevent link theft.",
   pending_wait:"Automated processing, please wait a few minutes.",pending_timeout:"Payment not received",pending_timeout_desc:"Payment not received in time. Have you transferred yet?",pending_support_text:"Need help? Message Admin.",pending_zalo_btn:"Message Zalo Admin",pending_manual_wait_title:"Waiting for Admin approval",pending_manual_title:"Order pending approval",pending_manual_desc:"Please message Admin with receipt for fast activation.",failed_title:"Order Rejected",
   bank_owner:"Acc Name:",bank_name:"Bank:",bank_num:"Acc No:",click_copy:"(CLICK MEMO TO COPY - REQUIRED)",input_manual:"Manually enter amount & Memo!",upgrade_confirm_title:"Confirm Upgrade",upgrade_confirm_desc:"Please verify the price difference and new package info. Click <b>CREATE PAYMENT QR</b> to proceed.",
   req_wait:"Request pending. Try again later!",req_sent:"Request sent! Please check your email later.",req_err:"Error occurred, please try again.",select_higher:"Please select a higher package to upgrade",copy_success:"Copied!",not_found:"Order/Email not found!",login_success:"Login success!",sending:"Sending...",
   checking_upgrade:"CHECKING UPGRADE TRANSACTION...",checking_tx:"CHECKING TRANSACTION...",admin_rejected:"Transaction rejected by Admin",unknown:"Unknown",active:"Active",web3_maintenance:"Backup link will be opened by Admin during maintenance",badge_upgrade_success:"🎉 UPGRADE SUCCESS",select_renew_pkg:"Please select a package to renew",dev_label_suffix:"Devices",dev_custom:"Custom",link_generating:"Generating link, please wait...",unavailable:"Unavailable",upg_none:"None",upg_pending:"Verifying upgrade",upg_failed:"Upgrade rejected",upg_ok:"Upgrade success",req_sent_btn:"Request sent"},
  zh:{brand:"VPN Trinh Hg",search_placeholder:"输入订单号或邮箱...",btn_logout:"退出",tab_p_home:"主页",tab_p_store:"商店",tab_p_guide:"指南",pending_title:"订单处理中",btn_copy:"复制链接",btn_renew:"续费",btn_watch_guide:"不知如何使用？立即查看指南！",order_id_label:"订单号:",pkg_name_label:"套餐:",exp_date_label:"到期:",status_lbl:"状态:",
-  hero_title:"有墙就翻。<span class='text-indigo-600'>如风般顺滑。</span>",hero_desc:"100%自动化VPN系统。<b class='text-indigo-600 font-black'>5分钟</b>内获取链接，无需等待审核。",
+  hero_title:"有墙就翻。<span class='text-indigo-600 dark:text-indigo-400'>如风般顺滑。</span>",hero_desc:"100%自动化VPN系统。<b class='text-indigo-600 dark:text-indigo-400 font-black'>5分钟</b>内获取链接，无需等待审核。",
   feat_1:"解锁所有平台",feat_1_desc:"无障碍访问Facebook, TikTok, Netflix全球内容。",feat_2:"极速网络",feat_2_desc:"超低延迟，完美支持移动游戏与4K视频流。",feat_3:"无日志记录",feat_3_desc:"绝对数据隐私，互联网上完全匿名。",
   tab_all:"全部",tab_travel:"旅游",tab_cycle:"周期",tab_usage:"流量",checkout_title:"结账",email_placeholder:"输入您的邮箱",btn_create_order:"创建支付二维码",btn_paid:"我已付款",
   month_lbl:"个月",choose_dur:"选择时长：",input_months:"输入月数:",choose_method:"支付方式:",auto_badge:"自动 24/24",email_warning:"请输入有效邮箱，激活链接将发送到此地址。",
@@ -460,12 +445,13 @@ const i18n={
   data_label:"流量: ",dev_label:"设备限制: ",dev_unlimited_label:"无限制设备",speed_label:"带宽高达 3Gbps",btn_buy:"立即订阅",btn_contact:"联系管理员",copy_memo:"转账备注:",copy_amount:"金额:",need_support:"需要人工设置支持",
   faq_title:"常见问题",faq_1_q:"如何获取安装指南？",faq_1_a:"在顶部搜索栏输入订单号。",faq_2_q:"VPN支持哪些应用？",faq_2_a:"TikTok、Facebook、Messenger、Instagram、Telegram、YouTube...",faq_3_q:"有哪些付款方式？",faq_3_a:"越南银行、支付宝、微信支付 (Weixin)。",faq_4_q:"可以更换设备吗？",faq_4_a:"可以，重新输入订单号即可获取链接。",
   refund_q:"退款政策",refund_a:"网站对已购订单不实行退款，请在付款时谨慎考虑。",status_pending:"待处理",status_success:"已激活",status_failed:"已拒绝",lifetime_lbl:"永久",days_lbl:"天",expired_lbl:"已过期",btn_check_data:"检查流量",security_alert:"安全警告",
-  security_desc:"请务必保密您的 <span class='text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100'>邮箱</span> 和 <span class='text-red-600 font-black bg-white px-1.5 py-0.5 rounded shadow-sm border border-red-100'>订单号</span>，以防链接被盗。",
+  security_desc:"请务必保密您的 <span class='text-red-600 dark:text-red-400 font-black bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm border border-red-100 dark:border-red-900/50'>邮箱</span> 和 <span class='text-red-600 dark:text-red-400 font-black bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm border border-red-100 dark:border-red-900/50'>订单号</span>，以防链接被盗。",
   pending_wait:"自动处理中，请稍候。",pending_timeout:"未收到付款",pending_timeout_desc:"已超过自动审核时间。您已转账了吗？",pending_support_text:"需要帮助？请联系管理员。",pending_zalo_btn:"联系Zalo管理员",pending_manual_wait_title:"等待管理员审核",pending_manual_title:"订单待管理员审核",pending_manual_desc:"请发送付款截图给管理员以快速激活。",failed_title:"订单被拒绝",
   bank_owner:"账户名:",bank_name:"银行:",bank_num:"账号:",click_copy:"(点击复制备注 - 必填)",input_manual:"请手动输入金额和订单号！",upgrade_confirm_title:"确认升级",upgrade_confirm_desc:"请核对差价及新套餐信息。点击 <b>创建支付二维码</b>继续。",
   req_wait:"请求待处理，请稍后再试！",req_sent:"请求已发送！请稍后检查您的电子邮件。",req_err:"发生错误，请重试！",select_higher:"请选择更高的套餐进行升级",copy_success:"已复制！",not_found:"未找到订单/邮箱！",login_success:"登录成功！",sending:"发送中...",
   checking_upgrade:"正在检查升级交易...",checking_tx:"正在检查交易...",admin_rejected:"管理员拒绝了交易",unknown:"未知",active:"已激活",web3_maintenance:"备用链接将在网站维护时由管理员开放",badge_upgrade_success:"🎉 升级成功",select_renew_pkg:"请选择续订套餐",dev_label_suffix:"台设备",dev_custom:"自定义",link_generating:"正在生成链接，请稍候...",unavailable:"不可用",upg_none:"无",upg_pending:"升级验证中",upg_failed:"升级被拒绝",upg_ok:"升级成功",req_sent_btn:"请求已发送"}
 };
+
 const pkgs=[
  {id:'t1',category:['cycle','travel'],vi:{name:'Gói 1 tháng',price:'60,000VND'},en:{name:'1 Month',price:'$2.50'},zh:{name:'1个月',price:'¥15.5'},usd:2.5,vnd:60000,cny:15.5,data:'100GB',dev:1,time:1,tag:{vi:'🔥 BÁN CHẠY',en:'🔥 BEST SELLER',zh:'🔥热销'},tag2:{vi:'✈️ Du lịch',en:'✈️ Travel',zh:'✈️ 旅游'}},
  {id:'t2',category:['cycle','travel'],vi:{name:'Gói 1 tháng',price:'70,000VND'},en:{name:'1 Month',price:'$3.00'},zh:{name:'1个月',price:'¥18'},usd:3,vnd:70000,cny:18,data:'500GB',dev:3,time:1,tag:{vi:'🔥 BÁN CHẠY',en:'🔥 BEST SELLER',zh:'🔥热销'},tag2:{vi:'✈️ Du lịch',en:'✈️ Travel',zh:'✈️ 旅游'}},
@@ -477,23 +463,20 @@ const pkgs=[
  {id:'d3',category:['usage'],vi:{name:'Không Giới Hạn',price:'999,000VND'},en:{name:'Unlimited',price:'$40.00'},zh:{name:'不限时',price:'¥256'},usd:40,vnd:999000,cny:256,data:'5000GB',dev:'unlimited',time:'lifetime'},
  {id:'custom',isCustom:true,category:['travel','cycle','usage'],vi:{name:'Gói Tùy Chọn',price:'Liên hệ Admin'},en:{name:'Custom',price:'Contact Admin'},zh:{name:'自定义',price:'联系管理员'},usd:0,vnd:0,cny:0,data:'100GB - 100,000GB',dev:'custom',time:1}
 ];
-// ---------- Dock icon: dùng danh sách từ Worker (cmsDb.settings.dock, quản lý ở Admin) nếu có, fallback về danh sách mặc định.
-// S: kéo/vuốt tay + wheel ngang mượt, không jank — dừng animation CSS khi người dùng đang tương tác, resume khi thả ra.
+
 const DOCK_DEFAULT=[['https://www.facebook.com/','bg-fb','fab fa-facebook-f'],['https://messenger.com/','bg-mess','fab fa-facebook-messenger'],['https://telegram.org/','bg-tele','fab fa-telegram-plane'],['https://whatsapp.com/','bg-wa','fab fa-whatsapp'],['https://discord.com/','bg-discord','fab fa-discord'],['https://tiktok.com/','bg-tiktok','fab fa-tiktok'],['https://instagram.com/','bg-insta','fab fa-instagram'],['https://twitter.com/','bg-x','fab fa-x-twitter'],['https://threads.net/','bg-threads','fab fa-threads'],['https://youtube.com/','bg-youtube','fab fa-youtube'],['https://reddit.com/','bg-reddit','fab fa-reddit-alien'],['https://soundcloud.com/','bg-sc','fab fa-soundcloud'],['https://locket.camera/','bg-locket','fas fa-heart'],['https://netflix.com/','bg-netflix','IMG'],['https://spotify.com/','bg-spotify','fab fa-spotify']];
 const DOCK_NF='https://images.ctfassets.net/4cd45et68cgf/Rx83JoRDMkYNlMC9MKzcB/2b14d5a59fc3937afd3f03191e19502d/Netflix-Symbol.png?w=700&h=456';
 function renderDock(){
  const list=(Array.isArray(cfgCache.dock)&&cfgCache.dock.length?cfgCache.dock:DOCK_DEFAULT);
  const one=list.map(it=>{const h=it.url||it[0],c=it.cls||it[1]||(it.bg?'':'bg-fb'),ic=it.icon||it[2]||'fas fa-star',img=it.img||(ic==='IMG'?DOCK_NF:''),bgStyle=it.bg?` style="background:${esc(it.bg)}"`:'';
   return `<a href="${esc(h)}" target="_blank" class="dock-icon ${esc(c)}"${bgStyle}>${img?`<img src="${esc(img)}" class="w-[70%] h-[70%] object-contain" alt="">`:`<i class="${esc(ic)}"></i>`}</a>`;}).join('');
- // Clone x4 để dải đủ dài lấp đầy mọi màn hình Desktop siêu rộng
  $('dockMarquee').innerHTML=one+one+one+one;
  setupDockDrag();}
-// Kéo tay / vuốt / wheel mượt cho dải icon — không jank: dùng transform trực tiếp trong lúc kéo, chỉ bật lại animation khi thả ra.
+
 function setupDockDrag(){
  const wrap=$('dockWrapper'),track=$('dockMarquee');if(!wrap||!track)return;
  let dragging=false,startX=0,startScroll=0,curX=0;
  const setX=x=>{track.style.transform=`translateX(${x}px)`;};
- // Vì đã clone x4 nên 1 chu kỳ bằng độ rộng cuộn chia 4
  const unitWidth=()=>track.scrollWidth/4;
  const onDown=x=>{dragging=true;wrap.classList.add('dragging');startX=x;const m=/translateX\((-?[\d.]+)px\)/.exec(track.style.transform);curX=m?parseFloat(m[1]):0;startScroll=curX;};
  const onMove=x=>{if(!dragging)return;let nx=startScroll+(x-startX);const uw=unitWidth();if(uw){while(nx<=-uw)nx+=uw;while(nx>0)nx-=uw;}curX=nx;setX(nx);};
@@ -506,84 +489,115 @@ function setupDockDrag(){
  wrap.addEventListener('touchend',onUp);
  wrap.addEventListener('wheel',e=>{if(Math.abs(e.deltaX)<Math.abs(e.deltaY)&&!e.shiftKey)return;e.preventDefault();wrap.classList.add('dragging');const m=/translateX\((-?[\d.]+)px\)/.exec(track.style.transform);let nx=(m?parseFloat(m[1]):0)-(e.deltaX||e.deltaY);const uw=unitWidth();if(uw){while(nx<=-uw)nx+=uw;while(nx>0)nx-=uw;}setX(nx);
   clearTimeout(wrap._wheelT);wrap._wheelT=setTimeout(()=>{wrap.classList.remove('dragging');track.style.transform='';},500);},{passive:false});}
-// ---------- Guide dạng khối (cùng định dạng với Admin)
+
+// ---------- Hướng dẫn cài đặt dạng khối (Refactored Dark Mode chuẩn Tailwind)
 const DEF_TABS=[{id:'android',name:'Android',ic:'fab fa-android',col:'text-green-500'},{id:'windows',name:'Windows',ic:'fab fa-windows',col:'text-blue-500'},{id:'macos',name:'MacOS',ic:'fab fa-apple',col:'text-slate-800'},{id:'ios',name:'iOS',ic:'fab fa-app-store-ios',col:'text-blue-400'}];
 let curGuide='android';
 const guideTabList=()=>{const t=cfgCache.guides&&cfgCache.guides._tabs;return Array.isArray(t)&&t.length?t:DEF_TABS;};
-function shortcodeToBlocks(t){return String(t||'').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const m=l.match(/^\[(HEADER|SUB|STEP|NOTE|BTN|IMG)\]\s*(.*)$/);if(!m)return{t:'text',x:l};const T=m[1].toLowerCase();if(T==='btn'){const p=m[2].split('|');return{t:'btn',x:(p[0]||'').trim(),u:(p[1]||'').trim()};}if(T==='img')return{t:'img',u:m[2].trim(),x:''};return{t:T,x:m[2]};});}
+function shortcodeToBlocks(t){return String(t||'').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const m=l.match(/^\[(HEADER|SUB|STEP|NOTE|BTN|IMG|TOC)\]\s*(.*)$/i);if(!m)return{t:'text',x:l};const T=m[1].toLowerCase();if(T==='btn'){const p=m[2].split('|');return{t:'btn',x:(p[0]||'').trim(),u:(p[1]||'').trim()};}if(T==='img')return{t:'img',u:m[2].trim(),x:''};return{t:T,x:m[2]};});}
 const normGuide=g=>Array.isArray(g)?g:shortcodeToBlocks(g);
 const safeUrl=u=>/^https?:\/\//i.test(u||'')?u:'#';
 const bAlign=b=>b.al==='c'?'center':b.al==='r'?'right':'left';
-function bStyle(b){let st='';if(b.b)st+='font-weight:800;';if(b.i)st+='font-style:italic;';if(b.ul)st+=`text-decoration:underline;text-decoration-color:${b.ul==='red'?'#dc2626':'#0f172a'};text-underline-offset:3px;`;const z={s:'12px',m:'14px',l:'17px',xl:'22px'}[b.sz];if(z)st+=`font-size:${z};`;return st;}
 const bText=b=>esc(b.x).replace(/\n/g,'<br>');
-function guideScroll(id){const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});}
+
 function renderBlocks(bl,gid){
  let n=1,h='';const g=gid||'g';
- bl.forEach((b,idx)=>{const al=bAlign(b),st=bStyle(b),aid=`g-${g}-${idx}`;
-  if(b.t==='header'){n=1;h+=`<div id="${aid}" style="text-align:${al};margin-bottom:12px;scroll-margin-top:100px"><div style="background:linear-gradient(90deg,#4f46e5,#8b5cf6);display:inline-block;color:#fff;padding:8px 16px;border-radius:8px;font-weight:800;box-shadow:0 4px 10px rgba(79,70,229,.3);${st}"><i class="fas fa-star" style="margin-right:8px"></i>${bText(b)}</div></div>`;}
-  else if(b.t==='sub')h+=`<div id="${aid}" style="text-align:${al};margin:15px 0 10px;scroll-margin-top:100px"><div style="display:inline-block;background:#e0e7ff;border-left:4px solid #4f46e5;padding:6px 12px;border-radius:4px;font-weight:800;color:#3730a3;font-size:14px;${st}">${bText(b)}</div></div>`;
-  else if(b.t==='step'){const lb=(b.n!==undefined&&String(b.n).trim()!=='')?esc(b.n):n++;const jc=al==='center'?'center':al==='right'?'flex-end':'flex-start';h+=`<div style="display:flex;gap:8px;margin-bottom:10px;align-items:flex-start;justify-content:${jc}"><span style="background:#4f46e5;color:#fff;min-width:20px;height:20px;padding:0 5px;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:11px;font-weight:bold;flex-shrink:0">${lb}</span><p style="margin:0;color:#334155;line-height:20px;text-align:${al};${st}">${bText(b)}</p></div>`;}
-  else if(b.t==='note')h+=`<div style="text-align:${al};margin:10px 0"><div style="display:inline-block;max-width:100%;background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;padding:8px 12px;border-radius:6px;text-align:left"><p style="margin:0;color:#92400e;line-height:1.5;${st}"><b>⚠️ LƯU Ý:</b> ${bText(b)}</p></div></div>`;
-  else if(b.t==='btn')h+=`<div style="text-align:${al};margin:10px 0"><a href="${esc(safeUrl(b.u))}" target="_blank" rel="noopener" style="display:inline-block;background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;padding:10px 20px;border-radius:10px;font-weight:bold;text-decoration:none;box-shadow:0 4px 15px rgba(109,40,217,.4)"><i class="fas fa-download" style="margin-right:8px"></i>${esc(b.x||'TẢI VỀ')}</a></div>`;
-  else if(b.t==='img')h+=`<div style="text-align:${al}"><img src="${esc(safeUrl(b.u))}" style="max-height:250px;width:auto;max-width:100%;object-fit:contain;border-radius:6px;border:1px solid #e2e8f0;margin:10px 0" /></div>`;
-  else if(b.t==='spacer')h+=`<div style="height:${Math.max(4,Math.min(200,parseInt(b.h)||16))}px"></div>`;
-  else if(b.t==='divider')h+='<hr style="border:0;border-top:1px solid #e2e8f0;margin:16px 0">';
-  else if(b.t==='toc'){const items=bl.map((x,i)=>({x,i})).filter(o=>o.x.t==='header'||o.x.t==='sub');h+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:12px 14px;margin:12px 0"><div style="font-weight:800;color:#4f46e5;margin-bottom:8px;font-size:13px"><i class="fas fa-list-ul" style="margin-right:6px"></i>${esc(b.x||'Xem nhanh')}</div>${items.map(o=>`<a onclick="guideScroll('g-${g}-${o.i}')" style="display:block;cursor:pointer;padding:5px 0 5px ${o.x.t==='sub'?'16px':'0'};color:${o.x.t==='sub'?'#475569':'#3730a3'};font-weight:${o.x.t==='sub'?'600':'800'};font-size:13px"><i class="fas fa-angle-right" style="margin-right:6px;color:#818cf8"></i>${esc(o.x.x)}</a>`).join('')||'<span style="font-size:12px;color:#94a3b8">Chưa có mục nào</span>'}</div>`;}
-  else h+=`<p style="margin:0 0 10px;color:#334155;text-align:${al};${st}">${bText(b)}</p>`;});
- return h;}
+ bl.forEach((b,idx)=>{
+  const al=bAlign(b), aid=`g-${g}-${idx}`;
+  if(b.t==='header'){
+   n=1;
+   h+=`<div id="${aid}" class="mb-3 scroll-mt-24 text-${al}"><div class="inline-block bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2 rounded-lg font-extrabold shadow-md"><i class="fas fa-star mr-2"></i>${bText(b)}</div></div>`;
+  }
+  else if(b.t==='sub'){
+   h+=`<div id="${aid}" class="my-4 scroll-mt-24 text-${al}"><div class="inline-block bg-indigo-50 dark:bg-indigo-900/30 border-l-4 border-indigo-600 dark:border-indigo-500 px-3 py-1.5 rounded text-indigo-800 dark:text-indigo-300 font-extrabold text-sm">${bText(b)}</div></div>`;
+  }
+  else if(b.t==='step'){
+   const lb=(b.n!==undefined&&String(b.n).trim()!=='')?esc(b.n):n++;
+   const jc=al==='center'?'justify-center':al==='right'?'justify-end':'justify-start';
+   h+=`<div class="flex gap-2 mb-2.5 items-start ${jc}"><span class="bg-indigo-600 text-white min-w-[20px] h-[20px] px-1.5 flex items-center justify-center rounded-full text-[11px] font-bold shrink-0">${lb}</span><p class="m-0 text-slate-700 dark:text-slate-300 leading-relaxed text-${al}">${bText(b)}</p></div>`;
+  }
+  else if(b.t==='note'){
+   h+=`<div class="my-2.5 text-${al}"><div class="inline-block max-w-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 border-l-4 border-l-amber-500 px-3 py-2 rounded-md text-left"><p class="m-0 text-amber-900 dark:text-amber-200 leading-relaxed"><b>⚠️ LƯU Ý:</b> ${bText(b)}</p></div></div>`;
+  }
+  else if(b.t==='toc'){
+   const items=bl.map((x,i)=>({x,i})).filter(o=>o.x.t==='header'||o.x.t==='sub');
+   h+=`<div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-3 my-3"><div class="font-extrabold text-indigo-600 dark:text-indigo-400 mb-2 text-sm"><i class="fas fa-list-ul mr-1.5"></i>${esc(b.x||'Xem nhanh')}</div>${items.map(o=>`<a onclick="guideScroll('g-${g}-${o.i}')" class="block cursor-pointer py-1 text-[13px] hover:text-indigo-500 transition ${o.x.t==='sub'?'pl-4 text-slate-600 dark:text-slate-400 font-semibold':'text-indigo-800 dark:text-indigo-300 font-extrabold'}"><i class="fas fa-angle-right mr-1.5 text-indigo-400"></i>${esc(o.x.x)}</a>`).join('')||'<span class="text-xs text-slate-400">Chưa có mục nào</span>'}</div>`;
+  }
+  else if(b.t==='btn'){
+   h+=`<div class="my-2.5 text-${al}"><a href="${esc(safeUrl(b.u))}" target="_blank" rel="noopener" class="inline-block bg-gradient-to-br from-purple-500 to-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-md hover:scale-105 transition"><i class="fas fa-download mr-2"></i>${esc(b.x||'TẢI VỀ')}</a></div>`;
+  }
+  else if(b.t==='img'){
+   h+=`<div class="text-${al}"><img src="${esc(safeUrl(b.u))}" class="max-h-[250px] w-auto max-w-full object-contain rounded-lg border border-slate-200 dark:border-slate-700 my-2.5 inline-block shadow-sm" /></div>`;
+  }
+  else if(b.t==='spacer') h+=`<div style="height:${Math.max(4,Math.min(200,parseInt(b.h)||16))}px"></div>`;
+  else if(b.t==='divider') h+=`<hr class="border-0 border-t border-slate-200 dark:border-slate-700 my-4">`;
+  else {
+   h+=`<p class="m-0 mb-2.5 text-slate-700 dark:text-slate-300 text-${al}">${bText(b)}</p>`;
+  }
+ });
+ return h;
+}
+
 function renderGuideTabs(){
  $('guideTabs').innerHTML=guideTabList().map(t=>{const on=t.id===curGuide;const ic=t.img?`<img src="${esc(safeUrl(t.img))}" class="w-5 h-5 mr-2 rounded object-contain">`:`<i class="${esc(t.ic||'fas fa-book')} ${on?'':esc(t.col||'text-indigo-500')} text-lg mr-2"></i>`;
-  return `<button onclick="showGuide('${esc(t.id)}')" id="btn-dev-${esc(t.id)}" class="dev-btn ${on?'active bg-indigo-600 text-white border-indigo-600 shadow-lg scale-105':'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'} border-2 px-5 py-2.5 rounded-xl font-bold flex items-center text-xs md:text-sm transition">${ic}${esc(t.name)}${on?'<i class="fas fa-check-circle ml-2 text-xs opacity-80"></i>':''}</button>`;}).join('');}
+  return `<button onclick="showGuide('${esc(t.id)}')" id="btn-dev-${esc(t.id)}" class="dev-btn ${on?'active bg-indigo-600 text-white border-indigo-600 shadow-lg scale-105':'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'} border-2 px-5 py-2.5 rounded-xl font-bold flex items-center text-xs md:text-sm transition">${ic}${esc(t.name)}${on?'<i class="fas fa-check-circle ml-2 text-xs opacity-80"></i>':''}</button>`;}).join('');}
 function showGuide(dev){
  if(!guideTabList().some(t=>t.id===dev))dev=guideTabList()[0].id;curGuide=dev;renderGuideTabs();
  $('guideContent').classList.remove('hidden');
  const bl=normGuide(cfgCache.guides&&cfgCache.guides[dev]);
  $('guideText').innerHTML=bl.length?renderBlocks(bl,dev):i18n[lang].guide_empty;}
+
 async function loadConfig(){try{const r=await fetch(WORKER_URL+'/api/public/config?_t='+Date.now(),{cache:'no-store'});if(r.ok){cfgCache=await r.json();renderDock();}}catch(e){}}
-// ---------- API
+
 async function wpost(path,body){const r=await fetch(WORKER_URL+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});let d={};try{d=await r.json();}catch{}return{ok:r.ok,status:r.status,data:d};}
 async function wpostRetry(path,body,n=3){let last;for(let i=0;i<n;i++){try{last=await wpost(path,body);if(last.ok||last.status<500)return last;}catch(e){last={ok:false,status:0,data:{error:String(e)}};}await new Promise(r=>setTimeout(r,800*(i+1)));}return last;}
+
 function showToast(msg,type='success'){const c=$('toastContainer'),t=document.createElement('div');const bg=type==='error'?'bg-red-500':type==='info'?'bg-blue-500':'bg-green-500';const icon=type==='error'?'fa-times-circle':type==='info'?'fa-info-circle':'fa-check-circle';
  t.className=`${bg} text-white px-4 py-3 rounded-xl shadow-xl flex items-center transform transition-all duration-300 translate-x-full opacity-0 w-fit max-w-[90vw]`;
  t.innerHTML=`<i class="fas ${icon} mr-2 shrink-0"></i><span class="font-bold text-xs md:text-sm">${esc(msg)}</span>`;c.appendChild(t);setTimeout(()=>t.classList.remove('translate-x-full','opacity-0'),10);setTimeout(()=>{t.classList.add('translate-x-full','opacity-0');setTimeout(()=>t.remove(),300);},3000);}
+
 window.addEventListener('scroll',()=>{const nav=$('mainNav');if(window.scrollY>lastScrollY&&window.scrollY>80)nav.classList.add('nav-hidden');else nav.classList.remove('nav-hidden');lastScrollY=window.scrollY;});
 const obs=new IntersectionObserver(es=>es.forEach(e=>{const s=$('floatingSocials');if(!s)return;if(e.isIntersecting){s.style.opacity='0';s.style.pointerEvents='none';s.style.transform='translateY(20px)';}else{s.style.opacity='1';s.style.pointerEvents='auto';s.style.transform='translateY(0)';}}),{threshold:.1});
+
 function changeLanguage(val){
  const cy=window.scrollY;lang=val;$('langSelectMobile').value=val;$('langSelectDesktop').value=val;
  document.querySelectorAll('[data-i18n]').forEach(el=>el.innerHTML=i18n[lang][el.getAttribute('data-i18n')]||el.innerHTML);
  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>el.placeholder=i18n[lang][el.getAttribute('data-i18n-placeholder')]||el.placeholder);
  renderPackages('all');
- if(!$('checkoutSection').classList.contains('hidden')&&currentPackage){$('selectedPackageName').innerText=currentPackage[lang].name;$('selectedPackagePrice').innerText=currentPackage[lang].price;calculateTotal();}
- $('pendingWaitText').innerText=i18n[lang].pending_wait;$('pendingTimeoutTitle').innerText=i18n[lang].pending_timeout;$('pendingTimeoutDesc').innerText=i18n[lang].pending_timeout_desc;$('pendingSupportText').innerText=i18n[lang].pending_support_text;$('pendingZaloBtnTxt').innerText=i18n[lang].pending_zalo_btn;$('securityAlertTitle').innerText=i18n[lang].security_alert;$('securityAlertDesc').innerHTML=i18n[lang].security_desc;
+ if(!$('checkoutSection').classList.contains('hidden')&&currentPackage){$('selectedPackageName').innerText=currentPackage[lang].name;$('selectedPackagePrice').innerText=currentPackage[lang].price;calculateTotal();}$('pendingWaitText').innerText=i18n[lang].pending_wait;$('pendingTimeoutTitle').innerText=i18n[lang].pending_timeout;$('pendingTimeoutDesc').innerText=i18n[lang].pending_timeout_desc;$('pendingSupportText').innerText=i18n[lang].pending_support_text;$('pendingZaloBtnTxt').innerText=i18n[lang].pending_zalo_btn;$('securityAlertTitle').innerText=i18n[lang].security_alert;$('securityAlertDesc').innerHTML=i18n[lang].security_desc;
  if(oCache)updatePortalInfo(oCache);window.scrollTo(0,cy);}
-const faqHTML=['1','2','3','4'].map(n=>`<details class="bg-white rounded-2xl shadow-sm border border-slate-100 group cursor-pointer w-full transition-all" onclick="event.preventDefault();this.open=!this.open;"><summary class="font-bold text-indigo-700 text-sm flex justify-between items-center outline-none p-4 md:p-5"><span data-i18n="faq_${n}_q"></span><span class="transition group-open:rotate-180 text-slate-400"><i class="fas fa-chevron-down"></i></span></summary><div class="px-4 pb-4 md:px-5 md:pb-5"><p class="text-slate-600 text-xs" data-i18n="faq_${n}_a"></p></div></details>`).join('')+
- `<details class="bg-white rounded-2xl shadow-sm border border-slate-100 group cursor-pointer w-full transition-all" onclick="event.preventDefault();this.open=!this.open;"><summary class="font-bold text-indigo-700 text-sm flex justify-between items-center outline-none p-4 md:p-5"><span data-i18n="refund_q"></span><span class="transition group-open:rotate-180 text-slate-400"><i class="fas fa-chevron-down"></i></span></summary><div class="px-4 pb-4 md:px-5 md:pb-5"><p class="text-slate-600 text-xs" data-i18n="refund_a"></p></div></details>`;
+
+const faqHTML=['1','2','3','4'].map(n=>`<details class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 group cursor-pointer w-full transition-all" onclick="event.preventDefault();this.open=!this.open;"><summary class="font-bold text-indigo-700 dark:text-indigo-400 text-sm flex justify-between items-center outline-none p-4 md:p-5"><span data-i18n="faq_${n}_q"></span><span class="transition group-open:rotate-180 text-slate-400 dark:text-slate-500"><i class="fas fa-chevron-down"></i></span></summary><div class="px-4 pb-4 md:px-5 md:pb-5"><p class="text-slate-600 dark:text-slate-400 text-xs" data-i18n="faq_${n}_a"></p></div></details>`).join('')+
+ `<details class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 group cursor-pointer w-full transition-all" onclick="event.preventDefault();this.open=!this.open;"><summary class="font-bold text-indigo-700 dark:text-indigo-400 text-sm flex justify-between items-center outline-none p-4 md:p-5"><span data-i18n="refund_q"></span><span class="transition group-open:rotate-180 text-slate-400 dark:text-slate-500"><i class="fas fa-chevron-down"></i></span></summary><div class="px-4 pb-4 md:px-5 md:pb-5"><p class="text-slate-600 dark:text-slate-400 text-xs" data-i18n="refund_a"></p></div></details>`;
 ['faqStoreContainer','faqPortalContainer','faqPortalHomeContainer'].forEach(id=>{const el=$(id);if(el)el.innerHTML=faqHTML;});
-// ---------- Cửa hàng
+
 function disableUpgradeMode(){isUpgradeMode=false;isRenewMode=false;upgradeConfirmed=false;baseOrderPriceVnd=baseOrderPriceUsd=baseOrderPriceCny=0;renderPackages('all');}
 function genHTML(pkg){
  const l=i18n[lang],p=pkg[lang];let displayTime=pkg.time==='lifetime'?l.lifetime_lbl:`${pkg.time} ${l.month_lbl}`;if(pkg.category.includes('usage')&&!pkg.isCustom)displayTime=l.lifetime_lbl;
  const devText=pkg.dev==='unlimited'?l.dev_unlimited_label:pkg.dev==='custom'?l.dev_custom:`${l.dev_label} <b>${pkg.dev} ${l.dev_label_suffix}</b>`;
  const isDisabled=isUpgradeMode&&pkg.vnd<=baseOrderPriceVnd&&!pkg.isCustom;
  const priceStr=p.price.replace('VND','<span class="text-sm md:text-base font-bold ml-0.5">VND</span>');
- const priceHTML=pkg.isCustom?`<div class="text-xl font-black text-red-600 mb-4 border-b border-slate-100 pb-4 mt-2">${priceStr}</div>`:`<div class="text-2xl md:text-3xl font-black text-indigo-600 mb-4 border-b border-slate-100 pb-4 mt-2">${priceStr}</div>`;
- const btn=isDisabled?`<button disabled class="w-full bg-slate-100 text-slate-400 font-bold py-3 rounded-xl text-sm cursor-not-allowed">${l.unavailable}</button>`:pkg.isCustom?`<a href="#footerArea" class="w-full block text-center bg-red-50 text-red-700 font-bold py-3 rounded-xl text-sm hover:bg-red-600 hover:text-white transition">${l.btn_contact}</a>`:`<button onclick="openCheckout('${pkg.id}')" class="w-full bg-indigo-50 text-indigo-700 font-bold py-3 rounded-xl text-sm hover:bg-indigo-600 hover:text-white transition">${l.btn_buy}</button>`;
- return `<div class="bg-white p-5 md:p-6 rounded-3xl border border-slate-100 shadow-sm relative flex flex-col justify-between hover:shadow-lg transition mt-4 md:mt-0 ${isDisabled?'pkg-disabled':''}">
+ const priceHTML=pkg.isCustom?`<div class="text-xl font-black text-red-600 dark:text-red-400 mb-4 border-b border-slate-100 dark:border-slate-700 pb-4 mt-2">${priceStr}</div>`:`<div class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-indigo-400 mb-4 border-b border-slate-100 dark:border-slate-700 pb-4 mt-2">${priceStr}</div>`;
+ const btn=isDisabled?`<button disabled class="w-full bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 font-bold py-3 rounded-xl text-sm cursor-not-allowed">${l.unavailable}</button>`:pkg.isCustom?`<a href="#footerArea" class="w-full block text-center bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-bold py-3 rounded-xl text-sm hover:bg-red-600 hover:text-white transition">${l.btn_contact}</a>`:`<button onclick="openCheckout('${pkg.id}')" class="w-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 font-bold py-3 rounded-xl text-sm hover:bg-indigo-600 hover:text-white transition">${l.btn_buy}</button>`;
+ return `<div class="bg-white dark:bg-slate-800 p-5 md:p-6 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm relative flex flex-col justify-between hover:shadow-lg transition mt-4 md:mt-0 ${isDisabled?'pkg-disabled':''}">
  ${pkg.tag?`<span class="absolute -top-3 right-4 bg-red-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10">${pkg.tag[lang]||pkg.tag.vi}</span>`:''}${pkg.tag2?`<span class="absolute -top-3 left-4 bg-blue-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10">${pkg.tag2[lang]||pkg.tag2.vi}</span>`:''}
- <div class="${pkg.tag||pkg.tag2?'pt-2':''}"><h3 class="font-extrabold text-lg md:text-xl">${p.name}</h3><p class="text-xs font-bold text-slate-500 mb-3">${displayTime}</p>${priceHTML}
- <ul class="text-xs md:text-sm space-y-2.5 mb-6 font-medium text-slate-600"><li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${l.data_label} <b>${pkg.data}</b></li><li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${devText}</li><li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${l.speed_label}</li></ul></div>${btn}</div>`;}
+ <div class="${pkg.tag||pkg.tag2?'pt-2':''}"><h3 class="font-extrabold text-lg md:text-xl dark:text-slate-200">${p.name}</h3><p class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-3">${displayTime}</p>${priceHTML}
+ <ul class="text-xs md:text-sm space-y-2.5 mb-6 font-medium text-slate-600 dark:text-slate-300"><li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${l.data_label} <b>${pkg.data}</b></li><li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${devText}</li><li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${l.speed_label}</li></ul></div>${btn}</div>`;}
 function renderPackages(filter){
- ['htab','ptab'].forEach(p=>['all','travel','cycle','usage'].forEach(t=>{const b=$(`${p}-${t}`);if(!b)return;if(t===filter){b.classList.add('active','bg-indigo-600','text-white');b.classList.remove('text-slate-600');}else{b.classList.remove('active','bg-indigo-600','text-white');b.classList.add('text-slate-600');}}));
+ ['htab','ptab'].forEach(p=>['all','travel','cycle','usage'].forEach(t=>{const b=$(`${p}-${t}`);if(!b)return;if(t===filter){b.classList.add('active','bg-indigo-600','text-white');b.classList.remove('text-slate-600','dark:text-slate-300');}else{b.classList.remove('active','bg-indigo-600','text-white');b.classList.add('text-slate-600','dark:text-slate-300');}}));
  const html=pkgs.filter(p=>filter==='all'||p.category.includes(filter)).map(genHTML).join('');if($('packagesContainerHome'))$('packagesContainerHome').innerHTML=html;if($('packagesContainerPortal'))$('packagesContainerPortal').innerHTML=html;}
+
 function startUpgrade(){
  isUpgradeMode=true;isRenewMode=false;upgradeConfirmed=false;
  const cur=pkgs.find(p=>p.id===oCache.pkgId)||pkgs.find(p=>p.vi.name===oCache.pkgName&&p.data===oCache.pkgData);
  baseOrderPriceVnd=cur?cur.vnd:0;baseOrderPriceUsd=cur?cur.usd:0;baseOrderPriceCny=cur?cur.cny:0;
  switchPortalTab('p-store',true);renderPackages('all');showToast(i18n[lang].select_higher,'info');}
+
 function startRenew(){disableUpgradeMode();isRenewMode=true;switchPortalTab('p-store',true);showToast(i18n[lang].select_renew_pkg,'info');}
+
 function openCheckout(id){
  currentPackage=pkgs.find(p=>p.id===id);const co=$('checkoutSection');
- if($('view-portal').classList.contains('active'))$('p-store').appendChild(co);else $('view-store').appendChild(co);
+ if($('view-portal').classList.contains('active'))$('p-store').appendChild(co);else$('view-store').appendChild(co);
  co.classList.remove('hidden');co.scrollIntoView({behavior:'smooth'});
  $('selectedPackageName').innerText=currentPackage[lang].name;$('selectedPackageData').innerText=currentPackage.data;$('selectedPackagePrice').innerText=currentPackage[lang].price;
  const hideEmail=isUpgradeMode||isRenewMode;$('emailBlock').classList.toggle('hidden',hideEmail);$('cusEmail').required=!hideEmail;
@@ -592,14 +606,29 @@ function openCheckout(id){
  currentOrderId='';upgradeConfirmed=false;selectDuration(1);
  const z=$('cusZalo');z.classList.toggle('hidden',!$('needSupport').checked);z.required=$('needSupport').checked&&!hideEmail;
  document.body.classList.add('checkout-active');renderPaymentBox();}
+
 function selectDuration(m){
- currentDurationMode=m;document.querySelectorAll('.dur-btn').forEach(b=>{b.classList.remove('!bg-indigo-600','!text-white','border-transparent','active','bg-indigo-600','text-white');b.classList.add('bg-white','text-slate-600','border-slate-200');});
- const ab=$('dur-btn-'+m);ab.classList.remove('bg-white','text-slate-600','border-slate-200');ab.classList.add('!bg-indigo-600','!text-white','border-transparent','active');
+ currentDurationMode=m;
+ document.querySelectorAll('.dur-btn').forEach(b=>{
+  b.classList.remove('!bg-indigo-600','!text-white','border-transparent','active');
+  b.classList.add('bg-white','dark:bg-slate-800','text-slate-600','dark:text-slate-300','border-slate-200','dark:border-slate-700');
+ });
+ const ab=$('dur-btn-'+m);
+ ab.classList.remove('bg-white','dark:bg-slate-800','text-slate-600','dark:text-slate-300','border-slate-200','dark:border-slate-700');
+ ab.classList.add('!bg-indigo-600','!text-white','border-transparent','active');
  $('customDurWrap').classList.toggle('hidden',m!=='custom');calculateTotal();}
+
 function selectPayMethod(method){
- $('payMethod').value=method;document.querySelectorAll('.pay-btn').forEach(b=>{b.classList.remove('active','bg-indigo-50','border-indigo-500','text-indigo-700');b.classList.add('bg-white','border-slate-200','text-slate-600');});
- const ab=$('pay-btn-'+method);ab.classList.remove('bg-white','border-slate-200','text-slate-600');ab.classList.add('active','bg-indigo-50','border-indigo-500','text-indigo-700');
+ $('payMethod').value=method;
+ document.querySelectorAll('.pay-btn').forEach(b=>{
+  b.classList.remove('active','bg-indigo-50','dark:bg-indigo-900/40','border-indigo-500','text-indigo-700','dark:text-indigo-400');
+  b.classList.add('bg-white','dark:bg-slate-800','border-slate-200','dark:border-slate-700','text-slate-600','dark:text-slate-300');
+ });
+ const ab=$('pay-btn-'+method);
+ ab.classList.remove('bg-white','dark:bg-slate-800','border-slate-200','dark:border-slate-700','text-slate-600','dark:text-slate-300');
+ ab.classList.add('active','bg-indigo-50','dark:bg-indigo-900/40','border-indigo-500','text-indigo-700','dark:text-indigo-400');
  if(currentOrderId||(isUpgradeMode&&upgradeConfirmed))renderPaymentBox();}
+
 function calculateTotal(){
  if(!currentPackage)return;currentMultiplier=currentDurationMode==='custom'?Math.max(1,Math.min(120,parseInt($('customDurInput').value)||1)):currentDurationMode;
  if(isUpgradeMode){
@@ -610,31 +639,35 @@ function calculateTotal(){
   currentTotalVnd=currentPackage.vnd*currentMultiplier;currentTotalCny=currentPackage.cny*currentMultiplier;currentTotalUsd=parseFloat((currentPackage.usd*currentMultiplier).toFixed(2));
   $('priceCalculation').innerText=lang==='vi'?`${currentPackage.vnd.toLocaleString('en-US')}VND × ${currentMultiplier} = ${currentTotalVnd.toLocaleString('en-US')}VND`:lang==='en'?`$${currentPackage.usd} × ${currentMultiplier} = $${currentTotalUsd}`:`¥${currentPackage.cny} × ${currentMultiplier} = ¥${currentTotalCny}`;}
  if(currentOrderId||(isUpgradeMode&&upgradeConfirmed))renderPaymentBox();}
+
 function toggleZalo(){const z=$('cusZalo');z.classList.toggle('hidden');z.required=!z.classList.contains('hidden')&&!(isUpgradeMode||isRenewMode);}
+
 async function copyText(t){try{await navigator.clipboard.writeText(t);}catch(e){try{const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);}catch(e2){}}showToast(i18n[lang].copy_success);}
 async function copyToClipboard(id){const e=$(id);if(e.dataset.locked)return;e.select();await copyText(e.value);}
-// ---------- V. Payment box: Alipay/Weixin dùng box "Đợi Admin duyệt" thay vì countdown ngân hàng
+
 function renderPaymentBox(){
  const col=$('checkoutRightCol'),m=$('payMethod').value,btn=$('btnConfirm'),l=i18n[lang];
  const fp=lang==='vi'?`${currentTotalVnd.toLocaleString('en-US')}VND`:lang==='en'?`$${currentTotalUsd}`:`¥${currentTotalCny}`;
  btn.innerHTML=l.btn_create_order;let guideHtml=l.guide_desc+(isUpgradeMode?"<br><br>"+l.guide_desc_upgrade:"");
- if(!currentOrderId&&!isUpgradeMode){col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 border-b pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4><p class="text-sm text-slate-600 leading-relaxed">${guideHtml}</p></div>`;return;}
- if(isUpgradeMode&&!upgradeConfirmed){col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-purple-700 border-b pb-2"><i class="fas fa-arrow-up mr-2"></i>${l.upgrade_confirm_title}</h4><p class="text-sm text-slate-600 mb-4">${l.upgrade_confirm_desc}</p><h4 class="font-extrabold text-base mb-2 text-indigo-700 border-b pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4><p class="text-sm text-slate-600 leading-relaxed">${guideHtml}</p></div>`;return;}
+ if(!currentOrderId&&!isUpgradeMode){col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 dark:text-indigo-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4><p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${guideHtml}</p></div>`;return;}
+ if(isUpgradeMode&&!upgradeConfirmed){col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-purple-700 dark:text-purple-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-arrow-up mr-2"></i>${l.upgrade_confirm_title}</h4><p class="text-sm text-slate-600 dark:text-slate-300 mb-4">${l.upgrade_confirm_desc}</p><h4 class="font-extrabold text-base mb-2 text-indigo-700 dark:text-indigo-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4><p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${guideHtml}</p></div>`;return;}
  const dispId=isUpgradeMode?oCache.id:currentOrderId;
  const paid=`<button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button>`;
- const memo=(cls,extra)=>`<div class="highlight-copy py-4 px-3 rounded-xl text-center cursor-pointer" onclick="copyText('${dispId}')"><span class="block text-[11px] font-black mb-2 uppercase">${l.copy_memo}</span><strong class="block bg-white font-mono ${cls} py-3 rounded-xl shadow-inner border-2 border-yellow-400">${dispId} <i class="far fa-copy ml-2 opacity-50"></i></strong><p class="text-[10px] mt-2 italic font-bold opacity-80 ${extra}">${extra?l.input_manual:l.click_copy}</p></div>${paid}`;
+ const memo=(cls,extra)=>`<div class="highlight-copy py-4 px-3 rounded-xl text-center cursor-pointer" onclick="copyText('${dispId}')"><span class="block text-[11px] font-black mb-2 uppercase text-slate-800 dark:text-slate-200">${l.copy_memo}</span><strong class="block bg-white dark:bg-slate-900 font-mono ${cls} py-3 rounded-xl shadow-inner border-2 border-yellow-400 dark:text-slate-200">${dispId} <i class="far fa-copy ml-2 opacity-50"></i></strong><p class="text-[10px] mt-2 italic font-bold opacity-80 ${extra} text-slate-700 dark:text-slate-300">${extra?l.input_manual:l.click_copy}</p></div>${paid}`;
  if(m==='bank'){
-  col.innerHTML=`<div class="text-center w-full"><div class="bg-indigo-50 p-2 rounded-xl inline-block mb-4"><img src="https://img.vietqr.io/image/mbbank-0917678211-compact.png?amount=${currentTotalVnd}&addInfo=${dispId}&accountName=TRINH THI XUAN HUONG" class="w-40 h-40 md:w-56 md:h-56 rounded-xl mix-blend-multiply mx-auto"></div>
-  <div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white p-2.5 rounded-xl border"><span class="text-slate-500">${l.bank_owner}</span><strong>TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white p-2.5 rounded-xl border"><span class="text-slate-500">${l.bank_name}</span><strong>MB BANK</strong></div><div class="flex justify-between bg-white p-2.5 rounded-xl border"><span class="text-slate-500">${l.bank_num}</span><strong class="text-indigo-600 cursor-pointer" onclick="copyText('0917678211')">0917678211 <i class="far fa-copy ml-1"></i></strong></div><div class="flex justify-between bg-white p-2.5 rounded-xl border"><span class="text-slate-500">${l.copy_amount}</span><strong class="text-red-500 font-black text-base">${fp}</strong></div></div>${memo('text-2xl md:text-3xl','')}</div>`;
+  col.innerHTML=`<div class="text-center w-full"><div class="bg-white p-2 rounded-xl inline-block mb-4 border border-indigo-100 dark:border-indigo-800/50 shadow-sm"><img src="https://img.vietqr.io/image/mbbank-0917678211-compact.png?amount=${currentTotalVnd}&addInfo=${dispId}&accountName=TRINH THI XUAN HUONG" class="w-40 h-40 md:w-56 md:h-56 rounded-lg mx-auto object-contain"></div>
+  <div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-slate-200">TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700"><span class="text-slate-500 dark:text-slate-400">${l.bank_name}</span><strong class="dark:text-slate-200">MB BANK</strong></div><div class="flex justify-between bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700"><span class="text-slate-500 dark:text-slate-400">${l.bank_num}</span><strong class="text-indigo-600 dark:text-indigo-400 cursor-pointer" onclick="copyText('0917678211')">0917678211 <i class="far fa-copy ml-1"></i></strong></div><div class="flex justify-between bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div></div>${memo('text-2xl md:text-3xl','')}</div>`;
  }else{
   const ali=m==='alipay',img=ali?'https://i.pinimg.com/736x/44/57/9d/44579dfb5241614ddc897a21ce34e233.jpg':'https://i.pinimg.com/736x/22/f8/67/22f86738297318826838424d3c09645c.jpg';
-  col.innerHTML=`<div class="text-center w-full"><h4 class="font-extrabold text-lg mb-1 ${ali?'text-blue-600':'text-green-600'}">${ali?'Alipay':'Weixin'} <i class="fas fa-qrcode text-sm ml-1"></i></h4><div class="inline-flex items-center gap-1.5 bg-sky-50 text-sky-700 border border-sky-100 px-3 py-1 rounded-full text-[11px] font-bold mb-3"><i class="fas fa-user-clock"></i>${l.pending_manual_wait_title}</div><div class="bg-slate-50 p-2 rounded-xl inline-block mb-4 border border-slate-100 shadow-sm"><img src="${img}" class="w-48 max-w-full h-auto mx-auto rounded-lg object-contain mix-blend-multiply"></div>
-  <div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white p-2.5 rounded-xl border"><span class="text-slate-500">${l.bank_owner}</span><strong>TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white p-2.5 rounded-xl border"><span class="text-slate-500">${l.copy_amount}</span><strong class="text-red-500 font-black text-base">¥${currentTotalCny}</strong></div></div>${memo('text-2xl','uppercase')}</div>`;}}
+  col.innerHTML=`<div class="text-center w-full"><h4 class="font-extrabold text-lg mb-1 ${ali?'text-blue-600':'text-green-600'}">${ali?'Alipay':'Weixin'} <i class="fas fa-qrcode text-sm ml-1"></i></h4><div class="inline-flex items-center gap-1.5 bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400 border border-sky-100 dark:border-sky-800/50 px-3 py-1 rounded-full text-[11px] font-bold mb-3"><i class="fas fa-user-clock"></i>${l.pending_manual_wait_title}</div><div class="bg-white p-2 rounded-xl inline-block mb-4 border border-slate-100 dark:border-slate-700 shadow-sm"><img src="${img}" class="w-48 max-w-full h-auto mx-auto rounded-lg object-contain"></div>
+  <div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-slate-200">TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">¥${currentTotalCny}</strong></div></div>${memo('text-2xl','uppercase')}</div>`;}}
+
 function submitOrder(e){
  e.preventDefault();if(!currentPackage)return;
  if(isUpgradeMode){upgradeConfirmed=true;}
  else if(!currentOrderId){const ch='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',a=new Uint8Array(10);crypto.getRandomValues(a);currentOrderId='DH'+[...a].map(x=>ch[x%36]).join('');}
  renderPaymentBox();}
+
 async function confirmPaid(){
  const btn=$('btnPaidConfirm');if(!btn||btn.disabled)return;const l=i18n[lang];
  const orig=btn.innerHTML;btn.innerHTML=`<i class="fas fa-spinner fa-spin mr-2"></i>${l.sending}`;btn.disabled=true;
@@ -649,24 +682,22 @@ async function confirmPaid(){
  isUpgradeMode=false;isRenewMode=false;upgradeConfirmed=false;currentOrderId='';
  localStorage.setItem(SESSION_KEY,JSON.stringify({id:o.id,time:Date.now()}));localStorage.setItem(CACHE_KEY,JSON.stringify(o));
  enterPortal(o,false);window.scrollTo({top:0,behavior:'smooth'});}
-// ---------- Portal
+
 function maskLink(v){return v;}
-// T/V/W: đồng bộ 1 hệ UI cho mọi trạng thái chờ — pending (bank countdown / alipay-wechat chờ duyệt), timeout, manual (đơn tạo tay chờ CK thủ công)
+
 function updatePortalInfo(o){
  oCache=o;skew=(o.serverTime||Date.now())-Date.now();const L=i18n[lang];
- ['portalContentPending','portalContentManual','pendingActiveState','pendingTimeoutState','portalContentSuccess','portalContentFailed'].forEach(id=>$(id).classList.add('hidden'));
- $('upgradeSuccessBadge').classList.add('hidden');stopTick();
+ ['portalContentPending','portalContentManual','pendingActiveState','pendingTimeoutState','portalContentSuccess','portalContentFailed'].forEach(id=>$(id).classList.add('hidden'));$('upgradeSuccessBadge').classList.add('hidden');stopTick();
  const manual=/alipay|weixin|wechat/i.test(o.method||''),now=Date.now()+skew;
  if(o.status==='failed'){$('portalContentFailed').classList.remove('hidden');$('failReasonText').innerText=o.reason||L.admin_rejected;return;}
  if(o.status==='pending'){
-  if(manual){ // V: Alipay/WeChat -> "Đợi Admin duyệt" thay vì đếm ngược 5 phút của ngân hàng
+  if(manual){
    $('portalContentManual').classList.remove('hidden');
    return;}
   $('portalContentPending').classList.remove('hidden');$('pendingTitleUI').innerText=L.checking_tx;
   const end=(o.createdTs||now)+300000;
   if(now>=end)$('pendingTimeoutState').classList.remove('hidden');else{$('pendingActiveState').classList.remove('hidden');startTick(end,false);}
   return;}
- // success
  $('portalContentSuccess').classList.remove('hidden');fillDashboard(o);
  const up=o.pendingUpgrade;
  if(up){
@@ -674,36 +705,36 @@ function updatePortalInfo(o){
   if(upManual){$('portalContentManual').classList.remove('hidden');}
   else{const end=up.ts+300000;if(now<end){$('portalContentPending').classList.remove('hidden');$('pendingTitleUI').innerText=L.checking_upgrade;$('pendingActiveState').classList.remove('hidden');startTick(end,true);}}}
  if(o.upgradeStatus==='success'&&o.upgradedAt&&now-o.upgradedAt<864e5)$('upgradeSuccessBadge').classList.remove('hidden');}
+
 const sc=t=>t?t.charAt(0)+t.slice(1).toLowerCase():'';
 function pkgLine(o){const p=pkgs.find(x=>x.id===o.pkgId)||pkgs.find(x=>x.vi.name===o.pkgName&&x.data===o.pkgData);if(!p)return o.pkgName?sc(o.pkgName):'Gói VPN';return `${sc(p.vi.name)} – ${p.vnd.toLocaleString('en-US')}VND`;}
+
 function fillDashboard(o){
- const L=i18n[lang];$('displayOrderId').innerText=o.id;$('displayEmail').innerText=o.email||'—';$('displayPkg').innerText=pkgLine(o);
- $('displayExp').innerText=o.expDate||L.unknown;
+ const L=i18n[lang];$('displayOrderId').innerText=o.id;$('displayEmail').innerText=o.email||'—';$('displayPkg').innerText=pkgLine(o);$('displayExp').innerText=o.expDate||L.unknown;
  const life=/vĩnh viễn|lifetime|永久/i.test(o.expDate||'');let exp=false;
  const mm=String(o.expDate||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(!life&&mm)exp=Date.now()+skew>Date.UTC(+mm[3],mm[2]-1,+mm[1],16,59,59);
- $('displayStatus').innerText=exp?L.expired_lbl:L.active;$('displayStatus').className='text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap '+(exp?'bg-red-100 text-red-700':'bg-green-100 text-green-700');
- let ut=L.upg_none,uc='bg-slate-100 text-slate-500';
- if(o.pendingUpgrade){ut=L.upg_pending;uc='bg-yellow-100 text-yellow-700';}else if(o.upgradeStatus==='failed'){ut=L.upg_failed;uc='bg-red-100 text-red-700';}else if(o.isUpgrade){ut=L.upg_ok;uc='bg-green-100 text-green-700';}
+ $('displayStatus').innerText=exp?L.expired_lbl:L.active;$('displayStatus').className='text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap '+(exp?'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400':'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400');
+ let ut=L.upg_none,uc='bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400';
+ if(o.pendingUpgrade){ut=L.upg_pending;uc='bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400';}else if(o.upgradeStatus==='failed'){ut=L.upg_failed;uc='bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400';}else if(o.isUpgrade){ut=L.upg_ok;uc='bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400';}
  $('displayUpgradeStatus').innerText=ut;$('displayUpgradeStatus').className='text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap '+uc;
- // W: 3 ô link — nếu trống thì để trống thật sự; chỉ hiện "Đang tạo link..." khi info trống NHƯNG cũng chưa bị làm mờ (nghĩa là hệ thống đang thực sự xử lý cấp link cho đơn success)
  const titles=['Link Subscription URL:','Link Subscription URL dự phòng 2:','Link Subscription URL dự phòng 3:'];
- $('linkBoxes').innerHTML=[1,2,3].map(i=>`<div class="w-full ${i>1?'mt-2 border-t border-green-200/50 pt-3':''}"><h3 class="text-green-700 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>${titles[i-1]}</h3><div class="flex flex-col sm:flex-row gap-2 w-full items-stretch"><input type="text" id="subLink${i}" readonly class="w-full sm:flex-1 bg-white border border-slate-200 text-green-600 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()"><button onclick="copyToClipboard('subLink${i}')" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button></div></div>`).join('')+
-  `<div class="mt-4 grid grid-cols-2 gap-3 border-t border-green-300 pt-4"><button onclick="startUpgrade()" class="w-full bg-amber-500 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-amber-600 transition flex items-center justify-center shadow-md"><i class="fas fa-arrow-up mr-1.5"></i> NÂNG GÓI</button><button onclick="startRenew()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center shadow-md"><i class="fas fa-redo-alt mr-1.5"></i> ${L.btn_renew}</button></div>`;
+ $('linkBoxes').innerHTML=[1,2,3].map(i=>`<div class="w-full ${i>1?'mt-2 border-t border-green-200/50 dark:border-green-800/50 pt-3':''}"><h3 class="text-green-700 dark:text-green-500 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>${titles[i-1]}</h3><div class="flex flex-col sm:flex-row gap-2 w-full items-stretch"><input type="text" id="subLink${i}" readonly class="w-full sm:flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()"><button onclick="copyToClipboard('subLink${i}')" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button></div></div>`).join('')+
+  `<div class="mt-4 grid grid-cols-2 gap-3 border-t border-green-300 dark:border-green-800 pt-4"><button onclick="startUpgrade()" class="w-full bg-amber-500 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-amber-600 transition flex items-center justify-center shadow-md"><i class="fas fa-arrow-up mr-1.5"></i> NÂNG GÓI</button><button onclick="startRenew()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center shadow-md"><i class="fas fa-redo-alt mr-1.5"></i> ${L.btn_renew}</button></div>`;
  [1,2,3].forEach(i=>{const inp=$('subLink'+i),v=o['info'+i];
   if(o['blur'+i]){inp.value=L.web3_maintenance;inp.classList.add('blur-link');inp.dataset.locked='1';}
   else{inp.value=v||'';inp.classList.remove('blur-link');inp.dataset.locked=v?'':'1';
-   // Chỉ hiện "Đang tạo link..." khi thực sự đang xử lý: đơn còn rất mới (< 3 phút) và chưa có link — không hiện trống vô thời hạn thành chữ giả
    if(!v&&Date.now()+skew-(o.createdTs||0)<180000)inp.value=L.link_generating;}});
  const cd=localStorage.getItem('data_req_'+o.id),btn=$('btnRequestData');
  if(cd&&Date.now()-parseInt(cd)<300000){btn.innerHTML=`<i class="fas fa-check-circle mr-1.5"></i> ${L.req_sent_btn}`;btn.disabled=true;btn.classList.remove('btn-heartbeat');}
  else{btn.innerHTML=`<i class="fas fa-chart-pie mr-1.5"></i><span>${L.btn_check_data}</span>`;btn.disabled=false;btn.classList.add('btn-heartbeat');}}
+
 function startTick(end,isUpg){
  const tick=()=>{const left=Math.ceil((end-Date.now()-skew)/1000);
   if(left<=0){stopTick();if(isUpg)$('portalContentPending').classList.add('hidden');else{$('pendingActiveState').classList.add('hidden');$('pendingTimeoutState').classList.remove('hidden');}return;}
-  $('countdownTimer').innerText=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');const bar=$('pendingBar');if(bar)bar.style.width=Math.max(0,Math.min(100,left/3))+'%';};
+  $('countdownTimer').innerText=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left\%60).padStart(2,'0');const bar=$('pendingBar');if(bar)bar.style.width=Math.max(0,Math.min(100,left/3))+'%';};
  tick();tickT=setInterval(tick,1000);}
 function stopTick(){if(tickT){clearInterval(tickT);tickT=null;}}
-// Polling: 3s khi đang chờ, 10s khi bình thường; dừng khi tab ẩn. Tự cập nhật khi Admin đổi trạng thái / hệ thống cấp link.
+
 async function refreshOrder(){
  if(!oCache)return;
  try{const r=await wpost('/api/public/lookup',{q:oCache.id});
@@ -716,6 +747,7 @@ async function refreshOrder(){
 function pollLoop(){clearTimeout(pollT);if(!oCache)return;const fast=oCache.status==='pending'||oCache.pendingUpgrade||[1,2,3].some(i=>oCache.status==='success'&&!oCache['info'+i]&&!oCache['blur'+i]);
  pollT=setTimeout(async()=>{if(!document.hidden)await refreshOrder();pollLoop();},fast?3000:10000);}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&oCache)refreshOrder();});
+
 function enterPortal(o,auto){
  $('view-store').classList.remove('active');$('view-portal').classList.add('active');$('userMenu').classList.remove('hidden');$('checkoutSection').classList.add('hidden');
  document.documentElement.classList.add('has-user-session');
@@ -724,12 +756,13 @@ function enterPortal(o,auto){
  lastSig=JSON.stringify({...o,serverTime:0});updatePortalInfo(o);
  loadConfig().then(()=>{showGuide(curGuide);if(oCache)updatePortalInfo(oCache);});
  renderPackages('all');pollLoop();document.body.classList.remove('checkout-active');}
+
 async function login(auto=false){
- if(auto&&auto.type)auto=false; // gọi từ onclick/onkeyup
+ if(auto&&auto.type)auto=false;
  const input=$('loginInput').value.trim();if(!input)return;
  let res=null;try{res=await wpost('/api/public/lookup',{q:input});}catch(e){res=null;}
  if(res&&res.status===404){showToast(i18n[lang].not_found,'error');logout();return;}
- if(!res||!res.ok){ // lỗi mạng/máy chủ: KHÔNG đá khách ra ngoài, dùng bản lưu gần nhất
+ if(!res||!res.ok){
   let c=null;try{c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');}catch{}
   if(auto&&c){enterPortal(c,true);return;}
   showToast(i18n[lang].req_err,'error');if(auto)logout();return;}
@@ -737,21 +770,24 @@ async function login(auto=false){
  if(!auto){localStorage.setItem(SESSION_KEY,JSON.stringify({id:o.id,time:Date.now()}));showToast(i18n[lang].login_success,'info');history.replaceState(null,'','#portal');}
  localStorage.setItem(CACHE_KEY,JSON.stringify(o));enterPortal(o,auto);
  if(!auto)window.scrollTo({top:0,behavior:'smooth'});}
+
 function switchPortalTab(tabId,fromUpgrade=false){
  if(!fromUpgrade)disableUpgradeMode();
  document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
- document.querySelectorAll('.desktop-tab-btn').forEach(el=>{el.classList.remove('active','text-white','bg-indigo-600');el.classList.add('text-slate-600','hover:bg-slate-100');});
- document.querySelectorAll('.mobile-tab-btn').forEach(el=>{el.classList.remove('active','text-indigo-600','bg-[#e0e7ff]');el.classList.add('text-slate-500');});
+ document.querySelectorAll('.desktop-tab-btn').forEach(el=>{el.classList.remove('active','text-white','bg-indigo-600');el.classList.add('text-slate-600','dark:text-slate-300','hover:bg-slate-100','dark:hover:bg-slate-800');});
+ document.querySelectorAll('.mobile-tab-btn').forEach(el=>{el.classList.remove('active','text-indigo-600','bg-[#e0e7ff]','dark:text-[#818cf8]','dark:bg-[#312e81]');el.classList.add('text-slate-500','dark:text-slate-400');});
  $(tabId).classList.add('active');
- document.querySelectorAll('.desktop-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','bg-indigo-600','text-white');el.classList.remove('text-slate-600','hover:bg-slate-100');});
- document.querySelectorAll('.mobile-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','text-indigo-600','bg-[#e0e7ff]');el.classList.remove('text-slate-500');});
+ document.querySelectorAll('.desktop-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','bg-indigo-600','text-white');el.classList.remove('text-slate-600','dark:text-slate-300','hover:bg-slate-100','dark:hover:bg-slate-800');});
+ document.querySelectorAll('.mobile-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','text-indigo-600','bg-[#e0e7ff]','dark:text-[#818cf8]','dark:bg-[#312e81]');el.classList.remove('text-slate-500','dark:text-slate-400');});
  if(tabId==='p-guide'&&!$('guideText').innerHTML)showGuide(curGuide);}
+
 function logout(){
  localStorage.removeItem(SESSION_KEY);history.replaceState(null,'',location.pathname);
  $('view-portal').classList.remove('active');$('view-store').classList.add('active');$('userMenu').classList.add('hidden');$('loginInput').value='';$('mobileNavWrapper').classList.add('hidden');
  const dn=$('desktopPortalNav');dn.classList.remove('md:flex','opacity-100','w-auto');dn.classList.add('hidden','opacity-0','w-0');
  oCache=null;clearTimeout(pollT);stopTick();disableUpgradeMode();
  document.documentElement.classList.remove('has-user-session');document.body.classList.remove('checkout-active');window.scrollTo(0,0);}
+
 window.onload=async function(){
  changeLanguage('vi');renderDock();
  if(location.hash==='#wechat')$('wechatModal').classList.remove('hidden');
@@ -760,6 +796,7 @@ window.onload=async function(){
  else{if(s)localStorage.removeItem(SESSION_KEY);document.documentElement.classList.remove('has-user-session');$('view-store').classList.add('active');renderPackages('all');}
  loadConfig();
  const f=$('footerArea');if(f)obs.observe(f);};
+
 async function requestDataCheck(){
  if(!oCache)return;const L=i18n[lang],key='data_req_'+oCache.id,last=localStorage.getItem(key);
  if(last&&Date.now()-parseInt(last)<300000){showToast(L.req_wait,'info');return;}
