@@ -1,4 +1,4 @@
-<!-- v1.5 - Fix Dark Mode chuẩn Tailwind, FontAwesome toggle, Xóa UI rác - 2026-09-25 -->
+<!-- v1.6 - Fix Dark Mode chuẩn Tailwind, FontAwesome toggle, Xóa UI rác - 2026-09-25 -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
 <head>
@@ -107,8 +107,8 @@ html.dark{color-scheme:dark;}
     <div class="flex items-center justify-between w-full md:w-auto shrink-0">
       <div class="font-extrabold text-xl md:text-2xl tracking-tighter cursor-pointer text-indigo-700 dark:text-indigo-400" onclick="logout()"><span data-i18n="brand">VPN Trinh Hg</span></div>
       <div class="flex md:hidden items-center gap-2">
-        <button id="themeToggleMobile" onclick="toggleTheme()" title="Sáng / Tối" class="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0 transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-yellow-400 dark:hover:bg-slate-700"></button>
         <select id="langSelectMobile" onchange="changeLanguage(this.value)" class="bg-indigo-50 dark:bg-slate-800 text-indigo-700 dark:text-slate-200 border border-indigo-100 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs font-bold outline-none"><option value="vi">🇻🇳 VN</option><option value="en">🇬🇧 EN</option><option value="zh">🇨🇳 CN</option></select>
+        <button id="themeToggleMobile" onclick="toggleTheme()" title="Sáng / Tối" class="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0 transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-yellow-400 dark:hover:bg-slate-700"></button>
       </div>
     </div>
     <div class="flex-1 w-full md:flex-1 flex items-center justify-center mx-0 md:mx-2">
@@ -291,7 +291,7 @@ html.dark{color-scheme:dark;}
       <div class="bg-white dark:bg-slate-800 p-4 md:p-8 rounded-3xl mb-8 border border-slate-200 dark:border-slate-700 shadow-sm w-full">
         <h2 class="text-xl font-extrabold text-slate-800 dark:text-slate-200 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4"><i class="fas fa-book-open text-indigo-500 mr-2"></i>Hướng dẫn Cài đặt</h2>
         <div id="guideTabs" class="flex flex-wrap gap-2 mb-6 justify-center"></div>
-        <div id="guideContent" class="hidden overflow-x-auto w-full"><div id="guideText" class="text-sm text-slate-800 dark:text-slate-300 leading-relaxed font-medium"></div></div>
+        <div id="guideContent" class="hidden overflow-x-auto w-full"><div id="guideArtPicker" class="hidden flex-wrap gap-2 mb-4"></div><div id="guideText" class="text-sm text-slate-800 dark:text-slate-300 leading-relaxed font-medium"></div></div>
       </div>
       <h3 class="text-xl font-extrabold text-center mb-6 text-slate-800 dark:text-slate-200" data-i18n="faq_title">Câu hỏi thường gặp (FAQ)</h3>
       <div id="faqPortalContainer" class="space-y-3"></div>
@@ -494,15 +494,39 @@ function setupDockDrag(){
  wrap.addEventListener('wheel',e=>{if(Math.abs(e.deltaX)<Math.abs(e.deltaY)&&!e.shiftKey)return;e.preventDefault();wrap.classList.add('dragging');const m=/translateX\((-?[\d.]+)px\)/.exec(track.style.transform);let nx=(m?parseFloat(m[1]):0)-(e.deltaX||e.deltaY);const uw=unitWidth();if(uw){while(nx<=-uw)nx+=uw;while(nx>0)nx-=uw;}setX(nx);
   clearTimeout(wrap._wheelT);wrap._wheelT=setTimeout(()=>{wrap.classList.remove('dragging');track.style.transform='';},500);},{passive:false});}
 
-// ---------- Hướng dẫn cài đặt dạng khối (Refactored Dark Mode chuẩn Tailwind)
+// ---------- Hướng dẫn cài đặt: nhiều tab + nhiều bài viết mỗi tab (khớp Admin) ----------
 const DEF_TABS=[{id:'android',name:'Android',ic:'fab fa-android',col:'text-green-500'},{id:'windows',name:'Windows',ic:'fab fa-windows',col:'text-blue-500'},{id:'macos',name:'MacOS',ic:'fab fa-apple',col:'text-slate-800'},{id:'ios',name:'iOS',ic:'fab fa-app-store-ios',col:'text-blue-400'}];
-let curGuide='android';
+let curGuide='android', curGuideArt='';
 const guideTabList=()=>{const t=cfgCache.guides&&cfgCache.guides._tabs;return Array.isArray(t)&&t.length?t:DEF_TABS;};
 function shortcodeToBlocks(t){return String(t||'').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const m=l.match(/^\[(HEADER|SUB|STEP|NOTE|BTN|IMG|TOC)\]\s*(.*)$/i);if(!m)return{t:'text',x:l};const T=m[1].toLowerCase();if(T==='btn'){const p=m[2].split('|');return{t:'btn',x:(p[0]||'').trim(),u:(p[1]||'').trim()};}if(T==='img')return{t:'img',u:m[2].trim(),x:''};return{t:T,x:m[2]};});}
 const normGuide=g=>Array.isArray(g)?g:shortcodeToBlocks(g);
 const safeUrl=u=>/^https?:\/\//i.test(u||'')?u:'#';
 const bAlign=b=>b.al==='c'?'center':b.al==='r'?'right':'left';
+const dAlign=b=>b.dal==='l'?'left':b.dal==='r'?'right':'center';
 const bText=b=>esc(b.x).replace(/\n/g,'<br>');
+
+// Danh sách bài viết của 1 tab: ưu tiên _articles (nhiều bài, dữ liệu mới của Admin); nếu không có thì dùng guides[tabId] (1 bài, tương thích ngược)
+function guideArts(tabId){
+ const a=cfgCache.guides&&cfgCache.guides._articles&&cfgCache.guides._articles[tabId];
+ if(Array.isArray(a)&&a.length)return a;
+ const bl=normGuide(cfgCache.guides&&cfgCache.guides[tabId]);
+ return bl.length?[{id:'_legacy',name:'',blocks:bl}]:[];
+}
+function findArt(tabId,artId){const list=guideArts(tabId);return list.find(a=>a.id===artId)||list[0]||null;}
+function findArtByName(tabId,name){return guideArts(tabId).find(a=>String(a.name||'')===String(name||''))||null;}
+
+function videoEmbed(u){
+ u=String(u||'');let m;
+ if(m=u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/))([\w-]{6,})/))return `<div style="position:relative;width:100%;aspect-ratio:16/9"><iframe src="https://www.youtube.com/embed/${m[1]}" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:10px" allowfullscreen loading="lazy"></iframe></div>`;
+ if(m=u.match(/vimeo\.com\/(?:video\/)?(\d+)/))return `<div style="position:relative;width:100%;aspect-ratio:16/9"><iframe src="https://player.vimeo.com/video/${m[1]}" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:10px" allowfullscreen loading="lazy"></iframe></div>`;
+ if(/^https?:\/\//i.test(u))return `<video src="${esc(u)}" controls playsinline class="w-full max-w-full rounded-xl bg-black"></video>`;
+ return `<div class="p-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-400 text-center text-xs">Video chưa sẵn sàng</div>`;
+}
+function openLightbox(u){const d=document.createElement('div');d.className='fixed inset-0 bg-black/85 z-[99999] flex items-center justify-center p-4 cursor-zoom-out';d.innerHTML=`<img src="${esc(u)}" class="max-w-full max-h-full rounded-lg">`;d.onclick=()=>d.remove();document.body.appendChild(d);}
+
+// Khớp 100% ký tự với nội dung 1 khối trong CÙNG bài viết (giống cơ chế của Admin)
+const ANCH=new Set(['header','sub','step','note','text','btn','img','video']);
+const findTarget=(bl,text)=>{const s=String(text??'');if(s==='')return -1;return bl.findIndex(x=>ANCH.has(x.t)&&String(x.x??'')===s);};
 
 function renderBlocks(bl,gid){
  let n=1,h='';const g=gid||'g';
@@ -518,38 +542,79 @@ function renderBlocks(bl,gid){
   else if(b.t==='step'){
    const lb=(b.n!==undefined&&String(b.n).trim()!=='')?esc(b.n):n++;
    const jc=al==='center'?'justify-center':al==='right'?'justify-end':'justify-start';
-   h+=`<div class="flex gap-2 mb-2.5 items-start ${jc}"><span class="bg-indigo-600 text-white min-w-[20px] h-[20px] px-1.5 flex items-center justify-center rounded-full text-[11px] font-bold shrink-0">${lb}</span><p class="m-0 text-slate-700 dark:text-slate-300 leading-relaxed text-${al}">${bText(b)}</p></div>`;
+   h+=`<div id="${aid}" class="flex gap-2 mb-2.5 items-start scroll-mt-24 ${jc}"><span class="bg-indigo-600 text-white min-w-[20px] h-[20px] px-1.5 flex items-center justify-center rounded-full text-[11px] font-bold shrink-0">${lb}</span><p class="m-0 text-slate-700 dark:text-slate-300 leading-relaxed text-${al}">${bText(b)}</p></div>`;
   }
   else if(b.t==='note'){
-   h+=`<div class="my-2.5 text-${al}"><div class="inline-block max-w-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 border-l-4 border-l-amber-500 px-3 py-2 rounded-md text-left"><p class="m-0 text-amber-900 dark:text-amber-200 leading-relaxed"><b>⚠️ LƯU Ý:</b> ${bText(b)}</p></div></div>`;
+   h+=`<div id="${aid}" class="my-2.5 scroll-mt-24 text-${al}"><div class="inline-block max-w-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 border-l-4 border-l-amber-500 px-3 py-2 rounded-md text-left"><p class="m-0 text-amber-900 dark:text-amber-200 leading-relaxed"><b>⚠️ LƯU Ý:</b> ${bText(b)}</p></div></div>`;
   }
   else if(b.t==='toc'){
    const items=bl.map((x,i)=>({x,i})).filter(o=>o.x.t==='header'||o.x.t==='sub');
    h+=`<div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-3 my-3"><div class="font-extrabold text-indigo-600 dark:text-indigo-400 mb-2 text-sm"><i class="fas fa-list-ul mr-1.5"></i>${esc(b.x||'Xem nhanh')}</div>${items.map(o=>`<a onclick="guideScroll('g-${g}-${o.i}')" class="block cursor-pointer py-1 text-[13px] hover:text-indigo-500 transition ${o.x.t==='sub'?'pl-4 text-slate-600 dark:text-slate-400 font-semibold':'text-indigo-800 dark:text-indigo-300 font-extrabold'}"><i class="fas fa-angle-right mr-1.5 text-indigo-400"></i>${esc(o.x.x)}</a>`).join('')||'<span class="text-xs text-slate-400">Chưa có mục nào</span>'}</div>`;
   }
   else if(b.t==='btn'){
-   h+=`<div class="my-2.5 text-${al}"><a href="${esc(safeUrl(b.u))}" target="_blank" rel="noopener" class="inline-block bg-gradient-to-br from-purple-500 to-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-md hover:scale-105 transition"><i class="fas fa-download mr-2"></i>${esc(b.x||'TẢI VỀ')}</a></div>`;
+   h+=`<div id="${aid}" class="my-2.5 scroll-mt-24 text-${al}"><a href="${esc(safeUrl(b.u))}" target="_blank" rel="noopener" class="inline-block bg-gradient-to-br from-purple-500 to-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-md hover:scale-105 transition"><i class="fas fa-download mr-2"></i>${esc(b.x||'TẢI VỀ')}</a></div>`;
   }
   else if(b.t==='img'){
-   h+=`<div class="text-${al}"><img src="${esc(safeUrl(b.u))}" class="max-h-[250px] w-auto max-w-full object-contain rounded-lg border border-slate-200 dark:border-slate-700 my-2.5 inline-block shadow-sm" /></div>`;
+   h+=`<div id="${aid}" class="my-2.5 scroll-mt-24"><div class="text-${al}"><img src="${esc(safeUrl(b.u))}" onclick="openLightbox('${esc(safeUrl(b.u))}')" class="max-h-[280px] w-auto max-w-full object-contain rounded-lg border border-slate-200 dark:border-slate-700 inline-block shadow-sm cursor-zoom-in" /></div>${String(b.x||'')!==''?`<div class="text-${dAlign(b)} text-xs text-slate-500 dark:text-slate-400 mt-1.5">${bText(b)}</div>`:''}</div>`;
+  }
+  else if(b.t==='video'){
+   h+=`<div id="${aid}" class="my-2.5 scroll-mt-24">${videoEmbed(b.u)}${String(b.x||'')!==''?`<div class="text-${dAlign(b)} text-xs text-slate-500 dark:text-slate-400 mt-1.5">${bText(b)}</div>`:''}</div>`;
+  }
+  else if(b.t==='qlink'){
+   const ti=findTarget(bl,b.target);
+   h+=`<div class="my-2 text-${al}"><a ${ti>=0?`onclick="guideScroll('g-${g}-${ti}')"`:''} class="inline-flex items-center gap-1.5 ${ti>=0?'cursor-pointer bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-800 hover:bg-sky-100':'cursor-not-allowed opacity-50 bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'} border px-3.5 py-2 rounded-full font-bold text-sm transition"><i class="fas fa-link"></i>${esc(b.x||'Liên kết nhanh')}</a></div>`;
+  }
+  else if(b.t==='qtab'){
+   h+=`<div class="my-2 text-${al}"><a onclick="pubGoto('${esc(b.tab||'')}','${esc(b.art||'')}','${esc(b.target||'')}')" class="inline-flex items-center gap-1.5 cursor-pointer bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-800 hover:bg-teal-100 px-3.5 py-2 rounded-full font-bold text-sm transition"><i class="fas fa-layer-group"></i>${esc(b.x||'Chuyển tab')}</a></div>`;
+  }
+  else if(b.t==='qart'){
+   h+=`<div class="my-2 text-${al}"><a onclick="pubGotoArt('${esc(b.tab||'')}','${esc(b.art||'')}')" class="inline-flex items-center gap-1.5 cursor-pointer bg-cyan-50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800 hover:bg-cyan-100 px-3.5 py-2 rounded-full font-bold text-sm transition"><i class="fas fa-newspaper"></i>${esc(b.x||'Mở bài viết')}</a></div>`;
   }
   else if(b.t==='spacer') h+=`<div style="height:${Math.max(4,Math.min(200,parseInt(b.h)||16))}px"></div>`;
   else if(b.t==='divider') h+=`<hr class="border-0 border-t border-slate-200 dark:border-slate-700 my-4">`;
   else {
-   h+=`<p class="m-0 mb-2.5 text-slate-700 dark:text-slate-300 text-${al}">${bText(b)}</p>`;
+   h+=`<p id="${aid}" class="m-0 mb-2.5 scroll-mt-24 text-slate-700 dark:text-slate-300 text-${al}">${bText(b)}</p>`;
   }
  });
  return h;
 }
+function guideScroll(id){const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});}
 
 function renderGuideTabs(){
  $('guideTabs').innerHTML=guideTabList().map(t=>{const on=t.id===curGuide;const ic=t.img?`<img src="${esc(safeUrl(t.img))}" class="w-5 h-5 mr-2 rounded object-contain">`:`<i class="${esc(t.ic||'fas fa-book')} ${on?'':esc(t.col||'text-indigo-500')} text-lg mr-2"></i>`;
   return `<button onclick="showGuide('${esc(t.id)}')" id="btn-dev-${esc(t.id)}" class="dev-btn ${on?'active bg-indigo-600 text-white border-indigo-600 shadow-lg scale-105':'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'} border-2 px-5 py-2.5 rounded-xl font-bold flex items-center text-xs md:text-sm transition">${ic}${esc(t.name)}${on?'<i class="fas fa-check-circle ml-2 text-xs opacity-80"></i>':''}</button>`;}).join('');}
-function showGuide(dev){
- if(!guideTabList().some(t=>t.id===dev))dev=guideTabList()[0].id;curGuide=dev;renderGuideTabs();
+
+function renderArtPicker(tabId){
+ const list=guideArts(tabId),el=$('guideArtPicker');
+ if(!el)return;
+ if(list.length<=1){el.classList.add('hidden');el.classList.remove('flex');el.innerHTML='';return;}
+ el.classList.remove('hidden');el.classList.add('flex');
+ el.innerHTML=list.map(a=>{const on=a.id===curGuideArt;
+  return `<button onclick="showGuide('${esc(tabId)}','${esc(a.id)}')" class="px-3.5 py-1.5 rounded-full text-xs font-bold border transition ${on?'bg-indigo-600 border-indigo-600 text-white shadow-sm':'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}"><i class="fas fa-file-lines mr-1.5"></i>${esc(a.name||'Bài viết')}</button>`;}).join('');
+}
+
+function showGuide(dev,artId){
+ if(!guideTabList().some(t=>t.id===dev))dev=(guideTabList()[0]&&guideTabList()[0].id)||'android';
+ curGuide=dev;renderGuideTabs();
+ const arts=guideArts(dev),art=artId?findArt(dev,artId):arts[0];
+ curGuideArt=art?art.id:'';renderArtPicker(dev);
  $('guideContent').classList.remove('hidden');
- const bl=normGuide(cfgCache.guides&&cfgCache.guides[dev]);
- $('guideText').innerHTML=bl.length?renderBlocks(bl,dev):i18n[lang].guide_empty;}
+ const bl=art?art.blocks:[];
+ $('guideText').innerHTML=bl.length?renderBlocks(bl,dev+'-'+curGuideArt):i18n[lang].guide_empty;
+}
+// Quick Tab Link: chuyển sang tab khác (+ chọn đúng bài nếu chỉ định, + cuộn tới mục nếu có)
+function pubGoto(tab,artId,target){
+ if(!tab||!guideTabList().some(t=>t.id===tab))return;
+ switchPortalTab('p-guide',true);
+ showGuide(tab,artId||undefined);
+ if(target){const bl=(artId?findArt(tab,artId):guideArts(tab)[0])?.blocks||[];const i=findTarget(bl,target);if(i>=0)setTimeout(()=>guideScroll('g-'+tab+'-'+curGuideArt+'-'+i),120);}
+}
+// Quick Article Link: mở đúng bài viết theo tên (khớp 100%), tự tìm đúng tab nếu cần
+function pubGotoArt(tab,name){
+ let t=tab,a=findArtByName(t,name);
+ if(!a){for(const tt of guideTabList()){const f=findArtByName(tt.id,name);if(f){t=tt.id;a=f;break;}}}
+ if(!a)return;pubGoto(t,a.id,'');
+}
 
 async function loadConfig(){try{const r=await fetch(WORKER_URL+'/api/public/config?_t='+Date.now(),{cache:'no-store'});if(r.ok){cfgCache=await r.json();renderDock();}}catch(e){}}
 
