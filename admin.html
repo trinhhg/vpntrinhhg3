@@ -333,6 +333,15 @@ textarea.autog{resize:none;overflow:hidden;}
      <div id="beEmail" class="text-[11px] rounded-lg bg-slate-50 border border-slate-200 p-2 text-slate-600">Đang kiểm tra trạng thái backend...</div>
      <button onclick="saveEmailPerm()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU QUYỀN EMAIL</button>
     </div>
+    <!-- A2. Nhà cung cấp gửi mail -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3 lg:col-span-2">
+     <div class="flex items-center justify-between">
+      <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-paper-plane text-indigo-500 mr-1.5"></i>Nhà cung cấp gửi mail</div>
+      <button onclick="loadQuota()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-sync mr-1"></i>Làm mới quota</button>
+     </div>
+     <p class="text-[11px] text-slate-500">Chọn nơi Worker gửi mọi mail (báo khách, mail admin, nhắc hết hạn). Chỉ 1 nhà cung cấp hoạt động tại một thời điểm — bấm "Chọn &amp; Lưu mặc định" trên thẻ muốn dùng.</p>
+     <div id="mailProvCards" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+    </div>
     <!-- B. Cron + node -->
     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
      <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-clock-rotate-left text-indigo-500 mr-1.5"></i>Cron &amp; Luân chuyển Node</div>
@@ -1364,6 +1373,23 @@ const QL={kvW:1000,kvR:100000,kvD:1000,wReq:100000,d1R:5e6,d1W:1e5};
 function qBar(used,total,label,unit,reset){
  const pct=total?Math.min(100,Math.round(used/total*100)):0,rem=Math.max(0,total-used),c=pct>=90?["red","text-red-600","bg-red-500"]:pct>=80?["amber","text-amber-600","bg-amber-500"]:["emerald","text-emerald-600","bg-emerald-500"];
  return `<div><div class="flex justify-between text-[11px] font-bold mb-1"><span class="text-slate-600">${label}</span><span class="${c[1]}">${pct}%</span></div><div class="h-2 bg-slate-100 rounded-full overflow-hidden"><div class="h-full ${c[2]} rounded-full" style="width:${pct}%"></div></div><div class="text-[10px] text-slate-500 mt-1">Đã dùng <b>${Number(used).toLocaleString("en-US")}</b> / ${Number(total).toLocaleString("en-US")} ${unit} · còn <b>${rem.toLocaleString("en-US")}</b>${reset?" · reset sau ~"+reset:""}</div></div>`;}
+const MAIL_PROV_META={
+ google:{name:"Google Apps Script",sub:"Gửi qua Gmail — miễn phí",logo:'<svg viewBox="0 0 48 48" class="w-7 h-7 shrink-0"><path fill="#4285F4" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13 17.7 9.5 24 9.5z"/><path fill="#34A853" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.6c-.5 2.9-2.2 5.4-4.6 7l7.4 5.7c4.3-4 6.9-9.9 6.9-17.2z"/><path fill="#FBBC05" d="M10.5 19.3c-.5 1.5-.8 3.1-.8 4.7s.3 3.2.8 4.7l-7.9 6.1C1 31.4 0 27.8 0 24s1-7.4 2.6-10.8z"/><path fill="#EA4335" d="M24 48c6.3 0 11.9-2.1 15.9-5.6l-7.4-5.7c-2.1 1.4-4.9 2.3-8.5 2.3-6.3 0-11.6-3.5-13.5-9.3l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>'},
+ brevo:{name:"Brevo",sub:"(Sendinblue) — 300 mail/ngày free",logo:'<svg viewBox="0 0 48 48" class="w-7 h-7 shrink-0"><rect width="48" height="48" rx="10" fill="#0B996E"/><path fill="#fff" d="M11 30V16h4.3l7.5 9.6V16H27v14h-4.3l-7.5-9.6V30H11zM30 30V16h6.6c3 0 4.9 1.7 4.9 4.2 0 1.6-.8 2.8-2.1 3.4 1.6.6 2.6 2 2.6 3.8 0 2.8-2.1 4.6-5.2 4.6H30zm4.1-8.3h2.1c1.1 0 1.8-.6 1.8-1.5s-.7-1.5-1.8-1.5h-2.1v3zm0 5h2.4c1.2 0 2-.7 2-1.7s-.8-1.7-2-1.7h-2.4v3.4z"/></svg>'},
+ sendpulse:{name:"SendPulse",sub:"SMTP theo gói / balance",logo:'<svg viewBox="0 0 48 48" class="w-7 h-7 shrink-0"><rect width="48" height="48" rx="10" fill="#00B256"/><path fill="#fff" d="M24 7c9.4 0 17 7.6 17 17s-7.6 17-17 17S7 33.4 7 24 14.6 7 24 7zm-.3 8.3c-4.2 0-7.4 2.9-7.4 6.9 0 2.4 1.3 4.5 3.1 5.4.1-.3.3-1.1.4-1.4.1-.4-.1-.6-.3-.9-.5-.6-.8-1.4-.8-2.4 0-3.1 2.3-5.5 5.6-5.5 3.1 0 5.3 2 5.3 4.9 0 3.3-1.6 5.7-3.9 5.7-1.2 0-2.1-1-1.8-2.2.3-1.4 1-3 1-4 0-.9-.5-1.7-1.5-1.7-1.2 0-2.2 1.3-2.2 3 0 1.1.4 1.8.4 1.8s-1.3 5.4-1.5 6.4c-.3 1.2-.1 2.7 0 3.6-2.9-1.8-4.9-5-4.9-8.7 0-5.6 4.6-10.9 10.9-10.9z"/></svg>'}
+};
+let mailProvQuota={},mailProvCfg={},mailProvErr={};
+function mailProvCard(id){
+ const m=MAIL_PROV_META[id],cur=(cmsDb.settings&&cmsDb.settings.mailProvider)||"google",on=cur===id,ready=id==="google"?true:!!mailProvCfg[id],err=mailProvErr[id],q=mailProvQuota[id];
+ let body='<div class="text-[10px] text-slate-400">Bấm "Làm mới quota"</div>';
+ if(!ready)body='<div class="text-[10px] text-slate-400">Chưa cấu hình biến trên Worker</div>';
+ else if(err)body=`<div class="text-[10px] text-red-500">${esc(err)}</div>`;
+ else if(id==="google"&&q)body=`<div class="text-[11px] text-slate-600">Còn <b class="text-emerald-600">${q.remaining}</b>/${q.limit} người nhận (24h)</div>`;
+ else if(id==="brevo"&&q)body=`<div class="text-[11px] text-slate-600">Credits còn: <b class="text-emerald-600">${q.credits??"—"}</b>${q.creditsType?" ("+esc(q.creditsType)+")":""}</div>`;
+ else if(id==="sendpulse"&&q)body=`<div class="text-[11px] text-slate-600">Email còn: <b class="text-emerald-600">${q.emailsLeft??"—"}</b>${q.tariff?`<br><span class="text-slate-400">${esc(q.tariff)}</span>`:""}</div>`;
+ return `<div class="border-2 ${on?"border-indigo-500 bg-indigo-50":"border-slate-200 bg-white"} rounded-2xl p-3 flex flex-col gap-2"><div class="flex items-center gap-2">${m.logo}<div class="min-w-0"><div class="font-extrabold text-xs text-slate-800">${m.name}</div><div class="text-[10px] text-slate-500">${m.sub}</div></div>${on?'<span class="ml-auto bg-indigo-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full whitespace-nowrap">ĐANG DÙNG</span>':""}</div><div class="min-h-[32px]">${body}</div><button ${ready?"":"disabled"} onclick="pickMailProvider('${id}')" class="${on?"bg-slate-100 text-slate-400 cursor-default":ready?"bg-indigo-600 hover:bg-indigo-700 text-white":"bg-slate-100 text-slate-300 cursor-not-allowed"} font-bold py-2 rounded-lg text-xs">${on?"Đang chọn":"Chọn & Lưu mặc định"}</button></div>`;}
+function renderMailProvCards(){const el=$("mailProvCards");if(el)el.innerHTML=["google","brevo","sendpulse"].map(mailProvCard).join("");}
+async function pickMailProvider(id){cmsDb.settings.mailProvider=id;try{await saveCmsDb();toast("Đã chọn "+MAIL_PROV_META[id].name+" làm nhà cung cấp gửi mail");logEvent("ok","Lưu cấu hình","Nhà cung cấp mail: "+id);renderMailProvCards();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
 async function loadQuota(){
  const el=$("quotaBody");if(!el)return;
  try{
