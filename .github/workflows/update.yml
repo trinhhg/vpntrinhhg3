@@ -22,4 +22,6 @@ jobs:
         run: pip install requests pyyaml
 
       - name: Run Script
+        env:
+          WEB_API_SECRET2: ${{ secrets.WEB_API_SECRET2 }}
         run: python update_sub.py
