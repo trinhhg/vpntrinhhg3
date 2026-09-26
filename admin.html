@@ -1394,6 +1394,7 @@ async function loadQuota(){
  const el=$("quotaBody");if(!el)return;
  try{
   const j=await aj("/api/admin/quota",{soft:true});
+  mailProvCfg=(j&&j.cfg)||{};mailProvErr=(j&&j.err)||{};mailProvQuota={google:j&&j.mail,brevo:j&&j.brevo,sendpulse:j&&j.sendpulse};renderMailProvCards();
   if(!j||!j.ok){el.innerHTML='<div class="text-red-500 font-bold lg:col-span-2">Không lấy được quota (Worker chưa có CF_API_TOKEN / CF_ACCOUNT_ID hoặc endpoint lỗi)</div>';return;}
   const h=j.nextReset?Math.max(0,Math.round((j.nextReset-Date.now())/36e5)):null,rs=h!==null?h+" giờ":"";
   const err=(k,t)=>box(t,`<div class="text-[11px] text-slate-500">Không lấy được số liệu thật: <span class="text-red-500">${esc(j.err&&j.err[k]||"Worker chưa cấu hình nguồn này")}</span></div>`);
