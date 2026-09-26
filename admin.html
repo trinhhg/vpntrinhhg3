@@ -1385,7 +1385,20 @@ function mailProvCard(id){
  else if(err)body=`<div class="text-[10px] text-red-500">${esc(err)}</div>`;
  else if(id==="google"&&q)body=`<div class="text-[11px] text-slate-600">Còn <b class="text-emerald-600">${q.remaining}</b>/${q.limit} người nhận (24h)</div>`;
  else if(id==="brevo"&&q)body=`<div class="text-[11px] text-slate-600">Credits còn: <b class="text-emerald-600">${q.credits??"—"}</b>${q.creditsType?" ("+esc(q.creditsType)+")":""}</div>`;
- else if(id==="sendpulse"&&q)body=`<div class="text-[11px] text-slate-600">Email còn: <b class="text-emerald-600">${q.emailsLeft??"—"}</b>${q.tariff?`<br><span class="text-slate-400">${esc(q.tariff)}</span>`:""}</div>`;
+else if(id==="sendpulse"&&q) {
+   if (q.monthTotal !== undefined && q.monthTotal !== null) {
+     // Giao diện cho gói SMTP có quota rõ ràng (ngày/tháng/giờ)
+     body = `<div class="text-[11px] text-slate-600 mb-2 font-bold">${esc(q.tariff)}</div>`
+          + qBar(q.monthTotal - q.monthLeft, q.monthTotal, "Tháng", "email", "")
+          + `<div class="h-2"></div>`
+          + (q.dayTotal ? qBar(q.dayTotal - q.dayLeft, q.dayTotal, "Ngày", "email", "") : "")
+          + `<div class="h-2"></div>`
+          + (q.minTotal ? qBar(q.minTotal - q.minLeft, q.minTotal, "Phút", "email", "") : "");
+   } else {
+     // Fallback cho tài khoản cũ không có quota SMTP
+     body = `<div class="text-[11px] text-slate-600">Email còn: <b class="text-emerald-600">${q.emailsLeftFallback??"—"}</b>${q.tariff?`<br><span class="text-slate-400">${esc(q.tariff)}</span>`:""}</div>`;
+   }
+ }
  return `<div class="border-2 ${on?"border-indigo-500 bg-indigo-50":"border-slate-200 bg-white"} rounded-2xl p-3 flex flex-col gap-2"><div class="flex items-center gap-2">${m.logo}<div class="min-w-0"><div class="font-extrabold text-xs text-slate-800">${m.name}</div><div class="text-[10px] text-slate-500">${m.sub}</div></div>${on?'<span class="ml-auto bg-indigo-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full whitespace-nowrap">ĐANG DÙNG</span>':""}</div><div class="min-h-[32px]">${body}</div><button ${ready?"":"disabled"} onclick="pickMailProvider('${id}')" class="${on?"bg-slate-100 text-slate-400 cursor-default":ready?"bg-indigo-600 hover:bg-indigo-700 text-white":"bg-slate-100 text-slate-300 cursor-not-allowed"} font-bold py-2 rounded-lg text-xs">${on?"Đang chọn":"Chọn & Lưu mặc định"}</button></div>`;}
 function renderMailProvCards(){const el=$("mailProvCards");if(el)el.innerHTML=["google","brevo","sendpulse"].map(mailProvCard).join("");}
 async function pickMailProvider(id){cmsDb.settings.mailProvider=id;try{await saveCmsDb();toast("Đã chọn "+MAIL_PROV_META[id].name+" làm nhà cung cấp gửi mail");logEvent("ok","Lưu cấu hình","Nhà cung cấp mail: "+id);renderMailProvCards();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
