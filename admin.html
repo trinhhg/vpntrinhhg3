@@ -1343,7 +1343,7 @@ function addDockIcon(){const a=readDockRows();a.push({name:"",img:"",url:""});cm
 function removeDockIcon(i){const a=readDockRows();a.splice(i,1);cmsDb.settings.dock=a;renderDockRows();}
 async function saveDock(){const a=readDockRows().filter(it=>/^https?:\/\//i.test(it.img||""));cmsDb.settings.dock=a;try{await saveCmsDb();toast("Đã lưu Icon Dock ("+a.length+" icon tùy chỉnh)");logEvent("ok","Lưu cấu hình","Icon Dock");renderDockRows();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
 function loadSettingsUI(){
- const s=cmsDb.settings;renderRouteRows();renderSyncWorkers();renderDockRows();
+ const s=cmsDb.settings;renderRouteRows();renderSyncWorkers();renderDockRows();renderMailProvCards();
  const rr=document.querySelector(`input[name=emailRoleRad][value=${s.emailRole==="master"?"master":"slave"}]`);if(rr)rr.checked=true;
  $("toggleAutoMail").checked=!!s.autoMailEnabled;$("toggleAutoMigrate").checked=s.autoMigrateNode!==false;$("toggleLockExpiry").checked=!!s.lockExpiry;
  $("toggleLockFulfill").checked=!!s.lockFulfill;$("toggleMailOnSave").checked=mailOnSaveOn();paintTimeUI();}
