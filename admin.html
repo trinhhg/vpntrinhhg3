@@ -322,19 +322,80 @@ textarea.autog{resize:none;overflow:hidden;}
    </div>
   </div>
 
-  <div id="settings-view-setweb">
-   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-    <!-- A. Email -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
-     <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-envelope text-indigo-500 mr-1.5"></i>Quyền gửi Email tự động</div>
-     <p class="text-[11px] text-slate-500">Lưu thẳng vào Worker (KV). <b>Master</b>: web này được gửi mọi mail automation (kích hoạt, gia hạn, nâng gói, nhắc hết hạn). <b>Slave</b>: Worker không gửi mail automation nào.</p>
-     <div class="grid grid-cols-2 gap-2"><label class="radio-card"><input type="radio" name="emailRoleRad" value="master">Master (Gửi)</label><label class="radio-card"><input type="radio" name="emailRoleRad" value="slave">Slave (Tắt)</label></div>
-     <div class="flex items-start justify-between gap-4 pt-3 border-t border-slate-100"><div><div class="font-bold text-sm text-slate-800">Tự động gửi mail nhắc hết hạn</div><div class="text-xs text-slate-500 mt-1">19:00 giờ VN — ngày D-2 và D-1. Worker Cron tự chạy, không cần mở admin. Chỉ hoạt động khi là Master.</div></div><div class="toggle-wrap mt-0.5"><input type="checkbox" id="toggleAutoMail"><span class="toggle-slider"></span></div></div>
-     <div id="beEmail" class="text-[11px] rounded-lg bg-slate-50 border border-slate-200 p-2 text-slate-600">Đang kiểm tra trạng thái backend...</div>
-     <button onclick="saveEmailPerm()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU QUYỀN EMAIL</button>
+<div id="settings-view-setweb" class="space-y-4">
+    <!-- LƯỚI 2 CỘT ĐỘC LẬP (HÀNG 1, 2, 3) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+      
+      <!-- CỘT TRÁI (Email, Cron, Status) -->
+      <div class="flex flex-col gap-4">
+        <!-- Hàng 1 Trái: A. Email -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+         <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-envelope text-indigo-500 mr-1.5"></i>Quyền gửi Email tự động</div>
+         <p class="text-[11px] text-slate-500">Lưu thẳng vào Worker (KV). <b>Master</b>: web này được gửi mọi mail automation (kích hoạt, gia hạn, nâng gói, nhắc hết hạn). <b>Slave</b>: Worker không gửi mail automation nào.</p>
+         <div class="grid grid-cols-2 gap-2"><label class="radio-card"><input type="radio" name="emailRoleRad" value="master">Master (Gửi)</label><label class="radio-card"><input type="radio" name="emailRoleRad" value="slave">Slave (Tắt)</label></div>
+         <div class="flex items-start justify-between gap-4 pt-3 border-t border-slate-100"><div><div class="font-bold text-sm text-slate-800">Tự động gửi mail nhắc hết hạn</div><div class="text-xs text-slate-500 mt-1">19:00 giờ VN — ngày D-2 và D-1. Worker Cron tự chạy, không cần mở admin. Chỉ hoạt động khi là Master.</div></div><div class="toggle-wrap mt-0.5"><input type="checkbox" id="toggleAutoMail"><span class="toggle-slider"></span></div></div>
+         <div id="beEmail" class="text-[11px] rounded-lg bg-slate-50 border border-slate-200 p-2 text-slate-600">Đang kiểm tra trạng thái backend...</div>
+         <button onclick="saveEmailPerm()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU QUYỀN EMAIL</button>
+        </div>
+
+        <!-- Hàng 2 Trái: B. Cron + node -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+         <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-clock-rotate-left text-indigo-500 mr-1.5"></i>Cron &amp; Luân chuyển Node</div>
+         <p class="text-[11px] text-slate-500">Worker Cron chạy <b>15 phút/lần</b>: khóa link hết hạn, luân chuyển node (còn ≤ 1 ngày hạn hoặc &lt; 100GB), mail nhắc hạn (19:00 VN), dọn link đã xóa &gt; 48h, thử lại đăng ký D1.</p>
+         <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-100"><div class="flex items-center gap-3"><div class="toggle-wrap"><input type="checkbox" id="toggleAutoMigrate"><span class="toggle-slider"></span></div><span class="text-xs font-bold text-slate-700">Auto Migrate node</span></div><button onclick="runCronNow()" class="text-xs bg-rose-50 text-rose-600 font-bold px-3 py-2 rounded-lg hover:bg-rose-100 border border-rose-200"><i class="fas fa-random mr-1"></i>Chạy Cron ngay</button></div>
+         <div id="cronBox" class="text-xs rounded-xl border p-3 bg-slate-50 border-slate-200 text-slate-600">Đang kiểm tra Cron...</div>
+         <div class="flex gap-2"><button onclick="saveCronCfg()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU CẤU HÌNH CRON</button><button onclick="showCronLog()" class="bg-slate-100 text-slate-700 font-bold px-3 py-2.5 rounded-xl text-xs hover:bg-slate-200">Xem nhật ký Cron</button></div>
+        </div>
+
+        <!-- Hàng 3 Trái: D. Status -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+         <div class="flex items-center justify-between"><div class="font-extrabold text-sm text-slate-800"><i class="fas fa-heart-pulse text-emerald-500 mr-1.5"></i>Trạng thái hệ thống</div><button onclick="loadStatus()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-sync mr-1"></i>Kiểm tra</button></div>
+         <div id="statusBox" class="text-xs rounded-xl border p-3 bg-slate-50 border-slate-200 text-slate-600">Đang kiểm tra trạng thái...</div>
+         <p class="text-[10px] text-slate-400">Không bao giờ hiển thị giá trị secret thật — chỉ báo Có / Không.</p>
+        </div>
+      </div>
+
+      <!-- CỘT PHẢI (Routing, Vệ tinh, Khóa hạn) -->
+      <div class="flex flex-col gap-4">
+        <!-- Hàng 1 Phải: F. Routing + blur -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-2">
+         <div class="font-bold text-sm text-slate-800"><i class="fas fa-route text-indigo-500 mr-1.5"></i>Định tuyến &amp; Làm mờ (Blur)</div>
+         <p class="text-[10px] text-slate-500">Nhập từ khoá domain của web (VD: doicucden) để xác định ô Link 1/2/3. Chỉ khi đã nhập định tuyến mới bật được Làm mờ. Làm mờ chỉ che link với khách, không xóa link ở backend.</p>
+         <div id="routeRows" class="space-y-2"></div>
+         <button onclick="saveRouting()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU ĐỊNH TUYẾN &amp; BLUR</button>
+        </div>
+
+        <!-- Hàng 2 Phải: E. Vệ tinh -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-2">
+         <div class="flex justify-between items-center mb-1 border-b border-slate-100 pb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-satellite-dish text-indigo-500 mr-1.5"></i>Worker vệ tinh (2 web còn lại)</div><button onclick="addSyncWorker()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-plus"></i> Thêm</button></div>
+         <p class="text-[10px] text-slate-500">Nhập URL Worker của web kia, bật công tắc để đồng bộ. Đơn thành công: Web chính → Worker 2 → Worker 3, mỗi web tự tạo link riêng và cả 3 web đều biết đủ 3 link.</p>
+         <div id="syncWorkerList" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
+         <div class="flex gap-2"><button onclick="saveSyncWorkers()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU VỆ TINH</button><button onclick="checkTriLinks()" class="bg-slate-100 text-slate-700 font-bold px-3 py-2.5 rounded-xl text-xs hover:bg-slate-200">Kiểm tra đủ 3 link</button></div>
+         <div id="triLinkRes" class="text-[11px] text-slate-600"></div>
+        </div>
+
+        <!-- Hàng 3 Phải: C. Khóa hạn -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+         <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-calendar-lock text-amber-500 mr-1.5"></i>Khóa thông tin hết hạn của đơn hàng</div>
+         <p class="text-[11px] text-slate-500">Bật: <b>expDate</b> và <b>days</b> của đơn KHÔNG bị thay đổi, kể cả khi bạn đổi gói / đổi giá / sửa dữ liệu khác. Dùng để sửa gói &amp; giá lịch sử mà không làm đổi thời hạn khách đang có.</p>
+         <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-100"><span class="text-xs font-bold text-slate-700">Đang khóa thông tin hết hạn</span><div class="toggle-wrap"><input type="checkbox" id="toggleLockExpiry"><span class="toggle-slider"></span></div></div>
+         <button onclick="saveLockExpiry()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU</button>
+        </div>
+      </div>
+    </div> <!-- HẾT LƯỚI 2 CỘT -->
+
+    <!-- CÁC KHỐI FULL-WIDTH BÊN DƯỚI -->
+
+    <!-- Hàng 4: G. Icon dock -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+     <div class="flex justify-between items-center mb-1 border-b border-slate-100 pb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-icons text-indigo-500 mr-1.5"></i>Icon Dock Trang chủ</div><button onclick="addDockIcon()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-plus"></i> Thêm icon</button></div>
+     <p class="text-[10px] text-slate-500 mb-2">Không dùng FontAwesome, không có màu nền: icon tùy chỉnh dùng trực tiếp <b>URL ảnh</b> (xem trước ngay bên cạnh). Khi lưu, Trang chủ nhận đúng URL ảnh đó. Khối này độc lập với Định tuyến / Blur.</p>
+     <div id="dockRows" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+     <button onclick="saveDock()" class="w-full mt-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU ICON DOCK</button>
     </div>
-    <!-- A2. Nhà cung cấp gửi mail -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3 lg:col-span-2">
+
+    <!-- Hàng 5: A2. Nhà cung cấp gửi mail -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
      <div class="flex items-center justify-between">
       <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-paper-plane text-indigo-500 mr-1.5"></i>Nhà cung cấp gửi mail</div>
       <button onclick="loadQuota()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-sync mr-1"></i>Làm mới quota</button>
@@ -342,51 +403,15 @@ textarea.autog{resize:none;overflow:hidden;}
      <p class="text-[11px] text-slate-500">Chọn nơi Worker gửi mọi mail (báo khách, mail admin, nhắc hết hạn). Chỉ 1 nhà cung cấp hoạt động tại một thời điểm — bấm "Chọn &amp; Lưu mặc định" trên thẻ muốn dùng.</p>
      <div id="mailProvCards" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
     </div>
-    <!-- B. Cron + node -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
-     <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-clock-rotate-left text-indigo-500 mr-1.5"></i>Cron &amp; Luân chuyển Node</div>
-     <p class="text-[11px] text-slate-500">Worker Cron chạy <b>15 phút/lần</b>: khóa link hết hạn, luân chuyển node (còn ≤ 1 ngày hạn hoặc &lt; 100GB), mail nhắc hạn (19:00 VN), dọn link đã xóa &gt; 48h, thử lại đăng ký D1.</p>
-     <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-100"><div class="flex items-center gap-3"><div class="toggle-wrap"><input type="checkbox" id="toggleAutoMigrate"><span class="toggle-slider"></span></div><span class="text-xs font-bold text-slate-700">Auto Migrate node</span></div><button onclick="runCronNow()" class="text-xs bg-rose-50 text-rose-600 font-bold px-3 py-2 rounded-lg hover:bg-rose-100 border border-rose-200"><i class="fas fa-random mr-1"></i>Chạy Cron ngay</button></div>
-     <div id="cronBox" class="text-xs rounded-xl border p-3 bg-slate-50 border-slate-200 text-slate-600">Đang kiểm tra Cron...</div>
-     <div class="flex gap-2"><button onclick="saveCronCfg()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU CẤU HÌNH CRON</button><button onclick="showCronLog()" class="bg-slate-100 text-slate-700 font-bold px-3 py-2.5 rounded-xl text-xs hover:bg-slate-200">Xem nhật ký Cron</button></div>
+
+    <!-- Hàng 6: I. Quota -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+     <div class="flex items-center justify-between mb-1 border-b border-slate-100 pb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-gauge-high text-indigo-500 mr-1.5"></i>System Quota (chỉ web này)</div><button onclick="loadQuota()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-sync mr-1"></i>Làm mới</button></div>
+     <div id="quotaBody" class="pt-3 grid grid-cols-1 lg:grid-cols-2 gap-3 text-xs text-slate-500">Đang tải quota...</div>
     </div>
-    <!-- C. Khóa hạn -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
-     <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-calendar-lock text-amber-500 mr-1.5"></i>Khóa thông tin hết hạn của đơn hàng</div>
-     <p class="text-[11px] text-slate-500">Bật: <b>expDate</b> và <b>days</b> của đơn KHÔNG bị thay đổi, kể cả khi bạn đổi gói / đổi giá / sửa dữ liệu khác. Dùng để sửa gói &amp; giá lịch sử mà không làm đổi thời hạn khách đang có.</p>
-     <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-100"><span class="text-xs font-bold text-slate-700">Đang khóa thông tin hết hạn</span><div class="toggle-wrap"><input type="checkbox" id="toggleLockExpiry"><span class="toggle-slider"></span></div></div>
-     <button onclick="saveLockExpiry()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU</button>
-    </div>
-    <!-- D. Status -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
-     <div class="flex items-center justify-between"><div class="font-extrabold text-sm text-slate-800"><i class="fas fa-heart-pulse text-emerald-500 mr-1.5"></i>Trạng thái hệ thống</div><button onclick="loadStatus()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-sync mr-1"></i>Kiểm tra</button></div>
-     <div id="statusBox" class="text-xs rounded-xl border p-3 bg-slate-50 border-slate-200 text-slate-600">Đang kiểm tra trạng thái...</div>
-     <p class="text-[10px] text-slate-400">Không bao giờ hiển thị giá trị secret thật — chỉ báo Có / Không.</p>
-    </div>
-    <!-- E. Vệ tinh -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-2">
-     <div class="flex justify-between items-center mb-1 border-b border-slate-100 pb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-satellite-dish text-indigo-500 mr-1.5"></i>Worker vệ tinh (2 web còn lại)</div><button onclick="addSyncWorker()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-plus"></i> Thêm</button></div>
-     <p class="text-[10px] text-slate-500">Nhập URL Worker của web kia, bật công tắc để đồng bộ. Đơn thành công: Web chính → Worker 2 → Worker 3, mỗi web tự tạo link riêng và cả 3 web đều biết đủ 3 link.</p>
-     <div id="syncWorkerList" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
-     <div class="flex gap-2"><button onclick="saveSyncWorkers()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU VỆ TINH</button><button onclick="checkTriLinks()" class="bg-slate-100 text-slate-700 font-bold px-3 py-2.5 rounded-xl text-xs hover:bg-slate-200">Kiểm tra đủ 3 link</button></div>
-     <div id="triLinkRes" class="text-[11px] text-slate-600"></div>
-    </div>
-    <!-- F. Routing + blur -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-2">
-     <div class="font-bold text-sm text-slate-800"><i class="fas fa-route text-indigo-500 mr-1.5"></i>Định tuyến &amp; Làm mờ (Blur)</div>
-     <p class="text-[10px] text-slate-500">Nhập từ khoá domain của web (VD: doicucden) để xác định ô Link 1/2/3. Chỉ khi đã nhập định tuyến mới bật được Làm mờ. Làm mờ chỉ che link với khách, không xóa link ở backend.</p>
-     <div id="routeRows" class="space-y-2"></div>
-     <button onclick="saveRouting()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU ĐỊNH TUYẾN &amp; BLUR</button>
-    </div>
-    <!-- G. Icon dock -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 lg:col-span-2">
-     <div class="flex justify-between items-center mb-1 border-b border-slate-100 pb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-icons text-indigo-500 mr-1.5"></i>Icon Dock Trang chủ</div><button onclick="addDockIcon()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-plus"></i> Thêm icon</button></div>
-     <p class="text-[10px] text-slate-500 mb-2">Không dùng FontAwesome, không có màu nền: icon tùy chỉnh dùng trực tiếp <b>URL ảnh</b> (xem trước ngay bên cạnh). Khi lưu, Trang chủ nhận đúng URL ảnh đó. Khối này độc lập với Định tuyến / Blur.</p>
-     <div id="dockRows" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
-     <button onclick="saveDock()" class="w-full mt-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU ICON DOCK</button>
-    </div>
-    <!-- H. Bảo trì Link Sub -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 lg:col-span-2 space-y-4">
+
+    <!-- Hàng 7: H. Bảo trì Link Sub -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
      <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-toolbox text-amber-500 mr-1.5"></i>Bảo trì Link Sub</div>
      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 w-full">
       <button id="btnRunGC" onclick="runGC()" class="bg-white text-red-600 hover:bg-red-50 font-bold py-2 rounded-xl text-xs shadow-sm border border-slate-200"><i class="fas fa-broom mr-1"></i>Dọn KV</button>
@@ -420,14 +445,9 @@ textarea.autog{resize:none;overflow:hidden;}
       </div>
      </div>
     </div>
-    <!-- I. Quota -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 lg:col-span-2">
-     <div class="flex items-center justify-between mb-1 border-b border-slate-100 pb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-gauge-high text-indigo-500 mr-1.5"></i>System Quota (chỉ web này)</div><button onclick="loadQuota()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-sync mr-1"></i>Làm mới</button></div>
-     <div id="quotaBody" class="pt-3 grid grid-cols-1 lg:grid-cols-2 gap-3 text-xs text-slate-500">Đang tải quota...</div>
-    </div>
-   </div>
   </div>
 
+  <!-- CÁC TAB ẨN BÊN DƯỚI (LOG, DEV, TIME) ĐƯỢC GIỮ NGUYÊN -->
   <div id="settings-view-log" class="hidden">
    <div class="flex flex-wrap items-center gap-2 mb-3"><div class="text-sm font-bold text-slate-700 mr-auto">Nhật ký hoạt động <span id="logCount" class="text-slate-400 font-normal text-xs"></span></div>
     <select id="logLvl" onchange="renderLogs()" class="p-2 border border-slate-200 rounded-lg text-xs bg-white"><option value="">Mọi mức</option><option value="error">Lỗi</option><option value="warn">Cảnh báo</option><option value="ok">Thành công</option><option value="info">Thông tin</option></select>
@@ -468,9 +488,8 @@ textarea.autog{resize:none;overflow:hidden;}
     <div id="pkgReport" class="text-xs text-slate-600 space-y-1"></div>
    </div>
   </div>
- </div>
 </main>
-
+    
 <!-- ===== MODAL ĐƠN HÀNG ===== -->
 <div id="mOrd" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 md:p-4">
  <div class="glass-card p-4 md:p-6 w-full max-w-lg max-h-[98vh] overflow-y-auto min-w-0">
