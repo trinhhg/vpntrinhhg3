@@ -663,6 +663,8 @@ function genHTML(pkg){
  ${pkg.tag?`<span class="absolute -top-3 right-4 bg-red-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10">${pkg.tag[lang]||pkg.tag.vi}</span>`:''}${pkg.tag2?`<span class="absolute -top-3 left-4 bg-blue-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10">${pkg.tag2[lang]||pkg.tag2.vi}</span>`:''}
  <div class="${pkg.tag||pkg.tag2?'pt-2':''}"><h3 class="font-extrabold text-lg md:text-xl dark:text-white">${p.name}</h3><p class="text-xs font-bold text-slate-500 dark:text-slate-300 mb-3">${displayTime}</p>${priceHTML}
  <ul class="text-xs md:text-sm space-y-2.5 mb-6 font-medium text-slate-600 dark:text-white"><li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${l.data_label} <b class="dark:text-white">${pkg.data}</b></li><li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${devText}</li><li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${l.speed_label}</li></ul></div>${btn}</div>`;}
+
+function renderPackages(filter){
  ['htab','ptab'].forEach(p=>['all','travel','cycle','usage'].forEach(t=>{const b=$(`${p}-${t}`);if(!b)return;if(t===filter){b.classList.add('active','bg-indigo-600','text-white');b.classList.remove('text-slate-600','dark:text-slate-300');}else{b.classList.remove('active','bg-indigo-600','text-white');b.classList.add('text-slate-600','dark:text-slate-300');}}));
  const html=pkgs.filter(p=>filter==='all'||p.category.includes(filter)).map(genHTML).join('');if($('packagesContainerHome'))$('packagesContainerHome').innerHTML=html;if($('packagesContainerPortal'))$('packagesContainerPortal').innerHTML=html;}
 
