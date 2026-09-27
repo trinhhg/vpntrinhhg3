@@ -476,7 +476,7 @@ function renderDock(){
  const custom=(Array.isArray(cfgCache.dock)?cfgCache.dock:[]);
  const list=[...DOCK_DEFAULT, ...custom];
  const one=list.map(it=>{const h=it.url||it[0],hasImg=!!it.img,c=it.cls||it[1]||(hasImg?'bg-white dark:bg-slate-800':(it.bg?'':'bg-fb')),ic=it.icon||it[2]||'fas fa-star',img=it.img||(ic==='IMG'?DOCK_NF:''),bgStyle=it.bg?` style="background:${esc(it.bg)}"`:'';
-  return `<a href="${esc(h)}" target="_blank" class="dock-icon ${esc(c)}"${bgStyle}>${img?`<img src="${esc(img)}" class="w-[70%] h-[70%] object-contain" alt="">`:`<i class="${esc(ic)}"></i>`}</a>`;}).join('');
+  return `<a href="${esc(h)}" target="_blank" class="dock-icon ${esc(c)}"${bgStyle}>${img?`<img src="${esc(img)}" class="w-full h-full object-cover" alt="">`:`<i class="${esc(ic)}"></i>`}</a>`;}).join('');
  $('dockMarquee').innerHTML=one+one+one+one;
  setupDockDrag();}
 
