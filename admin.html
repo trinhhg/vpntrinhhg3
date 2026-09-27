@@ -1027,14 +1027,11 @@ async function mcSend(){
  mcSending=false;$("mcProgTxt").textContent=`Hoàn tất: đã gửi ${ok}/${list.length} email. Xem chi tiết ở Cài đặt → Nhật ký.`;toast(`Đã gửi ${ok}/${list.length} email`);}
 
 // ===================== DUNG LƯỢNG =====================
-// "Gói: 80,000VND": ưu tiên totalVnd của đơn → dữ liệu giao dịch D1 → nhận diện gói cũ. Không sửa dữ liệu gốc.
+// Lấy nguyên tên gói từ Order theo chuẩn pkgLabel (so khớp orderId và email)
 function dataPriceLabel(r){
- const oi=ordersDb.find(o=>normId(o.id)===normId(r.orderId)),tx=txData.find(t=>normId(t.order_id)===normId(r.orderId)&&Number(t.amount)>0);
- let amount=oi?Number(oi.totalVnd)||0:0;if(!amount&&tx)amount=Number(tx.amount)||0;
- const p=oi?pkgOf({...oi,totalVnd:amount||oi.totalVnd}):null;
- if(amount>0){return (p&&amount%p.vnd===0?fmtVnd(p.vnd):fmtVnd(amount))+"VND";}
- if(p)return fmtVnd(p.vnd)+"VND";
- return r.pkgName||"—";}
+ const oi=ordersDb.find(o=>normId(o.id)===normId(r.orderId) && String(o.email||"").toLowerCase()===String(r.email||"").toLowerCase());
+ return oi ? pkgLabel(oi) : (r.pkgName||"—");
+}
 function renderDataRequests(){
  const tb=$("dataReqBody");if(!dataReqDb.length){tb.innerHTML=`<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold">Không có yêu cầu nào</div>`;return;}
  const groups={};dataReqDb.forEach((r,i)=>{const mi=monthInfo(Number(r.ts)||parseAny(r.date));(groups[mi.key]=groups[mi.key]||{label:mi.label,items:[]}).items.push({r,i});});
@@ -1042,7 +1039,7 @@ function renderDataRequests(){
  for(const key of Object.keys(groups).sort((a,b)=>b.localeCompare(a))){
   const g=groups[key];html+=`<div class="month-header"><i class="far fa-calendar-alt text-indigo-400"></i><span>${g.label}</span><span class="month-count">${g.items.length} yêu cầu</span></div><div class="space-y-3 mb-6">`;
   html+=g.items.map(({r,i})=>{const ok=r.status==="success";
-   return `<div class="${ok?"bg-slate-50 border-slate-200 opacity-60":"bg-white border-2 border-dashed border-indigo-400"} rounded-xl p-3 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-1">${ok?'<div class="dot-green"></div>':'<div class="dot-yellow"></div>'}<span class="font-mono font-extrabold text-indigo-600 text-sm cp" onclick="cp(${q(r.orderId)})">${esc(r.orderId)}</span></div><div class="font-bold text-slate-800 text-xs cp truncate pl-5" onclick="cp(${q(r.email)})">${esc(r.email)}</div><div class="text-[11px] text-slate-500 mt-1 pl-5">Gói: <b>${esc(dataPriceLabel(r))}</b> - ${fmtBank(r.ts||r.date)}</div></div>
+   return `<div class="${ok?"bg-slate-50 border-slate-200 opacity-60":"bg-white border-2 border-dashed border-indigo-400"} rounded-xl p-3 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-1">${ok?'<div class="dot-green"></div>':'<div class="dot-yellow"></div>'}<span class="font-mono font-extrabold text-indigo-600 text-sm cp" onclick="cp(${q(r.orderId)})">${esc(r.orderId)}</span></div><div class="font-bold text-slate-800 text-xs cp truncate pl-5" onclick="cp(${q(r.email)})">${esc(r.email)}</div><div class="text-[11px] text-slate-500 mt-1 pl-5"><b>${esc(dataPriceLabel(r))}</b> - ${fmtBank(r.ts||r.date)}</div></div>
    <div class="flex gap-2 items-center"><div class="relative w-28"><input type="number" step="0.1" id="gb-input-${i}" placeholder="Số GB..." class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none font-bold bg-white text-center pr-8" ${ok?"disabled":""}><span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">GB</span></div>
    <button onclick="sendDataReport(${i})" class="${ok?"bg-slate-300 text-slate-500 pointer-events-none":"bg-indigo-600 text-white hover:bg-indigo-700 shadow-md"} font-bold px-3 py-2 rounded-lg text-xs flex items-center"><i class="fas fa-paper-plane mr-1.5"></i>${ok?"Đã Gửi":"Gửi Khách"}</button><button onclick="delDataRequest(${i})" class="text-red-500 bg-red-50 border border-red-100 hover:bg-red-500 hover:text-white px-3 py-2 rounded-lg"><i class="fas fa-trash"></i></button></div></div>`;}).join("");
   html+=`</div>`;}
