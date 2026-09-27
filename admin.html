@@ -593,11 +593,11 @@ const TZN=()=>off()===8?"Asia/Shanghai":"Asia/Ho_Chi_Minh";
 const nowMs=()=>Date.now()+((cmsDb.settings&&cmsDb.settings.simMode)?Number(cmsDb.settings.simOffset)||0:0);
 function parseAny(v){
  if(typeof v==="number")return v;const s=String(v||"").trim();if(!s)return 0;let m;
- m=s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*-?\s*(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m)return Date.UTC(+m[6],m[5]-1,+m[4],m[1]-7,+m[2],+(m[3]||0));
+ m=s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*-?\s*(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);if(m){let y=+m[6];if(y<100)y+=2000;return Date.UTC(y,m[5]-1,+m[4],m[1]-7,+m[2],+(m[3]||0));}
  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?$/);if(m){let y=+m[3];if(y<100)y+=2000;return Date.UTC(y,m[2]-1,+m[1],m[4]-7,+m[5],+(m[6]||0));}
  m=s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/);if(m)return Date.UTC(+m[1],m[2]-1,+m[3],m[4]-7,+m[5],+(m[6]||0));
  const t=Date.parse(s);return isNaN(t)?0:t;}
-function fmtBank(v){const t=parseAny(v);if(!t)return v?String(v):"—";const p=new Intl.DateTimeFormat("en-GB",{timeZone:TZN(),day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date(t));const g=k=>p.find(x=>x.type===k).value;return `${g("day")}/${g("month")}/${g("year")} ${g("hour")}:${g("minute")}`;}
+function fmtBank(v){const t=parseAny(v);if(!t)return v?String(v):"—";const p=new Intl.DateTimeFormat("en-GB",{timeZone:TZN(),day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date(t));const g=k=>p.find(x=>x.type===k).value;return `${g("day")}/${g("month")}/${g("year")} ${g("hour")}:${g("minute")}`;}
 const oTs=o=>Number(o.createdTs)||parseAny(o.date);
 const dmyOf=ts=>{const d=new Date(ts+off()*36e5);return `${String(d.getUTCDate()).padStart(2,"0")}/${String(d.getUTCMonth()+1).padStart(2,"0")}/${d.getUTCFullYear()}`;};
 const expEnd=e=>{const m=String(e||"").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?Date.UTC(+m[3],m[2]-1,+m[1],23,59,59)-off()*36e5:0;};
