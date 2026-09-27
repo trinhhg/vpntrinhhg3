@@ -473,8 +473,9 @@ const pkgs=[
 const DOCK_DEFAULT=[['https://www.facebook.com/','bg-fb','fab fa-facebook-f'],['https://messenger.com/','bg-mess','fab fa-facebook-messenger'],['https://telegram.org/','bg-tele','fab fa-telegram-plane'],['https://whatsapp.com/','bg-wa','fab fa-whatsapp'],['https://discord.com/','bg-discord','fab fa-discord'],['https://tiktok.com/','bg-tiktok','fab fa-tiktok'],['https://instagram.com/','bg-insta','fab fa-instagram'],['https://twitter.com/','bg-x','fab fa-x-twitter'],['https://threads.net/','bg-threads','fab fa-threads'],['https://youtube.com/','bg-youtube','fab fa-youtube'],['https://reddit.com/','bg-reddit','fab fa-reddit-alien'],['https://soundcloud.com/','bg-sc','fab fa-soundcloud'],['https://locket.camera/','bg-locket','fas fa-heart'],['https://netflix.com/','bg-netflix','IMG'],['https://spotify.com/','bg-spotify','fab fa-spotify']];
 const DOCK_NF='https://images.ctfassets.net/4cd45et68cgf/Rx83JoRDMkYNlMC9MKzcB/2b14d5a59fc3937afd3f03191e19502d/Netflix-Symbol.png?w=700&h=456';
 function renderDock(){
- const list=(Array.isArray(cfgCache.dock)&&cfgCache.dock.length?cfgCache.dock:DOCK_DEFAULT);
- const one=list.map(it=>{const h=it.url||it[0],c=it.cls||it[1]||(it.bg?'':'bg-fb'),ic=it.icon||it[2]||'fas fa-star',img=it.img||(ic==='IMG'?DOCK_NF:''),bgStyle=it.bg?` style="background:${esc(it.bg)}"`:'';
+ const custom=(Array.isArray(cfgCache.dock)?cfgCache.dock:[]);
+ const list=[...DOCK_DEFAULT, ...custom];
+ const one=list.map(it=>{const h=it.url||it[0],hasImg=!!it.img,c=it.cls||it[1]||(hasImg?'bg-white dark:bg-slate-800':(it.bg?'':'bg-fb')),ic=it.icon||it[2]||'fas fa-star',img=it.img||(ic==='IMG'?DOCK_NF:''),bgStyle=it.bg?` style="background:${esc(it.bg)}"`:'';
   return `<a href="${esc(h)}" target="_blank" class="dock-icon ${esc(c)}"${bgStyle}>${img?`<img src="${esc(img)}" class="w-[70%] h-[70%] object-contain" alt="">`:`<i class="${esc(ic)}"></i>`}</a>`;}).join('');
  $('dockMarquee').innerHTML=one+one+one+one;
  setupDockDrag();}
