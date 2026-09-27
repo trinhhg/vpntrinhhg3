@@ -87,7 +87,7 @@ html.dark{color-scheme:dark;}
  try{const t=localStorage.getItem('vpn_theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark');}catch(e){}
 </script>
 </head>
-<body class="min-h-screen flex flex-col w-full overflow-x-hidden bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
+<body class="min-h-screen flex flex-col w-full overflow-x-hidden bg-slate-50 dark:bg-black text-slate-800 dark:text-slate-200 transition-colors duration-300">
 <div id="toastContainer" class="fixed top-[90px] md:top-[100px] right-5 z-[9999] flex flex-col items-end gap-2 pointer-events-none"></div>
 <div id="floatingSocials" class="fixed bottom-24 md:bottom-6 right-4 md:right-6 flex flex-col gap-3 z-40 transition-all duration-500">
   <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="w-12 h-12 bg-wechat text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce"><i class="fab fa-weixin"></i></button>
@@ -103,7 +103,7 @@ html.dark{color-scheme:dark;}
     <button onclick="document.getElementById('wechatModal').classList.add('hidden')" class="w-full bg-slate-800 dark:bg-slate-700 text-white font-bold py-3 rounded-xl hover:bg-slate-900 dark:hover:bg-slate-600 transition">ĐÓNG BẢNG NÀY</button>
   </div>
 </div>
-<nav id="mainNav" class="fixed top-0 w-full z-[70] border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md py-3 transition-colors duration-300">
+<nav id="mainNav" class="fixed top-0 w-full z-[70] border-b border-slate-200 dark:border-white/10 bg-white/95 dark:bg-black/90 backdrop-blur-md py-3 transition-colors duration-300">
   <div class="max-w-[1400px] mx-auto px-4 w-full flex flex-col md:flex-row items-center justify-between gap-3">
     <div class="flex items-center justify-between w-full md:w-auto shrink-0">
       <div class="font-extrabold text-xl md:text-2xl tracking-tighter cursor-pointer text-indigo-700 dark:text-indigo-400" onclick="logout()"><span data-i18n="brand">VPN Trinh Hg</span></div>
@@ -270,7 +270,7 @@ html.dark{color-scheme:dark;}
         </div>
       </div>
       <div class="flex justify-center mt-6 mb-8">
-        <button onclick="switchPortalTab('p-guide')" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-black py-3 px-6 rounded-full shadow-lg hover:scale-105 transition-transform flex items-center gap-2 text-xs md:text-sm max-w-[90vw] text-center"><i class="fas fa-question-circle text-lg"></i><span data-i18n="btn_watch_guide">Chưa biết sử dụng? Xem hướng dẫn ngay!</span></button>
+<button onclick="switchPortalTab('p-guide')" class="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-400 dark:to-indigo-500 text-white font-black py-3 px-6 rounded-full shadow-lg dark:shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:scale-105 transition-transform flex items-center gap-2 text-xs md:text-sm max-w-[90vw] text-center"><i class="fas fa-question-circle text-lg"></i><span data-i18n="btn_watch_guide">Chưa biết sử dụng? Xem hướng dẫn ngay!</span></button>
       </div>
       <h3 class="text-xl font-extrabold text-center mb-6 text-slate-800 dark:text-slate-200" data-i18n="faq_title">Câu hỏi thường gặp (FAQ)</h3>
       <div id="faqPortalHomeContainer" class="space-y-3"></div>
@@ -362,7 +362,7 @@ html.dark{color-scheme:dark;}
               <div id="customDurWrap" class="hidden mt-3"><div class="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 p-2 rounded-lg border border-indigo-100 dark:border-indigo-800/50"><label class="text-xs font-bold text-indigo-800 dark:text-indigo-400 whitespace-nowrap pl-1" data-i18n="input_months">Nhập số tháng:</label><input type="number" id="customDurInput" min="1" max="120" value="2" oninput="calculateTotal()" class="w-full p-2 text-sm border border-slate-300 dark:border-slate-700 rounded outline-none focus:border-indigo-500 font-bold bg-white dark:bg-slate-900 text-center text-slate-800 dark:text-slate-200"></div></div>
               <div id="priceCalculation" class="mt-3 text-sm font-black text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800/50 p-2.5 rounded-lg text-center"></div>
             </div>
-            <div class="sticky bottom-0 z-40 mt-auto pt-4 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md rounded-b-3xl pb-2"><button type="submit" id="btnConfirm" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md" data-i18n="btn_create_order">TẠO MÃ QR CHUYỂN KHOẢN</button></div>
+            <div class="sticky bottom-0 z-40 mt-auto pt-4 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md rounded-b-3xl pb-2"><button type="submit" id="btnConfirm" class="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md dark:shadow-[0_0_20px_rgba(99,102,241,0.5)]" data-i18n="btn_create_order">TẠO MÃ QR CHUYỂN KHOẢN</button>
           </div>
           <div id="checkoutRightCol" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-5 md:p-8 rounded-3xl shadow-sm flex flex-col"></div>
         </div>
@@ -372,7 +372,7 @@ html.dark{color-scheme:dark;}
     <div id="faqStoreContainer" class="space-y-3"></div>
   </div>
 </main>
-<footer id="footerArea" class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 z-10 w-full mt-auto transition-colors duration-300">
+<footer id="footerArea" class="bg-white dark:bg-black border-t border-slate-200 dark:border-white/10 py-6 z-10 w-full mt-auto transition-colors duration-300">
   <div class="max-w-[1400px] mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
     <p class="text-xs font-bold text-slate-500 dark:text-slate-400">© 2026 VPN Trinh Hg. All rights reserved.</p>
     <div class="flex flex-wrap justify-center gap-2">
@@ -650,8 +650,7 @@ function genHTML(pkg){
  const isDisabled=isUpgradeMode&&pkg.vnd<=baseOrderPriceVnd&&!pkg.isCustom;
  const priceStr=p.price.replace('VND','<span class="text-sm md:text-base font-bold ml-0.5">VND</span>');
  const priceHTML=pkg.isCustom?`<div class="text-xl font-black text-red-600 dark:text-red-400 mb-4 border-b border-slate-100 dark:border-slate-700 pb-4 mt-2">${priceStr}</div>`:`<div class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-indigo-400 mb-4 border-b border-slate-100 dark:border-slate-700 pb-4 mt-2">${priceStr}</div>`;
- const btn=isDisabled?`<button disabled class="w-full bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 font-bold py-3 rounded-xl text-sm cursor-not-allowed">${l.unavailable}</button>`:pkg.isCustom?`<a href="#footerArea" class="w-full block text-center bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-bold py-3 rounded-xl text-sm hover:bg-red-600 hover:text-white transition">${l.btn_contact}</a>`:`<button onclick="openCheckout('${pkg.id}')" class="w-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 font-bold py-3 rounded-xl text-sm hover:bg-indigo-600 hover:text-white transition">${l.btn_buy}</button>`;
- return `<div class="bg-white dark:bg-slate-800 p-5 md:p-6 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm relative flex flex-col justify-between hover:shadow-lg transition mt-4 md:mt-0 ${isDisabled?'pkg-disabled':''}">
+ const btn=isDisabled?`<button disabled class="w-full bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 font-bold py-3 rounded-xl text-sm cursor-not-allowed">${l.unavailable}</button>`:pkg.isCustom?`<a href="#footerArea" class="w-full block text-center bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-bold py-3 rounded-xl text-sm hover:bg-red-600 hover:text-white transition">${l.btn_contact}</a>`:`<button onclick="openCheckout('${pkg.id}')" class="w-full bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-bold py-3 rounded-xl text-sm hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white dark:hover:shadow-[0_0_15px_rgba(99,102,241,0.5)] transition">${l.btn_buy}</button>
  ${pkg.tag?`<span class="absolute -top-3 right-4 bg-red-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10">${pkg.tag[lang]||pkg.tag.vi}</span>`:''}${pkg.tag2?`<span class="absolute -top-3 left-4 bg-blue-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10">${pkg.tag2[lang]||pkg.tag2.vi}</span>`:''}
  <div class="${pkg.tag||pkg.tag2?'pt-2':''}"><h3 class="font-extrabold text-lg md:text-xl dark:text-slate-200">${p.name}</h3><p class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-3">${displayTime}</p>${priceHTML}
  <ul class="text-xs md:text-sm space-y-2.5 mb-6 font-medium text-slate-600 dark:text-slate-300"><li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${l.data_label} <b>${pkg.data}</b></li><li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${devText}</li><li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${l.speed_label}</li></ul></div>${btn}</div>`;}
