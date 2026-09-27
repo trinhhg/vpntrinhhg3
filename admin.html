@@ -737,7 +737,9 @@ function renderOrd(){
  const groups={};list.forEach(o=>{const mi=monthInfo(oTs(o));(groups[mi.key]=groups[mi.key]||{label:mi.label,orders:[]}).orders.push(o);});
  let html="";
  for(const key of Object.keys(groups).sort((a,b)=>b.localeCompare(a))){
-  const g=groups[key];html+=`<div class="month-header"><i class="far fa-calendar-alt text-indigo-400"></i><span>${g.label}</span><span class="month-count">${g.orders.length} đơn</span></div><div class="space-y-3 mb-6">${g.orders.map(o=>ordCard(o,false)).join("")}</div>`;}
+  const g=groups[key];
+  g.orders.sort((a,b)=>oTs(b)-oTs(a));
+  html+=`<div class="month-header"><i class="far fa-calendar-alt text-indigo-400"></i><span>${g.label}</span><span class="month-count">${g.orders.length} đơn</span></div><div class="space-y-3 mb-6">${g.orders.map(o=>ordCard(o,false)).join("")}</div>`;}
  tb.innerHTML=html;}
 async function setLockFulfill(v){const s=cmsDb.settings;const old=!!s.lockFulfill;s.lockFulfill=!!v;try{await saveCmsDb();toast(v?"Đã BẬT Khóa fulfillment — sửa đơn sẽ không chạy automation":"Đã tắt Khóa fulfillment");logEvent("warn","Khóa fulfillment",v?"Bật":"Tắt");}catch(e){s.lockFulfill=old;$("toggleLockFulfill").checked=old;toast("Lỗi lưu: "+e.message,"err");}}
 function setMailOnSave(v){localStorage.setItem(SITE_KEY+"_mailOnSave",v?"1":"0");toast(v?"Sẽ gửi mail báo khách khi lưu đơn":"Đã tắt gửi mail khi lưu đơn");}
