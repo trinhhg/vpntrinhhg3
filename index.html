@@ -597,12 +597,16 @@ function renderGuideTabs(){
   return `<button onclick="showGuide('${esc(t.id)}')" id="btn-dev-${esc(t.id)}" class="dev-btn ${on?'active bg-indigo-600 text-white border-indigo-600 shadow-lg scale-105':'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'} border-2 px-5 py-2.5 rounded-xl font-bold flex items-center text-xs md:text-sm transition">${ic}${esc(t.name)}${on?'<i class="fas fa-check-circle ml-2 text-xs opacity-80"></i>':''}</button>`;}).join('');}
 
 function renderArtPicker(tabId){
- const list=guideArts(tabId),el=$('guideArtPicker');
+ const list=[...guideArts(tabId)].sort((a,b)=>(b.updated||0)-(a.updated||0)),el=$('guideArtPicker');
  if(!el)return;
- if(list.length<=1){el.classList.add('hidden');el.classList.remove('flex');el.innerHTML='';return;}
- el.classList.remove('hidden');el.classList.add('flex');
+ if(list.length<=1){el.classList.add('hidden');el.classList.remove('flex','flex-col','space-y-3');el.innerHTML='';return;}
+ el.className = 'hidden'; el.classList.remove('hidden'); el.classList.add('flex','flex-col','space-y-3','mb-6','w-full');
  el.innerHTML=list.map(a=>{const on=a.id===curGuideArt;
-  return `<button onclick="showGuide('${esc(tabId)}','${esc(a.id)}')" class="px-3.5 py-1.5 rounded-full text-xs font-bold border transition ${on?'bg-indigo-600 border-indigo-600 text-white shadow-sm':'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}"><i class="fas fa-file-lines mr-1.5"></i>${esc(a.name||'Bài viết')}</button>`;}).join('');
+  const timeStr=a.updated?new Date(a.updated).toLocaleDateString('vi-VN'):"Mới";
+  return `<div onclick="showGuide('${esc(tabId)}','${esc(a.id)}')" class="w-full cursor-pointer border-2 ${on?'border-indigo-500 bg-indigo-50 dark:bg-[#111111] dark:shadow-[0_0_15px_rgba(99,102,241,0.3)]':'border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a] hover:border-indigo-300 dark:hover:border-indigo-500 dark:hover:shadow-[0_0_15px_rgba(99,102,241,0.4)]'} rounded-2xl p-3 md:p-4 flex flex-col md:flex-row md:items-center justify-between gap-2 transition-all duration-300 transform ${on?'':'hover:-translate-y-1 hover:scale-[1.01]'}">
+    <div class="min-w-0"><div class="font-extrabold text-sm md:text-base ${on?'text-indigo-700 dark:text-indigo-400':'text-slate-800 dark:text-white'} truncate"><i class="fas fa-newspaper mr-2 opacity-70"></i>${esc(a.name||'Bài viết')}</div></div>
+    <div class="flex gap-4 text-[11px] font-bold ${on?'text-indigo-500 dark:text-indigo-400':'text-slate-500 dark:text-slate-400'} shrink-0"><span class="bg-slate-100 dark:bg-black px-2 py-1 rounded-md"><i class="fas fa-user-edit mr-1"></i>${esc(a.author||"Admin")}</span><span class="bg-slate-100 dark:bg-black px-2 py-1 rounded-md"><i class="fas fa-clock mr-1"></i>${timeStr}</span></div>
+  </div>`;}).join('');
 }
 
 function showGuide(dev,artId){
