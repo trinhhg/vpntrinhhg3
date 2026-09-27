@@ -105,10 +105,10 @@ html.dark .neon-animated-card {
   <a href="https://zalo.me/0917678211" target="_blank" class="w-12 h-12 bg-[#0068ff] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.3s"><span class="font-bold text-[14px]">Zalo</span></a>
 </div>
 <div id="wechatModal" class="hidden fixed inset-0 z-[99999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all" onclick="this.classList.add('hidden')">
-  <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl text-center max-w-sm w-full shadow-2xl" onclick="event.stopPropagation()">
+  <div class="bg-white dark:bg-[#0a0a0a] border dark:border-white/10 p-6 rounded-3xl text-center max-w-sm w-full shadow-2xl" onclick="event.stopPropagation()">
     <h3 class="font-extrabold text-xl text-slate-800 dark:text-slate-100 mb-2">WeChat Hỗ trợ</h3>
     <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Lưu ảnh hoặc dùng chức năng quét mã của WeChat để thêm Admin.</p>
-    <div class="bg-slate-50 dark:bg-slate-900/50 p-2 rounded-2xl mb-4 border border-slate-200 dark:border-slate-700 shadow-inner overflow-hidden flex justify-center"><img src="https://i.pinimg.com/736x/93/29/1e/93291e3f736f05f2f5722ecbcb7ca428.jpg" alt="WeChat QR" class="max-w-[250px] w-full h-auto rounded-xl object-contain"></div>
+    <div class="bg-slate-50 dark:bg-[#111111] p-2 rounded-2xl mb-4 border border-slate-200 dark:border-white/10 shadow-inner overflow-hidden flex justify-center"><img src="https://i.pinimg.com/736x/93/29/1e/93291e3f736f05f2f5722ecbcb7ca428.jpg" alt="WeChat QR" class="max-w-[250px] w-full h-auto rounded-xl object-contain"></div>
     <button onclick="document.getElementById('wechatModal').classList.add('hidden')" class="w-full bg-slate-800 dark:bg-slate-700 text-white font-bold py-3 rounded-xl hover:bg-slate-900 dark:hover:bg-slate-600 transition">ĐÓNG BẢNG NÀY</button>
   </div>
 </div>
@@ -140,7 +140,7 @@ html.dark .neon-animated-card {
 </nav>
 <div class="h-[120px] md:h-[80px]"></div>
 <div id="mobileNavWrapper" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[60]">
-  <div class="md:hidden bg-white/95 dark:bg-slate-800/95 backdrop-blur-md shadow-lg rounded-full px-3 py-1.5 flex gap-2 border border-slate-200 dark:border-slate-700">
+  <div class="md:hidden bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md shadow-lg rounded-full px-3 py-1.5 flex gap-2 border border-slate-200 dark:border-white/10">
     <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home mobile-tab-btn active flex items-center justify-center text-slate-500 dark:text-slate-400 w-10 h-10 rounded-full transition"><i class="fas fa-tv text-lg"></i></button>
     <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store mobile-tab-btn flex items-center justify-center text-slate-500 dark:text-slate-400 w-10 h-10 rounded-full transition"><i class="fas fa-shopping-cart text-lg"></i></button>
     <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide mobile-tab-btn flex items-center justify-center text-slate-500 dark:text-slate-400 w-10 h-10 rounded-full transition"><i class="fas fa-book text-lg"></i></button>
@@ -256,7 +256,7 @@ html.dark .neon-animated-card {
               </div>
             </div>
           </div>
-          <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 md:p-5 mb-5 shadow-sm relative overflow-hidden">
+          <div class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 rounded-2xl p-4 md:p-5 mb-5 shadow-sm relative overflow-hidden">
             <div id="upgradeSuccessBadge" class="hidden absolute top-0 right-0 bg-red-600 dark:bg-red-500 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md z-10" data-i18n="badge_upgrade_success">🎉 NÂNG GÓI THÀNH CÔNG</div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
               <div class="flex flex-col gap-2.5">
@@ -297,7 +297,7 @@ html.dark .neon-animated-card {
       <div id="packagesContainerPortal" class="grid md:grid-cols-3 gap-4 md:gap-6 mb-10 w-full"></div>
     </div>
     <div id="p-guide" class="portal-tab-content w-full">
-      <div class="bg-white dark:bg-slate-800 p-4 md:p-8 rounded-3xl mb-8 border border-slate-200 dark:border-slate-700 shadow-sm w-full">
+      <div class="bg-white dark:bg-[#0a0a0a] p-4 md:p-8 rounded-3xl mb-8 border border-slate-200 dark:border-white/10 shadow-sm w-full">
         <h2 class="text-xl font-extrabold text-slate-800 dark:text-slate-200 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4"><i class="fas fa-book-open text-indigo-500 mr-2"></i>Hướng dẫn Cài đặt</h2>
         <div id="guideTabs" class="flex flex-wrap gap-2 mb-6 justify-center"></div>
         <div id="guideContent" class="hidden overflow-x-auto w-full"><div id="guideArtPicker" class="hidden flex-wrap gap-2 mb-4"></div><div id="guideText" class="text-sm text-slate-800 dark:text-slate-300 leading-relaxed font-medium"></div></div>
