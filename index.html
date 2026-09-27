@@ -863,7 +863,7 @@ function switchPortalTab(tabId,fromUpgrade=false){
  $(tabId).classList.add('active');
  document.querySelectorAll('.desktop-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','bg-indigo-600','text-white');el.classList.remove('text-slate-600','dark:text-slate-300','hover:bg-slate-100','dark:hover:bg-slate-800');});
  document.querySelectorAll('.mobile-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','text-indigo-600','bg-[#e0e7ff]','dark:text-[#818cf8]','dark:bg-[#312e81]');el.classList.remove('text-slate-500','dark:text-slate-400');});
- if(tabId==='p-guide'&&!$('guideText').innerHTML)showGuide(curGuide);}
+ if(tabId==='p-guide')showGuide((guideTabList()[0]||{}).id);}
 
 function logout(){
  localStorage.removeItem(SESSION_KEY);history.replaceState(null,'',location.pathname);
