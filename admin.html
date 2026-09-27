@@ -497,7 +497,7 @@ textarea.autog{resize:none;overflow:hidden;}
    <div class="flex items-center gap-1 flex-wrap justify-end max-w-[60%]" id="upgChecks"></div></div>
   <div class="grid grid-cols-2 gap-2 mb-2">
    <div>
-    <label class="block font-bold text-[10px] text-slate-600 mb-0.5">Mã đơn (nhập hoặc tạo ngẫu nhiên)</label>
+    <label class="block font-bold text-[10px] text-slate-600 mb-0.5">Mã đơn</label>
     <div class="flex gap-1.5">
      <input id="mOId" type="text" maxlength="14" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" class="w-full p-2 text-xs border rounded-lg bg-slate-50 font-mono font-bold outline-none focus:border-indigo-500">
      <button type="button" onclick="document.getElementById('mOId').value=genId()" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold px-3 rounded-lg text-xs transition shadow-sm shrink-0" title="Tạo mã ngẫu nhiên">
