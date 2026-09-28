@@ -776,7 +776,7 @@ function renderGuideCategories() {
     
     html += `<div class="mb-8 last:mb-0">
       <h3 class="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-        ${tab.img ? `<img src="${esc(safeUrl(tab.img))}" class="w-5 h-5 rounded object-contain">` : `<i class="${esc(tab.ic \vert{}\vert{} 'fas fa-book')}${esc(tab.col || 'text-indigo-500')}"></i>`}
+        ${tab.img ? `<img src="${esc(safeUrl(tab.img))}" class="w-5 h-5 rounded object-contain">` : `<i class="${esc(tab.ic || 'fas fa-book')} ${esc(tab.col || 'text-indigo-500')}"></i>`}
         ${esc(tab.name)}
       </h3>
       <div class="flex flex-col gap-3">
