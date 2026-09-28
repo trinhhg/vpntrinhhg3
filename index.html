@@ -298,10 +298,20 @@ html.dark .neon-animated-card {
       <div id="packagesContainerPortal" class="grid md:grid-cols-3 gap-4 md:gap-6 mb-10 w-full"></div>
     </div>
     <div id="p-guide" class="portal-tab-content w-full">
-      <div class="bg-white dark:bg-[#0a0a0a] p-4 md:p-8 rounded-3xl mb-8 border border-slate-200 dark:border-white/10 shadow-sm w-full">
-        <h2 class="text-xl font-extrabold text-slate-800 dark:text-slate-200 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4"><i class="fas fa-book-open text-indigo-500 mr-2"></i>Hướng dẫn Cài đặt</h2>
-        <div id="guideTabs" class="flex flex-wrap gap-2 mb-6 justify-center"></div>
-        <div id="guideContent" class="hidden overflow-x-auto w-full"><div id="guideArtPicker" class="hidden flex-wrap gap-2 mb-4"></div><div id="guideText" class="text-sm text-slate-800 dark:text-slate-300 leading-relaxed font-medium"></div></div>
+      <div class="bg-white dark:bg-[#0a0a0a] p-4 md:p-8 rounded-3xl mb-8 border border-slate-200 dark:border-white/10 shadow-sm w-full relative overflow-hidden">
+        <div id="guideCategoryList" class="w-full">
+          <h2 class="text-xl font-extrabold text-slate-800 dark:text-slate-200 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4"><i class="fas fa-book-open text-indigo-500 mr-2"></i>Hướng dẫn Cài đặt</h2>
+          <div id="guideCategoriesContainer" class="space-y-8"></div>
+        </div>
+        <div id="guideDetailView" class="hidden w-full relative">
+          <button onclick="closeGuideArticle()" class="mb-4 text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-2 hover:opacity-80 transition text-sm"><i class="fas fa-arrow-left"></i> Quay lại danh sách</button>
+          <div id="guideDetailWatermark" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] dark:opacity-5 overflow-hidden z-0"><span class="text-6xl md:text-9xl font-black text-slate-900 dark:text-white transform -rotate-45 break-words text-center leading-none" id="guideDetailWatermarkText"></span></div>
+          <div class="relative z-10">
+            <h2 id="guideDetailTitle" class="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-slate-200 mb-2"></h2>
+            <div id="guideDetailMeta" class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4"></div>
+            <div id="guideText" class="text-sm text-slate-800 dark:text-slate-300 leading-relaxed font-medium"></div>
+          </div>
+        </div>
       </div>
       <h3 class="text-xl font-extrabold text-center mb-6 text-slate-800 dark:text-slate-200" data-i18n="faq_title">Câu hỏi thường gặp (FAQ)</h3>
       <div id="faqPortalContainer" class="space-y-3"></div>
