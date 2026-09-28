@@ -153,7 +153,7 @@ html.dark .neon-animated-card {
       <div class="bg-white dark:bg-[#0a0a0a] p-4 md:p-8 rounded-3xl mb-8 shadow-sm border border-slate-200 dark:border-white/10 w-full overflow-hidden">
         
         <!-- TRẠNG THÁI 1: PENDING -->
-        <div id="portalContentPending" class="hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800 border border-indigo-200 dark:border-slate-700 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-sm">
+        <div id="portalContentPending" class="hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-black dark:via-black dark:to-black border border-indigo-200 dark:border-indigo-500 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-sm dark:shadow-[0_0_15px_rgba(99,102,241,0.2)]">
           
           <div id="pendingActiveState" class="w-full">
             <div class="loader-ring"><i class="fas fa-shield-halved"></i></div>
@@ -181,7 +181,7 @@ html.dark .neon-animated-card {
               <h4 id="pendingTimeoutTitle" class="font-extrabold text-orange-700 dark:text-orange-400 text-sm md:text-lg uppercase">Chưa nhận được thanh toán</h4>
               <p id="pendingTimeoutDesc" class="text-orange-600 dark:text-orange-300 text-sm md:text-base font-bold mt-1 mb-4">Đã quá thời gian tự động duyệt. Bạn đã chuyển khoản chưa?</p>
               
-              <div class="w-full max-w-md mx-auto bg-white/80 dark:bg-slate-900/50 border border-orange-200 dark:border-orange-900/50 rounded-2xl px-4 py-3 shadow-sm text-left">
+              <div class="w-full max-w-md mx-auto bg-white/80 dark:bg-black border border-orange-200 dark:border-orange-500/50 rounded-2xl px-4 py-3 shadow-sm text-left">
                 <div class="flex items-start gap-3">
                   <i class="fas fa-circle-info text-orange-400 mt-0.5"></i>
                   <p class="text-orange-800 dark:text-orange-300 text-xs md:text-sm font-medium">Nếu bạn đã chuyển khoản, hệ thống có thể đang xử lý chậm. Vui lòng gửi biên lai cho Admin để được duyệt tay nhanh chóng.</p>
@@ -199,7 +199,7 @@ html.dark .neon-animated-card {
         </div>
 
         <!-- TRẠNG THÁI 2: ĐỢI ADMIN DUYỆT -->
-        <div id="portalContentManual" class="hidden bg-gradient-to-br from-amber-50 via-white to-orange-50 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800 border border-amber-200 dark:border-slate-700 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-sm">
+        <div id="portalContentManual" class="hidden bg-gradient-to-br from-amber-50 via-white to-orange-50 dark:from-black dark:via-black dark:to-black border border-amber-200 dark:border-amber-500/80 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-sm dark:shadow-[0_0_15px_rgba(245,158,11,0.2)]">
           <div class="loader-ring amber"><i class="fas fa-hourglass-half"></i></div>
           <h4 class="font-extrabold text-amber-800 dark:text-amber-400 text-sm md:text-lg uppercase" data-i18n="pending_manual_title">Đơn hàng đang chờ Admin duyệt</h4>
           <p class="text-amber-700 dark:text-amber-300 text-xs md:text-sm font-bold mt-1 mb-4 max-w-md" data-i18n="pending_manual_desc">Vui lòng nhắn tin cho Admin cùng với biên lai để được kích hoạt sớm nhất.</p>
@@ -215,7 +215,7 @@ html.dark .neon-animated-card {
         </div>
 
         <!-- TRẠNG THÁI 3: TỪ CHỐI -->
-        <div id="portalContentFailed" class="hidden relative overflow-hidden bg-gradient-to-br from-red-100 via-rose-50 to-red-100 dark:from-red-900/20 dark:via-rose-900/10 dark:to-red-900/20 border border-red-200 dark:border-red-900/50 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-lg">
+        <div id="portalContentFailed" class="hidden relative overflow-hidden bg-gradient-to-br from-red-100 via-rose-50 to-red-100 dark:from-red-900/60 dark:via-red-800/40 dark:to-rose-900/60 border border-red-200 dark:border-red-500 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-lg dark:shadow-[0_0_20px_rgba(239,68,68,0.3)]">
           <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-red-500 to-rose-500"></div>
           
           <div class="relative w-20 h-20 flex items-center justify-center rounded-2xl bg-white dark:bg-slate-800 border border-red-200 dark:border-red-900/50 shadow-md mb-5 mx-auto transform rotate-3 hover:rotate-0 transition-transform duration-300">
@@ -318,11 +318,11 @@ html.dark .neon-animated-card {
         <div class="absolute -right-4 -bottom-4 text-indigo-400/40 text-6xl md:text-8xl group-hover:rotate-12 transition-transform duration-500"><i class="fas fa-globe-asia"></i></div>
         <div class="relative z-10"><h3 class="text-lg md:text-2xl font-black mb-1.5 md:mb-2" data-i18n="feat_1"></h3><p class="text-indigo-100 text-[11px] md:text-sm font-medium opacity-95 leading-relaxed" data-i18n="feat_1_desc"></p></div>
       </div>
-      <div class="col-span-1 w-full bg-white dark:bg-[#1e293b] p-5 md:p-6 rounded-[1.5rem] border border-slate-100 dark:border-transparent shadow-sm flex flex-col justify-center hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden group">
+      <div class="col-span-1 w-full bg-white dark:bg-black p-5 md:p-6 rounded-[1.5rem] border border-slate-100 dark:border-amber-500/30 shadow-sm flex flex-col justify-center hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden group">
         <div class="absolute -right-4 -bottom-4 text-amber-100 dark:text-amber-500/10 text-6xl md:text-8xl group-hover:-rotate-12 transition-transform duration-500"><i class="fas fa-bolt"></i></div>
         <div class="relative z-10"><div class="w-10 h-10 md:w-12 md:h-12 bg-amber-50 dark:bg-[#334155] rounded-2xl flex items-center justify-center mb-2 md:mb-3"><i class="fas fa-bolt text-xl md:text-2xl text-amber-500 dark:text-amber-400"></i></div><h4 class="font-bold text-slate-800 dark:text-white text-lg md:text-2xl mb-1.5 md:mb-2" data-i18n="feat_2"></h4><p class="text-[11px] md:text-sm text-slate-500 dark:text-slate-300 font-medium leading-relaxed" data-i18n="feat_2_desc"></p></div>
       </div>
-      <div class="col-span-1 w-full bg-white dark:bg-[#0f172a] p-5 md:p-6 rounded-[1.5rem] border border-slate-100 dark:border-transparent shadow-sm flex flex-col justify-center hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden group">
+      <div class="col-span-1 w-full bg-white dark:bg-black p-5 md:p-6 rounded-[1.5rem] border border-slate-100 dark:border-emerald-500/30 shadow-sm flex flex-col justify-center hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden group">
         <div class="absolute -right-4 -bottom-4 text-emerald-50 dark:text-emerald-500/10 text-6xl md:text-8xl group-hover:rotate-12 transition-transform duration-500"><i class="fas fa-user-secret"></i></div>
         <div class="relative z-10"><div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 dark:bg-[#1e293b] rounded-2xl flex items-center justify-center mb-2 md:mb-3"><i class="fas fa-user-secret text-xl md:text-2xl text-emerald-500 dark:text-emerald-400"></i></div><h4 class="font-bold text-slate-800 dark:text-white text-lg md:text-2xl mb-1.5 md:mb-2" data-i18n="feat_3"></h4><p class="text-[11px] md:text-sm text-slate-500 dark:text-slate-300 font-medium leading-relaxed" data-i18n="feat_3_desc"></p></div>
       </div>
