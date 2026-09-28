@@ -305,7 +305,7 @@ html.dark .neon-animated-card {
         </div>
         <div id="guideDetailView" class="hidden w-full relative">
           <button onclick="closeGuideArticle()" class="mb-4 text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-2 hover:opacity-80 transition text-sm"><i class="fas fa-arrow-left"></i> Quay lại danh sách</button>
-          <div id="guideDetailWatermark" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] dark:opacity-5 overflow-hidden z-0"><span class="text-6xl md:text-9xl font-black text-slate-900 dark:text-white transform -rotate-45 break-words text-center leading-none" id="guideDetailWatermarkText"></span></div>
+          <div id="guideDetailWatermark" class="absolute inset-0 overflow-hidden pointer-events-none z-0"></div>
           <div class="relative z-10">
             <h2 id="guideDetailTitle" class="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-slate-200 mb-2"></h2>
             <div id="guideDetailMeta" class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4"></div>
@@ -812,10 +812,16 @@ function openGuideArticle(tabId, artId) {
   $('guideDetailMeta').innerText = `Được viết bởi: ${art.author || "Admin"} · Cập nhật lần cuối: ${timeStr}`;
   
   if (art.watermark && art.watermark.trim()) {
-    $('guideDetailWatermark').classList.remove('hidden');$('guideDetailWatermarkText').innerText = art.watermark;
-  } else {
-    $('guideDetailWatermark').classList.add('hidden');$('guideDetailWatermarkText').innerText = '';
-  }
+   $('guideDetailWatermark').classList.remove('hidden');
+   const wmText = esc(art.watermark.trim());
+   let wmHtml = '';
+   for(let i=0; i<40; i++) {
+     wmHtml += `<span class="text-xl md:text-3xl font-black text-slate-900 dark:text-white transform -rotate-45 opacity-[0.04] dark:opacity-[0.05] whitespace-nowrap m-6 md:m-10 inline-block select-none">${wmText}</span>`;
+   }
+   $('guideDetailWatermark').innerHTML = `<div class="flex flex-wrap justify-center items-center w-[150%] h-[150%] -translate-x-[15%] -translate-y-[15%] pointer-events-none">${wmHtml}</div>`;
+ } else {
+   $('guideDetailWatermark').classList.add('hidden');$('guideDetailWatermark').innerHTML = '';
+ }
   
   $('guideText').innerHTML = art.blocks && art.blocks.length ? renderBlocks(art.blocks, `${tabId}-${curGuideArt}`) : i18n[lang].guide_empty;
   $('view-portal').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -930,23 +936,34 @@ function selectDuration(m){
 function selectPayMethod(method){
  $('payMethod').value=method;
  document.querySelectorAll('.pay-btn').forEach(b=>{
-  b.classList.remove('active','bg-indigo-50','dark:bg-indigo-900/40','dark:bg-indigo-500/30','border-indigo-500','dark:border-indigo-400','text-indigo-700','dark:text-indigo-400','dark:text-indigo-300');
+  b.classList.remove('active','bg-indigo-50','dark:bg-indigo-500/30','border-indigo-500','dark:border-indigo-400','text-indigo-700','dark:text-indigo-400','dark:text-indigo-300');
   b.classList.add('bg-white','dark:bg-slate-800','border-slate-200','dark:border-slate-700','text-slate-600','dark:text-slate-300');
  });
  const ab=$('pay-btn-'+method);
  ab.classList.remove('bg-white','dark:bg-slate-800','border-slate-200','dark:border-slate-700','text-slate-600','dark:text-slate-300');
  ab.classList.add('active','bg-indigo-50','dark:bg-indigo-500/30','border-indigo-500','dark:border-indigo-400','text-indigo-700','dark:text-indigo-300');
- if(currentOrderId||(isUpgradeMode&&upgradeConfirmed))renderPaymentBox();}
+ calculateTotal();}
 
 function calculateTotal(){
  if(!currentPackage)return;currentMultiplier=currentDurationMode==='custom'?Math.max(1,Math.min(120,parseInt($('customDurInput').value)||1)):currentDurationMode;
+ const m=$('payMethod').value;
  if(isUpgradeMode){
-  currentTotalVnd=Math.max(0,(currentPackage.vnd-baseOrderPriceVnd)*currentMultiplier);currentTotalCny=parseFloat(((currentPackage.cny-baseOrderPriceCny)*currentMultiplier).toFixed(2));currentTotalUsd=parseFloat(((currentPackage.usd-baseOrderPriceUsd)*currentMultiplier).toFixed(2));
-  $('upgradePriceNote').innerHTML=`Đơn giá nâng cấp: <b>${(currentPackage.vnd-baseOrderPriceVnd).toLocaleString('en-US')}VND / Tháng</b>`;
-  $('priceCalculation').innerText=`Thanh toán chênh lệch (${currentMultiplier} tháng): ${currentTotalVnd.toLocaleString('en-US')}VND`;
+  currentTotalVnd=Math.max(0,(currentPackage.vnd-baseOrderPriceVnd)*currentMultiplier);currentTotalCny=parseFloat((Math.max(0,currentPackage.cny-baseOrderPriceCny)*currentMultiplier).toFixed(2));currentTotalUsd=parseFloat((Math.max(0,currentPackage.usd-baseOrderPriceUsd)*currentMultiplier).toFixed(2));
+  const dpVnd=currentPackage.vnd-baseOrderPriceVnd,dpCny=parseFloat((Math.max(0,currentPackage.cny-baseOrderPriceCny)).toFixed(2)),dpUsd=parseFloat((Math.max(0,currentPackage.usd-baseOrderPriceUsd)).toFixed(2));
+  let noteStr='', calcStr='';
+  if(m==='bank'){ noteStr=`${dpVnd.toLocaleString('en-US')}VND`; calcStr=`${currentTotalVnd.toLocaleString('en-US')}VND`; }
+  else if(m==='alipay'||m==='wechat'||m==='weixin'){ noteStr=`¥${dpCny}`; calcStr=`¥${currentTotalCny}`; }
+  else { noteStr=`$${dpUsd}`; calcStr=`$${currentTotalUsd}`; }
+  $('upgradePriceNote').innerHTML=`Đơn giá nâng cấp: <b>${noteStr} / Tháng</b>`;
+  $('priceCalculation').innerText=`Thanh toán chênh lệch (${currentMultiplier} tháng): ${calcStr}`;
  }else{
   currentTotalVnd=currentPackage.vnd*currentMultiplier;currentTotalCny=currentPackage.cny*currentMultiplier;currentTotalUsd=parseFloat((currentPackage.usd*currentMultiplier).toFixed(2));
-  $('priceCalculation').innerText=lang==='vi'?`${currentPackage.vnd.toLocaleString('en-US')}VND × ${currentMultiplier} = ${currentTotalVnd.toLocaleString('en-US')}VND`:lang==='en'?`$${currentPackage.usd} × ${currentMultiplier} = $${currentTotalUsd}`:`¥${currentPackage.cny} × ${currentMultiplier} = ¥${currentTotalCny}`;}
+  let calcStr='';
+  if(m==='bank'){ calcStr=`${currentPackage.vnd.toLocaleString('en-US')}VND × ${currentMultiplier} = ${currentTotalVnd.toLocaleString('en-US')}VND`; }
+  else if(m==='alipay'||m==='wechat'||m==='weixin'){ calcStr=`¥${currentPackage.cny} × ${currentMultiplier} = ¥${currentTotalCny}`; }
+  else { calcStr=`$${currentPackage.usd} × ${currentMultiplier} = $${currentTotalUsd}`; }
+  $('priceCalculation').innerText=calcStr;
+ }
  if(currentOrderId||(isUpgradeMode&&upgradeConfirmed))renderPaymentBox();}
 
 function toggleZalo(){const z=$('cusZalo');z.classList.toggle('hidden');z.required=!z.classList.contains('hidden')&&!(isUpgradeMode||isRenewMode);}
@@ -956,21 +973,21 @@ async function copyToClipboard(id){const e=$(id);if(e.dataset.locked)return;e.se
 
 function renderPaymentBox(){
  const col=$('checkoutRightCol'),m=$('payMethod').value,btn=$('btnConfirm'),l=i18n[lang];
- const fp=lang==='vi'?`${currentTotalVnd.toLocaleString('en-US')}VND`:lang==='en'?`$${currentTotalUsd}`:`¥${currentTotalCny}`;
+ const fp=m==='bank'?`${currentTotalVnd.toLocaleString('en-US')}VND`:m==='alipay'||m==='wechat'||m==='weixin'?`¥${currentTotalCny}`:`$${currentTotalUsd}`;
  btn.innerHTML=l.btn_create_order;let guideHtml=l.guide_desc+(isUpgradeMode?"<br><br>"+l.guide_desc_upgrade:"");
  if(!currentOrderId&&!isUpgradeMode){col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 dark:text-indigo-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4><p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${guideHtml}</p></div>`;return;}
  if(isUpgradeMode&&!upgradeConfirmed){col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-purple-700 dark:text-purple-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-arrow-up mr-2"></i>${l.upgrade_confirm_title}</h4><p class="text-sm text-slate-600 dark:text-slate-300 mb-4">${l.upgrade_confirm_desc}</p><h4 class="font-extrabold text-base mb-2 text-indigo-700 dark:text-indigo-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4><p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${guideHtml}</p></div>`;return;}
  const dispId=isUpgradeMode?oCache.id:currentOrderId;
- const paid=`<button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full mt-4 bg-[#10b981] hover:bg-[#059669] dark:bg-[#059669] dark:hover:bg-[#047857] text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center btn-heartbeat"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button>`;
+ const paid=`<button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center btn-heartbeat"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button>`;
  const memo=(cls,extra)=>`<div class="highlight-copy py-4 px-3 rounded-xl text-center cursor-pointer" onclick="copyText('${dispId}')"><span class="block text-[11px] font-black mb-2 uppercase text-[#854d0e] dark:text-indigo-200">${l.copy_memo}</span><strong class="block bg-white dark:bg-black font-mono ${cls} py-3 rounded-xl shadow-inner border-2 border-yellow-400 dark:border-indigo-500 text-[#854d0e] dark:text-indigo-100 flex items-center justify-center gap-2">${dispId} <i class="far fa-copy opacity-50"></i></strong><p class="text-[10px] mt-2 italic font-bold opacity-80 ${extra} text-[#854d0e] dark:text-indigo-300">${extra?l.input_manual:l.click_copy}</p></div>${paid}`;
  if(m==='bank'){
-  col.innerHTML=`<div class="text-center w-full"><div class="bg-indigo-50 dark:bg-white p-2 rounded-xl inline-block mb-4 border border-transparent dark:border-white/10 shadow-sm"><img src="https://img.vietqr.io/image/mbbank-0917678211-compact.png?amount=${currentTotalVnd}&addInfo=${dispId}&accountName=TRINH THI XUAN HUONG" class="w-40 h-40 md:w-56 md:h-56 rounded-xl mx-auto object-contain mix-blend-multiply dark:mix-blend-normal"></div>
+  col.innerHTML=`<div class="text-center w-full"><div class="bg-indigo-50 dark:bg-white p-2 rounded-xl inline-block mb-4 border border-transparent dark:border-indigo-500 shadow-sm dark:shadow-[0_0_15px_rgba(99,102,241,0.5)]"><img src="https://img.vietqr.io/image/mbbank-0917678211-compact.png?amount=${currentTotalVnd}&addInfo=${dispId}&accountName=TRINH THI XUAN HUONG" class="w-40 h-40 md:w-56 md:h-56 rounded-xl mx-auto object-contain mix-blend-multiply dark:mix-blend-normal"></div>
   <div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_name}</span><strong class="dark:text-white">MB BANK</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_num}</span><strong class="text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.6)] cursor-pointer" onclick="copyText('0917678211')">0917678211 <i class="far fa-copy ml-1"></i></strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div></div>${memo('text-2xl md:text-3xl','')}</div>`;
  }
  else{
   const ali=m==='alipay',img=ali?'https://i.pinimg.com/736x/44/57/9d/44579dfb5241614ddc897a21ce34e233.jpg':'https://i.pinimg.com/736x/28/b2/95/28b29577c6229ec943e8e13afe241db3.jpg';
-  col.innerHTML=`<div class="text-center w-full"><h4 class="font-extrabold text-lg mb-4 ${ali?'text-blue-600':'text-green-600'}">${ali?'Alipay <i class="fas fa-qrcode text-sm ml-1"></i>':'Weixin <i class="fas fa-qrcode text-sm ml-1"></i>'}</h4><div class="bg-slate-50 dark:bg-white p-2 rounded-xl inline-block mb-4 border border-slate-100 dark:border-white/10 shadow-sm"><img src="${img}" class="w-48 max-w-full h-auto mx-auto rounded-lg object-contain mix-blend-multiply dark:mix-blend-normal"></div>
-  <div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">¥${currentTotalCny}</strong></div></div>${memo('text-2xl','uppercase')}</div>`;
+  col.innerHTML=`<div class="text-center w-full"><h4 class="font-extrabold text-lg mb-4 ${ali?'text-blue-600':'text-green-600'}">${ali?'Alipay <i class="fas fa-qrcode text-sm ml-1"></i>':'Weixin <i class="fas fa-qrcode text-sm ml-1"></i>'}</h4><div class="bg-slate-50 dark:bg-white p-2 rounded-xl inline-block mb-4 border border-slate-100 dark:border-transparent shadow-sm"><img src="${img}" class="w-48 max-w-full h-auto mx-auto rounded-lg object-contain mix-blend-multiply dark:mix-blend-normal"></div>
+  <div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div></div>${memo('text-2xl','uppercase')}</div>`;
  }
 }
 function submitOrder(e){
