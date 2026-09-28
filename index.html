@@ -437,27 +437,191 @@ const i18n={
   checking_upgrade:"ĐANG KIỂM TRA GIAO DỊCH NÂNG GÓI...",checking_tx:"ĐANG KIỂM TRA GIAO DỊCH...",admin_rejected:"Admin từ chối giao dịch",unknown:"Chưa xác định",active:"Đã kích hoạt",web3_maintenance:"Link dự phòng sẽ được Admin mở khi web bảo trì",badge_upgrade_success:"🎉 NÂNG GÓI THÀNH CÔNG",select_renew_pkg:"Vui lòng chọn gói để gia hạn",dev_label_suffix:"Thiết bị",dev_custom:"Tùy chọn",link_generating:"Đang tạo link, vui lòng chờ...",unavailable:"Không khả dụng",upg_none:"Không",upg_pending:"Đang xác minh nâng gói",upg_failed:"Từ chối nâng gói",upg_ok:"Nâng gói thành công",req_sent_btn:"Đã gửi yêu cầu"}
 };
 
-i18n.en = i18n.vi;
-i18n.zh = i18n.vi;
-const I18N_CACHE_KEY = 'vpn_i18n_cache_v1';
-async function loadI18nRemote(){
- try{
-  const r = await fetch(WORKER_URL+'/api/public/translations?_t='+Date.now(),{cache:'no-store'});
-  if(r.ok){
-   const d = await r.json();
-   if(d && d.ok){
-    if(d.en && Object.keys(d.en).length) i18n.en = Object.assign({}, i18n.vi, d.en);
-    if(d.zh && Object.keys(d.zh).length) i18n.zh = Object.assign({}, i18n.vi, d.zh);
-    try{ localStorage.setItem(I18N_CACHE_KEY, JSON.stringify({en:i18n.en, zh:i18n.zh})); }catch(e){}
-    return;
-   }
+i18n.en=i18n.vi;i18n.zh=i18n.vi; // JS luôn sinh chữ Việt, engine bên dưới tự dịch DOM
+/* ===== I18N CORE v1 — KHÔNG SỬA: phải GIỐNG HỆT trong index.html và translator.html ===== */
+const VI_RE=/[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/;
+const hasVi=s=>VI_RE.test(String(s).toLowerCase());
+const normWs=s=>String(s).replace(/\s+/g,' ').trim();
+const h53=str=>{let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0,c;i<str.length;i++){c=str.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677);}h1=Math.imul(h1^(h1>>>16),2246822507);h1^=Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507);h2^=Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0);};
+const keyOf=s=>'t'+h53(s).toString(36);
+const I_ATTRS=['placeholder','title','alt','aria-label'];
+const I_SKIP=new Set(['SCRIPT','STYLE','NOSCRIPT','TEXTAREA','SELECT','OPTION','SVG','CODE','PRE','HEAD','TEMPLATE','IFRAME']);
+const I_INLINE=new Set(['A','B','I','U','S','EM','STRONG','SPAN','SMALL','MARK','SUB','SUP','BR','FONT','ABBR','IMG']);
+const I_VOID=new Set(['BR','IMG']);
+const tg=el=>el.tagName.toUpperCase();
+const skipEl=el=>I_SKIP.has(tg(el))||el.getAttribute('translate')==='no';
+const escHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const isInlineOnly=el=>Array.prototype.every.call(el.children,c=>!skipEl(c)&&I_INLINE.has(tg(c))&&isInlineOnly(c));
+const openTag=c=>{const s=c.cloneNode(false).outerHTML;return I_VOID.has(tg(c))?s:s.slice(0,s.length-tg(c).length-3);};
+/* Biến nội dung 1 phần tử "chỉ chứa chữ + thẻ inline" thành chuỗi dịch được: thẻ -> [[1]] [[2]]..., bỏ thẻ rỗng/bao ngoài ở 2 đầu */
+function protectEl(el){
+  const parts=[],raw=[],kind=[],pair={},openOf={};let n=0;
+  (function rec(node){
+    for(const c of node.childNodes){
+     if(c.nodeType===3)parts.push(c.nodeValue);
+      else if(c.nodeType===1){
+        const o=++n;raw[o]=openTag(c);parts.push({id:o});
+       if(I_VOID.has(tg(c)))kind[o]='v';
+       else{kind[o]='o';rec(c);const k=++n;raw[k]='</'+c.tagName.toLowerCase()+'>';kind[k]='c';pair[o]=k;openOf[k]=o;parts.push({id:k});}
+      }
+    }
+  })(el);
+  const lead=[],trail=[],isWs=p=>typeof p==='string'&&!p.trim();
+  for(let ch=true;ch;){
+    ch=false;
+   while(parts.length&&isWs(parts[0]))parts.shift();
+   while(parts.length&&isWs(parts[parts.length-1]))parts.pop();
+    const a=parts[0],z=parts[parts.length-1];
+   if(a&&typeof a==='object'){
+     if(kind[a.id]==='v'){lead.push(raw[a.id]);parts.shift();ch=true;continue;}
+      const b=parts[1];
+     if(kind[a.id]==='o'&&b&&typeof b==='object'&&b.id===pair[a.id]){lead.push(raw[a.id],raw[b.id]);parts.splice(0,2);ch=true;continue;}
+     if(kind[a.id]==='o'&&parts.length>1&&z&&typeof z==='object'&&z.id===pair[a.id]){lead.push(raw[a.id]);trail.unshift(raw[z.id]);parts.shift();parts.pop();ch=true;continue;}
+    }
+   if(z&&typeof z==='object'){
+     if(kind[z.id]==='v'){trail.unshift(raw[z.id]);parts.pop();ch=true;continue;}
+      const b=parts[parts.length-2];
+     if(kind[z.id]==='c'&&b&&typeof b==='object'&&b.id===openOf[z.id]){trail.unshift(raw[b.id],raw[z.id]);parts.splice(parts.length-2,2);ch=true;continue;}
+    }
   }
- }catch(e){}
- try{
-  const c = JSON.parse(localStorage.getItem(I18N_CACHE_KEY)||'null');
-  if(c){ if(c.en) i18n.en=Object.assign({},i18n.vi,c.en); if(c.zh) i18n.zh=Object.assign({},i18n.vi,c.zh); }
- }catch(e){}
+  if(typeof parts[0]==='string'&&/^\s/.test(parts[0]))lead.push(' ');
+  if(typeof parts[parts.length-1]==='string'&&/\s$/.test(parts[parts.length-1]))trail.unshift(' ');
+  const tags=[];let text='';
+  for(const p of parts){if(typeof p==='string')text+=p;else{tags.push(raw[p.id]);text+='[['+tags.length+']]';}}
+ return{text:normWs(text),tags,lead:lead.join(''),trail:trail.join('')};
 }
+const restoreHtml=(tr,tags)=>String(tr).split(/(\[\[\d+\]\])/).map(p=>{const m=p.match(/^\[\[(\d+)\]\]$/);return m?(tags[+m[1]-1]||''):escHtml(p);}).join('');
+const mk=s=>(String(s).match(/\[\[\d+\]\]/g)||[]).sort().join(',');
+/* ===== HẾT I18N CORE ===== */
+/* ===== I18N RUNTIME: đọc bản dịch (vi+en+zh) từ KV qua Worker, dịch DOM tự động, không cần sửa từng chữ ===== */
+let TR={vi:{},en:{},zh:{}},TRPAT={};
+const TR_KEY='vpn_tr_cache_v1',TITLE_VI=document.title,REG=new Set();
+function setTR(d){if(!d||!d.vi)return false;TR={vi:d.vi||{},en:d.en||{},zh:d.zh||{},version:d.version||''};TRPAT={};return true;}
+function fetchTR(){
+  return fetch(WORKER_URL+'/api/public/translations?_t='+Date.now(),{cache:'no-store'})
+   .then(r=>r.ok?r.json():null)
+    .then(d=>{
+     if(d&&d.vi&&Object.keys(d.vi).length){
+        const ch=(TR.version||'')!==(d.version||'')||!Object.keys(TR.en).length;
+       setTR(d);try{localStorage.setItem(TR_KEY,JSON.stringify(d));}catch(e){}
+        return ch;}
+      return false;})
+   .catch(()=>false);
+}
+/* Tải NGAY khi trang mở: có cache localStorage thì dùng liền (nhanh), đồng thời hỏi Worker bản mới nhất */
+const TR_READY=(async()=>{
+  let cached=false;
+ try{cached=setTR(JSON.parse(localStorage.getItem(TR_KEY)||'null'));}catch(e){}
+  const net=fetchTR().then(ch=>{if(ch&&lang!=='vi')applyLang(lang);});
+  if(!cached)await net;
+})();
+function buildPat(l){
+  const a=[];
+  for(const k in TR.vi){
+    const v=TR.vi[k],t=TR[l]&&TR[l][k];
+   if(!t||!/\{\d+\}/.test(v))continue;
+    const idx=[];
+    const re='^'+v.split(/(\{\d+\})/).map(p=>{const m=p.match(/^\{(\d+)\}$/);if(m){idx.push(+m[1]);return'([\\s\\S]*?)';}return p.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}).join('')+'$';
+    a.push({re:new RegExp(re),idx,t});
+  }
+  TRPAT[l]=a;
+}
+function lookup(text){
+  const L=TR[lang];if(!L)return null;
+  const k=keyOf(text);if(L[k])return L[k];
+ if(!TRPAT[lang])buildPat(lang);
+  for(const p of TRPAT[lang]){const m=text.match(p.re);if(m)return p.t.replace(/\{(\d+)\}/g,(_,i)=>{const q=p.idx.indexOf(+i);return q<0?'':(m[q+1]||'');});}
+  return null;
+}
+/* tx('chữ tiếng Việt') -> chữ theo ngôn ngữ hiện tại (dùng cho input.value, alert... nơi DOM không tự dịch được) */
+const tx=s=>{s=String(s==null?'':s);if(lang==='vi')return s;const r=lookup(normWs(s));return(r!=null&&!/\[\[\d+\]\]/.test(r))?r:s;};
+const regHtml=(el,o)=>{el.__io=o;el.__it=el.innerHTML;REG.add(el);};
+const regText=(n,o)=>{n.__io=o;n.__it=n.nodeValue;REG.add(n);};
+const regAttr=(el,a,o)=>{(el.__ia=el.__ia||{})[a]={o,t:el.getAttribute(a)};REG.add(el);};
+function restoreAll(){
+  for(const x of REG){
+    if(x.isConnected){
+     if(x.nodeType===3){if(x.nodeValue===x.__it)x.nodeValue=x.__io;}
+      else{
+       if(x.__io!==undefined&&x.innerHTML===x.__it)x.innerHTML=x.__io;
+       if(x.__ia)for(const a in x.__ia){if(x.getAttribute(a)===x.__ia[a].t)x.setAttribute(a,x.__ia[a].o);}
+      }
+    }
+    delete x.__io;delete x.__it;delete x.__ia;
+  }
+  REG.clear();
+}
+function applyHtml(el){
+  const u=protectEl(el);if(!hasVi(u.text))return false;
+  const tr=lookup(u.text);if(tr==null||mk(tr)!==mk(u.text))return false;
+  const o=el.innerHTML;el.innerHTML=u.lead+restoreHtml(tr,u.tags)+u.trail;regHtml(el,o);return true;
+}
+function applyText(n){
+  const raw=n.nodeValue,t=normWs(raw);if(!t||!hasVi(t))return;
+  const tr=lookup(t);if(tr==null||/\[\[\d+\]\]/.test(tr))return;
+ n.nodeValue=raw.match(/^\s*/)[0]+tr+raw.match(/\s*$/)[0];regText(n,raw);
+}
+function applyAttr(el,a){
+  const v=el.getAttribute(a);if(!v||!hasVi(v))return;
+  const tr=lookup(normWs(v));if(tr==null)return;
+ el.setAttribute(a,tr);regAttr(el,a,v);
+}
+function applyInline(el){
+ if(applyHtml(el))return;
+  for(const c of Array.from(el.childNodes)){
+   if(c.nodeType===3)applyText(c);
+    else if(c.nodeType===1&&!skipEl(c)&&hasVi(c.textContent))applyInline(c);
+  }
+}
+function walkTr(el){
+ if(skipEl(el))return;
+ if(isInlineOnly(el)){if(hasVi(el.textContent))applyInline(el);return;}
+  for(const c of Array.from(el.childNodes)){if(c.nodeType===3)applyText(c);else if(c.nodeType===1)walkTr(c);}
+}
+function translateTree(root){
+ if(!root||root.nodeType!==1||skipEl(root)||root.closest('[translate="no"]'))return;
+  for(const el of [root,...root.querySelectorAll('*')]){
+   if(skipEl(el))continue;
+    for(const a of I_ATTRS)if(el.hasAttribute(a))applyAttr(el,a);
+  }
+  walkTr(root);
+}
+function containerOf(node){
+  let e=node.nodeType===3?node.parentElement:node;
+ while(e&&e!==document.body&&I_INLINE.has(tg(e))&&e.parentElement)e=e.parentElement;
+  return e;
+}
+/* JS render lại nội dung (toast, thẻ gói, link...) -> tự dịch ngay khi đang ở EN/ZH */
+const OBS=new MutationObserver(recs=>{
+ if(lang==='vi')return;
+  const roots=new Set(),attrs=[];
+  for(const r of recs){
+   if(r.type==='attributes'){attrs.push([r.target,r.attributeName]);continue;}
+   if(!r.target.isConnected)continue;
+    const c=containerOf(r.target);if(c)roots.add(c);
+  }
+  for(const [el,a] of attrs)applyAttr(el,a);
+  for(const c of roots)translateTree(c);
+  OBS.takeRecords();
+});
+function applyLang(L){
+  restoreAll();
+ document.documentElement.lang=L==='zh'?'zh-CN':L;
+ document.title=TITLE_VI;
+ if(L!=='vi'){translateTree(document.body);const t=lookup(normWs(TITLE_VI));if(t!=null)document.title=t;}
+  OBS.takeRecords();
+}
+async function applyLangSafe(val){
+  if(val!=='vi'){
+    await TR_READY;
+   if(!Object.keys(TR[val]||{}).length)await fetchTR();
+  }
+ if(val!==lang)return;
+  applyLang(val);
+ if(val!=='vi'&&typeof oCache!=='undefined'&&oCache)updatePortalInfo(oCache);
+}
+OBS.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:I_ATTRS});
+/* ===== HẾT I18N RUNTIME ===== */
 
 const pkgs=[
  {id:'t1',category:['cycle','travel'],vi:{name:'Gói 1 tháng',price:'60,000VND'},en:{name:'1 Month',price:'$2.50'},zh:{name:'1个月',price:'¥15.5'},usd:2.5,vnd:60000,cny:15.5,data:'100GB',dev:1,time:1,tag:{vi:'🔥 BÁN CHẠY',en:'🔥 BEST SELLER',zh:'🔥热销'},tag2:{vi:'✈️ Du lịch',en:'✈️ Travel',zh:'✈️ 旅游'}},
