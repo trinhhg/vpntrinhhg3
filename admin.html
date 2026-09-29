@@ -1501,31 +1501,100 @@ const MAIL_PROV_META={
  brevo:{name:"Brevo",sub:"(Sendinblue) — 300 mail/ngày free",logo:'<img src="https://ps.w.org/mailin/assets/icon-256x256.png" class="w-7 h-7 shrink-0 rounded-lg shadow-sm object-contain bg-white">'},
  sendpulse:{name:"SendPulse",sub:"SMTP theo gói / balance",logo:'<img src="https://s3.amazonaws.com/appforest_uf/f1645282052830x986159287891572600/sendpulse-logo-symbol.png" class="w-7 h-7 shrink-0 rounded-lg shadow-sm object-contain bg-white">'}
 };
-let mailProvQuota={},mailProvCfg={},mailProvErr={};
-function mailProvCard(id){
- const m=MAIL_PROV_META[id],cur=(cmsDb.settings&&cmsDb.settings.mailProvider)||"google",on=cur===id,ready=id==="google"?true:!!mailProvCfg[id],err=mailProvErr[id],q=mailProvQuota[id];
- let body='<div class="text-[10px] text-slate-400">Bấm "Làm mới quota"</div>';
- if(!ready)body='<div class="text-[10px] text-slate-400">Chưa cấu hình biến trên Worker</div>';
- else if(err)body=`<div class="text-[10px] text-red-500">${esc(err)}</div>`;
- else if(id==="google"&&q)body=`<div class="text-[11px] text-slate-600">Còn <b class="text-emerald-600">${q.remaining}</b>/${q.limit} người nhận (24h)</div>`;
- else if(id==="brevo"&&q)body=`<div class="text-[11px] text-slate-600">Credits còn: <b class="text-emerald-600">${q.credits??"—"}</b>${q.creditsType?" ("+esc(q.creditsType)+")":""}</div>`;
-else if(id==="sendpulse"&&q) {
-   if (q.monthTotal !== undefined && q.monthTotal !== null) {
-     // Giao diện cho gói SMTP có quota rõ ràng (ngày/tháng/giờ)
-     body = `<div class="text-[11px] text-slate-600 mb-2 font-bold">${esc(q.tariff)}</div>`
-          + qBar(q.monthTotal - q.monthLeft, q.monthTotal, "Tháng", "email", "")
-          + `<div class="h-2"></div>`
-          + (q.dayTotal ? qBar(q.dayTotal - q.dayLeft, q.dayTotal, "Ngày", "email", "") : "")
-          + `<div class="h-2"></div>`
-          + (q.minTotal ? qBar(q.minTotal - q.minLeft, q.minTotal, "Phút", "email", "") : "");
-   } else {
-     // Fallback cho tài khoản cũ không có quota SMTP
-     body = `<div class="text-[11px] text-slate-600">Email còn: <b class="text-emerald-600">${q.emailsLeftFallback??"—"}</b>${q.tariff?`<br><span class="text-slate-400">${esc(q.tariff)}</span>`:""}</div>`;
-   }
- }
- return `<div class="border-2 ${on?"border-indigo-500 bg-indigo-50":"border-slate-200 bg-white"} rounded-2xl p-3 flex flex-col gap-2"><div class="flex items-center gap-2">${m.logo}<div class="min-w-0"><div class="font-extrabold text-xs text-slate-800">${m.name}</div><div class="text-[10px] text-slate-500">${m.sub}</div></div>${on?'<span class="ml-auto bg-indigo-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full whitespace-nowrap">ĐANG DÙNG</span>':""}</div><div class="min-h-[32px]">${body}</div><button ${ready?"":"disabled"} onclick="pickMailProvider('${id}')" class="${on?"bg-slate-100 text-slate-400 cursor-default":ready?"bg-indigo-600 hover:bg-indigo-700 text-white":"bg-slate-100 text-slate-300 cursor-not-allowed"} font-bold py-2 rounded-lg text-xs">${on?"Đang chọn":"Chọn & Lưu mặc định"}</button></div>`;}
-function renderMailProvCards(){const el=$("mailProvCards");if(el)el.innerHTML=["google","brevo","sendpulse"].map(mailProvCard).join("");}
-async function pickMailProvider(id){cmsDb.settings.mailProvider=id;try{await saveCmsDb();toast("Đã chọn "+MAIL_PROV_META[id].name+" làm nhà cung cấp gửi mail");logEvent("ok","Lưu cấu hình","Nhà cung cấp mail: "+id);renderMailProvCards();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
+let mailProvQuota = {}, mailProvCfg = {}, mailProvErr = {}, selectedMailProv = null;
+
+// Thẻ hiển thị: bỏ nút con, click trực tiếp vào thẻ để chọn (sáng viền tím)
+function mailProvCard(id) {
+  const m = MAIL_PROV_META[id];
+  const cur = selectedMailProv || (cmsDb.settings && cmsDb.settings.mailProvider) || "google";
+  const on = cur === id;
+  const ready = id === "google" ? true : !!mailProvCfg[id];
+  const err = mailProvErr[id];
+  const q = mailProvQuota[id];
+
+  let body = '<div class="text-[10px] text-slate-400">Bấm "Làm mới quota"</div>';
+  if (!ready) {
+    body = '<div class="text-[10px] text-rose-500 font-bold"><i class="fas fa-circle-exclamation mr-1"></i>Chưa cấu hình biến trên Worker</div>';
+  } else if (err) {
+    body = `<div class="text-[10px] text-rose-500 font-semibold">${esc(err)}</div>`;
+  } else if (id === "google" && q) {
+    body = `<div class="text-[11px] text-slate-600">Còn <b class="text-emerald-600">${q.remaining}</b>/${q.limit} người nhận (24h)</div>`;
+  } else if (id === "brevo" && q) {
+    body = `<div class="text-[11px] text-slate-600">Credits còn: <b class="text-emerald-600">${q.credits ?? "—"}</b>${q.creditsType ? " (" + esc(q.creditsType) + ")" : ""}</div>`;
+  } else if (id === "sendpulse" && q) {
+    if (q.monthTotal !== undefined && q.monthTotal !== null) {
+      const usedMonth = q.monthLeft !== undefined && q.monthLeft !== null ? Math.max(0, q.monthTotal - q.monthLeft) : (q.totalSent || 0);
+      body = `<div class="text-[11px] text-slate-600 mb-1.5 font-bold flex justify-between items-center"><span>${esc(q.tariff || "SMTP Free")}</span>${q.hourLimit || q.dayTotal ? `<span class="text-[10px] text-slate-400 font-normal">Giới hạn: ${q.hourLimit || q.dayTotal} mail/h</span>` : ""}</div>`
+           + qBar(usedMonth, q.monthTotal, "Tháng", "email", "");
+    } else {
+      body = `<div class="text-[11px] text-slate-600">Email còn: <b class="text-emerald-600">${q.emailsLeftFallback ?? (q.totalSent != null ? q.totalSent + " đã gửi" : "—")}</b>${q.tariff ? `<br><span class="text-slate-400">${esc(q.tariff)}</span>` : ""}</div>`;
+    }
+  }
+
+  return `
+    <div onclick="selectMailProvider('${id}')" class="cursor-pointer border-2 transition-all duration-200 ${on ? "border-purple-600 bg-purple-50/70 shadow-sm ring-1 ring-purple-400" : "border-slate-200 bg-white hover:border-purple-300 hover:bg-slate-50"} rounded-2xl p-3 flex flex-col gap-2 select-none">
+      <div class="flex items-center gap-2">
+        ${m.logo}
+        <div class="min-w-0 flex-1">
+          <div class="font-extrabold text-xs text-slate-800">${m.name}</div>
+          <div class="text-[10px] text-slate-500">${m.sub}</div>
+        </div>
+        ${on 
+          ? '<span class="ml-auto bg-purple-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full whitespace-nowrap shadow-sm flex items-center gap-1"><i class="fas fa-check text-[8px]"></i>ĐANG CHỌN</span>' 
+          : '<span class="ml-auto text-slate-400 text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 whitespace-nowrap">Bấm để chọn</span>'}
+      </div>
+      <div class="min-h-[32px] pt-1">
+        ${body}
+      </div>
+    </div>
+  `;
+}
+
+// Bấm vào thẻ: cập nhật viền tím ngay lập tức
+function selectMailProvider(id) {
+  selectedMailProv = id;
+  renderMailProvCards();
+}
+const pickMailProvider = selectMailProvider; // Giữ alias dự phòng
+
+// Bấm nút "LƯU CẤU HÌNH NHÀ CUNG CẤP MAIL" phía dưới
+async function saveMailProvider() {
+  if (!selectedMailProv) {
+    selectedMailProv = (cmsDb.settings && cmsDb.settings.mailProvider) || "google";
+  }
+  cmsDb.settings = cmsDb.settings || {};
+  cmsDb.settings.mailProvider = selectedMailProv;
+
+  const btn = $("btnSaveMailProv");
+  const origText = btn ? btn.innerHTML : "";
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i>ĐANG LƯU CẤU HÌNH...';
+  }
+
+  try {
+    await saveCmsDb();
+    const provName = (MAIL_PROV_META[selectedMailProv] && MAIL_PROV_META[selectedMailProv].name) || selectedMailProv;
+    toast("Đã lưu nhà cung cấp gửi mail: " + provName);
+    logEvent("ok", "Lưu cấu hình", "Nhà cung cấp mail: " + selectedMailProv);
+    renderMailProvCards();
+  } catch (e) {
+    toast("Lỗi lưu cấu hình: " + e.message, "err");
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origText;
+    }
+  }
+}
+
+function renderMailProvCards() {
+  if (!selectedMailProv) {
+    selectedMailProv = (cmsDb.settings && cmsDb.settings.mailProvider) || "google";
+  }
+  const el = $("mailProvCards");
+  if (el) el.innerHTML = ["google", "brevo", "sendpulse"].map(mailProvCard).join("");
+}
 async function loadQuota(){
  const el=$("quotaBody");if(!el)return;
  try{
