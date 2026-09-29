@@ -1407,13 +1407,68 @@ function loadSettingsUI(){
  const s=cmsDb.settings;renderRouteRows();renderSyncWorkers();renderDockRows();renderMailProvCards();
  const rr=document.querySelector(`input[name=emailRoleRad][value=${s.emailRole==="master"?"master":"slave"}]`);if(rr)rr.checked=true;
  $("toggleAutoMail").checked=!!s.autoMailEnabled;$("toggleAutoMigrate").checked=s.autoMigrateNode!==false;$("toggleLockExpiry").checked=!!s.lockExpiry;
- $("toggleLockFulfill").checked=!!s.lockFulfill;$("toggleMailOnSave").checked=mailOnSaveOn();paintTimeUI();}
+ $("toggleLockFulfill").checked=!!s.lockFulfill;$("toggleMailOnSave").checked=mailOnSaveOn();paintTimeUI();
+ initAdminNotifyUI();}
 async function saveEmailPerm(){
  const s=cmsDb.settings;s.emailRole=document.querySelector("input[name=emailRoleRad]:checked")?.value||"slave";s.autoMailEnabled=$("toggleAutoMail").checked;
  if(s.autoMailEnabled&&s.emailRole!=="master"){s.autoMailEnabled=false;$("toggleAutoMail").checked=false;toast("Slave không gửi mail — đã tắt Auto Mail","warn");}
  try{await saveCmsDb();const be=await aj("/api/cms"),bs=(be&&be.settings)||{};
   if(bs.emailRole!==s.emailRole||!!bs.autoMailEnabled!==!!s.autoMailEnabled)toast("Backend chưa nhận đúng cấu hình — thử lưu lại","err");else toast("Đã lưu — Worker xác nhận: "+(s.emailRole==="master"?"Master":"Slave"));
   logEvent("ok","Lưu cấu hình","Quyền Email: "+s.emailRole+" · auto nhắc hạn "+(s.autoMailEnabled?"bật":"tắt"));loadStatus();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
+
+// ===================== THÔNG BÁO MAIL ADMIN TỪ INDEX =====================
+function initAdminNotifyUI(){
+ const s=(cmsDb&&cmsDb.settings)||{};
+ const role=s.adminNotifyRole||"master";
+ const rr=document.querySelector(`input[name=adminNotifyRoleRad][value=${role==="slave"?"slave":"master"}]`);
+ if(rr)rr.checked=true;
+ const ev=s.adminNotifyEvents||{new:true,renew:true,upgrade:true,data:true};
+ ["new","renew","upgrade","data"].forEach(k=>{
+  const el=$("an-"+k);
+  if(el)el.checked=(ev[k]!==false);
+ });
+ updateAdminNotifyStatusUI();
+}
+
+function updateAdminNotifyStatusUI(){
+ const role=document.querySelector("input[name=adminNotifyRoleRad]:checked")?.value||"master";
+ const badge=$("adminNotifyRoleBadge");
+ const be=$("beAdminNotify");
+ const wrap=$("adminNotifyCheckboxes");
+ if(role==="master"){
+  if(badge){badge.textContent="Master";badge.className="text-[10px] px-2 py-0.5 rounded font-black bg-indigo-50 text-indigo-600";}
+  if(wrap)wrap.style.opacity="0.5";
+  if(be)be.innerHTML='<i class="fas fa-server mr-1"></i>Backend đang áp dụng: <b>Master</b> (Báo tất cả: Đơn mới, Gia hạn, Nâng gói, Tra cứu)';
+ }else{
+  if(badge){badge.textContent="Slave";badge.className="text-[10px] px-2 py-0.5 rounded font-black bg-amber-50 text-amber-700";}
+  if(wrap)wrap.style.opacity="1";
+  const ev=["new","renew","upgrade","data"].filter(k=>$(`an-${k}`)?.checked);
+  const evNames={new:"Đơn mới",renew:"Gia hạn",upgrade:"Nâng gói",data:"Tra cứu"};
+  const listTxt=ev.length?ev.map(k=>evNames[k]).join(", "):"Tắt sạch (Không báo gì)";
+  if(be)be.innerHTML=`<i class="fas fa-server mr-1"></i>Backend đang áp dụng: <b>Slave</b> · Chỉ báo: <b class="text-indigo-600">${listTxt}</b>`;
+ }
+}
+
+async function saveAdminNotifyPerm(){
+ const role=document.querySelector("input[name=adminNotifyRoleRad]:checked")?.value||"master";
+ const events={
+  new:!!$("an-new")?.checked,
+  renew:!!$("an-renew")?.checked,
+  upgrade:!!$("an-upgrade")?.checked,
+  data:!!$("an-data")?.checked
+ };
+ cmsDb.settings=cmsDb.settings||{};
+ cmsDb.settings.adminNotifyRole=role;
+ cmsDb.settings.adminNotifyEvents=events;
+ try{
+  await saveCmsDb();
+  updateAdminNotifyStatusUI();
+  toast("Đã lưu cấu hình Báo Mail Admin: "+(role==="master"?"Master":"Slave"));
+  logEvent("ok","Lưu cấu hình",`Báo Mail Admin: ${role.toUpperCase()}`);
+ }catch(e){
+  toast("Lỗi lưu: "+e.message,"err");
+ }
+}
 async function saveCronCfg(){cmsDb.settings.autoMigrateNode=$("toggleAutoMigrate").checked;try{await saveCmsDb();toast("Đã lưu cấu hình Cron");logEvent("ok","Lưu cấu hình","Auto Migrate "+(cmsDb.settings.autoMigrateNode?"bật":"tắt"));loadStatus();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
 async function saveLockExpiry(){cmsDb.settings.lockExpiry=$("toggleLockExpiry").checked;try{await saveCmsDb();toast(cmsDb.settings.lockExpiry?"Đã BẬT khóa thông tin hết hạn (expDate & days không đổi)":"Đã tắt khóa thông tin hết hạn");logEvent("warn","Khóa hạn",cmsDb.settings.lockExpiry?"Bật":"Tắt");}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
 async function runCronNow(){toast("Đang chạy Cron...");const s=cmsDb.settings||{};try{const j=await aj("/api/admin/cron",{method:"POST",body:{force:true,simMode:!!s.simMode,simOffset:Number(s.simOffset)||0}});const d=j.details||{};toast(`Xong: khóa ${d.locked||0} · luân chuyển ${d.migrated||0} · xóa node ${d.delNodes||0} · mail ${d.mails||0}`);loadStatus();fetchAll();}catch(e){toast("Lỗi: "+e.message,"err");}}
