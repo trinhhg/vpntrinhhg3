@@ -80,15 +80,14 @@ html.has-user-session #view-portal{display:block!important;}
 @media (max-width:767px){body.checkout-active #floatingSocials{display:none!important;}}
 .countdown-wrap{position:relative;width:100%;max-width:320px;margin:0 auto 12px;display:flex;flex-direction:column;align-items:center;gap:10px;}
 .countdown-wrap #countdownTimer{position:static;}
-```css
 /* ===== GREY GLASS (chỉ áp dụng html.dark, Light giữ nguyên) ===== */
-html.dark{color-scheme:dark;scrollbar-color:#3a3c42 #1A1C23;
---g1:linear-gradient(135deg,rgba(255,255,255,.06) 0%,rgba(255,255,255,.01) 100%);--g2:linear-gradient(135deg,rgba(255,255,255,.03) 0%,transparent 100%);--g3:rgba(255,255,255,.08);
---bd:rgba(255,255,255,.15);--bd2:rgba(255,255,255,.25);
---t1:#FFFFFF;--t2:rgba(255,255,255,.85);--t3:rgba(255,255,255,.65);--t4:rgba(255,255,255,.45);
---blur:blur(20px) saturate(120%);
---shadow:0 15px 35px -5px rgba(0,0,0,.4),inset 0 1px 1px rgba(255,255,255,.3),inset 0 -1px 1px rgba(255,255,255,.02);}
-html.dark body{background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.05),transparent 60%) fixed,#1A1C23!important;}
+html.dark{color-scheme:dark;scrollbar-color:#3a3c42 #151619;
+--g1:rgba(255,255,255,.055);--g2:rgba(255,255,255,.04);--g3:rgba(255,255,255,.09);
+--bd:rgba(255,255,255,.10);--bd2:rgba(255,255,255,.18);
+--t1:#F5F5F5;--t2:#B5B7BC;--t3:#858891;--t4:#5F626A;
+--blur:blur(18px) saturate(140%);
+--shadow:0 8px 30px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06);}
+html.dark body{background:radial-gradient(900px 500px at 50% -5%,rgba(255,255,255,.055),transparent 70%) fixed,#151619!important;}
 
 /* Tầng 1: card kính | Tầng 2: ô con | Tầng 3: hover/active */
 html.dark :is([class*="dark:bg-black"],[class*="dark:bg-slate-"],[class*="dark:bg-[#111111]"],[class*="dark:bg-[#334155]"],[class*="dark:bg-[#1e293b]"]){background:var(--g2);border-color:var(--bd)}
