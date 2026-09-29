@@ -1050,12 +1050,12 @@ function selectDuration(m){
 function selectPayMethod(method){
  $('payMethod').value=method;
  document.querySelectorAll('.pay-btn').forEach(b=>{
-  b.classList.remove('active','bg-indigo-50','dark:bg-indigo-500/30','border-indigo-500','dark:border-indigo-400','text-indigo-700','dark:text-indigo-400','dark:text-indigo-300');
-  b.classList.add('bg-white','dark:bg-slate-800','border-slate-200','dark:border-slate-700','text-slate-600','dark:text-slate-300');
+  b.classList.remove('active','border-indigo-500','bg-indigo-50','text-indigo-700');
+  b.classList.add('border-slate-200','text-slate-600');
  });
  const ab=$('pay-btn-'+method);
- ab.classList.remove('bg-white','dark:bg-slate-800','border-slate-200','dark:border-slate-700','text-slate-600','dark:text-slate-300');
- ab.classList.add('active','bg-indigo-50','dark:bg-indigo-500/30','border-indigo-500','dark:border-indigo-400','text-indigo-700','dark:text-indigo-300');
+ ab.classList.remove('border-slate-200','text-slate-600');
+ ab.classList.add('active','border-indigo-500','bg-indigo-50','text-indigo-700');
  calculateTotal();}
 
 function calculateTotal(){
