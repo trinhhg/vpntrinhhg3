@@ -211,10 +211,21 @@ textarea.autog{resize:none;overflow:hidden;}
   <div id="dataReqBody" class="space-y-3"></div>
  </div>
 
- <!-- ===== LINK SUB ===== -->
+  <!-- ===== LINK SUB ===== -->
  <div id="t-lnk" class="hidden space-y-4 w-full min-w-0">
   <h2 class="text-lg md:text-2xl font-bold text-slate-800">Quản lý Link Sub Ẩn</h2>
-  <p class="text-[11px] text-slate-500 -mt-2">Các công cụ bảo trì (Rà quét & Map lại, Dọn KV, Rebuild MAP, Sắp xếp, Đồng bộ GH) đã chuyển sang <b>Cài đặt → Set Web → Bảo trì Link Sub</b>.</p>
+  <p class="text-[11px] text-slate-500 -mt-2">Công cụ Rà quét &amp; Map lại nằm ở <b>Cài đặt → Set Web → Bảo trì Link Sub</b>.</p>
+
+  <!-- Khối 4 nút bảo trì (nằm riêng biệt, không tiêu đề) -->
+  <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm mb-3">
+   <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full">
+    <button id="btnRunGC" onclick="runGC()" class="bg-white text-red-600 hover:bg-red-50 font-bold py-2 rounded-xl text-xs shadow-sm border border-slate-200 flex items-center justify-center gap-1.5 transition active:scale-95"><i class="fas fa-broom"></i>Dọn KV</button>
+    <button id="btnRebuildAll" onclick="rebuildAllMAP()" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold py-2 rounded-xl text-xs shadow-sm border border-emerald-100 flex items-center justify-center gap-1.5 transition active:scale-95"><i class="fas fa-rotate"></i>Rebuild MAP</button>
+    <button id="btnSortLinks" onclick="sortAllLinks()" class="bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold py-2 rounded-xl text-xs shadow-sm border border-purple-100 flex items-center justify-center gap-1.5 transition active:scale-95"><i class="fas fa-sort-numeric-down"></i>Sắp xếp</button>
+    <button id="btnTriggerGH" onclick="triggerGitHub()" class="bg-blue-600 text-white hover:bg-blue-700 font-bold py-2 rounded-xl text-xs shadow-md flex items-center justify-center gap-1.5 transition active:scale-95"><i class="fab fa-github"></i>Đồng bộ GH</button>
+   </div>
+  </div>
+
   <div class="grid grid-cols-2 gap-2 w-full mb-2">
    <button id="btn-ls-manual" onclick="switchLinkMode('manual')" class="link-tab-btn active bg-white border border-slate-200 shadow-sm rounded-xl text-slate-600 font-bold text-[11px] py-2"><i class="fas fa-magic mr-1"></i>TẠO THỦ CÔNG</button>
    <button id="btn-ls-pool" onclick="switchLinkMode('pool')" class="link-tab-btn bg-white border border-slate-200 shadow-sm rounded-xl text-slate-600 font-bold text-[11px] py-2"><i class="fas fa-plus-circle mr-1"></i>THÊM NGUỒN</button>
@@ -430,14 +441,17 @@ textarea.autog{resize:none;overflow:hidden;}
      <button onclick="saveDock()" class="w-full mt-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU ICON DOCK</button>
     </div>
 
-    <!-- Hàng 5: A2. Nhà cung cấp gửi mail -->
+        <!-- Hàng 5: A2. Nhà cung cấp gửi mail -->
     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
      <div class="flex items-center justify-between">
       <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-paper-plane text-indigo-500 mr-1.5"></i>Nhà cung cấp gửi mail</div>
       <button onclick="loadQuota()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-sync mr-1"></i>Làm mới quota</button>
      </div>
-     <p class="text-[11px] text-slate-500">Chọn nơi Worker gửi mọi mail (báo khách, mail admin, nhắc hết hạn). Chỉ 1 nhà cung cấp hoạt động tại một thời điểm — bấm "Chọn &amp; Lưu mặc định" trên thẻ muốn dùng.</p>
+     <p class="text-[11px] text-slate-500">Chọn nơi Worker gửi mọi mail (báo khách, mail admin, nhắc hết hạn). Nhấp vào thẻ để chọn nhà cung cấp, sau đó bấm Lưu cấu hình.</p>
      <div id="mailProvCards" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+     <button id="btnSaveMailProv" onclick="saveMailProvider()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 mt-2 flex items-center justify-center gap-1.5">
+      <i class="fas fa-floppy-disk"></i>LƯU CẤU HÌNH NHÀ CUNG CẤP MAIL
+     </button>
     </div>
 
     <!-- Hàng 6: I. Quota -->
@@ -446,16 +460,9 @@ textarea.autog{resize:none;overflow:hidden;}
      <div id="quotaBody" class="pt-3 grid grid-cols-1 lg:grid-cols-2 gap-3 text-xs text-slate-500">Đang tải quota...</div>
     </div>
 
-    <!-- Hàng 7: H. Bảo trì Link Sub -->
+        <!-- Hàng 7: H. Bảo trì Link Sub -->
     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
-     <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-toolbox text-amber-500 mr-1.5"></i>Bảo trì Link Sub</div>
-     <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 w-full">
-      <button id="btnRunGC" onclick="runGC()" class="bg-white text-red-600 hover:bg-red-50 font-bold py-2 rounded-xl text-xs shadow-sm border border-slate-200"><i class="fas fa-broom mr-1"></i>Dọn KV</button>
-      <button id="btnRebuildAll" onclick="rebuildAllMAP()" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold py-2 rounded-xl text-xs shadow-sm border border-emerald-100"><i class="fas fa-rotate mr-1"></i>Rebuild MAP</button>
-      <button id="btnSortLinks" onclick="sortAllLinks()" class="bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold py-2 rounded-xl text-xs shadow-sm border border-purple-100"><i class="fas fa-sort-numeric-down mr-1"></i>Sắp xếp</button>
-      <button id="btnTriggerGH" onclick="triggerGitHub()" class="bg-blue-600 text-white hover:bg-blue-700 font-bold py-2 rounded-xl text-xs shadow-md"><i class="fab fa-github mr-1"></i>Đồng bộ GH</button>
-     </div>
-     <div class="font-bold text-sm text-slate-800 border-t border-slate-100 pt-3"><i class="fas fa-magnifying-glass text-amber-500 mr-1.5"></i>Rà quét &amp; Map lại <span class="text-[10px] font-normal text-slate-400">(không tự chạy khi mở trang)</span></div>
+     <div class="font-bold text-sm text-slate-800"><i class="fas fa-magnifying-glass text-amber-500 mr-1.5"></i>Rà quét &amp; Map lại <span class="text-[10px] font-normal text-slate-400">(không tự chạy khi mở trang)</span></div>
      <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
       <div class="border border-amber-200 rounded-xl p-3 bg-amber-50/30 space-y-2">
        <div class="font-extrabold text-xs text-amber-700">A. RÀ QUÉT</div>
