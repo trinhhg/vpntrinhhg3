@@ -328,7 +328,7 @@ textarea.autog{resize:none;overflow:hidden;}
       
       <!-- CỘT TRÁI (Email, Cron, Status) -->
       <div class="flex flex-col gap-4">
-        <!-- Hàng 1 Trái: A. Email -->
+                <!-- Hàng 1 Trái: A. Email -->
         <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
          <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-envelope text-indigo-500 mr-1.5"></i>Quyền gửi Email tự động</div>
          <p class="text-[11px] text-slate-500">Lưu thẳng vào Worker (KV). <b>Master</b>: web này được gửi mọi mail automation (kích hoạt, gia hạn, nâng gói, nhắc hết hạn). <b>Slave</b>: Worker không gửi mail automation nào.</p>
@@ -336,6 +336,42 @@ textarea.autog{resize:none;overflow:hidden;}
          <div class="flex items-start justify-between gap-4 pt-3 border-t border-slate-100"><div><div class="font-bold text-sm text-slate-800">Tự động gửi mail nhắc hết hạn</div><div class="text-xs text-slate-500 mt-1">19:00 giờ VN — ngày D-2 và D-1. Worker Cron tự chạy, không cần mở admin. Chỉ hoạt động khi là Master.</div></div><div class="toggle-wrap mt-0.5"><input type="checkbox" id="toggleAutoMail"><span class="toggle-slider"></span></div></div>
          <div id="beEmail" class="text-[11px] rounded-lg bg-slate-50 border border-slate-200 p-2 text-slate-600">Đang kiểm tra trạng thái backend...</div>
          <button onclick="saveEmailPerm()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU QUYỀN EMAIL</button>
+        </div>
+
+        <!-- Khối Báo Mail Admin từ Index (Riêng biệt) -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+         <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-bell text-amber-500 mr-1.5"></i>Thông báo Mail Admin từ Index</div>
+         <p class="text-[11px] text-slate-500">Quản lý việc Worker gửi mail báo Admin khi khách thao tác trên web này. <b>Master</b>: Báo tất cả. <b>Slave</b>: Chỉ báo các mục được tick chọn bên dưới.</p>
+         <div class="grid grid-cols-2 gap-2">
+          <label class="radio-card"><input type="radio" name="adminNotifyRoleRad" value="master" onchange="updateAdminNotifyStatusUI()">Master (Báo tất cả)</label>
+          <label class="radio-card"><input type="radio" name="adminNotifyRoleRad" value="slave" onchange="updateAdminNotifyStatusUI()">Slave (Theo bộ lọc)</label>
+         </div>
+         <div class="pt-3 border-t border-slate-100 space-y-2">
+          <div class="text-[11px] font-bold text-slate-700 flex justify-between items-center">
+           <span>Bộ lọc thông báo khi là Slave:</span>
+           <span id="adminNotifyRoleBadge" class="text-[10px] px-2 py-0.5 rounded font-black bg-indigo-50 text-indigo-600">Master</span>
+          </div>
+          <div id="adminNotifyCheckboxes" class="grid grid-cols-2 gap-2 text-xs transition-opacity duration-200">
+           <label class="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100">
+            <input type="checkbox" id="an-new" onchange="updateAdminNotifyStatusUI()" class="w-4 h-4 accent-indigo-600">
+            <span class="font-bold text-slate-700">Đơn mới</span>
+           </label>
+           <label class="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100">
+            <input type="checkbox" id="an-renew" onchange="updateAdminNotifyStatusUI()" class="w-4 h-4 accent-indigo-600">
+            <span class="font-bold text-slate-700">Đơn gia hạn</span>
+           </label>
+           <label class="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100">
+            <input type="checkbox" id="an-upgrade" onchange="updateAdminNotifyStatusUI()" class="w-4 h-4 accent-indigo-600">
+            <span class="font-bold text-slate-700">Nâng gói</span>
+           </label>
+           <label class="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100">
+            <input type="checkbox" id="an-data" onchange="updateAdminNotifyStatusUI()" class="w-4 h-4 accent-indigo-600">
+            <span class="font-bold text-slate-700">Tra cứu data</span>
+           </label>
+          </div>
+         </div>
+         <div id="beAdminNotify" class="text-[11px] rounded-lg bg-slate-50 border border-slate-200 p-2 text-slate-600">Đang kiểm tra trạng thái backend...</div>
+         <button onclick="saveAdminNotifyPerm()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU CẤU HÌNH BÁO ADMIN</button>
         </div>
 
         <!-- Hàng 2 Trái: B. Cron + node -->
