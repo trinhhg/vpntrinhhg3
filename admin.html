@@ -404,12 +404,23 @@ textarea.autog{resize:none;overflow:hidden;}
 
       <!-- CỘT PHẢI (Routing, Vệ tinh, Khóa hạn) -->
       <div class="flex flex-col gap-4">
-        <!-- Hàng 1 Phải: F. Routing + blur -->
+                <!-- Khối 1: Định tuyến Gốc (Tạo Link Sub dán vào ô nào) -->
         <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-2">
-         <div class="font-bold text-sm text-slate-800"><i class="fas fa-route text-indigo-500 mr-1.5"></i>Định tuyến &amp; Làm mờ (Blur)</div>
-         <p class="text-[10px] text-slate-500">Nhập từ khoá domain của web (VD: doicucden) để xác định ô Link 1/2/3. Chỉ khi đã nhập định tuyến mới bật được Làm mờ. Làm mờ chỉ che link với khách, không xóa link ở backend.</p>
+         <div class="font-bold text-sm text-slate-800"><i class="fas fa-route text-indigo-500 mr-1.5"></i>1. Định tuyến Gốc (Gán ô Link 1/2/3)</div>
+         <p class="text-[10px] text-slate-500">Nhập từ khóa domain của từng web (VD: doicucden, onepiece, lucastanora) để Worker biết khi tạo link sub thì dán vào ô Link 1, Link 2 hay Link 3.</p>
          <div id="routeRows" class="space-y-2"></div>
-         <button onclick="saveRouting()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU ĐỊNH TUYẾN &amp; BLUR</button>
+         <button onclick="saveRouting()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs shadow-md">LƯU ĐỊNH TUYẾN GỐC</button>
+        </div>
+
+        <!-- Khối 2: Cấu hình Làm mờ (Blur - Riêng web này, KHÔNG đồng bộ) -->
+        <div class="bg-white border border-purple-200 rounded-2xl shadow-sm p-5 space-y-2">
+         <div class="font-bold text-sm text-purple-800 flex items-center justify-between">
+           <span><i class="fas fa-eye-slash text-purple-500 mr-1.5"></i>2. Cấu hình Làm mờ (Blur - Web này)</span>
+           <span class="text-[10px] font-black px-2 py-0.5 rounded bg-purple-100 text-purple-700">Chỉ web này</span>
+         </div>
+         <p class="text-[10px] text-slate-500">Nhập tên ô định tuyến muốn làm mờ và gạt Bật/Tắt. Cài đặt này chỉ áp dụng trên chính web này, không đồng bộ sang web khác.</p>
+         <div id="blurRows" class="space-y-2"></div>
+         <button onclick="saveBlur()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU CẤU HÌNH LÀM MỜ</button>
         </div>
 
         <!-- Hàng 2 Phải: E. Vệ tinh -->
@@ -1384,10 +1395,67 @@ async function saveCms(){
 const saveCmsDb=()=>{const s=cmsDb.settings;["syncD1Url","syncD1Secret","crossSyncEnabled","mailLog","sysLog","autoRole"].forEach(k=>delete s[k]);return aj("/api/cms",{method:"POST",body:cmsDb});};
 function switchSettingsTab(t){["setweb","log","dev","time"].forEach(x=>{$("settings-view-"+x).classList.toggle("hidden",x!==t);$("stab-"+x).classList.toggle("active",x===t);});if(t==="log")loadLogs();if(t==="dev")renderDev();if(t==="setweb"||t==="time")loadSettingsUI();if(t==="setweb"){loadStatus();loadQuota();}}
 function showCronLog(){switchSettingsTab("log");$("logSrc").value="cron";$("logLvl").value="";loadLogs();}
-function checkBlur(i){const has=$("routeWeb"+i).value.trim(),c=$("blurWeb"+i);if(!has){c.checked=false;c.disabled=true;}else c.disabled=false;}
-function renderRouteRows(){const s=cmsDb.settings;$("routeRows").innerHTML=[1,2,3].map(i=>`<div class="flex items-center justify-between bg-slate-50 border border-slate-200 p-2 rounded-xl"><div class="flex-1 mr-3"><label class="block font-bold text-[10px] text-slate-600 mb-1">Web ${i} → Link ${i} (từ khoá domain)</label><input id="routeWeb${i}" type="text" oninput="checkBlur(${i})" value="${esc(s["routeWeb"+i]||"")}" placeholder="${["doicucden","onepiece","lucastanora"][i-1]}" class="w-full p-2 border border-slate-200 rounded-lg outline-none font-mono text-[11px] bg-white"></div><div class="flex flex-col items-center shrink-0"><label class="block font-bold text-[10px] text-slate-600 mb-1">Làm mờ</label><div class="toggle-wrap"><input type="checkbox" id="blurWeb${i}" ${s["blurWeb"+i]?"checked":""}><span class="toggle-slider"></span></div></div></div>`).join("");[1,2,3].forEach(checkBlur);}
-async function saveRouting(){const s=cmsDb.settings;[1,2,3].forEach(i=>{const r=$("routeWeb"+i).value.trim();s["routeWeb"+i]=r;s["blurWeb"+i]=!!(r&&$("blurWeb"+i).checked);});
- try{await saveCmsDb();toast("Đã lưu định tuyến & blur");logEvent("ok","Lưu cấu hình","Định tuyến & Blur");renderOrd();renderRouteRows();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
+// Khối 1: Render & Lưu Định tuyến Gốc (Chỉ phục vụ gán ô dán link)
+function renderRouteRows(){
+  const s = cmsDb.settings;
+  $("routeRows").innerHTML = [1, 2, 3].map(i => `
+    <div class="bg-slate-50 border border-slate-200 p-2 rounded-xl">
+      <label class="block font-bold text-[10px] text-slate-600 mb-1">Web ${i} → Ô Link ${i} (từ khoá domain)</label>
+      <input id="routeWeb${i}" type="text" value="${esc(s["routeWeb" + i] || "")}" placeholder="${["doicucden", "onepiece", "lucastanora"][i - 1]}" class="w-full p-1.5 border border-slate-200 rounded-lg outline-none font-mono text-[11px] bg-white">
+    </div>
+  `).join("");
+}
+
+async function saveRouting(){
+  const s = cmsDb.settings;
+  [1, 2, 3].forEach(i => { s["routeWeb" + i] = $("routeWeb" + i).value.trim(); });
+  try {
+    await saveCmsDb();
+    toast("Đã lưu Định tuyến Gốc");
+    logEvent("ok", "Lưu cấu hình", "Định tuyến Gốc");
+    renderRouteRows();
+  } catch(e) {
+    toast("Lỗi lưu: " + e.message, "err");
+  }
+}
+
+// Khối 2: Render & Lưu Làm mờ (Blur riêng biệt, 3 ô nhập định tuyến muốn làm mờ + công tắc)
+function renderBlurRows(){
+  const s = cmsDb.settings;
+  $("blurRows").innerHTML = [1, 2, 3].map(i => `
+    <div class="flex items-center justify-between bg-purple-50/50 border border-purple-100 p-2 rounded-xl">
+      <div class="flex-1 mr-3">
+        <label class="block font-bold text-[10px] text-purple-900 mb-1">Ô mờ ${i}: Tên ô định tuyến muốn làm mờ</label>
+        <input id="blurRoute${i}" type="text" value="${esc(s["blurRoute" + i] || "")}" placeholder="VD: ${["doicucden", "onepiece", "lucastanora"][i-1]} hoặc Link ${i}" class="w-full p-1.5 border border-purple-200 rounded-lg outline-none font-mono text-[11px] bg-white">
+      </div>
+      <div class="flex flex-col items-center shrink-0">
+        <label class="block font-bold text-[10px] text-purple-800 mb-1">Bật mờ</label>
+        <div class="toggle-wrap">
+          <input type="checkbox" id="blurOn${i}" ${s["blurOn" + i] ? "checked" : ""}>
+          <span class="toggle-slider"></span>
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+async function saveBlur(){
+  const s = cmsDb.settings;
+  [1, 2, 3].forEach(i => {
+    s["blurRoute" + i] = $("blurRoute" + i).value.trim();
+    s["blurOn" + i] = $("blurOn" + i).checked;
+  });
+  try {
+    // Chỉ lưu vào KV của web này, KHÔNG bắn đồng bộ đi đâu cả!
+    await saveCmsDb();
+    toast("Đã lưu cấu hình làm mờ cho web này");
+    logEvent("ok", "Lưu cấu hình", "Làm mờ Blur cục bộ");
+    renderBlurRows();
+    renderOrd();
+  } catch(e) {
+    toast("Lỗi lưu: " + e.message, "err");
+  }
+}
 function renderSyncWorkers(){$("syncWorkerList").innerHTML=arr(cmsDb.settings.syncWorkers).map((w,i)=>`<div><div class="flex items-center gap-2"><input type="text" id="syncW_${i}" value="${esc(w.url)}" placeholder="https://worker..." class="w-full p-2 border border-slate-200 rounded-xl outline-none font-mono text-[11px] bg-slate-50"><div class="toggle-wrap"><input type="checkbox" id="syncWActive_${i}" ${w.active?"checked":""}><span class="toggle-slider"></span></div><button onclick="testSyncWorker(${i})" title="Kiểm tra kết nối" class="shrink-0 bg-sky-50 text-sky-600 p-2.5 rounded-xl hover:bg-sky-500 hover:text-white"><i class="fas fa-plug"></i></button><button onclick="removeSyncWorker(${i})" class="shrink-0 bg-red-50 text-red-500 p-2.5 rounded-xl hover:bg-red-500 hover:text-white"><i class="fas fa-trash"></i></button></div><div id="syncRes_${i}" class="text-[10px] pl-1 mt-0.5"></div></div>`).join("")||'<div class="text-[11px] text-slate-400 italic">Chưa có Worker vệ tinh nào.</div>';}
 function readWorkers(){const a=arr(cmsDb.settings.syncWorkers);a.forEach((w,i)=>{if($("syncW_"+i)){w.url=$("syncW_"+i).value.trim();w.active=$("syncWActive_"+i).checked;}});cmsDb.settings.syncWorkers=a.filter(w=>w.url);}
 function addSyncWorker(){readWorkers();cmsDb.settings.syncWorkers.push({url:"",active:true});renderSyncWorkers();}
@@ -1411,7 +1479,7 @@ function addDockIcon(){const a=readDockRows();a.push({name:"",img:"",url:""});cm
 function removeDockIcon(i){const a=readDockRows();a.splice(i,1);cmsDb.settings.dock=a;renderDockRows();}
 async function saveDock(){const a=readDockRows().filter(it=>/^https?:\/\//i.test(it.img||""));cmsDb.settings.dock=a;try{await saveCmsDb();toast("Đã lưu Icon Dock ("+a.length+" icon tùy chỉnh)");logEvent("ok","Lưu cấu hình","Icon Dock");renderDockRows();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
 function loadSettingsUI(){
- const s=cmsDb.settings;renderRouteRows();renderSyncWorkers();renderDockRows();renderMailProvCards();
+ const s=cmsDb.settings;renderRouteRows();renderBlurRows();renderSyncWorkers();renderDockRows();renderMailProvCards();
  const rr=document.querySelector(`input[name=emailRoleRad][value=${s.emailRole==="master"?"master":"slave"}]`);if(rr)rr.checked=true;
  $("toggleAutoMail").checked=!!s.autoMailEnabled;$("toggleAutoMigrate").checked=s.autoMigrateNode!==false;$("toggleLockExpiry").checked=!!s.lockExpiry;
  $("toggleLockFulfill").checked=!!s.lockFulfill;$("toggleMailOnSave").checked=mailOnSaveOn();paintTimeUI();
