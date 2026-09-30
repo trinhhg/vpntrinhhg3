@@ -1083,7 +1083,15 @@ function calculateTotal(){
 function toggleZalo(){const z=$('cusZalo');z.classList.toggle('hidden');z.required=!z.classList.contains('hidden')&&!(isUpgradeMode||isRenewMode);}
 
 async function copyText(t){try{await navigator.clipboard.writeText(t);}catch(e){try{const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);}catch(e2){}}showToast(i18n[lang].copy_success);}
-async function copyToClipboard(id){const e=$(id);if(e.dataset.locked)return;e.select();await copyText(e.value);}
+async function copyToClipboard(id){
+  const e = $(id);
+  if (e.dataset.locked === '1') {
+    showToast("Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!", "error");
+    return;
+  }
+  e.select();
+  await copyText(e.value);
+}
 
 function renderPaymentBox(){
  const col=$('checkoutRightCol'),m=$('payMethod').value,btn=$('btnConfirm'),l=i18n[lang];
@@ -1162,10 +1170,19 @@ function fillDashboard(o){
  const titles=['Link Subscription URL:','Link Subscription URL dự phòng 2:','Link Subscription URL dự phòng 3:'];
  $('linkBoxes').innerHTML=[1,2,3].map(i=>`<div class="w-full ${i>1?'mt-2 border-t border-green-200/50 dark:border-green-800/50 pt-3':''}"><h3 class="text-green-700 dark:text-green-500 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>${titles[i-1]}</h3><div class="flex flex-col sm:flex-row gap-2 w-full items-stretch"><input type="text" id="subLink${i}" readonly class="w-full sm:flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()"><button onclick="copyToClipboard('subLink${i}')" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button></div></div>`).join('')+
   `<div class="mt-4 grid grid-cols-2 gap-3 border-t border-green-300 dark:border-green-800 pt-4"><button onclick="startUpgrade()" class="w-full bg-amber-500 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-amber-600 transition flex items-center justify-center shadow-md"><i class="fas fa-arrow-up mr-1.5"></i> NÂNG GÓI</button><button onclick="startRenew()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center shadow-md"><i class="fas fa-redo-alt mr-1.5"></i> ${L.btn_renew}</button></div>`;
- [1,2,3].forEach(i=>{const inp=$('subLink'+i),v=o['info'+i];
- if(o['blur'+i]){inp.value=tx(L.web3_maintenance);inp.classList.add('blur-link');inp.dataset.locked='1';}
- else{inp.value=v||'';inp.classList.remove('blur-link');inp.dataset.locked=v?'':'1';
-  if(!v&&Date.now()+skew-(o.createdTs||0)<180000)inp.value=tx(L.link_generating);}});
+  [1,2,3].forEach(i=>{
+   const inp = $('subLink' + i), v = o['info' + i];
+   if (o['blur' + i]) {
+     inp.value = tx("🔒 Link này đang bảo trì / tạm ẩn");
+     inp.classList.add('blur-link', 'select-none', 'pointer-events-none');
+     inp.dataset.locked = '1';
+   } else {
+     inp.value = v || '';
+     inp.classList.remove('blur-link', 'select-none', 'pointer-events-none');
+     inp.dataset.locked = v ? '' : '1';
+     if (!v && Date.now() + skew - (o.createdTs || 0) < 180000) inp.value = tx(L.link_generating);
+   }
+ });
  const cd=localStorage.getItem('data_req_'+o.id),btn=$('btnRequestData');
  if(cd&&Date.now()-parseInt(cd)<300000){btn.innerHTML=`<i class="fas fa-check-circle mr-1.5"></i> ${L.req_sent_btn}`;btn.disabled=true;btn.classList.remove('btn-heartbeat');}
  else{btn.innerHTML=`<i class="fas fa-chart-pie mr-1.5"></i><span>${L.btn_check_data}</span>`;btn.disabled=false;btn.classList.add('btn-heartbeat');}}
