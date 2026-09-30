@@ -632,6 +632,40 @@ def build_yaml(proxy_list: list, is_liangxin: bool) -> str:
     return result
 
 
+# ── Hàm chuẩn hóa & làm sạch tên node (có dự phòng 2 tầng) ────────────────────
+ISP_DROP_KEYWORDS = {"CUCM", "CMCU", "CTCUCM", "CTCU"}
+
+def format_node_name(raw_name: str) -> str:
+    if not raw_name:
+        return "VPN Node - VPNTrinhHg"
+    try:
+        # 1. Tạm gỡ suffix cũ nếu có
+        name = raw_name.replace(" - VPNTrinhHg", "").strip()
+
+        # 2. Đổi cờ Trung Quốc sang cờ Đài Loan nếu là node Đài Loan
+        if "🇨🇳台湾" in name:
+            name = name.replace("🇨🇳台湾", "🇹🇼台湾")
+
+        # 3. Tách theo dấu '|'
+        parts = [p.strip() for p in name.split("|")]
+
+        # 4. Chuẩn hóa số thứ tự (01 -> 001, 02 -> 002...) ở phân đoạn tên vị trí (parts[0])
+        # Cách này tuyệt đối không chạm vào 0.5x, 0.1x, 0.01x ở các phân đoạn sau
+        if parts:
+            parts[0] = re.sub(r'(?<![\d.])0*([1-9]\d?)(?![\d.xX])', lambda m: f"{int(m.group(1)):03d}", parts[0])
+
+        # 5. Lọc bỏ các phân đoạn nhà mạng (CTCUCM, CTCU, CMCU, CUCM)
+        # Dự phòng tầng 1: Nếu node không có nhà mạng, giữ nguyên toàn bộ các phân đoạn khác
+        filtered_parts = [p for p in parts if p.upper() not in ISP_DROP_KEYWORDS and p != ""]
+        final_parts = filtered_parts if filtered_parts else parts
+        clean_name = "|".join(final_parts)
+
+        return f"{clean_name} - VPNTrinhHg"
+    except Exception:
+        # Dự phòng tầng 2: Nếu có lỗi bất ngờ, dùng đúng tên gốc fetch về và thêm đuôi
+        fallback = raw_name.strip()
+        return fallback if "VPNTrinhHg" in fallback else f"{fallback} - VPNTrinhHg"
+
 # ── Process b64 ───────────────────────────────────────────────────────────────
 def process_b64(raw_b64: str, is_liangxin: bool):
     pad = raw_b64 + "=" * ((-len(raw_b64)) % 4)
@@ -648,10 +682,7 @@ def process_b64(raw_b64: str, is_liangxin: bool):
         if "127.0.0.1" in line or "://" not in line: continue
         old_name = urllib.parse.unquote(line.split("#", 1)[-1]) if "#" in line else None
         if old_name and any(kw in old_name for kw in INFO_SKIP_KW): continue
-        if old_name:
-            new_name = old_name if "VPNTrinhHg" in old_name else old_name + " - VPNTrinhHg"
-        else:
-            new_name = old_name
+        new_name = format_node_name(old_name)
         uri_base = line.split("#")[0]
         new_line = uri_base + "#" + urllib.parse.quote(new_name or "", safe="")
         new_b64_lines.append(new_line)
