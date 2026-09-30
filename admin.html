@@ -1419,14 +1419,36 @@ async function saveRouting(){
   }
 }
 
-// Khối 2: Render & Lưu Làm mờ (Blur riêng biệt, 3 ô nhập định tuyến muốn làm mờ + công tắc)
+// Khối 2: Render & Lưu Làm mờ (Quy định cứng: doicucden / onepiecechapter / lucastanora)
+const BLUR_RULES = { 1: "doicucden", 2: "onepiecechapter", 3: "lucastanora" };
+
+function checkBlurValidity(i) {
+  const val = String($("blurRoute" + i)?.value || "").trim().toLowerCase();
+  const req = BLUR_RULES[i];
+  const badge = $("blurBadge" + i);
+  if (!badge) return;
+  if (!val) {
+    badge.className = "text-[9px] font-bold text-slate-400";
+    badge.textContent = "Chưa nhập";
+  } else if (val.includes(req)) {
+    badge.className = "text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200";
+    badge.textContent = "✔ Hợp lệ (" + req + ")";
+  } else {
+    badge.className = "text-[9px] font-black text-red-600 bg-red-50 px-1.5 py-0.5 rounded border border-red-200";
+    badge.textContent = "✘ Phải nhập: " + req;
+  }
+}
+
 function renderBlurRows(){
   const s = cmsDb.settings;
   $("blurRows").innerHTML = [1, 2, 3].map(i => `
-    <div class="flex items-center justify-between bg-purple-50/50 border border-purple-100 p-2 rounded-xl">
+    <div class="flex items-center justify-between bg-purple-50/50 border border-purple-100 p-2.5 rounded-xl">
       <div class="flex-1 mr-3">
-        <label class="block font-bold text-[10px] text-purple-900 mb-1">Ô mờ ${i}: Tên ô định tuyến muốn làm mờ</label>
-        <input id="blurRoute${i}" type="text" value="${esc(s["blurRoute" + i] || "")}" placeholder="VD: ${["doicucden", "onepiece", "lucastanora"][i-1]} hoặc Link ${i}" class="w-full p-1.5 border border-purple-200 rounded-lg outline-none font-mono text-[11px] bg-white">
+        <div class="flex items-center justify-between mb-1">
+          <label class="block font-bold text-[10px] text-purple-900">Ô ${i} → Mờ Link ${i}</label>
+          <span id="blurBadge${i}"></span>
+        </div>
+        <input id="blurRoute${i}" type="text" oninput="checkBlurValidity(${i})" value="${esc(s["blurRoute" + i] || "")}" placeholder="Bắt buộc nhập: ${BLUR_RULES[i]}" class="w-full p-1.5 border border-purple-200 rounded-lg outline-none font-mono text-[11px] bg-white font-bold text-purple-950">
       </div>
       <div class="flex flex-col items-center shrink-0">
         <label class="block font-bold text-[10px] text-purple-800 mb-1">Bật mờ</label>
@@ -1437,6 +1459,7 @@ function renderBlurRows(){
       </div>
     </div>
   `).join("");
+  [1, 2, 3].forEach(checkBlurValidity);
 }
 
 async function saveBlur(){
