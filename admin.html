@@ -1871,12 +1871,6 @@ function selectMailProvider(id) {
 const pickMailProvider = selectMailProvider; // Giữ alias dự phòng
 
 // Bấm nút "LƯU CẤU HÌNH NHÀ CUNG CẤP MAIL" phía dưới
-const SHORT_MAIL_NAMES = {
-  google: "Google app script",
-  brevo: "Brevo",
-  sendpulse: "Sendpulse"
-};
-
 async function saveMailProvider() {
   const saved = (cmsDb && cmsDb.settings && cmsDb.settings.mailProvider) 
              || localStorage.getItem(SITE_KEY + "_mailProv") 
@@ -1897,7 +1891,7 @@ async function saveMailProvider() {
   try {
     await saveCmsDb();
     selectedMailProv = null;
-    const shortName = SHORT_MAIL_NAMES[target] || target;
+    const shortName = ({ google: "Google app script", brevo: "Brevo", sendpulse: "Sendpulse" })[target] || target;
     toast("Đã lưu nhà cung cấp gửi mail: " + shortName);
     logEvent("ok", "Lưu cấu hình", "Nhà cung cấp mail: " + target);
     renderMailProvCards();
@@ -1925,8 +1919,7 @@ function renderMailProvCards() {
   const active = selectedMailProv || saved;
   const btn = $("btnSaveMailProv");
   if (btn) {
-    const shortName = SHORT_MAIL_NAMES[active] || active;
-    // Nút lưu luôn giữ nguyên phong cách chuẩn như các nút khác trong tab Set Web, không viền tím, không nhấp nháy
+    const shortName = ({ google: "Google app script", brevo: "Brevo", sendpulse: "Sendpulse" })[active] || active;
     btn.className = "w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 mt-2 flex items-center justify-center gap-1.5";
     btn.innerHTML = `<i class="fas fa-floppy-disk mr-1.5"></i>Lưu cấu hình: ${shortName}`;
   }
