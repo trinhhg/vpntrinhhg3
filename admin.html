@@ -852,11 +852,35 @@ function openOrdModal(id){
   if(pid)sel.value=pid;else{sel.innerHTML+=`<option value="-1" selected>${esc(o.pkg||o.pkgName||"Gói custom")}</option>`;sel.value="-1";}
   const bank=!/alipay|weixin/i.test($("mOMethod").value);$("mOAmount").value=bank?(o.totalVnd||""):(o.totalCny||o.totalVnd||"");}
  else{sel.value="t1";$("mOAmount").value="";}
- ["1","2","3"].forEach(i=>{$("mOUnl"+i).checked=false;const lk=!!(o&&o.lockInfo&&o.lockInfo["info"+i]);$("mOUnlW"+i).classList.toggle("hidden",!lk);$("mOLkTag"+i).innerHTML=lk?'<span class="text-purple-600"><i class="fas fa-lock"></i> đã khóa (sửa tay)</span>':"";});
+
+ // Quản lý 3 ô Link theo công tắc "Sửa tay":
+ const canEditManual = manualEditOn();
+ ["1","2","3"].forEach(i=>{
+   const inp = $("mOLink"+i);
+   inp.readOnly = !canEditManual;
+   if(canEditManual){
+     inp.classList.remove("bg-slate-100","cursor-not-allowed","text-slate-500");
+     inp.classList.add("bg-white","cursor-text");
+     inp.placeholder = "Dán link sub vào đây (sau khi lưu sẽ được khóa)";
+   } else {
+     inp.classList.add("bg-slate-100","cursor-not-allowed","text-slate-500");
+     inp.classList.remove("bg-white","cursor-text");
+     inp.placeholder = "Đang tắt Sửa tay (chỉ đọc) — bật công tắc Sửa tay ngoài tab để sửa";
+   }
+   $("mOUnl"+i).checked=false;
+   const lk=!!(o&&o.lockInfo&&o.lockInfo["info"+i]);
+   $("mOUnlW"+i).classList.toggle("hidden",!lk);
+   $("mOLkTag"+i).innerHTML=lk?'<span class="text-purple-600 font-bold"><i class="fas fa-lock"></i> đã khóa (sửa tay)</span>':"";
+ });
+
  const lockOn=!modalNew&&expLocked();$("mOExp").disabled=lockOn;$("mODays").disabled=lockOn;
- const ln=$("mOLockNote");ln.classList.toggle("hidden",!(lockOn||lockFulfillOn()));ln.innerHTML=(lockOn?'<i class="fas fa-lock mr-1"></i>Đang bật <b>Khóa thông tin hết hạn</b>: HSD &amp; số ngày sẽ KHÔNG đổi. ':"")+(lockFulfillOn()?'<i class="fas fa-lock mr-1"></i>Đang bật <b>Khóa fulfillment</b>: lưu đơn sẽ không cấp link / gửi mail tự động.':"");
+ const ln=$("mOLockNote");ln.classList.toggle("hidden",!(lockOn||lockFulfillOn()||canEditManual));
+ ln.innerHTML=(lockOn?'<i class="fas fa-lock mr-1"></i>Đang bật <b>Khóa thông tin hết hạn</b>: HSD &amp; số ngày sẽ KHÔNG đổi. ':"")
+  +(lockFulfillOn()?'<i class="fas fa-lock mr-1"></i>Đang bật <b>Khóa fulfillment</b>: lưu đơn sẽ không cấp link / gửi mail tự động. ':"")
+  +(canEditManual?'<i class="fas fa-pen-to-square text-purple-600 mr-1"></i>Đang bật <b>Sửa tay</b>: bạn có thể sửa 3 ô Link, lưu xong sẽ khóa không bị ghi đè.':"");
  if(modalNew){autoFillDays();fillAmount();}
  updMonths();updAmountUi();togSF();modalInit=readModal();upgInit=curUpg();$("mOrd").classList.remove("hidden");}
+
 async function saveOrd(){
  const oldId=modalOldId,id=normId($("mOId").value);
  if(!/^DH[A-Z0-9]{10}$/.test(id))return toast("Mã đơn phải dạng DH + 10 ký tự chữ/số","err");
@@ -870,6 +894,7 @@ async function saveOrd(){
  const pk=PKG_DB[cur.pkgId];if(pk&&(modalNew||cur.days!==modalInit.days||cur.pkgId!==modalInit.pkgId))body.qty=pk.m===1?Math.max(1,Math.floor((parseInt(cur.days)||0)/30)):1;
  if(!modalNew&&expLocked()){delete body.expDate;delete body.days;}
  if(lockFulfillOn())body.lockAuto=true;if(expLocked())body.lockExpiry=true;
+ if(manualEditOn())body.manualEdit=true; // Báo cho server biết đang bật chế độ Sửa tay
  const un=["1","2","3"].filter(i=>$("mOUnl"+i).checked).map(i=>"info"+i);if(un.length)body.unlockInfo=un;
  if(modalNew||curUpg()!==upgInit)body.upg=curUpg();
  if(modalNew&&!body.status)body.status="pending";
