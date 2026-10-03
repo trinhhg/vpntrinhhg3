@@ -1877,12 +1877,6 @@ const SHORT_MAIL_NAMES = {
   sendpulse: "Sendpulse"
 };
 
-const SHORT_MAIL_NAMES = {
-  google: "Google app script",
-  brevo: "Brevo",
-  sendpulse: "Sendpulse"
-};
-
 async function saveMailProvider() {
   const saved = (cmsDb && cmsDb.settings && cmsDb.settings.mailProvider) 
              || localStorage.getItem(SITE_KEY + "_mailProv") 
