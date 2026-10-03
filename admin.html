@@ -483,7 +483,7 @@ textarea.autog{resize:none;overflow:hidden;}
      <p class="text-[11px] text-slate-500">Chọn nơi Worker gửi mọi mail (báo khách, mail admin, nhắc hết hạn). Nhấp vào thẻ để chọn nhà cung cấp, sau đó bấm Lưu cấu hình.</p>
      <div id="mailProvCards" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
      <button id="btnSaveMailProv" onclick="saveMailProvider()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 mt-2 flex items-center justify-center gap-1.5">
-      <i class="fas fa-floppy-disk"></i>Lưu cấu hình
+      <i class="fas fa-floppy-disk"></i>Lưu cấu hình: Google app script
      </button>
     </div>
 
@@ -1278,18 +1278,18 @@ const rlPicks=cls=>[...document.querySelectorAll("."+cls+":checked")].map(el=>({
 const rlAll=(cls,on)=>document.querySelectorAll("."+cls).forEach(el=>el.checked=on);
 async function relinkScanRun(){
  const body={action:"scan",mode:"scan",scope:$("rsLink").value,expired:$("rsStatus").value,fields:infoFields($("rsInfo").value),includeManual:$("rsManual").checked};
- $("rsResult").innerHTML='<div class="text-xs text-slate-400"><i class="fas fa-spinner fa-spin mr-1"></i>Đang rà quét...</div>';$("rsApply").classList.add("hidden");
+ $("rsResult").innerHTML='<div class="text-xs text-slate-400"><i class="fas fa-spinner fa-spin mr-1"></i>Đang rà quét trên web này...</div>';$("rsApply").classList.add("hidden");
  try{const j=await aj("/api/admin/relink",{method:"POST",body});rsLastBody=body;rsItems=arr(j.items);
-  if(j.remoteOk===false)toast("Không kiểm tra được link ở các web vệ tinh — link Info2/3 có thể chưa xác định được","warn");
   if(!rsItems.length){$("rsResult").innerHTML='<div class="text-xs text-slate-400 italic">Không tìm thấy mục nào khớp bộ lọc.</div>';return;}
   $("rsResult").innerHTML=`<div class="text-[11px] font-bold text-slate-500 mb-1 flex items-center justify-between"><span>${rsItems.length} mục khớp — bỏ chọn mục không muốn xử lý</span><label class="flex items-center gap-1"><input type="checkbox" checked onchange="rlAll('rs-pick',this.checked)" class="accent-amber-600">Tất cả</label></div><div class="border border-slate-200 rounded-xl max-h-72 overflow-y-auto divide-y divide-slate-100 bg-white">${rsItems.map(it=>`<label class="flex items-center gap-2 px-2 py-1.5 text-[11px] cursor-pointer hover:bg-slate-50"><input type="checkbox" class="rs-pick w-3.5 h-3.5 accent-amber-600" data-id="${esc(it.id)}" data-field="${esc(it.field)}" checked><span class="font-mono font-bold text-indigo-600">${esc(it.id)}</span><span class="font-bold text-slate-500">${esc(it.field.replace("info","Info"))}</span><span class="text-slate-600 truncate flex-1" title="${esc(it.link)}">${esc(it.email||"")} · ${esc(String(it.link||"").slice(0,38))}</span>${it.dead?'<span class="bg-red-100 text-red-700 text-[9px] font-black px-1.5 py-0.5 rounded">KHÔNG TỒN TẠI</span>':'<span class="bg-emerald-100 text-emerald-700 text-[9px] font-black px-1.5 py-0.5 rounded">CÒN</span>'}${it.expired?'<span class="bg-slate-200 text-slate-600 text-[9px] font-black px-1.5 py-0.5 rounded">HẾT HẠN</span>':""}${it.manual?'<span class="bg-purple-100 text-purple-700 text-[9px] font-black px-1.5 py-0.5 rounded">KHÓA</span>':""}</label>`).join("")}</div>`;
   $("rsApply").classList.remove("hidden");
  }catch(e){$("rsResult").innerHTML=`<span class="text-red-600 text-xs">Lỗi: ${esc(e.message)}</span>`;}}
+
 async function relinkMapRun(){
  const body={action:"remap",mode:"scan",fields:infoFields($("rmInfo").value),includeManual:$("rmManual").checked};
- $("rmResult").innerHTML='<div class="text-xs text-slate-400"><i class="fas fa-spinner fa-spin mr-1"></i>Đang quét đơn còn hạn...</div>';$("rmApply").classList.add("hidden");
+ $("rmResult").innerHTML='<div class="text-xs text-slate-400"><i class="fas fa-spinner fa-spin mr-1"></i>Đang quét link còn sống trên web này...</div>';$("rmApply").classList.add("hidden");
  try{const j=await aj("/api/admin/relink",{method:"POST",body});rmLastBody=body;rmItems=arr(j.items);
-  if(!rmItems.length){$("rmResult").innerHTML='<div class="text-xs text-slate-400 italic">Không có đơn còn hạn nào cần map lại.</div>';return;}
+  if(!rmItems.length){$("rmResult").innerHTML='<div class="text-xs text-slate-400 italic">Không có đơn còn hạn nào cần map lại trên web này.</div>';return;}
   $("rmResult").innerHTML=`<div class="text-[11px] font-bold text-slate-500 mb-1 flex items-center justify-between"><span>${rmItems.length} ô sẽ được ghi lại (khớp email + hạn)</span><label class="flex items-center gap-1"><input type="checkbox" checked onchange="rlAll('rm-pick',this.checked)" class="accent-emerald-600">Tất cả</label></div><div class="border border-slate-200 rounded-xl max-h-72 overflow-y-auto divide-y divide-slate-100 bg-white">${rmItems.map(it=>{const od=ordersDb.find(o=>o.id===it.id);return `<label class="flex items-center gap-2 px-2 py-1.5 text-[11px] cursor-pointer hover:bg-slate-50"><input type="checkbox" class="rm-pick w-3.5 h-3.5 accent-emerald-600" data-id="${esc(it.id)}" data-field="${esc(it.field)}" checked><span class="font-mono font-bold text-indigo-600">${esc(it.id)}</span><span class="font-bold text-slate-500">${esc(it.field.replace("info","Info"))}</span><span class="text-slate-600 truncate flex-1">${esc(it.email||"")}${od&&od.expDate?" · HSD "+esc(od.expDate):""}</span><span class="text-emerald-600 font-mono truncate max-w-[40%]" title="${esc(it.to||"")}">→ ${esc(String(it.to||"").slice(0,34))}…</span></label>`;}).join("")}</div>`;
   $("rmApply").classList.remove("hidden");
  }catch(e){$("rmResult").innerHTML=`<span class="text-red-600 text-xs">Lỗi: ${esc(e.message)}</span>`;}}
