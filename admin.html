@@ -1717,6 +1717,12 @@ function selectMailProvider(id) {
 const pickMailProvider = selectMailProvider; // Giữ alias dự phòng
 
 // Bấm nút "LƯU CẤU HÌNH NHÀ CUNG CẤP MAIL" phía dưới
+const SHORT_MAIL_NAMES = {
+  google: "Google app script",
+  brevo: "Brevo",
+  sendpulse: "Sendpulse"
+};
+
 async function saveMailProvider() {
   const saved = (cmsDb && cmsDb.settings && cmsDb.settings.mailProvider) 
              || localStorage.getItem(SITE_KEY + "_mailProv") 
@@ -1731,14 +1737,14 @@ async function saveMailProvider() {
   const origText = btn ? btn.innerHTML : "";
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i>ĐANG LƯU CẤU HÌNH...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i>ĐANG LƯU...';
   }
 
   try {
     await saveCmsDb();
-    selectedMailProv = null; // Reset về null để lấy thẳng từ cấu hình đã lưu
-    const provName = (MAIL_PROV_META[target] && MAIL_PROV_META[target].name) || target;
-    toast("Đã lưu nhà cung cấp gửi mail mặc định: " + provName);
+    selectedMailProv = null;
+    const shortName = SHORT_MAIL_NAMES[target] || target;
+    toast("Đã lưu nhà cung cấp gửi mail: " + shortName);
     logEvent("ok", "Lưu cấu hình", "Nhà cung cấp mail: " + target);
     renderMailProvCards();
   } catch (e) {
@@ -1752,7 +1758,6 @@ async function saveMailProvider() {
 }
 
 function renderMailProvCards() {
-  // Đồng bộ cache nếu cmsDb đã tải xong từ server
   if (cmsDb && cmsDb.settings && cmsDb.settings.mailProvider) {
     localStorage.setItem(SITE_KEY + "_mailProv", cmsDb.settings.mailProvider);
   }
@@ -1766,13 +1771,13 @@ function renderMailProvCards() {
   const active = selectedMailProv || saved;
   const btn = $("btnSaveMailProv");
   if (btn) {
-    const provName = (MAIL_PROV_META[active] && MAIL_PROV_META[active].name) || active;
+    const shortName = SHORT_MAIL_NAMES[active] || active;
     if (selectedMailProv && selectedMailProv !== saved) {
       btn.classList.add("ring-2", "ring-purple-400", "animate-pulse");
-      btn.innerHTML = `<i class="fas fa-floppy-disk mr-1.5"></i>LƯU CẤU HÌNH: CHUYỂN SANG DÙNG ${provName.toUpperCase()}`;
+      btn.innerHTML = `<i class="fas fa-floppy-disk mr-1.5"></i>Lưu cấu hình: ${shortName}`;
     } else {
       btn.classList.remove("ring-2", "ring-purple-400", "animate-pulse");
-      btn.innerHTML = `<i class="fas fa-floppy-disk mr-1.5"></i>LƯU CẤU HÌNH NHÀ CUNG CẤP MAIL (${provName.toUpperCase()})`;
+      btn.innerHTML = `<i class="fas fa-floppy-disk mr-1.5"></i>Lưu cấu hình: ${shortName}`;
     }
   }
 }
