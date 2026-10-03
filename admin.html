@@ -1557,7 +1557,9 @@ function loadSettingsUI(){
  const s=cmsDb.settings;renderRouteRows();renderBlurRows();renderSyncWorkers();renderDockRows();renderMailProvCards();
  const rr=document.querySelector(`input[name=emailRoleRad][value=${s.emailRole==="master"?"master":"slave"}]`);if(rr)rr.checked=true;
  $("toggleAutoMail").checked=!!s.autoMailEnabled;$("toggleAutoMigrate").checked=s.autoMigrateNode!==false;$("toggleLockExpiry").checked=!!s.lockExpiry;
- $("toggleLockFulfill").checked=!!s.lockFulfill;$("toggleMailOnSave").checked=mailOnSaveOn();paintTimeUI();
+ $("toggleLockFulfill").checked=!!s.lockFulfill;$("toggleMailOnSave").checked=mailOnSaveOn();
+ if($("toggleManualEdit")) $("toggleManualEdit").checked=manualEditOn();
+ paintTimeUI();
  initAdminNotifyUI();}
 async function saveEmailPerm(){
  const s=cmsDb.settings;s.emailRole=document.querySelector("input[name=emailRoleRad]:checked")?.value||"slave";s.autoMailEnabled=$("toggleAutoMail").checked;
