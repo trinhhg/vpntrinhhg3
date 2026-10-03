@@ -736,6 +736,11 @@ const isMailMaster=()=>cmsDb.settings.emailRole==="master";
 const expLocked=()=>!!(cmsDb.settings&&cmsDb.settings.lockExpiry);
 const lockFulfillOn=()=>!!(cmsDb.settings&&cmsDb.settings.lockFulfill);
 const mailOnSaveOn=()=>localStorage.getItem(SITE_KEY+"_mailOnSave")!=="0";
+const manualEditOn=()=>localStorage.getItem(SITE_KEY+"_manualEdit")==="1";
+function setManualEdit(v){
+  localStorage.setItem(SITE_KEY+"_manualEdit", v ? "1" : "0");
+  toast(v ? "Đã BẬT Sửa tay — cho phép sửa 3 ô định tuyến, lưu xong không bị ghi đè" : "Đã TẮT Sửa tay — 3 ô link định tuyến ở chế độ chỉ đọc");
+}
 
 // Link đã xóa KHÔNG được quay lại: mọi link có id nằm trong "Đã xóa" (server) hoặc trong tombstone cục bộ đều bị loại khỏi danh sách active
 // trước khi hiển thị / trước khi ghi ngược lên ALL_LINKS (tự chữa nếu Worker/Cron/nguồn cũ ghi đè lại).
