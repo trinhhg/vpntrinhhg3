@@ -213,7 +213,24 @@ textarea.autog{resize:none;overflow:hidden;}
    <div class="ord-sub-tab" id="otab-pending" onclick="switchOrdTab('pending')"><div class="mac-dot mac-yellow"></div>Chờ duyệt<span id="cnt-pending" class="bg-yellow-100 text-yellow-700 text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
    <div class="ord-sub-tab" id="otab-failed" onclick="switchOrdTab('failed')"><div class="mac-dot mac-red"></div>Thất bại<span id="cnt-failed" class="bg-red-100 text-red-700 text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
   </div>
-  <div id="ordBody" class="w-full min-w-0"></div>
+    <div id="ordBody" class="w-full min-w-0"></div>
+ </div>
+
+ <!-- ===== KIỂM TRA ĐƠN CHƯA ĐỦ LINK ===== -->
+ <div id="t-check" class="hidden w-full min-w-0 space-y-3">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+   <div>
+    <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
+     <i class="fas fa-clipboard-check text-purple-600"></i>Kiểm tra đơn chưa đủ 3 link
+     <span id="checkBadgeCount" class="bg-purple-100 text-purple-700 text-xs font-black px-2 py-0.5 rounded-full">0</span>
+    </h2>
+    <p class="text-[11px] text-slate-500 mt-0.5">Chứa các đơn thành công còn hạn nhưng chưa đủ 3 link. Bấm nút bên dưới để hệ thống kiểm tra và xin bù link từ web vệ tinh, hoặc bạn có thể dán link sửa tay trực tiếp.</p>
+   </div>
+   <button id="btnHealAll" onclick="healAllMissing()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5 shrink-0">
+    <i class="fas fa-bolt"></i>Kiểm tra & xin bù link tất cả
+   </button>
+  </div>
+  <div id="checkBody" class="space-y-3 w-full min-w-0"></div>
  </div>
 
  <!-- ===== GIAO DỊCH D1 ===== -->
@@ -639,7 +656,7 @@ const PDS={1:"https://vpntrinhhg.pages.dev",2:"https://vpntrinhhg2.pages.dev",3:
 let PD=/pages\.dev$/.test(location.hostname)?location.origin:PDS[3];
 const GH_REPO="trinhhg/vpntrinhhg3";
 const PKG_LIST=[["t1","Gói 1 tháng - 60,000VND / $2.5 / ¥15.5 (100GB)",30],["t2","Gói 1 tháng - 70,000VND / $3 / ¥18 (500GB)",30],["c1","Gói 1 tháng - 80,000VND / $3.5 / ¥20.5 (1000GB)",30],["c2","Gói Cao Cấp - 200,000VND / $8 / ¥50 (3000GB)",30],["c3","Gói 1 Năm - 799,000VND / $30 / ¥199 (300GB/tháng)",365],["d1","Không Giới Hạn - 200,000VND / $8 / ¥52 (200GB)",0],["d2","Không Giới Hạn - 399,000VND / $16 / ¥102 (1000GB)",0],["d3","Không Giới Hạn - 999,000VND / $40 / ¥256 (5000GB)",0],["o1","[Giá cũ] Gói 1 tháng - 50,000VND / ¥12.5 (100GB)",30],["o2","[Giá cũ] Gói 1 tháng - 60,000VND / ¥15 (500GB)",30],["o3","[Giá cũ] Gói 1 tháng - 70,000VND / ¥17.5 (1000GB)",30]];
-const TABS=[["t-ord","fa-box","Đơn hàng"],["t-trans","fa-file-invoice-dollar","Giao dịch"],["t-data","fa-chart-pie","Dung lượng"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-cms","fa-book","H.Dẫn"],["t-mail","fa-envelope","Soạn mail"],["t-settings","fa-cog","Cài đặt"]];
+const TABS=[["t-ord","fa-box","Đơn hàng"],["t-check","fa-clipboard-check","Kiểm tra"],["t-trans","fa-file-invoice-dollar","Giao dịch"],["t-data","fa-chart-pie","Dung lượng"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-cms","fa-book","H.Dẫn"],["t-mail","fa-envelope","Soạn mail"],["t-settings","fa-cog","Cài đặt"]];
 // PKG_DB: giá hiện tại + giá cũ (o1/o2/o3) để nhận diện dữ liệu lịch sử — TUYỆT ĐỐI không quy đổi totalVnd của đơn cũ sang giá mới.
 const PKG_DB={t1:{n:"Gói 1 tháng",d:"100GB",vnd:60000,cny:15.5,m:1},t2:{n:"Gói 1 tháng",d:"500GB",vnd:70000,cny:18,m:1},c1:{n:"Gói 1 tháng",d:"1000GB",vnd:80000,cny:20.5,m:1},c2:{n:"Gói Cao Cấp",d:"3000GB",vnd:200000,cny:50,m:1},c3:{n:"Gói 1 Năm",d:"300GB/tháng",vnd:799000,cny:199,m:12},d1:{n:"Không Giới Hạn",d:"200GB",vnd:200000,cny:52,m:0},d2:{n:"Không Giới Hạn",d:"1000GB",vnd:399000,cny:102,m:0},d3:{n:"Không Giới Hạn",d:"5000GB",vnd:999000,cny:256,m:0},o1:{n:"Gói 1 tháng",d:"100GB",vnd:50000,cny:12.5,m:1,old:true},o2:{n:"Gói 1 tháng",d:"500GB",vnd:60000,cny:15,m:1,old:true},o3:{n:"Gói 1 tháng",d:"1000GB",vnd:70000,cny:17.5,m:1,old:true}};
 
@@ -762,7 +779,7 @@ async function fetchAll(msg){
   if(pc)await aj("/api/link_pool",{method:"POST",body:linkPoolDb});
   if(healed>0){try{await aj("/api/links",{method:"POST",body:linksDb});logEvent("warn","Link Sub",`Tự chữa: loại ${healed} link đã xóa bị quay lại danh sách`);}catch(e){}}
   lastSig={o:JSON.stringify(ordersDb),l:JSON.stringify(linksDb),p:JSON.stringify(linkPoolDb),d:JSON.stringify(dataReqDb)};
-  renderOrd();renderDataRequests();renderLinks();renderDead();renderDev();loadSettingsUI();if(!curArtsReady)initGuides();
+  renderOrd();renderCheckTab();renderDataRequests();renderLinks();renderDead();renderDev();loadSettingsUI();if(!curArtsReady)initGuides();
   loadStatus();if(msg)toast("Đã làm mới dữ liệu!");
  }catch(e){if(e.message!=="401")toast("Lỗi tải dữ liệu: "+e.message,"err");}}
 const isLockedPoolUrl=u=>u==="Da_bi_khoa";
@@ -770,18 +787,19 @@ async function pollMain(){
  if(document.hidden||!TOKEN||!$("mOrd").classList.contains("hidden"))return;
  try{const j=await aj("/api/admin/poll");
   const s={o:JSON.stringify(arr(j.orders)),l:JSON.stringify(arr(j.links)),p:JSON.stringify(arr(j.pool)),d:JSON.stringify(arr(j.data_requests))};const oldPending=dataReqDb.filter(r=>r.status==="pending").length;
-  applyPoll(j);if(s.o!==lastSig.o){renderOrd();if(!$("t-trans").classList.contains("hidden")&&curTxTab==="rev")renderRevenue();}if(s.l!==lastSig.l||s.p!==lastSig.p)renderLinks();
+  applyPoll(j);if(s.o!==lastSig.o){renderOrd();renderCheckTab();if(!$("t-trans").classList.contains("hidden")&&curTxTab==="rev")renderRevenue();}if(s.l!==lastSig.l||s.p!==lastSig.p)renderLinks();
   if(s.d!==lastSig.d){renderDataRequests();if(dataReqDb.filter(r=>r.status==="pending").length>oldPending)toast("Có yêu cầu dung lượng mới!","warn");}
   lastSig=s;}catch(e){}}
 
 // ===================== TAB =====================
-function buildTabs(){$("tabBar").innerHTML=TABS.map(([id,ic,lb])=>`<button onclick="go('${id}')" id="btn-${id}" class="col-span-1 tab-btn flex flex-col md:flex-row items-center px-1 py-2 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm justify-center gap-1 relative"><i class="fas ${ic} md:mr-1"></i><span>${lb}</span>${id==='t-trans'?'<span id="transBadge" class="hidden absolute top-0.5 right-0.5 bg-red-500 text-white text-[9px] min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center">!</span>':''}</button>`).join("");}
+function buildTabs(){$("tabBar").innerHTML=TABS.map(([id,ic,lb])=>`<button onclick="go('${id}')" id="btn-${id}" class="col-span-1 tab-btn flex flex-col md:flex-row items-center px-1 py-2 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm justify-center gap-1 relative"><i class="fas ${ic} md:mr-1"></i><span>${lb}</span>${id==='t-trans'?'<span id="transBadge" class="hidden absolute top-0.5 right-0.5 bg-red-500 text-white text-[9px] min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center">!</span>':''}${id==='t-check'?'<span id="checkBadge" class="hidden absolute top-0.5 right-0.5 bg-purple-600 text-white text-[9px] min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center font-black">0</span>':''}</button>`).join("");}
 function go(id){
  if(!TABS.some(t=>t[0]===id))id="t-ord";
  TABS.forEach(([t])=>{$(t).classList.add("hidden");const b=$("btn-"+t);b.classList.remove("active");b.classList.add("bg-white","text-slate-600");});
  $(id).classList.remove("hidden");const a=$("btn-"+id);a.classList.add("active");a.classList.remove("bg-white","text-slate-600");
  localStorage.setItem(SITE_KEY+"_lastTab",id);
  try{
+  if(id==="t-check")renderCheckTab();
   if(id==="t-dead")renderDead();if(id==="t-data")renderDataRequests();if(id==="t-lnk")switchLinkMode(curLinkTab);
   if(id==="t-settings"){loadSettingsUI();loadStatus();loadQuota();}
   if(id==="t-trans"){localStorage.setItem(SITE_KEY+"_txSeen",Date.now());$("transBadge").classList.add("hidden");if(curTxTab==="rev")renderRevenue();else renderTransactions();}
@@ -910,7 +928,143 @@ async function saveOrd(){
  btn.disabled=false;}
 async function forceOrder(id){if(lockFulfillOn())return toast("Đang bật Khóa fulfillment — tắt khóa mới được duyệt & cấp link","warn");if(!confirm(`Duyệt tay đơn ${id} (không cần khớp giao dịch) và cấp link ngay?`))return;
  try{const j=await aj("/api/admin/order",{method:"POST",body:{id,status:"success"}});const i=ordersDb.findIndex(x=>x.id===id);if(i>=0)ordersDb[i]=j.order;lastSig.o=JSON.stringify(ordersDb);renderOrd();toast("Đã duyệt & cấp link");}catch(e){toast("Lỗi: "+e.message,"err");}}
-async function delOrd(id){if(!confirm("Xóa đơn "+id+"?"))return;try{await api("/api/admin/order?id="+id,{method:"DELETE"});ordersDb=ordersDb.filter(x=>x.id!==id);lastSig.o=JSON.stringify(ordersDb);renderOrd();toast("Đã xóa");}catch(e){}}
+async function delOrd(id){if(!confirm("Xóa đơn "+id+"?"))return;try{await api("/api/admin/order?id="+id,{method:"DELETE"});ordersDb=ordersDb.filter(x=>x.id!==id);lastSig.o=JSON.stringify(ordersDb);renderOrd();renderCheckTab();toast("Đã xóa");}catch(e){}}
+
+// ===================== TAB KIỂM TRA ĐƠN CHƯA ĐỦ LINK =====================
+function getMissingOrders(){
+ const now = nowMs();
+ return ordersDb.filter(o => 
+   o && normSt(o.status) === "success" && 
+   (!o.expDate || isLife(o.expDate) || (expEnd(o.expDate) >= now)) &&
+   (!o.info1 || !o.info2 || !o.info3)
+ );
+}
+
+function updateCheckBadge(){
+ const list = getMissingOrders();
+ const b = $("checkBadge"), cnt = $("checkBadgeCount");
+ if (b) {
+   b.textContent = list.length;
+   b.classList.toggle("hidden", list.length === 0);
+ }
+ if (cnt) cnt.textContent = list.length;
+}
+
+function renderCheckTab(){
+ updateCheckBadge();
+ const tb = $("checkBody");
+ if (!tb) return;
+ const list = getMissingOrders();
+ if (!list.length) {
+   tb.innerHTML = `<div class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-slate-200 shadow-sm font-bold">
+     <i class="fas fa-circle-check text-emerald-500 text-3xl mb-2 block"></i>
+     Tuyệt vời! Tất cả đơn hàng còn hạn đều đã có đủ 3 link.
+   </div>`;
+   return;
+ }
+
+ tb.innerHTML = list.map((o, idx) => {
+   return `
+   <div class="bg-white border-2 border-purple-200 rounded-2xl p-4 shadow-sm flex flex-col gap-3">
+     <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-100 pb-3">
+       <div>
+         <div class="flex items-center gap-2 flex-wrap">
+           <span class="text-xs font-bold text-slate-400">#${idx+1}</span>
+           <span class="font-mono font-black text-indigo-600 text-sm cp" onclick="cp('${o.id}')">${esc(o.id)}</span>
+           <span class="font-bold text-slate-700 text-xs">${esc(o.email || "—")}</span>
+           ${o.nickname ? `<span class="bg-amber-100 text-amber-800 text-[10px] font-black px-1.5 py-0.5 rounded"><i class="fas fa-user-tag mr-0.5"></i>${esc(o.nickname)}</span>` : ""}
+         </div>
+         <div class="text-[11px] text-slate-500 mt-1">
+           Gói: <b>${esc(pkgLabel(o))}</b> · HSD: <b>${esc(o.expDate || "Vĩnh viễn")}</b>
+         </div>
+       </div>
+       <div class="flex gap-2 shrink-0">
+         <button onclick="healSingleOrder('${o.id}')" class="bg-purple-50 text-purple-700 hover:bg-purple-600 hover:text-white font-bold px-3 py-1.5 rounded-xl text-xs border border-purple-200 transition">
+           <i class="fas fa-bolt mr-1"></i>Bù link
+         </button>
+         <button onclick="saveCheckManual('${o.id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm transition">
+           <i class="fas fa-save mr-1"></i>Lưu link
+         </button>
+       </div>
+     </div>
+
+     <!-- 3 ô sửa tay định tuyến -->
+     <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+       <div>
+         <label class="block text-[10px] font-bold ${o.info1 ? 'text-emerald-700' : 'text-purple-700'} mb-1">
+           ${o.info1 ? '<i class="fas fa-check-circle text-emerald-500 mr-1"></i>' : '<i class="fas fa-triangle-exclamation text-amber-500 mr-1"></i>'}Ô Link 1
+         </label>
+         <input type="text" id="chkLink1_${o.id}" value="${esc(o.info1 || '')}" placeholder="Dán Link 1 vào đây..." class="w-full p-2 text-xs border ${o.info1 ? 'border-slate-200 bg-slate-50' : 'border-purple-300 bg-purple-50/30'} rounded-lg font-mono outline-none focus:border-indigo-500">
+       </div>
+       <div>
+         <label class="block text-[10px] font-bold ${o.info2 ? 'text-emerald-700' : 'text-purple-700'} mb-1">
+           ${o.info2 ? '<i class="fas fa-check-circle text-emerald-500 mr-1"></i>' : '<i class="fas fa-triangle-exclamation text-amber-500 mr-1"></i>'}Ô Link 2
+         </label>
+         <input type="text" id="chkLink2_${o.id}" value="${esc(o.info2 || '')}" placeholder="Dán Link 2 vào đây..." class="w-full p-2 text-xs border ${o.info2 ? 'border-slate-200 bg-slate-50' : 'border-purple-300 bg-purple-50/30'} rounded-lg font-mono outline-none focus:border-indigo-500">
+       </div>
+       <div>
+         <label class="block text-[10px] font-bold ${o.info3 ? 'text-emerald-700' : 'text-purple-700'} mb-1">
+           ${o.info3 ? '<i class="fas fa-check-circle text-emerald-500 mr-1"></i>' : '<i class="fas fa-triangle-exclamation text-amber-500 mr-1"></i>'}Ô Link 3
+         </label>
+         <input type="text" id="chkLink3_${o.id}" value="${esc(o.info3 || '')}" placeholder="Dán Link 3 vào đây..." class="w-full p-2 text-xs border ${o.info3 ? 'border-slate-200 bg-slate-50' : 'border-purple-300 bg-purple-50/30'} rounded-lg font-mono outline-none focus:border-indigo-500">
+       </div>
+     </div>
+   </div>`;
+ }).join("");
+}
+
+// Lưu sửa tay trực tiếp 3 ô link từ tab Kiểm tra
+async function saveCheckManual(orderId){
+ const o = ordersDb.find(x => x.id === orderId);
+ if (!o) return;
+ const l1 = ($("chkLink1_" + orderId)?.value || "").trim();
+ const l2 = ($("chkLink2_" + orderId)?.value || "").trim();
+ const l3 = ($("chkLink3_" + orderId)?.value || "").trim();
+
+ toast("Đang lưu link sửa tay...");
+ try {
+   const body = { id: o.id, info1: l1, info2: l2, info3: l3, manualEdit: true };
+   const j = await aj("/api/admin/order", { method: "POST", body });
+   const idx = ordersDb.findIndex(x => x.id === o.id);
+   if (idx >= 0) ordersDb[idx] = j.order;
+   lastSig.o = JSON.stringify(ordersDb);
+   renderCheckTab();
+   renderOrd();
+   toast("Đã lưu link cho đơn " + o.id + (j.order.info1 && j.order.info2 && j.order.info3 ? " (đủ 3 link, tự biến mất khỏi tab)" : ""));
+ } catch(e) {
+   toast("Lỗi lưu link: " + e.message, "err");
+ }
+}
+
+// Bấm nút bù link cho 1 đơn cụ thể
+async function healSingleOrder(orderId){
+ toast("Đang gửi lệnh xin bù link cho đơn " + orderId + "...");
+ try {
+   await aj("/api/admin/heal", { method: "POST", body: { orderIds: [orderId] } });
+   toast("Đã gửi lệnh Nhạc trưởng, hệ thống đang xin bù link...");
+   setTimeout(fetchAll, 3000);
+ } catch(e) {
+   toast("Lỗi: " + e.message, "err");
+ }
+}
+
+// Bấm nút bù link cho tất cả các đơn thiếu link
+async function healAllMissing(){
+ const list = getMissingOrders();
+ if (!list.length) return toast("Không có đơn nào thiếu link", "info");
+ const btn = $("btnHealAll");
+ btn.disabled = true;
+ toast("Đang kích hoạt Nhạc trưởng bù link cho " + list.length + " đơn...");
+ try {
+   await aj("/api/admin/heal", { method: "POST", body: { orderIds: list.map(o => o.id) } });
+   toast("Đã phát lệnh bù link, hệ thống đang chạy ngầm...");
+   setTimeout(fetchAll, 3500);
+ } catch(e) {
+   toast("Lỗi: " + e.message, "err");
+ } finally {
+   btn.disabled = false;
+ }
+}
 
 // ===================== MAIL: LÕI TEMPLATE (giống hệt Worker để preview = gửi thật) =====================
 const htmlEscape=esc;
@@ -1723,6 +1877,12 @@ const SHORT_MAIL_NAMES = {
   sendpulse: "Sendpulse"
 };
 
+const SHORT_MAIL_NAMES = {
+  google: "Google app script",
+  brevo: "Brevo",
+  sendpulse: "Sendpulse"
+};
+
 async function saveMailProvider() {
   const saved = (cmsDb && cmsDb.settings && cmsDb.settings.mailProvider) 
              || localStorage.getItem(SITE_KEY + "_mailProv") 
@@ -1772,13 +1932,9 @@ function renderMailProvCards() {
   const btn = $("btnSaveMailProv");
   if (btn) {
     const shortName = SHORT_MAIL_NAMES[active] || active;
-    if (selectedMailProv && selectedMailProv !== saved) {
-      btn.classList.add("ring-2", "ring-purple-400", "animate-pulse");
-      btn.innerHTML = `<i class="fas fa-floppy-disk mr-1.5"></i>Lưu cấu hình: ${shortName}`;
-    } else {
-      btn.classList.remove("ring-2", "ring-purple-400", "animate-pulse");
-      btn.innerHTML = `<i class="fas fa-floppy-disk mr-1.5"></i>Lưu cấu hình: ${shortName}`;
-    }
+    // Nút lưu luôn giữ nguyên phong cách chuẩn như các nút khác trong tab Set Web, không viền tím, không nhấp nháy
+    btn.className = "w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 mt-2 flex items-center justify-center gap-1.5";
+    btn.innerHTML = `<i class="fas fa-floppy-disk mr-1.5"></i>Lưu cấu hình: ${shortName}`;
   }
 }
 async function loadQuota(){
