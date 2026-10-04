@@ -1501,12 +1501,17 @@ function renderPkgAdmin() {
       <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 flex-wrap gap-2">
         <div class="flex items-center gap-2">
           <span draggable="true" ondragstart="startDragPkg(event, ${idx})" class="cursor-grab text-slate-400 px-1 hover:text-indigo-600" title="Kéo để sắp xếp thứ tự hiển thị"><i class="fas fa-grip-vertical text-lg"></i></span>
-          <span class="text-xs font-bold text-slate-400">#${idx + 1}</span>
+          <div class="flex items-center bg-slate-100 border border-slate-300 rounded-lg px-1.5 py-0.5" title="Nhập số thứ tự để đổi vị trí ngay">
+            <span class="text-[11px] font-black text-slate-500 mr-0.5">#</span>
+            <input type="number" min="1" max="${adminPkgsList.length}" value="${idx + 1}" onchange="changePkgOrder(${idx}, this.value)" class="w-10 text-xs font-black text-indigo-700 bg-transparent text-center outline-none">
+          </div>
           <span class="bg-indigo-100 text-indigo-700 font-mono font-black text-xs px-2 py-0.5 rounded-lg border border-indigo-200">
             Mã: ${esc(p.id)} ${isFixed ? '(Cố định)' : '(Tùy chỉnh)'}
           </span>
         </div>
-        ${!isFixed ? `<button onclick="delCustomPkg(${idx})" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 px-2.5 py-1 rounded-lg border border-red-100"><i class="fas fa-trash mr-1"></i>Xóa gói này</button>` : ''}
+        <button onclick="delPkg(${idx})" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg border border-red-200 transition" title="Xóa toàn bộ thông tin và gói này">
+          <i class="fas fa-trash mr-1"></i>Xóa gói
+        </button>
       </div>
 
       <!-- 4 loại Tag -->
@@ -1676,14 +1681,26 @@ function addNewCustomPkg() {
   toast("Đã tạo gói mới: " + newId + ". Hãy điền thông tin và bấm LƯU.");
 }
 
-function delCustomPkg(idx) {
+function changePkgOrder(oldIdx, newPosStr) {
+  let targetPos = parseInt(newPosStr);
+  if (isNaN(targetPos) || targetPos < 1) targetPos = 1;
+  if (targetPos > adminPkgsList.length) targetPos = adminPkgsList.length;
+  const targetIdx = targetPos - 1;
+  if (oldIdx === targetIdx) return;
+  const [item] = adminPkgsList.splice(oldIdx, 1);
+  adminPkgsList.splice(targetIdx, 0, item);
+  renderPkgAdmin();
+  toast(`Đã đổi gói "${item.name || item.id}" sang vị trí #${targetPos}`);
+}
+
+function delPkg(idx) {
   const p = adminPkgsList[idx];
-  if (FIXED_PKG_IDS.has(p.id)) return toast("Không thể xóa 9 gói cố định của hệ thống", "warn");
-  if (!confirm(`Xóa gói tùy chỉnh ${p.name} (mã: ${p.id})?`)) return;
+  if (!confirm(`Bạn có chắc muốn xóa toàn bộ thông tin và xóa gói "${p.name || p.id}" (mã: ${p.id}) khỏi hệ thống?`)) return;
   adminPkgsList.splice(idx, 1);
   renderPkgAdmin();
-  toast("Đã xóa gói");
+  toast(`Đã xóa gói ${p.id}`);
 }
+const delCustomPkg = delPkg;
 
 async function saveAllPkgs() {
   const btn = $("btnSaveAllPkgs");
