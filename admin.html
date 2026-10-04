@@ -356,8 +356,29 @@ textarea.autog{resize:none;overflow:hidden;}
    <div class="flex flex-wrap items-center gap-2 mb-3"><div class="font-bold text-sm text-slate-800 mr-auto"><i class="fas fa-users text-indigo-500 mr-1"></i>Người nhận (khách còn đơn còn hạn)</div><button onclick="mcScan()" class="bg-slate-100 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs hover:bg-slate-200"><i class="fas fa-search mr-1"></i>Quét danh sách</button></div>
    <div id="mcRecs" class="text-xs text-slate-400 italic">Bấm "Quét danh sách" để lấy email còn hạn.</div>
    <div class="flex flex-col sm:flex-row gap-2 mt-3"><button id="mcSendBtn" onclick="mcSend()" class="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-xl text-sm shadow-md hover:bg-indigo-700"><i class="fas fa-paper-plane mr-2"></i>XÁC NHẬN BẮN MAIL (từng người một)</button><button onclick="mcStop=true" class="bg-red-50 text-red-600 font-bold px-4 py-3 rounded-xl text-sm border border-red-100">Dừng</button></div>
-   <div id="mcProg" class="mt-3 hidden"><div class="h-2 bg-slate-100 rounded-full overflow-hidden"><div id="mcBar" class="h-full bg-indigo-500 transition-all" style="width:0%"></div></div><div id="mcProgTxt" class="text-[11px] text-slate-500 mt-1"></div></div>
+   <   <div id="mcProg" class="mt-3 hidden"><div class="h-2 bg-slate-100 rounded-full overflow-hidden"><div id="mcBar" class="h-full bg-indigo-500 transition-all" style="width:0%"></div></div><div id="mcProgTxt" class="text-[11px] text-slate-500 mt-1"></div></div>
   </div>
+ </div>
+
+ <!-- ===== GIÁ GÓI ===== -->
+ <div id="t-pkg" class="hidden w-full min-w-0 space-y-4">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+   <div>
+    <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
+     <i class="fas fa-tags text-indigo-600"></i>Quản lý Giá gói cước & Thẻ hiển thị
+    </h2>
+    <p class="text-[11px] text-slate-500 mt-0.5">9 mã gói cố định được khóa mã để đảm bảo an toàn đơn hàng. Kéo thả icon <i class="fas fa-grip-vertical"></i> để đổi thứ tự hiển thị bên Index.</p>
+   </div>
+   <div class="flex gap-2 shrink-0">
+    <button onclick="addNewCustomPkg()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold px-3 py-2 rounded-xl text-xs transition">
+     <i class="fas fa-plus mr-1"></i>Thêm gói mới
+    </button>
+    <button id="btnSaveAllPkgs" onclick="saveAllPkgs()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition">
+     <i class="fas fa-save mr-1.5"></i>LƯU CẤU HÌNH GIÁ GÓI
+    </button>
+   </div>
+  </div>
+  <div id="pkgCardsList" class="space-y-4 w-full min-w-0"></div>
  </div>
 
  <!-- ===== CÀI ĐẶT ===== -->
@@ -656,7 +677,7 @@ const PDS={1:"https://vpntrinhhg.pages.dev",2:"https://vpntrinhhg2.pages.dev",3:
 let PD=/pages\.dev$/.test(location.hostname)?location.origin:PDS[3];
 const GH_REPO="trinhhg/vpntrinhhg3";
 const PKG_LIST=[["t1","Gói 1 tháng - 60,000VND / $2.5 / ¥15.5 (100GB)",30],["t2","Gói 1 tháng - 70,000VND / $3 / ¥18 (500GB)",30],["c1","Gói 1 tháng - 80,000VND / $3.5 / ¥20.5 (1000GB)",30],["c2","Gói Cao Cấp - 200,000VND / $8 / ¥50 (3000GB)",30],["c3","Gói 1 Năm - 799,000VND / $30 / ¥199 (300GB/tháng)",365],["d1","Không Giới Hạn - 200,000VND / $8 / ¥52 (200GB)",0],["d2","Không Giới Hạn - 399,000VND / $16 / ¥102 (1000GB)",0],["d3","Không Giới Hạn - 999,000VND / $40 / ¥256 (5000GB)",0],["o1","[Giá cũ] Gói 1 tháng - 50,000VND / ¥12.5 (100GB)",30],["o2","[Giá cũ] Gói 1 tháng - 60,000VND / ¥15 (500GB)",30],["o3","[Giá cũ] Gói 1 tháng - 70,000VND / ¥17.5 (1000GB)",30]];
-const TABS=[["t-ord","fa-box","Đơn hàng"],["t-check","fa-clipboard-check","Kiểm tra"],["t-trans","fa-file-invoice-dollar","Giao dịch"],["t-data","fa-chart-pie","Dung lượng"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-cms","fa-book","H.Dẫn"],["t-mail","fa-envelope","Soạn mail"],["t-settings","fa-cog","Cài đặt"]];
+const TABS=[["t-ord","fa-box","Đơn hàng"],["t-check","fa-clipboard-check","Kiểm tra"],["t-trans","fa-file-invoice-dollar","Giao dịch"],["t-data","fa-chart-pie","Dung lượng"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-cms","fa-book","H.Dẫn"],["t-mail","fa-envelope","Soạn mail"],["t-pkg","fa-tags","Giá gói"],["t-settings","fa-cog","Cài đặt"]];
 // PKG_DB: giá hiện tại + giá cũ (o1/o2/o3) để nhận diện dữ liệu lịch sử — TUYỆT ĐỐI không quy đổi totalVnd của đơn cũ sang giá mới.
 const PKG_DB={t1:{n:"Gói 1 tháng",d:"100GB",vnd:60000,cny:15.5,m:1},t2:{n:"Gói 1 tháng",d:"500GB",vnd:70000,cny:18,m:1},c1:{n:"Gói 1 tháng",d:"1000GB",vnd:80000,cny:20.5,m:1},c2:{n:"Gói Cao Cấp",d:"3000GB",vnd:200000,cny:50,m:1},c3:{n:"Gói 1 Năm",d:"300GB/tháng",vnd:799000,cny:199,m:12},d1:{n:"Không Giới Hạn",d:"200GB",vnd:200000,cny:52,m:0},d2:{n:"Không Giới Hạn",d:"1000GB",vnd:399000,cny:102,m:0},d3:{n:"Không Giới Hạn",d:"5000GB",vnd:999000,cny:256,m:0},o1:{n:"Gói 1 tháng",d:"100GB",vnd:50000,cny:12.5,m:1,old:true},o2:{n:"Gói 1 tháng",d:"500GB",vnd:60000,cny:15,m:1,old:true},o3:{n:"Gói 1 tháng",d:"1000GB",vnd:70000,cny:17.5,m:1,old:true}};
 
@@ -799,6 +820,7 @@ function go(id){
  $(id).classList.remove("hidden");const a=$("btn-"+id);a.classList.add("active");a.classList.remove("bg-white","text-slate-600");
  localStorage.setItem(SITE_KEY+"_lastTab",id);
  try{
+  if(id==="t-pkg")loadAdminPkgs();
   if(id==="t-check")renderCheckTab();
   if(id==="t-dead")renderDead();if(id==="t-data")renderDataRequests();if(id==="t-lnk")switchLinkMode(curLinkTab);
   if(id==="t-settings"){loadSettingsUI();loadStatus();loadQuota();}
@@ -1405,16 +1427,279 @@ function openLnkModal(id){const l=linksDb.find(x=>x.id===id);if(!l)return;$("mLI
 async function saveLnkEdit(){const l=linksDb.find(x=>x.id===$("mLId").value);if(!l)return;const o=$("mLOrig").value.trim();if(!o)return toast("Link gốc rỗng!","err");
  Object.assign(l,{email:$("mLEmail").value.trim(),expDate:$("mLExp").value.trim(),linkIndex:$("mLIdx").value.trim(),orig:o});delete l.machine;cm("mLnk");renderLinks();try{await saveLinks();toast("Đã cập nhật! Nhớ Đồng bộ GitHub.");}catch(e){}}
 async function toggleLock(tok,locked){if(!tok)return;linksDb.forEach(l=>{if(getT(l.masked)===tok)l.isLocked=!locked;});renderLinks();try{await saveLinks();toast(locked?"Đã mở khóa":"Đã khóa");}catch(e){}}
-// XÓA LINK (sửa tận gốc): ghi tombstone cục bộ + gọi endpoint atomic của Worker (/api/admin/link/delete: xóa khỏi ALL_LINKS, thêm vào DEAD_LINKS, rebuild MAP, ghi tombstone
-// để Cron/nguồn cũ không thể đưa lại, gỡ link khỏi Info1/2/3 của đơn). Nếu Worker chưa có endpoint → dùng đường cũ (2 bước tuần tự) + tự chữa phía admin.
-async function delLink(id){const l=linksDb.find(x=>x.id===id);if(!l||!confirm("Xóa link này? (giữ 48h trong tab Đã xóa, không tự quay lại Link Sub)"))return;
- const dead={...l,deadTs:nowMs(),deadDate:new Date(nowMs()).toISOString()};
- addTomb(l);deadDb.unshift(dead);linksDb=linksDb.filter(x=>x.id!==id);renderLinks();renderDead();
- try{
-  const j=await aj("/api/admin/link/delete",{method:"POST",body:{id:l.id,masked:l.masked,link:dead},soft:true});
-  if(!(j&&j.ok)){await aj("/api/deadlinks",{method:"POST",body:deadDb});await saveLinks();aj("/api/admin/unlink",{method:"POST",body:{masked:[l.masked]},soft:true}).catch(()=>{});}
-  lastSig.l=JSON.stringify(linksDb);toast("Đã xóa link");logEvent("info","Link Sub","Xóa link "+(l.email||""),l.id);
- }catch(e){toast("Lỗi xóa link: "+e.message,"err");}}
+// XÓA LINK TRIỆT ĐỂ: So khớp kép cả id và masked (link ẩn là duy nhất 100%), không bao giờ bị hiện lại
+async function delLink(id){
+ const l = linksDb.find(x => x.id === id || x.masked === id);
+ if (!l || !confirm("Xóa link này? Link sẽ vào tab Đã xóa và KHÔNG BAO GIỜ tự quay lại.")) return;
+ const dead = { ...l, deadTs: nowMs(), deadDate: new Date(nowMs()).toISOString() };
+ addTomb(l);
+ deadDb.unshift(dead);
+ // Lọc bỏ triệt để theo cả id và masked
+ linksDb = linksDb.filter(x => x.id !== l.id && x.masked !== l.masked);
+ renderLinks();
+ renderDead();
+ try {
+  const j = await aj("/api/admin/link/delete", { method: "POST", body: { id: l.id, masked: l.masked, link: dead }, soft: true });
+  if (!(j && j.ok)) {
+    await aj("/api/deadlinks", { method: "POST", body: deadDb });
+    await saveLinks();
+  }
+  lastSig.l = JSON.stringify(linksDb);
+  toast("Đã xóa link vĩnh viễn khỏi Link Sub");
+  logEvent("info", "Link Sub", "Xóa link " + (l.email || ""), l.id || l.masked);
+ } catch(e) {
+  toast("Lỗi xóa link: " + e.message, "err");
+ }
+}
+
+// ===================== LOGIC TAB GIÁ GÓI LINH HOẠT =====================
+const FIXED_PKG_IDS = new Set(["t1", "t2", "c1", "c2", "c3", "d1", "d2", "d3", "custom"]);
+let adminPkgsList = [];
+
+// Khởi tạo danh sách gói mặc định
+function getDefaultAdminPkgs() {
+  return [
+    { id: "t1", name: "Gói 1 tháng", time: 1, vnd: 60000, cny: 15.5, usd: 2.5, data: "100GB", dev: "1 Thiết bị", tag1: "🔥 BÁN CHẠY", tag2: "✈️ Du lịch", tag3: "", tag4: "", tag1On: true, tag2On: true, tag3On: false, tag4On: false, category: ["cycle", "travel"], features: ["Băng thông lên đến 3Gbps"] },
+    { id: "t2", name: "Gói 1 tháng", time: 1, vnd: 70000, cny: 18.0, usd: 3.0, data: "500GB", dev: "3 Thiết bị", tag1: "🔥 BÁN CHẠY", tag2: "✈️ Du lịch", tag3: "", tag4: "", tag1On: true, tag2On: true, tag3On: false, tag4On: false, category: ["cycle", "travel"], features: ["Băng thông lên đến 3Gbps"] },
+    { id: "c1", name: "Gói 1 tháng", time: 1, vnd: 80000, cny: 20.5, usd: 3.5, data: "1000GB", dev: "Không giới hạn thiết bị", tag1: "🔥 BÁN CHẠY", tag2: "✈️ Du lịch", tag3: "", tag4: "", tag1On: true, tag2On: true, tag3On: false, tag4On: false, category: ["cycle", "travel"], features: ["Băng thông lên đến 3Gbps"] },
+    { id: "c2", name: "Gói Cao Cấp", time: 1, vnd: 200000, cny: 50.0, usd: 8.0, data: "3000GB", dev: "Không giới hạn thiết bị", tag1: "", tag2: "", tag3: "", tag4: "", tag1On: false, tag2On: false, tag3On: false, tag4On: false, category: ["cycle"], features: ["Băng thông lên đến 3Gbps"] },
+    { id: "c3", name: "Gói 1 Năm", time: 12, vnd: 799000, cny: 199.0, usd: 30.0, data: "300GB/tháng", dev: "Không giới hạn thiết bị", tag1: "", tag2: "", tag3: "Khuyên dùng", tag4: "", tag1On: false, tag2On: false, tag3On: true, tag4On: false, category: ["cycle"], features: ["Băng thông lên đến 3Gbps"] },
+    { id: "d1", name: "Không Giới Hạn", time: "lifetime", vnd: 200000, cny: 52.0, usd: 8.0, data: "200GB", dev: "Không giới hạn thiết bị", tag1: "", tag2: "", tag3: "", tag4: "", tag1On: false, tag2On: false, tag3On: false, tag4On: false, category: ["usage"], features: ["Băng thông lên đến 3Gbps"] },
+    { id: "d2", name: "Không Giới Hạn", time: "lifetime", vnd: 399000, cny: 102.0, usd: 16.0, data: "1000GB", dev: "Không giới hạn thiết bị", tag1: "", tag2: "", tag3: "", tag4: "", tag1On: false, tag2On: false, tag3On: false, tag4On: false, category: ["usage"], features: ["Băng thông lên đến 3Gbps"] },
+    { id: "d3", name: "Không Giới Hạn", time: "lifetime", vnd: 999000, cny: 256.0, usd: 40.0, data: "5000GB", dev: "Không giới hạn thiết bị", tag1: "", tag2: "", tag3: "", tag4: "", tag1On: false, tag2On: false, tag3On: false, tag4On: false, category: ["usage"], features: ["Băng thông lên đến 3Gbps"] },
+    { id: "custom", name: "Gói Tùy Chọn", time: 1, vnd: 0, cny: 0, usd: 0, isCustom: true, data: "100GB - 100,000GB", dev: "Tùy chọn", tag1: "", tag2: "", tag3: "", tag4: "", tag1On: false, tag2On: false, tag3On: false, tag4On: false, category: ["travel", "cycle", "usage"], features: ["Băng thông lên đến 3Gbps"] }
+  ];
+}
+
+async function loadAdminPkgs() {
+  try {
+    const j = await aj("/api/packages");
+    if (Array.isArray(j?.packages) && j.packages.length) {
+      adminPkgsList = j.packages;
+    } else {
+      adminPkgsList = getDefaultAdminPkgs();
+    }
+  } catch {
+    adminPkgsList = getDefaultAdminPkgs();
+  }
+  renderPkgAdmin();
+}
+
+let pkgDragIndex = -1;
+
+function renderPkgAdmin() {
+  const container = $("pkgCardsList");
+  if (!container) return;
+  if (!adminPkgsList.length) adminPkgsList = getDefaultAdminPkgs();
+
+  container.innerHTML = adminPkgsList.map((p, idx) => {
+    const isFixed = FIXED_PKG_IDS.has(p.id);
+    const feats = Array.isArray(p.features) ? p.features : ["Băng thông lên đến 3Gbps"];
+    
+    return `
+    <div data-pkg-idx="${idx}" ondragover="event.preventDefault()" ondrop="dropPkgCard(event, ${idx})" class="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col gap-3 relative transition-all">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 flex-wrap gap-2">
+        <div class="flex items-center gap-2">
+          <span draggable="true" ondragstart="startDragPkg(event, ${idx})" class="cursor-grab text-slate-400 px-1 hover:text-indigo-600" title="Kéo để sắp xếp thứ tự hiển thị"><i class="fas fa-grip-vertical text-lg"></i></span>
+          <span class="text-xs font-bold text-slate-400">#${idx + 1}</span>
+          <span class="bg-indigo-100 text-indigo-700 font-mono font-black text-xs px-2 py-0.5 rounded-lg border border-indigo-200">
+            Mã: ${esc(p.id)} ${isFixed ? '(Cố định)' : '(Tùy chỉnh)'}
+          </span>
+        </div>
+        ${!isFixed ? `<button onclick="delCustomPkg(${idx})" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 px-2.5 py-1 rounded-lg border border-red-100"><i class="fas fa-trash mr-1"></i>Xóa gói này</button>` : ''}
+      </div>
+
+      <!-- 4 loại Tag -->
+      <div class="bg-slate-50 border border-slate-100 rounded-xl p-2.5 space-y-2">
+        <div class="text-[10px] font-bold text-slate-500 uppercase">Cấu hình 4 Badge Tag góc thẻ:</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border">
+            <input type="checkbox" id="pkg_tag1_on_${idx}" ${p.tag1On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag1On = this.checked" class="w-4 h-4 accent-red-600 shrink-0">
+            <input type="text" id="pkg_tag1_${idx}" value="${esc(p.tag1 || '🔥 BÁN CHẠY')}" oninput="adminPkgsList[${idx}].tag1 = this.value" placeholder="Tag 1 (Bán chạy)" class="w-full text-xs font-bold text-red-600 outline-none">
+          </div>
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border">
+            <input type="checkbox" id="pkg_tag2_on_${idx}" ${p.tag2On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag2On = this.checked" class="w-4 h-4 accent-blue-600 shrink-0">
+            <input type="text" id="pkg_tag2_${idx}" value="${esc(p.tag2 || '✈️ Du lịch')}" oninput="adminPkgsList[${idx}].tag2 = this.value" placeholder="Tag 2 (Du lịch)" class="w-full text-xs font-bold text-blue-600 outline-none">
+          </div>
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border">
+            <input type="checkbox" id="pkg_tag3_on_${idx}" ${p.tag3On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag3On = this.checked" class="w-4 h-4 accent-amber-600 shrink-0">
+            <input type="text" id="pkg_tag3_${idx}" value="${esc(p.tag3 || 'Khuyên dùng')}" oninput="adminPkgsList[${idx}].tag3 = this.value" placeholder="Tag 3 (Khuyên dùng)" class="w-full text-xs font-bold text-amber-600 outline-none">
+          </div>
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border">
+            <input type="checkbox" id="pkg_tag4_on_${idx}" ${p.tag4On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag4On = this.checked" class="w-4 h-4 accent-purple-600 shrink-0">
+            <input type="text" id="pkg_tag4_${idx}" value="${esc(p.tag4 || '')}" oninput="adminPkgsList[${idx}].tag4 = this.value" placeholder="Tag 4 (Tự do nhập)" class="w-full text-xs font-bold text-purple-600 outline-none">
+          </div>
+        </div>
+      </div>
+
+      <!-- Thông tin chính -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tên gói cước</label>
+          <input type="text" value="${esc(p.name || '')}" oninput="adminPkgsList[${idx}].name = this.value" class="w-full p-2 text-xs border rounded-lg font-bold bg-white outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Thời hạn (Tháng / Vĩnh viễn)</label>
+          <div class="flex items-center gap-1.5">
+            <input type="number" min="1" max="120" value="${p.time === 'lifetime' ? '' : (p.time || 1)}" ${p.time === 'lifetime' ? 'disabled' : ''} id="pkg_time_val_${idx}" oninput="adminPkgsList[${idx}].time = Number(this.value)||1" class="w-20 p-2 text-xs border rounded-lg text-center font-bold bg-white">
+            <label class="flex items-center gap-1 text-xs font-bold text-slate-700 cursor-pointer">
+              <input type="checkbox" ${p.time === 'lifetime' ? 'checked' : ''} onchange="toggleLifetimePkg(${idx}, this.checked)" class="accent-indigo-600"> Vĩnh viễn
+            </label>
+          </div>
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Dung lượng hiển thị</label>
+          <input type="text" value="${esc(p.data || '')}" oninput="adminPkgsList[${idx}].data = this.value" placeholder="VD: 100GB, 300GB/tháng..." class="w-full p-2 text-xs border rounded-lg font-bold bg-white outline-none">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Giới hạn thiết bị</label>
+          <input type="text" value="${esc(p.dev || '')}" oninput="adminPkgsList[${idx}].dev = this.value" placeholder="VD: 1 Thiết bị, Không giới hạn..." class="w-full p-2 text-xs border rounded-lg font-bold bg-white outline-none">
+        </div>
+      </div>
+
+      <!-- Giá tiền -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+        <div>
+          <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Giá VND (Bank VN)</label>
+          <input type="number" step="1000" value="${p.vnd || 0}" ${p.isCustom ? 'disabled' : ''} oninput="adminPkgsList[${idx}].vnd = Number(this.value)||0" class="w-full p-2 text-xs border rounded-lg font-bold text-emerald-600 bg-white">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Giá CNY ¥ (Alipay / Weixin)</label>
+          <input type="number" step="0.5" value="${p.cny || 0}" ${p.isCustom ? 'disabled' : ''} oninput="adminPkgsList[${idx}].cny = Number(this.value)||0" class="w-full p-2 text-xs border rounded-lg font-bold text-blue-600 bg-white">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Giá USD $</label>
+          <input type="number" step="0.5" value="${p.usd || 0}" ${p.isCustom ? 'disabled' : ''} oninput="adminPkgsList[${idx}].usd = Number(this.value)||0" class="w-full p-2 text-xs border rounded-lg font-bold text-slate-700 bg-white">
+        </div>
+      </div>
+
+      <!-- Dòng tính năng / Ghi chú (Thêm/bớt block) -->
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <label class="block text-[10px] font-bold text-slate-500 uppercase">Các dòng tính năng (dấu tích xanh bên Index):</label>
+          <button onclick="addPkgFeatureLine(${idx})" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800"><i class="fas fa-plus mr-0.5"></i>Thêm dòng</button>
+        </div>
+        <div class="space-y-1.5" id="pkg_feats_wrap_${idx}">
+          ${feats.map((f, fIdx) => `
+            <div class="flex items-center gap-1.5">
+              <i class="fas fa-check-circle text-emerald-500 text-xs shrink-0"></i>
+              <input type="text" value="${esc(f)}" oninput="adminPkgsList[${idx}].features[${fIdx}] = this.value" class="w-full p-1.5 text-xs border rounded-lg bg-white outline-none">
+              <button onclick="delPkgFeatureLine(${idx}, ${fIdx})" class="text-slate-400 hover:text-red-500 px-1 text-xs shrink-0"><i class="fas fa-times"></i></button>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+
+      <!-- Phân loại bộ lọc tab -->
+      <div class="flex items-center gap-3 pt-1 border-t border-slate-100 flex-wrap">
+        <span class="text-[10px] font-bold text-slate-400 uppercase">Bộ lọc Index:</span>
+        <label class="text-xs font-bold text-slate-700 flex items-center gap-1 cursor-pointer">
+          <input type="checkbox" ${(p.category || []).includes('travel') ? 'checked' : ''} onchange="togglePkgCat(${idx}, 'travel', this.checked)" class="accent-indigo-600"> Du lịch
+        </label>
+        <label class="text-xs font-bold text-slate-700 flex items-center gap-1 cursor-pointer">
+          <input type="checkbox" ${(p.category || []).includes('cycle') ? 'checked' : ''} onchange="togglePkgCat(${idx}, 'cycle', this.checked)" class="accent-indigo-600"> Chu kỳ
+        </label>
+        <label class="text-xs font-bold text-slate-700 flex items-center gap-1 cursor-pointer">
+          <input type="checkbox" ${(p.category || []).includes('usage') ? 'checked' : ''} onchange="togglePkgCat(${idx}, 'usage', this.checked)" class="accent-indigo-600"> Dung lượng
+        </label>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function startDragPkg(e, idx) {
+  pkgDragIndex = idx;
+  try { e.dataTransfer.setData("text/plain", String(idx)); } catch {}
+}
+
+function dropPkgCard(e, targetIdx) {
+  e.preventDefault();
+  if (pkgDragIndex < 0 || pkgDragIndex === targetIdx) return;
+  const [item] = adminPkgsList.splice(pkgDragIndex, 1);
+  adminPkgsList.splice(targetIdx, 0, item);
+  pkgDragIndex = -1;
+  renderPkgAdmin();
+}
+
+function toggleLifetimePkg(idx, checked) {
+  adminPkgsList[idx].time = checked ? "lifetime" : 1;
+  const inp = $("pkg_time_val_" + idx);
+  if (inp) {
+    inp.disabled = checked;
+    inp.value = checked ? "" : "1";
+  }
+}
+
+function addPkgFeatureLine(idx) {
+  if (!Array.isArray(adminPkgsList[idx].features)) adminPkgsList[idx].features = [];
+  adminPkgsList[idx].features.push("Tính năng mới");
+  renderPkgAdmin();
+}
+
+function delPkgFeatureLine(pkgIdx, featIdx) {
+  if (Array.isArray(adminPkgsList[pkgIdx].features)) {
+    adminPkgsList[pkgIdx].features.splice(featIdx, 1);
+    renderPkgAdmin();
+  }
+}
+
+function togglePkgCat(pkgIdx, cat, checked) {
+  let cats = new Set(adminPkgsList[pkgIdx].category || []);
+  if (checked) cats.add(cat); else cats.delete(cat);
+  adminPkgsList[pkgIdx].category = [...cats];
+}
+
+function addNewCustomPkg() {
+  const nextNum = adminPkgsList.filter(p => !FIXED_PKG_IDS.has(p.id)).length + 4;
+  const newId = "c" + nextNum;
+  adminPkgsList.unshift({
+    id: newId,
+    name: "Gói mới tùy chỉnh",
+    time: 1,
+    vnd: 90000,
+    cny: 23.0,
+    usd: 4.0,
+    data: "2000GB",
+    dev: "Không giới hạn thiết bị",
+    tag1: "MỚI",
+    tag2: "",
+    tag3: "",
+    tag4: "",
+    tag1On: true,
+    tag2On: false,
+    tag3On: false,
+    tag4On: false,
+    category: ["cycle"],
+    features: ["Băng thông lên đến 3Gbps", "Hỗ trợ 24/7"]
+  });
+  renderPkgAdmin();
+  toast("Đã tạo gói mới: " + newId + ". Hãy điền thông tin và bấm LƯU.");
+}
+
+function delCustomPkg(idx) {
+  const p = adminPkgsList[idx];
+  if (FIXED_PKG_IDS.has(p.id)) return toast("Không thể xóa 9 gói cố định của hệ thống", "warn");
+  if (!confirm(`Xóa gói tùy chỉnh ${p.name} (mã: ${p.id})?`)) return;
+  adminPkgsList.splice(idx, 1);
+  renderPkgAdmin();
+  toast("Đã xóa gói");
+}
+
+async function saveAllPkgs() {
+  const btn = $("btnSaveAllPkgs");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i>ĐANG LƯU...';
+  try {
+    const j = await aj("/api/packages", { method: "POST", body: { packages: adminPkgsList } });
+    toast(`Đã lưu ${j.count || adminPkgsList.length} gói cước và đồng bộ sang D1 thành công!`);
+    renderPkgAdmin();
+  } catch (e) {
+    toast("Lỗi lưu gói: " + e.message, "err");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-save mr-1.5"></i>LƯU CẤU HÌNH GIÁ GÓI';
+  }
+}
 async function sortAllLinks(){
  const b=$("btnSortLinks");b.disabled=true;
  const pe=s=>{const t=expEnd(s);return t||0;};
