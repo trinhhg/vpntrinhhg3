@@ -946,7 +946,40 @@ function pubGotoArt(tab,name){
  if(!a)return;pubGoto(t,a.id,'');
 }
 
-async function loadConfig(){try{const r=await fetch(WORKER_URL+'/api/public/config?_t='+Date.now(),{cache:'no-store'});if(r.ok){cfgCache=await r.json();renderDock();}}catch(e){}}
+async function loadConfig(){
+  try{
+    const r=await fetch(WORKER_URL+'/api/public/config?_t='+Date.now(),{cache:'no-store'});
+    if(r.ok){
+      cfgCache=await r.json();
+      renderDock();
+      // Nếu có danh sách gói động do Admin cấu hình từ tab Giá gói, thay thế mảng pkgs tĩnh
+      if(Array.isArray(cfgCache.packages) && cfgCache.packages.length){
+        pkgs = cfgCache.packages.map(p => {
+          return {
+            id: p.id,
+            category: p.category || ['cycle'],
+            vi: { name: p.name || p.vi?.name || 'Gói VPN', price: p.isCustom ? 'Liên hệ Admin' : (p.vnd ? Number(p.vnd).toLocaleString('en-US') + 'VND' : '0VND') },
+            en: { name: p.name || p.en?.name || 'VPN Plan', price: p.isCustom ? 'Contact Admin' : ('$' + (p.usd || 0)) },
+            zh: { name: p.name || p.zh?.name || 'VPN套餐', price: p.isCustom ? '联系管理员' : ('¥' + (p.cny || 0)) },
+            usd: Number(p.usd) || 0,
+            vnd: Number(p.vnd) || 0,
+            cny: Number(p.cny) || 0,
+            data: p.data || '',
+            dev: p.dev || 'unlimited',
+            time: p.time !== undefined ? p.time : (p.m === 0 ? 'lifetime' : (p.m || 1)),
+            isCustom: !!p.isCustom,
+            tag: p.tag1On && p.tag1 ? { vi: p.tag1, en: p.tag1, zh: p.tag1 } : null,
+            tag2: p.tag2On && p.tag2 ? { vi: p.tag2, en: p.tag2, zh: p.tag2 } : null,
+            tag3: p.tag3On && p.tag3 ? { vi: p.tag3, en: p.tag3, zh: p.tag3 } : null,
+            tag4: p.tag4On && p.tag4 ? { vi: p.tag4, en: p.tag4, zh: p.tag4 } : null,
+            features: p.features || ['Băng thông lên đến 3Gbps']
+          };
+        });
+        renderPackages('all');
+      }
+    }
+  }catch(e){}
+}
 
 async function wpost(path,body){const r=await fetch(WORKER_URL+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});let d={};try{d=await r.json();}catch{}return{ok:r.ok,status:r.status,data:d};}
 async function wpostRetry(path,body,n=3){let last;for(let i=0;i<n;i++){try{last=await wpost(path,body);if(last.ok||last.status<500)return last;}catch(e){last={ok:false,status:0,data:{error:String(e)}};}await new Promise(r=>setTimeout(r,800*(i+1)));}return last;}
@@ -1001,17 +1034,33 @@ const faqHTML=['1','2','3','4'].map(n=>`<details class="bg-white dark:bg-[#0a0a0
 
 function disableUpgradeMode(){isUpgradeMode=false;isRenewMode=false;upgradeConfirmed=false;baseOrderPriceVnd=baseOrderPriceUsd=baseOrderPriceCny=0;renderPackages('all');}
 function genHTML(pkg){
- const l=i18n[lang],p=pkg[lang];let displayTime=pkg.time==='lifetime'?l.lifetime_lbl:`${pkg.time} ${l.month_lbl}`;if(pkg.category.includes('usage')&&!pkg.isCustom)displayTime=l.lifetime_lbl;
- const devText=pkg.dev==='unlimited'?l.dev_unlimited_label:pkg.dev==='custom'?l.dev_custom:`${l.dev_label} <b>${pkg.dev} ${l.dev_label_suffix}</b>`;
+ const l=i18n[lang],p=pkg[lang]||pkg.vi;let displayTime=pkg.time==='lifetime'?l.lifetime_lbl:`${pkg.time} ${l.month_lbl}`;if((pkg.category||[]).includes('usage')&&!pkg.isCustom)displayTime=l.lifetime_lbl;
+ const devText=String(pkg.dev).includes('unlimited')?l.dev_unlimited_label:pkg.dev==='custom'?l.dev_custom:String(pkg.dev).includes('Thiết bị')?`<b>${pkg.dev}</b>`:`${l.dev_label} <b>${pkg.dev}</b>`;
  const isDisabled=isUpgradeMode&&pkg.vnd<=baseOrderPriceVnd&&!pkg.isCustom;
- const priceStr=p.price.replace('VND','<span class="text-sm md:text-base font-bold ml-0.5">VND</span>');
+ const priceStr=(p.price||'').replace('VND','<span class="text-sm md:text-base font-bold ml-0.5">VND</span>');
  const priceHTML=pkg.isCustom?`<div class="text-xl font-black text-red-600 dark:text-red-400 dark:drop-shadow-[0_0_8px_rgba(248,113,113,0.8)] mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${priceStr}</div>`:`<div class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_10px_rgba(165,180,252,0.8)] mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${priceStr}</div>`;
  const btn=isDisabled?`<button disabled class="w-full bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 font-bold py-3 rounded-xl text-sm cursor-not-allowed">${l.unavailable}</button>`:pkg.isCustom?`<a href="#footerArea" class="w-full block text-center bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-bold py-3 rounded-xl text-sm hover:bg-red-600 hover:text-white transition">${l.btn_contact}</a>`:`<button onclick="openCheckout('${pkg.id}')" class="w-full bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-bold py-3 rounded-xl text-sm hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white dark:hover:shadow-[0_0_15px_rgba(99,102,241,0.5)] transition">${l.btn_buy}</button>`;
- return `<div class="bg-white dark:bg-[#0a0a0a] p-5 md:p-6 rounded-3xl border border-slate-100 dark:border-indigo-500/50 shadow-sm relative flex flex-col justify-between transition-all duration-300 transform hover:-translate-y-2 hover:scale-[1.02] neon-animated-card mt-4 md:mt-0 ${isDisabled?'pkg-disabled':''}">
- ${pkg.tag?`<span class="absolute -top-3 right-4 bg-red-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10">${pkg.tag[lang]||pkg.tag.vi}</span>`:''}${pkg.tag2?`<span class="absolute -top-3 left-4 bg-blue-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10">${pkg.tag2[lang]||pkg.tag2.vi}</span>`:''}
- <div class="${pkg.tag||pkg.tag2?'pt-2':''}"><h3 class="font-extrabold text-lg md:text-xl dark:text-white">${p.name}</h3><p class="text-xs font-bold text-slate-500 dark:text-slate-300 mb-3">${displayTime}</p>${priceHTML}
- <ul class="text-xs md:text-sm space-y-2.5 mb-6 font-medium text-slate-600 dark:text-white"><li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${l.data_label} <b class="dark:text-white">${pkg.data}</b></li><li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${devText}</li><li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${l.speed_label}</li></ul></div>${btn}</div>`;}
 
+ // Render 4 loại Tag linh hoạt
+ let tagBadges = '';
+ if (pkg.tag) tagBadges += `<span class="absolute -top-3 right-4 bg-red-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10 shadow-sm">${pkg.tag[lang]||pkg.tag.vi||pkg.tag}</span>`;
+ if (pkg.tag2) tagBadges += `<span class="absolute -top-3 left-4 bg-blue-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10 shadow-sm">${pkg.tag2[lang]||pkg.tag2.vi||pkg.tag2}</span>`;
+ if (pkg.tag3) tagBadges += `<span class="absolute -top-3 right-4 bg-amber-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10 shadow-sm">${pkg.tag3[lang]||pkg.tag3.vi||pkg.tag3}</span>`;
+ if (pkg.tag4) tagBadges += `<span class="absolute -top-3 left-4 bg-purple-600 text-white text-[10px] px-3 py-1 rounded-full font-black z-10 shadow-sm">${pkg.tag4[lang]||pkg.tag4.vi||pkg.tag4}</span>`;
+
+ // Render danh sách dòng tính năng linh hoạt
+ const extraFeats = Array.isArray(pkg.features) ? pkg.features : ['Băng thông lên đến 3Gbps'];
+ const featsHtml = extraFeats.map(f => `<li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${esc(f)}</li>`).join('');
+
+ return `<div class="bg-white dark:bg-[#0a0a0a] p-5 md:p-6 rounded-3xl border border-slate-100 dark:border-indigo-500/50 shadow-sm relative flex flex-col justify-between transition-all duration-300 transform hover:-translate-y-2 hover:scale-[1.02] neon-animated-card mt-4 md:mt-0 ${isDisabled?'pkg-disabled':''}">
+ ${tagBadges}
+ <div class="${tagBadges?'pt-2':''}"><h3 class="font-extrabold text-lg md:text-xl dark:text-white">${esc(p.name)}</h3><p class="text-xs font-bold text-slate-500 dark:text-slate-300 mb-3">${displayTime}</p>${priceHTML}
+ <ul class="text-xs md:text-sm space-y-2.5 mb-6 font-medium text-slate-600 dark:text-white">
+   <li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${l.data_label} <b class="dark:text-white">${esc(pkg.data)}</b></li>
+   <li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${devText}</li>
+   ${featsHtml}
+ </ul></div>${btn}</div>`;
+}
 function renderPackages(filter){
  ['htab','ptab'].forEach(p=>['all','travel','cycle','usage'].forEach(t=>{const b=$(`${p}-${t}`);if(!b)return;if(t===filter){b.classList.add('active','bg-indigo-600','text-white');b.classList.remove('text-slate-600','dark:text-slate-300');}else{b.classList.remove('active','bg-indigo-600','text-white');b.classList.add('text-slate-600','dark:text-slate-300');}}));
  const html=pkgs.filter(p=>filter==='all'||p.category.includes(filter)).map(genHTML).join('');if($('packagesContainerHome'))$('packagesContainerHome').innerHTML=html;if($('packagesContainerPortal'))$('packagesContainerPortal').innerHTML=html;}
