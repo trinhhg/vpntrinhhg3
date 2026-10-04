@@ -719,7 +719,7 @@ async function applyLangSafe(val){
 OBS.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:I_ATTRS});
 /* ===== HẾT I18N RUNTIME ===== */
 
-const pkgs=[
+let pkgs=[
  {id:'t1',category:['cycle','travel'],vi:{name:'Gói 1 tháng',price:'60,000VND'},en:{name:'1 Month',price:'$2.50'},zh:{name:'1个月',price:'¥15.5'},usd:2.5,vnd:60000,cny:15.5,data:'100GB',dev:1,time:1,tag:{vi:'🔥 BÁN CHẠY',en:'🔥 BEST SELLER',zh:'🔥热销'},tag2:{vi:'✈️ Du lịch',en:'✈️ Travel',zh:'✈️ 旅游'}},
  {id:'t2',category:['cycle','travel'],vi:{name:'Gói 1 tháng',price:'70,000VND'},en:{name:'1 Month',price:'$3.00'},zh:{name:'1个月',price:'¥18'},usd:3,vnd:70000,cny:18,data:'500GB',dev:3,time:1,tag:{vi:'🔥 BÁN CHẠY',en:'🔥 BEST SELLER',zh:'🔥热销'},tag2:{vi:'✈️ Du lịch',en:'✈️ Travel',zh:'✈️ 旅游'}},
  {id:'c1',category:['cycle','travel'],vi:{name:'Gói 1 tháng',price:'80,000VND'},en:{name:'1 Month',price:'$3.50'},zh:{name:'1个月',price:'¥20.5'},usd:3.5,vnd:80000,cny:20.5,data:'1000GB',dev:'unlimited',time:1,tag:{vi:'🔥 BÁN CHẠY',en:'🔥 BEST SELLER',zh:'🔥热销'},tag2:{vi:'✈️ Du lịch',en:'✈️ Travel',zh:'✈️ 旅游'}},
@@ -730,6 +730,14 @@ const pkgs=[
  {id:'d3',category:['usage'],vi:{name:'Không Giới Hạn',price:'999,000VND'},en:{name:'Unlimited',price:'$40.00'},zh:{name:'不限时',price:'¥256'},usd:40,vnd:999000,cny:256,data:'5000GB',dev:'unlimited',time:'lifetime'},
  {id:'custom',isCustom:true,category:['travel','cycle','usage'],vi:{name:'Gói Tùy Chọn',price:'Liên hệ Admin'},en:{name:'Custom',price:'Contact Admin'},zh:{name:'自定义',price:'联系管理员'},usd:0,vnd:0,cny:0,data:'100GB - 100,000GB',dev:'custom',time:1}
 ];
+// Đồng bộ tức thì 0ms: Nạp ngay từ Cache LocalStorage khi tải trang
+try {
+  const cachedPkgsRaw = localStorage.getItem('vpn_dynamic_pkgs_cache');
+  if (cachedPkgsRaw) {
+    const parsedPkgs = JSON.parse(cachedPkgsRaw);
+    if (Array.isArray(parsedPkgs) && parsedPkgs.length) pkgs = parsedPkgs;
+  }
+} catch(e) {}
 
 const DOCK_DEFAULT=[['https://www.facebook.com/','bg-fb','fab fa-facebook-f'],['https://messenger.com/','bg-mess','fab fa-facebook-messenger'],['https://telegram.org/','bg-tele','fab fa-telegram-plane'],['https://whatsapp.com/','bg-wa','fab fa-whatsapp'],['https://discord.com/','bg-discord','fab fa-discord'],['https://tiktok.com/','bg-tiktok','fab fa-tiktok'],['https://instagram.com/','bg-insta','fab fa-instagram'],['https://twitter.com/','bg-x','fab fa-x-twitter'],['https://threads.net/','bg-threads','fab fa-threads'],['https://youtube.com/','bg-youtube','fab fa-youtube'],['https://reddit.com/','bg-reddit','fab fa-reddit-alien'],['https://soundcloud.com/','bg-sc','fab fa-soundcloud'],['https://locket.camera/','bg-locket','fas fa-heart'],['https://netflix.com/','bg-netflix','IMG'],['https://spotify.com/','bg-spotify','fab fa-spotify']];
 const DOCK_NF='https://images.ctfassets.net/4cd45et68cgf/Rx83JoRDMkYNlMC9MKzcB/2b14d5a59fc3937afd3f03191e19502d/Netflix-Symbol.png?w=700&h=456';
@@ -975,6 +983,7 @@ async function loadConfig(){
             features: p.features || ['Băng thông lên đến 3Gbps']
           };
         });
+        try { localStorage.setItem('vpn_dynamic_pkgs_cache', JSON.stringify(pkgs)); } catch(e) {}
         renderPackages('all');
       }
     }
@@ -1035,7 +1044,16 @@ const faqHTML=['1','2','3','4'].map(n=>`<details class="bg-white dark:bg-[#0a0a0
 function disableUpgradeMode(){isUpgradeMode=false;isRenewMode=false;upgradeConfirmed=false;baseOrderPriceVnd=baseOrderPriceUsd=baseOrderPriceCny=0;renderPackages('all');}
 function genHTML(pkg){
  const l=i18n[lang],p=pkg[lang]||pkg.vi;let displayTime=pkg.time==='lifetime'?l.lifetime_lbl:`${pkg.time} ${l.month_lbl}`;if((pkg.category||[]).includes('usage')&&!pkg.isCustom)displayTime=l.lifetime_lbl;
- const devText=String(pkg.dev).includes('unlimited')?l.dev_unlimited_label:pkg.dev==='custom'?l.dev_custom:String(pkg.dev).includes('Thiết bị')?`<b>${pkg.dev}</b>`:`${l.dev_label} <b>${pkg.dev}</b>`;
+ let devText = '';
+ const devRaw = String(pkg.dev ?? '').trim();
+ if (devRaw.toLowerCase().includes('unlimited') || devRaw.toLowerCase().includes('không giới hạn')) {
+   devText = `${l.dev_label}<b>${l.dev_unlimited_label || 'Không giới hạn thiết bị'}</b>`;
+ } else if (devRaw === 'custom' || devRaw.toLowerCase().includes('tùy chọn')) {
+   devText = `${l.dev_label}<b>${l.dev_custom || 'Tùy chọn'}</b>`;
+ } else {
+   const cleanVal = devRaw.toLowerCase().includes('thiết bị') ? devRaw : `${devRaw} Thiết bị`;
+   devText = `${l.dev_label}<b>${cleanVal}</b>`;
+ }
  const isDisabled=isUpgradeMode&&pkg.vnd<=baseOrderPriceVnd&&!pkg.isCustom;
  const priceStr=(p.price||'').replace('VND','<span class="text-sm md:text-base font-bold ml-0.5">VND</span>');
  const priceHTML=pkg.isCustom?`<div class="text-xl font-black text-red-600 dark:text-red-400 dark:drop-shadow-[0_0_8px_rgba(248,113,113,0.8)] mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${priceStr}</div>`:`<div class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_10px_rgba(165,180,252,0.8)] mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${priceStr}</div>`;
@@ -1298,11 +1316,11 @@ function logout(){
 
 window.onload=async function(){
  changeLanguage('vi');renderDock();
+ await loadConfig();
  if(location.hash==='#wechat')$('wechatModal').classList.remove('hidden');
  let s=null;try{s=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');}catch{}
  if(s&&Date.now()-s.time<864e5){$('loginInput').value=s.id;await login(true);}
  else{if(s)localStorage.removeItem(SESSION_KEY);document.documentElement.classList.remove('has-user-session');$('view-store').classList.add('active');renderPackages('all');}
- loadConfig();
  const f=$('footerArea');if(f)obs.observe(f);};
 
 async function requestDataCheck(){
