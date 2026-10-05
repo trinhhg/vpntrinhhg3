@@ -1063,7 +1063,7 @@ function genHTML(pkg){
  let tagBadges = '';
  if (pkg.tag) tagBadges += `<span class="absolute -top-3 right-4 bg-red-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10 shadow-sm">${pkg.tag[lang]||pkg.tag.vi||pkg.tag}</span>`;
  if (pkg.tag2) tagBadges += `<span class="absolute -top-3 left-4 bg-blue-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10 shadow-sm">${pkg.tag2[lang]||pkg.tag2.vi||pkg.tag2}</span>`;
- if (pkg.tag3) tagBadges += `<span class="absolute -top-3 right-4 bg-amber-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10 shadow-sm">${pkg.tag3[lang]||pkg.tag3.vi||pkg.tag3}</span>`;
+ if (pkg.tag3) tagBadges += `<span class="absolute -top-3 right-4 bg-red-500 text-white font-black px-3 py-1 rounded-full shadow-sm text-[10px] z-10">${pkg.tag3[lang]||pkg.tag3.vi||pkg.tag3}</span>`;
  if (pkg.tag4) tagBadges += `<span class="absolute -top-3 left-4 bg-purple-600 text-white text-[10px] px-3 py-1 rounded-full font-black z-10 shadow-sm">${pkg.tag4[lang]||pkg.tag4.vi||pkg.tag4}</span>`;
 
  // Render danh sách dòng tính năng linh hoạt
@@ -1099,9 +1099,73 @@ if ($('view-portal').classList.contains('active')) $('p-store').appendChild(co);
  const hideEmail=isUpgradeMode||isRenewMode;$('emailBlock').classList.toggle('hidden',hideEmail);$('cusEmail').required=!hideEmail;
  $('checkoutTitle').innerText=isUpgradeMode?i18n[lang].upgrade_confirm_title:i18n[lang].checkout_title;
  $('upgradePriceNote').classList.toggle('hidden',!isUpgradeMode);
- currentOrderId='';upgradeConfirmed=false;selectDuration(1);
+ currentOrderId='';upgradeConfirmed=false;renderDurationSelector(currentPackage);selectDuration(1);
  const z=$('cusZalo');z.classList.toggle('hidden',!$('needSupport').checked);z.required=$('needSupport').checked&&!hideEmail;
  document.body.classList.add('checkout-active');renderPaymentBox();}
+
+function renderDurationSelector(pkg) {
+ const block = $('durationBlock');
+ if (!block) return;
+ 
+ // 1. Gói Vĩnh viễn (lifetime)
+ if (pkg.time === 'lifetime') {
+  block.innerHTML = `
+   <label class="block font-bold text-xs text-slate-700 dark:text-slate-200 mb-2">Thời hạn gói:</label>
+   <div class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-500/30 p-3 rounded-xl text-center font-black text-indigo-700 dark:text-indigo-300 text-sm">
+    <i class="fas fa-infinity mr-1.5 text-lg"></i>Thời hạn: Vĩnh viễn
+   </div>
+  `;
+  currentDurationMode = 1;
+  return;
+ }
+
+ // 2. Gói 1 Năm (time: 12)
+ if (pkg.time === 12) {
+  block.innerHTML = `
+   <label class="block font-bold text-xs text-slate-700 dark:text-slate-200 mb-2">Thời hạn gói:</label>
+   <div class="grid grid-cols-1 gap-2 text-center">
+    <button type="button" class="dur-btn active !bg-indigo-600 !text-white font-bold py-2.5 rounded-lg text-sm shadow-md">
+     12 Tháng (1 Năm)
+    </button>
+   </div>
+  `;
+  currentDurationMode = 1;
+  return;
+ }
+
+ // 3. Gói chu kỳ 3 tháng (ví dụ Combo)
+ if (pkg.time === 3) {
+  block.innerHTML = `
+   <label class="block font-bold text-xs text-slate-700 dark:text-slate-200 mb-2">Chọn chu kỳ thanh toán:</label>
+   <div class="grid grid-cols-5 gap-1.5 md:gap-2 text-center">
+    <button type="button" onclick="selectDuration(1)" id="dur-btn-1" class="dur-btn active !bg-indigo-600 !text-white font-bold py-2 rounded-lg text-xs md:text-sm">3T <span class="text-[9px] font-normal block sm:inline">(x1)</span></button>
+    <button type="button" onclick="selectDuration(2)" id="dur-btn-2" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-xs md:text-sm">6T <span class="text-[9px] font-normal block sm:inline">(x2)</span></button>
+    <button type="button" onclick="selectDuration(3)" id="dur-btn-3" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-xs md:text-sm">9T <span class="text-[9px] font-normal block sm:inline">(x3)</span></button>
+    <button type="button" onclick="selectDuration(4)" id="dur-btn-4" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-xs md:text-sm">12T <span class="text-[9px] font-normal block sm:inline">(x4)</span></button>
+    <button type="button" onclick="selectDuration('custom')" id="dur-btn-custom" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-xs md:text-sm">XT <span class="text-[9px] font-normal block sm:inline">(Tùy chọn)</span></button>
+   </div>
+   <div id="customDurWrap" class="hidden mt-3"><div class="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 p-2 rounded-lg border border-indigo-100 dark:border-indigo-500/30"><label class="text-xs font-bold text-indigo-800 dark:text-indigo-300 whitespace-nowrap pl-1">Nhập số chu kỳ (mỗi chu kỳ 3 tháng):</label><input type="number" id="customDurInput" min="1" max="40" value="2" oninput="calculateTotal()" class="w-full p-2 text-sm border border-slate-300 dark:border-white/20 rounded outline-none font-bold bg-white dark:bg-black text-center text-slate-800 dark:text-white"></div></div>
+   <div id="priceCalculation" class="mt-3 text-sm font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-500/30 p-2.5 rounded-lg text-center"></div>
+  `;
+  currentDurationMode = 1;
+  return;
+ }
+
+ // 4. Gói 1 tháng thông thường (mặc định)
+ block.innerHTML = `
+  <label class="block font-bold text-xs text-slate-700 dark:text-slate-200 mb-2" data-i18n="choose_dur">Chọn thời gian:</label>
+  <div class="grid grid-cols-5 gap-2 text-center">
+    <button type="button" onclick="selectDuration(1)" id="dur-btn-1" class="dur-btn active !bg-indigo-600 !text-white font-bold py-2 rounded-lg text-sm">1 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
+    <button type="button" onclick="selectDuration(3)" id="dur-btn-3" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900">3 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
+    <button type="button" onclick="selectDuration(6)" id="dur-btn-6" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900">6 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
+    <button type="button" onclick="selectDuration(12)" id="dur-btn-12" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900">12 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
+    <button type="button" onclick="selectDuration('custom')" id="dur-btn-custom" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900">X <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
+  </div>
+  <div id="customDurWrap" class="hidden mt-3"><div class="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 p-2 rounded-lg border border-indigo-100 dark:border-indigo-500/30"><label class="text-xs font-bold text-indigo-800 dark:text-indigo-300 whitespace-nowrap pl-1" data-i18n="input_months">Nhập số tháng:</label><input type="number" id="customDurInput" min="1" max="120" value="2" oninput="calculateTotal()" class="w-full p-2 text-sm border border-slate-300 dark:border-white/20 rounded outline-none focus:border-indigo-500 font-bold bg-white dark:bg-black text-center text-slate-800 dark:text-white"></div></div>
+  <div id="priceCalculation" class="mt-3 text-sm font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-500/30 p-2.5 rounded-lg text-center"></div>
+ `;
+ currentDurationMode = 1;
+}
 
 function selectDuration(m){
  currentDurationMode=m;
@@ -1110,9 +1174,14 @@ function selectDuration(m){
   b.classList.add('bg-white','dark:bg-slate-800','text-slate-600','dark:text-slate-300','border-slate-200','dark:border-slate-700');
  });
  const ab=$('dur-btn-'+m);
- ab.classList.remove('bg-white','dark:bg-slate-800','text-slate-600','dark:text-slate-300','border-slate-200','dark:border-slate-700');
- ab.classList.add('!bg-indigo-600','!text-white','border-transparent','active');
- $('customDurWrap').classList.toggle('hidden',m!=='custom');calculateTotal();}
+ if (ab) {
+  ab.classList.remove('bg-white','dark:bg-slate-800','text-slate-600','dark:text-slate-300','border-slate-200','dark:border-slate-700');
+  ab.classList.add('!bg-indigo-600','!text-white','border-transparent','active');
+ }
+ const wrap = $('customDurWrap');
+ if (wrap) wrap.classList.toggle('hidden', m !== 'custom');
+ calculateTotal();
+}
 
 function selectPayMethod(method){
  $('payMethod').value=method;
