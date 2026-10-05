@@ -270,7 +270,19 @@ textarea.autog{resize:none;overflow:hidden;}
    <button id="btn-ls-pool" onclick="switchLinkMode('pool')" class="link-tab-btn bg-white border border-slate-200 shadow-sm rounded-xl text-slate-600 font-bold text-[11px] py-2"><i class="fas fa-plus-circle mr-1"></i>THÊM NGUỒN</button>
   </div>
   <div id="panel-ls-manual" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-4">
-   <div class="mb-3"><label class="block font-bold text-xs text-slate-700 mb-1">Link Gốc (Liangxin / Djjc)</label><input id="lkOrig" type="text" placeholder="https://liangxin..." class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-xs bg-slate-50"></div>
+   <div class="flex items-center justify-between mb-2">
+    <label class="font-bold text-xs text-slate-700">Link Gốc 1 (Liangxin / DJJC)</label>
+    <label class="flex items-center gap-1.5 text-xs font-black text-indigo-600 cursor-pointer">
+     <input type="checkbox" id="chkManualCombo" onchange="$('manualLeg2Wrap').classList.toggle('hidden', !this.checked)" class="accent-indigo-600 w-4 h-4"> Link trộn (Combo)
+    </label>
+   </div>
+   <input id="lkOrig" type="text" placeholder="https://liangxin... hoặc https://gates.djjc..." class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-xs bg-slate-50 mb-3">
+   
+   <div id="manualLeg2Wrap" class="hidden mb-3">
+    <label class="block font-bold text-xs text-indigo-700 mb-1"><i class="fas fa-shuffle mr-1"></i>Link Gốc 2 (Nguồn thứ 2)</label>
+    <input id="lkOrig2" type="text" placeholder="https://gates.djjc... hoặc https://liangxin..." class="w-full p-2 border border-indigo-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-xs bg-indigo-50/30">
+   </div>
+
    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
     <div><label class="block font-bold text-xs text-slate-700 mb-1">Email khách</label><input id="lkEmail" type="text" placeholder="khach@email.com" class="w-full p-2 border border-slate-200 bg-slate-50 rounded-xl outline-none text-xs"></div>
     <div><label class="block font-bold text-xs text-slate-700 mb-1">Hết hạn</label><input id="lkExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 border border-slate-200 bg-slate-50 rounded-xl outline-none text-xs text-center"></div>
@@ -278,15 +290,48 @@ textarea.autog{resize:none;overflow:hidden;}
    </div>
    <button onclick="createLink()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-6 py-2.5 rounded-xl shadow-md w-full text-xs"><i class="fas fa-mask mr-2"></i>TẠO LINK ẨN</button>
   </div>
-  <div id="panel-ls-pool" class="hidden bg-white p-4 rounded-2xl border border-indigo-200 shadow-sm mb-4">
-   <div class="mb-3"><label class="block font-bold text-xs text-slate-700 mb-1">Link Gốc (Liangxin / Djjc)</label><input id="poolOrig" type="text" placeholder="https://liangxin..." class="w-full p-2 border border-slate-200 rounded-xl outline-none font-mono text-xs bg-slate-50"></div>
-   <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-    <div><label class="block font-bold text-xs text-slate-700 mb-1">Tổng dung lượng (GB)</label><input id="poolGb" type="number" placeholder="1000" class="w-full p-2 border border-slate-200 bg-slate-50 rounded-xl outline-none text-xs"></div>
-    <div><label class="block font-bold text-xs text-slate-700 mb-1">Còn lại (GB)</label><input id="poolRemainGb" type="number" placeholder="1000" class="w-full p-2 border border-slate-200 bg-slate-50 rounded-xl outline-none text-xs"></div>
-    <div><label class="block font-bold text-xs text-slate-700 mb-1">Hết hạn</label><input id="poolExp" type="text" placeholder="DD/MM/YYYY hoặc Lifetime" class="w-full p-2 border border-slate-200 bg-slate-50 rounded-xl outline-none text-xs text-center"></div>
-    <div><label class="block font-bold text-xs text-slate-700 mb-1">Max thiết bị</label><input id="poolMax" type="number" min="1" placeholder="20" class="w-full p-2 border border-slate-200 bg-slate-50 rounded-xl outline-none text-xs text-center"></div>
+
+  <div id="panel-ls-pool" class="hidden bg-white p-4 rounded-2xl border border-indigo-200 shadow-sm mb-4 space-y-3">
+   <div class="flex items-center justify-between">
+    <span class="font-extrabold text-xs text-slate-700">Thông tin nguồn nhập kho</span>
+    <label class="flex items-center gap-1.5 text-xs font-black text-indigo-600 cursor-pointer">
+     <input type="checkbox" id="chkPoolCombo" onchange="togglePoolComboForm(this.checked)" class="accent-indigo-600 w-4 h-4"> ☑ Link trộn (Nhập cặp Liangxin + DJJC)
+    </label>
    </div>
-   <button onclick="addLinkToPool()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-md w-full text-xs"><i class="fas fa-plus-circle mr-2"></i>LƯU VÀO KHO TỔNG & TẠO LINK #1</button>
+
+   <!-- Bảng Nguồn 1 (Liangxin) -->
+   <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2">
+    <div class="text-[11px] font-black text-emerald-700 flex items-center justify-between">
+     <span id="poolLeg1Label">Nguồn Liangxin (hoặc nguồn duy nhất)</span>
+     <span class="badge-lx">Nguồn 1</span>
+    </div>
+    <div><input id="poolOrig" type="text" placeholder="https://liangxin.xyz/..." class="w-full p-2 border border-slate-200 rounded-xl outline-none font-mono text-xs bg-white"></div>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB</label><input id="poolGb" type="number" placeholder="1670" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
+     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB</label><input id="poolRemainGb" type="number" placeholder="150" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
+     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Hết hạn</label><input id="poolExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-1.5 border rounded-lg bg-white text-xs text-center"></div>
+     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max thiết bị</label><input id="poolMax" type="number" min="1" value="30" class="w-full p-1.5 border rounded-lg bg-white text-xs text-center"></div>
+    </div>
+   </div>
+
+   <!-- Bảng Nguồn 2 (DJJC) - Hiện khi tick Link Trộn -->
+   <div id="poolLeg2Container" class="hidden border border-indigo-200 rounded-xl p-3 bg-indigo-50/30 space-y-2">
+    <div class="text-[11px] font-black text-blue-700 flex items-center justify-between">
+     <span>Nguồn DJJC (Chân thứ 2)</span>
+     <span class="badge-dj">Nguồn 2</span>
+    </div>
+    <div><input id="poolOrig2" type="text" placeholder="https://gates.djjc.cfd/..." class="w-full p-2 border border-indigo-200 rounded-xl outline-none font-mono text-xs bg-white"></div>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB</label><input id="poolGb2" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
+     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB</label><input id="poolRemainGb2" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
+     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Hết hạn</label><input id="poolExp2" type="text" placeholder="DD/MM/YYYY" class="w-full p-1.5 border rounded-lg bg-white text-xs text-center"></div>
+     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max thiết bị</label><input id="poolMax2" type="number" min="1" value="30" class="w-full p-1.5 border rounded-lg bg-white text-xs text-center"></div>
+    </div>
+   </div>
+
+   <button onclick="addLinkToPool()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-md w-full text-xs">
+    <i class="fas fa-plus-circle mr-2"></i>LƯU VÀO KHO TỔNG & TẠO LINK NEO INDEX #1
+   </button>
   </div>
   <div class="flex items-center justify-between border-t border-slate-200 pt-4 mb-3"><h3 class="font-extrabold text-slate-700 text-sm"><i class="fas fa-list mr-1"></i>Danh sách Link</h3><div class="view-switcher"><div id="btn-view-detailed" class="view-btn active" onclick="switchLinkView('detailed')">CÂY</div><div id="btn-view-compact" class="view-btn" onclick="switchLinkView('compact')">KHO</div></div></div>
   <div id="linksViewContainer" class="space-y-3 w-full min-w-0"></div>
@@ -379,6 +424,81 @@ textarea.autog{resize:none;overflow:hidden;}
    </div>
   </div>
   <div id="pkgCardsList" class="space-y-4 w-full min-w-0"></div>
+ </div>
+
+ <!-- ===== FULFILLMENT ===== -->
+ <div id="t-fulfill" class="hidden w-full min-w-0 space-y-4">
+  <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-4">
+   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+    <div>
+     <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
+      <i class="fas fa-shuffle text-indigo-600"></i>Cấu hình Cấp Link Tự Động (Auto Fulfillment)
+     </h2>
+     <p class="text-[11px] text-slate-500 mt-0.5">Cấu hình này chỉ áp dụng cho đơn mới phát sinh từ khi lưu trở đi. Đơn hàng và link cũ được bảo toàn 100%.</p>
+    </div>
+    <button id="btnSaveFulfillMapping" onclick="saveFulfillmentMapping()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5 shrink-0">
+     <i class="fas fa-save"></i>LƯU MAPPING FULFILLMENT
+    </button>
+   </div>
+
+   <!-- Bảng Cấu Hình Mapping -->
+   <div class="overflow-x-auto">
+    <table class="log-table">
+     <thead>
+      <tr>
+       <th style="width: 80px;">Mã Gói</th>
+       <th>Tên Gói & Dung Lượng</th>
+       <th style="width: 120px;">Thời Hạn</th>
+       <th style="width: 280px;">Nguồn Cấp Tự Động</th>
+      </tr>
+     </thead>
+     <tbody id="fulfillMappingTableBody">
+      <tr><td colspan="4" class="text-center py-6 text-slate-400">Đang tải danh sách gói...</td></tr>
+     </tbody>
+    </table>
+   </div>
+  </div>
+
+  <!-- Khối Chính Sách Dự Phòng (Failover Policy) - 2 Nút Bấm Lớn Nổi Bật -->
+  <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-4">
+   <div>
+    <h3 class="font-extrabold text-sm md:text-base text-slate-800 flex items-center gap-2">
+     <i class="fas fa-shield-heart text-amber-500"></i>Chính Sách Dự Phòng (Failover Policy)
+    </h3>
+    <p class="text-xs text-slate-600 font-semibold mt-1">Khi 1 trong 2 chân nguồn của Link Trộn gặp sự cố mà kho hết nguồn cùng mạng thay thế, tự động rớt về Link Đơn nào?</p>
+    <p class="text-[11px] text-slate-400 mt-0.5">Link masked của khách giữ nguyên 100% token, khách không bị mất mạng hay phải đổi link.</p>
+   </div>
+
+   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+    <button type="button" id="btnFailoverLx" onclick="selectFailoverPolicy('lx')" class="p-4 rounded-2xl border-2 font-bold text-left transition flex items-center justify-between border-slate-200 bg-slate-50 text-slate-700 hover:border-indigo-300">
+     <div class="flex items-center gap-3">
+      <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center border-slate-400 bg-white" id="radioDotLx"><span class="w-2.5 h-2.5 rounded-full bg-transparent" id="radioInnerLx"></span></span>
+      <div>
+       <div class="text-sm font-black text-slate-800">Ưu tiên giữ Nguồn Liangxin</div>
+       <div class="text-[11px] text-slate-500 font-normal">Tự động chuyển về Link Đơn Liangxin khi DJJC đứt</div>
+      </div>
+     </div>
+     <span class="badge-lx">Liangxin</span>
+    </button>
+
+    <button type="button" id="btnFailoverDj" onclick="selectFailoverPolicy('dj')" class="p-4 rounded-2xl border-2 font-bold text-left transition flex items-center justify-between border-slate-200 bg-slate-50 text-slate-700 hover:border-indigo-300">
+     <div class="flex items-center gap-3">
+      <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center border-slate-400 bg-white" id="radioDotDj"><span class="w-2.5 h-2.5 rounded-full bg-transparent" id="radioInnerDj"></span></span>
+      <div>
+       <div class="text-sm font-black text-slate-800">Ưu tiên giữ Nguồn DJJC</div>
+       <div class="text-[11px] text-slate-500 font-normal">Tự động chuyển về Link Đơn DJJC khi Liangxin đứt</div>
+      </div>
+     </div>
+     <span class="badge-dj">DJJC</span>
+    </button>
+   </div>
+
+   <div class="pt-2 flex justify-end">
+    <button onclick="saveFailoverPolicy()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md transition active:scale-95">
+     <i class="fas fa-check-circle mr-1.5"></i>LƯU CHÍNH SÁCH DỰ PHÒNG
+    </button>
+   </div>
+  </div>
  </div>
 
  <!-- ===== CÀI ĐẶT ===== -->
@@ -677,7 +797,7 @@ const PDS={1:"https://vpntrinhhg.pages.dev",2:"https://vpntrinhhg2.pages.dev",3:
 let PD=/pages\.dev$/.test(location.hostname)?location.origin:PDS[3];
 const GH_REPO="trinhhg/vpntrinhhg3";
 const PKG_LIST=[["t1","Gói 1 tháng - 60,000VND / $2.5 / ¥15.5 (100GB)",30],["t2","Gói 1 tháng - 70,000VND / $3 / ¥18 (500GB)",30],["c1","Gói 1 tháng - 80,000VND / $3.5 / ¥20.5 (1000GB)",30],["c2","Gói Cao Cấp - 200,000VND / $8 / ¥50 (3000GB)",30],["c3","Gói 1 Năm - 799,000VND / $30 / ¥199 (300GB/tháng)",365],["d1","Không Giới Hạn - 200,000VND / $8 / ¥52 (200GB)",0],["d2","Không Giới Hạn - 399,000VND / $16 / ¥102 (1000GB)",0],["d3","Không Giới Hạn - 999,000VND / $40 / ¥256 (5000GB)",0],["o1","[Giá cũ] Gói 1 tháng - 50,000VND / ¥12.5 (100GB)",30],["o2","[Giá cũ] Gói 1 tháng - 60,000VND / ¥15 (500GB)",30],["o3","[Giá cũ] Gói 1 tháng - 70,000VND / ¥17.5 (1000GB)",30]];
-const TABS=[["t-ord","fa-box","Đơn hàng"],["t-check","fa-clipboard-check","Kiểm tra"],["t-trans","fa-file-invoice-dollar","Giao dịch"],["t-data","fa-chart-pie","Dung lượng"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-cms","fa-book","H.Dẫn"],["t-mail","fa-envelope","Soạn mail"],["t-pkg","fa-tags","Giá gói"],["t-settings","fa-cog","Cài đặt"]];
+const TABS=[["t-ord","fa-box","Đơn hàng"],["t-check","fa-clipboard-check","Kiểm tra"],["t-trans","fa-file-invoice-dollar","Giao dịch"],["t-data","fa-chart-pie","Dung lượng"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-cms","fa-book","H.Dẫn"],["t-mail","fa-envelope","Soạn mail"],["t-pkg","fa-tags","Giá gói"],["t-fulfill","fa-shuffle","Fulfillment"],["t-settings","fa-cog","Cài đặt"]];
 // PKG_DB: giá hiện tại + giá cũ (o1/o2/o3) để nhận diện dữ liệu lịch sử — TUYỆT ĐỐI không quy đổi totalVnd của đơn cũ sang giá mới.
 const PKG_DB={t1:{n:"Gói 1 tháng",d:"100GB",vnd:60000,cny:15.5,m:1},t2:{n:"Gói 1 tháng",d:"500GB",vnd:70000,cny:18,m:1},c1:{n:"Gói 1 tháng",d:"1000GB",vnd:80000,cny:20.5,m:1},c2:{n:"Gói Cao Cấp",d:"3000GB",vnd:200000,cny:50,m:1},c3:{n:"Gói 1 Năm",d:"300GB/tháng",vnd:799000,cny:199,m:12},d1:{n:"Không Giới Hạn",d:"200GB",vnd:200000,cny:52,m:0},d2:{n:"Không Giới Hạn",d:"1000GB",vnd:399000,cny:102,m:0},d3:{n:"Không Giới Hạn",d:"5000GB",vnd:999000,cny:256,m:0},o1:{n:"Gói 1 tháng",d:"100GB",vnd:50000,cny:12.5,m:1,old:true},o2:{n:"Gói 1 tháng",d:"500GB",vnd:60000,cny:15,m:1,old:true},o3:{n:"Gói 1 tháng",d:"1000GB",vnd:70000,cny:17.5,m:1,old:true}};
 
@@ -821,6 +941,7 @@ function go(id){
  localStorage.setItem(SITE_KEY+"_lastTab",id);
  try{
   if(id==="t-pkg")loadAdminPkgs();
+  if(id==="t-fulfill"){loadAdminPkgs();loadFulfillmentConfig();}
   if(id==="t-check")renderCheckTab();
   if(id==="t-dead")renderDead();if(id==="t-data")renderDataRequests();if(id==="t-lnk")switchLinkMode(curLinkTab);
   if(id==="t-settings"){loadSettingsUI();loadStatus();loadQuota();}
@@ -1361,12 +1482,13 @@ function renderTransactions(){
   tb.innerHTML=txData.map((tx,i)=>{
    const oId=tx.order_id||"Trống",oi=ordersDb.find(o=>normId(o.id)===normId(oId)),mo=tx.matchedOrder||{};
    const email=oi?.email||mo.email||"Chưa xác định",tc=oi?fmtBank(oTs(oi)):(mo.created_at?fmtBank(mo.created_at):"—"),web=webLabel(oi?.sourceWeb||oi?.target_web||mo.target_web,mo.worker_url);
-   const amt=Number(tx.amount);let sl=1;for(const bp of[60000,70000,80000,200000,50000])if(amt%bp===0&&amt/bp<=24){sl=amt/bp;break;}
+   const amt=Number(tx.amount);
+   const sl=oi && oi.qty ? Number(oi.qty) : 1;
    const rx=extractOrder(tx.notification||tx.content),s=tx.status;
    const badge=/^(success|paid)$/.test(s)?["emerald","success"]:s==="pending"?["orange","pending"]:s==="unmatched"?["slate","unmatched"]:/reject|invalid|failed/.test(s)?["rose","failed"]:["yellow",s];
    const kind=tx.kind||mo.order_type||(oi?.isUpgrade?"upgrade":"new");
    return `<tr><td class="text-xs font-bold text-slate-400">${i+1}</td><td class="font-mono font-black text-emerald-600 cp" onclick="cp(${q(oId)})">${esc(oId)}${kindBadge(kind)}</td><td class="text-xs text-slate-600 whitespace-nowrap">${tc}</td><td class="text-xs font-bold text-slate-700 cp" onclick="cp(${q(email)})">${esc(email)}</td>
-   <td><span class="font-black text-rose-600 whitespace-nowrap">${amt.toLocaleString("en-US")}VND</span>${sl>1?` <span class="text-xs text-slate-500 font-bold">x${sl}</span>`:""}</td><td class="text-xs font-bold text-slate-500">${esc(web)}</td><td>${rx?`<span class="font-bold text-[11px] cp text-slate-700" onclick="cp('${rx}')">${rx}</span>`:'<span class="text-slate-400 font-bold text-xs">Trống</span>'}</td>
+   <td><span class="font-black text-rose-600 whitespace-nowrap">${amt.toLocaleString("en-US")}VND</span> <span class="text-xs text-slate-500 font-bold">x${sl}</span></td><td class="text-xs font-bold text-slate-500">${esc(web)}</td><td>${rx?`<span class="font-bold text-[11px] cp text-slate-700" onclick="cp('${rx}')">${rx}</span>`:'<span class="text-slate-400 font-bold text-xs">Trống</span>'}</td>
    <td><span class="bg-${badge[0]}-100 text-${badge[0]}-700 border border-${badge[0]}-200 px-2 py-1 rounded text-[10px] font-bold uppercase" title="${esc(tx.review_note||"")}">${esc(badge[1])}</span></td><td class="col-ok">${/^(success|paid|rejected)$/.test(s)?'<span class="text-slate-300">—</span>':`<button onclick="approveTransaction(${tx.id})" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg shadow text-xs whitespace-nowrap"><i class="fas fa-bolt mr-1"></i>Ép Khớp</button>`}</td><td class="col-x">${delBtn(tx.id)}</td></tr>`;}).join("");
  }else{
   th.innerHTML='<tr><th>STT</th><th>Thời Gian</th><th>Số Tiền</th><th>Nội Dung Thô</th><th class="col-x">Xóa</th></tr>';
@@ -2267,6 +2389,121 @@ async function migratePkg(apply){
  if(apply&&!confirm("Ghi đè cách lưu tên gói của các đơn trong KV? Nên bấm Quét thử trước."))return;$("pkgReport").innerHTML="Đang xử lý...";
  try{const j=await aj("/api/admin/migrate_pkg",{method:"POST",body:{apply}});$("pkgReport").innerHTML=(apply?'<div class="font-bold text-emerald-700 mb-1">✔ Đã áp dụng</div>':'<div class="font-bold text-slate-700 mb-1">Kết quả quét thử (chưa ghi gì)</div>')+`<div><b>Đơn hàng:</b> ${j.changed}/${j.total} bản ghi cần đổi${j.oldPrice?` · <span class="text-amber-600 font-bold">${j.oldPrice} đơn giá cũ được giữ nguyên</span>`:""}${j.sample.length?`<div class="font-mono text-[10px] text-slate-500 pl-3">${j.sample.map(esc).join("<br>")}</div>`:""}</div>`;if(apply)fetchAll();}
  catch(e){$("pkgReport").innerHTML=`<span class="text-red-600">Lỗi: ${esc(e.message)}</span>`;}}
+
+// ===================== LOGIC FULFILLMENT CONFIG & LINK TRỘN =====================
+let currentFulfillmentConfig = { mapping: {}, failover_pref: "lx" };
+
+function togglePoolComboForm(isCombo) {
+  $("poolLeg2Container").classList.toggle("hidden", !isCombo);
+  $("poolLeg1Label").textContent = isCombo ? "Nguồn 1: Liangxin" : "Nguồn Liangxin (hoặc nguồn duy nhất)";
+}
+
+async function loadFulfillmentConfig() {
+  try {
+    const res = await aj("/api/admin/fulfillment_config");
+    if (res && res.config) currentFulfillmentConfig = res.config;
+  } catch (e) {
+    currentFulfillmentConfig = { mapping: {}, failover_pref: "lx" };
+  }
+  renderFulfillmentUI();
+}
+
+function renderFulfillmentUI() {
+  const tb = $("fulfillMappingTableBody");
+  if (!tb) return;
+  const pkgs = adminPkgsList && adminPkgsList.length ? adminPkgsList : getDefaultAdminPkgs();
+  const map = currentFulfillmentConfig.mapping || {};
+
+  tb.innerHTML = pkgs.map(p => {
+    const curVal = map[p.id] || "";
+    const timeStr = p.time === "lifetime" ? "Vĩnh viễn" : (p.time ? p.time + " Tháng" : "1 Tháng");
+    return `
+      <tr>
+        <td class="font-mono font-bold text-indigo-600">${esc(p.id)}</td>
+        <td>
+          <div class="font-bold text-slate-800 text-xs">${esc(p.name || p.id)}</div>
+          <div class="text-[10px] text-slate-500">${esc(p.data || "")} · ${p.vnd ? fmtVnd(p.vnd) + "VND" : ""}</div>
+        </td>
+        <td class="text-xs font-semibold text-slate-600">${timeStr}</td>
+        <td>
+          <select id="sel_fulfill_${p.id}" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white font-bold outline-none focus:border-indigo-500">
+            <option value="" ${curVal === "" ? "selected" : ""}>-- Mặc định (Link đơn thông thường) --</option>
+            <option value="single_lx" ${curVal === "single_lx" ? "selected" : ""}>Link đơn Liangxin</option>
+            <option value="single_dj" ${curVal === "single_dj" ? "selected" : ""}>Link đơn DJJC</option>
+            <option value="combo" ${curVal === "combo" ? "selected" : ""}>Link Trộn (Combo Liangxin + DJJC)</option>
+          </select>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  updateFailoverPolicyUI(currentFulfillmentConfig.failover_pref || "lx");
+}
+
+function selectFailoverPolicy(pref) {
+  currentFulfillmentConfig.failover_pref = pref;
+  updateFailoverPolicyUI(pref);
+}
+
+function updateFailoverPolicyUI(pref) {
+  const isLx = pref === "lx";
+  const btnLx = $("btnFailoverLx"), btnDj = $("btnFailoverDj");
+  const dotLx = $("radioDotLx"), dotDj = $("radioDotDj");
+  const inLx = $("radioInnerLx"), inDj = $("radioInnerDj");
+
+  if (!btnLx || !btnDj) return;
+
+  if (isLx) {
+    btnLx.className = "p-4 rounded-2xl border-2 font-bold text-left transition flex items-center justify-between border-emerald-500 bg-emerald-50/60 shadow-sm ring-1 ring-emerald-400";
+    btnDj.className = "p-4 rounded-2xl border-2 font-bold text-left transition flex items-center justify-between border-slate-200 bg-slate-50 text-slate-700 hover:border-indigo-300 opacity-70";
+    dotLx.className = "w-5 h-5 rounded-full border-2 flex items-center justify-center border-emerald-600 bg-white";
+    inLx.className = "w-2.5 h-2.5 rounded-full bg-emerald-600";
+    dotDj.className = "w-5 h-5 rounded-full border-2 flex items-center justify-center border-slate-400 bg-white";
+    inDj.className = "w-2.5 h-2.5 rounded-full bg-transparent";
+  } else {
+    btnDj.className = "p-4 rounded-2xl border-2 font-bold text-left transition flex items-center justify-between border-blue-500 bg-blue-50/60 shadow-sm ring-1 ring-blue-400";
+    btnLx.className = "p-4 rounded-2xl border-2 font-bold text-left transition flex items-center justify-between border-slate-200 bg-slate-50 text-slate-700 hover:border-indigo-300 opacity-70";
+    dotDj.className = "w-5 h-5 rounded-full border-2 flex items-center justify-center border-blue-600 bg-white";
+    inDj.className = "w-2.5 h-2.5 rounded-full bg-blue-600";
+    dotLx.className = "w-5 h-5 rounded-full border-2 flex items-center justify-center border-slate-400 bg-white";
+    inLx.className = "w-2.5 h-2.5 rounded-full bg-transparent";
+  }
+}
+
+async function saveFulfillmentMapping() {
+  const pkgs = adminPkgsList && adminPkgsList.length ? adminPkgsList : getDefaultAdminPkgs();
+  const mapping = {};
+  pkgs.forEach(p => {
+    const val = $("sel_fulfill_" + p.id)?.value || "";
+    if (val) mapping[p.id] = val;
+  });
+  currentFulfillmentConfig.mapping = mapping;
+
+  const btn = $("btnSaveFulfillMapping");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>ĐANG LƯU...';
+
+  try {
+    await aj("/api/admin/fulfillment_config", { method: "POST", body: { config: currentFulfillmentConfig } });
+    toast("Đã lưu bảng cấu hình Mapping Fulfillment vào KV!");
+    logEvent("ok", "admin", "Lưu Mapping Fulfillment", `${Object.keys(mapping).length} gói cấu hình`);
+  } catch (e) {
+    toast("Lỗi lưu cấu hình: " + e.message, "err");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-save mr-1"></i>LƯU MAPPING FULFILLMENT';
+  }
+}
+
+async function saveFailoverPolicy() {
+  try {
+    await aj("/api/admin/fulfillment_config", { method: "POST", body: { config: currentFulfillmentConfig } });
+    toast("Đã lưu Chính sách dự phòng (Failover Policy) vào KV!");
+    logEvent("ok", "admin", "Lưu Failover Policy", `Ưu tiên: ${currentFulfillmentConfig.failover_pref === "lx" ? "Liangxin" : "DJJC"}`);
+  } catch (e) {
+    toast("Lỗi lưu chính sách: " + e.message, "err");
+  }
+}
 
 // ===================== KHỞI ĐỘNG =====================
 let started=false;
