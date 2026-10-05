@@ -222,7 +222,7 @@ def parse_hysteria2(uri: str) -> dict | None:
             "port": u.port or 443,
             "password": urllib.parse.unquote(u.username or ""),
             "udp": True,
-            "skip-cert-verify": p.get("insecure", "0") == "1",
+            "skip-cert-verify": True, # Hysteria 2 mượn SNI giả lập luôn phải bật True
         }
         if p.get("sni"):   proxy["sni"]   = p["sni"]
         if p.get("mport"): proxy["mport"] = p["mport"]
@@ -348,9 +348,8 @@ def proxy_to_singbox_outbound(p: dict) -> dict | None:
     elif p["type"] in ("hysteria2", "hy2"):
         out["type"]     = "hysteria2"
         out["password"] = p.get("password", "")
-        tls = {"enabled": True}
-        if p.get("sni"):              tls["server_name"] = p["sni"]
-        if p.get("skip-cert-verify"): tls["insecure"]    = True
+        tls = {"enabled": True, "insecure": True} # Luôn bật insecure cho Hysteria2
+        if p.get("sni"): tls["server_name"] = p["sni"]
         out["tls"] = tls
 
     elif p["type"] == "trojan":
@@ -632,41 +631,20 @@ def build_yaml(proxy_list: list, is_liangxin: bool) -> str:
     return result
 
 
-# ── Hàm chuẩn hóa & làm sạch tên node (có dự phòng 2 tầng) ────────────────────
-ISP_DROP_KEYWORDS = {"CUCM", "CMCU", "CTCUCM", "CTCU"}
-
+# ── Hàm chuẩn hóa tên node (Giữ nguyên tên gốc, đổi cờ, không bao giờ bị trùng tên) ────
 def format_node_name(raw_name: str) -> str:
     if not raw_name:
         return "VPN Node - VPNTrinhHg"
     try:
-        # 1. Tạm gỡ suffix cũ nếu có
         name = raw_name.replace(" - VPNTrinhHg", "").strip()
-
-        # 2. Đổi cờ Trung Quốc sang cờ Đài Loan nếu là node Đài Loan
         if "🇨🇳台湾" in name:
             name = name.replace("🇨🇳台湾", "🇹🇼台湾")
-
-        # 3. Tách theo dấu '|'
-        parts = [p.strip() for p in name.split("|")]
-
-        # 4. Chuẩn hóa số thứ tự (01 -> 001, 02 -> 002...) ở phân đoạn tên vị trí (parts[0])
-        # Cách này tuyệt đối không chạm vào 0.5x, 0.1x, 0.01x ở các phân đoạn sau
-        if parts:
-            parts[0] = re.sub(r'(?<![\d.])0*([1-9]\d?)(?![\d.xX])', lambda m: f"{int(m.group(1)):03d}", parts[0])
-
-        # 5. Lọc bỏ các phân đoạn nhà mạng (CTCUCM, CTCU, CMCU, CUCM)
-        # Dự phòng tầng 1: Nếu node không có nhà mạng, giữ nguyên toàn bộ các phân đoạn khác
-        filtered_parts = [p for p in parts if p.upper() not in ISP_DROP_KEYWORDS and p != ""]
-        final_parts = filtered_parts if filtered_parts else parts
-        clean_name = "|".join(final_parts)
-
-        return f"{clean_name} - VPNTrinhHg"
+        return f"{name} - VPNTrinhHg"
     except Exception:
-        # Dự phòng tầng 2: Nếu có lỗi bất ngờ, dùng đúng tên gốc fetch về và thêm đuôi
         fallback = raw_name.strip()
         return fallback if "VPNTrinhHg" in fallback else f"{fallback} - VPNTrinhHg"
 
-# ── Process b64 ───────────────────────────────────────────────────────────────
+# ── Process b64 (Có cơ chế chống trùng lặp tên node) ──────────────────────────
 def process_b64(raw_b64: str, is_liangxin: bool):
     pad = raw_b64 + "=" * ((-len(raw_b64)) % 4)
     try:
@@ -677,12 +655,21 @@ def process_b64(raw_b64: str, is_liangxin: bool):
     lines = [l.strip() for l in decoded.splitlines() if l.strip() and "://" in l]
     new_b64_lines = [INFO_VLESS_PREFIX + urllib.parse.quote(n, safe="") for n in INFO_NODES]
     proxy_list = []
+    seen_names = {}
 
     for line in lines:
         if "127.0.0.1" in line or "://" not in line: continue
         old_name = urllib.parse.unquote(line.split("#", 1)[-1]) if "#" in line else None
         if old_name and any(kw in old_name for kw in INFO_SKIP_KW): continue
+        
         new_name = format_node_name(old_name)
+        # Chống trùng lặp tuyệt đối: Nếu trùng tên sẽ tự thêm hậu tố (2), (3)...
+        if new_name in seen_names:
+            seen_names[new_name] += 1
+            new_name = f"{new_name} ({seen_names[new_name]})"
+        else:
+            seen_names[new_name] = 1
+
         uri_base = line.split("#")[0]
         new_line = uri_base + "#" + urllib.parse.quote(new_name or "", safe="")
         new_b64_lines.append(new_line)
