@@ -21,19 +21,7 @@ INFO_NODES = [
 INFO_SKIP_KW = ["剩余流量", "距离下次重置", "套餐到期"]
 INFO_VLESS_PREFIX = "vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1?type=tcp#"
 
-# ── DNS Clash ─────────────────────────────────────────────────────────────────
-DJJC_DNS_CLASH = """\
-dns:
-    enable: true
-    ipv6: false
-    default-nameserver: [223.5.5.5, 119.29.29.29]
-    enhanced-mode: fake-ip
-    fake-ip-range: 198.18.0.1/16
-    use-hosts: true
-    nameserver: ['https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query']
-    fallback: ['https://doh.dns.sb/dns-query', 'https://dns.cloudflare.com/dns-query', 'https://dns.twnic.tw/dns-query', 'tls://8.8.4.4:853']
-    fallback-filter: { geoip: true, ipcidr: [240.0.0.0/4, 0.0.0.0/32] }"""
-
+# ── 3 BỘ DNS CLASH ĐỘC LẬP TƯỜNG MINH 100% ────────────────────────────────────
 LIANGXIN_DNS_CLASH = """\
 dns:
     enable: true
@@ -48,166 +36,355 @@ dns:
     fallback: [1.1.1.1, 8.8.8.8]
     fallback-filter: { geoip: true, geoip-code: CN, geosite: [gfw], ipcidr: [240.0.0.0/4], domain: [+.google.com, +.facebook.com, +.youtube.com] }"""
 
-# ── Rules Clash (full) ────────────────────────────────────────────────────────
+DJJC_DNS_CLASH = """\
+dns:
+    enable: true
+    ipv6: false
+    default-nameserver: [223.5.5.5, 119.29.29.29]
+    enhanced-mode: fake-ip
+    fake-ip-range: 198.18.0.1/16
+    use-hosts: true
+    respect-rules: true
+    nameserver: ['https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query']
+    fallback: ['https://doh.dns.sb/dns-query', 'https://dns.cloudflare.com/dns-query', 'https://dns.twnic.tw/dns-query', 'tls://8.8.4.4:853']
+    fallback-filter: { geoip: true, ipcidr: [240.0.0.0/4, 0.0.0.0/32] }"""
+
+COMBO_DNS_CLASH = """\
+dns:
+    enable: true
+    ipv6: false
+    default-nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]
+    enhanced-mode: fake-ip
+    fake-ip-range: 198.18.0.1/16
+    use-hosts: true
+    respect-rules: true
+    proxy-server-nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]
+    nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114, 'https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query']
+    fallback: [1.1.1.1, 8.8.8.8, 'https://doh.dns.sb/dns-query', 'https://dns.cloudflare.com/dns-query', 'https://dns.twnic.tw/dns-query', 'tls://8.8.4.4:853']
+    fallback-filter: { geoip: true, geoip-code: CN, geosite: [gfw], ipcidr: [240.0.0.0/4, 0.0.0.0/32], domain: [+.google.com, +.facebook.com, +.youtube.com] }"""
+
+# ── 3 BỘ RULES CLASH ĐỘC LẬP TƯỜNG MINH 100% (KHÔNG KẾ THỪA RÚT GỌN) ───────────
 LIANGXIN_RULES = [
-    "IP-CIDR,1.1.1.1/32,VPN Trinh Hg,no-resolve","IP-CIDR,8.8.8.8/32,VPN Trinh Hg,no-resolve",
-    "DOMAIN-SUFFIX,services.googleapis.cn,VPN Trinh Hg","DOMAIN-SUFFIX,xn--ngstr-lra8j.com,VPN Trinh Hg",
-    "DOMAIN,safebrowsing.urlsec.qq.com,DIRECT","DOMAIN,safebrowsing.googleapis.com,DIRECT",
-    "DOMAIN,developer.apple.com,VPN Trinh Hg","DOMAIN-SUFFIX,digicert.com,VPN Trinh Hg",
-    "DOMAIN,ocsp.apple.com,VPN Trinh Hg","DOMAIN,ocsp.comodoca.com,VPN Trinh Hg",
-    "DOMAIN,ocsp.usertrust.com,VPN Trinh Hg","DOMAIN,ocsp.sectigo.com,VPN Trinh Hg",
-    "DOMAIN,ocsp.verisign.net,VPN Trinh Hg","DOMAIN-SUFFIX,apple-dns.net,VPN Trinh Hg",
-    "DOMAIN,testflight.apple.com,VPN Trinh Hg","DOMAIN,sandbox.itunes.apple.com,VPN Trinh Hg",
-    "DOMAIN,itunes.apple.com,VPN Trinh Hg","DOMAIN-SUFFIX,apps.apple.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,blobstore.apple.com,VPN Trinh Hg","DOMAIN,cvws.icloud-content.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,mzstatic.com,DIRECT","DOMAIN-SUFFIX,itunes.apple.com,DIRECT",
-    "DOMAIN-SUFFIX,icloud.com,DIRECT","DOMAIN-SUFFIX,icloud-content.com,DIRECT",
-    "DOMAIN-SUFFIX,me.com,DIRECT","DOMAIN-SUFFIX,aaplimg.com,DIRECT",
-    "DOMAIN-SUFFIX,cdn20.com,DIRECT","DOMAIN-SUFFIX,cdn-apple.com,DIRECT",
-    "DOMAIN-SUFFIX,akadns.net,DIRECT","DOMAIN-SUFFIX,akamaiedge.net,DIRECT",
-    "DOMAIN-SUFFIX,edgekey.net,DIRECT","DOMAIN-SUFFIX,mwcloudcdn.com,DIRECT",
-    "DOMAIN-SUFFIX,mwcname.com,DIRECT","DOMAIN-SUFFIX,apple.com,DIRECT",
-    "DOMAIN-SUFFIX,apple-cloudkit.com,DIRECT","DOMAIN-SUFFIX,apple-mapkit.com,DIRECT",
+    "IP-CIDR,1.1.1.1/32,VPN Trinh Hg,no-resolve", "IP-CIDR,8.8.8.8/32,VPN Trinh Hg,no-resolve",
+    "DOMAIN-SUFFIX,services.googleapis.cn,VPN Trinh Hg", "DOMAIN-SUFFIX,xn--ngstr-lra8j.com,VPN Trinh Hg",
+    "DOMAIN,safebrowsing.urlsec.qq.com,DIRECT", "DOMAIN,safebrowsing.googleapis.com,DIRECT",
+    "DOMAIN,developer.apple.com,VPN Trinh Hg", "DOMAIN-SUFFIX,digicert.com,VPN Trinh Hg",
+    "DOMAIN,ocsp.apple.com,VPN Trinh Hg", "DOMAIN,ocsp.comodoca.com,VPN Trinh Hg",
+    "DOMAIN,ocsp.usertrust.com,VPN Trinh Hg", "DOMAIN,ocsp.sectigo.com,VPN Trinh Hg",
+    "DOMAIN,ocsp.verisign.net,VPN Trinh Hg", "DOMAIN-SUFFIX,apple-dns.net,VPN Trinh Hg",
+    "DOMAIN,testflight.apple.com,VPN Trinh Hg", "DOMAIN,sandbox.itunes.apple.com,VPN Trinh Hg",
+    "DOMAIN,itunes.apple.com,VPN Trinh Hg", "DOMAIN-SUFFIX,apps.apple.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,blobstore.apple.com,VPN Trinh Hg", "DOMAIN,cvws.icloud-content.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,mzstatic.com,DIRECT", "DOMAIN-SUFFIX,itunes.apple.com,DIRECT",
+    "DOMAIN-SUFFIX,icloud.com,DIRECT", "DOMAIN-SUFFIX,icloud-content.com,DIRECT",
+    "DOMAIN-SUFFIX,me.com,DIRECT", "DOMAIN-SUFFIX,aaplimg.com,DIRECT",
+    "DOMAIN-SUFFIX,cdn20.com,DIRECT", "DOMAIN-SUFFIX,cdn-apple.com,DIRECT",
+    "DOMAIN-SUFFIX,akadns.net,DIRECT", "DOMAIN-SUFFIX,akamaiedge.net,DIRECT",
+    "DOMAIN-SUFFIX,edgekey.net,DIRECT", "DOMAIN-SUFFIX,mwcloudcdn.com,DIRECT",
+    "DOMAIN-SUFFIX,mwcname.com,DIRECT", "DOMAIN-SUFFIX,apple.com,DIRECT",
+    "DOMAIN-SUFFIX,apple-cloudkit.com,DIRECT", "DOMAIN-SUFFIX,apple-mapkit.com,DIRECT",
     "DOMAIN,cn.bing.com,DIRECT",
-    "DOMAIN-SUFFIX,126.com,DIRECT","DOMAIN-SUFFIX,126.net,DIRECT","DOMAIN-SUFFIX,127.net,DIRECT",
-    "DOMAIN-SUFFIX,163.com,DIRECT","DOMAIN-SUFFIX,360buyimg.com,DIRECT","DOMAIN-SUFFIX,36kr.com,DIRECT",
-    "DOMAIN-SUFFIX,acfun.tv,DIRECT","DOMAIN-SUFFIX,air-matters.com,DIRECT","DOMAIN-SUFFIX,aixifan.com,DIRECT",
-    "DOMAIN-KEYWORD,alicdn,DIRECT","DOMAIN-KEYWORD,alipay,DIRECT","DOMAIN-KEYWORD,taobao,DIRECT",
-    "DOMAIN-SUFFIX,amap.com,DIRECT","DOMAIN-SUFFIX,autonavi.com,DIRECT","DOMAIN-KEYWORD,baidu,DIRECT",
-    "DOMAIN-SUFFIX,bdimg.com,DIRECT","DOMAIN-SUFFIX,bdstatic.com,DIRECT",
-    "DOMAIN-SUFFIX,bilibili.com,DIRECT","DOMAIN-SUFFIX,bilivideo.com,DIRECT",
-    "DOMAIN-SUFFIX,caiyunapp.com,DIRECT","DOMAIN-SUFFIX,clouddn.com,DIRECT",
-    "DOMAIN-SUFFIX,cnbeta.com,DIRECT","DOMAIN-SUFFIX,cnbetacdn.com,DIRECT",
-    "DOMAIN-SUFFIX,cootekservice.com,DIRECT","DOMAIN-SUFFIX,csdn.net,DIRECT",
-    "DOMAIN-SUFFIX,ctrip.com,DIRECT","DOMAIN-SUFFIX,dgtle.com,DIRECT",
-    "DOMAIN-SUFFIX,dianping.com,DIRECT","DOMAIN-SUFFIX,douban.com,DIRECT",
-    "DOMAIN-SUFFIX,doubanio.com,DIRECT","DOMAIN-SUFFIX,duokan.com,DIRECT",
-    "DOMAIN-SUFFIX,easou.com,DIRECT","DOMAIN-SUFFIX,ele.me,DIRECT",
-    "DOMAIN-SUFFIX,feng.com,DIRECT","DOMAIN-SUFFIX,fir.im,DIRECT",
-    "DOMAIN-SUFFIX,frdic.com,DIRECT","DOMAIN-SUFFIX,g-cores.com,DIRECT",
-    "DOMAIN-SUFFIX,godic.net,DIRECT","DOMAIN-SUFFIX,gtimg.com,DIRECT",
-    "DOMAIN,cdn.hockeyapp.net,DIRECT","DOMAIN-SUFFIX,hongxiu.com,DIRECT",
-    "DOMAIN-SUFFIX,hxcdn.net,DIRECT","DOMAIN-SUFFIX,iciba.com,DIRECT",
-    "DOMAIN-SUFFIX,ifeng.com,DIRECT","DOMAIN-SUFFIX,ifengimg.com,DIRECT",
-    "DOMAIN-SUFFIX,ipip.net,DIRECT","DOMAIN-SUFFIX,iqiyi.com,DIRECT",
-    "DOMAIN-SUFFIX,jd.com,DIRECT","DOMAIN-SUFFIX,jianshu.com,DIRECT",
-    "DOMAIN-SUFFIX,knewone.com,DIRECT","DOMAIN-SUFFIX,le.com,DIRECT",
-    "DOMAIN-SUFFIX,lecloud.com,DIRECT","DOMAIN-SUFFIX,lemicp.com,DIRECT",
-    "DOMAIN-SUFFIX,licdn.com,DIRECT","DOMAIN-SUFFIX,luoo.net,DIRECT",
-    "DOMAIN-SUFFIX,meituan.com,DIRECT","DOMAIN-SUFFIX,meituan.net,DIRECT",
-    "DOMAIN-SUFFIX,mi.com,DIRECT","DOMAIN-SUFFIX,miaopai.com,DIRECT",
-    "DOMAIN-SUFFIX,microsoft.com,DIRECT","DOMAIN-SUFFIX,microsoftonline.com,DIRECT",
-    "DOMAIN-SUFFIX,miui.com,DIRECT","DOMAIN-SUFFIX,miwifi.com,DIRECT",
-    "DOMAIN-SUFFIX,mob.com,DIRECT","DOMAIN-SUFFIX,netease.com,DIRECT",
-    "DOMAIN-SUFFIX,office.com,DIRECT","DOMAIN-SUFFIX,office365.com,DIRECT",
-    "DOMAIN-KEYWORD,officecdn,DIRECT","DOMAIN-SUFFIX,oschina.net,DIRECT",
-    "DOMAIN-SUFFIX,ppsimg.com,DIRECT","DOMAIN-SUFFIX,pstatp.com,DIRECT",
-    "DOMAIN-SUFFIX,qcloud.com,DIRECT","DOMAIN-SUFFIX,qdaily.com,DIRECT",
-    "DOMAIN-SUFFIX,qdmm.com,DIRECT","DOMAIN-SUFFIX,qhimg.com,DIRECT",
-    "DOMAIN-SUFFIX,qhres.com,DIRECT","DOMAIN-SUFFIX,qidian.com,DIRECT",
-    "DOMAIN-SUFFIX,qihucdn.com,DIRECT","DOMAIN-SUFFIX,qiniu.com,DIRECT",
-    "DOMAIN-SUFFIX,qiniucdn.com,DIRECT","DOMAIN-SUFFIX,qiyipic.com,DIRECT",
-    "DOMAIN-SUFFIX,qq.com,DIRECT","DOMAIN-SUFFIX,qqurl.com,DIRECT",
-    "DOMAIN-SUFFIX,rarbg.to,DIRECT","DOMAIN-SUFFIX,ruguoapp.com,DIRECT",
-    "DOMAIN-SUFFIX,segmentfault.com,DIRECT","DOMAIN-SUFFIX,sinaapp.com,DIRECT",
-    "DOMAIN-SUFFIX,smzdm.com,DIRECT","DOMAIN-SUFFIX,snapdrop.net,DIRECT",
-    "DOMAIN-SUFFIX,sogou.com,DIRECT","DOMAIN-SUFFIX,sogoucdn.com,DIRECT",
-    "DOMAIN-SUFFIX,sohu.com,DIRECT","DOMAIN-SUFFIX,soku.com,DIRECT",
-    "DOMAIN-SUFFIX,speedtest.net,DIRECT","DOMAIN-SUFFIX,sspai.com,DIRECT",
-    "DOMAIN-SUFFIX,suning.com,DIRECT","DOMAIN-SUFFIX,taobao.com,DIRECT",
-    "DOMAIN-SUFFIX,tencent.com,DIRECT","DOMAIN-SUFFIX,tenpay.com,DIRECT",
-    "DOMAIN-SUFFIX,tianyancha.com,DIRECT","DOMAIN-SUFFIX,tmall.com,DIRECT",
-    "DOMAIN-SUFFIX,tudou.com,DIRECT","DOMAIN-SUFFIX,umetrip.com,DIRECT",
-    "DOMAIN-SUFFIX,upaiyun.com,DIRECT","DOMAIN-SUFFIX,upyun.com,DIRECT",
-    "DOMAIN-SUFFIX,veryzhun.com,DIRECT","DOMAIN-SUFFIX,weather.com,DIRECT",
-    "DOMAIN-SUFFIX,weibo.com,DIRECT","DOMAIN-SUFFIX,xiami.com,DIRECT",
-    "DOMAIN-SUFFIX,xiami.net,DIRECT","DOMAIN-SUFFIX,xiaomicp.com,DIRECT",
-    "DOMAIN-SUFFIX,ximalaya.com,DIRECT","DOMAIN-SUFFIX,xmcdn.com,DIRECT",
-    "DOMAIN-SUFFIX,xunlei.com,DIRECT","DOMAIN-SUFFIX,yhd.com,DIRECT",
-    "DOMAIN-SUFFIX,yihaodianimg.com,DIRECT","DOMAIN-SUFFIX,yinxiang.com,DIRECT",
-    "DOMAIN-SUFFIX,ykimg.com,DIRECT","DOMAIN-SUFFIX,youdao.com,DIRECT",
-    "DOMAIN-SUFFIX,youku.com,DIRECT","DOMAIN-SUFFIX,zealer.com,DIRECT",
-    "DOMAIN-SUFFIX,zhihu.com,DIRECT","DOMAIN-SUFFIX,zhimg.com,DIRECT",
-    "DOMAIN-SUFFIX,zimuzu.tv,DIRECT","DOMAIN-SUFFIX,zoho.com,DIRECT",
-    "DOMAIN-KEYWORD,amazon,VPN Trinh Hg","DOMAIN-KEYWORD,google,VPN Trinh Hg",
-    "DOMAIN-KEYWORD,gmail,VPN Trinh Hg","DOMAIN-KEYWORD,youtube,VPN Trinh Hg",
-    "DOMAIN-KEYWORD,facebook,VPN Trinh Hg","DOMAIN-SUFFIX,fb.me,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,fbcdn.net,VPN Trinh Hg","DOMAIN-KEYWORD,twitter,VPN Trinh Hg",
-    "DOMAIN-KEYWORD,instagram,VPN Trinh Hg","DOMAIN-KEYWORD,dropbox,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,twimg.com,VPN Trinh Hg","DOMAIN-KEYWORD,blogspot,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,youtu.be,VPN Trinh Hg","DOMAIN-KEYWORD,whatsapp,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,telegra.ph,VPN Trinh Hg","DOMAIN-SUFFIX,telegram.org,VPN Trinh Hg",
-    "DOMAIN-KEYWORD,admarvel,REJECT","DOMAIN-KEYWORD,admaster,REJECT",
-    "DOMAIN-KEYWORD,adsage,REJECT","DOMAIN-KEYWORD,adsmogo,REJECT",
-    "DOMAIN-KEYWORD,adsrvmedia,REJECT","DOMAIN-KEYWORD,adwords,REJECT",
-    "DOMAIN-KEYWORD,adservice,REJECT","DOMAIN-SUFFIX,appsflyer.com,REJECT",
-    "DOMAIN-KEYWORD,domob,REJECT","DOMAIN-SUFFIX,doubleclick.net,REJECT",
-    "DOMAIN-KEYWORD,duomeng,REJECT","DOMAIN-KEYWORD,dwtrack,REJECT",
-    "DOMAIN-KEYWORD,guanggao,REJECT","DOMAIN-KEYWORD,lianmeng,REJECT",
-    "DOMAIN-SUFFIX,mmstat.com,REJECT","DOMAIN-KEYWORD,mopub,REJECT",
-    "DOMAIN-KEYWORD,omgmta,REJECT","DOMAIN-KEYWORD,openx,REJECT",
-    "DOMAIN-KEYWORD,partnerad,REJECT","DOMAIN-KEYWORD,pingfore,REJECT",
-    "DOMAIN-KEYWORD,supersonicads,REJECT","DOMAIN-KEYWORD,uedas,REJECT",
-    "DOMAIN-KEYWORD,umeng,REJECT","DOMAIN-KEYWORD,usage,REJECT",
-    "DOMAIN-SUFFIX,vungle.com,REJECT","DOMAIN-KEYWORD,wlmonitor,REJECT",
+    "DOMAIN-SUFFIX,126.com,DIRECT", "DOMAIN-SUFFIX,126.net,DIRECT", "DOMAIN-SUFFIX,127.net,DIRECT",
+    "DOMAIN-SUFFIX,163.com,DIRECT", "DOMAIN-SUFFIX,360buyimg.com,DIRECT", "DOMAIN-SUFFIX,36kr.com,DIRECT",
+    "DOMAIN-SUFFIX,acfun.tv,DIRECT", "DOMAIN-SUFFIX,air-matters.com,DIRECT", "DOMAIN-SUFFIX,aixifan.com,DIRECT",
+    "DOMAIN-KEYWORD,alicdn,DIRECT", "DOMAIN-KEYWORD,alipay,DIRECT", "DOMAIN-KEYWORD,taobao,DIRECT",
+    "DOMAIN-SUFFIX,amap.com,DIRECT", "DOMAIN-SUFFIX,autonavi.com,DIRECT", "DOMAIN-KEYWORD,baidu,DIRECT",
+    "DOMAIN-SUFFIX,bdimg.com,DIRECT", "DOMAIN-SUFFIX,bdstatic.com,DIRECT",
+    "DOMAIN-SUFFIX,bilibili.com,DIRECT", "DOMAIN-SUFFIX,bilivideo.com,DIRECT",
+    "DOMAIN-SUFFIX,caiyunapp.com,DIRECT", "DOMAIN-SUFFIX,clouddn.com,DIRECT",
+    "DOMAIN-SUFFIX,cnbeta.com,DIRECT", "DOMAIN-SUFFIX,cnbetacdn.com,DIRECT",
+    "DOMAIN-SUFFIX,cootekservice.com,DIRECT", "DOMAIN-SUFFIX,csdn.net,DIRECT",
+    "DOMAIN-SUFFIX,ctrip.com,DIRECT", "DOMAIN-SUFFIX,dgtle.com,DIRECT",
+    "DOMAIN-SUFFIX,dianping.com,DIRECT", "DOMAIN-SUFFIX,douban.com,DIRECT",
+    "DOMAIN-SUFFIX,doubanio.com,DIRECT", "DOMAIN-SUFFIX,duokan.com,DIRECT",
+    "DOMAIN-SUFFIX,easou.com,DIRECT", "DOMAIN-SUFFIX,ele.me,DIRECT",
+    "DOMAIN-SUFFIX,feng.com,DIRECT", "DOMAIN-SUFFIX,fir.im,DIRECT",
+    "DOMAIN-SUFFIX,frdic.com,DIRECT", "DOMAIN-SUFFIX,g-cores.com,DIRECT",
+    "DOMAIN-SUFFIX,godic.net,DIRECT", "DOMAIN-SUFFIX,gtimg.com,DIRECT",
+    "DOMAIN,cdn.hockeyapp.net,DIRECT", "DOMAIN-SUFFIX,hongxiu.com,DIRECT",
+    "DOMAIN-SUFFIX,hxcdn.net,DIRECT", "DOMAIN-SUFFIX,iciba.com,DIRECT",
+    "DOMAIN-SUFFIX,ifeng.com,DIRECT", "DOMAIN-SUFFIX,ifengimg.com,DIRECT",
+    "DOMAIN-SUFFIX,ipip.net,DIRECT", "DOMAIN-SUFFIX,iqiyi.com,DIRECT",
+    "DOMAIN-SUFFIX,jd.com,DIRECT", "DOMAIN-SUFFIX,jianshu.com,DIRECT",
+    "DOMAIN-SUFFIX,knewone.com,DIRECT", "DOMAIN-SUFFIX,le.com,DIRECT",
+    "DOMAIN-SUFFIX,lecloud.com,DIRECT", "DOMAIN-SUFFIX,lemicp.com,DIRECT",
+    "DOMAIN-SUFFIX,licdn.com,DIRECT", "DOMAIN-SUFFIX,luoo.net,DIRECT",
+    "DOMAIN-SUFFIX,meituan.com,DIRECT", "DOMAIN-SUFFIX,meituan.net,DIRECT",
+    "DOMAIN-SUFFIX,mi.com,DIRECT", "DOMAIN-SUFFIX,miaopai.com,DIRECT",
+    "DOMAIN-SUFFIX,microsoft.com,DIRECT", "DOMAIN-SUFFIX,microsoftonline.com,DIRECT",
+    "DOMAIN-SUFFIX,miui.com,DIRECT", "DOMAIN-SUFFIX,miwifi.com,DIRECT",
+    "DOMAIN-SUFFIX,mob.com,DIRECT", "DOMAIN-SUFFIX,netease.com,DIRECT",
+    "DOMAIN-SUFFIX,office.com,DIRECT", "DOMAIN-SUFFIX,office365.com,DIRECT",
+    "DOMAIN-KEYWORD,officecdn,DIRECT", "DOMAIN-SUFFIX,oschina.net,DIRECT",
+    "DOMAIN-SUFFIX,ppsimg.com,DIRECT", "DOMAIN-SUFFIX,pstatp.com,DIRECT",
+    "DOMAIN-SUFFIX,qcloud.com,DIRECT", "DOMAIN-SUFFIX,qdaily.com,DIRECT",
+    "DOMAIN-SUFFIX,qdmm.com,DIRECT", "DOMAIN-SUFFIX,qhimg.com,DIRECT",
+    "DOMAIN-SUFFIX,qhres.com,DIRECT", "DOMAIN-SUFFIX,qidian.com,DIRECT",
+    "DOMAIN-SUFFIX,qihucdn.com,DIRECT", "DOMAIN-SUFFIX,qiniu.com,DIRECT",
+    "DOMAIN-SUFFIX,qiniucdn.com,DIRECT", "DOMAIN-SUFFIX,qiyipic.com,DIRECT",
+    "DOMAIN-SUFFIX,qq.com,DIRECT", "DOMAIN-SUFFIX,qqurl.com,DIRECT",
+    "DOMAIN-SUFFIX,rarbg.to,DIRECT", "DOMAIN-SUFFIX,ruguoapp.com,DIRECT",
+    "DOMAIN-SUFFIX,segmentfault.com,DIRECT", "DOMAIN-SUFFIX,sinaapp.com,DIRECT",
+    "DOMAIN-SUFFIX,smzdm.com,DIRECT", "DOMAIN-SUFFIX,snapdrop.net,DIRECT",
+    "DOMAIN-SUFFIX,sogou.com,DIRECT", "DOMAIN-SUFFIX,sogoucdn.com,DIRECT",
+    "DOMAIN-SUFFIX,sohu.com,DIRECT", "DOMAIN-SUFFIX,soku.com,DIRECT",
+    "DOMAIN-SUFFIX,speedtest.net,DIRECT", "DOMAIN-SUFFIX,sspai.com,DIRECT",
+    "DOMAIN-SUFFIX,suning.com,DIRECT", "DOMAIN-SUFFIX,taobao.com,DIRECT",
+    "DOMAIN-SUFFIX,tencent.com,DIRECT", "DOMAIN-SUFFIX,tenpay.com,DIRECT",
+    "DOMAIN-SUFFIX,tianyancha.com,DIRECT", "DOMAIN-SUFFIX,tmall.com,DIRECT",
+    "DOMAIN-SUFFIX,tudou.com,DIRECT", "DOMAIN-SUFFIX,umetrip.com,DIRECT",
+    "DOMAIN-SUFFIX,upaiyun.com,DIRECT", "DOMAIN-SUFFIX,upyun.com,DIRECT",
+    "DOMAIN-SUFFIX,veryzhun.com,DIRECT", "DOMAIN-SUFFIX,weather.com,DIRECT",
+    "DOMAIN-SUFFIX,weibo.com,DIRECT", "DOMAIN-SUFFIX,xiami.com,DIRECT",
+    "DOMAIN-SUFFIX,xiami.net,DIRECT", "DOMAIN-SUFFIX,xiaomicp.com,DIRECT",
+    "DOMAIN-SUFFIX,ximalaya.com,DIRECT", "DOMAIN-SUFFIX,xmcdn.com,DIRECT",
+    "DOMAIN-SUFFIX,xunlei.com,DIRECT", "DOMAIN-SUFFIX,yhd.com,DIRECT",
+    "DOMAIN-SUFFIX,yihaodianimg.com,DIRECT", "DOMAIN-SUFFIX,yinxiang.com,DIRECT",
+    "DOMAIN-SUFFIX,ykimg.com,DIRECT", "DOMAIN-SUFFIX,youdao.com,DIRECT",
+    "DOMAIN-SUFFIX,youku.com,DIRECT", "DOMAIN-SUFFIX,zealer.com,DIRECT",
+    "DOMAIN-SUFFIX,zhihu.com,DIRECT", "DOMAIN-SUFFIX,zhimg.com,DIRECT",
+    "DOMAIN-SUFFIX,zimuzu.tv,DIRECT", "DOMAIN-SUFFIX,zoho.com,DIRECT",
+    "DOMAIN-KEYWORD,amazon,VPN Trinh Hg", "DOMAIN-KEYWORD,google,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,gmail,VPN Trinh Hg", "DOMAIN-KEYWORD,youtube,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,facebook,VPN Trinh Hg", "DOMAIN-SUFFIX,fb.me,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,fbcdn.net,VPN Trinh Hg", "DOMAIN-KEYWORD,twitter,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,instagram,VPN Trinh Hg", "DOMAIN-KEYWORD,dropbox,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,twimg.com,VPN Trinh Hg", "DOMAIN-KEYWORD,blogspot,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,youtu.be,VPN Trinh Hg", "DOMAIN-KEYWORD,whatsapp,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,telegra.ph,VPN Trinh Hg", "DOMAIN-SUFFIX,telegram.org,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,admarvel,REJECT", "DOMAIN-KEYWORD,admaster,REJECT",
+    "DOMAIN-KEYWORD,adsage,REJECT", "DOMAIN-KEYWORD,adsmogo,REJECT",
+    "DOMAIN-KEYWORD,adsrvmedia,REJECT", "DOMAIN-KEYWORD,adwords,REJECT",
+    "DOMAIN-KEYWORD,adservice,REJECT", "DOMAIN-SUFFIX,appsflyer.com,REJECT",
+    "DOMAIN-KEYWORD,domob,REJECT", "DOMAIN-SUFFIX,doubleclick.net,REJECT",
+    "DOMAIN-KEYWORD,duomeng,REJECT", "DOMAIN-KEYWORD,dwtrack,REJECT",
+    "DOMAIN-KEYWORD,guanggao,REJECT", "DOMAIN-KEYWORD,lianmeng,REJECT",
+    "DOMAIN-SUFFIX,mmstat.com,REJECT", "DOMAIN-KEYWORD,mopub,REJECT",
+    "DOMAIN-KEYWORD,omgmta,REJECT", "DOMAIN-KEYWORD,openx,REJECT",
+    "DOMAIN-KEYWORD,partnerad,REJECT", "DOMAIN-KEYWORD,pingfore,REJECT",
+    "DOMAIN-KEYWORD,supersonicads,REJECT", "DOMAIN-KEYWORD,uedas,REJECT",
+    "DOMAIN-KEYWORD,umeng,REJECT", "DOMAIN-KEYWORD,usage,REJECT",
+    "DOMAIN-SUFFIX,vungle.com,REJECT", "DOMAIN-KEYWORD,wlmonitor,REJECT",
     "DOMAIN-KEYWORD,zjtoolbar,REJECT",
-    "DOMAIN-SUFFIX,9to5mac.com,VPN Trinh Hg","DOMAIN-SUFFIX,abpchina.org,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,adblockplus.org,VPN Trinh Hg","DOMAIN-SUFFIX,adobe.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,akamaized.net,VPN Trinh Hg","DOMAIN-SUFFIX,android.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,appspot.com,VPN Trinh Hg","DOMAIN-SUFFIX,archive.org,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,awsstatic.com,VPN Trinh Hg","DOMAIN-SUFFIX,azureedge.net,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,azurewebsites.net,VPN Trinh Hg","DOMAIN-SUFFIX,bing.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,bit.ly,VPN Trinh Hg","DOMAIN-SUFFIX,bitbucket.org,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,blogger.com,VPN Trinh Hg","DOMAIN-SUFFIX,blogspot.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,bloomberg.com,VPN Trinh Hg","DOMAIN-SUFFIX,box.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,cachefly.net,VPN Trinh Hg","DOMAIN-SUFFIX,chromium.org,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,cloudflare.com,VPN Trinh Hg","DOMAIN-SUFFIX,cloudfront.net,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,docker.com,VPN Trinh Hg","DOMAIN-SUFFIX,dribbble.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,duckduckgo.com,VPN Trinh Hg","DOMAIN-SUFFIX,evernote.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,fast.com,VPN Trinh Hg","DOMAIN-SUFFIX,fastly.net,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,feedly.com,VPN Trinh Hg","DOMAIN-SUFFIX,firebaseio.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,flickr.com,VPN Trinh Hg","DOMAIN-SUFFIX,g.co,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,ggpht.com,VPN Trinh Hg","DOMAIN-SUFFIX,git.io,VPN Trinh Hg",
-    "DOMAIN-KEYWORD,github,VPN Trinh Hg","DOMAIN-SUFFIX,golang.org,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,goo.gl,VPN Trinh Hg","DOMAIN-SUFFIX,goodreads.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,gravatar.com,VPN Trinh Hg","DOMAIN-SUFFIX,gstatic.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,hotmail.com,VPN Trinh Hg","DOMAIN-SUFFIX,imgur.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,instapaper.com,VPN Trinh Hg","DOMAIN-SUFFIX,linkedin.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,live.com,VPN Trinh Hg","DOMAIN-SUFFIX,live.net,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,medium.com,VPN Trinh Hg","DOMAIN-SUFFIX,mega.nz,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,microsofttranslator.com,VPN Trinh Hg","DOMAIN-SUFFIX,msedge.net,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,onedrive.com,VPN Trinh Hg","DOMAIN-SUFFIX,onenote.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,openvpn.net,VPN Trinh Hg","DOMAIN-SUFFIX,outlook.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,pinterest.com,VPN Trinh Hg","DOMAIN-SUFFIX,pixiv.net,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,playstation.com,VPN Trinh Hg","DOMAIN-SUFFIX,playstation.net,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,shadowsocks.org,VPN Trinh Hg","DOMAIN-SUFFIX,skype.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,soundcloud.com,VPN Trinh Hg","DOMAIN-SUFFIX,sourceforge.net,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,spotify.com,VPN Trinh Hg","DOMAIN-SUFFIX,stackoverflow.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,steamcommunity.com,VPN Trinh Hg","DOMAIN-SUFFIX,techcrunch.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,theverge.com,VPN Trinh Hg","DOMAIN-SUFFIX,todoist.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,trello.com,VPN Trinh Hg","DOMAIN-SUFFIX,tumblr.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,twitch.tv,VPN Trinh Hg","DOMAIN-SUFFIX,v2ex.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,vimeo.com,VPN Trinh Hg","DOMAIN-SUFFIX,vultr.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,w.org,VPN Trinh Hg","DOMAIN-SUFFIX,wikipedia.org,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,windows.com,VPN Trinh Hg","DOMAIN-SUFFIX,windows.net,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,wordpress.com,VPN Trinh Hg","DOMAIN-SUFFIX,wsj.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,yahoo.com,VPN Trinh Hg","DOMAIN-SUFFIX,ytimg.com,VPN Trinh Hg",
-    "IP-CIDR,91.108.4.0/22,VPN Trinh Hg,no-resolve","IP-CIDR,91.108.8.0/21,VPN Trinh Hg,no-resolve",
-    "IP-CIDR,91.108.16.0/22,VPN Trinh Hg,no-resolve","IP-CIDR,91.108.56.0/22,VPN Trinh Hg,no-resolve",
+    "DOMAIN-SUFFIX,9to5mac.com,VPN Trinh Hg", "DOMAIN-SUFFIX,abpchina.org,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,adblockplus.org,VPN Trinh Hg", "DOMAIN-SUFFIX,adobe.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,akamaized.net,VPN Trinh Hg", "DOMAIN-SUFFIX,android.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,appspot.com,VPN Trinh Hg", "DOMAIN-SUFFIX,archive.org,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,awsstatic.com,VPN Trinh Hg", "DOMAIN-SUFFIX,azureedge.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,azurewebsites.net,VPN Trinh Hg", "DOMAIN-SUFFIX,bing.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,bit.ly,VPN Trinh Hg", "DOMAIN-SUFFIX,bitbucket.org,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,blogger.com,VPN Trinh Hg", "DOMAIN-SUFFIX,blogspot.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,bloomberg.com,VPN Trinh Hg", "DOMAIN-SUFFIX,box.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,cachefly.net,VPN Trinh Hg", "DOMAIN-SUFFIX,chromium.org,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,cloudflare.com,VPN Trinh Hg", "DOMAIN-SUFFIX,cloudfront.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,docker.com,VPN Trinh Hg", "DOMAIN-SUFFIX,dribbble.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,duckduckgo.com,VPN Trinh Hg", "DOMAIN-SUFFIX,evernote.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,fast.com,VPN Trinh Hg", "DOMAIN-SUFFIX,fastly.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,feedly.com,VPN Trinh Hg", "DOMAIN-SUFFIX,firebaseio.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,flickr.com,VPN Trinh Hg", "DOMAIN-SUFFIX,g.co,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,ggpht.com,VPN Trinh Hg", "DOMAIN-SUFFIX,git.io,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,github,VPN Trinh Hg", "DOMAIN-SUFFIX,golang.org,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,goo.gl,VPN Trinh Hg", "DOMAIN-SUFFIX,goodreads.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,gravatar.com,VPN Trinh Hg", "DOMAIN-SUFFIX,gstatic.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,hotmail.com,VPN Trinh Hg", "DOMAIN-SUFFIX,imgur.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,instapaper.com,VPN Trinh Hg", "DOMAIN-SUFFIX,linkedin.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,live.com,VPN Trinh Hg", "DOMAIN-SUFFIX,live.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,medium.com,VPN Trinh Hg", "DOMAIN-SUFFIX,mega.nz,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,microsofttranslator.com,VPN Trinh Hg", "DOMAIN-SUFFIX,msedge.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,onedrive.com,VPN Trinh Hg", "DOMAIN-SUFFIX,onenote.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,openvpn.net,VPN Trinh Hg", "DOMAIN-SUFFIX,outlook.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,pinterest.com,VPN Trinh Hg", "DOMAIN-SUFFIX,pixiv.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,playstation.com,VPN Trinh Hg", "DOMAIN-SUFFIX,playstation.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,shadowsocks.org,VPN Trinh Hg", "DOMAIN-SUFFIX,skype.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,soundcloud.com,VPN Trinh Hg", "DOMAIN-SUFFIX,sourceforge.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,spotify.com,VPN Trinh Hg", "DOMAIN-SUFFIX,stackoverflow.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,steamcommunity.com,VPN Trinh Hg", "DOMAIN-SUFFIX,techcrunch.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,theverge.com,VPN Trinh Hg", "DOMAIN-SUFFIX,todoist.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,trello.com,VPN Trinh Hg", "DOMAIN-SUFFIX,tumblr.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,twitch.tv,VPN Trinh Hg", "DOMAIN-SUFFIX,v2ex.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,vimeo.com,VPN Trinh Hg", "DOMAIN-SUFFIX,vultr.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,w.org,VPN Trinh Hg", "DOMAIN-SUFFIX,wikipedia.org,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,windows.com,VPN Trinh Hg", "DOMAIN-SUFFIX,windows.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,wordpress.com,VPN Trinh Hg", "DOMAIN-SUFFIX,wsj.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,yahoo.com,VPN Trinh Hg", "DOMAIN-SUFFIX,ytimg.com,VPN Trinh Hg",
+    "IP-CIDR,91.108.4.0/22,VPN Trinh Hg,no-resolve", "IP-CIDR,91.108.8.0/21,VPN Trinh Hg,no-resolve",
+    "IP-CIDR,91.108.16.0/22,VPN Trinh Hg,no-resolve", "IP-CIDR,91.108.56.0/22,VPN Trinh Hg,no-resolve",
     "IP-CIDR,149.154.160.0/20,VPN Trinh Hg,no-resolve",
     "IP-CIDR6,2001:67c:4e8::/48,VPN Trinh Hg,no-resolve",
     "IP-CIDR6,2001:b28:f23d::/48,VPN Trinh Hg,no-resolve",
     "IP-CIDR6,2001:b28:f23f::/48,VPN Trinh Hg,no-resolve",
-    "DOMAIN,injections.adguard.org,DIRECT","DOMAIN,local.adguard.org,DIRECT",
-    "DOMAIN-SUFFIX,local,DIRECT","IP-CIDR,127.0.0.0/8,DIRECT",
-    "IP-CIDR,172.16.0.0/12,DIRECT","IP-CIDR,192.168.0.0/16,DIRECT",
-    "IP-CIDR,10.0.0.0/8,DIRECT","IP-CIDR,100.64.0.0/10,DIRECT",
-    "IP-CIDR,224.0.0.0/4,DIRECT","IP-CIDR6,fe80::/10,DIRECT",
-    "DOMAIN-SUFFIX,cn,DIRECT","DOMAIN-KEYWORD,-cn,DIRECT",
-    "GEOIP,CN,DIRECT","MATCH,VPN Trinh Hg"
+    "DOMAIN,injections.adguard.org,DIRECT", "DOMAIN,local.adguard.org,DIRECT",
+    "DOMAIN-SUFFIX,local,DIRECT", "IP-CIDR,127.0.0.0/8,DIRECT",
+    "IP-CIDR,172.16.0.0/12,DIRECT", "IP-CIDR,192.168.0.0/16,DIRECT",
+    "IP-CIDR,10.0.0.0/8,DIRECT", "IP-CIDR,100.64.0.0/10,DIRECT",
+    "IP-CIDR,224.0.0.0/4,DIRECT", "IP-CIDR6,fe80::/10,DIRECT",
+    "DOMAIN-SUFFIX,cn,DIRECT", "DOMAIN-KEYWORD,-cn,DIRECT",
+    "GEOIP,CN,DIRECT", "MATCH,VPN Trinh Hg"
 ]
 
-DJJC_RULES = [r for r in LIANGXIN_RULES if not r.startswith("IP-CIDR,1.1.1.1") and not r.startswith("IP-CIDR,8.8.8.8") and "cn.bing.com" not in r]
+DJJC_RULES = [
+    "DOMAIN-SUFFIX,services.googleapis.cn,VPN Trinh Hg", "DOMAIN-SUFFIX,xn--ngstr-lra8j.com,VPN Trinh Hg",
+    "DOMAIN,safebrowsing.urlsec.qq.com,DIRECT", "DOMAIN,safebrowsing.googleapis.com,DIRECT",
+    "DOMAIN,developer.apple.com,VPN Trinh Hg", "DOMAIN-SUFFIX,digicert.com,VPN Trinh Hg",
+    "DOMAIN,ocsp.apple.com,VPN Trinh Hg", "DOMAIN,ocsp.comodoca.com,VPN Trinh Hg",
+    "DOMAIN,ocsp.usertrust.com,VPN Trinh Hg", "DOMAIN,ocsp.sectigo.com,VPN Trinh Hg",
+    "DOMAIN,ocsp.verisign.net,VPN Trinh Hg", "DOMAIN-SUFFIX,apple-dns.net,VPN Trinh Hg",
+    "DOMAIN,testflight.apple.com,VPN Trinh Hg", "DOMAIN,sandbox.itunes.apple.com,VPN Trinh Hg",
+    "DOMAIN,itunes.apple.com,VPN Trinh Hg", "DOMAIN-SUFFIX,apps.apple.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,blobstore.apple.com,VPN Trinh Hg", "DOMAIN,cvws.icloud-content.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,mzstatic.com,DIRECT", "DOMAIN-SUFFIX,itunes.apple.com,DIRECT",
+    "DOMAIN-SUFFIX,icloud.com,DIRECT", "DOMAIN-SUFFIX,icloud-content.com,DIRECT",
+    "DOMAIN-SUFFIX,me.com,DIRECT", "DOMAIN-SUFFIX,aaplimg.com,DIRECT",
+    "DOMAIN-SUFFIX,cdn20.com,DIRECT", "DOMAIN-SUFFIX,cdn-apple.com,DIRECT",
+    "DOMAIN-SUFFIX,akadns.net,DIRECT", "DOMAIN-SUFFIX,akamaiedge.net,DIRECT",
+    "DOMAIN-SUFFIX,edgekey.net,DIRECT", "DOMAIN-SUFFIX,mwcloudcdn.com,DIRECT",
+    "DOMAIN-SUFFIX,mwcname.com,DIRECT", "DOMAIN-SUFFIX,apple.com,DIRECT",
+    "DOMAIN-SUFFIX,apple-cloudkit.com,DIRECT", "DOMAIN-SUFFIX,apple-mapkit.com,DIRECT",
+    "DOMAIN-SUFFIX,126.com,DIRECT", "DOMAIN-SUFFIX,126.net,DIRECT", "DOMAIN-SUFFIX,127.net,DIRECT",
+    "DOMAIN-SUFFIX,163.com,DIRECT", "DOMAIN-SUFFIX,360buyimg.com,DIRECT", "DOMAIN-SUFFIX,36kr.com,DIRECT",
+    "DOMAIN-SUFFIX,acfun.tv,DIRECT", "DOMAIN-SUFFIX,air-matters.com,DIRECT", "DOMAIN-SUFFIX,aixifan.com,DIRECT",
+    "DOMAIN-KEYWORD,alicdn,DIRECT", "DOMAIN-KEYWORD,alipay,DIRECT", "DOMAIN-KEYWORD,taobao,DIRECT",
+    "DOMAIN-SUFFIX,amap.com,DIRECT", "DOMAIN-SUFFIX,autonavi.com,DIRECT", "DOMAIN-KEYWORD,baidu,DIRECT",
+    "DOMAIN-SUFFIX,bdimg.com,DIRECT", "DOMAIN-SUFFIX,bdstatic.com,DIRECT",
+    "DOMAIN-SUFFIX,bilibili.com,DIRECT", "DOMAIN-SUFFIX,bilivideo.com,DIRECT",
+    "DOMAIN-SUFFIX,caiyunapp.com,DIRECT", "DOMAIN-SUFFIX,clouddn.com,DIRECT",
+    "DOMAIN-SUFFIX,cnbeta.com,DIRECT", "DOMAIN-SUFFIX,cnbetacdn.com,DIRECT",
+    "DOMAIN-SUFFIX,cootekservice.com,DIRECT", "DOMAIN-SUFFIX,csdn.net,DIRECT",
+    "DOMAIN-SUFFIX,ctrip.com,DIRECT", "DOMAIN-SUFFIX,dgtle.com,DIRECT",
+    "DOMAIN-SUFFIX,dianping.com,DIRECT", "DOMAIN-SUFFIX,douban.com,DIRECT",
+    "DOMAIN-SUFFIX,doubanio.com,DIRECT", "DOMAIN-SUFFIX,duokan.com,DIRECT",
+    "DOMAIN-SUFFIX,easou.com,DIRECT", "DOMAIN-SUFFIX,ele.me,DIRECT",
+    "DOMAIN-SUFFIX,feng.com,DIRECT", "DOMAIN-SUFFIX,fir.im,DIRECT",
+    "DOMAIN-SUFFIX,frdic.com,DIRECT", "DOMAIN-SUFFIX,g-cores.com,DIRECT",
+    "DOMAIN-SUFFIX,godic.net,DIRECT", "DOMAIN-SUFFIX,gtimg.com,DIRECT",
+    "DOMAIN,cdn.hockeyapp.net,DIRECT", "DOMAIN-SUFFIX,hongxiu.com,DIRECT",
+    "DOMAIN-SUFFIX,hxcdn.net,DIRECT", "DOMAIN-SUFFIX,iciba.com,DIRECT",
+    "DOMAIN-SUFFIX,ifeng.com,DIRECT", "DOMAIN-SUFFIX,ifengimg.com,DIRECT",
+    "DOMAIN-SUFFIX,ipip.net,DIRECT", "DOMAIN-SUFFIX,iqiyi.com,DIRECT",
+    "DOMAIN-SUFFIX,jd.com,DIRECT", "DOMAIN-SUFFIX,jianshu.com,DIRECT",
+    "DOMAIN-SUFFIX,knewone.com,DIRECT", "DOMAIN-SUFFIX,le.com,DIRECT",
+    "DOMAIN-SUFFIX,lecloud.com,DIRECT", "DOMAIN-SUFFIX,lemicp.com,DIRECT",
+    "DOMAIN-SUFFIX,licdn.com,DIRECT", "DOMAIN-SUFFIX,luoo.net,DIRECT",
+    "DOMAIN-SUFFIX,meituan.com,DIRECT", "DOMAIN-SUFFIX,meituan.net,DIRECT",
+    "DOMAIN-SUFFIX,mi.com,DIRECT", "DOMAIN-SUFFIX,miaopai.com,DIRECT",
+    "DOMAIN-SUFFIX,microsoft.com,DIRECT", "DOMAIN-SUFFIX,microsoftonline.com,DIRECT",
+    "DOMAIN-SUFFIX,miui.com,DIRECT", "DOMAIN-SUFFIX,miwifi.com,DIRECT",
+    "DOMAIN-SUFFIX,mob.com,DIRECT", "DOMAIN-SUFFIX,netease.com,DIRECT",
+    "DOMAIN-SUFFIX,office.com,DIRECT", "DOMAIN-SUFFIX,office365.com,DIRECT",
+    "DOMAIN-KEYWORD,officecdn,DIRECT", "DOMAIN-SUFFIX,oschina.net,DIRECT",
+    "DOMAIN-SUFFIX,ppsimg.com,DIRECT", "DOMAIN-SUFFIX,pstatp.com,DIRECT",
+    "DOMAIN-SUFFIX,qcloud.com,DIRECT", "DOMAIN-SUFFIX,qdaily.com,DIRECT",
+    "DOMAIN-SUFFIX,qdmm.com,DIRECT", "DOMAIN-SUFFIX,qhimg.com,DIRECT",
+    "DOMAIN-SUFFIX,qhres.com,DIRECT", "DOMAIN-SUFFIX,qidian.com,DIRECT",
+    "DOMAIN-SUFFIX,qihucdn.com,DIRECT", "DOMAIN-SUFFIX,qiniu.com,DIRECT",
+    "DOMAIN-SUFFIX,qiniucdn.com,DIRECT", "DOMAIN-SUFFIX,qiyipic.com,DIRECT",
+    "DOMAIN-SUFFIX,qq.com,DIRECT", "DOMAIN-SUFFIX,qqurl.com,DIRECT",
+    "DOMAIN-SUFFIX,rarbg.to,DIRECT", "DOMAIN-SUFFIX,ruguoapp.com,DIRECT",
+    "DOMAIN-SUFFIX,segmentfault.com,DIRECT", "DOMAIN-SUFFIX,sinaapp.com,DIRECT",
+    "DOMAIN-SUFFIX,smzdm.com,DIRECT", "DOMAIN-SUFFIX,snapdrop.net,DIRECT",
+    "DOMAIN-SUFFIX,sogou.com,DIRECT", "DOMAIN-SUFFIX,sogoucdn.com,DIRECT",
+    "DOMAIN-SUFFIX,sohu.com,DIRECT", "DOMAIN-SUFFIX,soku.com,DIRECT",
+    "DOMAIN-SUFFIX,speedtest.net,DIRECT", "DOMAIN-SUFFIX,sspai.com,DIRECT",
+    "DOMAIN-SUFFIX,suning.com,DIRECT", "DOMAIN-SUFFIX,taobao.com,DIRECT",
+    "DOMAIN-SUFFIX,tencent.com,DIRECT", "DOMAIN-SUFFIX,tenpay.com,DIRECT",
+    "DOMAIN-SUFFIX,tianyancha.com,DIRECT", "DOMAIN-SUFFIX,tmall.com,DIRECT",
+    "DOMAIN-SUFFIX,tudou.com,DIRECT", "DOMAIN-SUFFIX,umetrip.com,DIRECT",
+    "DOMAIN-SUFFIX,upaiyun.com,DIRECT", "DOMAIN-SUFFIX,upyun.com,DIRECT",
+    "DOMAIN-SUFFIX,veryzhun.com,DIRECT", "DOMAIN-SUFFIX,weather.com,DIRECT",
+    "DOMAIN-SUFFIX,weibo.com,DIRECT", "DOMAIN-SUFFIX,xiami.com,DIRECT",
+    "DOMAIN-SUFFIX,xiami.net,DIRECT", "DOMAIN-SUFFIX,xiaomicp.com,DIRECT",
+    "DOMAIN-SUFFIX,ximalaya.com,DIRECT", "DOMAIN-SUFFIX,xmcdn.com,DIRECT",
+    "DOMAIN-SUFFIX,xunlei.com,DIRECT", "DOMAIN-SUFFIX,yhd.com,DIRECT",
+    "DOMAIN-SUFFIX,yihaodianimg.com,DIRECT", "DOMAIN-SUFFIX,yinxiang.com,DIRECT",
+    "DOMAIN-SUFFIX,ykimg.com,DIRECT", "DOMAIN-SUFFIX,youdao.com,DIRECT",
+    "DOMAIN-SUFFIX,youku.com,DIRECT", "DOMAIN-SUFFIX,zealer.com,DIRECT",
+    "DOMAIN-SUFFIX,zhihu.com,DIRECT", "DOMAIN-SUFFIX,zhimg.com,DIRECT",
+    "DOMAIN-SUFFIX,zimuzu.tv,DIRECT", "DOMAIN-SUFFIX,zoho.com,DIRECT",
+    "DOMAIN-KEYWORD,amazon,VPN Trinh Hg", "DOMAIN-KEYWORD,google,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,gmail,VPN Trinh Hg", "DOMAIN-KEYWORD,youtube,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,facebook,VPN Trinh Hg", "DOMAIN-SUFFIX,fb.me,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,fbcdn.net,VPN Trinh Hg", "DOMAIN-KEYWORD,twitter,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,instagram,VPN Trinh Hg", "DOMAIN-KEYWORD,dropbox,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,twimg.com,VPN Trinh Hg", "DOMAIN-KEYWORD,blogspot,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,youtu.be,VPN Trinh Hg", "DOMAIN-KEYWORD,whatsapp,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,telegra.ph,VPN Trinh Hg", "DOMAIN-SUFFIX,telegram.org,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,admarvel,REJECT", "DOMAIN-KEYWORD,admaster,REJECT",
+    "DOMAIN-KEYWORD,adsage,REJECT", "DOMAIN-KEYWORD,adsmogo,REJECT",
+    "DOMAIN-KEYWORD,adsrvmedia,REJECT", "DOMAIN-KEYWORD,adwords,REJECT",
+    "DOMAIN-KEYWORD,adservice,REJECT", "DOMAIN-SUFFIX,appsflyer.com,REJECT",
+    "DOMAIN-KEYWORD,domob,REJECT", "DOMAIN-SUFFIX,doubleclick.net,REJECT",
+    "DOMAIN-KEYWORD,duomeng,REJECT", "DOMAIN-KEYWORD,dwtrack,REJECT",
+    "DOMAIN-KEYWORD,guanggao,REJECT", "DOMAIN-KEYWORD,lianmeng,REJECT",
+    "DOMAIN-SUFFIX,mmstat.com,REJECT", "DOMAIN-KEYWORD,mopub,REJECT",
+    "DOMAIN-KEYWORD,omgmta,REJECT", "DOMAIN-KEYWORD,openx,REJECT",
+    "DOMAIN-KEYWORD,partnerad,REJECT", "DOMAIN-KEYWORD,pingfore,REJECT",
+    "DOMAIN-KEYWORD,supersonicads,REJECT", "DOMAIN-KEYWORD,uedas,REJECT",
+    "DOMAIN-KEYWORD,umeng,REJECT", "DOMAIN-KEYWORD,usage,REJECT",
+    "DOMAIN-SUFFIX,vungle.com,REJECT", "DOMAIN-KEYWORD,wlmonitor,REJECT",
+    "DOMAIN-KEYWORD,zjtoolbar,REJECT",
+    "DOMAIN-SUFFIX,9to5mac.com,VPN Trinh Hg", "DOMAIN-SUFFIX,abpchina.org,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,adblockplus.org,VPN Trinh Hg", "DOMAIN-SUFFIX,adobe.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,akamaized.net,VPN Trinh Hg", "DOMAIN-SUFFIX,android.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,appspot.com,VPN Trinh Hg", "DOMAIN-SUFFIX,archive.org,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,awsstatic.com,VPN Trinh Hg", "DOMAIN-SUFFIX,azureedge.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,azurewebsites.net,VPN Trinh Hg", "DOMAIN-SUFFIX,bing.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,bit.ly,VPN Trinh Hg", "DOMAIN-SUFFIX,bitbucket.org,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,blogger.com,VPN Trinh Hg", "DOMAIN-SUFFIX,blogspot.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,bloomberg.com,VPN Trinh Hg", "DOMAIN-SUFFIX,box.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,cachefly.net,VPN Trinh Hg", "DOMAIN-SUFFIX,chromium.org,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,cloudflare.com,VPN Trinh Hg", "DOMAIN-SUFFIX,cloudfront.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,docker.com,VPN Trinh Hg", "DOMAIN-SUFFIX,dribbble.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,duckduckgo.com,VPN Trinh Hg", "DOMAIN-SUFFIX,evernote.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,fast.com,VPN Trinh Hg", "DOMAIN-SUFFIX,fastly.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,feedly.com,VPN Trinh Hg", "DOMAIN-SUFFIX,firebaseio.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,flickr.com,VPN Trinh Hg", "DOMAIN-SUFFIX,g.co,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,ggpht.com,VPN Trinh Hg", "DOMAIN-SUFFIX,git.io,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,github,VPN Trinh Hg", "DOMAIN-SUFFIX,golang.org,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,goo.gl,VPN Trinh Hg", "DOMAIN-SUFFIX,goodreads.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,gravatar.com,VPN Trinh Hg", "DOMAIN-SUFFIX,gstatic.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,hotmail.com,VPN Trinh Hg", "DOMAIN-SUFFIX,imgur.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,instapaper.com,VPN Trinh Hg", "DOMAIN-SUFFIX,linkedin.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,live.com,VPN Trinh Hg", "DOMAIN-SUFFIX,live.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,medium.com,VPN Trinh Hg", "DOMAIN-SUFFIX,mega.nz,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,microsofttranslator.com,VPN Trinh Hg", "DOMAIN-SUFFIX,msedge.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,onedrive.com,VPN Trinh Hg", "DOMAIN-SUFFIX,onenote.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,openvpn.net,VPN Trinh Hg", "DOMAIN-SUFFIX,outlook.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,pinterest.com,VPN Trinh Hg", "DOMAIN-SUFFIX,pixiv.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,playstation.com,VPN Trinh Hg", "DOMAIN-SUFFIX,playstation.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,shadowsocks.org,VPN Trinh Hg", "DOMAIN-SUFFIX,skype.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,soundcloud.com,VPN Trinh Hg", "DOMAIN-SUFFIX,sourceforge.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,spotify.com,VPN Trinh Hg", "DOMAIN-SUFFIX,stackoverflow.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,steamcommunity.com,VPN Trinh Hg", "DOMAIN-SUFFIX,techcrunch.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,theverge.com,VPN Trinh Hg", "DOMAIN-SUFFIX,todoist.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,trello.com,VPN Trinh Hg", "DOMAIN-SUFFIX,tumblr.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,twitch.tv,VPN Trinh Hg", "DOMAIN-SUFFIX,v2ex.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,vimeo.com,VPN Trinh Hg", "DOMAIN-SUFFIX,vultr.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,w.org,VPN Trinh Hg", "DOMAIN-SUFFIX,wikipedia.org,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,windows.com,VPN Trinh Hg", "DOMAIN-SUFFIX,windows.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,wordpress.com,VPN Trinh Hg", "DOMAIN-SUFFIX,wsj.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,yahoo.com,VPN Trinh Hg", "DOMAIN-SUFFIX,ytimg.com,VPN Trinh Hg",
+    "IP-CIDR,91.108.4.0/22,VPN Trinh Hg,no-resolve", "IP-CIDR,91.108.8.0/21,VPN Trinh Hg,no-resolve",
+    "IP-CIDR,91.108.16.0/22,VPN Trinh Hg,no-resolve", "IP-CIDR,91.108.56.0/22,VPN Trinh Hg,no-resolve",
+    "IP-CIDR,149.154.160.0/20,VPN Trinh Hg,no-resolve",
+    "IP-CIDR6,2001:67c:4e8::/48,VPN Trinh Hg,no-resolve",
+    "IP-CIDR6,2001:b28:f23d::/48,VPN Trinh Hg,no-resolve",
+    "IP-CIDR6,2001:b28:f23f::/48,VPN Trinh Hg,no-resolve",
+    "DOMAIN,injections.adguard.org,DIRECT", "DOMAIN,local.adguard.org,DIRECT",
+    "DOMAIN-SUFFIX,local,DIRECT", "IP-CIDR,127.0.0.0/8,DIRECT",
+    "IP-CIDR,172.16.0.0/12,DIRECT", "IP-CIDR,192.168.0.0/16,DIRECT",
+    "IP-CIDR,10.0.0.0/8,DIRECT", "IP-CIDR,100.64.0.0/10,DIRECT",
+    "IP-CIDR,224.0.0.0/4,DIRECT", "IP-CIDR6,fe80::/10,DIRECT",
+    "DOMAIN-SUFFIX,cn,DIRECT", "DOMAIN-KEYWORD,-cn,DIRECT",
+    "GEOIP,CN,DIRECT", "MATCH,VPN Trinh Hg"
+]
+
+# COMBO_RULES gộp đầy đủ từ Liangxin + DJJC, loại bỏ trùng lặp và giữ nguyên thứ tự
+_seen_combo = set()
+COMBO_RULES = []
+for _r in LIANGXIN_RULES + DJJC_RULES:
+    if _r not in _seen_combo:
+        _seen_combo.add(_r)
+        COMBO_RULES.append(_r)
 
 
 # ── Parse proxy URI ───────────────────────────────────────────────────────────
@@ -364,14 +541,20 @@ def proxy_to_singbox_outbound(p: dict) -> dict | None:
 
 
 # ── Build Singbox FULL CONFIG (khớp sát Hiddify) ─────────────────────────────
-def build_singbox_full(proxy_list: list, is_liangxin: bool) -> str:
+def build_singbox_full(proxy_list: list, mode: str) -> str:
     """
     Output JSON khớp sát với config gốc xuất từ Hiddify:
     selector → urltest → direct → block → dns-out → info nodes → real nodes
     + inbounds (mixed + tun) + dns block + route rules + experimental
+    Hỗ trợ 3 mode: 'liangxin', 'djjc', 'combo'
     """
     real_names   = [p["name"] for p in proxy_list]
-    active_rules = LIANGXIN_RULES if is_liangxin else DJJC_RULES
+    if mode == "combo":
+        active_rules = COMBO_RULES
+    elif mode == "liangxin" or mode is True:
+        active_rules = LIANGXIN_RULES
+    else:
+        active_rules = DJJC_RULES
     proxy_group  = "节点选择"
 
     # ── Outbounds — thứ tự giống hệt file gốc ─────────────────────────────
@@ -574,9 +757,16 @@ def group_to_inline(g: dict) -> str:
     if "tolerance" in g: line += f", tolerance: {g['tolerance']}"
     return line + " }"
 
-def build_yaml(proxy_list: list, is_liangxin: bool) -> str:
-    dns_clash  = LIANGXIN_DNS_CLASH if is_liangxin else DJJC_DNS_CLASH
-    rules_list = LIANGXIN_RULES     if is_liangxin else DJJC_RULES
+def build_yaml(proxy_list: list, mode: str) -> str:
+    if mode == "combo":
+        dns_clash  = COMBO_DNS_CLASH
+        rules_list = COMBO_RULES
+    elif mode == "liangxin" or mode is True:
+        dns_clash  = LIANGXIN_DNS_CLASH
+        rules_list = LIANGXIN_RULES
+    else:
+        dns_clash  = DJJC_DNS_CLASH
+        rules_list = DJJC_RULES
 
     info_proxies = []
     for name in INFO_NODES:
@@ -631,15 +821,35 @@ def build_yaml(proxy_list: list, is_liangxin: bool) -> str:
     return result
 
 
-# ── Hàm chuẩn hóa tên node (Giữ nguyên tên gốc, đổi cờ, không bao giờ bị trùng tên) ────
-def format_node_name(raw_name: str) -> str:
-    if not raw_name:
-        return "VPN Node - VPNTrinhHg"
+# ── HAI HÀM CHUẨN HÓA TÊN NODE ĐỘC LẬP & AN TOÀN ──────────────────────────────
+def clean_liangxin_node(raw_name: str) -> str:
+    """Chuẩn hóa tên node nguồn Liangxin: đổi cờ, lọc ISP, đổi 01->001, giữ hệ số."""
+    if not raw_name: return "Liangxin - VPNTrinhHg"
     try:
-        name = raw_name.replace(" - VPNTrinhHg", "").strip()
-        if "🇨🇳台湾" in name:
-            name = name.replace("🇨🇳台湾", "🇹🇼台湾")
-        return f"{name} - VPNTrinhHg"
+        s = re.sub(r"\s*-\s*VPNTrinhHg$", "", raw_name.strip()).strip()
+        s = s.replace("🇨🇳台湾", "🇹🇼台湾")
+        parts = [p.strip() for p in s.split("|")]
+        # Lọc bỏ phân đoạn tên nhà mạng
+        clean_parts = [p for p in parts if p.upper() not in ISP_DROP_KEYWORDS]
+        if clean_parts:
+            # Đổi số thứ tự phân đoạn đầu (01, 02 -> 001, 002) mà không chạm vào 0.5x, 0.1x
+            clean_parts[0] = re.sub(r"(?<![\d.xX])(\d{1,2})(?![\d.xX])", lambda m: m.group(1).zfill(3), clean_parts[0])
+            s = "|".join(clean_parts)
+        return f"{s} - VPNTrinhHg"
+    except Exception:
+        fallback = raw_name.strip()
+        return fallback if "VPNTrinhHg" in fallback else f"{fallback} - VPNTrinhHg"
+
+def clean_djjc_node(raw_name: str) -> str:
+    """Chuẩn hóa tên node nguồn DJJC: hệ số nhân x, xóa chữ 号, đổi 1号/01号->001."""
+    if not raw_name: return "DJJC - VPNTrinhHg"
+    try:
+        s = re.sub(r"\s*-\s*VPNTrinhHg$", "", raw_name.strip()).strip()
+        # Chuẩn hóa hệ số nhân tiếng Trung (1.5倍率, 1.5倍 -> 1.5x, 0.1倍 -> 0.1x)
+        s = re.sub(r"(\d+(?:\.\d+)?)\s*倍率?", r"\1x", s)
+        # Chuẩn hóa số thứ tự và xóa chữ 号 (1号, 01号 -> 001)
+        s = re.sub(r"(\d{1,2})\s*号", lambda m: m.group(1).zfill(3), s)
+        return f"{s} - VPNTrinhHg"
     except Exception:
         fallback = raw_name.strip()
         return fallback if "VPNTrinhHg" in fallback else f"{fallback} - VPNTrinhHg"
@@ -662,7 +872,9 @@ def process_b64(raw_b64: str, is_liangxin: bool):
         old_name = urllib.parse.unquote(line.split("#", 1)[-1]) if "#" in line else None
         if old_name and any(kw in old_name for kw in INFO_SKIP_KW): continue
         
-        new_name = format_node_name(old_name)
+        # Áp dụng hàm chuẩn hóa độc lập theo từng nguồn
+        new_name = clean_liangxin_node(old_name) if is_liangxin else clean_djjc_node(old_name)
+        
         # Chống trùng lặp tuyệt đối: Nếu trùng tên sẽ tự thêm hậu tố (2), (3)...
         if new_name in seen_names:
             seen_names[new_name] += 1
@@ -679,8 +891,9 @@ def process_b64(raw_b64: str, is_liangxin: bool):
     new_b64 = base64.b64encode("\n".join(new_b64_lines).encode("utf-8")).decode("ascii")
     print(f"  Parsed {len(proxy_list)} real proxies from {len(lines)} lines")
 
-    yaml_str    = build_yaml(proxy_list, is_liangxin)        if proxy_list else ""
-    singbox_str = build_singbox_full(proxy_list, is_liangxin) if proxy_list else ""
+    mode = "liangxin" if is_liangxin else "djjc"
+    yaml_str    = build_yaml(proxy_list, mode)        if proxy_list else ""
+    singbox_str = build_singbox_full(proxy_list, mode) if proxy_list else ""
     return new_b64, yaml_str, singbox_str
 
 
