@@ -22,47 +22,69 @@ INFO_SKIP_KW = ["剩余流量", "距离下次重置", "套餐到期"]
 INFO_VLESS_PREFIX = "vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1?type=tcp#"
 ISP_DROP_KEYWORDS = ["CUCM", "CMCU", "CTCUCM", "CTCU"]
 
-# ── 3 BỘ DNS CLASH ĐỘC LẬP TƯỜNG MINH 100% ────────────────────────────────────
+# ── 3 BỘ DNS CLASH ĐỘC LẬP TƯỜNG MINH 100% (CHUẨN GỐC TỪ FILE CẤU HÌNH) ───────
 LIANGXIN_DNS_CLASH = """\
 dns:
     enable: true
-    ipv6: false
-    default-nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]
-    enhanced-mode: fake-ip
-    fake-ip-range: 198.18.0.1/16
+    prefer-h3: false
+    ipv6: true
+    ipv6-timeout: 100
     use-hosts: true
+    use-system-hosts: true
     respect-rules: true
-    proxy-server-nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]
     nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]
     fallback: [1.1.1.1, 8.8.8.8]
-    fallback-filter: { geoip: true, geoip-code: CN, geosite: [gfw], ipcidr: [240.0.0.0/4], domain: [+.google.com, +.facebook.com, +.youtube.com] }"""
+    fallback-filter: { geoip: true, geoip-code: CN, ipcidr: [240.0.0.0/4], domain: [+.google.com, +.facebook.com, +.youtube.com], geosite: [gfw] }
+    fallback-lazy-query: false
+    enhanced-mode: fake-ip
+    fake-ip-range: 198.18.0.1/16
+    fake-ip-filter: [dns.msftnsci.com, www.msftnsci.com, www.msftconnecttest.com]
+    fake-ip-filter-mode: blacklist
+    fake-ip-ttl: 1
+    default-nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]
+    proxy-server-nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]"""
 
 DJJC_DNS_CLASH = """\
 dns:
     enable: true
-    ipv6: false
-    default-nameserver: [223.5.5.5, 119.29.29.29]
+    prefer-h3: false
+    ipv6: true
+    ipv6-timeout: 100
+    use-hosts: true
+    use-system-hosts: true
+    respect-rules: true
+    nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]
+    fallback: [1.1.1.1, 8.8.8.8]
+    fallback-filter: { geoip: true, geoip-code: CN, ipcidr: [240.0.0.0/4], domain: [+.google.com, +.facebook.com, +.youtube.com], geosite: [gfw] }
+    fallback-lazy-query: false
     enhanced-mode: fake-ip
     fake-ip-range: 198.18.0.1/16
-    use-hosts: true
-    respect-rules: false
-    nameserver: ['https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query']
-    fallback: ['https://doh.dns.sb/dns-query', 'https://dns.cloudflare.com/dns-query', 'https://dns.twnic.tw/dns-query', 'tls://8.8.4.4:853']
-    fallback-filter: { geoip: true, ipcidr: [240.0.0.0/4, 0.0.0.0/32] }"""
+    fake-ip-filter: [dns.msftnsci.com, www.msftnsci.com, www.msftconnecttest.com]
+    fake-ip-filter-mode: blacklist
+    fake-ip-ttl: 1
+    default-nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]
+    proxy-server-nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]"""
 
 COMBO_DNS_CLASH = """\
 dns:
     enable: true
-    ipv6: false
-    default-nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]
+    prefer-h3: false
+    ipv6: true
+    ipv6-timeout: 100
+    use-hosts: true
+    use-system-hosts: true
+    respect-rules: true
+    nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]
+    fallback: [1.1.1.1, 8.8.8.8]
+    fallback-filter: { geoip: true, geoip-code: CN, ipcidr: [240.0.0.0/4], domain: [+.google.com, +.facebook.com, +.youtube.com], geosite: [gfw] }
+    fallback-lazy-query: false
     enhanced-mode: fake-ip
     fake-ip-range: 198.18.0.1/16
-    use-hosts: true
-    respect-rules: true
-    proxy-server-nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]
-    nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114, 'https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query']
-    fallback: [1.1.1.1, 8.8.8.8, 'https://doh.dns.sb/dns-query', 'https://dns.cloudflare.com/dns-query', 'https://dns.twnic.tw/dns-query', 'tls://8.8.4.4:853']
-    fallback-filter: { geoip: true, geoip-code: CN, geosite: [gfw], ipcidr: [240.0.0.0/4, 0.0.0.0/32], domain: [+.google.com, +.facebook.com, +.youtube.com] }"""
+    fake-ip-filter: [dns.msftnsci.com, www.msftnsci.com, www.msftconnecttest.com]
+    fake-ip-filter-mode: blacklist
+    fake-ip-ttl: 1
+    default-nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]
+    proxy-server-nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]"""
 
 # ── 3 BỘ RULES CLASH ĐỘC LẬP TƯỜNG MINH 100% (KHÔNG KẾ THỪA RÚT GỌN) ───────────
 LIANGXIN_RULES = [
@@ -824,38 +846,64 @@ def build_yaml(proxy_list: list, mode: str) -> str:
 
 # ── HAI BỘ QUY TẮC CHUẨN HÓA TÊN NODE RIÊNG BIỆT (LIANGXIN & DJJC) ───────────
 def clean_liangxin_node(raw_name: str) -> str:
-    """Chuẩn hóa riêng cho Liangxin: đổi cờ, bóc tách nhà mạng, GIỮ NGUYÊN số thứ tự gốc."""
+    """
+    Quy tắc độc lập Liangxin:
+    1. Đổi cờ: 🇨🇳台湾 -> 🇹🇼台湾
+    2. Lọc bỏ ISP: CUCM, CTCU, CMCU, CTCUCM
+    3. Số thứ tự: 2 chữ số (01) -> 3 chữ số (001); 1 chữ số (1) -> 2 chữ số (01); không số giữ nguyên
+    4. Giữ nguyên hệ số nhân: 0.5x, 0.1x...
+    5. Hậu tố: - VPNTrinhHg
+    6. Fallback an toàn: raw_name + ' - VPNTrinhHg'
+    """
     if not raw_name: return "Liangxin - VPNTrinhHg"
     try:
         s = re.sub(r"\s*-\s*VPNTrinhHg$", "", raw_name.strip()).strip()
         s = s.replace("🇨🇳台湾", "🇹🇼台湾")
         parts = [p.strip() for p in s.split("|")]
-        # Lọc bỏ các phân đoạn nhà mạng ISP
+        # Lọc bỏ nhà mạng ISP
         clean_parts = [p for p in parts if p.upper() not in ISP_DROP_KEYWORDS]
         s = "|".join(clean_parts) if clean_parts else s
+        
+        # Số hóa: 2 số -> 3 số (01 -> 001); 1 số -> 2 số (1 -> 01); bảo vệ số thập phân hệ số nhân
+        def _pad_lx_num(m):
+            num = m.group(1)
+            return ("00" + num[1]) if len(num) == 2 else ("0" + num)
+        s = re.sub(r"(?<![\d.])(\d{1,2})(?![\d.xX])", _pad_lx_num, s)
         return f"{s} - VPNTrinhHg"
     except Exception:
         fallback = raw_name.strip()
         return fallback if "VPNTrinhHg" in fallback else f"{fallback} - VPNTrinhHg"
 
+
 def clean_djjc_node(raw_name: str) -> str:
-    """Chuẩn hóa riêng cho DJJC: 1 -> 01, 01 -> 001, xóa chữ 号, không đụng vào 0.1x, 0.5x, 1.5x."""
+    """
+    Quy tắc độc lập DJJC:
+    1. Chuẩn hóa hệ số nhân: 倍率 / 倍 -> x (1.5倍率 -> 1.5x, 0.1倍 -> 0.1x)
+    2. Số thứ tự bóc tách chữ 号:
+       - 1 chữ số kèm 号 (1号) -> 2 chữ số (01), xóa 号
+       - 2 chữ số kèm 号 (01号) -> 3 chữ số (001), xóa 号
+       - Số thứ tự lẻ cuối tên không có 号 (Đức2) -> 2 chữ số (02)
+       - Không có số -> giữ nguyên chữ
+    3. Bảo vệ số thập phân trong hệ số nhân (0.1x, 1.5x...)
+    4. Hậu tố: - VPNTrinhHg
+    5. Fallback an toàn: raw_name + ' - VPNTrinhHg'
+    """
     if not raw_name: return "DJJC - VPNTrinhHg"
     try:
         s = re.sub(r"\s*-\s*VPNTrinhHg$", "", raw_name.strip()).strip()
-        # 1. Chuyển đổi hệ số nhân tiếng Trung sang chuẩn x trước (1.5倍率, 1.5倍 -> 1.5x, 0.1倍 -> 0.1x, 1倍 -> 1x)
+        # 1. Đổi hệ số nhân tiếng Trung sang chuẩn x trước (bảo vệ các số này)
         s = re.sub(r"(\d+(?:\.\d+)?)\s*倍率?", r"\1x", s)
-        # 2. Quy tắc số hóa riêng của DJJC:
-        # Số 1 chữ số -> 2 chữ số (1 -> 01), Số 2 chữ số -> 3 chữ số (01 -> 001), xóa chữ 号
-        def _pad_djjc_num(m):
+        
+        # 2. Bóc tách số thứ tự kèm 号 hoặc đứng lẻ không có 号
+        def _pad_dj_num(m):
             num = m.group(1)
-            return num.zfill(3) if len(num) == 2 else num.zfill(2)
-        s = re.sub(r"(?<![\d.xX])(\d{1,2})(?:\s*号)?(?![\d.xX])", _pad_djjc_num, s)
+            return ("00" + num[1]) if len(num) == 2 else ("0" + num)
+        s = re.sub(r"(?<![\d.])(\d{1,2})(?:\s*号)?(?![\d.xX])", _pad_dj_num, s)
         return f"{s} - VPNTrinhHg"
     except Exception:
         fallback = raw_name.strip()
         return fallback if "VPNTrinhHg" in fallback else f"{fallback} - VPNTrinhHg"
-
+        
 # ── Process b64 (Có cơ chế chống trùng lặp tên node) ──────────────────────────
 def process_b64(raw_b64: str, is_liangxin: bool):
     pad = raw_b64 + "=" * ((-len(raw_b64)) % 4)
