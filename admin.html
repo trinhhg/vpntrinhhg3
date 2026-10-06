@@ -250,10 +250,9 @@ textarea.autog{resize:none;overflow:hidden;}
   <div id="dataReqBody" class="space-y-3"></div>
  </div>
 
-  <!-- ===== LINK SUB ===== -->
+ <!-- ===== LINK SUB ===== -->
  <div id="t-lnk" class="hidden space-y-4 w-full min-w-0">
-  <h2 class="text-lg md:text-2xl font-bold text-slate-800">Quản lý Link Sub Ẩn</h2>
-  <p class="text-[11px] text-slate-500 -mt-2">Công cụ Rà quét &amp; Map lại nằm ở <b>Cài đặt → Set Web → Bảo trì Link Sub</b>.</p>
+  <h2 class="text-lg md:text-2xl font-bold text-slate-800 mb-2">Quản lý Link Sub Ẩn</h2>
 
   <!-- Khối 4 nút bảo trì (nằm riêng biệt, không tiêu đề) -->
   <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm mb-3">
@@ -294,18 +293,16 @@ textarea.autog{resize:none;overflow:hidden;}
   <div id="panel-ls-pool" class="hidden bg-white p-4 rounded-2xl border border-indigo-200 shadow-sm mb-4 space-y-3">
    <div class="flex items-center justify-between">
     <span class="font-extrabold text-xs text-slate-700">Thông tin nguồn nhập kho</span>
-    <label class="flex items-center gap-1.5 text-xs font-black text-indigo-600 cursor-pointer">
-     <input type="checkbox" id="chkPoolCombo" onchange="togglePoolComboForm(this.checked)" class="accent-indigo-600 w-4 h-4"> ☑ Link trộn (Nhập cặp Liangxin + DJJC)
-    </label>
+    <span class="text-[10px] text-slate-400 font-medium">Nhập 1 ô = Nguồn Đơn · Nhập 2 ô = Khối Combo (Tự nhận diện LX / DJ)</span>
    </div>
 
-   <!-- Bảng Nguồn 1 (Liangxin) -->
+   <!-- Bảng Nguồn A -->
    <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2">
     <div class="text-[11px] font-black text-emerald-700 flex items-center justify-between">
-     <span id="poolLeg1Label">Nguồn Liangxin (hoặc nguồn duy nhất)</span>
-     <span class="badge-lx">Nguồn 1</span>
+     <span>Nguồn A (Liangxin hoặc DJJC)</span>
+     <span class="badge-lx">Chân 1</span>
     </div>
-    <div><input id="poolOrig" type="text" placeholder="https://liangxin.xyz/..." class="w-full p-2 border border-slate-200 rounded-xl outline-none font-mono text-xs bg-white"></div>
+    <div><input id="poolOrig" type="text" placeholder="https://liangxin.xyz/... hoặc https://gates.djjc..." class="w-full p-2 border border-slate-200 rounded-xl outline-none font-mono text-xs bg-white"></div>
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
      <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB</label><input id="poolGb" type="number" placeholder="1670" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
      <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB</label><input id="poolRemainGb" type="number" placeholder="150" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
@@ -314,13 +311,13 @@ textarea.autog{resize:none;overflow:hidden;}
     </div>
    </div>
 
-   <!-- Bảng Nguồn 2 (DJJC) - Hiện khi tick Link Trộn -->
-   <div id="poolLeg2Container" class="hidden border border-indigo-200 rounded-xl p-3 bg-indigo-50/30 space-y-2">
+   <!-- Bảng Nguồn B (Để trống nếu nhập nguồn đơn) -->
+   <div id="poolLeg2Container" class="border border-indigo-200 rounded-xl p-3 bg-indigo-50/30 space-y-2">
     <div class="text-[11px] font-black text-blue-700 flex items-center justify-between">
-     <span>Nguồn DJJC (Chân thứ 2)</span>
-     <span class="badge-dj">Nguồn 2</span>
+     <span>Nguồn B (Để trống nếu là Nguồn Đơn)</span>
+     <span class="badge-dj">Chân 2</span>
     </div>
-    <div><input id="poolOrig2" type="text" placeholder="https://gates.djjc.cfd/..." class="w-full p-2 border border-indigo-200 rounded-xl outline-none font-mono text-xs bg-white"></div>
+    <div><input id="poolOrig2" type="text" placeholder="https://gates.djjc... hoặc https://liangxin... (tự nhận diện)" class="w-full p-2 border border-indigo-200 rounded-xl outline-none font-mono text-xs bg-white"></div>
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
      <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB</label><input id="poolGb2" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
      <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB</label><input id="poolRemainGb2" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
@@ -770,12 +767,54 @@ textarea.autog{resize:none;overflow:hidden;}
 </div>
 
 <div id="mPoolEdit" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
- <div class="glass-card p-5 w-full max-w-2xl">
-  <h3 class="font-extrabold text-lg mb-3 text-slate-800">Sửa Nguồn Node</h3><input type="hidden" id="mPEOldOrig">
-  <div class="mb-2"><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link gốc (đổi sẽ cập nhật TOÀN BỘ Sub Ẩn)</label><input id="mPEOrig" type="text" class="w-full p-2 text-xs border border-slate-300 rounded-lg font-mono outline-none"></div>
-  <div class="grid grid-cols-2 gap-2 mb-2"><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Tổng GB</label><input id="mPEGb" type="number" class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none bg-slate-50"></div><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Còn lại GB</label><input id="mPERemain" type="number" class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none bg-slate-50"></div></div>
-  <div class="grid grid-cols-2 gap-2 mb-4"><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Hết hạn</label><input id="mPEExp" type="text" class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none text-center bg-slate-50"></div><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Max thiết bị</label><input id="mPEMax" type="number" min="1" class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none text-center bg-slate-50"></div></div>
+ <div class="glass-card p-5 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+  <div class="flex items-center justify-between mb-3">
+   <h3 class="font-extrabold text-lg text-slate-800" id="mPETitle">Sửa Nguồn Node Trong Kho</h3>
+   <span id="mPEBadge" class="text-xs font-black px-2 py-0.5 rounded"></span>
+  </div>
+  <input type="hidden" id="mPEId">
+  <input type="hidden" id="mPEOldOrig">
+  <input type="hidden" id="mPEOldOrig2">
+
+  <!-- BẢNG CHÂN 1 -->
+  <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/50 mb-3 space-y-2">
+   <div class="text-xs font-black text-slate-700 flex justify-between"><span>Thông số Chân 1</span><span id="mPELeg1Badge" class="badge-lx">Chân 1</span></div>
+   <div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link gốc 1</label><input id="mPEOrig" type="text" class="w-full p-2 text-xs border border-slate-300 rounded-lg font-mono outline-none bg-white"></div>
+   <div class="grid grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Tổng GB</label><input id="mPEGb" type="number" class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none bg-white"></div><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Còn lại GB</label><input id="mPERemain" type="number" class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none bg-white"></div></div>
+   <div class="grid grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Hết hạn</label><input id="mPEExp" type="text" class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none text-center bg-white"></div><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Max thiết bị</label><input id="mPEMax" type="number" min="1" class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none text-center bg-white"></div></div>
+  </div>
+
+  <!-- BẢNG CHÂN 2 (Bung đủ khi là Khối Combo) -->
+  <div id="mPEContainer2" class="hidden border border-indigo-200 rounded-xl p-3 bg-indigo-50/30 mb-4 space-y-2">
+   <div class="text-xs font-black text-blue-700 flex justify-between"><span>Thông số Chân 2</span><span class="badge-dj">Chân 2</span></div>
+   <div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link gốc 2</label><input id="mPEOrig2" type="text" class="w-full p-2 text-xs border border-indigo-300 rounded-lg font-mono outline-none bg-white"></div>
+   <div class="grid grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Tổng GB 2</label><input id="mPEGb2" type="number" class="w-full p-2 text-xs border border-indigo-300 rounded-lg outline-none bg-white"></div><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Còn lại GB 2</label><input id="mPERemain2" type="number" class="w-full p-2 text-xs border border-indigo-300 rounded-lg outline-none bg-white"></div></div>
+   <div class="grid grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Hết hạn 2</label><input id="mPEExp2" type="text" class="w-full p-2 text-xs border border-indigo-300 rounded-lg outline-none text-center bg-white"></div><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Max thiết bị 2</label><input id="mPEMax2" type="number" min="1" class="w-full p-2 text-xs border border-indigo-300 rounded-lg outline-none text-center bg-white"></div></div>
+  </div>
+
   <div class="flex gap-2"><button onclick="savePoolEdit()" class="flex-1 bg-indigo-600 text-white font-bold py-2.5 rounded-lg text-xs shadow-md">LƯU THAY ĐỔI</button><button onclick="cm('mPoolEdit')" class="bg-white border border-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-lg text-xs shadow-sm">Hủy</button></div>
+ </div>
+</div>
+
+<!-- MODAL SỬA NGUỒN CẤP CỤM (ROOT SOURCE) -->
+<div id="mRootEdit" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+ <div class="glass-card p-5 w-full max-w-xl">
+  <h3 class="font-extrabold text-lg mb-1 text-slate-800">Sửa Nguồn Cấp Cụm (Root Source)</h3>
+  <p class="text-[11px] text-slate-500 mb-3">Đổi link gốc cho toàn bộ link con bên dưới. <b>Token link ẩn của khách hàng được bảo toàn 100%</b>.</p>
+  <input type="hidden" id="mREGroupKey">
+  <input type="hidden" id="mREIsCombo">
+  <div class="mb-3">
+   <label class="block text-xs font-bold text-slate-700 mb-1" id="mRELabel1">Link gốc chân 1 (Liangxin hoặc Đơn)</label>
+   <input id="mREOrig1" type="text" class="w-full p-2 text-xs border border-slate-300 rounded-lg font-mono outline-none bg-slate-50">
+  </div>
+  <div id="mREContainer2" class="mb-4 hidden">
+   <label class="block text-xs font-bold text-indigo-700 mb-1">Link gốc chân 2 (DJJC)</label>
+   <input id="mREOrig2" type="text" class="w-full p-2 text-xs border border-indigo-200 rounded-lg font-mono outline-none bg-indigo-50/30">
+  </div>
+  <div class="flex gap-2">
+   <button onclick="saveRootEdit()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg text-xs shadow-md">CẬP NHẬT CẢ CỤM LINK</button>
+   <button onclick="cm('mRootEdit')" class="bg-white border border-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-lg text-xs shadow-sm">Hủy</button>
+  </div>
  </div>
 </div>
 
@@ -1500,26 +1539,114 @@ async function approveTransaction(id){
  oid=normId(oid);toast("Đang ép khớp...");
  try{await aj("/api/admin/tx/"+id+"/approve",{method:"POST",body:{orderId:oid,note:"Duyệt tay qua Admin UI"}});toast("Đã ép khớp, hệ thống đang cấp link");if(tx){tx.status="success";tx.order_id=oid;}renderTransactions();setTimeout(pollMain,2500);setTimeout(()=>loadTx(),1500);}
  catch(e){if(e.message!=="401")toast("Lỗi: "+e.message,"err");}}
-// ===================== LINK SUB =====================
-function switchLinkMode(m){curLinkTab=m;$("btn-ls-pool").classList.toggle("active",m==="pool");$("btn-ls-manual").classList.toggle("active",m==="manual");$("panel-ls-pool").classList.toggle("hidden",m!=="pool");$("panel-ls-manual").classList.toggle("hidden",m!=="manual");}
-function switchLinkView(v){curLinkListView=v;$("btn-view-compact").classList.toggle("active",v==="compact");$("btn-view-detailed").classList.toggle("active",v==="detailed");renderLinks();}
-// Mọi lần ghi ALL_LINKS đều loại link đã xóa trước (không để bản cũ ghi đè khiến link quay lại)
-const saveLinks=()=>{healLinks();return aj("/api/links",{method:"POST",body:linksDb}).then(()=>{lastSig.l=JSON.stringify(linksDb);});};
-const savePool=()=>aj("/api/link_pool",{method:"POST",body:linkPoolDb}).then(()=>{lastSig.p=JSON.stringify(linkPoolDb);});
+// Cơ chế Auto-Switching View tự động
+function switchLinkMode(m){
+  curLinkTab = m;
+  $("btn-ls-pool").classList.toggle("active", m === "pool");
+  $("btn-ls-manual").classList.toggle("active", m === "manual");
+  $("panel-ls-pool").classList.toggle("hidden", m !== "pool");
+  $("panel-ls-manual").classList.toggle("hidden", m !== "manual");
+  if (m === "manual") switchLinkView("detailed"); // Bấm Tạo thủ công -> Tự chuyển danh sách sang xem tab CÂY
+  else if (m === "pool") switchLinkView("compact"); // Bấm Thêm nguồn -> Tự chuyển danh sách sang xem tab KHO
+}
+
+function switchLinkView(v){
+  curLinkListView = v;
+  $("btn-view-compact").classList.toggle("active", v === "compact");
+  $("btn-view-detailed").classList.toggle("active", v === "detailed");
+  renderLinks();
+}
+
+const saveLinks = () => { healLinks(); return aj("/api/links", { method: "POST", body: linksDb }).then(() => { lastSig.l = JSON.stringify(linksDb); }); };
+const savePool = () => aj("/api/link_pool", { method: "POST", body: linkPoolDb }).then(() => { lastSig.p = JSON.stringify(linkPoolDb); });
+
 function renderLinks(){
- const c=$("linksViewContainer");if(!linkPoolDb.length&&!linksDb.length){c.innerHTML=`<div class="border border-dashed border-slate-300 p-8 rounded-2xl text-center text-slate-400 font-bold bg-white">Hệ thống chưa có Link nào</div>`;return;}
- linkPoolDb.forEach(p=>p.used=linksDb.filter(x=>x.orig===p.url).length);
- if(curLinkListView==="compact"){c.innerHTML=linkPoolDb.map(p=>{const full=p.used>=(p.max||30);return `<div class="bg-white border border-slate-200 p-3 rounded-xl shadow-sm flex items-center justify-between gap-2"><div class="min-w-0 flex-1"><div class="mb-1"><span class="font-bold text-slate-800 text-xs md:text-sm truncate block cp" onclick="cp(${q(p.url)})">${esc(p.url)}</span></div><div class="flex gap-2 flex-wrap"><span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Còn: ${esc(p.remainGb||"0")} / ${esc(p.gb||"N/A")} GB</span><span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded">HSD: ${esc(p.exp||"Lifetime")}</span><span class="${full?"bg-red-100 text-red-700":"bg-emerald-50 text-emerald-700"} text-[10px] font-bold px-1.5 py-0.5 rounded">Đã dùng: ${p.used}/${p.max||30}</span></div></div><div class="flex gap-2 shrink-0"><button onclick="openPoolEditModal(${q(p.url)})" class="text-indigo-600 bg-indigo-50 p-2 rounded hover:bg-indigo-600 hover:text-white"><i class="fas fa-pen"></i></button><button onclick="delPool(${q(p.url)})" class="text-red-500 bg-red-50 p-2 rounded hover:bg-red-500 hover:text-white"><i class="fas fa-trash"></i></button></div></div>`;}).join("");return;}
+ const c = $("linksViewContainer");
+ if(!linkPoolDb.length && !linksDb.length){
+   c.innerHTML = `<div class="border border-dashed border-slate-300 p-8 rounded-2xl text-center text-slate-400 font-bold bg-white">Hệ thống chưa có Link nào</div>`;
+   return;
+ }
+
+ // Cập nhật biến đếm used
+ linkPoolDb.forEach(p => {
+   if (p.isCombo) {
+     p.used = linksDb.filter(x => x && x.isCombo && x.orig === p.url && x.orig2 === p.url2).length;
+   } else {
+     p.used = linksDb.filter(x => x && !x.isCombo && x.orig === p.url).length;
+   }
+ });
+
+ // ===== VIEW KHO NGUỒN (compact view) =====
+ if(curLinkListView === "compact"){
+   c.innerHTML = linkPoolDb.map(p => {
+     if (p.isCombo) {
+       const full1 = (p.used || 0) >= (p.max || 30), full2 = (p.used || 0) >= (p.max2 || 30);
+       return `
+       <div class="bg-white border-2 border-purple-200 p-3.5 rounded-2xl shadow-sm space-y-2 mb-3">
+         <div class="flex items-center justify-between">
+           <div class="flex items-center gap-1.5 flex-wrap">
+             <span class="bg-purple-100 text-purple-800 text-[10px] font-black px-2 py-0.5 rounded border border-purple-200"><i class="fas fa-shuffle mr-1"></i>KHỐI COMBO</span>
+             <span class="badge-lx">Liangxin</span><span class="badge-dj">DJJC</span>
+           </div>
+           <div class="flex gap-1.5">
+             <button onclick="openPoolEditModal(${q(p.id || p.url)})" class="text-indigo-600 bg-indigo-50 p-2 rounded-lg hover:bg-indigo-600 hover:text-white transition"><i class="fas fa-pen text-xs"></i></button>
+             <button onclick="delPool(${q(p.id || p.url)})" class="text-red-500 bg-red-50 p-2 rounded-lg hover:bg-red-500 hover:text-white transition"><i class="fas fa-trash text-xs"></i></button>
+           </div>
+         </div>
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs pt-1 border-t border-purple-100">
+           <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+             <div class="font-mono text-[11px] font-bold text-emerald-800 truncate cp" onclick="cp(${q(p.url)})">${esc(p.url)}</div>
+             <div class="flex gap-1.5 mt-1 flex-wrap">
+               <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Còn: ${esc(p.remainGb || "0")} / ${esc(p.gb || "N/A")} GB</span>
+               <span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded">HSD: ${esc(p.exp || "Lifetime")}</span>
+               <span class="${full1 ? "bg-red-100 text-red-700" : "bg-emerald-50 text-emerald-700"} text-[10px] font-bold px-1.5 py-0.5 rounded">Máy: ${p.used || 0}/${p.max || 30}</span>
+             </div>
+           </div>
+           <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
+             <div class="font-mono text-[11px] font-bold text-blue-800 truncate cp" onclick="cp(${q(p.url2)})">${esc(p.url2)}</div>
+             <div class="flex gap-1.5 mt-1 flex-wrap">
+               <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Còn: ${esc(p.remainGb2 || "0")} / ${esc(p.gb2 || "N/A")} GB</span>
+               <span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded">HSD: ${esc(p.exp2 || "Lifetime")}</span>
+               <span class="${full2 ? "bg-red-100 text-red-700" : "bg-emerald-50 text-emerald-700"} text-[10px] font-bold px-1.5 py-0.5 rounded">Máy: ${p.used || 0}/${p.max2 || 30}</span>
+             </div>
+           </div>
+         </div>
+       </div>`;
+     }
+     const full = (p.used || 0) >= (p.max || 30);
+     const lx = String(p.url).includes("liangxin");
+     return `
+     <div class="bg-white border border-slate-200 p-3.5 rounded-2xl shadow-sm flex items-center justify-between gap-2 mb-3">
+       <div class="min-w-0 flex-1">
+         <div class="mb-1 flex items-center gap-1.5">
+           <span class="${lx ? 'badge-lx' : 'badge-dj'}">${lx ? 'Liangxin' : 'DJJC'}</span>
+           <span class="font-bold text-slate-800 text-xs md:text-sm truncate block cp" onclick="cp(${q(p.url)})">${esc(p.url)}</span>
+         </div>
+         <div class="flex gap-2 flex-wrap">
+           <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Còn: ${esc(p.remainGb || "0")} / ${esc(p.gb || "N/A")} GB</span>
+           <span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded">HSD: ${esc(p.exp || "Lifetime")}</span>
+           <span class="${full ? "bg-red-100 text-red-700" : "bg-emerald-50 text-emerald-700"} text-[10px] font-bold px-1.5 py-0.5 rounded">Đã dùng: ${p.used || 0}/${p.max || 30}</span>
+         </div>
+       </div>
+       <div class="flex gap-1.5 shrink-0">
+         <button onclick="openPoolEditModal(${q(p.id || p.url)})" class="text-indigo-600 bg-indigo-50 p-2 rounded-lg hover:bg-indigo-600 hover:text-white transition"><i class="fas fa-pen text-xs"></i></button>
+         <button onclick="delPool(${q(p.id || p.url)})" class="text-red-500 bg-red-50 p-2 rounded-lg hover:bg-red-500 hover:text-white transition"><i class="fas fa-trash text-xs"></i></button>
+       </div>
+     </div>`;
+   }).join("");
+   return;
+ }
+
+ // ===== VIEW CÂY LINK SUB (detailed view) =====
  const grps = {};
  linksDb.forEach(l => {
   const k = l.isCombo ? `COMBO|${l.orig}|${l.orig2}` : (l.orig || "?");
   if (!grps[k]) {
     grps[k] = {
+      key: k,
       isCombo: !!l.isCombo,
       orig: l.orig || "",
       orig2: l.orig2 || "",
-      pool: linkPoolDb.find(p => p.url === l.orig) || {},
-      pool2: linkPoolDb.find(p => p.url === l.orig2) || {},
       ch: []
     };
   }
@@ -1535,41 +1662,56 @@ function renderLinks(){
     badge = lx ? `<span class="badge-lx">Liangxin</span>` : dj ? `<span class="badge-dj">DJJC</span>` : `<span class="badge-ot">Other</span>`;
   }
 
-  const rows = [...g.ch].sort((a,b) => (parseInt(a.linkIndex||a.machine)||1) - (parseInt(b.linkIndex||b.machine)||1)).map(l => {
-   const tok = getT(l.masked), locked = !!l.isLocked, idx = parseInt(l.linkIndex||l.machine)||1;
+  const rows = [...g.ch].sort((a,b) => (parseInt(a.linkIndex||1)) - (parseInt(b.linkIndex||1))).map(l => {
+   const tok = getT(l.masked), locked = !!l.isLocked, idx = parseInt(l.linkIndex||1);
    const bottom = linkBottom(l);
-   return `<div class="py-2.5 px-3 border rounded-xl mb-2 ${locked?"bg-red-50 border-red-200":"hover:bg-slate-50 border-slate-100"} flex flex-col gap-2 w-full min-w-0">
+   const idDisplay = (l.orderId && l.orderId.startsWith("DH")) ? `DH: ${l.orderId}` : `ID: ${l.id || l.orderId}`;
+   
+   return `
+   <div class="py-2.5 px-3 border rounded-xl mb-2 ${locked ? "bg-red-50/70 border-red-200" : "hover:bg-slate-50 border-slate-100 bg-white"} flex flex-col gap-2 w-full min-w-0">
+     <!-- HÀNG TRÊN: Chấm trạng thái + Index + Email + Badge Node Neo -->
      <div class="flex items-center justify-between gap-2 min-w-0">
        <div class="flex items-center gap-2 min-w-0">
-         ${locked?'<div class="dot-red"></div>':'<div class="dot-green"></div>'}
-         <span class="text-indigo-500 font-mono text-xs font-black cp shrink-0" onclick="cp('${idx}')">#${idx}</span>
-         <span class="font-bold text-xs text-slate-800 cp truncate" onclick="cp(${q(l.email)})">${esc(l.email||"Khách")}</span>
+         ${locked ? '<div class="dot-red" title="Đã khóa"></div>' : '<div class="dot-green" title="Hoạt động"></div>'}
+         <span class="text-indigo-600 font-mono text-xs font-black cp shrink-0" onclick="cp('${idx}')">#${idx}</span>
+         <span class="font-bold text-xs text-slate-800 cp truncate" onclick="cp(${q(l.email)})">${esc(l.email || "Khách")}</span>
+         ${idx === 1 ? '<span class="text-[9px] font-black bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded border border-amber-200">Node Neo (Khóa)</span>' : ''}
          ${l.isCombo ? `<span class="text-[9px] font-black bg-purple-50 text-purple-700 px-1.5 py-0.2 rounded border border-purple-200">Trộn 2 mạng</span>` : ""}
        </div>
-       <div class="text-[10px] font-mono text-slate-400">ID: ${esc(l.orderId || l.id)}</div>
      </div>
-     <div class="font-mono text-[10px] md:text-xs text-slate-500 cp break-all" onclick="cp(${q(l.masked)})">${esc(l.masked)}</div>
-     <div class="flex items-center justify-between mt-1 pt-2 border-t border-slate-100">
-       <div class="text-[10px] md:text-xs font-bold text-slate-500">${bottom}</div>
-       <div class="flex gap-2 shrink-0">
-         <button onclick="rebuildAllMAP()" title="Rebuild MAP" class="text-emerald-600 hover:text-white w-7 h-7 flex items-center justify-center bg-emerald-50 border border-emerald-100 rounded hover:bg-emerald-500"><i class="fas fa-sync-alt text-xs"></i></button>
-         <button onclick="openLnkModal(${q(l.id)})" class="text-indigo-600 hover:text-white w-7 h-7 flex items-center justify-center bg-indigo-50 border border-indigo-100 rounded hover:bg-indigo-500"><i class="fas fa-pen text-xs"></i></button>
-         <button onclick="toggleLock(${q(tok)},${locked})" class="${locked?"text-white bg-green-500":"text-orange-500 bg-orange-50 border-orange-100 border hover:bg-orange-500 hover:text-white"} w-7 h-7 flex items-center justify-center rounded"><i class="fas ${locked?"fa-lock-open":"fa-lock"} text-xs"></i></button>
-         <button onclick="delLink(${q(l.id)})" class="text-red-500 hover:text-white w-7 h-7 flex items-center justify-center bg-red-50 border border-red-100 rounded hover:bg-red-500"><i class="fas fa-trash text-xs"></i></button>
+
+     <!-- DÒNG GIỮA: Link masked -->
+     <div class="font-mono text-[10px] md:text-xs text-slate-500 cp break-all select-all" onclick="cp(${q(l.masked)})">${esc(l.masked)}</div>
+
+     <!-- HÀNG DƯỚI: Góc dưới bên trái (Dòng 1: ID, Dòng 2: HSD & Giờ) thẳng hàng chân ngang với 3 nút chức năng bên phải -->
+     <div class="flex items-end justify-between mt-0.5 pt-2 border-t border-slate-100">
+       <div class="flex flex-col text-left">
+         <span class="text-[10px] font-mono text-slate-400 leading-tight">${esc(idDisplay)}</span>
+         <span class="text-[10px] font-bold text-slate-500 mt-0.5 leading-tight">${bottom}</span>
+       </div>
+       <div class="flex gap-1.5 shrink-0 items-center">
+         <button onclick="openLnkModal(${q(l.id)})" title="Sửa link con" class="text-indigo-600 hover:text-white w-7 h-7 flex items-center justify-center bg-indigo-50 border border-indigo-100 rounded-lg hover:bg-indigo-600 transition"><i class="fas fa-pen text-xs"></i></button>
+         <button onclick="toggleLock(${q(tok)},${locked})" title="${locked ? "Mở khóa" : "Khóa link"}" class="${locked ? "text-white bg-green-500 hover:bg-green-600" : "text-orange-500 bg-orange-50 border-orange-100 border hover:bg-orange-500 hover:text-white"} w-7 h-7 flex items-center justify-center rounded-lg transition"><i class="fas ${locked ? "fa-lock-open" : "fa-lock"} text-xs"></i></button>
+         <button onclick="delLink(${q(l.id)})" title="Xóa link" class="text-red-500 hover:text-white w-7 h-7 flex items-center justify-center bg-red-50 border border-red-100 rounded-lg hover:bg-red-500 transition"><i class="fas fa-trash text-xs"></i></button>
        </div>
      </div>
    </div>`;
   }).join("");
 
-  return `<div class="bg-white border ${g.isCombo ? 'border-purple-200' : 'border-slate-200'} rounded-2xl overflow-hidden mb-4 shadow-sm">
-    <div class="${g.isCombo ? 'bg-purple-50/50 border-purple-200' : 'bg-slate-50 border-slate-200'} px-3 py-2 border-b">
-      <div class="flex items-center justify-between flex-wrap gap-1">
+  return `
+  <div class="bg-white border ${g.isCombo ? 'border-purple-200' : 'border-slate-200'} rounded-2xl overflow-hidden mb-4 shadow-sm">
+    <div class="${g.isCombo ? 'bg-purple-50/50 border-purple-200' : 'bg-slate-50 border-slate-200'} px-3 py-2.5 border-b">
+      <div class="flex items-center justify-between flex-wrap gap-2">
         <div class="flex gap-1.5 items-center flex-wrap">
           ${badge}
-          <span class="text-[10px] font-black bg-white border border-slate-200 text-slate-500 px-1.5 py-0.5 rounded">${g.ch.length} LINK</span>
+          <span class="text-[10px] font-black bg-white border border-slate-200 text-slate-600 px-1.5 py-0.5 rounded">${g.ch.length} LINK</span>
         </div>
+        <!-- CÂY BÚT CHÌ CẤP CỤM (ROOT SOURCE) -->
+        <button onclick="openRootEditModal(${q(g.key)})" class="text-indigo-600 hover:bg-indigo-600 hover:text-white bg-white border border-indigo-200 font-bold px-2 py-1 rounded-lg text-[10px] flex items-center gap-1 shadow-sm transition">
+          <i class="fas fa-pen"></i><span>Sửa nguồn cụm</span>
+        </button>
       </div>
-      <div class="font-mono text-[10px] md:text-xs font-bold text-slate-600 break-all cp mt-1" onclick="cp(${q(g.orig)})">
+      <div class="font-mono text-[10px] md:text-xs font-bold text-slate-600 break-all cp mt-1.5" onclick="cp(${q(g.orig)})">
         <span class="text-emerald-700 font-bold">[Nguồn 1]:</span> ${esc(g.orig)}
       </div>
       ${g.orig2 ? `<div class="font-mono text-[10px] md:text-xs font-bold text-slate-600 break-all cp mt-0.5" onclick="cp(${q(g.orig2)})"><span class="text-blue-700 font-bold">[Nguồn 2]:</span> ${esc(g.orig2)}</div>` : ''}
@@ -1578,54 +1720,277 @@ function renderLinks(){
   </div>`;
  }).join("");
 }
-function buildMasked(orig,fresh){const tok=fresh?genHex(32):(getT(orig)||genHex(32));const lx=orig.includes("liangxin");if(!lx&&!orig.includes("djjc.cfd"))return "";return PD+(lx?"/v1":"/v2")+"/VPNTrinhHg"+(lx?"?OwO=":"?token=")+tok+"#VPNTrinhHg";}
+
+// Bút chì sửa Nguồn cấp Cụm (Root Source)
+function openRootEditModal(groupKey){
+  const parts = groupKey.split("|");
+  const isCombo = (parts[0] === "COMBO");
+  $("mREGroupKey").value = groupKey;
+  $("mREIsCombo").value = isCombo ? "1" : "0";
+  $("mREOrig1").value = isCombo ? parts[1] : groupKey;
+  $("mREOrig2").value = isCombo ? parts[2] : "";
+  $("mRELabel1").textContent = isCombo ? "Link gốc chân 1 (Liangxin)" : "Link gốc cụm";
+  $("mREContainer2").classList.toggle("hidden", !isCombo);
+  $("mRootEdit").classList.remove("hidden");
+}
+
+async function saveRootEdit(){
+  const gKey = $("mREGroupKey").value;
+  const isCombo = $("mREIsCombo").value === "1";
+  const newO1 = $("mREOrig1").value.trim(), newO2 = $("mREOrig2").value.trim();
+  if(!newO1) return toast("Link gốc 1 không được rỗng!", "err");
+  if(isCombo && !newO2) return toast("Link gốc 2 không được rỗng với Khối Combo!", "err");
+
+  const parts = gKey.split("|");
+  const oldO1 = isCombo ? parts[1] : gKey;
+  const oldO2 = isCombo ? parts[2] : "";
+  let updated = false;
+
+  linksDb.forEach(l => {
+    if(isCombo && l.isCombo && l.orig === oldO1 && l.orig2 === oldO2){
+      l.orig = newO1; l.orig2 = newO2; updated = true;
+    } else if(!isCombo && !l.isCombo && l.orig === oldO1){
+      l.orig = newO1; updated = true;
+    }
+  });
+
+  linkPoolDb.forEach(p => {
+    if(isCombo && p.isCombo && p.url === oldO1 && p.url2 === oldO2){
+      p.url = newO1; p.url2 = newO2;
+    } else if(!isCombo && !p.isCombo && p.url === oldO1){
+      p.url = newO1;
+    }
+  });
+
+  cm("mRootEdit");
+  if(updated){
+    await saveLinks();
+    await savePool();
+    renderLinks();
+    toast("Đã đổi link gốc cho toàn bộ link con trong cụm! Token khách giữ nguyên 100%.");
+  }
+}
+
+// Thêm link vào kho có tạo Khối Combo riêng biệt & khởi tạo Node Neo Index #1
 async function addLinkToPool(){
- const orig=$("poolOrig").value.trim(),gb=$("poolGb").value.trim(),rg=$("poolRemainGb").value.trim(),exp=$("poolExp").value.trim(),max=parseInt($("poolMax").value);
- if(!orig||!max)return toast("Nhập URL gốc và Max thiết bị!","err");
- const ex=linkPoolDb.find(p=>p.url===orig);if(ex){Object.assign(ex,{gb,remainGb:rg||"0",exp,max});toast("Đã cập nhật Kho Tổng");}else{linkPoolDb.push({id:"POOL-"+Date.now(),url:orig,gb,remainGb:rg||"0",exp,max});toast("Đã thêm vào Kho");}
- try{await savePool();const masked=buildMasked(orig,false);
-  if(masked&&!linksDb.find(x=>x.orig===orig&&x.email==="Nguồn Hệ Thống (Auto)")){linksDb.unshift({id:"LNK-"+Date.now()+"-"+genHex(4),orig,masked,email:"Nguồn Hệ Thống (Auto)",expDate:exp,linkIndex:"1",isLocked:false,createdTs:nowMs(),date:fmtBank(nowMs())});await saveLinks();}
-  ["poolOrig","poolGb","poolRemainGb","poolExp","poolMax"].forEach(i=>$(i).value="");renderLinks();logEvent("ok","Nạp kho tổng",orig.slice(0,40));}catch(e){}}
-function openPoolEditModal(url){const p=linkPoolDb.find(x=>x.url===url);if(!p)return;$("mPEOldOrig").value=p.url;$("mPEOrig").value=p.url;$("mPEGb").value=p.gb||"";$("mPERemain").value=p.remainGb||"";$("mPEExp").value=p.exp||"";$("mPEMax").value=p.max||30;$("mPoolEdit").classList.remove("hidden");}
+  const orig1 = $("poolOrig").value.trim(), orig2 = $("poolOrig2").value.trim();
+  const gb1 = $("poolGb").value.trim(), rg1 = $("poolRemainGb").value.trim(), exp1 = $("poolExp").value.trim(), max1 = parseInt($("poolMax").value) || 30;
+  const gb2 = $("poolGb2").value.trim(), rg2 = $("poolRemainGb2").value.trim(), exp2 = $("poolExp2").value.trim(), max2 = parseInt($("poolMax2").value) || 30;
+
+  if(!orig1 && !orig2) return toast("Chưa nhập link gốc!", "err");
+
+  let isCombo = false, finalOrig1 = orig1, finalOrig2 = "";
+  if(orig1 && orig2){
+    const p1 = detectProvider(orig1), p2 = detectProvider(orig2);
+    if(p1 === p2 && p1 !== "other"){
+      return toast("Không thể thêm Combo với 2 link cùng nhà mạng (" + (p1 === "lx" ? "Liangxin" : "DJJC") + ")!", "err");
+    }
+    isCombo = true;
+    if(p1 === "lx" || p2 === "dj") { finalOrig1 = orig1; finalOrig2 = orig2; }
+    else { finalOrig1 = orig2; finalOrig2 = orig1; }
+  } else {
+    finalOrig1 = orig1 || orig2;
+  }
+
+  if(isCombo){
+    const comboId = "POOL-COMBO-" + Date.now();
+    // Tạo Block Combo riêng biệt trong LINK_POOL dù đã tồn tại riêng lẻ
+    linkPoolDb.unshift({
+      id: comboId,
+      isCombo: true,
+      url: finalOrig1, gb: gb1, remainGb: rg1 || "0", exp: exp1, max: max1,
+      url2: finalOrig2, gb2: gb2, remainGb2: rg2 || "0", exp2: exp2, max2: max2
+    });
+    // Luôn khởi tạo Node Neo Index #1 (mặc định KHÓA isLocked = true)
+    const masked = PD + "/v1/VPNTrinhHg?OwO=" + genHex(32) + "#VPNTrinhHg";
+    if(!linksDb.some(x => x.isCombo && x.orig === finalOrig1 && x.orig2 === finalOrig2 && x.linkIndex === "1")){
+      linksDb.unshift({
+        id: "LNK-" + Date.now() + "-ANC",
+        isCombo: true,
+        orig: finalOrig1,
+        orig2: finalOrig2,
+        masked,
+        email: "Nguồn Hệ Thống (Auto)",
+        expDate: exp1 || exp2 || "Vĩnh viễn",
+        linkIndex: "1",
+        isLocked: true, // Node Neo #1 LUÔN LUÔN KHÓA
+        createdTs: nowMs(),
+        date: fmtBank(nowMs())
+      });
+      await saveLinks();
+    }
+    toast("Đã thêm Khối Combo vào Kho & Khởi tạo Node Neo #1!");
+  } else {
+    const ex = linkPoolDb.find(p => !p.isCombo && p.url === finalOrig1);
+    if(ex){
+      Object.assign(ex, { gb: gb1, remainGb: rg1 || "0", exp: exp1, max: max1 });
+      toast("Đã cập nhật Nguồn Đơn trong Kho");
+    } else {
+      linkPoolDb.unshift({ id: "POOL-" + Date.now(), isCombo: false, url: finalOrig1, gb: gb1, remainGb: rg1 || "0", exp: exp1, max: max1 });
+      toast("Đã thêm Nguồn Đơn vào Kho");
+    }
+    // Khởi tạo Node Neo Index #1 cho Nguồn Đơn
+    const masked = buildMasked(finalOrig1, false);
+    if(masked && !linksDb.some(x => !x.isCombo && x.orig === finalOrig1 && x.linkIndex === "1")){
+      linksDb.unshift({
+        id: "LNK-" + Date.now() + "-ANC",
+        isCombo: false,
+        orig: finalOrig1,
+        masked,
+        email: "Nguồn Hệ Thống (Auto)",
+        expDate: exp1 || "Vĩnh viễn",
+        linkIndex: "1",
+        isLocked: true, // Node Neo #1 LUÔN LUÔN KHÓA
+        createdTs: nowMs(),
+        date: fmtBank(nowMs())
+      });
+      await saveLinks();
+    }
+  }
+
+  await savePool();
+  ["poolOrig","poolOrig2","poolGb","poolRemainGb","poolExp","poolMax","poolGb2","poolRemainGb2","poolExp2","poolMax2"].forEach(i => { if($(i)) $(i).value = ""; });
+  renderLinks();
+}
+
+function openPoolEditModal(idOrUrl){
+  const p = linkPoolDb.find(x => x.id === idOrUrl || x.url === idOrUrl);
+  if(!p) return;
+  $("mPEId").value = p.id || "";
+  $("mPEOldOrig").value = p.url || "";
+  $("mPEOldOrig2").value = p.url2 || "";
+  $("mPEOrig").value = p.url || "";
+  $("mPEGb").value = p.gb || "";
+  $("mPERemain").value = p.remainGb || "";
+  $("mPEExp").value = p.exp || "";
+  $("mPEMax").value = p.max || 30;
+
+  const isCombo = !!p.isCombo;
+  $("mPEContainer2").classList.toggle("hidden", !isCombo);
+  $("mPETitle").textContent = isCombo ? "Sửa Khối Combo Trong Kho" : "Sửa Nguồn Đơn Trong Kho";
+  $("mPEBadge").className = isCombo ? "text-xs font-black px-2 py-0.5 rounded bg-purple-100 text-purple-800" : "text-xs font-black px-2 py-0.5 rounded bg-emerald-100 text-emerald-800";
+  $("mPEBadge").textContent = isCombo ? "Khối Combo" : "Nguồn Đơn";
+  $("mPELeg1Badge").textContent = isCombo ? "Chân 1 (LX)" : "Chân duy nhất";
+
+  if(isCombo){
+    $("mPEOrig2").value = p.url2 || "";
+    $("mPEGb2").value = p.gb2 || "";
+    $("mPERemain2").value = p.remainGb2 || "";
+    $("mPEExp2").value = p.exp2 || "";
+    $("mPEMax2").value = p.max2 || 30;
+  }
+  $("mPoolEdit").classList.remove("hidden");
+}
+
 async function savePoolEdit(){
- const oldUrl=$("mPEOldOrig").value,newUrl=$("mPEOrig").value.trim(),p=linkPoolDb.find(x=>x.url===oldUrl);if(!p)return;let lu=false;
- if(newUrl&&newUrl!==oldUrl){linksDb.forEach(l=>{if(l.orig===oldUrl){l.orig=newUrl;lu=true;}});p.url=newUrl;}
- Object.assign(p,{gb:$("mPEGb").value.trim(),remainGb:$("mPERemain").value.trim(),exp:$("mPEExp").value.trim(),max:parseInt($("mPEMax").value)||30});cm("mPoolEdit");
- try{if(lu)await saveLinks();await savePool();renderLinks();toast("Đã cập nhật Nguồn Node");}catch(e){}}
-const detectProvider = (u) => {
-  const s = String(u || "").toLowerCase();
-  if (s.includes("liangxin")) return "lx";
-  if (s.includes("djjc")) return "dj";
-  return "other";
-};
+  const pId = $("mPEId").value, oldO1 = $("mPEOldOrig").value, oldO2 = $("mPEOldOrig2").value;
+  const p = linkPoolDb.find(x => (pId && x.id === pId) || x.url === oldO1);
+  if(!p) return;
+
+  const newO1 = $("mPEOrig").value.trim(), newO2 = $("mPEOrig2").value.trim();
+  let lu = false;
+
+  if(p.isCombo){
+    if(newO1 !== oldO1 || newO2 !== oldO2){
+      linksDb.forEach(l => {
+        if(l.isCombo && l.orig === oldO1 && l.orig2 === oldO2){
+          l.orig = newO1; l.orig2 = newO2; lu = true;
+        }
+      });
+      p.url = newO1; p.url2 = newO2;
+    }
+    Object.assign(p, {
+      gb: $("mPEGb").value.trim(), remainGb: $("mPERemain").value.trim(), exp: $("mPEExp").value.trim(), max: parseInt($("mPEMax").value) || 30,
+      gb2: $("mPEGb2").value.trim(), remainGb2: $("mPERemain2").value.trim(), exp2: $("mPEExp2").value.trim(), max2: parseInt($("mPEMax2").value) || 30
+    });
+  } else {
+    if(newO1 !== oldO1){
+      linksDb.forEach(l => {
+        if(!l.isCombo && l.orig === oldO1){ l.orig = newO1; lu = true; }
+      });
+      p.url = newO1;
+    }
+    Object.assign(p, {
+      gb: $("mPEGb").value.trim(), remainGb: $("mPERemain").value.trim(), exp: $("mPEExp").value.trim(), max: parseInt($("mPEMax").value) || 30
+    });
+  }
+
+  cm("mPoolEdit");
+  if(lu) await saveLinks();
+  await savePool();
+  renderLinks();
+  toast("Đã cập nhật thông số kho!");
+}
 
 async function createLink(){
  const orig1 = $("lkOrig").value.trim(), orig2 = $("lkOrig2") ? $("lkOrig2").value.trim() : "";
- const email = $("lkEmail").value.trim(), expDate = $("lkExp").value.trim(), idx = $("lkIdx").value.trim();
+ const email = $("lkEmail").value.trim(), expDate = $("lkExp").value.trim(), idxInput = $("lkIdx").value.trim();
  if (!orig1 && !orig2) return toast("Chưa nhập link gốc!","err");
 
- let isCombo = false, finalOrig = orig1, finalOrig2 = "";
+ let isCombo = false, finalOrig1 = orig1, finalOrig2 = "";
  if (orig1 && orig2) {
    const p1 = detectProvider(orig1), p2 = detectProvider(orig2);
    if (p1 === p2 && p1 !== "other") {
      return toast("Không thể tạo Link Trộn với 2 link cùng nhà mạng (" + (p1 === "lx" ? "Liangxin" : "DJJC") + ")!", "err");
    }
    isCombo = true;
-   // Đặt Liangxin vào orig, DJJC vào orig2 để thống nhất chuẩn
-   if (p1 === "lx" || p2 === "dj") { finalOrig = orig1; finalOrig2 = orig2; }
-   else { finalOrig = orig2; finalOrig2 = orig1; }
+   if (p1 === "lx" || p2 === "dj") { finalOrig1 = orig1; finalOrig2 = orig2; }
+   else { finalOrig1 = orig2; finalOrig2 = orig1; }
  } else {
-   finalOrig = orig1 || orig2;
+   finalOrig1 = orig1 || orig2;
  }
 
- try { new URL(finalOrig); if (finalOrig2) new URL(finalOrig2); } catch { return toast("Link không hợp lệ!","err"); }
+ try { new URL(finalOrig1); if (finalOrig2) new URL(finalOrig2); } catch { return toast("Link không hợp lệ!","err"); }
+
+ // Đảm bảo luôn khởi tạo Node Neo Index #1 (isLocked = true) trước
+ if (isCombo) {
+   if (!linksDb.some(x => x.isCombo && x.orig === finalOrig1 && x.orig2 === finalOrig2 && x.linkIndex === "1")) {
+     linksDb.unshift({
+       id: "LNK-" + Date.now() + "-ANC",
+       isCombo: true,
+       orig: finalOrig1,
+       orig2: finalOrig2,
+       masked: PD + "/v1/VPNTrinhHg?OwO=" + genHex(32) + "#VPNTrinhHg",
+       email: "Nguồn Hệ Thống (Auto)",
+       expDate: expDate || "Vĩnh viễn",
+       linkIndex: "1",
+       isLocked: true, // Node Neo #1 LUÔN LUÔN KHÓA
+       createdTs: nowMs(),
+       date: fmtBank(nowMs())
+     });
+   }
+ } else {
+   if (!linksDb.some(x => !x.isCombo && x.orig === finalOrig1 && x.linkIndex === "1")) {
+     linksDb.unshift({
+       id: "LNK-" + Date.now() + "-ANC",
+       isCombo: false,
+       orig: finalOrig1,
+       masked: buildMasked(finalOrig1, false),
+       email: "Nguồn Hệ Thống (Auto)",
+       expDate: expDate || "Vĩnh viễn",
+       linkIndex: "1",
+       isLocked: true, // Node Neo #1 LUÔN LUÔN KHÓA
+       createdTs: nowMs(),
+       date: fmtBank(nowMs())
+     });
+   }
+ }
+
+ // Cấp link thương mại: luôn bắt đầu từ Index #2 trở lên nếu không nhập số tay
+ let finalIdx = idxInput;
+ if (!finalIdx || parseInt(finalIdx) <= 1) {
+   const existingIndices = linksDb
+     .filter(x => isCombo ? (x.isCombo && x.orig === finalOrig1 && x.orig2 === finalOrig2) : (!x.isCombo && x.orig === finalOrig1))
+     .map(x => parseInt(x.linkIndex) || 1);
+   const maxIdx = existingIndices.length ? Math.max(...existingIndices) : 1;
+   finalIdx = String(Math.max(2, maxIdx + 1));
+ }
 
  const masked = isCombo 
    ? (PD + "/v1/VPNTrinhHg?OwO=" + genHex(32) + "#VPNTrinhHg")
-   : buildMasked(finalOrig, parseInt(idx) >= 2);
- if (!masked) return toast("Domain không hỗ trợ!","err");
+   : buildMasked(finalOrig1, true);
 
- for (const u of [finalOrig, finalOrig2].filter(Boolean)) {
+ for (const u of [finalOrig1, finalOrig2].filter(Boolean)) {
    if (!linkPoolDb.find(p => p.url === u)) {
      linkPoolDb.push({ id: "POOL-" + Date.now() + "-" + genHex(2), url: u, gb: "", remainGb: "", exp: expDate, max: 30 });
    }
@@ -1635,12 +2000,12 @@ async function createLink(){
  linksDb.unshift({
    id: "LNK-" + Date.now() + "-" + genHex(4),
    isCombo,
-   orig: finalOrig,
+   orig: finalOrig1,
    orig2: finalOrig2 || undefined,
    masked,
-   email,
+   email: email || "Khách",
    expDate,
-   linkIndex: idx || (isCombo ? String(linksDb.filter(x => x.isCombo).length + 2) : "1"),
+   linkIndex: finalIdx,
    isLocked: false,
    createdTs: nowMs(),
    date: fmtBank(nowMs())
@@ -1648,13 +2013,22 @@ async function createLink(){
 
  try {
    await saveLinks();
-   toast((isCombo ? "Đã tạo Link Trộn (Combo)!" : "Đã tạo Link Đơn!") + " Nhớ Đồng bộ GitHub.");
+   toast((isCombo ? "Đã tạo Link Trộn #" + finalIdx : "Đã tạo Link Đơn #" + finalIdx) + "! Nhớ Đồng bộ GitHub.");
    ["lkOrig","lkOrig2","lkEmail","lkExp","lkIdx"].forEach(f => { if ($(f)) $(f).value = ""; });
    renderLinks();
  } catch(e) { toast("Lỗi: " + e.message, "err"); }
 }
 
-async function delPool(url){if(!confirm("Xóa nguồn này khỏi kho?"))return;linkPoolDb=linkPoolDb.filter(p=>p.url!==url);renderLinks();try{await savePool();toast("Đã xóa khỏi Kho");logEvent("info","Xóa nguồn",url.slice(0,40));}catch(e){}}
+async function delPool(idOrUrl){
+  if(!confirm("Xóa nguồn này khỏi kho?")) return;
+  linkPoolDb = linkPoolDb.filter(p => p.id !== idOrUrl && p.url !== idOrUrl);
+  renderLinks();
+  try {
+    await savePool();
+    toast("Đã xóa khỏi Kho");
+    logEvent("info", "Xóa nguồn", String(idOrUrl).slice(0, 40));
+  } catch(e) {}
+}
 
 function openLnkModal(id){
  const l = linksDb.find(x => x.id === id); if (!l) return;
@@ -1665,36 +2039,37 @@ function openLnkModal(id){
  $("mLnk").classList.remove("hidden");
 }
 
+// Bút chì con: Sửa Email, HSD, Index VÀ SỬA LINK GỐC / CHUYỂN ĐƠN <-> COMBO cho riêng link đó
 async function saveLnkEdit(){
  const l = linksDb.find(x => x.id === $("mLId").value); if (!l) return;
  const o1 = $("mLOrig").value.trim(), o2 = $("mLOrig2") ? $("mLOrig2").value.trim() : "";
  if (!o1 && !o2) return toast("Link gốc không được rỗng!", "err");
 
- let isCombo = false, finalOrig = o1, finalOrig2 = "";
+ let isCombo = false, finalOrig1 = o1, finalOrig2 = "";
  if (o1 && o2) {
    const p1 = detectProvider(o1), p2 = detectProvider(o2);
    if (p1 === p2 && p1 !== "other") {
      return toast("Không thể sửa thành Combo với 2 link cùng nhà mạng!", "err");
    }
    isCombo = true;
-   if (p1 === "lx" || p2 === "dj") { finalOrig = o1; finalOrig2 = o2; }
-   else { finalOrig = o2; finalOrig2 = o1; }
+   if (p1 === "lx" || p2 === "dj") { finalOrig1 = o1; finalOrig2 = o2; }
+   else { finalOrig1 = o2; finalOrig2 = o1; }
  } else {
-   finalOrig = o1 || o2;
+   finalOrig1 = o1 || o2;
  }
 
  Object.assign(l, {
    email: $("mLEmail").value.trim(),
    expDate: $("mLExp").value.trim(),
    linkIndex: $("mLIdx").value.trim(),
-   orig: finalOrig,
+   orig: finalOrig1,
    isCombo: isCombo
  });
  if (isCombo) l.orig2 = finalOrig2; else delete l.orig2;
  delete l.machine;
 
  cm("mLnk"); renderLinks();
- try { await saveLinks(); toast("Đã cập nhật link! Nhớ Đồng bộ GitHub."); } catch(e) { toast("Lỗi: " + e.message, "err"); }
+ try { await saveLinks(); toast("Đã cập nhật link con thành công! Token khách giữ nguyên."); } catch(e) { toast("Lỗi: " + e.message, "err"); }
 }
 async function toggleLock(tok,locked){if(!tok)return;linksDb.forEach(l=>{if(getT(l.masked)===tok)l.isLocked=!locked;});renderLinks();try{await saveLinks();toast(locked?"Đã mở khóa":"Đã khóa");}catch(e){}}
 // XÓA LINK TRIỆT ĐỂ: So khớp kép cả id và masked (link ẩn là duy nhất 100%), không bao giờ bị hiện lại
