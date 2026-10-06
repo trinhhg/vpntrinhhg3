@@ -20,6 +20,7 @@ INFO_NODES = [
 ]
 INFO_SKIP_KW = ["剩余流量", "距离下次重置", "套餐到期"]
 INFO_VLESS_PREFIX = "vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1?type=tcp#"
+ISP_DROP_KEYWORDS = ["CUCM", "CMCU", "CTCUCM", "CTCU"]
 
 # ── 3 BỘ DNS CLASH ĐỘC LẬP TƯỜNG MINH 100% ────────────────────────────────────
 LIANGXIN_DNS_CLASH = """\
@@ -44,7 +45,7 @@ dns:
     enhanced-mode: fake-ip
     fake-ip-range: 198.18.0.1/16
     use-hosts: true
-    respect-rules: true
+    respect-rules: false
     nameserver: ['https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query']
     fallback: ['https://doh.dns.sb/dns-query', 'https://dns.cloudflare.com/dns-query', 'https://dns.twnic.tw/dns-query', 'tls://8.8.4.4:853']
     fallback-filter: { geoip: true, ipcidr: [240.0.0.0/4, 0.0.0.0/32] }"""
@@ -821,34 +822,35 @@ def build_yaml(proxy_list: list, mode: str) -> str:
     return result
 
 
-# ── HAI HÀM CHUẨN HÓA TÊN NODE ĐỘC LẬP & AN TOÀN ──────────────────────────────
+# ── HAI BỘ QUY TẮC CHUẨN HÓA TÊN NODE RIÊNG BIỆT (LIANGXIN & DJJC) ───────────
 def clean_liangxin_node(raw_name: str) -> str:
-    """Chuẩn hóa tên node nguồn Liangxin: đổi cờ, lọc ISP, đổi 01->001, giữ hệ số."""
+    """Chuẩn hóa riêng cho Liangxin: đổi cờ, bóc tách nhà mạng, GIỮ NGUYÊN số thứ tự gốc."""
     if not raw_name: return "Liangxin - VPNTrinhHg"
     try:
         s = re.sub(r"\s*-\s*VPNTrinhHg$", "", raw_name.strip()).strip()
         s = s.replace("🇨🇳台湾", "🇹🇼台湾")
         parts = [p.strip() for p in s.split("|")]
-        # Lọc bỏ phân đoạn tên nhà mạng
+        # Lọc bỏ các phân đoạn nhà mạng ISP
         clean_parts = [p for p in parts if p.upper() not in ISP_DROP_KEYWORDS]
-        if clean_parts:
-            # Đổi số thứ tự phân đoạn đầu (01, 02 -> 001, 002) mà không chạm vào 0.5x, 0.1x
-            clean_parts[0] = re.sub(r"(?<![\d.xX])(\d{1,2})(?![\d.xX])", lambda m: m.group(1).zfill(3), clean_parts[0])
-            s = "|".join(clean_parts)
+        s = "|".join(clean_parts) if clean_parts else s
         return f"{s} - VPNTrinhHg"
     except Exception:
         fallback = raw_name.strip()
         return fallback if "VPNTrinhHg" in fallback else f"{fallback} - VPNTrinhHg"
 
 def clean_djjc_node(raw_name: str) -> str:
-    """Chuẩn hóa tên node nguồn DJJC: hệ số nhân x, xóa chữ 号, đổi 1号/01号->001."""
+    """Chuẩn hóa riêng cho DJJC: 1 -> 01, 01 -> 001, xóa chữ 号, không đụng vào 0.1x, 0.5x, 1.5x."""
     if not raw_name: return "DJJC - VPNTrinhHg"
     try:
         s = re.sub(r"\s*-\s*VPNTrinhHg$", "", raw_name.strip()).strip()
-        # Chuẩn hóa hệ số nhân tiếng Trung (1.5倍率, 1.5倍 -> 1.5x, 0.1倍 -> 0.1x)
+        # 1. Chuyển đổi hệ số nhân tiếng Trung sang chuẩn x trước (1.5倍率, 1.5倍 -> 1.5x, 0.1倍 -> 0.1x, 1倍 -> 1x)
         s = re.sub(r"(\d+(?:\.\d+)?)\s*倍率?", r"\1x", s)
-        # Chuẩn hóa số thứ tự và xóa chữ 号 (1号, 01号 -> 001)
-        s = re.sub(r"(\d{1,2})\s*号", lambda m: m.group(1).zfill(3), s)
+        # 2. Quy tắc số hóa riêng của DJJC:
+        # Số 1 chữ số -> 2 chữ số (1 -> 01), Số 2 chữ số -> 3 chữ số (01 -> 001), xóa chữ 号
+        def _pad_djjc_num(m):
+            num = m.group(1)
+            return num.zfill(3) if len(num) == 2 else num.zfill(2)
+        s = re.sub(r"(?<![\d.xX])(\d{1,2})(?:\s*号)?(?![\d.xX])", _pad_djjc_num, s)
         return f"{s} - VPNTrinhHg"
     except Exception:
         fallback = raw_name.strip()
@@ -920,15 +922,17 @@ def update_all():
     print(f"Tổng links: {len(links_db)}")
     seen_orig = {}
     for lnk in links_db:
-        orig = lnk.get("orig", "")
-        if not orig: continue
-        try:
-            qs = urllib.parse.parse_qs(urllib.parse.urlparse(orig).query)
-            tok_list = qs.get("OwO") or qs.get("token")
-            if tok_list:
-                t = tok_list[0]
-                if t not in seen_orig: seen_orig[t] = orig
-        except Exception: continue
+        # Quét cả orig (chân 1) lẫn orig2 (chân 2 của Link Trộn)
+        for u_key in ("orig", "orig2"):
+            u_val = lnk.get(u_key, "")
+            if not u_val or u_val == "Da_bi_khoa": continue
+            try:
+                qs = urllib.parse.parse_qs(urllib.parse.urlparse(u_val).query)
+                tok_list = qs.get("OwO") or qs.get("token")
+                if tok_list:
+                    t = tok_list[0]
+                    if t not in seen_orig: seen_orig[t] = u_val
+            except Exception: continue
 
     print(f"Link gốc cần fetch: {len(seen_orig)}")
     global_subs_payload = {}
