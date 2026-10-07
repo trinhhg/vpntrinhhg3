@@ -38,26 +38,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc;color:#0f172a
 .month-header{font-size:14px;font-weight:900;color:#1e293b;padding:14px 4px 8px;border-bottom:2px solid #e2e8f0;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
 .month-count{background:#4f46e5;color:white;font-size:11px;font-weight:900;padding:3px 10px;border-radius:20px;}
 .scroll-hide::-webkit-scrollbar{display:none;}.scroll-hide{-ms-overflow-style:none;scrollbar-width:none;}
-
-/* ===== SIDEBAR STYLES (DESKTOP & MOBILE DRAWER) ===== */
-#adminSidebar{transition:width .25s ease, transform .25s ease;}
-.sidebar-expanded{width:230px;}
-.sidebar-collapsed{width:68px;}
-.sidebar-collapsed .nav-text,.sidebar-collapsed .nav-group-title,.sidebar-collapsed .nav-badge{display:none!important;}
-.sidebar-collapsed .nav-btn{justify-content:center;padding:10px 0;}
-.sidebar-collapsed .nav-btn i{margin:0;font-size:16px;}
-.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border-radius:12px;font-size:12px;font-weight:700;color:#64748b;transition:all .15s;text-align:left;}
-.nav-btn:hover{background:#f1f5f9;color:#334155;}
-.nav-btn.active{background:#4f46e5;color:#fff!important;box-shadow:0 4px 12px rgba(79,70,229,.3);}
-.nav-btn.active .nav-badge{background:#fff;color:#4f46e5;}
-.nav-group-title{font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px 4px;}
-@media (max-width:767px){
-  #adminSidebar{position:fixed;top:0;bottom:0;left:0;z-index:999;width:240px!important;transform:translateX(-100%);box-shadow:0 20px 25px -5px rgba(0,0,0,.2);}
-  #adminSidebar.mobile-open{transform:translateX(0);}
-  #sidebarBackdrop{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:998;backdrop-filter:blur(2px);}
-  #sidebarBackdrop.mobile-open{display:block;}
-}
-
 .ord-sub-tab{padding:5px 8px;border-radius:8px;font-size:10.5px;font-weight:800;cursor:pointer;color:#64748b;display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;}
 .ord-sub-tab.active{background:white;color:#4f46e5;box-shadow:0 1px 4px rgba(0,0,0,.1);}
 .ord-sub-tab .mac-dot{width:9px;height:9px;}
@@ -188,38 +168,16 @@ textarea.autog{resize:none;overflow:hidden;}
  </div>
 </div>
 
-<header id="hdr" class="hidden bg-white px-4 py-2.5 border-b border-slate-200 justify-between items-center shadow-sm w-full sticky top-0 z-40">
- <div class="flex items-center gap-2">
-  <!-- Nút Hamburger trên Mobile -->
-  <button onclick="toggleMobileSidebar()" class="md:hidden text-slate-600 hover:text-indigo-600 p-1.5 rounded-lg border border-slate-200">
-   <i class="fas fa-bars text-sm"></i>
-  </button>
-  <h1 class="text-base md:text-lg font-extrabold text-indigo-600 truncate">VPN Trinh Hg</h1>
- </div>
- <div class="flex gap-2 shrink-0 items-center">
+<header id="hdr" class="hidden bg-white px-4 py-2 border-b border-slate-200 justify-between items-center shadow-sm w-full sticky top-0 z-40">
+ <h1 class="text-base md:text-xl font-extrabold text-indigo-600 truncate">VPN Trinh Hg</h1>
+ <div class="flex gap-2 shrink-0">
   <button onclick="fetchAll(true)" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm flex items-center"><i class="fas fa-sync-alt"></i><span class="hidden sm:inline ml-1.5">Làm mới</span></button>
   <button onclick="doLogout()" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm flex items-center"><i class="fas fa-sign-out-alt"></i><span class="hidden sm:inline ml-1.5">Thoát</span></button>
  </div>
 </header>
 
-<div id="sidebarBackdrop" onclick="toggleMobileSidebar(false)"></div>
-
-<div id="mainLayout" class="hidden flex w-full min-h-[calc(100vh-53px)]">
- <!-- SIDEBAR DỌC BÊN TRÁI -->
- <aside id="adminSidebar" class="sidebar-expanded bg-white border-r border-slate-200 p-3 flex flex-col justify-between shrink-0 sticky top-[53px] h-[calc(100vh-53px)] overflow-y-auto">
-  <div class="space-y-1">
-   <!-- Nút Thu gọn / Xổ ra trên Desktop -->
-   <div class="hidden md:flex justify-end mb-2 pb-2 border-b border-slate-100">
-    <button onclick="toggleSidebarCollapse()" id="btnToggleSidebar" title="Thu gọn / Mở rộng" class="text-slate-400 hover:text-indigo-600 p-1.5 rounded-lg hover:bg-slate-50 transition">
-     <i class="fas fa-angles-left text-xs" id="iconToggleSidebar"></i>
-    </button>
-   </div>
-   <div id="sidebarNav" class="space-y-1"></div>
-  </div>
- </aside>
-
- <!-- KHU VỰC NỘI DUNG CHÍNH (FULL-WIDTH CÓ PADDING) -->
- <main id="main" class="flex-1 w-full min-w-0 p-3 md:p-6 overflow-x-hidden">
+<main id="main" class="hidden max-w-7xl mx-auto p-2 md:p-4 w-full min-w-0">
+ <div id="tabBar" class="grid grid-cols-4 md:flex md:flex-wrap gap-1 md:gap-2 mb-3"></div>
     
  <!-- ===== ĐƠN HÀNG ===== -->
  <div id="t-ord" class="w-full min-w-0">
@@ -1028,56 +986,16 @@ async function pollMain(){
   if(s.d!==lastSig.d){renderDataRequests();if(dataReqDb.filter(r=>r.status==="pending").length>oldPending)toast("Có yêu cầu dung lượng mới!","warn");}
   lastSig=s;}catch(e){}}
 
-// ===================== SIDEBAR & TAB NAVIGATION =====================
-let sidebarCollapsed = false;
-
-function toggleSidebarCollapse() {
-  sidebarCollapsed = !sidebarCollapsed;
-  const sb = $("adminSidebar"), icon = $("iconToggleSidebar");
-  if (!sb) return;
-  sb.classList.toggle("sidebar-collapsed", sidebarCollapsed);
-  sb.classList.toggle("sidebar-expanded", !sidebarCollapsed);
-  if (icon) {
-    icon.className = sidebarCollapsed ? "fas fa-angles-right text-xs" : "fas fa-angles-left text-xs";
-  }
-}
-
-function toggleMobileSidebar(force) {
-  const sb = $("adminSidebar"), bd = $("sidebarBackdrop");
-  if (!sb || !bd) return;
-  const open = force !== undefined ? force : !sb.classList.contains("mobile-open");
-  sb.classList.toggle("mobile-open", open);
-  bd.classList.toggle("mobile-open", open);
-}
-
-const TAB_GROUPS = [
-  { title: "Vận hành", tabs: ["t-ord", "t-check", "t-trans", "t-data"] },
-  { title: "Hạ tầng", tabs: ["t-lnk", "t-dead"] },
-  { title: "Cấu hình", tabs: ["t-pkg", "t-fulfill", "t-cms", "t-mail", "t-settings"] }
-];
-
+// ===================== TAB NAVIGATION =====================
 function buildTabs(){
-  const nav = $("sidebarNav");
-  if (!nav) return;
-  
-  let html = "";
-  TAB_GROUPS.forEach(g => {
-    html += `<div class="nav-group-title">${g.title}</div>`;
-    g.tabs.forEach(tId => {
-      const item = TABS.find(t => t[0] === tId);
-      if (!item) return;
-      const [id, ic, lb] = item;
-      html += `
-        <button onclick="go('${id}')" id="btn-${id}" class="nav-btn" title="${lb}">
-          <i class="fas ${ic} w-5 text-center shrink-0"></i>
-          <span class="nav-text truncate flex-1">${lb}</span>
-          ${id === 't-trans' ? '<span id="transBadge" class="hidden nav-badge bg-red-500 text-white text-[9px] min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center font-black">!</span>' : ''}
-          ${id === 't-check' ? '<span id="checkBadge" class="hidden nav-badge bg-purple-600 text-white text-[9px] min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center font-black">0</span>' : ''}
-        </button>
-      `;
-    });
-  });
-  nav.innerHTML = html;
+  $("tabBar").innerHTML=TABS.map(([id,ic,lb])=>`
+    <button onclick="go('${id}')" id="btn-${id}" class="col-span-1 tab-btn flex flex-col md:flex-row items-center px-1 py-2 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm justify-center gap-1 relative">
+      <i class="fas ${ic} md:mr-1"></i>
+      <span>${lb}</span>
+      ${id==='t-trans'?'<span id="transBadge" class="hidden absolute top-0.5 right-0.5 bg-red-500 text-white text-[9px] min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center font-black">!</span>':''}
+      ${id==='t-check'?'<span id="checkBadge" class="hidden absolute top-0.5 right-0.5 bg-purple-600 text-white text-[9px] min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center font-black">0</span>':''}
+    </button>
+  `).join("");
 }
 
 function go(id){
@@ -1085,13 +1003,12 @@ function go(id){
  TABS.forEach(([t])=>{
    $(t).classList.add("hidden");
    const b=$("btn-"+t);
-   if (b) b.classList.remove("active");
+   if(b){b.classList.remove("active");b.classList.add("bg-white","text-slate-600");}
  });
  $(id).classList.remove("hidden");
  const a=$("btn-"+id);
- if (a) a.classList.add("active");
+ if(a){a.classList.add("active");a.classList.remove("bg-white","text-slate-600");}
  localStorage.setItem(SITE_KEY+"_lastTab",id);
- toggleMobileSidebar(false); // Tự đóng drawer khi chọn trên điện thoại
 
  try{
   if(id==="t-pkg")loadAdminPkgs();
@@ -3268,7 +3185,6 @@ function startApp(fresh){
  document.documentElement.classList.add("has-tok");
  $("hdr").classList.remove("hidden");
  $("hdr").style.display="flex";
- $("mainLayout").classList.remove("hidden");
  $("main").classList.remove("hidden");
  if(started){fetchAll();return;}
  started=true;
