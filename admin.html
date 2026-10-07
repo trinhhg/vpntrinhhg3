@@ -38,6 +38,26 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc;color:#0f172a
 .month-header{font-size:14px;font-weight:900;color:#1e293b;padding:14px 4px 8px;border-bottom:2px solid #e2e8f0;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
 .month-count{background:#4f46e5;color:white;font-size:11px;font-weight:900;padding:3px 10px;border-radius:20px;}
 .scroll-hide::-webkit-scrollbar{display:none;}.scroll-hide{-ms-overflow-style:none;scrollbar-width:none;}
+
+/* ===== SIDEBAR STYLES (DESKTOP & MOBILE DRAWER) ===== */
+#adminSidebar{transition:width .25s ease, transform .25s ease;}
+.sidebar-expanded{width:230px;}
+.sidebar-collapsed{width:68px;}
+.sidebar-collapsed .nav-text,.sidebar-collapsed .nav-group-title,.sidebar-collapsed .nav-badge{display:none!important;}
+.sidebar-collapsed .nav-btn{justify-content:center;padding:10px 0;}
+.sidebar-collapsed .nav-btn i{margin:0;font-size:16px;}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border-radius:12px;font-size:12px;font-weight:700;color:#64748b;transition:all .15s;text-align:left;}
+.nav-btn:hover{background:#f1f5f9;color:#334155;}
+.nav-btn.active{background:#4f46e5;color:#fff!important;box-shadow:0 4px 12px rgba(79,70,229,.3);}
+.nav-btn.active .nav-badge{background:#fff;color:#4f46e5;}
+.nav-group-title{font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;padding:10px 12px 4px;}
+@media (max-width:767px){
+  #adminSidebar{position:fixed;top:0;bottom:0;left:0;z-index:999;width:240px!important;transform:translateX(-100%);box-shadow:0 20px 25px -5px rgba(0,0,0,.2);}
+  #adminSidebar.mobile-open{transform:translateX(0);}
+  #sidebarBackdrop{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:998;backdrop-filter:blur(2px);}
+  #sidebarBackdrop.mobile-open{display:block;}
+}
+
 .ord-sub-tab{padding:5px 8px;border-radius:8px;font-size:10.5px;font-weight:800;cursor:pointer;color:#64748b;display:flex;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0;}
 .ord-sub-tab.active{background:white;color:#4f46e5;box-shadow:0 1px 4px rgba(0,0,0,.1);}
 .ord-sub-tab .mac-dot{width:9px;height:9px;}
@@ -168,16 +188,38 @@ textarea.autog{resize:none;overflow:hidden;}
  </div>
 </div>
 
-<header id="hdr" class="hidden bg-white px-4 py-2 border-b border-slate-200 justify-between items-center shadow-sm w-full sticky top-0 z-40">
- <h1 class="text-base md:text-xl font-extrabold text-indigo-600 truncate">VPN Trinh Hg</h1>
- <div class="flex gap-2 shrink-0">
+<header id="hdr" class="hidden bg-white px-4 py-2.5 border-b border-slate-200 justify-between items-center shadow-sm w-full sticky top-0 z-40">
+ <div class="flex items-center gap-2">
+  <!-- Nút Hamburger trên Mobile -->
+  <button onclick="toggleMobileSidebar()" class="md:hidden text-slate-600 hover:text-indigo-600 p-1.5 rounded-lg border border-slate-200">
+   <i class="fas fa-bars text-sm"></i>
+  </button>
+  <h1 class="text-base md:text-lg font-extrabold text-indigo-600 truncate">VPN Trinh Hg</h1>
+ </div>
+ <div class="flex gap-2 shrink-0 items-center">
   <button onclick="fetchAll(true)" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm flex items-center"><i class="fas fa-sync-alt"></i><span class="hidden sm:inline ml-1.5">Làm mới</span></button>
   <button onclick="doLogout()" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm flex items-center"><i class="fas fa-sign-out-alt"></i><span class="hidden sm:inline ml-1.5">Thoát</span></button>
  </div>
 </header>
 
-<main id="main" class="hidden max-w-[1600px] w-full mx-auto px-4 md:px-6 py-2 md:py-4 min-w-0">
- <div id="tabBar" class="grid grid-cols-4 md:flex md:flex-nowrap md:overflow-x-auto scroll-hide gap-1 md:gap-2 mb-3"></div>
+<div id="sidebarBackdrop" onclick="toggleMobileSidebar(false)"></div>
+
+<div id="mainLayout" class="hidden flex w-full min-h-[calc(100vh-53px)]">
+ <!-- SIDEBAR DỌC BÊN TRÁI -->
+ <aside id="adminSidebar" class="sidebar-expanded bg-white border-r border-slate-200 p-3 flex flex-col justify-between shrink-0 sticky top-[53px] h-[calc(100vh-53px)] overflow-y-auto">
+  <div class="space-y-1">
+   <!-- Nút Thu gọn / Xổ ra trên Desktop -->
+   <div class="hidden md:flex justify-end mb-2 pb-2 border-b border-slate-100">
+    <button onclick="toggleSidebarCollapse()" id="btnToggleSidebar" title="Thu gọn / Mở rộng" class="text-slate-400 hover:text-indigo-600 p-1.5 rounded-lg hover:bg-slate-50 transition">
+     <i class="fas fa-angles-left text-xs" id="iconToggleSidebar"></i>
+    </button>
+   </div>
+   <div id="sidebarNav" class="space-y-1"></div>
+  </div>
+ </aside>
+
+ <!-- KHU VỰC NỘI DUNG CHÍNH (FULL-WIDTH CÓ PADDING) -->
+ <main id="main" class="flex-1 w-full min-w-0 p-3 md:p-6 overflow-x-hidden">
     
  <!-- ===== ĐƠN HÀNG ===== -->
  <div id="t-ord" class="w-full min-w-0">
@@ -796,21 +838,35 @@ textarea.autog{resize:none;overflow:hidden;}
  </div>
 </div>
 
-<!-- MODAL SỬA NGUỒN CẤP CỤM (ROOT SOURCE) -->
+<!-- MODAL SỬA NGUỒN CẤP CỤM (ROOT SOURCE - 2 CHÂN URL & SỬA THÔNG SỐ) -->
 <div id="mRootEdit" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
- <div class="glass-card p-5 w-full max-w-xl">
+ <div class="glass-card p-5 w-full max-w-xl max-h-[90vh] overflow-y-auto">
   <h3 class="font-extrabold text-lg mb-1 text-slate-800">Sửa Nguồn Cấp Cụm (Root Source)</h3>
-  <p class="text-[11px] text-slate-500 mb-3">Đổi link gốc cho toàn bộ link con bên dưới. <b>Token link ẩn của khách hàng được bảo toàn 100%</b>.</p>
+  <p class="text-[11px] text-slate-500 mb-3">Đổi nguồn cho toàn bộ link con (nhập 1 ô = Đơn, 2 ô = Trộn). <b>Token link ẩn của khách giữ nguyên 100%</b>.</p>
   <input type="hidden" id="mREGroupKey">
-  <input type="hidden" id="mREIsCombo">
-  <div class="mb-3">
-   <label class="block text-xs font-bold text-slate-700 mb-1" id="mRELabel1">Link gốc chân 1 (Liangxin hoặc Đơn)</label>
-   <input id="mREOrig1" type="text" class="w-full p-2 text-xs border border-slate-300 rounded-lg font-mono outline-none bg-slate-50">
+  
+  <div class="space-y-3 mb-4">
+   <div>
+    <label class="block text-xs font-bold text-slate-700 mb-1">Link gốc chân 1 (Liangxin hoặc DJJC)</label>
+    <input id="mREOrig1" type="text" placeholder="https://..." class="w-full p-2 text-xs border border-slate-300 rounded-lg font-mono outline-none bg-slate-50">
+   </div>
+   <div>
+    <label class="block text-xs font-bold text-indigo-700 mb-1">Link gốc chân 2 (Để trống nếu muốn chuyển về Link Đơn)</label>
+    <input id="mREOrig2" type="text" placeholder="Để trống nếu là Link Đơn" class="w-full p-2 text-xs border border-indigo-200 rounded-lg font-mono outline-none bg-indigo-50/30">
+   </div>
   </div>
-  <div id="mREContainer2" class="mb-4 hidden">
-   <label class="block text-xs font-bold text-indigo-700 mb-1">Link gốc chân 2 (DJJC)</label>
-   <input id="mREOrig2" type="text" class="w-full p-2 text-xs border border-indigo-200 rounded-lg font-mono outline-none bg-indigo-50/30">
+
+  <!-- BẢNG SỬA THÔNG SỐ CỤM TRỰC TIẾP -->
+  <div class="border border-slate-200 rounded-xl p-3 bg-slate-50 mb-4 space-y-2">
+   <div class="text-[11px] font-bold text-slate-700">Cập nhật thông số cụm (Hiển thị tab Cây & Kho)</div>
+   <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+    <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB</label><input id="mREGb" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
+    <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB</label><input id="mRERemain" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
+    <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Hết hạn</label><input id="mREExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-1.5 border rounded-lg bg-white text-xs text-center"></div>
+    <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max máy</label><input id="mREMax" type="number" min="1" value="30" class="w-full p-1.5 border rounded-lg bg-white text-xs text-center"></div>
+   </div>
   </div>
+
   <div class="flex gap-2">
    <button onclick="saveRootEdit()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg text-xs shadow-md">CẬP NHẬT CẢ CỤM LINK</button>
    <button onclick="cm('mRootEdit')" class="bg-white border border-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-lg text-xs shadow-sm">Hủy</button>
@@ -972,23 +1028,84 @@ async function pollMain(){
   if(s.d!==lastSig.d){renderDataRequests();if(dataReqDb.filter(r=>r.status==="pending").length>oldPending)toast("Có yêu cầu dung lượng mới!","warn");}
   lastSig=s;}catch(e){}}
 
-// ===================== TAB =====================
-function buildTabs(){$("tabBar").innerHTML=TABS.map(([id,ic,lb])=>`<button onclick="go('${id}')" id="btn-${id}" class="col-span-1 tab-btn flex flex-col md:flex-row items-center px-1 py-2 md:px-2.5 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-xs bg-white text-slate-600 border border-slate-200 shadow-sm justify-center gap-1 relative whitespace-nowrap shrink-0"><i class="fas ${ic} md:mr-1"></i><span>${lb}</span>${id==='t-trans'?'<span id="transBadge" class="hidden absolute top-0.5 right-0.5 bg-red-500 text-white text-[9px] min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center">!</span>':''}${id==='t-check'?'<span id="checkBadge" class="hidden absolute top-0.5 right-0.5 bg-purple-600 text-white text-[9px] min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center font-black">0</span>':''}</button>`).join("");}
+// ===================== SIDEBAR & TAB NAVIGATION =====================
+let sidebarCollapsed = false;
+
+function toggleSidebarCollapse() {
+  sidebarCollapsed = !sidebarCollapsed;
+  const sb = $("adminSidebar"), icon = $("iconToggleSidebar");
+  if (!sb) return;
+  sb.classList.toggle("sidebar-collapsed", sidebarCollapsed);
+  sb.classList.toggle("sidebar-expanded", !sidebarCollapsed);
+  if (icon) {
+    icon.className = sidebarCollapsed ? "fas fa-angles-right text-xs" : "fas fa-angles-left text-xs";
+  }
+}
+
+function toggleMobileSidebar(force) {
+  const sb = $("adminSidebar"), bd = $("sidebarBackdrop");
+  if (!sb || !bd) return;
+  const open = force !== undefined ? force : !sb.classList.contains("mobile-open");
+  sb.classList.toggle("mobile-open", open);
+  bd.classList.toggle("mobile-open", open);
+}
+
+const TAB_GROUPS = [
+  { title: "Vận hành", tabs: ["t-ord", "t-check", "t-trans", "t-data"] },
+  { title: "Hạ tầng", tabs: ["t-lnk", "t-dead"] },
+  { title: "Cấu hình", tabs: ["t-pkg", "t-fulfill", "t-cms", "t-mail", "t-settings"] }
+];
+
+function buildTabs(){
+  const nav = $("sidebarNav");
+  if (!nav) return;
+  
+  let html = "";
+  TAB_GROUPS.forEach(g => {
+    html += `<div class="nav-group-title">${g.title}</div>`;
+    g.tabs.forEach(tId => {
+      const item = TABS.find(t => t[0] === tId);
+      if (!item) return;
+      const [id, ic, lb] = item;
+      html += `
+        <button onclick="go('${id}')" id="btn-${id}" class="nav-btn" title="${lb}">
+          <i class="fas ${ic} w-5 text-center shrink-0"></i>
+          <span class="nav-text truncate flex-1">${lb}</span>
+          ${id === 't-trans' ? '<span id="transBadge" class="hidden nav-badge bg-red-500 text-white text-[9px] min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center font-black">!</span>' : ''}
+          ${id === 't-check' ? '<span id="checkBadge" class="hidden nav-badge bg-purple-600 text-white text-[9px] min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center font-black">0</span>' : ''}
+        </button>
+      `;
+    });
+  });
+  nav.innerHTML = html;
+}
+
 function go(id){
  if(!TABS.some(t=>t[0]===id))id="t-ord";
- TABS.forEach(([t])=>{$(t).classList.add("hidden");const b=$("btn-"+t);b.classList.remove("active");b.classList.add("bg-white","text-slate-600");});
- $(id).classList.remove("hidden");const a=$("btn-"+id);a.classList.add("active");a.classList.remove("bg-white","text-slate-600");
+ TABS.forEach(([t])=>{
+   $(t).classList.add("hidden");
+   const b=$("btn-"+t);
+   if (b) b.classList.remove("active");
+ });
+ $(id).classList.remove("hidden");
+ const a=$("btn-"+id);
+ if (a) a.classList.add("active");
  localStorage.setItem(SITE_KEY+"_lastTab",id);
+ toggleMobileSidebar(false); // Tự đóng drawer khi chọn trên điện thoại
+
  try{
   if(id==="t-pkg")loadAdminPkgs();
   if(id==="t-fulfill"){loadAdminPkgs();loadFulfillmentConfig();}
   if(id==="t-check")renderCheckTab();
-  if(id==="t-dead")renderDead();if(id==="t-data")renderDataRequests();if(id==="t-lnk")switchLinkMode(curLinkTab);
+  if(id==="t-dead")renderDead();
+  if(id==="t-data")renderDataRequests();
+  if(id==="t-lnk")switchLinkMode(curLinkTab);
   if(id==="t-settings"){loadSettingsUI();loadStatus();loadQuota();}
   if(id==="t-trans"){localStorage.setItem(SITE_KEY+"_txSeen",Date.now());$("transBadge").classList.add("hidden");if(curTxTab==="rev")renderRevenue();else renderTransactions();}
   if(id==="t-mail")renderMailComposer();
   if(id==="t-cms"&&curArtsReady)renderGuideAll();
- }catch(e){console.error("go("+id+") lỗi:",e);toast("Lỗi mở tab: "+e.message,"err");}}
+ }catch(e){console.error("go("+id+") lỗi:",e);toast("Lỗi mở tab: "+e.message,"err");}
+}
 
 // ===================== ĐƠN HÀNG =====================
 function switchOrdTab(t){curOrdTab=t;["success","pending","failed"].forEach(x=>$("otab-"+x).classList.toggle("active",x===t));renderOrd();}
@@ -1612,7 +1729,8 @@ function renderLinks(){
          </div>
          <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs pt-1 border-t border-purple-100">
            <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
-             <div class="font-mono text-[11px] font-bold text-emerald-800 truncate cp" onclick="cp(${q(p.url)})">${esc(p.url)}</div>
+             <!-- Mobile: break-all whitespace-normal để link tự ngắt thành 2 dòng, không bị cắt cụt -->
+             <div class="font-mono text-[11px] font-bold text-emerald-800 break-all whitespace-normal cp" onclick="cp(${q(p.url)})">${esc(p.url)}</div>
              <div class="flex gap-1.5 mt-1 flex-wrap">
                <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Còn: ${esc(p.remainGb || "0")} / ${esc(p.gb || "N/A")} GB</span>
                <span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded">HSD: ${esc(p.exp || "Lifetime")}</span>
@@ -1620,7 +1738,7 @@ function renderLinks(){
              </div>
            </div>
            <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
-             <div class="font-mono text-[11px] font-bold text-blue-800 truncate cp" onclick="cp(${q(p.url2)})">${esc(p.url2)}</div>
+             <div class="font-mono text-[11px] font-bold text-blue-800 break-all whitespace-normal cp" onclick="cp(${q(p.url2)})">${esc(p.url2)}</div>
              <div class="flex gap-1.5 mt-1 flex-wrap">
                <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Còn: ${esc(p.remainGb2 || "0")} / ${esc(p.gb2 || "N/A")} GB</span>
                <span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded">HSD: ${esc(p.exp2 || "Lifetime")}</span>
@@ -1635,9 +1753,9 @@ function renderLinks(){
      return `
      <div class="bg-white border border-slate-200 p-3.5 rounded-2xl shadow-sm flex items-center justify-between gap-2 mb-3">
        <div class="min-w-0 flex-1">
-         <div class="mb-1 flex items-center gap-1.5">
+         <div class="mb-1 flex items-center gap-1.5 flex-wrap">
            <span class="${lx ? 'badge-lx' : 'badge-dj'}">${lx ? 'Liangxin' : 'DJJC'}</span>
-           <span class="font-bold text-slate-800 text-xs md:text-sm truncate block cp" onclick="cp(${q(p.url)})">${esc(p.url)}</span>
+           <span class="font-bold text-slate-800 text-xs md:text-sm break-all whitespace-normal block cp" onclick="cp(${q(p.url)})">${esc(p.url)}</span>
          </div>
          <div class="flex gap-2 flex-wrap">
            <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Còn: ${esc(p.remainGb || "0")} / ${esc(p.gb || "N/A")} GB</span>
@@ -1679,33 +1797,46 @@ function renderLinks(){
     badge = lx ? `<span class="badge-lx">Liangxin</span>` : dj ? `<span class="badge-dj">DJJC</span>` : `<span class="badge-ot">Other</span>`;
   }
 
+  // Đồng bộ thông số từ Kho sang Header của Tab Cây
+  const pItem = linkPoolDb.find(p => g.isCombo ? (p.isCombo && p.url === g.orig && p.url2 === g.orig2) : (!p.isCombo && p.url === g.orig)) || {};
+  let poolChips = "";
+  if (g.isCombo) {
+    poolChips = `
+      <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Còn: ${esc(pItem.remainGb || "0")}/${esc(pItem.gb || "N/A")} GB & ${esc(pItem.remainGb2 || "0")}/${esc(pItem.gb2 || "N/A")} GB</span>
+      <span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded">HSD: ${esc(pItem.exp || pItem.exp2 || "Lifetime")}</span>
+      <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Máy: ${g.ch.length}/${pItem.max || 30}</span>
+    `;
+  } else {
+    poolChips = `
+      <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Còn: ${esc(pItem.remainGb || "0")}/${esc(pItem.gb || "N/A")} GB</span>
+      <span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded">HSD: ${esc(pItem.exp || "Lifetime")}</span>
+      <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Máy: ${g.ch.length}/${pItem.max || 30}</span>
+    `;
+  }
+
   const rows = [...g.ch].sort((a,b) => (parseInt(a.linkIndex||1)) - (parseInt(b.linkIndex||1))).map(l => {
    const tok = getT(l.masked), locked = !!l.isLocked, idx = parseInt(l.linkIndex||1);
    const bottom = linkBottom(l);
-   const idDisplay = (l.orderId && l.orderId.startsWith("DH")) ? `DH: ${l.orderId}` : `ID: ${l.id || l.orderId}`;
+   // Node Neo Index #1 chỉ ghi là "Auto", không chữ thừa hay badge thừa
+   const nameDisplay = (idx === 1) ? "Auto" : esc(l.email || "Khách");
    
    return `
    <div class="py-2.5 px-3 border rounded-xl mb-2 ${locked ? "bg-red-50/70 border-red-200" : "hover:bg-slate-50 border-slate-100 bg-white"} flex flex-col gap-2 w-full min-w-0">
-     <!-- HÀNG TRÊN: Chấm trạng thái + Index + Email + Badge Node Neo -->
+     <!-- HÀNG TRÊN: Chấm trạng thái + Index + Tên (Bỏ hoàn toàn tag thừa trên #1 Auto) -->
      <div class="flex items-center justify-between gap-2 min-w-0">
        <div class="flex items-center gap-2 min-w-0">
          ${locked ? '<div class="dot-red" title="Đã khóa"></div>' : '<div class="dot-green" title="Hoạt động"></div>'}
          <span class="text-indigo-600 font-mono text-xs font-black cp shrink-0" onclick="cp('${idx}')">#${idx}</span>
-         <span class="font-bold text-xs text-slate-800 cp truncate" onclick="cp(${q(l.email)})">${esc(l.email || "Khách")}</span>
-         ${idx === 1 ? '<span class="text-[9px] font-black bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded border border-amber-200">Node Neo (Khóa)</span>' : ''}
-         ${l.isCombo ? `<span class="text-[9px] font-black bg-purple-50 text-purple-700 px-1.5 py-0.2 rounded border border-purple-200">Trộn 2 mạng</span>` : ""}
+         <span class="font-bold text-xs ${idx === 1 ? 'text-amber-800 font-black' : 'text-slate-800'} cp truncate" onclick="cp(${q(l.email)})">${nameDisplay}</span>
        </div>
      </div>
 
      <!-- DÒNG GIỮA: Link masked -->
      <div class="font-mono text-[10px] md:text-xs text-slate-500 cp break-all select-all" onclick="cp(${q(l.masked)})">${esc(l.masked)}</div>
 
-     <!-- HÀNG DƯỚI: Góc dưới bên trái (Dòng 1: ID, Dòng 2: HSD & Giờ) thẳng hàng ngang chân với 3 nút chức năng bên phải -->
-     <div class="flex items-end justify-between mt-0.5 pt-2 border-t border-slate-100">
-       <div class="flex flex-col text-left">
-         <span class="text-[10px] font-mono text-slate-400 leading-tight">${esc(idDisplay)}</span>
-         <span class="text-[10px] font-bold text-slate-500 mt-0.5 leading-tight">${bottom}</span>
-       </div>
+     <!-- HÀNG DƯỚI: Đã BỎ ID hoàn toàn. Chỉ còn HSD & Giờ tạo thẳng hàng ngang chân với 3 nút chức năng -->
+     <div class="flex items-center justify-between mt-0.5 pt-2 border-t border-slate-100">
+       <div class="text-[10px] font-bold text-slate-500">${bottom}</div>
        <div class="flex gap-1.5 shrink-0 items-center">
          <button onclick="openLnkModal(${q(l.id)})" title="Sửa link con" class="text-indigo-600 hover:text-white w-7 h-7 flex items-center justify-center bg-indigo-50 border border-indigo-100 rounded-lg hover:bg-indigo-600 transition"><i class="fas fa-pen text-xs"></i></button>
          <button onclick="toggleLock(${q(tok)},${locked})" title="${locked ? "Mở khóa" : "Khóa link"}" class="${locked ? "text-white bg-green-500 hover:bg-green-600" : "text-orange-500 bg-orange-50 border-orange-100 border hover:bg-orange-500 hover:text-white"} w-7 h-7 flex items-center justify-center rounded-lg transition"><i class="fas ${locked ? "fa-lock-open" : "fa-lock"} text-xs"></i></button>
@@ -1722,10 +1853,12 @@ function renderLinks(){
         <div class="flex gap-1.5 items-center flex-wrap">
           ${badge}
           <span class="text-[10px] font-black bg-white border border-slate-200 text-slate-600 px-1.5 py-0.5 rounded">${g.ch.length} LINK</span>
+          <!-- CHIP THÔNG SỐ ĐỐI SOÁT HIỂN THỊ ĐỦ TRÊN TAB CÂY -->
+          ${poolChips}
         </div>
-        <!-- CÂY BÚT CHÌ CẤP CỤM (ROOT SOURCE) -->
-        <button onclick="openRootEditModal(${q(g.key)})" class="text-indigo-600 hover:bg-indigo-600 hover:text-white bg-white border border-indigo-200 font-bold px-2 py-1 rounded-lg text-[10px] flex items-center gap-1 shadow-sm transition">
-          <i class="fas fa-pen"></i><span>Sửa nguồn cụm</span>
+        <!-- BÚT CHÌ CẤP CỤM: Rút gọn chỉ còn icon cây bút chì -->
+        <button onclick="openRootEditModal(${q(g.key)})" title="Sửa nguồn cụm" class="text-indigo-600 hover:bg-indigo-600 hover:text-white bg-white border border-indigo-200 w-7 h-7 flex items-center justify-center rounded-lg shadow-sm transition">
+          <i class="fas fa-pen text-xs"></i>
         </button>
       </div>
       <div class="font-mono text-[10px] md:text-xs font-bold text-slate-600 break-all cp mt-1.5" onclick="cp(${q(g.orig)})">
@@ -1738,57 +1871,89 @@ function renderLinks(){
  }).join("");
 }
 
-// 4. Bút chì sửa Nguồn cấp Cụm (Root Source)
+// 4. Bút chì sửa Nguồn cấp Cụm (Luôn có 2 ô link + Sửa thông số HSD, GB)
 function openRootEditModal(groupKey){
   const parts = groupKey.split("|");
   const isCombo = (parts[0] === "COMBO");
+  const o1 = isCombo ? parts[1] : groupKey;
+  const o2 = isCombo ? parts[2] : "";
+
   $("mREGroupKey").value = groupKey;
-  $("mREIsCombo").value = isCombo ? "1" : "0";
-  $("mREOrig1").value = isCombo ? parts[1] : groupKey;
-  $("mREOrig2").value = isCombo ? parts[2] : "";
-  $("mRELabel1").textContent = isCombo ? "Link gốc chân 1 (Liangxin)" : "Link gốc cụm";
-  $("mREContainer2").classList.toggle("hidden", !isCombo);
+  $("mREOrig1").value = o1;
+  $("mREOrig2").value = o2;
+
+  // Nạp thông số hiện tại từ Kho sang Modal để sửa
+  const p = linkPoolDb.find(x => isCombo ? (x.isCombo && x.url === o1 && x.url2 === o2) : (!x.isCombo && x.url === o1)) || {};
+  $("mREGb").value = p.gb || "";
+  $("mRERemain").value = p.remainGb || "";
+  $("mREExp").value = p.exp || "";
+  $("mREMax").value = p.max || 30;
+
   $("mRootEdit").classList.remove("hidden");
 }
 
 async function saveRootEdit(){
   const gKey = $("mREGroupKey").value;
-  const isCombo = $("mREIsCombo").value === "1";
   const newO1 = $("mREOrig1").value.trim(), newO2 = $("mREOrig2").value.trim();
-  if(!newO1) return toast("Link gốc 1 không được rỗng!", "err");
-  if(isCombo && !newO2) return toast("Link gốc 2 không được rỗng với Khối Combo!", "err");
+  if(!newO1 && !newO2) return toast("Vui lòng nhập ít nhất 1 link gốc!", "err");
+
+  let isNowCombo = false, finalO1 = newO1, finalO2 = "";
+  if (newO1 && newO2) {
+    const p1 = detectProvider(newO1), p2 = detectProvider(newO2);
+    if (p1 === p2 && p1 !== "other") {
+      return toast("Không thể chuyển cụm sang Combo với 2 link cùng nhà mạng!", "err");
+    }
+    isNowCombo = true;
+    if (p1 === "lx" || p2 === "dj") { finalO1 = newO1; finalO2 = newO2; }
+    else { finalO1 = newO2; finalO2 = newO1; }
+  } else {
+    finalO1 = newO1 || newO2;
+  }
 
   const parts = gKey.split("|");
-  const oldO1 = isCombo ? parts[1] : gKey;
-  const oldO2 = isCombo ? parts[2] : "";
-  let updated = false;
+  const oldIsCombo = (parts[0] === "COMBO");
+  const oldO1 = oldIsCombo ? parts[1] : gKey;
+  const oldO2 = oldIsCombo ? parts[2] : "";
 
+  // 1. Cập nhật link con bên CÂY
   linksDb.forEach(l => {
-    if(isCombo && l.isCombo && l.orig === oldO1 && l.orig2 === oldO2){
-      l.orig = newO1; l.orig2 = newO2; updated = true;
-    } else if(!isCombo && !l.isCombo && l.orig === oldO1){
-      l.orig = newO1; updated = true;
+    const match = oldIsCombo ? (l.isCombo && l.orig === oldO1 && l.orig2 === oldO2) : (!l.isCombo && l.orig === oldO1);
+    if (match) {
+      l.orig = finalO1;
+      l.isCombo = isNowCombo;
+      if (isNowCombo) l.orig2 = finalO2;
+      else delete l.orig2;
+      // Cập nhật lại HSD nếu admin có nhập
+      if ($("mREExp").value.trim()) l.expDate = $("mREExp").value.trim();
     }
   });
 
-  linkPoolDb.forEach(p => {
-    if(isCombo && p.isCombo && p.url === oldO1 && p.url2 === oldO2){
-      p.url = newO1; p.url2 = newO2;
-    } else if(!isCombo && !p.isCombo && p.url === oldO1){
-      p.url = newO1;
-    }
-  });
+  // 2. Cập nhật thông số bên KHO (Đồng bộ 2 chiều)
+  const poolItem = linkPoolDb.find(x => oldIsCombo ? (x.isCombo && x.url === oldO1 && x.url2 === oldO2) : (!x.isCombo && x.url === oldO1));
+  const newSpecs = {
+    url: finalO1,
+    isCombo: isNowCombo,
+    gb: $("mREGb").value.trim(),
+    remainGb: $("mRERemain").value.trim(),
+    exp: $("mREExp").value.trim(),
+    max: parseInt($("mREMax").value) || 30
+  };
+  if (isNowCombo) newSpecs.url2 = finalO2;
+
+  if (poolItem) {
+    Object.assign(poolItem, newSpecs);
+  } else {
+    linkPoolDb.unshift({ id: "POOL-" + Date.now(), ...newSpecs });
+  }
 
   cm("mRootEdit");
-  if(updated){
-    await saveLinks();
-    await savePool();
-    renderLinks();
-    toast("Đã đổi link gốc cho toàn bộ link con trong cụm! Token khách giữ nguyên 100%.");
-  }
+  await saveLinks();
+  await savePool();
+  renderLinks();
+  toast("Đã cập nhật cả cụm link & đồng bộ thông số sang Kho thành công!");
 }
 
-// 5. Thêm link vào kho (Khối Combo độc lập + Node Neo Index #1)
+// 5. Thêm link vào kho (Đồng bộ sang Cây: tự sinh Node Neo #1 Auto)
 async function addLinkToPool(){
   const orig1 = $("poolOrig").value.trim(), orig2 = $("poolOrig2").value.trim();
   const gb1 = $("poolGb").value.trim(), rg1 = $("poolRemainGb").value.trim(), exp1 = $("poolExp").value.trim(), max1 = parseInt($("poolMax").value) || 30;
@@ -1811,14 +1976,13 @@ async function addLinkToPool(){
 
   if(isCombo){
     const comboId = "POOL-COMBO-" + Date.now();
-    // Luôn tạo Block Combo riêng biệt trong LINK_POOL
     linkPoolDb.unshift({
       id: comboId,
       isCombo: true,
-      url: finalOrig1, gb: gb1, remainGb: rg1 || "0", exp: exp1, max: max1,
-      url2: finalOrig2, gb2: gb2, remainGb2: rg2 || "0", exp2: exp2, max2: max2
+      url: finalOrig1, gb: gb1, remainGb: rg1 || "", exp: exp1, max: max1,
+      url2: finalOrig2, gb2: gb2, remainGb2: rg2 || "", exp2: exp2, max2: max2
     });
-    // Luôn khởi tạo Node Neo Index #1 (mặc định KHÓA isLocked = true)
+    // Đồng bộ sang Cây: Sinh ngay Node Neo #1 Auto (mặc định KHÓA)
     const masked = PD + "/v1/VPNTrinhHg?OwO=" + genHex(32) + "#VPNTrinhHg";
     if(!linksDb.some(x => x.isCombo && x.orig === finalOrig1 && x.orig2 === finalOrig2 && String(x.linkIndex) === "1")){
       linksDb.unshift({
@@ -1827,7 +1991,7 @@ async function addLinkToPool(){
         orig: finalOrig1,
         orig2: finalOrig2,
         masked,
-        email: "Nguồn Hệ Thống (Auto)",
+        email: "Auto", // Tên chuẩn: Auto
         expDate: exp1 || exp2 || "Vĩnh viễn",
         linkIndex: "1",
         isLocked: true, // Node Neo #1 LUÔN LUÔN KHÓA
@@ -1836,17 +2000,17 @@ async function addLinkToPool(){
       });
       await saveLinks();
     }
-    toast("Đã thêm Khối Combo vào Kho & Khởi tạo Node Neo #1!");
+    toast("Đã thêm Khối Combo vào Kho & Khởi tạo #1 Auto bên Cây!");
   } else {
     const ex = linkPoolDb.find(p => !p.isCombo && p.url === finalOrig1);
     if(ex){
-      Object.assign(ex, { gb: gb1, remainGb: rg1 || "0", exp: exp1, max: max1 });
+      Object.assign(ex, { gb: gb1, remainGb: rg1 || "", exp: exp1, max: max1 });
       toast("Đã cập nhật Nguồn Đơn trong Kho");
     } else {
-      linkPoolDb.unshift({ id: "POOL-" + Date.now(), isCombo: false, url: finalOrig1, gb: gb1, remainGb: rg1 || "0", exp: exp1, max: max1 });
+      linkPoolDb.unshift({ id: "POOL-" + Date.now(), isCombo: false, url: finalOrig1, gb: gb1, remainGb: rg1 || "", exp: exp1, max: max1 });
       toast("Đã thêm Nguồn Đơn vào Kho");
     }
-    // Khởi tạo Node Neo Index #1 cho Nguồn Đơn
+    // Đồng bộ sang Cây: Sinh ngay Node Neo #1 Auto (mặc định KHÓA)
     const masked = buildMasked(finalOrig1, false);
     if(masked && !linksDb.some(x => !x.isCombo && x.orig === finalOrig1 && String(x.linkIndex) === "1")){
       linksDb.unshift({
@@ -1854,7 +2018,7 @@ async function addLinkToPool(){
         isCombo: false,
         orig: finalOrig1,
         masked,
-        email: "Nguồn Hệ Thống (Auto)",
+        email: "Auto", // Tên chuẩn: Auto
         expDate: exp1 || "Vĩnh viễn",
         linkIndex: "1",
         isLocked: true, // Node Neo #1 LUÔN LUÔN KHÓA
@@ -1939,7 +2103,7 @@ async function savePoolEdit(){
   toast("Đã cập nhật thông số kho!");
 }
 
-// 6. Tạo Link Thủ Công
+// 6. Tạo Link Thủ Công (Tự động lưu vào Kho nếu là link mới)
 async function createLink(){
  const orig1 = $("lkOrig").value.trim(), orig2 = $("lkOrig2") ? $("lkOrig2").value.trim() : "";
  const email = $("lkEmail").value.trim(), expDate = $("lkExp").value.trim(), idxInput = $("lkIdx").value.trim();
@@ -1960,8 +2124,13 @@ async function createLink(){
 
  try { new URL(finalOrig1); if (finalOrig2) new URL(finalOrig2); } catch { return toast("Link không hợp lệ!","err"); }
 
- // Đảm bảo luôn khởi tạo Node Neo Index #1 (isLocked = true) trước
+ // ĐỒNG BỘ 2 CHIỀU: Nếu tạo thủ công link mới chưa có trong Kho thì tự lưu vào Kho luôn
  if (isCombo) {
+   if (!linkPoolDb.some(p => p.isCombo && p.url === finalOrig1 && p.url2 === finalOrig2)) {
+     linkPoolDb.unshift({ id: "POOL-COMBO-" + Date.now(), isCombo: true, url: finalOrig1, url2: finalOrig2, gb: "", remainGb: "", exp: expDate, max: 30 });
+     await savePool();
+   }
+   // Khởi tạo #1 Auto nếu chưa có
    if (!linksDb.some(x => x.isCombo && x.orig === finalOrig1 && x.orig2 === finalOrig2 && String(x.linkIndex) === "1")) {
      linksDb.unshift({
        id: "LNK-" + Date.now() + "-ANC",
@@ -1969,32 +2138,37 @@ async function createLink(){
        orig: finalOrig1,
        orig2: finalOrig2,
        masked: PD + "/v1/VPNTrinhHg?OwO=" + genHex(32) + "#VPNTrinhHg",
-       email: "Nguồn Hệ Thống (Auto)",
+       email: "Auto",
        expDate: expDate || "Vĩnh viễn",
        linkIndex: "1",
-       isLocked: true, // Node Neo #1 LUÔN LUÔN KHÓA
+       isLocked: true, // Node Neo #1 LUÔN KHÓA
        createdTs: nowMs(),
        date: fmtBank(nowMs())
      });
    }
  } else {
+   if (!linkPoolDb.some(p => !p.isCombo && p.url === finalOrig1)) {
+     linkPoolDb.unshift({ id: "POOL-" + Date.now(), isCombo: false, url: finalOrig1, gb: "", remainGb: "", exp: expDate, max: 30 });
+     await savePool();
+   }
+   // Khởi tạo #1 Auto nếu chưa có
    if (!linksDb.some(x => !x.isCombo && x.orig === finalOrig1 && String(x.linkIndex) === "1")) {
      linksDb.unshift({
        id: "LNK-" + Date.now() + "-ANC",
        isCombo: false,
        orig: finalOrig1,
        masked: buildMasked(finalOrig1, false),
-       email: "Nguồn Hệ Thống (Auto)",
+       email: "Auto",
        expDate: expDate || "Vĩnh viễn",
        linkIndex: "1",
-       isLocked: true, // Node Neo #1 LUÔN LUÔN KHÓA
+       isLocked: true, // Node Neo #1 LUÔN KHÓA
        createdTs: nowMs(),
        date: fmtBank(nowMs())
      });
    }
  }
 
- // Cấp link thương mại: luôn bắt đầu từ Index #2 trở lên nếu không nhập số tay
+ // Cấp link thương mại: bắt đầu từ Index #2 trở lên nếu không nhập số tay
  let finalIdx = idxInput;
  if (!finalIdx || parseInt(finalIdx) <= 1) {
    const existingIndices = linksDb
@@ -2007,13 +2181,6 @@ async function createLink(){
  const masked = isCombo 
    ? (PD + "/v1/VPNTrinhHg?OwO=" + genHex(32) + "#VPNTrinhHg")
    : buildMasked(finalOrig1, true);
-
- for (const u of [finalOrig1, finalOrig2].filter(Boolean)) {
-   if (!linkPoolDb.find(p => p.url === u)) {
-     linkPoolDb.push({ id: "POOL-" + Date.now() + "-" + genHex(2), url: u, gb: "", remainGb: "", exp: expDate, max: 30 });
-   }
- }
- await savePool();
 
  linksDb.unshift({
    id: "LNK-" + Date.now() + "-" + genHex(4),
@@ -3097,11 +3264,21 @@ async function saveFailoverPolicy() {
 // ===================== KHỞI ĐỘNG =====================
 let started=false;
 function startApp(fresh){
- $("loginWrap").classList.add("hidden");document.documentElement.classList.add("has-tok");$("hdr").classList.remove("hidden");$("hdr").style.display="flex";$("main").classList.remove("hidden");
- if(started){fetchAll();return;}started=true;buildTabs();
- go(localStorage.getItem(SITE_KEY+"_lastTab")||"t-ord");if(fresh)toast("Đăng nhập thành công!");
- fetchAll();loadTx(true);loadQuota();setInterval(pollMain,10000);setInterval(loadStatus,120000);setInterval(tickClocks,1000);
- document.addEventListener("visibilitychange",()=>{if(!document.hidden){pollMain();loadTx();}});}
+ $("loginWrap").classList.add("hidden");
+ document.documentElement.classList.add("has-tok");
+ $("hdr").classList.remove("hidden");
+ $("hdr").style.display="flex";
+ $("mainLayout").classList.remove("hidden");
+ $("main").classList.remove("hidden");
+ if(started){fetchAll();return;}
+ started=true;
+ buildTabs();
+ go(localStorage.getItem(SITE_KEY+"_lastTab")||"t-ord");
+ if(fresh)toast("Đăng nhập thành công!");
+ fetchAll();loadTx(true);loadQuota();
+ setInterval(pollMain,10000);setInterval(loadStatus,120000);setInterval(tickClocks,1000);
+ document.addEventListener("visibilitychange",()=>{if(!document.hidden){pollMain();loadTx();}});
+}
 window.onload=()=>{if(TOKEN)startApp(false);else{buildTabs();$("loginWrap").classList.remove("hidden");}};
 </script>
 </body>
