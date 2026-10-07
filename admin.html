@@ -796,32 +796,49 @@ textarea.autog{resize:none;overflow:hidden;}
  </div>
 </div>
 
-<!-- MODAL SỬA NGUỒN CẤP CỤM (ROOT SOURCE - 2 CHÂN URL & SỬA THÔNG SỐ) -->
+<!-- MODAL SỬA NGUỒN CẤP CỤM (ROOT SOURCE - 2 CHÂN ĐẦY ĐỦ THÔNG SỐ) -->
 <div id="mRootEdit" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
- <div class="glass-card p-5 w-full max-w-xl max-h-[90vh] overflow-y-auto">
-  <h3 class="font-extrabold text-lg mb-1 text-slate-800">Sửa Nguồn Cấp Cụm (Root Source)</h3>
-  <p class="text-[11px] text-slate-500 mb-3">Đổi nguồn cho toàn bộ link con (nhập 1 ô = Đơn, 2 ô = Trộn). <b>Token link ẩn của khách giữ nguyên 100%</b>.</p>
-  <input type="hidden" id="mREGroupKey">
-  
-  <div class="space-y-3 mb-4">
-   <div>
-    <label class="block text-xs font-bold text-slate-700 mb-1">Link gốc chân 1 (Liangxin hoặc DJJC)</label>
-    <input id="mREOrig1" type="text" placeholder="https://..." class="w-full p-2 text-xs border border-slate-300 rounded-lg font-mono outline-none bg-slate-50">
-   </div>
-   <div>
-    <label class="block text-xs font-bold text-indigo-700 mb-1">Link gốc chân 2 (Để trống nếu muốn chuyển về Link Đơn)</label>
-    <input id="mREOrig2" type="text" placeholder="Để trống nếu là Link Đơn" class="w-full p-2 text-xs border border-indigo-200 rounded-lg font-mono outline-none bg-indigo-50/30">
-   </div>
+ <div class="glass-card p-5 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+  <div class="flex items-center justify-between mb-2">
+   <h3 class="font-extrabold text-lg text-slate-800">Sửa Nguồn Cấp Cụm</h3>
+   <span class="text-xs font-black px-2 py-0.5 rounded bg-indigo-100 text-indigo-800">Đầy đủ 2 chân</span>
   </div>
+  <p class="text-[11px] text-slate-500 mb-3">Đổi link gốc &amp; thông số cụm (nhập 1 chân = Đơn, 2 chân = Trộn). <b>Token link ẩn của khách giữ nguyên 100%</b>.</p>
+  <input type="hidden" id="mREGroupKey">
 
-  <!-- BẢNG SỬA THÔNG SỐ CỤM TRỰC TIẾP -->
-  <div class="border border-slate-200 rounded-xl p-3 bg-slate-50 mb-4 space-y-2">
-   <div class="text-[11px] font-bold text-slate-700">Cập nhật thông số cụm (Hiển thị tab Cây & Kho)</div>
+  <!-- BẢNG CHÂN 1 -->
+  <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/50 mb-3 space-y-2">
+   <div class="text-xs font-black text-slate-700 flex justify-between">
+    <span>Thông số Chân 1</span>
+    <span class="badge-lx">Chân 1 (LX)</span>
+   </div>
+   <div>
+    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link gốc 1</label>
+    <input id="mREOrig1" type="text" placeholder="https://liangxin..." class="w-full p-2 text-xs border border-slate-300 rounded-lg font-mono outline-none bg-white">
+   </div>
    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB</label><input id="mREGb" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB</label><input id="mRERemain" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Hết hạn</label><input id="mREExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-1.5 border rounded-lg bg-white text-xs text-center"></div>
-    <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max máy</label><input id="mREMax" type="number" min="1" value="30" class="w-full p-1.5 border rounded-lg bg-white text-xs text-center"></div>
+    <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max thiết bị</label><input id="mREMax" type="number" min="1" value="30" class="w-full p-1.5 border rounded-lg bg-white text-xs text-center"></div>
+   </div>
+  </div>
+
+  <!-- BẢNG CHÂN 2 -->
+  <div class="border border-indigo-200 rounded-xl p-3 bg-indigo-50/30 mb-4 space-y-2">
+   <div class="text-xs font-black text-blue-700 flex justify-between">
+    <span>Thông số Chân 2 (Để trống link nếu muốn chuyển về Link Đơn)</span>
+    <span class="badge-dj">Chân 2 (DJ)</span>
+   </div>
+   <div>
+    <label class="block text-[10px] font-bold text-indigo-700 mb-0.5">Link gốc 2</label>
+    <input id="mREOrig2" type="text" placeholder="Để trống nếu là Link Đơn" class="w-full p-2 text-xs border border-indigo-300 rounded-lg font-mono outline-none bg-white">
+   </div>
+   <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+    <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB 2</label><input id="mREGb2" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
+    <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB 2</label><input id="mRERemain2" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
+    <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Hết hạn 2</label><input id="mREExp2" type="text" placeholder="DD/MM/YYYY" class="w-full p-1.5 border rounded-lg bg-white text-xs text-center"></div>
+    <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max thiết bị 2</label><input id="mREMax2" type="number" min="1" value="30" class="w-full p-1.5 border rounded-lg bg-white text-xs text-center"></div>
    </div>
   </div>
 
@@ -1627,7 +1644,7 @@ function renderLinks(){
    }
  });
 
- // ===== VIEW KHO NGUỒN (compact view) =====
+ // ===== VIEW KHO NGUỒN (compact view - Chip rút gọn: Còn GB, HSD, Máy) =====
  if(curLinkListView === "compact"){
    c.innerHTML = linkPoolDb.map(p => {
      if (p.isCombo) {
@@ -1646,20 +1663,19 @@ function renderLinks(){
          </div>
          <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs pt-1 border-t border-purple-100">
            <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
-             <!-- Mobile: break-all whitespace-normal để link tự ngắt thành 2 dòng, không bị cắt cụt -->
              <div class="font-mono text-[11px] font-bold text-emerald-800 break-all whitespace-normal cp" onclick="cp(${q(p.url)})">${esc(p.url)}</div>
              <div class="flex gap-1.5 mt-1 flex-wrap">
-               <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Còn: ${esc(p.remainGb || "0")} / ${esc(p.gb || "N/A")} GB</span>
-               <span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded">HSD: ${esc(p.exp || "Lifetime")}</span>
-               <span class="${full1 ? "bg-red-100 text-red-700" : "bg-emerald-50 text-emerald-700"} text-[10px] font-bold px-1.5 py-0.5 rounded">Máy: ${p.used || 0}/${p.max || 30}</span>
+               <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Còn ${esc(p.remainGb || "0")}/${esc(p.gb || "N/A")}GB</span>
+               <span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded">${esc(p.exp || "Lifetime")}</span>
+               <span class="${full1 ? "bg-red-100 text-red-700" : "bg-emerald-50 text-emerald-700"} text-[10px] font-bold px-1.5 py-0.5 rounded">${p.used || 0}/${p.max || 30}</span>
              </div>
            </div>
            <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
              <div class="font-mono text-[11px] font-bold text-blue-800 break-all whitespace-normal cp" onclick="cp(${q(p.url2)})">${esc(p.url2)}</div>
              <div class="flex gap-1.5 mt-1 flex-wrap">
-               <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Còn: ${esc(p.remainGb2 || "0")} / ${esc(p.gb2 || "N/A")} GB</span>
-               <span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded">HSD: ${esc(p.exp2 || "Lifetime")}</span>
-               <span class="${full2 ? "bg-red-100 text-red-700" : "bg-emerald-50 text-emerald-700"} text-[10px] font-bold px-1.5 py-0.5 rounded">Máy: ${p.used || 0}/${p.max2 || 30}</span>
+               <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Còn ${esc(p.remainGb2 || "0")}/${esc(p.gb2 || "N/A")}GB</span>
+               <span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded">${esc(p.exp2 || "Lifetime")}</span>
+               <span class="${full2 ? "bg-red-100 text-red-700" : "bg-emerald-50 text-emerald-700"} text-[10px] font-bold px-1.5 py-0.5 rounded">${p.used || 0}/${p.max2 || 30}</span>
              </div>
            </div>
          </div>
@@ -1674,10 +1690,10 @@ function renderLinks(){
            <span class="${lx ? 'badge-lx' : 'badge-dj'}">${lx ? 'Liangxin' : 'DJJC'}</span>
            <span class="font-bold text-slate-800 text-xs md:text-sm break-all whitespace-normal block cp" onclick="cp(${q(p.url)})">${esc(p.url)}</span>
          </div>
-         <div class="flex gap-2 flex-wrap">
-           <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Còn: ${esc(p.remainGb || "0")} / ${esc(p.gb || "N/A")} GB</span>
-           <span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded">HSD: ${esc(p.exp || "Lifetime")}</span>
-           <span class="${full ? "bg-red-100 text-red-700" : "bg-emerald-50 text-emerald-700"} text-[10px] font-bold px-1.5 py-0.5 rounded">Đã dùng: ${p.used || 0}/${p.max || 30}</span>
+         <div class="flex gap-1.5 flex-wrap">
+           <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Còn ${esc(p.remainGb || "0")}/${esc(p.gb || "N/A")}GB</span>
+           <span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded">${esc(p.exp || "Lifetime")}</span>
+           <span class="${full ? "bg-red-100 text-red-700" : "bg-emerald-50 text-emerald-700"} text-[10px] font-bold px-1.5 py-0.5 rounded">${p.used || 0}/${p.max || 30}</span>
          </div>
        </div>
        <div class="flex gap-1.5 shrink-0">
@@ -1689,7 +1705,7 @@ function renderLinks(){
    return;
  }
 
- // ===== VIEW CÂY LINK SUB (detailed view) =====
+ // ===== VIEW CÂY LINK SUB (detailed view - Header 1 hàng, chỉ hiện ngày hết hạn) =====
  const grps = {};
  linksDb.forEach(l => {
   const k = l.isCombo ? `COMBO|${l.orig}|${l.orig2}` : (l.orig || "?");
@@ -1714,32 +1730,18 @@ function renderLinks(){
     badge = lx ? `<span class="badge-lx">Liangxin</span>` : dj ? `<span class="badge-dj">DJJC</span>` : `<span class="badge-ot">Other</span>`;
   }
 
-  // Đồng bộ thông số từ Kho sang Header của Tab Cây
+  // Lấy ngày hết hạn của cụm từ kho nguồn hoặc từ link con đầu tiên
   const pItem = linkPoolDb.find(p => g.isCombo ? (p.isCombo && p.url === g.orig && p.url2 === g.orig2) : (!p.isCombo && p.url === g.orig)) || {};
-  let poolChips = "";
-  if (g.isCombo) {
-    poolChips = `
-      <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Còn: ${esc(pItem.remainGb || "0")}/${esc(pItem.gb || "N/A")} GB & ${esc(pItem.remainGb2 || "0")}/${esc(pItem.gb2 || "N/A")} GB</span>
-      <span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded">HSD: ${esc(pItem.exp || pItem.exp2 || "Lifetime")}</span>
-      <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Máy: ${g.ch.length}/${pItem.max || 30}</span>
-    `;
-  } else {
-    poolChips = `
-      <span class="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Còn: ${esc(pItem.remainGb || "0")}/${esc(pItem.gb || "N/A")} GB</span>
-      <span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded">HSD: ${esc(pItem.exp || "Lifetime")}</span>
-      <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-1.5 py-0.5 rounded">Máy: ${g.ch.length}/${pItem.max || 30}</span>
-    `;
-  }
+  const expDisplay = g.isCombo ? (pItem.exp || pItem.exp2 || g.ch[0]?.expDate || "Lifetime") : (pItem.exp || g.ch[0]?.expDate || "Lifetime");
 
   const rows = [...g.ch].sort((a,b) => (parseInt(a.linkIndex||1)) - (parseInt(b.linkIndex||1))).map(l => {
    const tok = getT(l.masked), locked = !!l.isLocked, idx = parseInt(l.linkIndex||1);
    const bottom = linkBottom(l);
-   // Node Neo Index #1 chỉ ghi là "Auto", không chữ thừa hay badge thừa
    const nameDisplay = (idx === 1) ? "Auto" : esc(l.email || "Khách");
    
    return `
    <div class="py-2.5 px-3 border rounded-xl mb-2 ${locked ? "bg-red-50/70 border-red-200" : "hover:bg-slate-50 border-slate-100 bg-white"} flex flex-col gap-2 w-full min-w-0">
-     <!-- HÀNG TRÊN: Chấm trạng thái + Index + Tên (Bỏ hoàn toàn tag thừa trên #1 Auto) -->
+     <!-- HÀNG TRÊN: Chấm trạng thái + Index + Tên -->
      <div class="flex items-center justify-between gap-2 min-w-0">
        <div class="flex items-center gap-2 min-w-0">
          ${locked ? '<div class="dot-red" title="Đã khóa"></div>' : '<div class="dot-green" title="Hoạt động"></div>'}
@@ -1751,7 +1753,7 @@ function renderLinks(){
      <!-- DÒNG GIỮA: Link masked -->
      <div class="font-mono text-[10px] md:text-xs text-slate-500 cp break-all select-all" onclick="cp(${q(l.masked)})">${esc(l.masked)}</div>
 
-     <!-- HÀNG DƯỚI: Đã BỎ ID hoàn toàn. Chỉ còn HSD & Giờ tạo thẳng hàng ngang chân với 3 nút chức năng -->
+     <!-- HÀNG DƯỚI: HSD & Giờ tạo thẳng hàng ngang với 3 nút chức năng -->
      <div class="flex items-center justify-between mt-0.5 pt-2 border-t border-slate-100">
        <div class="text-[10px] font-bold text-slate-500">${bottom}</div>
        <div class="flex gap-1.5 shrink-0 items-center">
@@ -1766,15 +1768,15 @@ function renderLinks(){
   return `
   <div class="bg-white border ${g.isCombo ? 'border-purple-200' : 'border-slate-200'} rounded-2xl overflow-hidden mb-4 shadow-sm">
     <div class="${g.isCombo ? 'bg-purple-50/50 border-purple-200' : 'bg-slate-50 border-slate-200'} px-3 py-2.5 border-b">
-      <div class="flex items-center justify-between flex-wrap gap-2">
+      <!-- HÀNG DUY NHẤT: Thông tin bên trái & Bút chì góc phải thẳng hàng -->
+      <div class="flex items-center justify-between gap-2">
         <div class="flex gap-1.5 items-center flex-wrap">
           ${badge}
           <span class="text-[10px] font-black bg-white border border-slate-200 text-slate-600 px-1.5 py-0.5 rounded">${g.ch.length} LINK</span>
-          <!-- CHIP THÔNG SỐ ĐỐI SOÁT HIỂN THỊ ĐỦ TRÊN TAB CÂY -->
-          ${poolChips}
+          <span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-1.5 py-0.5 rounded">${esc(expDisplay)}</span>
         </div>
-        <!-- BÚT CHÌ CẤP CỤM: Rút gọn chỉ còn icon cây bút chì -->
-        <button onclick="openRootEditModal(${q(g.key)})" title="Sửa nguồn cụm" class="text-indigo-600 hover:bg-indigo-600 hover:text-white bg-white border border-indigo-200 w-7 h-7 flex items-center justify-center rounded-lg shadow-sm transition">
+        <!-- BÚT CHÌ CẤP CỤM: Nằm ngay góc phải cùng hàng -->
+        <button onclick="openRootEditModal(${q(g.key)})" title="Sửa nguồn cụm" class="text-indigo-600 hover:bg-indigo-600 hover:text-white bg-white border border-indigo-200 w-7 h-7 flex items-center justify-center rounded-lg shadow-sm transition shrink-0">
           <i class="fas fa-pen text-xs"></i>
         </button>
       </div>
@@ -1788,7 +1790,7 @@ function renderLinks(){
  }).join("");
 }
 
-// 4. Bút chì sửa Nguồn cấp Cụm (Luôn có 2 ô link + Sửa thông số HSD, GB)
+// 4. Bút chì sửa Nguồn cấp Cụm (Đầy đủ 2 chân thông số: Chân 1 & Chân 2)
 function openRootEditModal(groupKey){
   const parts = groupKey.split("|");
   const isCombo = (parts[0] === "COMBO");
@@ -1801,10 +1803,18 @@ function openRootEditModal(groupKey){
 
   // Nạp thông số hiện tại từ Kho sang Modal để sửa
   const p = linkPoolDb.find(x => isCombo ? (x.isCombo && x.url === o1 && x.url2 === o2) : (!x.isCombo && x.url === o1)) || {};
+  
+  // Thông số Chân 1
   $("mREGb").value = p.gb || "";
   $("mRERemain").value = p.remainGb || "";
   $("mREExp").value = p.exp || "";
   $("mREMax").value = p.max || 30;
+
+  // Thông số Chân 2
+  $("mREGb2").value = p.gb2 || "";
+  $("mRERemain2").value = p.remainGb2 || "";
+  $("mREExp2").value = p.exp2 || "";
+  $("mREMax2").value = p.max2 || 30;
 
   $("mRootEdit").classList.remove("hidden");
 }
@@ -1832,6 +1842,10 @@ async function saveRootEdit(){
   const oldO1 = oldIsCombo ? parts[1] : gKey;
   const oldO2 = oldIsCombo ? parts[2] : "";
 
+  const newExp1 = $("mREExp").value.trim();
+  const newExp2 = $("mREExp2").value.trim();
+  const expToApply = newExp1 || (isNowCombo ? newExp2 : "");
+
   // 1. Cập nhật link con bên CÂY
   linksDb.forEach(l => {
     const match = oldIsCombo ? (l.isCombo && l.orig === oldO1 && l.orig2 === oldO2) : (!l.isCombo && l.orig === oldO1);
@@ -1841,23 +1855,42 @@ async function saveRootEdit(){
       if (isNowCombo) l.orig2 = finalO2;
       else delete l.orig2;
       // Cập nhật lại HSD nếu admin có nhập
-      if ($("mREExp").value.trim()) l.expDate = $("mREExp").value.trim();
+      if (expToApply) l.expDate = expToApply;
     }
   });
 
-  // 2. Cập nhật thông số bên KHO (Đồng bộ 2 chiều)
+  // 2. Cập nhật thông số bên KHO (Đồng bộ 2 chiều đầy đủ 2 chân)
   const poolItem = linkPoolDb.find(x => oldIsCombo ? (x.isCombo && x.url === oldO1 && x.url2 === oldO2) : (!x.isCombo && x.url === oldO1));
   const newSpecs = {
     url: finalO1,
     isCombo: isNowCombo,
     gb: $("mREGb").value.trim(),
     remainGb: $("mRERemain").value.trim(),
-    exp: $("mREExp").value.trim(),
+    exp: newExp1,
     max: parseInt($("mREMax").value) || 30
   };
-  if (isNowCombo) newSpecs.url2 = finalO2;
+  if (isNowCombo) {
+    newSpecs.url2 = finalO2;
+    newSpecs.gb2 = $("mREGb2").value.trim();
+    newSpecs.remainGb2 = $("mRERemain2").value.trim();
+    newSpecs.exp2 = newExp2;
+    newSpecs.max2 = parseInt($("mREMax2").value) || 30;
+  } else {
+    delete newSpecs.url2;
+    delete newSpecs.gb2;
+    delete newSpecs.remainGb2;
+    delete newSpecs.exp2;
+    delete newSpecs.max2;
+  }
 
   if (poolItem) {
+    if (!isNowCombo) {
+      delete poolItem.url2;
+      delete poolItem.gb2;
+      delete poolItem.remainGb2;
+      delete poolItem.exp2;
+      delete poolItem.max2;
+    }
     Object.assign(poolItem, newSpecs);
   } else {
     linkPoolDb.unshift({ id: "POOL-" + Date.now(), ...newSpecs });
@@ -1867,7 +1900,7 @@ async function saveRootEdit(){
   await saveLinks();
   await savePool();
   renderLinks();
-  toast("Đã cập nhật cả cụm link & đồng bộ thông số sang Kho thành công!");
+  toast("Đã cập nhật cả cụm link & đồng bộ 2 chân sang Kho thành công!");
 }
 
 // 5. Thêm link vào kho (Đồng bộ sang Cây: tự sinh Node Neo #1 Auto)
