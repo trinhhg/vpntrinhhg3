@@ -126,7 +126,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc;color:#0f172a
 .log-table td{padding:11px 14px;border-bottom:1px solid #e2e8f0;color:#475569;vertical-align:middle;background:#fff;}
 .log-table tr:hover td{background:#f1f5f9;}
 .log-table th.col-x,.log-table td.col-x{width:64px;text-align:center;padding-left:6px;padding-right:6px;}
-.log-table th.col-ok,.log-table td.col-ok{width:110px;text-align:center;padding-left:6px;padding-right:6px;}
+.log-table th.col-ok,.log-table td.col-ok{width:48px;text-align:center;padding-left:4px;padding-right:4px;}
 .settings-sub-tab{padding:6px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;color:#64748b;white-space:nowrap;flex-shrink:0;}
 .settings-sub-tab.active{background:white;color:#4f46e5;box-shadow:0 1px 4px rgba(0,0,0,.1);}
 .link-tab-btn.active{background:#4f46e5!important;color:#fff!important;border-color:#4f46e5!important;}
@@ -327,7 +327,7 @@ textarea.autog{resize:none;overflow:hidden;}
    </div>
 
    <button onclick="addLinkToPool()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-md w-full text-xs">
-    <i class="fas fa-plus-circle mr-2"></i>LƯU VÀO KHO TỔNG & TẠO LINK NEO INDEX #1
+    <i class="fas fa-plus-circle mr-1.5"></i>LƯU KHO + NEO
    </button>
   </div>
   <div class="flex items-center justify-between border-t border-slate-200 pt-4 mb-3"><h3 class="font-extrabold text-slate-700 text-sm"><i class="fas fa-list mr-1"></i>Danh sách Link</h3><div class="view-switcher"><div id="btn-view-detailed" class="view-btn active" onclick="switchLinkView('detailed')">CÂY</div><div id="btn-view-compact" class="view-btn" onclick="switchLinkView('compact')">KHO</div></div></div>
@@ -402,98 +402,107 @@ textarea.autog{resize:none;overflow:hidden;}
   </div>
  </div>
 
- <!-- ===== GIÁ GÓI ===== -->
- <div id="t-pkg" class="hidden w-full min-w-0 space-y-4">
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-   <div>
-    <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
-     <i class="fas fa-tags text-indigo-600"></i>Quản lý Giá gói cước & Thẻ hiển thị
-    </h2>
-    <p class="text-[11px] text-slate-500 mt-0.5">9 mã gói cố định được khóa mã để đảm bảo an toàn đơn hàng. Kéo thả icon <i class="fas fa-grip-vertical"></i> để đổi thứ tự hiển thị bên Index.</p>
-   </div>
-   <div class="flex gap-2 shrink-0">
-    <button onclick="addNewCustomPkg()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold px-3 py-2 rounded-xl text-xs transition">
-     <i class="fas fa-plus mr-1"></i>Thêm gói mới
-    </button>
-    <button id="btnSaveAllPkgs" onclick="saveAllPkgs()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition">
-     <i class="fas fa-save mr-1.5"></i>LƯU CẤU HÌNH GIÁ GÓI
-    </button>
-   </div>
+ <!-- ===== GÓI CƯỚC & FULFILLMENT ===== -->
+ <div id="t-pkg" class="hidden w-full min-w-0 space-y-3">
+  <!-- Sub-tab Bar -->
+  <div class="bg-slate-200 p-1 rounded-xl flex gap-1 w-fit">
+   <button onclick="switchPkgSubTab('cards')" id="btn-pkg-cards" class="settings-sub-tab active text-center !px-3 font-bold"><i class="fas fa-tags mr-1.5"></i>Thẻ Giá Gói Cước</button>
+   <button onclick="switchPkgSubTab('fulfill')" id="btn-pkg-fulfill" class="settings-sub-tab text-center !px-3 font-bold"><i class="fas fa-shuffle mr-1.5"></i>Cấp Link Tự Động (Fulfillment)</button>
   </div>
-  <div id="pkgCardsList" class="space-y-4 w-full min-w-0"></div>
- </div>
 
- <!-- ===== FULFILLMENT ===== -->
- <div id="t-fulfill" class="hidden w-full min-w-0 space-y-4">
-  <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-4">
-   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+  <!-- Pane 1: Thẻ Giá Gói Cước -->
+  <div id="pane-pkg-cards" class="space-y-4">
+   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
     <div>
      <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
-      <i class="fas fa-shuffle text-indigo-600"></i>Cấu hình Cấp Link Tự Động (Auto Fulfillment)
+      <i class="fas fa-tags text-indigo-600"></i>Quản lý Giá gói cước & Thẻ hiển thị
      </h2>
-     <p class="text-[11px] text-slate-500 mt-0.5">Cấu hình này chỉ áp dụng cho đơn mới phát sinh từ khi lưu trở đi. Đơn hàng và link cũ được bảo toàn 100%.</p>
+     <p class="text-[11px] text-slate-500 mt-0.5">9 mã gói cố định được khóa mã để đảm bảo an toàn đơn hàng. Kéo thả icon <i class="fas fa-grip-vertical"></i> để đổi thứ tự hiển thị bên Index.</p>
     </div>
-    <button id="btnSaveFulfillMapping" onclick="saveFulfillmentMapping()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5 shrink-0">
-     <i class="fas fa-save"></i>LƯU MAPPING FULFILLMENT
-    </button>
+    <div class="flex gap-2 shrink-0">
+     <button onclick="addNewCustomPkg()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold px-3 py-2 rounded-xl text-xs transition">
+      <i class="fas fa-plus mr-1"></i>Thêm gói mới
+     </button>
+     <button id="btnSaveAllPkgs" onclick="saveAllPkgs()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition">
+      <i class="fas fa-save mr-1.5"></i>LƯU CẤU HÌNH GIÁ GÓI
+     </button>
+    </div>
    </div>
-
-   <!-- Bảng Cấu Hình Mapping -->
-   <div class="overflow-x-auto">
-    <table class="log-table">
-     <thead>
-      <tr>
-       <th style="width: 80px;">Mã Gói</th>
-       <th>Tên Gói & Dung Lượng</th>
-       <th style="width: 120px;">Thời Hạn</th>
-       <th style="width: 280px;">Nguồn Cấp Tự Động</th>
-      </tr>
-     </thead>
-     <tbody id="fulfillMappingTableBody">
-      <tr><td colspan="4" class="text-center py-6 text-slate-400">Đang tải danh sách gói...</td></tr>
-     </tbody>
-    </table>
-   </div>
+   <div id="pkgCardsList" class="space-y-4 w-full min-w-0"></div>
   </div>
 
-  <!-- Khối Chính Sách Dự Phòng (Failover Policy) - 2 Nút Bấm Lớn Nổi Bật -->
-  <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-4">
-   <div>
-    <h3 class="font-extrabold text-sm md:text-base text-slate-800 flex items-center gap-2">
-     <i class="fas fa-shield-heart text-amber-500"></i>Chính Sách Dự Phòng (Failover Policy)
-    </h3>
-    <p class="text-xs text-slate-600 font-semibold mt-1">Khi 1 trong 2 chân nguồn của Link Trộn gặp sự cố mà kho hết nguồn cùng mạng thay thế, tự động rớt về Link Đơn nào?</p>
-    <p class="text-[11px] text-slate-400 mt-0.5">Link masked của khách giữ nguyên 100% token, khách không bị mất mạng hay phải đổi link.</p>
+  <!-- Pane 2: Cấp link Fulfillment -->
+  <div id="pane-pkg-fulfill" class="hidden space-y-4">
+   <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+     <div>
+      <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
+       <i class="fas fa-shuffle text-indigo-600"></i>Cấu hình Cấp Link Tự Động (Auto Fulfillment)
+      </h2>
+      <p class="text-[11px] text-slate-500 mt-0.5">Cấu hình này chỉ áp dụng cho đơn mới phát sinh từ khi lưu trở đi. Đơn hàng và link cũ được bảo toàn 100%.</p>
+     </div>
+     <button id="btnSaveFulfillMapping" onclick="saveFulfillmentMapping()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5 shrink-0">
+      <i class="fas fa-save"></i>LƯU MAPPING FULFILLMENT
+     </button>
+    </div>
+
+    <!-- Bảng Cấu Hình Mapping -->
+    <div class="overflow-x-auto">
+     <table class="log-table">
+      <thead>
+       <tr>
+        <th style="width: 80px;">Mã Gói</th>
+        <th>Tên Gói & Dung Lượng</th>
+        <th style="width: 120px;">Thời Hạn</th>
+        <th style="width: 280px;">Nguồn Cấp Tự Động</th>
+       </tr>
+      </thead>
+      <tbody id="fulfillMappingTableBody">
+       <tr><td colspan="4" class="text-center py-6 text-slate-400">Đang tải danh sách gói...</td></tr>
+      </tbody>
+     </table>
+    </div>
    </div>
 
-   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-    <button type="button" id="btnFailoverLx" onclick="selectFailoverPolicy('lx')" class="p-4 rounded-2xl border-2 font-bold text-left transition flex items-center justify-between border-slate-200 bg-slate-50 text-slate-700 hover:border-indigo-300">
-     <div class="flex items-center gap-3">
-      <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center border-slate-400 bg-white" id="radioDotLx"><span class="w-2.5 h-2.5 rounded-full bg-transparent" id="radioInnerLx"></span></span>
-      <div>
-       <div class="text-sm font-black text-slate-800">Ưu tiên giữ Nguồn Liangxin</div>
-       <div class="text-[11px] text-slate-500 font-normal">Tự động chuyển về Link Đơn Liangxin khi DJJC đứt</div>
-      </div>
-     </div>
-     <span class="badge-lx">Liangxin</span>
-    </button>
+   <!-- Khối Chính Sách Dự Phòng (Failover Policy) -->
+   <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-4">
+    <div>
+     <h3 class="font-extrabold text-sm md:text-base text-slate-800 flex items-center gap-2">
+      <i class="fas fa-shield-heart text-amber-500"></i>Chính Sách Dự Phòng (Failover Policy)
+     </h3>
+     <p class="text-xs text-slate-600 font-semibold mt-1">Khi 1 trong 2 chân nguồn của Link Trộn gặp sự cố mà kho hết nguồn cùng mạng thay thế, tự động rớt về Link Đơn nào?</p>
+     <p class="text-[11px] text-slate-400 mt-0.5">Link masked của khách giữ nguyên 100% token, khách không bị mất mạng hay phải đổi link.</p>
+    </div>
 
-    <button type="button" id="btnFailoverDj" onclick="selectFailoverPolicy('dj')" class="p-4 rounded-2xl border-2 font-bold text-left transition flex items-center justify-between border-slate-200 bg-slate-50 text-slate-700 hover:border-indigo-300">
-     <div class="flex items-center gap-3">
-      <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center border-slate-400 bg-white" id="radioDotDj"><span class="w-2.5 h-2.5 rounded-full bg-transparent" id="radioInnerDj"></span></span>
-      <div>
-       <div class="text-sm font-black text-slate-800">Ưu tiên giữ Nguồn DJJC</div>
-       <div class="text-[11px] text-slate-500 font-normal">Tự động chuyển về Link Đơn DJJC khi Liangxin đứt</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+     <button type="button" id="btnFailoverLx" onclick="selectFailoverPolicy('lx')" class="p-4 rounded-2xl border-2 font-bold text-left transition flex items-center justify-between border-slate-200 bg-slate-50 text-slate-700 hover:border-indigo-300">
+      <div class="flex items-center gap-3">
+       <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center border-slate-400 bg-white" id="radioDotLx"><span class="w-2.5 h-2.5 rounded-full bg-transparent" id="radioInnerLx"></span></span>
+       <div>
+        <div class="text-sm font-black text-slate-800">Ưu tiên giữ Nguồn Liangxin</div>
+        <div class="text-[11px] text-slate-500 font-normal">Tự động chuyển về Link Đơn Liangxin khi DJJC đứt</div>
+       </div>
       </div>
-     </div>
-     <span class="badge-dj">DJJC</span>
-    </button>
-   </div>
+      <span class="badge-lx">Liangxin</span>
+     </button>
 
-   <div class="pt-2 flex justify-end">
-    <button onclick="saveFailoverPolicy()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md transition active:scale-95">
-     <i class="fas fa-check-circle mr-1.5"></i>LƯU CHÍNH SÁCH DỰ PHÒNG
-    </button>
+     <button type="button" id="btnFailoverDj" onclick="selectFailoverPolicy('dj')" class="p-4 rounded-2xl border-2 font-bold text-left transition flex items-center justify-between border-slate-200 bg-slate-50 text-slate-700 hover:border-indigo-300">
+      <div class="flex items-center gap-3">
+       <span class="w-5 h-5 rounded-full border-2 flex items-center justify-center border-slate-400 bg-white" id="radioDotDj"><span class="w-2.5 h-2.5 rounded-full bg-transparent" id="radioInnerDj"></span></span>
+       <div>
+        <div class="text-sm font-black text-slate-800">Ưu tiên giữ Nguồn DJJC</div>
+        <div class="text-[11px] text-slate-500 font-normal">Tự động chuyển về Link Đơn DJJC khi Liangxin đứt</div>
+       </div>
+      </div>
+      <span class="badge-dj">DJJC</span>
+     </button>
+    </div>
+
+    <div class="pt-2 flex justify-end">
+     <button onclick="saveFailoverPolicy()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md transition active:scale-95">
+      <i class="fas fa-check-circle mr-1.5"></i>LƯU CHÍNH SÁCH DỰ PHÒNG
+     </button>
+    </div>
    </div>
   </div>
  </div>
@@ -868,7 +877,7 @@ const PDS={1:"https://vpntrinhhg.pages.dev",2:"https://vpntrinhhg2.pages.dev",3:
 let PD=/pages\.dev$/.test(location.hostname)?location.origin:PDS[3];
 const GH_REPO="trinhhg/vpntrinhhg3";
 const PKG_LIST=[["t1","Gói 1 tháng - 60,000VND / $2.5 / ¥15.5 (100GB)",30],["t2","Gói 1 tháng - 70,000VND / $3 / ¥18 (500GB)",30],["c1","Gói 1 tháng - 80,000VND / $3.5 / ¥20.5 (1000GB)",30],["c2","Gói Cao Cấp - 200,000VND / $8 / ¥50 (3000GB)",30],["c3","Gói 1 Năm - 799,000VND / $30 / ¥199 (300GB/tháng)",365],["d1","Không Giới Hạn - 200,000VND / $8 / ¥52 (200GB)",0],["d2","Không Giới Hạn - 399,000VND / $16 / ¥102 (1000GB)",0],["d3","Không Giới Hạn - 999,000VND / $40 / ¥256 (5000GB)",0],["o1","[Giá cũ] Gói 1 tháng - 50,000VND / ¥12.5 (100GB)",30],["o2","[Giá cũ] Gói 1 tháng - 60,000VND / ¥15 (500GB)",30],["o3","[Giá cũ] Gói 1 tháng - 70,000VND / ¥17.5 (1000GB)",30]];
-const TABS=[["t-ord","fa-box","Đơn hàng"],["t-check","fa-clipboard-check","Kiểm tra"],["t-trans","fa-file-invoice-dollar","Giao dịch"],["t-data","fa-chart-pie","Dung lượng"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-cms","fa-book","H.Dẫn"],["t-mail","fa-envelope","Soạn mail"],["t-pkg","fa-tags","Giá gói"],["t-fulfill","fa-shuffle","Fulfillment"],["t-settings","fa-cog","Cài đặt"]];
+const TABS=[["t-ord","fa-box","Đơn hàng"],["t-check","fa-clipboard-check","Kiểm tra"],["t-trans","fa-file-invoice-dollar","Giao dịch"],["t-data","fa-chart-pie","Dung lượng"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-cms","fa-book","H.Dẫn"],["t-mail","fa-envelope","Soạn mail"],["t-pkg","fa-boxes-stacked","Gói cước"],["t-settings","fa-cog","Cài đặt"]];
 // PKG_DB: giá hiện tại + giá cũ (o1/o2/o3) để nhận diện dữ liệu lịch sử — TUYỆT ĐỐI không quy đổi totalVnd của đơn cũ sang giá mới.
 const PKG_DB={t1:{n:"Gói 1 tháng",d:"100GB",vnd:60000,cny:15.5,m:1},t2:{n:"Gói 1 tháng",d:"500GB",vnd:70000,cny:18,m:1},c1:{n:"Gói 1 tháng",d:"1000GB",vnd:80000,cny:20.5,m:1},c2:{n:"Gói Cao Cấp",d:"3000GB",vnd:200000,cny:50,m:1},c3:{n:"Gói 1 Năm",d:"300GB/tháng",vnd:799000,cny:199,m:12},d1:{n:"Không Giới Hạn",d:"200GB",vnd:200000,cny:52,m:0},d2:{n:"Không Giới Hạn",d:"1000GB",vnd:399000,cny:102,m:0},d3:{n:"Không Giới Hạn",d:"5000GB",vnd:999000,cny:256,m:0},o1:{n:"Gói 1 tháng",d:"100GB",vnd:50000,cny:12.5,m:1,old:true},o2:{n:"Gói 1 tháng",d:"500GB",vnd:60000,cny:15,m:1,old:true},o3:{n:"Gói 1 tháng",d:"1000GB",vnd:70000,cny:17.5,m:1,old:true}};
 
@@ -1004,6 +1013,13 @@ async function pollMain(){
   lastSig=s;}catch(e){}}
 
 // ===================== TAB NAVIGATION =====================
+function switchPkgSubTab(tab){
+  $("pane-pkg-cards").classList.toggle("hidden", tab !== "cards");
+  $("pane-pkg-fulfill").classList.toggle("hidden", tab !== "fulfill");
+  $("btn-pkg-cards").classList.toggle("active", tab === "cards");
+  $("btn-pkg-fulfill").classList.toggle("active", tab === "fulfill");
+}
+
 function buildTabs(){
   $("tabBar").innerHTML=TABS.map(([id,ic,lb])=>`
     <button onclick="go('${id}')" id="btn-${id}" class="col-span-1 tab-btn flex flex-col md:flex-row items-center px-1 py-2 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm justify-center gap-1 relative">
@@ -1028,8 +1044,7 @@ function go(id){
  localStorage.setItem(SITE_KEY+"_lastTab",id);
 
  try{
-  if(id==="t-pkg")loadAdminPkgs();
-  if(id==="t-fulfill"){loadAdminPkgs();loadFulfillmentConfig();}
+  if(id==="t-pkg"){loadAdminPkgs();loadFulfillmentConfig();}
   if(id==="t-check")renderCheckTab();
   if(id==="t-dead")renderDead();
   if(id==="t-data")renderDataRequests();
@@ -1569,7 +1584,7 @@ function renderTransactions(){
  const th=$("transHead"),tb=$("transBody");if(curTxTab==="rev")return;
  if(!txData.length){th.innerHTML="";tb.innerHTML='<tr><td colspan="10" class="text-center py-8 text-slate-400 font-bold">Không có giao dịch nào</td></tr>';return;}
  if(curTxTab==="giamsat"){
-  th.innerHTML='<tr><th>STT</th><th>Mã Đơn / Loại</th><th>Giờ Tạo Đơn</th><th>Email Khách</th><th>Tiền Thu & SL</th><th>Nguồn Web</th><th>Mã CK (Regex)</th><th>Trạng Thái</th><th class="col-ok">Ép khớp</th><th class="col-x">Xóa</th></tr>';
+  th.innerHTML='<tr><th>STT</th><th>Mã Đơn</th><th>Giờ Tạo Đơn</th><th>Email Khách</th><th>Tiền Thu & SL</th><th>Nguồn Web</th><th>Mã CK (Regex)</th><th>Trạng Thái</th><th class="col-ok">Khớp</th><th class="col-x">Xóa</th></tr>';
   tb.innerHTML=txData.map((tx,i)=>{
    const oId=tx.order_id||"Trống",oi=ordersDb.find(o=>normId(o.id)===normId(oId)),mo=tx.matchedOrder||{};
    const email=oi?.email||mo.email||"Chưa xác định",tc=oi?fmtBank(oTs(oi)):(mo.created_at?fmtBank(mo.created_at):"—"),web=webLabel(oi?.sourceWeb||oi?.target_web||mo.target_web,mo.worker_url);
@@ -1578,9 +1593,11 @@ function renderTransactions(){
    const rx=extractOrder(tx.notification||tx.content),s=tx.status;
    const badge=/^(success|paid)$/.test(s)?["emerald","success"]:s==="pending"?["orange","pending"]:s==="unmatched"?["slate","unmatched"]:/reject|invalid|failed/.test(s)?["rose","failed"]:["yellow",s];
    const kind=tx.kind||mo.order_type||(oi?.isUpgrade?"upgrade":"new");
-   return `<tr><td class="text-xs font-bold text-slate-400">${i+1}</td><td class="font-mono font-black text-emerald-600 cp" onclick="cp(${q(oId)})">${esc(oId)}${kindBadge(kind)}</td><td class="text-xs text-slate-600 whitespace-nowrap">${tc}</td><td class="text-xs font-bold text-slate-700 cp" onclick="cp(${q(email)})">${esc(email)}</td>
+   // Phân biệt màu trực tiếp trên Mã đơn: Tím = Nâng cấp, Xanh dương = Gia hạn, Xám đậm = Đơn mới
+   const oIdColor = kind === "upgrade" ? "text-purple-600" : kind === "renew" ? "text-sky-600" : "text-slate-700";
+   return `<tr><td class="text-xs font-bold text-slate-400">${i+1}</td><td class="font-mono font-black ${oIdColor} cp" onclick="cp(${q(oId)})">${esc(oId)}</td><td class="text-xs text-slate-600 whitespace-nowrap">${tc}</td><td class="text-xs font-bold text-slate-700 cp" onclick="cp(${q(email)})">${esc(email)}</td>
    <td><span class="font-black text-rose-600 whitespace-nowrap">${amt.toLocaleString("en-US")}VND</span> <span class="text-xs text-slate-500 font-bold">x${sl}</span></td><td class="text-xs font-bold text-slate-500">${esc(web)}</td><td>${rx?`<span class="font-bold text-[11px] cp text-slate-700" onclick="cp('${rx}')">${rx}</span>`:'<span class="text-slate-400 font-bold text-xs">Trống</span>'}</td>
-   <td><span class="bg-${badge[0]}-100 text-${badge[0]}-700 border border-${badge[0]}-200 px-2 py-1 rounded text-[10px] font-bold uppercase" title="${esc(tx.review_note||"")}">${esc(badge[1])}</span></td><td class="col-ok">${/^(success|paid|rejected)$/.test(s)?'<span class="text-slate-300">—</span>':`<button onclick="approveTransaction(${tx.id})" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg shadow text-xs whitespace-nowrap"><i class="fas fa-bolt mr-1"></i>Ép Khớp</button>`}</td><td class="col-x">${delBtn(tx.id)}</td></tr>`;}).join("");
+   <td><span class="bg-${badge[0]}-100 text-${badge[0]}-700 border border-${badge[0]}-200 px-2 py-1 rounded text-[10px] font-bold uppercase" title="${esc(tx.review_note||"")}">${esc(badge[1])}</span></td><td class="col-ok">${/^(success|paid|rejected)$/.test(s)?'<span class="text-slate-300">—</span>':`<button onclick="approveTransaction(${tx.id})" title="Ép khớp giao dịch" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold w-8 h-8 rounded-lg shadow text-xs flex items-center justify-center mx-auto transition active:scale-95"><i class="fas fa-bolt"></i></button>`}</td><td class="col-x">${delBtn(tx.id)}</td></tr>`;}).join("");
  }else{
   th.innerHTML='<tr><th>STT</th><th>Thời Gian</th><th>Số Tiền</th><th>Nội Dung Thô</th><th class="col-x">Xóa</th></tr>';
   tb.innerHTML=txData.map((tx,i)=>`<tr><td class="text-xs text-slate-500 font-bold">${i+1}</td><td class="text-xs text-slate-600 whitespace-nowrap">${fmtBank(tx.created_at)}</td><td class="font-black text-rose-600 whitespace-nowrap">${Number(tx.amount).toLocaleString("en-US")}VND</td><td class="font-mono text-[11px] text-slate-600 bg-slate-50 whitespace-normal break-words min-w-[250px]">${esc(tx.notification||tx.content||"—")}</td><td class="col-x">${delBtn(tx.id)}</td></tr>`).join("");}}
@@ -1781,9 +1798,9 @@ function renderLinks(){
         </button>
       </div>
       <div class="font-mono text-[10px] md:text-xs font-bold text-slate-600 break-all cp mt-1.5" onclick="cp(${q(g.orig)})">
-        <span class="text-emerald-700 font-bold">[Nguồn 1]:</span> ${esc(g.orig)}
+        <span class="text-emerald-700 font-bold">Nguồn 1:</span> ${esc(g.orig)}
       </div>
-      ${g.orig2 ? `<div class="font-mono text-[10px] md:text-xs font-bold text-slate-600 break-all cp mt-0.5" onclick="cp(${q(g.orig2)})"><span class="text-blue-700 font-bold">[Nguồn 2]:</span> ${esc(g.orig2)}</div>` : ''}
+      ${g.orig2 ? `<div class="font-mono text-[10px] md:text-xs font-bold text-slate-600 break-all cp mt-0.5" onclick="cp(${q(g.orig2)})"><span class="text-blue-700 font-bold">Nguồn 2:</span> ${esc(g.orig2)}</div>` : ''}
     </div>
     <div class="p-2 lg:p-3">${rows}</div>
   </div>`;
