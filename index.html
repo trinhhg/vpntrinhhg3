@@ -1081,7 +1081,11 @@ function genHTML(pkg){
 }
 function renderPackages(filter){
  ['htab','ptab'].forEach(p=>['all','travel','cycle','usage'].forEach(t=>{const b=$(`${p}-${t}`);if(!b)return;if(t===filter){b.classList.add('active','bg-indigo-600','text-white');b.classList.remove('text-slate-600','dark:text-slate-300');}else{b.classList.remove('active','bg-indigo-600','text-white');b.classList.add('text-slate-600','dark:text-slate-300');}}));
- const html=pkgs.filter(p=>filter==='all'||p.category.includes(filter)).map(genHTML).join('');if($('packagesContainerHome'))$('packagesContainerHome').innerHTML=html;if($('packagesContainerPortal'))$('packagesContainerPortal').innerHTML=html;}
+ const visiblePkgs = pkgs.filter(p => !p.hidden && (filter==='all' || (p.category && p.category.includes(filter))));
+ const html=visiblePkgs.map(genHTML).join('');
+ if($('packagesContainerHome'))$('packagesContainerHome').innerHTML=html;
+ if($('packagesContainerPortal'))$('packagesContainerPortal').innerHTML=html;
+}
 
 function startUpgrade(){
  isUpgradeMode=true;isRenewMode=false;upgradeConfirmed=false;
