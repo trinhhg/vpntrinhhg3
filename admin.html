@@ -184,29 +184,35 @@ textarea.autog{resize:none;overflow:hidden;}
   <div class="flex items-center justify-between mb-3"><h2 class="text-lg md:text-2xl font-bold text-slate-800">Quản lý Đơn hàng</h2><button onclick="openOrdModal(null)" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs lg:text-sm shadow-sm"><i class="fas fa-plus mr-1"></i>Tạo thủ công</button></div>
     <div class="grid grid-cols-3 gap-1.5 sm:gap-2 mb-3">
    <!-- 1. Khóa fulfillment -->
-   <div class="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-1.5 sm:gap-3 bg-white border border-slate-200 rounded-xl p-2 sm:p-2.5 shadow-sm">
-    <div class="min-w-0 text-center sm:text-left w-full sm:w-auto">
-     <div class="font-bold text-[11px] sm:text-xs text-slate-800 truncate"><i class="fas fa-lock text-amber-500 mr-1"></i>Khóa fulfillment</div>
-     <div class="hidden sm:block text-[10px] text-slate-500 leading-snug mt-0.5">Bật: sửa đơn thủ công KHÔNG chạy automation (cấp link, routing, mail thành công...). Dùng để sửa dữ liệu lịch sử an toàn.</div>
+   <button type="button" id="btnToggleLockFulfill" onclick="toggleLockFulfillBtn()" class="flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2 border rounded-xl p-2 sm:p-2.5 shadow-sm transition text-left bg-slate-100 text-slate-600 border-slate-200">
+    <div class="min-w-0 w-full sm:w-auto text-center sm:text-left">
+     <div class="font-bold text-[11px] sm:text-xs truncate flex items-center justify-center sm:justify-start gap-1">
+      <i class="fas fa-lock text-amber-500"></i><span>Khóa fulfillment</span>
+     </div>
+     <div class="hidden sm:block text-[10px] opacity-75 leading-snug mt-0.5">Sửa đơn thủ công KHÔNG chạy automation</div>
     </div>
-    <div class="toggle-wrap shrink-0"><input type="checkbox" id="toggleLockFulfill" onchange="setLockFulfill(this.checked)"><span class="toggle-slider"></span></div>
-   </div>
+    <span id="badgeLockFulfill" class="text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 shrink-0">TẮT</span>
+   </button>
    <!-- 2. Gửi mail báo khách -->
-   <div class="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-1.5 sm:gap-3 bg-white border border-slate-200 rounded-xl p-2 sm:p-2.5 shadow-sm">
-    <div class="min-w-0 text-center sm:text-left w-full sm:w-auto">
-     <div class="font-bold text-[11px] sm:text-xs text-slate-800 truncate"><i class="fas fa-envelope text-indigo-500 mr-1"></i>Gửi mail báo khách</div>
-     <div class="hidden sm:block text-[10px] text-slate-500 leading-snug mt-0.5">Áp dụng cho mọi lần lưu đơn (cần quyền Master Email). Nhớ tắt khi sửa hàng loạt để tránh gửi nhầm.</div>
+   <button type="button" id="btnToggleMailOnSave" onclick="toggleMailOnSaveBtn()" class="flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2 border rounded-xl p-2 sm:p-2.5 shadow-sm transition text-left bg-slate-100 text-slate-600 border-slate-200">
+    <div class="min-w-0 w-full sm:w-auto text-center sm:text-left">
+     <div class="font-bold text-[11px] sm:text-xs truncate flex items-center justify-center sm:justify-start gap-1">
+      <i class="fas fa-envelope text-indigo-500"></i><span>Gửi mail khách</span>
+     </div>
+     <div class="hidden sm:block text-[10px] opacity-75 leading-snug mt-0.5">Áp dụng cho mọi lần lưu đơn (quyền Master)</div>
     </div>
-    <div class="toggle-wrap shrink-0"><input type="checkbox" id="toggleMailOnSave" onchange="setMailOnSave(this.checked)"><span class="toggle-slider"></span></div>
-   </div>
+    <span id="badgeMailOnSave" class="text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 shrink-0">TẮT</span>
+   </button>
    <!-- 3. Sửa tay -->
-   <div class="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-1.5 sm:gap-3 bg-white border border-slate-200 rounded-xl p-2 sm:p-2.5 shadow-sm">
-    <div class="min-w-0 text-center sm:text-left w-full sm:w-auto">
-     <div class="font-bold text-[11px] sm:text-xs text-slate-800 truncate"><i class="fas fa-pen-to-square text-purple-600 mr-1"></i>Sửa tay</div>
-     <div class="hidden sm:block text-[10px] text-slate-500 leading-snug mt-0.5">Bật: cho phép dán hoặc sửa tay 3 ô link sub định tuyến, lưu xong không bị hệ thống ghi đè. Ưu tiên sửa tay trước fulfillment.</div>
+   <button type="button" id="btnToggleManualEdit" onclick="toggleManualEditBtn()" class="flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2 border rounded-xl p-2 sm:p-2.5 shadow-sm transition text-left bg-slate-100 text-slate-600 border-slate-200">
+    <div class="min-w-0 w-full sm:w-auto text-center sm:text-left">
+     <div class="font-bold text-[11px] sm:text-xs truncate flex items-center justify-center sm:justify-start gap-1">
+      <i class="fas fa-pen-to-square text-purple-600"></i><span>Sửa tay</span>
+     </div>
+     <div class="hidden sm:block text-[10px] opacity-75 leading-snug mt-0.5">Cho phép sửa 3 ô link định tuyến, khóa ghi đè</div>
     </div>
-    <div class="toggle-wrap shrink-0"><input type="checkbox" id="toggleManualEdit" onchange="setManualEdit(this.checked)"><span class="toggle-slider"></span></div>
-   </div>
+    <span id="badgeManualEdit" class="text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 shrink-0">TẮT</span>
+   </button>
   </div>
   <div class="bg-slate-100 p-1 rounded-xl flex gap-1 mb-4 w-fit max-w-full overflow-x-auto scroll-hide">
    <div class="ord-sub-tab active" id="otab-success" onclick="switchOrdTab('success')"><div class="mac-dot mac-green"></div>Thành công<span id="cnt-success" class="bg-green-100 text-green-700 text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
@@ -218,20 +224,88 @@ textarea.autog{resize:none;overflow:hidden;}
 
  <!-- ===== KIỂM TRA ĐƠN CHƯA ĐỦ LINK ===== -->
  <div id="t-check" class="hidden w-full min-w-0 space-y-3">
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-   <div>
-    <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
-     <i class="fas fa-clipboard-check text-purple-600"></i>Kiểm tra đơn chưa đủ 3 link
-     <span id="checkBadgeCount" class="bg-purple-100 text-purple-700 text-xs font-black px-2 py-0.5 rounded-full">0</span>
-    </h2>
-    <p class="text-[11px] text-slate-500 mt-0.5">Chứa các đơn thành công còn hạn nhưng chưa đủ 3 link. Bấm nút bên dưới để hệ thống kiểm tra và xin bù link từ web vệ tinh, hoặc bạn có thể dán link sửa tay trực tiếp.</p>
+  <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+    <div>
+     <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
+      <i class="fas fa-clipboard-check text-purple-600"></i>Kiểm tra đơn chưa đủ 3 link
+      <span id="checkBadgeCount" class="bg-purple-100 text-purple-700 text-xs font-black px-2 py-0.5 rounded-full">0</span>
+     </h2>
+     <p class="text-[11px] text-slate-500 mt-0.5">Chứa các đơn thành công còn hạn nhưng chưa đủ 3 link. Bấm nút bên dưới để kiểm tra, xin bù link và theo dõi log chi tiết.</p>
+    </div>
+    <button id="btnHealAll" onclick="healAllMissingWithProgress()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5 shrink-0">
+     <i class="fas fa-bolt"></i>Kiểm tra & xin bù link tất cả
+    </button>
    </div>
-   <button id="btnHealAll" onclick="healAllMissing()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5 shrink-0">
-    <i class="fas fa-bolt"></i>Kiểm tra & xin bù link tất cả
-   </button>
+
+async function healAllMissingWithProgress(){
+ const list = getMissingOrders();
+ if (!list.length) return toast("Tất cả đơn đã đủ 3 link!", "info");
+ const btn = $("btnHealAll");
+ btn.disabled = true;
+ const box = $("checkProgressBox"), bar = $("checkProgressBar"), pTxt = $("checkProgressPercent"), sTxt = $("checkProgressStatus"), logEl = $("checkLogTerminal");
+ box.classList.remove("hidden");
+ bar.style.width = "0%";
+ pTxt.textContent = "0%";
+ $("statTotal").textContent = list.length;
+ $("statSuccess").textContent = "0";
+ $("statFailed").textContent = "0";
+ logEl.innerHTML = `<div class="text-emerald-400">[BẮT ĐẦU] Tìm thấy ${list.length} đơn cần kiểm tra bù link...</div>`;
+ 
+ let succCount = 0, failCount = 0;
+ for(let i = 0; i < list.length; i++){
+   const o = list[i];
+   const pct = Math.round(((i + 1) / list.length) * 100);
+   bar.style.width = pct + "%";
+   pTxt.textContent = pct + "%";
+   sTxt.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Đang xử lý ${i+1}/${list.length} (${o.id})...`;
+   
+   try {
+     const res = await aj("/api/admin/heal", { method: "POST", body: { orderIds: [o.id] } });
+     succCount++;
+     $("statSuccess").textContent = succCount;
+     const logLine = document.createElement("div");
+     logLine.className = "text-emerald-300";
+     logLine.textContent = `✔ [OK] Đơn ${o.id} (${o.email}): Đã phát lệnh bù link thành công`;
+     logEl.appendChild(logLine);
+   } catch(e) {
+     failCount++;
+     $("statFailed").textContent = failCount;
+     const logLine = document.createElement("div");
+     logLine.className = "text-rose-400";
+     logLine.textContent = `✘ [LỖI] Đơn ${o.id}: ${e.message || "Không phản hồi"}`;
+     logEl.appendChild(logLine);
+   }
+   logEl.scrollTop = logEl.scrollHeight;
+   await sleep(350);
+ }
+ sTxt.innerHTML = `<i class="fas fa-circle-check text-emerald-500 mr-1"></i>Đã hoàn thành kiểm tra bù link cho ${list.length} đơn!`;
+ btn.disabled = false;
+ setTimeout(fetchAll, 2500);
+}
+      
+   <!-- KHỐI TIẾN TRÌNH & LOG TERMINAL -->
+   <div id="checkProgressBox" class="hidden border border-purple-200 bg-purple-50/40 rounded-xl p-3 space-y-2">
+    <div class="flex items-center justify-between text-xs font-bold text-purple-900">
+     <span id="checkProgressStatus"><i class="fas fa-spinner fa-spin mr-1"></i>Đang khởi động tiến trình...</span>
+     <span id="checkProgressPercent">0%</span>
+    </div>
+    <div class="w-full bg-purple-200 rounded-full h-2.5 overflow-hidden">
+     <div id="checkProgressBar" class="bg-purple-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+    </div>
+    <div class="flex items-center justify-between text-[11px] text-slate-600 border-t border-purple-100 pt-1.5">
+     <div>Tổng: <b id="statTotal" class="text-purple-700">0</b> | Thành công: <b id="statSuccess" class="text-emerald-600">0</b> | Lỗi/Bỏ qua: <b id="statFailed" class="text-red-500">0</b></div>
+     <button type="button" onclick="$('checkLogTerminal').innerHTML=''" class="text-[10px] text-slate-400 hover:text-slate-600">Xóa log</button>
+    </div>
+    <div id="checkLogTerminal" class="max-h-36 overflow-y-auto bg-slate-900 text-slate-100 rounded-lg p-2.5 font-mono text-[11px] space-y-1 shadow-inner scroll-hide">
+     <div class="text-slate-400">// Nhật ký tiến trình kiểm tra bù link sẽ xuất hiện tại đây...</div>
+    </div>
+   </div>
   </div>
   <div id="checkBody" class="space-y-3 w-full min-w-0"></div>
  </div>
+
+    
 
  <!-- ===== GIAO DỊCH D1 ===== -->
  <div id="t-trans" class="hidden w-full min-w-0">
@@ -406,8 +480,8 @@ textarea.autog{resize:none;overflow:hidden;}
  <div id="t-pkg" class="hidden w-full min-w-0 space-y-3">
   <!-- Sub-tab Bar -->
   <div class="bg-slate-200 p-1 rounded-xl flex gap-1 w-fit">
-   <button onclick="switchPkgSubTab('cards')" id="btn-pkg-cards" class="settings-sub-tab active text-center !px-3 font-bold"><i class="fas fa-tags mr-1.5"></i>Thẻ Giá Gói Cước</button>
-   <button onclick="switchPkgSubTab('fulfill')" id="btn-pkg-fulfill" class="settings-sub-tab text-center !px-3 font-bold"><i class="fas fa-shuffle mr-1.5"></i>Cấp Link Tự Động (Fulfillment)</button>
+   <button onclick="switchPkgSubTab('cards')" id="btn-pkg-cards" class="settings-sub-tab active text-center !px-3 font-bold"><i class="fas fa-tags mr-1.5"></i>Sửa gói</button>
+   <button onclick="switchPkgSubTab('fulfill')" id="btn-pkg-fulfill" class="settings-sub-tab text-center !px-3 font-bold"><i class="fas fa-shuffle mr-1.5"></i>Auto cấp link</button>
   </div>
 
   <!-- Pane 1: Thẻ Giá Gói Cước -->
@@ -540,8 +614,8 @@ textarea.autog{resize:none;overflow:hidden;}
          <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-bell text-amber-500 mr-1.5"></i>Thông báo Mail Admin từ Index</div>
          <p class="text-[11px] text-slate-500">Quản lý việc Worker gửi mail báo Admin khi khách thao tác trên web này. <b>Master</b>: Báo tất cả. <b>Slave</b>: Chỉ báo các mục được tick chọn bên dưới.</p>
          <div class="grid grid-cols-2 gap-2">
-          <label class="radio-card"><input type="radio" name="adminNotifyRoleRad" value="master" onchange="updateAdminNotifyStatusUI()">Master (Báo tất cả)</label>
-          <label class="radio-card"><input type="radio" name="adminNotifyRoleRad" value="slave" onchange="updateAdminNotifyStatusUI()">Slave (Theo bộ lọc)</label>
+          <label class="radio-card"><input type="radio" name="adminNotifyRoleRad" value="master" onchange="updateAdminNotifyStatusUI()">Master (All)</label>
+          <label class="radio-card"><input type="radio" name="adminNotifyRoleRad" value="slave" onchange="updateAdminNotifyStatusUI()">Slave (Filter)</label>
          </div>
          <div class="pt-3 border-t border-slate-100 space-y-2">
           <div class="text-[11px] font-bold text-slate-700 flex justify-between items-center">
@@ -945,7 +1019,12 @@ const pkgLabel=o=>{const p=pkgOf(o);return p?`${p.n} - ${fmtVnd(p.vnd)}VND${p.ol
 const fmtMonths=d=>{d=Number(d)||0;return d>0?String(Math.round(d/30*100)/100):"";};
 function ordMonths(o){const p=pkgOf(o);if(p&&p.m===0)return 0;const d=Number(o.days);if(d>0)return Math.floor(d/30);return (p?p.m:1)*(Number(o.qty)||1);}
 function webLabel(v,wu){const t=String(v||"")+" "+String(wu||"");if(/vpntrinhhg3|lucastanora/i.test(t))return "Web 3";if(/vpntrinhhg2|onepiece/i.test(t))return "Web 2";if(/vpntrinhhg\.|doicucden/i.test(t))return "Web 1";return v?String(v).replace(/^https?:\/\//,"").replace(/\/$/,""):"—";}
-function linkBottom(l){const ts=Number(l.createdTs)||Number(((l.id||"").match(/^LNK-(\d{13})/)||[])[1])||parseAny(l.date);const hm=ts?fmtBank(ts).slice(9):"";return esc(l.expDate||"Vĩnh viễn")+(hm?" "+hm:"");}
+function linkBottom(l){
+ if(isLife(l.expDate)) return "Vĩnh viễn";
+ const ts=Number(l.createdTs)||Number(((l.id||"").match(/^LNK-(\d{13})/)||[])[1])||parseAny(l.date);
+ const hm=ts?fmtBank(ts).slice(9):"";
+ return esc(l.expDate||"Vĩnh viễn")+(hm?" "+hm:"");
+}
 const payOf=o=>/alipay/i.test(o.method||"")?"Alipay":/weixin|wechat/i.test(o.method||"")?"Weixin":"Bank";
 
 // ===================== API + ĐĂNG NHẬP =====================
@@ -1069,7 +1148,7 @@ function ordCard(o,ro){
  const nick=o.nickname?`<span class="text-[10px] font-black bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded ml-1"><i class="fas fa-user-tag mr-0.5"></i>${esc(o.nickname)}</span>`:"";
  const lk=o.lockInfo?Object.keys(o.lockInfo).filter(k=>o.lockInfo[k]):[];const lkb=lk.length?`<span title="Ô đã khóa (sửa tay): ${esc(lk.join(", "))}" class="text-[9px] font-black bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded ml-1"><i class="fas fa-lock mr-0.5"></i>${lk.map(k=>k.replace("info","")).join("/")}</span>`:"";
  const extra=ro?`<div class="pl-5 mt-1.5 flex flex-wrap gap-1 text-[10px] font-bold"><span class="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">${esc(o.method||"—")}</span><span class="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded">Thực nhận: ${esc(ordAmountTxt(o))}</span><span class="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded">${pkgOf(o)&&pkgOf(o).m===0?"Vĩnh viễn":ordMonths(o)+" tháng"}</span><span class="${st==="success"?"bg-green-100 text-green-700":st==="pending"?"bg-yellow-100 text-yellow-700":"bg-red-100 text-red-700"} px-1.5 py-0.5 rounded">${st==="success"?"Thành công":st==="pending"?"Chờ duyệt":"Thất bại"}</span></div>`:"";
- const acts=ro?"":`<div class="flex gap-1.5">${st==="pending"?`<button onclick="forceOrder(${q(o.id)})" title="Duyệt tay & cấp link" class="text-purple-600 font-bold px-2.5 py-1.5 bg-purple-50 border border-purple-100 rounded-lg text-xs hover:bg-purple-600 hover:text-white"><i class="fas fa-rocket"></i></button>`:""}${st==="success"&&o.expDate&&!expired&&!isLife(o.expDate)?`<button onclick="sendExpMail(${q(o.id)})" title="Nhắc hết hạn" class="text-amber-500 font-bold px-2.5 py-1.5 bg-amber-50 border border-amber-100 rounded-lg text-xs hover:bg-amber-500 hover:text-white"><i class="fas fa-clock"></i></button>`:""}<button onclick="sendZaloMail(${q(o.id)})" title="Nhắc hỗ trợ cài đặt (Zalo)" class="text-blue-500 font-bold px-2.5 py-1.5 bg-blue-50 border border-blue-100 rounded-lg text-xs hover:bg-blue-500 hover:text-white"><i class="fas fa-comment-dots"></i></button><button onclick="openOrdModal(${q(o.id)})" title="Sửa" class="text-indigo-600 font-bold px-3 py-1.5 bg-indigo-50 border border-indigo-100 rounded-lg text-xs hover:bg-indigo-600 hover:text-white"><i class="fas fa-pen md:mr-1"></i><span class="hidden md:inline">Sửa</span></button><button onclick="delOrd(${q(o.id)})" title="Xóa" class="text-red-500 font-bold px-2.5 py-1.5 bg-red-50 border border-red-100 rounded-lg text-xs hover:bg-red-500 hover:text-white"><i class="fas fa-trash"></i></button></div>`;
+ const acts=ro?"":`<div class="flex gap-1.5">${st==="success"&&o.expDate&&!expired&&!isLife(o.expDate)?`<button onclick="sendExpMail(${q(o.id)})" title="Nhắc hết hạn" class="text-amber-500 font-bold px-2.5 py-1.5 bg-amber-50 border border-amber-100 rounded-lg text-xs hover:bg-amber-500 hover:text-white"><i class="fas fa-clock"></i></button>`:""}<button onclick="sendZaloMail(${q(o.id)})" title="Nhắc hỗ trợ cài đặt (Zalo)" class="text-blue-500 font-bold px-2.5 py-1.5 bg-blue-50 border border-blue-100 rounded-lg text-xs hover:bg-blue-500 hover:text-white"><i class="fas fa-comment-dots"></i></button><button onclick="openOrdModal(${q(o.id)})" title="Sửa" class="text-indigo-600 font-bold px-3 py-1.5 bg-indigo-50 border border-indigo-100 rounded-lg text-xs hover:bg-indigo-600 hover:text-white"><i class="fas fa-pen md:mr-1"></i><span class="hidden md:inline">Sửa</span></button><button onclick="delOrd(${q(o.id)})" title="Xóa" class="text-red-500 font-bold px-2.5 py-1.5 bg-red-50 border border-red-100 rounded-lg text-xs hover:bg-red-500 hover:text-white"><i class="fas fa-trash"></i></button></div>`;
  // Desktop: giờ tạo ở góc TRÊN-PHẢI, 4 nút ở góc DƯỚI-PHẢI. Mobile: hàng dưới "giờ tạo (trái) | các nút (phải)".
  return `<div class="${card} rounded-xl p-3 shadow-sm flex flex-col md:flex-row md:items-stretch justify-between gap-2 md:gap-3 w-full min-w-0"><div class="flex-1 min-w-0">
   <div class="flex items-center gap-2 mb-1 flex-wrap">${dot}<span class="font-bold text-[10px] text-slate-400">#${ordersDb.indexOf(o)+1}</span><span class="font-mono font-extrabold text-indigo-600 text-xs md:text-base cp order-id-text" onclick="cp(${q(o.id)})">${esc(o.id)}</span>${nick}${kind}${st==="pending"?`<span class="bg-yellow-100 text-yellow-800 text-[10px] font-bold px-1.5 py-0.5 rounded ml-1">Chưa xác nhận CK</span>`:""}${bu}${lkb}${expired?`<span class="text-[10px] font-black bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1">ĐÃ HẾT HẠN</span>`:""}</div>
@@ -1089,8 +1168,52 @@ function renderOrd(){
   g.orders.sort((a,b)=>oTs(b)-oTs(a));
   html+=`<div class="month-header"><i class="far fa-calendar-alt text-indigo-400"></i><span>${g.label}</span><span class="month-count">${g.orders.length} đơn</span></div><div class="space-y-3 mb-6">${g.orders.map(o=>ordCard(o,false)).join("")}</div>`;}
  tb.innerHTML=html;}
-async function setLockFulfill(v){const s=cmsDb.settings;const old=!!s.lockFulfill;s.lockFulfill=!!v;try{await saveCmsDb();toast(v?"Đã BẬT Khóa fulfillment — sửa đơn sẽ không chạy automation":"Đã tắt Khóa fulfillment");logEvent("warn","Khóa fulfillment",v?"Bật":"Tắt");}catch(e){s.lockFulfill=old;$("toggleLockFulfill").checked=old;toast("Lỗi lưu: "+e.message,"err");}}
-function setMailOnSave(v){localStorage.setItem(SITE_KEY+"_mailOnSave",v?"1":"0");toast(v?"Sẽ gửi mail báo khách khi lưu đơn":"Đã tắt gửi mail khi lưu đơn");}
+function updateOrderTogglesUI(){
+  const lf = lockFulfillOn(), ms = mailOnSaveOn(), me = manualEditOn();
+  const setBtn = (btnId, badgeId, active) => {
+    const btn = $(btnId), b = $(badgeId);
+    if (!btn || !b) return;
+    if (active) {
+      btn.className = "flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2 border rounded-xl p-2 sm:p-2.5 shadow-sm transition text-left bg-purple-600 text-white border-purple-600 ring-2 ring-purple-300";
+      b.className = "text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-white text-purple-700 shrink-0";
+      b.textContent = "BẬT";
+    } else {
+      btn.className = "flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2 border rounded-xl p-2 sm:p-2.5 shadow-sm transition text-left bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200";
+      b.className = "text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 shrink-0";
+      b.textContent = "TẮT";
+    }
+  };
+  setBtn("btnToggleLockFulfill", "badgeLockFulfill", lf);
+  setBtn("btnToggleMailOnSave", "badgeMailOnSave", ms);
+  setBtn("btnToggleManualEdit", "badgeManualEdit", me);
+}
+
+async function toggleLockFulfillBtn(){
+  const s = cmsDb.settings; const cur = !s.lockFulfill;
+  s.lockFulfill = cur;
+  updateOrderTogglesUI();
+  try {
+    await saveCmsDb();
+    toast(cur ? "Đã BẬT Khóa fulfillment — sửa đơn không chạy auto" : "Đã TẮT Khóa fulfillment");
+    logEvent("warn", "Khóa fulfillment", cur ? "Bật" : "Tắt");
+  } catch(e) {
+    s.lockFulfill = !cur; updateOrderTogglesUI(); toast("Lỗi lưu: " + e.message, "err");
+  }
+}
+
+function toggleMailOnSaveBtn(){
+  const cur = !mailOnSaveOn();
+  localStorage.setItem(SITE_KEY + "_mailOnSave", cur ? "1" : "0");
+  updateOrderTogglesUI();
+  toast(cur ? "Đã BẬT gửi mail báo khách khi lưu đơn" : "Đã TẮT gửi mail khi lưu đơn");
+}
+
+function toggleManualEditBtn(){
+  const cur = !manualEditOn();
+  localStorage.setItem(SITE_KEY + "_manualEdit", cur ? "1" : "0");
+  updateOrderTogglesUI();
+  toast(cur ? "Đã BẬT Sửa tay — cho phép sửa 3 ô định tuyến" : "Đã TẮT Sửa tay");
+}
 
 function autoFillNickname(){const e=$("mOEmail").value.trim().toLowerCase();if(!e||$("mONickname").value)return;const x=ordersDb.find(o=>String(o.email||"").toLowerCase()===e&&o.nickname);if(x)$("mONickname").value=x.nickname;}
 function updMonths(){$("mOMonths").value=fmtMonths($("mODays").value);}
@@ -1113,9 +1236,19 @@ function openOrdModal(id){
  $("mOUpgVerify").checked=!!o?.pendingUpgrade;$("mOUpgSuccess").checked=!!(o?.isUpgrade&&!o.pendingUpgrade&&o.upgradeStatus!=="failed");$("mOUpgReject").checked=o?.upgradeStatus==="failed";
  $("mOLink1").value=o?.info1||o?.info||"";$("mOLink2").value=o?.info2||"";$("mOLink3").value=o?.info3||"";$("mOReason").value=o?.reason||"";
  $("mOStatus").value=o?normSt(o.status):"pending";$("mOMethod").value=/alipay/i.test(o?.method||"")?"Alipay":/weixin|wechat/i.test(o?.method||"")?"Weixin":"Ngân hàng VN";
- const sel=$("mOPkg");sel.innerHTML=PKG_LIST.map(p=>`<option value="${p[0]}">${esc(p[1])}</option>`).join("");
- if(o){let pid=PKG_LIST.find(p=>p[0]===o.pkgId)?.[0];if(!pid){const pp=pkgOf(o);if(pp)pid=Object.keys(PKG_DB).find(k=>PKG_DB[k]===pp);}
-  if(!pid)pid=PKG_LIST.find(p=>o.pkgName&&o.pkgData&&p[1].startsWith(o.pkgName)&&p[1].includes("("+o.pkgData+")"))?.[0];
+ const sel=$("mOPkg");
+ const dynamicList = [...PKG_LIST];
+ if(Array.isArray(adminPkgsList) && adminPkgsList.length){
+   adminPkgsList.forEach(dp => {
+     if(!dynamicList.some(x => x[0] === dp.id)){
+       const timeNum = dp.time === "lifetime" ? 0 : (Number(dp.time) || 1) * 30;
+       dynamicList.push([dp.id, `${dp.name || dp.id} - ${fmtVnd(dp.vnd)}VND (${dp.data || ''})`, timeNum]);
+     }
+   });
+ }
+ sel.innerHTML=dynamicList.map(p=>`<option value="${p[0]}">${esc(p[1])}</option>`).join("");
+ if(o){let pid=dynamicList.find(p=>p[0]===o.pkgId)?.[0];if(!pid){const pp=pkgOf(o);if(pp)pid=Object.keys(PKG_DB).find(k=>PKG_DB[k]===pp);}
+  if(!pid)pid=dynamicList.find(p=>o.pkgName&&o.pkgData&&p[1].startsWith(o.pkgName)&&p[1].includes("("+o.pkgData+")"))?.[0];
   if(pid)sel.value=pid;else{sel.innerHTML+=`<option value="-1" selected>${esc(o.pkg||o.pkgName||"Gói custom")}</option>`;sel.value="-1";}
   const bank=!/alipay|weixin/i.test($("mOMethod").value);$("mOAmount").value=bank?(o.totalVnd||""):(o.totalCny||o.totalVnd||"");}
  else{sel.value="t1";$("mOAmount").value="";}
@@ -1592,11 +1725,18 @@ function renderTransactions(){
    const sl=oi && oi.qty ? Number(oi.qty) : 1;
    const rx=extractOrder(tx.notification||tx.content),s=tx.status;
    const badge=/^(success|paid)$/.test(s)?["emerald","success"]:s==="pending"?["orange","pending"]:s==="unmatched"?["slate","unmatched"]:/reject|invalid|failed/.test(s)?["rose","failed"]:["yellow",s];
-   const kind=tx.kind||mo.order_type||(oi?.isUpgrade?"upgrade":"new");
-   // Phân biệt màu trực tiếp trên Mã đơn: Tím = Nâng cấp, Xanh dương = Gia hạn, Xám đậm = Đơn mới
-   const oIdColor = kind === "upgrade" ? "text-purple-600" : kind === "renew" ? "text-sky-600" : "text-slate-700";
-   return `<tr><td class="text-xs font-bold text-slate-400">${i+1}</td><td class="font-mono font-black ${oIdColor} cp" onclick="cp(${q(oId)})">${esc(oId)}</td><td class="text-xs text-slate-600 whitespace-nowrap">${tc}</td><td class="text-xs font-bold text-slate-700 cp" onclick="cp(${q(email)})">${esc(email)}</td>
-   <td><span class="font-black text-rose-600 whitespace-nowrap">${amt.toLocaleString("en-US")}VND</span> <span class="text-xs text-slate-500 font-bold">x${sl}</span></td><td class="text-xs font-bold text-slate-500">${esc(web)}</td><td>${rx?`<span class="font-bold text-[11px] cp text-slate-700" onclick="cp('${rx}')">${rx}</span>`:'<span class="text-slate-400 font-bold text-xs">Trống</span>'}</td>
+   const kind=tx.kind||mo.order_type||(oi?.isUpgrade?"upgrade":(oi?.orderType==="renew"?"renew":"new"));
+   let oIdBadge = "bg-slate-100 text-slate-600 border-slate-200";
+   if (oId === "Trống" || !oId) {
+     oIdBadge = "bg-slate-100 text-slate-500 border-slate-200";
+   } else if (kind === "upgrade") {
+     oIdBadge = "bg-purple-100 text-purple-800 border-purple-200";
+   } else if (kind === "renew") {
+     oIdBadge = "bg-sky-100 text-sky-800 border-sky-200";
+   } else {
+     oIdBadge = "bg-emerald-100 text-emerald-800 border-emerald-200";
+   }
+   return `<tr><td class="text-xs font-bold text-slate-400">${i+1}</td><td><span class="font-mono font-black text-xs px-2 py-1 rounded-md border cp inline-block ${oIdBadge}" onclick="cp(${q(oId)})">${esc(oId)}</span></td>
    <td><span class="bg-${badge[0]}-100 text-${badge[0]}-700 border border-${badge[0]}-200 px-2 py-1 rounded text-[10px] font-bold uppercase" title="${esc(tx.review_note||"")}">${esc(badge[1])}</span></td><td class="col-ok">${/^(success|paid|rejected)$/.test(s)?'<span class="text-slate-300">—</span>':`<button onclick="approveTransaction(${tx.id})" title="Ép khớp giao dịch" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold w-8 h-8 rounded-lg shadow text-xs flex items-center justify-center mx-auto transition active:scale-95"><i class="fas fa-bolt"></i></button>`}</td><td class="col-x">${delBtn(tx.id)}</td></tr>`;}).join("");
  }else{
   th.innerHTML='<tr><th>STT</th><th>Thời Gian</th><th>Số Tiền</th><th>Nội Dung Thô</th><th class="col-x">Xóa</th></tr>';
@@ -1661,9 +1801,14 @@ function renderLinks(){
    }
  });
 
- // ===== VIEW KHO NGUỒN (compact view - Chip rút gọn: Còn GB, HSD, Máy) =====
+ // ===== VIEW KHO NGUỒN (compact view - Đã lọc bỏ Da_bi_khoa) =====
  if(curLinkListView === "compact"){
-   c.innerHTML = linkPoolDb.map(p => {
+   const filteredPool = linkPoolDb.filter(p => p && p.url !== "Da_bi_khoa" && p.url !== LOCK_ORIG);
+   if(!filteredPool.length){
+     c.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border font-bold">Kho chưa có nguồn nào</div>`;
+     return;
+   }
+   c.innerHTML = filteredPool.map(p => {
      if (p.isCombo) {
        const full1 = (p.used || 0) >= (p.max || 30), full2 = (p.used || 0) >= (p.max2 || 30);
        return `
@@ -2342,6 +2487,13 @@ async function loadAdminPkgs() {
 
 let pkgDragIndex = -1;
 
+function toggleHidePkg(idx){
+  adminPkgsList[idx].hidden = !adminPkgsList[idx].hidden;
+  renderPkgAdmin();
+  if($("btn-pkg-fulfill")?.classList.contains("active")) renderFulfillmentUI();
+  toast(adminPkgsList[idx].hidden ? `Đã ẩn gói ${adminPkgsList[idx].name || adminPkgsList[idx].id} bên Index` : `Đã hiện lại gói bên Index`);
+}
+
 function renderPkgAdmin() {
   const container = $("pkgCardsList");
   if (!container) return;
@@ -2350,9 +2502,10 @@ function renderPkgAdmin() {
   container.innerHTML = adminPkgsList.map((p, idx) => {
     const isFixed = FIXED_PKG_IDS.has(p.id);
     const feats = Array.isArray(p.features) ? p.features : ["Băng thông lên đến 3Gbps"];
+    const isHidden = !!p.hidden;
     
     return `
-    <div data-pkg-idx="${idx}" ondragover="event.preventDefault()" ondrop="dropPkgCard(event, ${idx})" class="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col gap-3 relative transition-all">
+    <div data-pkg-idx="${idx}" ondragover="event.preventDefault()" ondrop="dropPkgCard(event, ${idx})" class="bg-white border-2 ${isHidden ? 'border-amber-300 bg-amber-50/20' : 'border-slate-200'} rounded-2xl p-4 shadow-sm flex flex-col gap-3 relative transition-all">
       <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 flex-wrap gap-2">
         <div class="flex items-center gap-2">
           <span draggable="true" ondragstart="startDragPkg(event, ${idx})" class="cursor-grab text-slate-400 px-1 hover:text-indigo-600" title="Kéo để sắp xếp thứ tự hiển thị"><i class="fas fa-grip-vertical text-lg"></i></span>
@@ -2363,12 +2516,18 @@ function renderPkgAdmin() {
           <span class="bg-indigo-100 text-indigo-700 font-mono font-black text-xs px-2 py-0.5 rounded-lg border border-indigo-200">
             Mã: ${esc(p.id)} ${isFixed ? '(Cố định)' : '(Tùy chỉnh)'}
           </span>
+          ${isHidden ? '<span class="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">ĐÃ ẨN BÊN INDEX</span>' : ''}
         </div>
-        <button onclick="delPkg(${idx})" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg border border-red-200 transition" title="Xóa toàn bộ thông tin và gói này">
-          <i class="fas fa-trash mr-1"></i>Xóa gói
-        </button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="toggleHidePkg(${idx})" class="font-bold text-xs px-2.5 py-1 rounded-lg border transition ${isHidden ? 'bg-amber-500 text-white border-amber-500 hover:bg-amber-600' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'}">
+            <i class="fas ${isHidden ? 'fa-eye' : 'fa-eye-slash'} mr-1"></i>${isHidden ? 'Hiện gói' : 'Ẩn gói'}
+          </button>
+          <button onclick="delPkg(${idx})" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg border border-red-200 transition" title="Xóa toàn bộ thông tin và gói này">
+            <i class="fas fa-trash mr-1"></i>Xóa gói
+          </button>
+        </div>
       </div>
-
+      
       <!-- 4 loại Tag -->
       <div class="bg-slate-50 border border-slate-100 rounded-xl p-2.5 space-y-2">
         <div class="text-[10px] font-bold text-slate-500 uppercase">Cấu hình 4 Badge Tag góc thẻ:</div>
@@ -3084,7 +3243,6 @@ async function loadQuota(){
   html+=j.kv?box("Cloudflare KV (chỉ web này, hôm nay)",qBar(j.kv.write||0,QL.kvW,"Write","lượt ghi",rs)+`<div class="h-2"></div>`+qBar(j.kv.read||0,QL.kvR,"Read","lượt đọc",rs)+`<div class="h-2"></div>`+qBar(j.kv.delete||0,QL.kvD,"Delete","lượt xóa",rs)+`<div class="text-[10px] text-slate-400 mt-2">Tổng = giới hạn gói Free của Cloudflare.</div>`):err("kv","Cloudflare KV");
   html+=j.worker?box("Cloudflare Worker (hôm nay)",qBar(j.worker.requests||0,QL.wReq,"Requests","requests",rs)+`<div class="grid grid-cols-2 gap-2 text-center mt-3"><div><div class="text-lg font-black text-red-500">${(j.worker.errors||0).toLocaleString("en-US")}</div><div class="text-[10px] text-slate-400 font-bold">Errors</div></div><div><div class="text-lg font-black text-slate-600">${(j.worker.subrequests||0).toLocaleString("en-US")}</div><div class="text-[10px] text-slate-400 font-bold">Subrequests</div></div></div>`):err("worker","Cloudflare Worker");
   html+=j.d1?box("D1 Database (hôm nay)",qBar(j.d1.rowsRead||0,QL.d1R,"Rows read","rows",rs)+`<div class="h-2"></div>`+qBar(j.d1.rowsWritten||0,QL.d1W,"Rows written","rows",rs)):err("d1","D1 Database");
-  html+=j.mail?box("Google Apps Script — Email",`<div class="text-[11px] text-slate-500 mb-2">Đơn vị: <b>recipients</b> (người nhận), không phải số email message.</div>`+qBar(j.mail.limit-j.mail.remaining,j.mail.limit,"Recipients","recipients","24 giờ (theo Google)")):box("Google Apps Script — Email",`<div class="text-[11px] text-slate-500">Không lấy được số liệu thật: <span class="text-red-500">${esc(j.err&&j.err.mail||"không có dữ liệu")}</span></div><div class="text-[10px] text-slate-400 mt-1">Lỗi kiểu "Unexpected token '&lt;'" = Google trả về trang HTML (chưa deploy bản có doGet trả JSON, sai quyền "Anyone", hoặc dùng URL /dev thay vì /exec).</div>`);
   el.innerHTML=html;
  }catch(e){el.innerHTML=`<span class="text-red-600 lg:col-span-2">Lỗi tải quota: ${esc(e.message)}</span>`;}}
 
@@ -3141,16 +3299,19 @@ function renderFulfillmentUI() {
   tb.innerHTML = pkgs.map(p => {
     const curVal = map[p.id] || "";
     const timeStr = p.time === "lifetime" ? "Vĩnh viễn" : (p.time ? p.time + " Tháng" : "1 Tháng");
+    const isHidden = !!p.hidden;
     return `
-      <tr>
-        <td class="font-mono font-bold text-indigo-600">${esc(p.id)}</td>
+      <tr class="${isHidden ? 'opacity-40 bg-slate-100 cursor-not-allowed select-none' : ''}">
+        <td class="font-mono font-bold ${isHidden ? 'text-slate-400' : 'text-indigo-600'}">
+          ${esc(p.id)} ${isHidden ? '<span class="text-[9px] block text-amber-600 font-bold">(Đã ẩn)</span>' : ''}
+        </td>
         <td>
           <div class="font-bold text-slate-800 text-xs">${esc(p.name || p.id)}</div>
           <div class="text-[10px] text-slate-500">${esc(p.data || "")} · ${p.vnd ? fmtVnd(p.vnd) + "VND" : ""}</div>
         </td>
         <td class="text-xs font-semibold text-slate-600">${timeStr}</td>
         <td>
-          <select id="sel_fulfill_${p.id}" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white font-bold outline-none focus:border-indigo-500">
+          <select id="sel_fulfill_${p.id}" ${isHidden ? 'disabled' : ''} class="w-full p-2 text-xs border border-slate-200 rounded-lg ${isHidden ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-white font-bold text-slate-700 outline-none focus:border-indigo-500'}">
             <option value="single_lx" ${curVal === "single_lx" || !curVal ? "selected" : ""}>Link đơn Liangxin (Mặc định)</option>
             <option value="single_dj" ${curVal === "single_dj" ? "selected" : ""}>Link đơn DJJC</option>
             <option value="combo" ${curVal === "combo" ? "selected" : ""}>Link Trộn (Combo Liangxin + DJJC)</option>
