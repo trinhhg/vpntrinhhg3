@@ -536,18 +536,20 @@ textarea.autog{resize:none;overflow:hidden;}
 
  <!-- ===== CÀI ĐẶT (ĐÃ REDESIGN 8 SUB-TAB) ===== -->
  <div id="t-settings" class="hidden w-full min-w-0">
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-   <h2 class="text-lg md:text-2xl font-bold text-slate-800">Cài đặt hệ thống</h2>
-   <!-- Thanh 8 Sub-tab: Mobile chia 4 tab/hàng; Desktop ôm gọn vừa khít nội dung (w-fit) -->
-   <div class="bg-slate-200/80 p-1 rounded-2xl grid grid-cols-4 sm:flex sm:flex-wrap gap-1 w-full sm:w-fit max-w-full">
-    <button type="button" class="settings-sub-tab active text-center !px-3 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-setweb" onclick="switchSettingsTab('setweb')"><i class="fas fa-globe mr-1 hidden sm:inline"></i>Set Web</button>
-    <button type="button" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-email" onclick="switchSettingsTab('email')"><i class="fas fa-envelope mr-1 hidden sm:inline"></i>Email & Báo</button>
-    <button type="button" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-route" onclick="switchSettingsTab('route')"><i class="fas fa-route mr-1 hidden sm:inline"></i>Định tuyến</button>
-    <button type="button" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-cron" onclick="switchSettingsTab('cron')"><i class="fas fa-clock-rotate-left mr-1 hidden sm:inline"></i>Cron & Khóa</button>
-    <button type="button" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-time" onclick="switchSettingsTab('time')"><i class="fas fa-clock mr-1 hidden sm:inline"></i>Thời gian</button>
-    <button type="button" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-faq" onclick="switchSettingsTab('faq')"><i class="fas fa-circle-question mr-1 hidden sm:inline"></i>Quản lý FAQ</button>
-    <button type="button" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-log" onclick="switchSettingsTab('log')"><i class="fas fa-list-alt mr-1 hidden sm:inline"></i>Nhật ký</button>
-    <button type="button" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-dev" onclick="switchSettingsTab('dev')"><i class="fas fa-laptop mr-1 hidden sm:inline"></i>Thiết bị</button>
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+   <h2 class="text-lg md:text-2xl font-bold text-slate-800 shrink-0">Cài đặt hệ thống</h2>
+   <!-- Thanh 8 Sub-tab: Trên desktop đặt dồn sát từ phải sang trái, w-fit vừa khít nội dung -->
+   <div class="flex justify-end w-full sm:w-auto">
+    <div class="bg-slate-200/90 p-1 rounded-2xl grid grid-cols-4 sm:flex gap-1 w-full sm:w-fit shrink-0">
+     <button type="button" class="settings-sub-tab active text-center !px-3 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-setweb" onclick="switchSettingsTab('setweb')"><i class="fas fa-globe mr-1 hidden sm:inline"></i>Set Web</button>
+     <button type="button" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-email" onclick="switchSettingsTab('email')"><i class="fas fa-envelope mr-1 hidden sm:inline"></i>Email & Báo</button>
+     <button type="button" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-route" onclick="switchSettingsTab('route')"><i class="fas fa-route mr-1 hidden sm:inline"></i>Định tuyến</button>
+     <button type="button" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-cron" onclick="switchSettingsTab('cron')"><i class="fas fa-clock-rotate-left mr-1 hidden sm:inline"></i>Cron & Khóa</button>
+     <button type="button" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-time" onclick="switchSettingsTab('time')"><i class="fas fa-clock mr-1 hidden sm:inline"></i>Thời gian</button>
+     <button type="button" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-faq" onclick="switchSettingsTab('faq')"><i class="fas fa-circle-question mr-1 hidden sm:inline"></i>Quản lý FAQ</button>
+     <button type="button" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-log" onclick="switchSettingsTab('log')"><i class="fas fa-list-alt mr-1 hidden sm:inline"></i>Nhật ký</button>
+     <button type="button" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-dev" onclick="switchSettingsTab('dev')"><i class="fas fa-laptop mr-1 hidden sm:inline"></i>Thiết bị</button>
+    </div>
    </div>
   </div>
 
@@ -630,15 +632,16 @@ textarea.autog{resize:none;overflow:hidden;}
     </div>
    </div>
 
-   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-2">
-    <div class="flex justify-between items-center mb-1 border-b border-slate-100 pb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-satellite-dish text-indigo-500 mr-1.5"></i>Worker vệ tinh (2 web còn lại)</div><button onclick="addSyncWorker()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-plus mr-1"></i>Thêm</button></div>
-    <div id="syncWorkerList" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
-    <div class="flex gap-2"><button onclick="saveSyncWorkers()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU VỆ TINH</button><button onclick="checkTriLinks()" class="bg-slate-100 text-slate-700 font-bold px-3 py-2.5 rounded-xl text-xs hover:bg-slate-200">Kiểm tra đủ 3 link</button></div>
-    <div id="triLinkRes" class="text-[11px] text-slate-600"></div>
-   </div>
+   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-2">
+     <div class="flex justify-between items-center mb-1 border-b border-slate-100 pb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-satellite-dish text-indigo-500 mr-1.5"></i>Worker vệ tinh (2 web còn lại)</div><button onclick="addSyncWorker()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-plus mr-1"></i>Thêm</button></div>
+     <div id="syncWorkerList" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
+     <div class="flex gap-2"><button onclick="saveSyncWorkers()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU VỆ TINH</button><button onclick="checkTriLinks()" class="bg-slate-100 text-slate-700 font-bold px-3 py-2.5 rounded-xl text-xs hover:bg-slate-200">Kiểm tra đủ 3 link</button></div>
+     <div id="triLinkRes" class="text-[11px] text-slate-600"></div>
+    </div>
 
-   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
-    <div class="font-bold text-sm text-slate-800"><i class="fas fa-magnifying-glass text-amber-500 mr-1.5"></i>Rà quét &amp; Map lại <span class="text-[10px] font-normal text-slate-400">(cục bộ web này)</span></div>
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+     <div class="font-bold text-sm text-slate-800"><i class="fas fa-magnifying-glass text-amber-500 mr-1.5"></i>Rà quét &amp; Map lại <span class="text-[10px] font-normal text-slate-400">(cục bộ web này)</span></div>
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
      <div class="border border-amber-200 rounded-xl p-3 bg-amber-50/30 space-y-2">
       <div class="font-extrabold text-xs text-amber-700">A. RÀ QUÉT</div>
@@ -2466,11 +2469,18 @@ async function loadAdminPkgs() {
 
 let pkgDragIndex = -1;
 
-function toggleHidePkg(idx){
+async function toggleHidePkg(idx){
   adminPkgsList[idx].hidden = !adminPkgsList[idx].hidden;
   renderPkgAdmin();
-  if($("btn-pkg-fulfill")?.classList.contains("active")) renderFulfillmentUI();
-  toast(adminPkgsList[idx].hidden ? `Đã ẩn gói ${adminPkgsList[idx].name || adminPkgsList[idx].id} bên Index` : `Đã hiện lại gói bên Index`);
+  renderFulfillmentUI();
+  const isHidden = adminPkgsList[idx].hidden;
+  toast(isHidden ? `Đang ẩn gói ${adminPkgsList[idx].name || adminPkgsList[idx].id}...` : `Đang hiện lại gói...`);
+  try {
+    await aj("/api/packages", { method: "POST", body: { packages: adminPkgsList } });
+    toast(isHidden ? `Đã ẩn gói bên Index & đồng bộ thành công!` : `Đã hiện lại gói bên Index & đồng bộ thành công!`);
+  } catch(e) {
+    toast("Lỗi lưu trạng thái ẩn gói: " + e.message, "err");
+  }
 }
 
 function renderPkgAdmin() {
@@ -3078,15 +3088,15 @@ function moveFaq(idx, dir) {
 }
 
 async function saveFaqs() {
-  cmsDb.faqs = adminFaqsList;
+  cmsDb.faqs = JSON.parse(JSON.stringify(adminFaqsList));
   try {
     await saveCmsDb();
-    toast(`Đã lưu ${adminFaqsList.length} câu hỏi FAQ thành công!`);
+    toast(`Đã lưu ${adminFaqsList.length} câu hỏi FAQ và đồng bộ sang Trang chủ thành công!`);
     logEvent("ok", "FAQ", `Lưu ${adminFaqsList.length} câu hỏi`);
   } catch(e) {
     toast("Lỗi lưu FAQ: " + e.message, "err");
   }
-}    
+} 
 function loadSettingsUI(){
  const s=cmsDb.settings;renderRouteRows();renderBlurRows();renderSyncWorkers();renderDockRows();renderMailProvCards();
  const rr=document.querySelector(`input[name=emailRoleRad][value=${s.emailRole==="master"?"master":"slave"}]`);if(rr)rr.checked=true;
