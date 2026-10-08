@@ -668,6 +668,7 @@ textarea.autog{resize:none;overflow:hidden;}
     </div>
    </div>
   </div>
+ </div>
 
   <!-- 4. VIEW CRON & TỰ ĐỘNG (Bố cục 2 cột cân đối) -->
   <div id="settings-view-cron" class="hidden space-y-4">
@@ -1372,7 +1373,7 @@ async function healSingleOrder(orderId){
  }
 }
 
-// Bấm nút bù link cho tất cả các đơn thiếu link kèm thanh tiến trình & log Terminal
+// Bấm nút bù link: BATCHING 1 REQUEST DUY NHẤT - TIẾT KIỆM KV TUYỆT ĐỐI & LOG CHI TIẾT
 async function healAllMissingWithProgress(){
  const list = getMissingOrders();
  if (!list.length) return toast("Tất cả đơn đã đủ 3 link!", "info");
@@ -1380,43 +1381,61 @@ async function healAllMissingWithProgress(){
  btn.disabled = true;
  const box = $("checkProgressBox"), bar = $("checkProgressBar"), pTxt = $("checkProgressPercent"), sTxt = $("checkProgressStatus"), logEl = $("checkLogTerminal");
  box.classList.remove("hidden");
- bar.style.width = "0%";
- pTxt.textContent = "0%";
+ bar.style.width = "20%";
+ pTxt.textContent = "20%";
  $("statTotal").textContent = list.length;
  $("statSuccess").textContent = "0";
  $("statFailed").textContent = "0";
- logEl.innerHTML = `<div class="text-emerald-400">[BẮT ĐẦU] Tìm thấy ${list.length} đơn cần kiểm tra bù link...</div>`;
- 
- let succCount = 0, failCount = 0;
- for(let i = 0; i < list.length; i++){
-   const o = list[i];
-   const pct = Math.round(((i + 1) / list.length) * 100);
-   bar.style.width = pct + "%";
-   pTxt.textContent = pct + "%";
-   sTxt.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Đang xử lý ${i+1}/${list.length} (${o.id})...`;
-   
-   try {
-     await aj("/api/admin/heal", { method: "POST", body: { orderIds: [o.id] } });
-     succCount++;
-     $("statSuccess").textContent = succCount;
+ logEl.innerHTML = `<div class="text-purple-300">[BATCHING] Đang gửi gom ${list.length} đơn sang Nhạc Trưởng xử lý 1 lần duy nhất...</div>`;
+ sTxt.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Đang yêu cầu cấp bù link toàn bộ danh sách...`;
+
+ try {
+   const allIds = list.map(o => o.id);
+   // Gửi 1 request duy nhất chứa toàn bộ đơn, chờ nhận kết quả chi tiết
+   const res = await aj("/api/admin/heal", { method: "POST", body: { orderIds: allIds } });
+   bar.style.width = "75%";
+   pTxt.textContent = "75%";
+
+   const details = arr(res.details);
+   let full3Count = 0, partialCount = 0;
+
+   logEl.innerHTML += `<div class="text-slate-400 mt-1">// === CHI TIẾT KẾT QUẢ TỪNG ĐƠN ===</div>`;
+
+   for (const item of details) {
+     const count = item.totalLinks || 0;
+     const isFull = count >= 3;
+     if (isFull) full3Count++; else partialCount++;
+
      const logLine = document.createElement("div");
-     logLine.className = "text-emerald-300";
-     logLine.textContent = `✔ [OK] Đơn ${o.id} (${o.email}): Đã phát lệnh bù link thành công`;
-     logEl.appendChild(logLine);
-   } catch(e) {
-     failCount++;
-     $("statFailed").textContent = failCount;
-     const logLine = document.createElement("div");
-     logLine.className = "text-rose-400";
-     logLine.textContent = `✘ [LỖI] Đơn ${o.id}: ${e.message || "Không phản hồi"}`;
+     if (isFull) {
+       logLine.className = "text-emerald-300 font-bold";
+       logLine.textContent = `✔ [ĐỦ 3/3 LINK] Đơn ${item.id} (${item.email}): Link1: ${item.l1 ? 'Có' : 'Thiếu'} | Link2: ${item.l2 ? 'Có' : 'Thiếu'} | Link3: ${item.l3 ? 'Có' : 'Thiếu'} ${item.remoteNotes || ''}`;
+     } else {
+       logLine.className = "text-amber-300";
+       logLine.textContent = `⚠ [MỚI ĐƯỢC ${count}/3 LINK] Đơn ${item.id} (${item.email}): ${item.l1 ? 'L1: OK' : 'L1: Trống'} | ${item.l2 ? 'L2: OK' : 'L2: Trống'} | ${item.l3 ? 'L3: OK' : 'L3: Trống'} ${item.remoteNotes || '(Chưa đủ 3 web vệ tinh)'}`;
+     }
      logEl.appendChild(logLine);
    }
-   logEl.scrollTop = logEl.scrollHeight;
-   await sleep(350);
+
+   $("statSuccess").textContent = full3Count;
+   $("statFailed").textContent = partialCount;
+
+   bar.style.width = "100%";
+   pTxt.textContent = "100%";
+   sTxt.innerHTML = `<i class="fas fa-circle-check text-emerald-400 mr-1"></i>Hoàn tất! ${full3Count} đơn đủ 3 link (tự ẩn khỏi tab), ${partialCount} đơn còn thiếu link.`;
+   toast(`Đã xử lý xong: ${full3Count} đơn đủ 3 link, ${partialCount} đơn còn thiếu link.`);
+ } catch(e) {
+   bar.style.width = "100%";
+   sTxt.innerHTML = `<i class="fas fa-circle-xmark text-rose-400 mr-1"></i>Lỗi trong quá trình bù link!`;
+   const logLine = document.createElement("div");
+   logLine.className = "text-rose-400 font-bold";
+   logLine.textContent = `✘ [LỖI HỆ THỐNG]: ${e.message || "Không phản hồi"}`;
+   logEl.appendChild(logLine);
+   toast("Lỗi bù link: " + e.message, "err");
+ } finally {
+   btn.disabled = false;
+   setTimeout(fetchAll, 1500);
  }
- sTxt.innerHTML = `<i class="fas fa-circle-check text-emerald-500 mr-1"></i>Đã hoàn thành kiểm tra bù link cho ${list.length} đơn!`;
- btn.disabled = false;
- setTimeout(fetchAll, 2500);
 }
 const healAllMissing = healAllMissingWithProgress;
 
