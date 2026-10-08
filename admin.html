@@ -534,187 +534,194 @@ textarea.autog{resize:none;overflow:hidden;}
   </div>
  </div>
 
- <!-- ===== CÀI ĐẶT ===== -->
+ <!-- ===== CÀI ĐẶT (ĐÃ REDESIGN 8 SUB-TAB) ===== -->
  <div id="t-settings" class="hidden w-full min-w-0">
-  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+  <div class="flex flex-col gap-3 mb-4">
    <h2 class="text-lg md:text-2xl font-bold text-slate-800">Cài đặt hệ thống</h2>
-   <div class="bg-slate-100 p-1 rounded-xl sub-grid w-full sm:w-auto self-start">
-    <div class="settings-sub-tab active" id="stab-setweb" onclick="switchSettingsTab('setweb')"><i class="fas fa-globe mr-1.5"></i>Set Web</div>
-    <div class="settings-sub-tab" id="stab-log" onclick="switchSettingsTab('log')"><i class="fas fa-list-alt mr-1.5"></i>Nhật ký</div>
-    <div class="settings-sub-tab" id="stab-dev" onclick="switchSettingsTab('dev')"><i class="fas fa-laptop mr-1.5"></i>Thiết bị</div>
-    <div class="settings-sub-tab" id="stab-time" onclick="switchSettingsTab('time')"><i class="fas fa-clock mr-1.5"></i>Thời gian</div>
+   <!-- Thanh 8 Sub-tab (Mobile: 4 tab/hàng; Desktop: flex gọn gàng) -->
+   <div class="bg-slate-200/80 p-1 rounded-2xl grid grid-cols-4 sm:flex sm:flex-wrap gap-1 w-full">
+    <button type="button" class="settings-sub-tab active text-center !px-2.5 py-2 font-bold text-[11px] sm:text-xs" id="stab-setweb" onclick="switchSettingsTab('setweb')"><i class="fas fa-globe mr-1 hidden sm:inline"></i>Set Web</button>
+    <button type="button" class="settings-sub-tab text-center !px-2.5 py-2 font-bold text-[11px] sm:text-xs" id="stab-email" onclick="switchSettingsTab('email')"><i class="fas fa-envelope mr-1 hidden sm:inline"></i>Email & Báo</button>
+    <button type="button" class="settings-sub-tab text-center !px-2.5 py-2 font-bold text-[11px] sm:text-xs" id="stab-route" onclick="switchSettingsTab('route')"><i class="fas fa-route mr-1 hidden sm:inline"></i>Định tuyến</button>
+    <button type="button" class="settings-sub-tab text-center !px-2.5 py-2 font-bold text-[11px] sm:text-xs" id="stab-cron" onclick="switchSettingsTab('cron')"><i class="fas fa-clock-rotate-left mr-1 hidden sm:inline"></i>Cron & Khóa</button>
+    <button type="button" class="settings-sub-tab text-center !px-2.5 py-2 font-bold text-[11px] sm:text-xs" id="stab-time" onclick="switchSettingsTab('time')"><i class="fas fa-clock mr-1 hidden sm:inline"></i>Thời gian</button>
+    <button type="button" class="settings-sub-tab text-center !px-2.5 py-2 font-bold text-[11px] sm:text-xs" id="stab-faq" onclick="switchSettingsTab('faq')"><i class="fas fa-circle-question mr-1 hidden sm:inline"></i>Quản lý FAQ</button>
+    <button type="button" class="settings-sub-tab text-center !px-2.5 py-2 font-bold text-[11px] sm:text-xs" id="stab-log" onclick="switchSettingsTab('log')"><i class="fas fa-list-alt mr-1 hidden sm:inline"></i>Nhật ký</button>
+    <button type="button" class="settings-sub-tab text-center !px-2.5 py-2 font-bold text-[11px] sm:text-xs" id="stab-dev" onclick="switchSettingsTab('dev')"><i class="fas fa-laptop mr-1 hidden sm:inline"></i>Thiết bị</button>
    </div>
   </div>
 
-<div id="settings-view-setweb" class="space-y-4">
-    <!-- LƯỚI 2 CỘT ĐỘC LẬP (HÀNG 1, 2, 3) -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-      
-      <!-- CỘT TRÁI (Email, Cron, Status) -->
-      <div class="flex flex-col gap-4">
-                <!-- Hàng 1 Trái: A. Email -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
-         <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-envelope text-indigo-500 mr-1.5"></i>Quyền gửi Email tự động</div>
-         <p class="text-[11px] text-slate-500">Lưu thẳng vào Worker (KV). <b>Master</b>: web này được gửi mọi mail automation (kích hoạt, gia hạn, nâng gói, nhắc hết hạn). <b>Slave</b>: Worker không gửi mail automation nào.</p>
-         <div class="grid grid-cols-2 gap-2"><label class="radio-card"><input type="radio" name="emailRoleRad" value="master">Master (Gửi)</label><label class="radio-card"><input type="radio" name="emailRoleRad" value="slave">Slave (Tắt)</label></div>
-         <div class="flex items-start justify-between gap-4 pt-3 border-t border-slate-100"><div><div class="font-bold text-sm text-slate-800">Tự động gửi mail nhắc hết hạn</div><div class="text-xs text-slate-500 mt-1">19:00 giờ VN — ngày D-2 và D-1. Worker Cron tự chạy, không cần mở admin. Chỉ hoạt động khi là Master.</div></div><div class="toggle-wrap mt-0.5"><input type="checkbox" id="toggleAutoMail"><span class="toggle-slider"></span></div></div>
-         <div id="beEmail" class="text-[11px] rounded-lg bg-slate-50 border border-slate-200 p-2 text-slate-600">Đang kiểm tra trạng thái backend...</div>
-         <button onclick="saveEmailPerm()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU QUYỀN EMAIL</button>
-        </div>
-
-        <!-- Khối Báo Mail Admin từ Index (Riêng biệt) -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
-         <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-bell text-amber-500 mr-1.5"></i>Thông báo Mail Admin từ Index</div>
-         <p class="text-[11px] text-slate-500">Quản lý việc Worker gửi mail báo Admin khi khách thao tác trên web này. <b>Master</b>: Báo tất cả. <b>Slave</b>: Chỉ báo các mục được tick chọn bên dưới.</p>
-         <div class="grid grid-cols-2 gap-2">
-          <label class="radio-card"><input type="radio" name="adminNotifyRoleRad" value="master" onchange="updateAdminNotifyStatusUI()">Master (All)</label>
-          <label class="radio-card"><input type="radio" name="adminNotifyRoleRad" value="slave" onchange="updateAdminNotifyStatusUI()">Slave (Filter)</label>
-         </div>
-         <div class="pt-3 border-t border-slate-100 space-y-2">
-          <div class="text-[11px] font-bold text-slate-700 flex justify-between items-center">
-           <span>Bộ lọc thông báo khi là Slave:</span>
-           <span id="adminNotifyRoleBadge" class="text-[10px] px-2 py-0.5 rounded font-black bg-indigo-50 text-indigo-600">Master</span>
-          </div>
-          <div id="adminNotifyCheckboxes" class="grid grid-cols-2 gap-2 text-xs transition-opacity duration-200">
-           <label class="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100">
-            <input type="checkbox" id="an-new" onchange="updateAdminNotifyStatusUI()" class="w-4 h-4 accent-indigo-600">
-            <span class="font-bold text-slate-700">Đơn mới</span>
-           </label>
-           <label class="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100">
-            <input type="checkbox" id="an-renew" onchange="updateAdminNotifyStatusUI()" class="w-4 h-4 accent-indigo-600">
-            <span class="font-bold text-slate-700">Đơn gia hạn</span>
-           </label>
-           <label class="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100">
-            <input type="checkbox" id="an-upgrade" onchange="updateAdminNotifyStatusUI()" class="w-4 h-4 accent-indigo-600">
-            <span class="font-bold text-slate-700">Nâng gói</span>
-           </label>
-           <label class="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100">
-            <input type="checkbox" id="an-data" onchange="updateAdminNotifyStatusUI()" class="w-4 h-4 accent-indigo-600">
-            <span class="font-bold text-slate-700">Tra cứu data</span>
-           </label>
-          </div>
-         </div>
-         <div id="beAdminNotify" class="text-[11px] rounded-lg bg-slate-50 border border-slate-200 p-2 text-slate-600">Đang kiểm tra trạng thái backend...</div>
-         <button onclick="saveAdminNotifyPerm()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU CẤU HÌNH BÁO ADMIN</button>
-        </div>
-
-        <!-- Hàng 2 Trái: B. Cron + node -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
-         <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-clock-rotate-left text-indigo-500 mr-1.5"></i>Cron &amp; Luân chuyển Node</div>
-         <p class="text-[11px] text-slate-500">Worker Cron chạy <b>15 phút/lần</b>: khóa link hết hạn, luân chuyển node (còn ≤ 1 ngày hạn hoặc &lt; 100GB), mail nhắc hạn (19:00 VN), dọn link đã xóa &gt; 48h, thử lại đăng ký D1.</p>
-         <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-100"><div class="flex items-center gap-3"><div class="toggle-wrap"><input type="checkbox" id="toggleAutoMigrate"><span class="toggle-slider"></span></div><span class="text-xs font-bold text-slate-700">Auto Migrate node</span></div><button onclick="runCronNow()" class="text-xs bg-rose-50 text-rose-600 font-bold px-3 py-2 rounded-lg hover:bg-rose-100 border border-rose-200"><i class="fas fa-random mr-1"></i>Chạy Cron ngay</button></div>
-         <div id="cronBox" class="text-xs rounded-xl border p-3 bg-slate-50 border-slate-200 text-slate-600">Đang kiểm tra Cron...</div>
-         <div class="flex gap-2"><button onclick="saveCronCfg()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU CẤU HÌNH CRON</button><button onclick="showCronLog()" class="bg-slate-100 text-slate-700 font-bold px-3 py-2.5 rounded-xl text-xs hover:bg-slate-200">Xem nhật ký Cron</button></div>
-        </div>
-
-        <!-- Hàng 3 Trái: D. Status -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
-         <div class="flex items-center justify-between"><div class="font-extrabold text-sm text-slate-800"><i class="fas fa-heart-pulse text-emerald-500 mr-1.5"></i>Trạng thái hệ thống</div><button onclick="loadStatus()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-sync mr-1"></i>Kiểm tra</button></div>
-         <div id="statusBox" class="text-xs rounded-xl border p-3 bg-slate-50 border-slate-200 text-slate-600">Đang kiểm tra trạng thái...</div>
-         <p class="text-[10px] text-slate-400">Không bao giờ hiển thị giá trị secret thật — chỉ báo Có / Không.</p>
-        </div>
-      </div>
-
-      <!-- CỘT PHẢI (Routing, Vệ tinh, Khóa hạn) -->
-      <div class="flex flex-col gap-4">
-                <!-- Khối 1: Định tuyến Gốc (Tạo Link Sub dán vào ô nào) -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-2">
-         <div class="font-bold text-sm text-slate-800"><i class="fas fa-route text-indigo-500 mr-1.5"></i>1. Định tuyến Gốc (Gán ô Link 1/2/3)</div>
-         <p class="text-[10px] text-slate-500">Nhập từ khóa domain của từng web (VD: doicucden, onepiece, lucastanora) để Worker biết khi tạo link sub thì dán vào ô Link 1, Link 2 hay Link 3.</p>
-         <div id="routeRows" class="space-y-2"></div>
-         <button onclick="saveRouting()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs shadow-md">LƯU ĐỊNH TUYẾN GỐC</button>
-        </div>
-
-        <!-- Khối 2: Cấu hình Làm mờ (Blur - Riêng web này, KHÔNG đồng bộ) -->
-        <div class="bg-white border border-purple-200 rounded-2xl shadow-sm p-5 space-y-2">
-         <div class="font-bold text-sm text-purple-800 flex items-center justify-between">
-           <span><i class="fas fa-eye-slash text-purple-500 mr-1.5"></i>2. Cấu hình Làm mờ (Blur - Web này)</span>
-           <span class="text-[10px] font-black px-2 py-0.5 rounded bg-purple-100 text-purple-700">Chỉ web này</span>
-         </div>
-         <p class="text-[10px] text-slate-500">Nhập tên ô định tuyến muốn làm mờ và gạt Bật/Tắt. Cài đặt này chỉ áp dụng trên chính web này, không đồng bộ sang web khác.</p>
-         <div id="blurRows" class="space-y-2"></div>
-         <button onclick="saveBlur()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU CẤU HÌNH LÀM MỜ</button>
-        </div>
-
-        <!-- Hàng 2 Phải: E. Vệ tinh -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-2">
-         <div class="flex justify-between items-center mb-1 border-b border-slate-100 pb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-satellite-dish text-indigo-500 mr-1.5"></i>Worker vệ tinh (2 web còn lại)</div><button onclick="addSyncWorker()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-plus"></i> Thêm</button></div>
-         <p class="text-[10px] text-slate-500">Nhập URL Worker của web kia, bật công tắc để đồng bộ. Đơn thành công: Web chính → Worker 2 → Worker 3, mỗi web tự tạo link riêng và cả 3 web đều biết đủ 3 link.</p>
-         <div id="syncWorkerList" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
-         <div class="flex gap-2"><button onclick="saveSyncWorkers()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU VỆ TINH</button><button onclick="checkTriLinks()" class="bg-slate-100 text-slate-700 font-bold px-3 py-2.5 rounded-xl text-xs hover:bg-slate-200">Kiểm tra đủ 3 link</button></div>
-         <div id="triLinkRes" class="text-[11px] text-slate-600"></div>
-        </div>
-
-        <!-- Hàng 3 Phải: C. Khóa hạn -->
-        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
-         <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-calendar-lock text-amber-500 mr-1.5"></i>Khóa thông tin hết hạn của đơn hàng</div>
-         <p class="text-[11px] text-slate-500">Bật: <b>expDate</b> và <b>days</b> của đơn KHÔNG bị thay đổi, kể cả khi bạn đổi gói / đổi giá / sửa dữ liệu khác. Dùng để sửa gói &amp; giá lịch sử mà không làm đổi thời hạn khách đang có.</p>
-         <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-100"><span class="text-xs font-bold text-slate-700">Đang khóa thông tin hết hạn</span><div class="toggle-wrap"><input type="checkbox" id="toggleLockExpiry"><span class="toggle-slider"></span></div></div>
-         <button onclick="saveLockExpiry()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU</button>
-        </div>
-      </div>
-    </div> <!-- HẾT LƯỚI 2 CỘT -->
-
-    <!-- CÁC KHỐI FULL-WIDTH BÊN DƯỚI -->
-
-    <!-- Hàng 4: G. Icon dock -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-     <div class="flex justify-between items-center mb-1 border-b border-slate-100 pb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-icons text-indigo-500 mr-1.5"></i>Icon Dock Trang chủ</div><button onclick="addDockIcon()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-plus"></i> Thêm icon</button></div>
-     <p class="text-[10px] text-slate-500 mb-2">Không dùng FontAwesome, không có màu nền: icon tùy chỉnh dùng trực tiếp <b>URL ảnh</b> (xem trước ngay bên cạnh). Khi lưu, Trang chủ nhận đúng URL ảnh đó. Khối này độc lập với Định tuyến / Blur.</p>
-     <div id="dockRows" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
-     <button onclick="saveDock()" class="w-full mt-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU ICON DOCK</button>
-    </div>
-
-        <!-- Hàng 5: A2. Nhà cung cấp gửi mail -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
-     <div class="flex items-center justify-between">
-      <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-paper-plane text-indigo-500 mr-1.5"></i>Nhà cung cấp gửi mail</div>
-      <button onclick="loadQuota()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-sync mr-1"></i>Làm mới quota</button>
-     </div>
-     <p class="text-[11px] text-slate-500">Chọn nơi Worker gửi mọi mail (báo khách, mail admin, nhắc hết hạn). Nhấp vào thẻ để chọn nhà cung cấp, sau đó bấm Lưu cấu hình.</p>
-     <div id="mailProvCards" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
-     <button id="btnSaveMailProv" onclick="saveMailProvider()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 mt-2 flex items-center justify-center gap-1.5">
-      <i class="fas fa-floppy-disk"></i>Lưu cấu hình: Google app script
-     </button>
-    </div>
-
-    <!-- Hàng 6: I. Quota -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-     <div class="flex items-center justify-between mb-1 border-b border-slate-100 pb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-gauge-high text-indigo-500 mr-1.5"></i>System Quota (chỉ web này)</div><button onclick="loadQuota()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-sync mr-1"></i>Làm mới</button></div>
-     <div id="quotaBody" class="pt-3 grid grid-cols-1 lg:grid-cols-2 gap-3 text-xs text-slate-500">Đang tải quota...</div>
-    </div>
-
-        <!-- Hàng 7: H. Bảo trì Link Sub -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
-     <div class="font-bold text-sm text-slate-800"><i class="fas fa-magnifying-glass text-amber-500 mr-1.5"></i>Rà quét &amp; Map lại <span class="text-[10px] font-normal text-slate-400">(không tự chạy khi mở trang)</span></div>
-     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-      <div class="border border-amber-200 rounded-xl p-3 bg-amber-50/30 space-y-2">
-       <div class="font-extrabold text-xs text-amber-700">A. RÀ QUÉT</div>
-       <div class="grid grid-cols-2 gap-2 text-xs">
-        <div><label class="block font-bold text-slate-500 mb-1">Trạng thái đơn</label><select id="rsStatus" class="w-full p-2 border border-slate-200 rounded-lg bg-white text-xs"><option value="all">Tất cả</option><option value="active">Còn hạn</option><option value="expired">Đã hết hạn</option></select></div>
-        <div><label class="block font-bold text-slate-500 mb-1">Info</label><select id="rsInfo" class="w-full p-2 border border-slate-200 rounded-lg bg-white text-xs"><option value="all">Tất cả Info1/2/3</option><option value="1">Info1</option><option value="2">Info2</option><option value="3">Info3</option></select></div>
-        <div class="col-span-2"><label class="block font-bold text-slate-500 mb-1">Link</label><select id="rsLink" class="w-full p-2 border border-slate-200 rounded-lg bg-white text-xs"><option value="all">Tất cả link trong Info</option><option value="dead">Chỉ link không tồn tại trong Link Sub</option></select></div>
-       </div>
-       <label class="flex items-center gap-1.5 text-[11px] font-bold text-slate-600"><input type="checkbox" id="rsManual" class="w-3.5 h-3.5 accent-amber-600">Gồm cả ô đã sửa tay (khóa Info)</label>
-       <button onclick="relinkScanRun()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm"><i class="fas fa-magnifying-glass mr-1"></i>RÀ QUÉT</button>
-       <div id="rsResult" class="text-xs text-slate-400 italic">Chưa quét — chọn bộ lọc rồi bấm Rà quét.</div>
-       <button id="rsApply" onclick="relinkApply('scan')" class="hidden w-full bg-indigo-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LÀM SẠCH (chỉ xóa URL khỏi Info, không xóa Link Sub / đơn)</button>
-      </div>
-      <div class="border border-emerald-200 rounded-xl p-3 bg-emerald-50/30 space-y-2">
-       <div class="font-extrabold text-xs text-emerald-700">B. MAP LẠI <span class="font-normal text-slate-400">(chỉ đơn còn hạn · khớp email + hạn)</span></div>
-       <div class="grid grid-cols-2 gap-2 text-xs">
-        <div><label class="block font-bold text-slate-500 mb-1">Info</label><select id="rmInfo" class="w-full p-2 border border-slate-200 rounded-lg bg-white text-xs"><option value="all">Tất cả Info1/2/3</option><option value="1">Info1</option><option value="2">Info2</option><option value="3">Info3</option></select></div>
-        <div class="flex items-end"><label class="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 pb-2"><input type="checkbox" id="rmManual" class="w-3.5 h-3.5 accent-emerald-600">Gồm cả ô đã sửa tay</label></div>
-       </div>
-       <button onclick="relinkMapRun()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm"><i class="fas fa-diagram-project mr-1"></i>QUÉT ĐỂ MAP LẠI</button>
-       <div id="rmResult" class="text-xs text-slate-400 italic">Chưa quét — bấm nút phía trên.</div>
-       <button id="rmApply" onclick="relinkApply('remap')" class="hidden w-full bg-indigo-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">MAP LẠI CHO MỤC ĐÃ CHỌN</button>
-      </div>
-     </div>
-    </div>
+  <!-- 1. VIEW SET WEB (Trạng thái, Icon Dock, Quota) -->
+  <div id="settings-view-setweb" class="space-y-4">
+   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+    <div class="flex items-center justify-between"><div class="font-extrabold text-sm text-slate-800"><i class="fas fa-heart-pulse text-emerald-500 mr-1.5"></i>Trạng thái hệ thống</div><button onclick="loadStatus()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2.5 py-1 rounded-lg hover:bg-indigo-100"><i class="fas fa-sync mr-1"></i>Kiểm tra</button></div>
+    <div id="statusBox" class="text-xs rounded-xl border p-3 bg-slate-50 border-slate-200 text-slate-600">Đang kiểm tra trạng thái...</div>
+   </div>
+   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+    <div class="flex justify-between items-center mb-1 border-b border-slate-100 pb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-icons text-indigo-500 mr-1.5"></i>Icon Dock Trang chủ</div><button onclick="addDockIcon()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-plus mr-1"></i>Thêm icon</button></div>
+    <p class="text-[10px] text-slate-500 mb-2">Icon tùy chỉnh dùng trực tiếp <b>URL ảnh</b> (xem trước ngay bên cạnh). Khi lưu, Trang chủ nhận đúng URL ảnh đó.</p>
+    <div id="dockRows" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+    <button onclick="saveDock()" class="w-full mt-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU ICON DOCK</button>
+   </div>
+   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+    <div class="flex items-center justify-between mb-1 border-b border-slate-100 pb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-gauge-high text-indigo-500 mr-1.5"></i>System Quota (chỉ web này)</div><button onclick="loadQuota()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-sync mr-1"></i>Làm mới</button></div>
+    <div id="quotaBody" class="pt-3 grid grid-cols-1 lg:grid-cols-2 gap-3 text-xs text-slate-500">Đang tải quota...</div>
+   </div>
   </div>
 
-  <!-- CÁC TAB ẨN BÊN DƯỚI (LOG, DEV, TIME) ĐƯỢC GIỮ NGUYÊN -->
+  <!-- 2. VIEW EMAIL & THÔNG BÁO -->
+  <div id="settings-view-email" class="hidden space-y-4">
+   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+    <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-envelope text-indigo-500 mr-1.5"></i>Quyền gửi Email tự động</div>
+    <p class="text-[11px] text-slate-500">Lưu thẳng vào Worker (KV). <b>Master</b>: web này được gửi mọi mail automation. <b>Slave</b>: Worker không gửi mail automation nào.</p>
+    <div class="grid grid-cols-2 gap-2"><label class="radio-card"><input type="radio" name="emailRoleRad" value="master">Master (Gửi)</label><label class="radio-card"><input type="radio" name="emailRoleRad" value="slave">Slave (Tắt)</label></div>
+    <div class="flex items-start justify-between gap-4 pt-3 border-t border-slate-100"><div><div class="font-bold text-sm text-slate-800">Tự động gửi mail nhắc hết hạn</div><div class="text-xs text-slate-500 mt-1">19:00 giờ VN — ngày D-2 và D-1. Chỉ hoạt động khi là Master.</div></div><div class="toggle-wrap mt-0.5"><input type="checkbox" id="toggleAutoMail"><span class="toggle-slider"></span></div></div>
+    <div id="beEmail" class="text-[11px] rounded-lg bg-slate-50 border border-slate-200 p-2 text-slate-600">Đang kiểm tra trạng thái backend...</div>
+    <button onclick="saveEmailPerm()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU QUYỀN EMAIL</button>
+   </div>
+
+   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+    <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-bell text-amber-500 mr-1.5"></i>Thông báo Mail Admin từ Index</div>
+    <p class="text-[11px] text-slate-500">Quản lý việc Worker gửi mail báo Admin khi khách thao tác trên web này.</p>
+    <div class="grid grid-cols-2 gap-2">
+     <label class="radio-card"><input type="radio" name="adminNotifyRoleRad" value="master" onchange="updateAdminNotifyStatusUI()">Master (All)</label>
+     <label class="radio-card"><input type="radio" name="adminNotifyRoleRad" value="slave" onchange="updateAdminNotifyStatusUI()">Slave (Filter)</label>
+    </div>
+    <div class="pt-3 border-t border-slate-100 space-y-2">
+     <div class="text-[11px] font-bold text-slate-700 flex justify-between items-center">
+      <span>Bộ lọc thông báo khi là Slave:</span>
+      <span id="adminNotifyRoleBadge" class="text-[10px] px-2 py-0.5 rounded font-black bg-indigo-50 text-indigo-600">Master</span>
+     </div>
+     <div id="adminNotifyCheckboxes" class="grid grid-cols-2 gap-2 text-xs transition-opacity duration-200">
+      <label class="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100"><input type="checkbox" id="an-new" onchange="updateAdminNotifyStatusUI()" class="w-4 h-4 accent-indigo-600"><span class="font-bold text-slate-700">Đơn mới</span></label>
+      <label class="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100"><input type="checkbox" id="an-renew" onchange="updateAdminNotifyStatusUI()" class="w-4 h-4 accent-indigo-600"><span class="font-bold text-slate-700">Đơn gia hạn</span></label>
+      <label class="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100"><input type="checkbox" id="an-upgrade" onchange="updateAdminNotifyStatusUI()" class="w-4 h-4 accent-indigo-600"><span class="font-bold text-slate-700">Nâng gói</span></label>
+      <label class="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer hover:bg-slate-100"><input type="checkbox" id="an-data" onchange="updateAdminNotifyStatusUI()" class="w-4 h-4 accent-indigo-600"><span class="font-bold text-slate-700">Tra cứu data</span></label>
+     </div>
+    </div>
+    <div id="beAdminNotify" class="text-[11px] rounded-lg bg-slate-50 border border-slate-200 p-2 text-slate-600">Đang kiểm tra...</div>
+    <button onclick="saveAdminNotifyPerm()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU CẤU HÌNH BÁO ADMIN</button>
+   </div>
+
+   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+    <div class="flex items-center justify-between"><div class="font-extrabold text-sm text-slate-800"><i class="fas fa-paper-plane text-indigo-500 mr-1.5"></i>Nhà cung cấp gửi mail</div><button onclick="loadQuota()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-sync mr-1"></i>Làm mới quota</button></div>
+    <div id="mailProvCards" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+    <button id="btnSaveMailProv" onclick="saveMailProvider()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md mt-2">Lưu cấu hình nhà cung cấp mail</button>
+   </div>
+  </div>
+
+  <!-- 3. VIEW ĐỊNH TUYẾN & VỆ TINH -->
+  <div id="settings-view-route" class="hidden space-y-4">
+   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-2">
+    <div class="font-bold text-sm text-slate-800"><i class="fas fa-route text-indigo-500 mr-1.5"></i>1. Định tuyến Gốc (Gán ô Link 1/2/3)</div>
+    <div id="routeRows" class="space-y-2"></div>
+    <button onclick="saveRouting()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs shadow-md">LƯU ĐỊNH TUYẾN GỐC</button>
+   </div>
+
+   <div class="bg-white border border-purple-200 rounded-2xl shadow-sm p-5 space-y-2">
+    <div class="font-bold text-sm text-purple-800 flex items-center justify-between"><span><i class="fas fa-eye-slash text-purple-500 mr-1.5"></i>2. Cấu hình Làm mờ (Blur - Web này)</span><span class="text-[10px] font-black px-2 py-0.5 rounded bg-purple-100 text-purple-700">Chỉ web này</span></div>
+    <div id="blurRows" class="space-y-2"></div>
+    <button onclick="saveBlur()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU CẤU HÌNH LÀM MỜ</button>
+   </div>
+
+   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-2">
+    <div class="flex justify-between items-center mb-1 border-b border-slate-100 pb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-satellite-dish text-indigo-500 mr-1.5"></i>Worker vệ tinh (2 web còn lại)</div><button onclick="addSyncWorker()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2 py-1 rounded hover:bg-indigo-100"><i class="fas fa-plus mr-1"></i>Thêm</button></div>
+    <div id="syncWorkerList" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
+    <div class="flex gap-2"><button onclick="saveSyncWorkers()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU VỆ TINH</button><button onclick="checkTriLinks()" class="bg-slate-100 text-slate-700 font-bold px-3 py-2.5 rounded-xl text-xs hover:bg-slate-200">Kiểm tra đủ 3 link</button></div>
+    <div id="triLinkRes" class="text-[11px] text-slate-600"></div>
+   </div>
+
+   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
+    <div class="font-bold text-sm text-slate-800"><i class="fas fa-magnifying-glass text-amber-500 mr-1.5"></i>Rà quét &amp; Map lại <span class="text-[10px] font-normal text-slate-400">(cục bộ web này)</span></div>
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+     <div class="border border-amber-200 rounded-xl p-3 bg-amber-50/30 space-y-2">
+      <div class="font-extrabold text-xs text-amber-700">A. RÀ QUÉT</div>
+      <div class="grid grid-cols-2 gap-2 text-xs">
+       <div><label class="block font-bold text-slate-500 mb-1">Trạng thái đơn</label><select id="rsStatus" class="w-full p-2 border rounded-lg bg-white text-xs"><option value="all">Tất cả</option><option value="active">Còn hạn</option><option value="expired">Đã hết hạn</option></select></div>
+       <div><label class="block font-bold text-slate-500 mb-1">Info</label><select id="rsInfo" class="w-full p-2 border rounded-lg bg-white text-xs"><option value="all">Tất cả Info1/2/3</option><option value="1">Info1</option><option value="2">Info2</option><option value="3">Info3</option></select></div>
+       <div class="col-span-2"><label class="block font-bold text-slate-500 mb-1">Link</label><select id="rsLink" class="w-full p-2 border rounded-lg bg-white text-xs"><option value="all">Tất cả link trong Info</option><option value="dead">Chỉ link không tồn tại trong Link Sub</option></select></div>
+      </div>
+      <label class="flex items-center gap-1.5 text-[11px] font-bold text-slate-600"><input type="checkbox" id="rsManual" class="w-3.5 h-3.5 accent-amber-600">Gồm cả ô đã sửa tay</label>
+      <button onclick="relinkScanRun()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm">RÀ QUÉT</button>
+      <div id="rsResult" class="text-xs text-slate-400 italic">Chưa quét.</div>
+      <button id="rsApply" onclick="relinkApply('scan')" class="hidden w-full bg-indigo-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LÀM SẠCH</button>
+     </div>
+     <div class="border border-emerald-200 rounded-xl p-3 bg-emerald-50/30 space-y-2">
+      <div class="font-extrabold text-xs text-emerald-700">B. MAP LẠI</div>
+      <div class="grid grid-cols-2 gap-2 text-xs">
+       <div><label class="block font-bold text-slate-500 mb-1">Info</label><select id="rmInfo" class="w-full p-2 border rounded-lg bg-white text-xs"><option value="all">Tất cả Info1/2/3</option><option value="1">Info1</option><option value="2">Info2</option><option value="3">Info3</option></select></div>
+       <div class="flex items-end"><label class="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 pb-2"><input type="checkbox" id="rmManual" class="w-3.5 h-3.5 accent-emerald-600">Gồm cả ô sửa tay</label></div>
+      </div>
+      <button onclick="relinkMapRun()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm">QUÉT ĐỂ MAP LẠI</button>
+      <div id="rmResult" class="text-xs text-slate-400 italic">Chưa quét.</div>
+      <button id="rmApply" onclick="relinkApply('remap')" class="hidden w-full bg-indigo-600 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">MAP LẠI</button>
+     </div>
+    </div>
+   </div>
+  </div>
+
+  <!-- 4. VIEW CRON & TỰ ĐỘNG -->
+  <div id="settings-view-cron" class="hidden space-y-4">
+   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+    <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-clock-rotate-left text-indigo-500 mr-1.5"></i>Cron &amp; Luân chuyển Node</div>
+    <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-100"><div class="flex items-center gap-3"><div class="toggle-wrap"><input type="checkbox" id="toggleAutoMigrate"><span class="toggle-slider"></span></div><span class="text-xs font-bold text-slate-700">Auto Migrate node</span></div><button onclick="runCronNow()" class="text-xs bg-rose-50 text-rose-600 font-bold px-3 py-2 rounded-lg hover:bg-rose-100 border border-rose-200"><i class="fas fa-random mr-1"></i>Chạy Cron ngay</button></div>
+    <div id="cronBox" class="text-xs rounded-xl border p-3 bg-slate-50 border-slate-200 text-slate-600">Đang kiểm tra Cron...</div>
+    <div class="flex gap-2"><button onclick="saveCronCfg()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU CẤU HÌNH CRON</button><button onclick="showCronLog()" class="bg-slate-100 text-slate-700 font-bold px-3 py-2.5 rounded-xl text-xs hover:bg-slate-200">Xem nhật ký Cron</button></div>
+   </div>
+
+   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-3">
+    <div class="font-extrabold text-sm text-slate-800"><i class="fas fa-calendar-lock text-amber-500 mr-1.5"></i>Khóa thông tin hết hạn của đơn hàng</div>
+    <p class="text-[11px] text-slate-500">Bật: <b>expDate</b> và <b>days</b> của đơn KHÔNG bị thay đổi khi sửa giá/gói.</p>
+    <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-100"><span class="text-xs font-bold text-slate-700">Đang khóa thông tin hết hạn</span><div class="toggle-wrap"><input type="checkbox" id="toggleLockExpiry"><span class="toggle-slider"></span></div></div>
+    <button onclick="saveLockExpiry()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU KHÓA HẠN</button>
+   </div>
+  </div>
+
+  <!-- 5. VIEW THỜI GIAN -->
+  <div id="settings-view-time" class="hidden space-y-4 max-w-3xl">
+   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3"><div class="font-bold text-sm text-slate-800"><i class="fas fa-clock text-indigo-500 mr-1"></i>Giờ web đang chạy</div><span id="simBadge" class="text-[11px] font-black px-2 py-1 rounded bg-emerald-100 text-emerald-700">ĐANG CHẠY GIỜ THỰC</span></div>
+    <div id="clkWeb" class="font-mono text-2xl md:text-4xl font-black text-indigo-600 text-center bg-indigo-50 border border-indigo-100 rounded-2xl py-3">--:--:--</div>
+   </div>
+   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+    <div class="font-bold text-sm text-slate-800 mb-1">1. Múi giờ thực tế</div>
+    <div class="grid grid-cols-2 gap-3 mt-2">
+     <button id="tzCardVN" onclick="pickTz('VN')" class="border-2 border-slate-200 rounded-2xl p-3 text-left transition"><div class="text-xs font-bold text-slate-600">🇻🇳 Việt Nam (UTC+7)</div><div id="clkVN" class="font-mono text-base md:text-xl font-black text-slate-800 mt-1">--</div></button>
+     <button id="tzCardCN" onclick="pickTz('CN')" class="border-2 border-slate-200 rounded-2xl p-3 text-left transition"><div class="text-xs font-bold text-slate-600">🇨🇳 Trung Quốc (UTC+8)</div><div id="clkCN" class="font-mono text-base md:text-xl font-black text-slate-800 mt-1">--</div></button>
+    </div>
+   </div>
+   <div class="bg-white border border-purple-200 rounded-2xl shadow-sm p-5">
+    <div class="font-bold text-sm text-purple-700 mb-1"><i class="fas fa-flask mr-1"></i>2. Giờ tùy chỉnh (để test cronjob / auto)</div>
+    <div class="flex flex-col sm:flex-row gap-2 mt-2"><input type="datetime-local" id="simInput" class="flex-1 p-2 border border-slate-300 rounded-lg text-sm bg-slate-50 outline-none"><button onclick="applySim()" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-purple-700 shadow-md">Chạy giờ này</button><button onclick="clearSim()" class="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-200">Về giờ thực</button></div>
+   </div>
+   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+    <div class="font-bold text-sm text-slate-800 mb-1"><i class="fas fa-calendar-check text-indigo-500 mr-1"></i>3. Chuẩn hóa định dạng thời gian dữ liệu KV</div>
+    <div class="flex gap-2 mb-3 mt-2"><button onclick="migrateDates(false)" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2 rounded-lg text-xs hover:bg-slate-200">Quét thử</button><button onclick="migrateDates(true)" class="flex-1 bg-indigo-600 text-white font-bold py-2 rounded-lg text-xs hover:bg-indigo-700">Áp dụng</button></div>
+    <div id="migReport" class="text-xs text-slate-600 space-y-1"></div>
+   </div>
+   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+    <div class="font-bold text-sm text-slate-800 mb-1"><i class="fas fa-box text-indigo-500 mr-1"></i>4. Chuẩn hóa hiển thị gói VPN</div>
+    <div class="flex gap-2 mb-3 mt-2"><button onclick="migratePkg(false)" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2 rounded-lg text-xs hover:bg-slate-200">Quét thử</button><button onclick="migratePkg(true)" class="flex-1 bg-indigo-600 text-white font-bold py-2 rounded-lg text-xs hover:bg-indigo-700">Áp dụng</button></div>
+    <div id="pkgReport" class="text-xs text-slate-600 space-y-1"></div>
+   </div>
+  </div>
+
+  <!-- 6. VIEW QUẢN LÝ FAQ (MỚI) -->
+  <div id="settings-view-faq" class="hidden space-y-4">
+   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+    <div>
+     <h3 class="font-extrabold text-base text-slate-800"><i class="fas fa-circle-question text-indigo-600 mr-1.5"></i>Tùy biến câu hỏi thường gặp (FAQ) bên Index</h3>
+     <p class="text-[11px] text-slate-500 mt-0.5">Sửa nội dung 5 FAQ cố định, thêm câu hỏi mới, đổi thứ tự hiển thị. Dữ liệu sẽ đồng bộ sang index.html.</p>
+    </div>
+    <div class="flex gap-2 shrink-0">
+     <button type="button" onclick="addNewFaq()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold px-3 py-2 rounded-xl text-xs"><i class="fas fa-plus mr-1"></i>Thêm câu hỏi</button>
+     <button type="button" onclick="saveFaqs()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md"><i class="fas fa-save mr-1.5"></i>LƯU FAQ</button>
+    </div>
+   </div>
+   <div id="faqListContainer" class="space-y-3"></div>
+  </div>
+
+  <!-- 7. VIEW NHẬT KÝ -->
   <div id="settings-view-log" class="hidden">
    <div class="flex flex-wrap items-center gap-2 mb-3"><div class="text-sm font-bold text-slate-700 mr-auto">Nhật ký hoạt động <span id="logCount" class="text-slate-400 font-normal text-xs"></span></div>
     <select id="logLvl" onchange="renderLogs()" class="p-2 border border-slate-200 rounded-lg text-xs bg-white"><option value="">Mọi mức</option><option value="error">Lỗi</option><option value="warn">Cảnh báo</option><option value="ok">Thành công</option><option value="info">Thông tin</option></select>
@@ -723,38 +730,9 @@ textarea.autog{resize:none;overflow:hidden;}
    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden"><div class="overflow-x-auto"><table class="log-table"><thead><tr><th>Thời gian</th><th>Mức</th><th>Nguồn</th><th>Hành động</th><th>Chi tiết</th></tr></thead><tbody id="logBody"></tbody></table></div></div>
   </div>
 
+  <!-- 8. VIEW THIẾT BỊ -->
   <div id="settings-view-dev" class="hidden"><div class="mb-3 text-sm font-bold text-slate-700">Thiết bị quản trị đã đăng nhập</div><div id="devBody" class="space-y-3"></div><p class="text-[11px] text-slate-500 mt-3">Đổi biến ADMIN_PASSWORD trên Worker để đăng xuất toàn bộ thiết bị ngay lập tức.</p></div>
-
-  <div id="settings-view-time" class="hidden space-y-4 max-w-3xl">
-   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-    <div class="flex flex-wrap items-center justify-between gap-2 mb-3"><div class="font-bold text-sm text-slate-800"><i class="fas fa-clock text-indigo-500 mr-1"></i>Giờ web đang chạy</div><span id="simBadge" class="text-[11px] font-black px-2 py-1 rounded bg-emerald-100 text-emerald-700">ĐANG CHẠY GIỜ THỰC</span></div>
-    <div id="clkWeb" class="font-mono text-2xl md:text-4xl font-black text-indigo-600 text-center bg-indigo-50 border border-indigo-100 rounded-2xl py-3">--:--:--</div>
-   </div>
-   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-    <div class="font-bold text-sm text-slate-800 mb-1">1. Múi giờ thực tế</div><p class="text-[11px] text-slate-500 mb-3">Chọn múi giờ dùng để hiển thị ngày giờ và tính hạn. Đồng hồ bên cạnh chạy giờ hiện tại của từng nước.</p>
-    <div class="grid grid-cols-2 gap-3">
-     <button id="tzCardVN" onclick="pickTz('VN')" class="border-2 border-slate-200 rounded-2xl p-3 text-left transition"><div class="text-xs font-bold text-slate-600">🇻🇳 Việt Nam (UTC+7)</div><div id="clkVN" class="font-mono text-base md:text-xl font-black text-slate-800 mt-1">--</div></button>
-     <button id="tzCardCN" onclick="pickTz('CN')" class="border-2 border-slate-200 rounded-2xl p-3 text-left transition"><div class="text-xs font-bold text-slate-600">🇨🇳 Trung Quốc (UTC+8)</div><div id="clkCN" class="font-mono text-base md:text-xl font-black text-slate-800 mt-1">--</div></button>
-    </div>
-   </div>
-   <div class="bg-white border border-purple-200 rounded-2xl shadow-sm p-5">
-    <div class="font-bold text-sm text-purple-700 mb-1"><i class="fas fa-flask mr-1"></i>2. Giờ tùy chỉnh (để test cronjob / auto)</div>
-    <p class="text-[11px] text-slate-500 mb-3">Đặt ngày giờ web sẽ chạy theo. Khi bật, Admin và Worker (cron khóa link, luân chuyển node, mail nhắc hạn, tính hạn, giờ tạo đơn/link) đều chạy theo giờ này và đi tiếp từng giây từ mốc bạn đặt. Worker nhận giờ mới trong tối đa 30 giây; bấm "Chạy Cron ngay" ở tab Set Web để thử liền. Giờ ghi trong D1 (ngân hàng) vẫn là giờ thật. Nhớ tắt sau khi test.</p>
-    <div class="flex flex-col sm:flex-row gap-2"><input type="datetime-local" id="simInput" class="flex-1 p-2 border border-slate-300 rounded-lg text-sm bg-slate-50 outline-none"><button onclick="applySim()" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-purple-700 shadow-md">Chạy theo giờ này</button><button onclick="clearSim()" class="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-200">Về giờ thực</button></div>
-   </div>
-   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-    <div class="font-bold text-sm text-slate-800 mb-1"><i class="fas fa-calendar-check text-indigo-500 mr-1"></i>3. Chuẩn hóa định dạng thời gian dữ liệu KV</div>
-    <p class="text-[11px] text-slate-500 mb-3">Đổi mọi kiểu cũ (07:48:29 18/9/2026, 18:50 - 17/10/2026, ISO...) sang <b>DD/MM/YY HH:MM</b> và lưu thêm mốc thời gian chuẩn. Riêng Link Sub ẩn được ghi theo kiểu <b>HSD + giờ tạo</b> (VD 21/09/2026 20:31). Bấm "Quét thử" để xem trước, không ghi gì. Tháng nhóm ở tab Đơn hàng giữ nguyên.</p>
-    <div class="flex gap-2 mb-3"><button onclick="migrateDates(false)" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2 rounded-lg text-xs hover:bg-slate-200">Quét thử</button><button onclick="migrateDates(true)" class="flex-1 bg-indigo-600 text-white font-bold py-2 rounded-lg text-xs hover:bg-indigo-700">Áp dụng</button></div>
-    <div id="migReport" class="text-xs text-slate-600 space-y-1"></div>
-   </div>
-   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-    <div class="font-bold text-sm text-slate-800 mb-1"><i class="fas fa-box text-indigo-500 mr-1"></i>4. Chuẩn hóa hiển thị gói VPN</div>
-    <p class="text-[11px] text-slate-500 mb-3">Đưa mọi kiểu cũ (Gói 1 tháng - 60,000VND (100GB), Gói 1 tháng - 60.000đ...) về <b>Gói 1 tháng - 60,000VND</b> và gắn mã gói chuẩn cho đơn cũ. Đơn giá cũ (50,000/60,000/70,000) được nhận diện theo số tiền thực thu (totalVnd) và GIỮ NGUYÊN giá gốc, không bị quy về giá mới. Bấm "Quét thử" trước khi áp dụng.</p>
-    <div class="flex gap-2 mb-3"><button onclick="migratePkg(false)" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2 rounded-lg text-xs hover:bg-slate-200">Quét thử</button><button onclick="migratePkg(true)" class="flex-1 bg-indigo-600 text-white font-bold py-2 rounded-lg text-xs hover:bg-indigo-700">Áp dụng</button></div>
-    <div id="pkgReport" class="text-xs text-slate-600 space-y-1"></div>
-   </div>
-  </div>
+ </div>
 </main>
     
 <!-- ===== MODAL ĐƠN HÀNG ===== -->
@@ -1719,8 +1697,18 @@ function renderTransactions(){
    } else {
      oIdBadge = "bg-emerald-100 text-emerald-800 border-emerald-200";
    }
-   return `<tr><td class="text-xs font-bold text-slate-400">${i+1}</td><td><span class="font-mono font-black text-xs px-2 py-1 rounded-md border cp inline-block ${oIdBadge}" onclick="cp(${q(oId)})">${esc(oId)}</span></td>
-   <td><span class="bg-${badge[0]}-100 text-${badge[0]}-700 border border-${badge[0]}-200 px-2 py-1 rounded text-[10px] font-bold uppercase" title="${esc(tx.review_note||"")}">${esc(badge[1])}</span></td><td class="col-ok">${/^(success|paid|rejected)$/.test(s)?'<span class="text-slate-300">—</span>':`<button onclick="approveTransaction(${tx.id})" title="Ép khớp giao dịch" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold w-8 h-8 rounded-lg shadow text-xs flex items-center justify-center mx-auto transition active:scale-95"><i class="fas fa-bolt"></i></button>`}</td><td class="col-x">${delBtn(tx.id)}</td></tr>`;}).join("");
+   return `<tr>
+    <td class="text-xs font-bold text-slate-400">${i+1}</td>
+    <td><span class="font-mono font-black text-xs px-2 py-1 rounded-md border cp inline-block ${oIdBadge}" onclick="cp(${q(oId)})">${esc(oId)}</span></td>
+    <td class="text-xs text-slate-600 whitespace-nowrap">${tc}</td>
+    <td class="text-xs font-bold text-slate-700 cp" onclick="cp(${q(email)})">${esc(email)}</td>
+    <td><span class="font-black text-rose-600 whitespace-nowrap">${amt.toLocaleString("en-US")}VND</span> <span class="text-xs text-slate-500 font-bold">x${sl}</span></td>
+    <td class="text-xs font-bold text-slate-500">${esc(web)}</td>
+    <td>${rx?`<span class="font-bold text-[11px] cp text-slate-700" onclick="cp('${rx}')">${rx}</span>`:'<span class="text-slate-400 font-bold text-xs">Trống</span>'}</td>
+    <td><span class="bg-${badge[0]}-100 text-${badge[0]}-700 border border-${badge[0]}-200 px-2 py-1 rounded text-[10px] font-bold uppercase" title="${esc(tx.review_note||"")}">${esc(badge[1])}</span></td>
+    <td class="col-ok">${/^(success|paid|rejected)$/.test(s)?'<span class="text-slate-300">—</span>':`<button onclick="approveTransaction(${tx.id})" title="Ép khớp giao dịch" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold w-8 h-8 rounded-lg shadow text-xs flex items-center justify-center mx-auto transition active:scale-95"><i class="fas fa-bolt"></i></button>`}</td>
+    <td class="col-x">${delBtn(tx.id)}</td>
+   </tr>`;}).join("");
  }else{
   th.innerHTML='<tr><th>STT</th><th>Thời Gian</th><th>Số Tiền</th><th>Nội Dung Thô</th><th class="col-x">Xóa</th></tr>';
   tb.innerHTML=txData.map((tx,i)=>`<tr><td class="text-xs text-slate-500 font-bold">${i+1}</td><td class="text-xs text-slate-600 whitespace-nowrap">${fmtBank(tx.created_at)}</td><td class="font-black text-rose-600 whitespace-nowrap">${Number(tx.amount).toLocaleString("en-US")}VND</td><td class="font-mono text-[11px] text-slate-600 bg-slate-50 whitespace-normal break-words min-w-[250px]">${esc(tx.notification||tx.content||"—")}</td><td class="col-x">${delBtn(tx.id)}</td></tr>`).join("");}}
@@ -2889,8 +2877,22 @@ async function saveCms(){
  try{await aj("/api/guides",{method:"POST",body:guides});toast("Đã lưu bài (đã đẩy sang các web vệ tinh)");logEvent("ok","Lưu hướng dẫn",curCms+" / "+(curArtName||curArt));renderArtList();renderCmsEditor();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
 // ===================== CÀI ĐẶT =====================
 const saveCmsDb=()=>{const s=cmsDb.settings;["syncD1Url","syncD1Secret","crossSyncEnabled","mailLog","sysLog","autoRole"].forEach(k=>delete s[k]);return aj("/api/cms",{method:"POST",body:cmsDb});};
-function switchSettingsTab(t){["setweb","log","dev","time"].forEach(x=>{$("settings-view-"+x).classList.toggle("hidden",x!==t);$("stab-"+x).classList.toggle("active",x===t);});if(t==="log")loadLogs();if(t==="dev")renderDev();if(t==="setweb"||t==="time")loadSettingsUI();if(t==="setweb"){loadStatus();loadQuota();}}
-function showCronLog(){switchSettingsTab("log");$("logSrc").value="cron";$("logLvl").value="";loadLogs();}
+function switchSettingsTab(t){
+ const tabs = ["setweb", "email", "route", "cron", "time", "faq", "log", "dev"];
+ tabs.forEach(x => {
+   const view = $("settings-view-" + x);
+   const btn = $("stab-" + x);
+   if (view) view.classList.toggle("hidden", x !== t);
+   if (btn) btn.classList.toggle("active", x === t);
+ });
+ if (t === "log") loadLogs();
+ if (t === "dev") renderDev();
+ if (t === "setweb") { loadStatus(); loadQuota(); }
+ if (t === "email") { loadStatus(); loadQuota(); initAdminNotifyUI(); }
+ if (t === "route") { renderRouteRows(); renderBlurRows(); renderSyncWorkers(); }
+ if (t === "time") { paintTimeUI(); }
+ if (t === "faq") { renderFaqAdmin(); }
+}function showCronLog(){switchSettingsTab("log");$("logSrc").value="cron";$("logLvl").value="";loadLogs();}
 // Khối 1: Render & Lưu Định tuyến Gốc (Chỉ phục vụ gán ô dán link)
 function renderRouteRows(){
   const s = cmsDb.settings;
@@ -2997,6 +2999,86 @@ function readDockRows(){const a=arr(cmsDb.settings.dock);a.forEach((it,i)=>{if($
 function addDockIcon(){const a=readDockRows();a.push({name:"",img:"",url:""});cmsDb.settings.dock=a;renderDockRows();}
 function removeDockIcon(i){const a=readDockRows();a.splice(i,1);cmsDb.settings.dock=a;renderDockRows();}
 async function saveDock(){const a=readDockRows().filter(it=>/^https?:\/\//i.test(it.img||""));cmsDb.settings.dock=a;try{await saveCmsDb();toast("Đã lưu Icon Dock ("+a.length+" icon tùy chỉnh)");logEvent("ok","Lưu cấu hình","Icon Dock");renderDockRows();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
+// ===================== LOGIC QUẢN LÝ FAQ =====================
+const DEFAULT_FAQS = [
+  { id: "faq_1", q: "Làm sao lấy Link cài đặt?", a: "Nhập Mã Đơn hoặc Email vào thanh tìm kiếm trên cùng." },
+  { id: "faq_2", q: "VPN hỗ trợ những app nào?", a: "TikTok, Facebook, Messenger, Instagram, Telegram, Zalo, YouTube... Nhắn Admin để test." },
+  { id: "faq_3", q: "Có những phương thức thanh toán nào?", a: "Ngân hàng VN (VietQR), Alipay, Weixin." },
+  { id: "faq_4", q: "Đổi máy có dùng tiếp được không?", a: "Có. Tra cứu lại Mã Đơn trên web." },
+  { id: "refund", q: "Hoàn tiền", a: "Website không áp dụng hoàn tiền cho đơn hàng đã mua, khách hàng vui lòng chú ý và cân nhắc khi thanh toán." }
+];
+
+let adminFaqsList = [];
+
+function loadAdminFaqs() {
+  if (Array.isArray(cmsDb.faqs) && cmsDb.faqs.length) {
+    adminFaqsList = cmsDb.faqs;
+  } else {
+    adminFaqsList = JSON.parse(JSON.stringify(DEFAULT_FAQS));
+  }
+}
+
+function renderFaqAdmin() {
+  if (!adminFaqsList.length) loadAdminFaqs();
+  const c = $("faqListContainer");
+  if (!c) return;
+  c.innerHTML = adminFaqsList.map((item, idx) => `
+    <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm space-y-2">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded">#${idx + 1}</span>
+          <span class="font-bold text-xs text-indigo-700 font-mono">${esc(item.id || 'faq')}</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <button type="button" onclick="moveFaq(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} class="w-7 h-7 rounded bg-slate-100 text-slate-600 disabled:opacity-30 hover:bg-slate-200"><i class="fas fa-arrow-up text-xs"></i></button>
+          <button type="button" onclick="moveFaq(${idx}, 1)" ${idx === adminFaqsList.length - 1 ? 'disabled' : ''} class="w-7 h-7 rounded bg-slate-100 text-slate-600 disabled:opacity-30 hover:bg-slate-200"><i class="fas fa-arrow-down text-xs"></i></button>
+          <button type="button" onclick="delFaq(${idx})" class="w-7 h-7 rounded bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition"><i class="fas fa-trash text-xs"></i></button>
+        </div>
+      </div>
+      <div>
+        <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Câu hỏi (Q):</label>
+        <input type="text" value="${esc(item.q || '')}" oninput="adminFaqsList[${idx}].q = this.value" class="w-full p-2 text-xs border border-slate-200 rounded-lg font-bold bg-white outline-none focus:border-indigo-500">
+      </div>
+      <div>
+        <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Câu trả lời (A):</label>
+        <textarea rows="2" oninput="adminFaqsList[${idx}].a = this.value" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white outline-none focus:border-indigo-500 leading-relaxed">${esc(item.a || '')}</textarea>
+      </div>
+    </div>
+  `).join("");
+}
+
+function addNewFaq() {
+  const nextId = "faq_" + (adminFaqsList.length + 1);
+  adminFaqsList.push({ id: nextId, q: "Câu hỏi thường gặp mới", a: "Câu trả lời..." });
+  renderFaqAdmin();
+  toast("Đã thêm câu hỏi mới, hãy nhập nội dung và bấm LƯU FAQ.");
+}
+
+function delFaq(idx) {
+  if (!confirm(`Xóa câu hỏi #${idx + 1}?`)) return;
+  adminFaqsList.splice(idx, 1);
+  renderFaqAdmin();
+  toast("Đã xóa câu hỏi.");
+}
+
+function moveFaq(idx, dir) {
+  const target = idx + dir;
+  if (target < 0 || target >= adminFaqsList.length) return;
+  const [item] = adminFaqsList.splice(idx, 1);
+  adminFaqsList.splice(target, 0, item);
+  renderFaqAdmin();
+}
+
+async function saveFaqs() {
+  cmsDb.faqs = adminFaqsList;
+  try {
+    await saveCmsDb();
+    toast(`Đã lưu ${adminFaqsList.length} câu hỏi FAQ thành công!`);
+    logEvent("ok", "FAQ", `Lưu ${adminFaqsList.length} câu hỏi`);
+  } catch(e) {
+    toast("Lỗi lưu FAQ: " + e.message, "err");
+  }
+}    
 function loadSettingsUI(){
  const s=cmsDb.settings;renderRouteRows();renderBlurRows();renderSyncWorkers();renderDockRows();renderMailProvCards();
  const rr=document.querySelector(`input[name=emailRoleRad][value=${s.emailRole==="master"?"master":"slave"}]`);if(rr)rr.checked=true;
