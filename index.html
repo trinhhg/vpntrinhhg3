@@ -965,6 +965,7 @@ async function loadConfig(){
         pkgs = cfgCache.packages.map(p => {
           return {
             id: p.id,
+            hidden: !!p.hidden,
             category: p.category || ['cycle'],
             vi: { name: p.name || p.vi?.name || 'Gói VPN', price: p.isCustom ? 'Liên hệ Admin' : (p.vnd ? Number(p.vnd).toLocaleString('en-US') + 'VND' : '0VND') },
             en: { name: p.name || p.en?.name || 'VPN Plan', price: p.isCustom ? 'Contact Admin' : ('$' + (p.usd || 0)) },
@@ -985,6 +986,9 @@ async function loadConfig(){
         });
         try { localStorage.setItem('vpn_dynamic_pkgs_cache', JSON.stringify(pkgs)); } catch(e) {}
         renderPackages('all');
+      }
+      if(Array.isArray(cfgCache.faqs) && cfgCache.faqs.length){
+        renderDynamicFaqs(cfgCache.faqs);
       }
     }
   }catch(e){}
@@ -1037,54 +1041,121 @@ async function changeLanguage(val){
  if(oCache)updatePortalInfo(oCache);window.scrollTo(0,cy);
  await applyLangSafe(val);window.scrollTo(0,cy);}
 
-const faqHTML=['1','2','3','4'].map(n=>`<details class="bg-white dark:bg-[#0a0a0a] rounded-2xl shadow-sm border border-slate-100 dark:border-white/10 group cursor-pointer w-full transition-all" onclick="event.preventDefault();this.open=!this.open;"><summary class="font-bold text-indigo-700 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.3)] text-sm flex justify-between items-center outline-none p-4 md:p-5"><span data-i18n="faq_${n}_q"></span><span class="transition group-open:rotate-180 text-slate-400 dark:text-slate-500"><i class="fas fa-chevron-down"></i></span></summary><div class="px-4 pb-4 md:px-5 md:pb-5"><p class="text-slate-600 dark:text-slate-200 text-xs font-medium" data-i18n="faq_${n}_a"></p></div></details>`).join('')+
- `<details class="bg-white dark:bg-[#0a0a0a] rounded-2xl shadow-sm border border-slate-100 dark:border-white/10 group cursor-pointer w-full transition-all" onclick="event.preventDefault();this.open=!this.open;"><summary class="font-bold text-indigo-700 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.3)] text-sm flex justify-between items-center outline-none p-4 md:p-5"><span data-i18n="refund_q"></span><span class="transition group-open:rotate-180 text-slate-400 dark:text-slate-500"><i class="fas fa-chevron-down"></i></span></summary><div class="px-4 pb-4 md:px-5 md:pb-5"><p class="text-slate-600 dark:text-slate-200 text-xs font-medium" data-i18n="refund_a"></p></div></details>`;
-['faqStoreContainer','faqPortalContainer','faqPortalHomeContainer'].forEach(id=>{const el=$(id);if(el)el.innerHTML=faqHTML;});
+const DEFAULT_FAQS_STATIC = [
+  { q: "Làm sao lấy Link cài đặt?", a: "Nhập Mã Đơn hoặc Email vào thanh tìm kiếm trên cùng." },
+  { q: "VPN hỗ trợ những app nào?", a: "TikTok, Facebook, Messenger, Instagram, Telegram, Zalo, YouTube... Nhắn Admin để test." },
+  { q: "Có những phương thức thanh toán nào?", a: "Ngân hàng VN (VietQR), Alipay, Weixin." },
+  { q: "Đổi máy có dùng tiếp được không?", a: "Có. Tra cứu lại Mã Đơn trên web." },
+  { q: "Hoàn tiền", a: "Website không áp dụng hoàn tiền cho đơn hàng đã mua, khách hàng vui lòng chú ý và cân nhắc khi thanh toán." }
+];
+
+function buildFaqHtmlList(faqsList) {
+  return faqsList.map(item => `
+    <details class="bg-white dark:bg-[#0a0a0a] rounded-2xl shadow-sm border border-slate-100 dark:border-white/10 group cursor-pointer w-full transition-all" onclick="event.preventDefault();this.open=!this.open;">
+      <summary class="font-bold text-indigo-700 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.3)] text-sm flex justify-between items-center outline-none p-4 md:p-5 select-none">
+        <span>${esc(item.q || '')}</span>
+        <span class="transition group-open:rotate-180 text-slate-400 dark:text-slate-500"><i class="fas fa-chevron-down"></i></span>
+      </summary>
+      <div class="px-4 pb-4 md:px-5 md:pb-5">
+        <p class="text-slate-600 dark:text-slate-200 text-xs font-medium leading-relaxed">${esc(item.a || '')}</p>
+      </div>
+    </details>
+  `).join('');
+}
+
+function renderDynamicFaqs(list) {
+  const data = Array.isArray(list) && list.length ? list : DEFAULT_FAQS_STATIC;
+  const html = buildFaqHtmlList(data);
+  ['faqStoreContainer','faqPortalContainer','faqPortalHomeContainer'].forEach(id => {
+    const el = $(id);
+    if(el) el.innerHTML = html;
+  });
+}
+renderDynamicFaqs(DEFAULT_FAQS_STATIC);
 
 function disableUpgradeMode(){isUpgradeMode=false;isRenewMode=false;upgradeConfirmed=false;baseOrderPriceVnd=baseOrderPriceUsd=baseOrderPriceCny=0;renderPackages('all');}
 function genHTML(pkg){
- const l=i18n[lang],p=pkg[lang]||pkg.vi;let displayTime=pkg.time==='lifetime'?l.lifetime_lbl:`${pkg.time} ${l.month_lbl}`;if((pkg.category||[]).includes('usage')&&!pkg.isCustom)displayTime=l.lifetime_lbl;
+ const l = i18n[lang], p = pkg[lang] || pkg.vi;
+ let displayTime = pkg.time === 'lifetime' ? 'Vĩnh viễn' : `${pkg.time} Tháng`;
+ if((pkg.category || []).includes('usage') && !pkg.isCustom) displayTime = 'Vĩnh viễn';
+
  let devText = '';
  const devRaw = String(pkg.dev ?? '').trim();
  if (devRaw.toLowerCase().includes('unlimited') || devRaw.toLowerCase().includes('không giới hạn')) {
-   devText = `${l.dev_label}<b>${l.dev_unlimited_label || 'Không giới hạn thiết bị'}</b>`;
+   devText = 'Không giới hạn thiết bị';
  } else if (devRaw === 'custom' || devRaw.toLowerCase().includes('tùy chọn')) {
-   devText = `${l.dev_label}<b>${l.dev_custom || 'Tùy chọn'}</b>`;
+   devText = 'Tùy chọn';
  } else {
-   const cleanVal = devRaw.toLowerCase().includes('thiết bị') ? devRaw : `${devRaw} Thiết bị`;
-   devText = `${l.dev_label}<b>${cleanVal}</b>`;
+   devText = devRaw.toLowerCase().includes('thiết bị') ? devRaw : `${devRaw} Thiết bị`;
  }
- const isDisabled=isUpgradeMode&&pkg.vnd<=baseOrderPriceVnd&&!pkg.isCustom;
- const priceStr=(p.price||'').replace('VND','<span class="text-sm md:text-base font-bold ml-0.5">VND</span>');
- const priceHTML=pkg.isCustom?`<div class="text-xl font-black text-red-600 dark:text-red-400 dark:drop-shadow-[0_0_8px_rgba(248,113,113,0.8)] mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${priceStr}</div>`:`<div class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_10px_rgba(165,180,252,0.8)] mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${priceStr}</div>`;
- const btn=isDisabled?`<button disabled class="w-full bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 font-bold py-3 rounded-xl text-sm cursor-not-allowed">${l.unavailable}</button>`:pkg.isCustom?`<a href="#footerArea" class="w-full block text-center bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-bold py-3 rounded-xl text-sm hover:bg-red-600 hover:text-white transition">${l.btn_contact}</a>`:`<button onclick="openCheckout('${pkg.id}')" class="w-full bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-bold py-3 rounded-xl text-sm hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white dark:hover:shadow-[0_0_15px_rgba(99,102,241,0.5)] transition">${l.btn_buy}</button>`;
 
- // Render 4 loại Tag linh hoạt
+ const isDisabled = isUpgradeMode && pkg.vnd <= baseOrderPriceVnd && !pkg.isCustom;
+ const priceStr = (p.price || '').replace('VND','<span class="text-sm md:text-base font-bold ml-0.5">VND</span>');
+ const priceHTML = pkg.isCustom
+   ? `<div class="text-xl font-black text-red-600 dark:text-red-400 dark:drop-shadow-[0_0_8px_rgba(248,113,113,0.8)] mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${priceStr}</div>`
+   : `<div class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_10px_rgba(165,180,252,0.8)] mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${priceStr}</div>`;
+
+ const btn = isDisabled
+   ? `<button disabled class="w-full bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 font-bold py-3 rounded-xl text-sm cursor-not-allowed">Không khả dụng</button>`
+   : pkg.isCustom
+     ? `<a href="#footerArea" class="w-full block text-center bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-bold py-3 rounded-xl text-sm hover:bg-red-600 hover:text-white transition">Liên hệ Admin</a>`
+     : `<button onclick="openCheckout('${pkg.id}')" class="w-full bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-bold py-3 rounded-xl text-sm hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white dark:hover:shadow-[0_0_15px_rgba(99,102,241,0.5)] transition">Đăng ký Gói Này</button>`;
+
+ // Render 4 loại Tag dạng badge mở
  let tagBadges = '';
- if (pkg.tag) tagBadges += `<span class="absolute -top-3 right-4 bg-red-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10 shadow-sm">${pkg.tag[lang]||pkg.tag.vi||pkg.tag}</span>`;
- if (pkg.tag2) tagBadges += `<span class="absolute -top-3 left-4 bg-blue-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10 shadow-sm">${pkg.tag2[lang]||pkg.tag2.vi||pkg.tag2}</span>`;
- if (pkg.tag3) tagBadges += `<span class="absolute -top-3 right-4 bg-red-500 text-white font-black px-3 py-1 rounded-full shadow-sm text-[10px] z-10">${pkg.tag3[lang]||pkg.tag3.vi||pkg.tag3}</span>`;
- if (pkg.tag4) tagBadges += `<span class="absolute -top-3 left-4 bg-purple-600 text-white text-[10px] px-3 py-1 rounded-full font-black z-10 shadow-sm">${pkg.tag4[lang]||pkg.tag4.vi||pkg.tag4}</span>`;
+ if (pkg.tag) tagBadges += `<span class="absolute -top-3 right-4 bg-red-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10 shadow-sm">${esc(pkg.tag[lang] || pkg.tag.vi || pkg.tag)}</span>`;
+ if (pkg.tag2) tagBadges += `<span class="absolute -top-3 left-4 bg-blue-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10 shadow-sm">${esc(pkg.tag2[lang] || pkg.tag2.vi || pkg.tag2)}</span>`;
+ if (pkg.tag3) tagBadges += `<span class="absolute -top-3 right-4 bg-red-500 text-white font-black px-3 py-1 rounded-full shadow-sm text-[10px] z-10">${esc(pkg.tag3[lang] || pkg.tag3.vi || pkg.tag3)}</span>`;
+ if (pkg.tag4) tagBadges += `<span class="absolute -top-3 left-4 bg-purple-600 text-white text-[10px] px-3 py-1 rounded-full font-black z-10 shadow-sm">${esc(pkg.tag4[lang] || pkg.tag4.vi || pkg.tag4)}</span>`;
 
- // Render danh sách dòng tính năng linh hoạt
- const extraFeats = Array.isArray(pkg.features) ? pkg.features : ['Băng thông lên đến 3Gbps'];
- const featsHtml = extraFeats.map(f => `<li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${esc(f)}</li>`).join('');
+ const extraFeats = Array.isArray(pkg.features) && pkg.features.length ? pkg.features : ['Băng thông lên đến 3Gbps'];
+ const featsHtml = extraFeats.map(f => `
+   <li class="flex items-center gap-2">
+     <i class="fas fa-check-circle text-green-500 shrink-0"></i>
+     <span>${esc(f)}</span>
+   </li>
+ `).join('');
 
- return `<div class="bg-white dark:bg-[#0a0a0a] p-5 md:p-6 rounded-3xl border border-slate-100 dark:border-indigo-500/50 shadow-sm relative flex flex-col justify-between transition-all duration-300 transform hover:-translate-y-2 hover:scale-[1.02] neon-animated-card mt-4 md:mt-0 ${isDisabled?'pkg-disabled':''}">
- ${tagBadges}
- <div class="${tagBadges?'pt-2':''}"><h3 class="font-extrabold text-lg md:text-xl dark:text-white">${esc(p.name)}</h3><p class="text-xs font-bold text-slate-500 dark:text-slate-300 mb-3">${displayTime}</p>${priceHTML}
- <ul class="text-xs md:text-sm space-y-2.5 mb-6 font-medium text-slate-600 dark:text-white">
-   <li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${l.data_label} <b class="dark:text-white">${esc(pkg.data)}</b></li>
-   <li><i class="fas fa-check-circle text-green-500 mr-1.5"></i>${devText}</li>
-   ${featsHtml}
- </ul></div>${btn}</div>`;
+ return `
+ <div class="bg-white dark:bg-[#0a0a0a] p-5 md:p-6 rounded-3xl border border-slate-100 dark:border-indigo-500/50 shadow-sm relative flex flex-col justify-between transition-all duration-300 transform hover:-translate-y-2 hover:scale-[1.02] neon-animated-card mt-4 md:mt-0 ${isDisabled ? 'pkg-disabled' : ''}">
+   ${tagBadges}
+   <div class="${tagBadges ? 'pt-2' : ''}">
+     <h3 class="font-extrabold text-lg md:text-xl dark:text-white mb-0.5">${esc(p.name)}</h3>
+     <p class="text-xs font-bold text-slate-500 dark:text-slate-300 mb-3">${esc(displayTime)}</p>
+     ${priceHTML}
+     <ul class="text-xs md:text-sm space-y-2.5 mb-6 font-medium text-slate-600 dark:text-white">
+       <li class="flex items-center gap-2">
+         <i class="fas fa-check-circle text-green-500 shrink-0"></i>
+         <span>Dung lượng: <b class="dark:text-white">${esc(pkg.data)}</b></span>
+       </li>
+       <li class="flex items-center gap-2">
+         <i class="fas fa-check-circle text-green-500 shrink-0"></i>
+         <span>Giới hạn thiết bị: <b>${esc(devText)}</b></span>
+       </li>
+       ${featsHtml}
+     </ul>
+   </div>
+   ${btn}
+ </div>`;
 }
+
 function renderPackages(filter){
- ['htab','ptab'].forEach(p=>['all','travel','cycle','usage'].forEach(t=>{const b=$(`${p}-${t}`);if(!b)return;if(t===filter){b.classList.add('active','bg-indigo-600','text-white');b.classList.remove('text-slate-600','dark:text-slate-300');}else{b.classList.remove('active','bg-indigo-600','text-white');b.classList.add('text-slate-600','dark:text-slate-300');}}));
- const visiblePkgs = pkgs.filter(p => !p.hidden && (filter==='all' || (p.category && p.category.includes(filter))));
- const html=visiblePkgs.map(genHTML).join('');
- if($('packagesContainerHome'))$('packagesContainerHome').innerHTML=html;
- if($('packagesContainerPortal'))$('packagesContainerPortal').innerHTML=html;
+ ['htab','ptab'].forEach(p => ['all','travel','cycle','usage'].forEach(t => {
+   const b = $(`${p}-${t}`);
+   if(!b) return;
+   if(t === filter){
+     b.classList.add('active','bg-indigo-600','text-white');
+     b.classList.remove('text-slate-600','dark:text-slate-300');
+   } else {
+     b.classList.remove('active','bg-indigo-600','text-white');
+     b.classList.add('text-slate-600','dark:text-slate-300');
+   }
+ }));
+ // Lọc bỏ toàn bộ gói có flag hidden để CSS grid tự động co dồn card lên hàng trên
+ const visiblePkgs = pkgs.filter(p => !p.hidden && (filter === 'all' || (p.category && p.category.includes(filter))));
+ const html = visiblePkgs.map(genHTML).join('');
+ if($('packagesContainerHome')) $('packagesContainerHome').innerHTML = html;
+ if($('packagesContainerPortal')) $('packagesContainerPortal').innerHTML = html;
 }
 
 function startUpgrade(){
