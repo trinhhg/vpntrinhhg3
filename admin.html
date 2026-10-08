@@ -238,52 +238,6 @@ textarea.autog{resize:none;overflow:hidden;}
     </button>
    </div>
 
-async function healAllMissingWithProgress(){
- const list = getMissingOrders();
- if (!list.length) return toast("Tất cả đơn đã đủ 3 link!", "info");
- const btn = $("btnHealAll");
- btn.disabled = true;
- const box = $("checkProgressBox"), bar = $("checkProgressBar"), pTxt = $("checkProgressPercent"), sTxt = $("checkProgressStatus"), logEl = $("checkLogTerminal");
- box.classList.remove("hidden");
- bar.style.width = "0%";
- pTxt.textContent = "0%";
- $("statTotal").textContent = list.length;
- $("statSuccess").textContent = "0";
- $("statFailed").textContent = "0";
- logEl.innerHTML = `<div class="text-emerald-400">[BẮT ĐẦU] Tìm thấy ${list.length} đơn cần kiểm tra bù link...</div>`;
- 
- let succCount = 0, failCount = 0;
- for(let i = 0; i < list.length; i++){
-   const o = list[i];
-   const pct = Math.round(((i + 1) / list.length) * 100);
-   bar.style.width = pct + "%";
-   pTxt.textContent = pct + "%";
-   sTxt.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Đang xử lý ${i+1}/${list.length} (${o.id})...`;
-   
-   try {
-     const res = await aj("/api/admin/heal", { method: "POST", body: { orderIds: [o.id] } });
-     succCount++;
-     $("statSuccess").textContent = succCount;
-     const logLine = document.createElement("div");
-     logLine.className = "text-emerald-300";
-     logLine.textContent = `✔ [OK] Đơn ${o.id} (${o.email}): Đã phát lệnh bù link thành công`;
-     logEl.appendChild(logLine);
-   } catch(e) {
-     failCount++;
-     $("statFailed").textContent = failCount;
-     const logLine = document.createElement("div");
-     logLine.className = "text-rose-400";
-     logLine.textContent = `✘ [LỖI] Đơn ${o.id}: ${e.message || "Không phản hồi"}`;
-     logEl.appendChild(logLine);
-   }
-   logEl.scrollTop = logEl.scrollHeight;
-   await sleep(350);
- }
- sTxt.innerHTML = `<i class="fas fa-circle-check text-emerald-500 mr-1"></i>Đã hoàn thành kiểm tra bù link cho ${list.length} đơn!`;
- btn.disabled = false;
- setTimeout(fetchAll, 2500);
-}
-      
    <!-- KHỐI TIẾN TRÌNH & LOG TERMINAL -->
    <div id="checkProgressBox" class="hidden border border-purple-200 bg-purple-50/40 rounded-xl p-3 space-y-2">
     <div class="flex items-center justify-between text-xs font-bold text-purple-900">
@@ -304,7 +258,6 @@ async function healAllMissingWithProgress(){
   </div>
   <div id="checkBody" class="space-y-3 w-full min-w-0"></div>
  </div>
-
     
 
  <!-- ===== GIAO DỊCH D1 ===== -->
@@ -1430,23 +1383,53 @@ async function healSingleOrder(orderId){
  }
 }
 
-// Bấm nút bù link cho tất cả các đơn thiếu link
-async function healAllMissing(){
+// Bấm nút bù link cho tất cả các đơn thiếu link kèm thanh tiến trình & log Terminal
+async function healAllMissingWithProgress(){
  const list = getMissingOrders();
- if (!list.length) return toast("Không có đơn nào thiếu link", "info");
+ if (!list.length) return toast("Tất cả đơn đã đủ 3 link!", "info");
  const btn = $("btnHealAll");
  btn.disabled = true;
- toast("Đang kích hoạt Nhạc trưởng bù link cho " + list.length + " đơn...");
- try {
-   await aj("/api/admin/heal", { method: "POST", body: { orderIds: list.map(o => o.id) } });
-   toast("Đã phát lệnh bù link, hệ thống đang chạy ngầm...");
-   setTimeout(fetchAll, 3500);
- } catch(e) {
-   toast("Lỗi: " + e.message, "err");
- } finally {
-   btn.disabled = false;
+ const box = $("checkProgressBox"), bar = $("checkProgressBar"), pTxt = $("checkProgressPercent"), sTxt = $("checkProgressStatus"), logEl = $("checkLogTerminal");
+ box.classList.remove("hidden");
+ bar.style.width = "0%";
+ pTxt.textContent = "0%";
+ $("statTotal").textContent = list.length;
+ $("statSuccess").textContent = "0";
+ $("statFailed").textContent = "0";
+ logEl.innerHTML = `<div class="text-emerald-400">[BẮT ĐẦU] Tìm thấy ${list.length} đơn cần kiểm tra bù link...</div>`;
+ 
+ let succCount = 0, failCount = 0;
+ for(let i = 0; i < list.length; i++){
+   const o = list[i];
+   const pct = Math.round(((i + 1) / list.length) * 100);
+   bar.style.width = pct + "%";
+   pTxt.textContent = pct + "%";
+   sTxt.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Đang xử lý ${i+1}/${list.length} (${o.id})...`;
+   
+   try {
+     await aj("/api/admin/heal", { method: "POST", body: { orderIds: [o.id] } });
+     succCount++;
+     $("statSuccess").textContent = succCount;
+     const logLine = document.createElement("div");
+     logLine.className = "text-emerald-300";
+     logLine.textContent = `✔ [OK] Đơn ${o.id} (${o.email}): Đã phát lệnh bù link thành công`;
+     logEl.appendChild(logLine);
+   } catch(e) {
+     failCount++;
+     $("statFailed").textContent = failCount;
+     const logLine = document.createElement("div");
+     logLine.className = "text-rose-400";
+     logLine.textContent = `✘ [LỖI] Đơn ${o.id}: ${e.message || "Không phản hồi"}`;
+     logEl.appendChild(logLine);
+   }
+   logEl.scrollTop = logEl.scrollHeight;
+   await sleep(350);
  }
+ sTxt.innerHTML = `<i class="fas fa-circle-check text-emerald-500 mr-1"></i>Đã hoàn thành kiểm tra bù link cho ${list.length} đơn!`;
+ btn.disabled = false;
+ setTimeout(fetchAll, 2500);
 }
+const healAllMissing = healAllMissingWithProgress;
 
 // ===================== MAIL: LÕI TEMPLATE (giống hệt Worker để preview = gửi thật) =====================
 const htmlEscape=esc;
@@ -3017,9 +3000,10 @@ async function saveDock(){const a=readDockRows().filter(it=>/^https?:\/\//i.test
 function loadSettingsUI(){
  const s=cmsDb.settings;renderRouteRows();renderBlurRows();renderSyncWorkers();renderDockRows();renderMailProvCards();
  const rr=document.querySelector(`input[name=emailRoleRad][value=${s.emailRole==="master"?"master":"slave"}]`);if(rr)rr.checked=true;
- $("toggleAutoMail").checked=!!s.autoMailEnabled;$("toggleAutoMigrate").checked=s.autoMigrateNode!==false;$("toggleLockExpiry").checked=!!s.lockExpiry;
- $("toggleLockFulfill").checked=!!s.lockFulfill;$("toggleMailOnSave").checked=mailOnSaveOn();
- if($("toggleManualEdit")) $("toggleManualEdit").checked=manualEditOn();
+ if($("toggleAutoMail")) $("toggleAutoMail").checked=!!s.autoMailEnabled;
+ if($("toggleAutoMigrate")) $("toggleAutoMigrate").checked=s.autoMigrateNode!==false;
+ if($("toggleLockExpiry")) $("toggleLockExpiry").checked=!!s.lockExpiry;
+ updateOrderTogglesUI();
  paintTimeUI();
  initAdminNotifyUI();}
 async function saveEmailPerm(){
