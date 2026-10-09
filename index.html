@@ -465,9 +465,15 @@ html.dark .loader-ring.amber i{color:#E6C078;}
                 <button type="button" onclick="selectDuration('custom')" id="dur-btn-custom" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900">X <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
               </div>
               <div id="customDurWrap" class="hidden mt-3"><div class="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 p-2 rounded-lg border border-indigo-100 dark:border-indigo-500/30"><label class="text-xs font-bold text-indigo-800 dark:text-indigo-300 whitespace-nowrap pl-1" data-i18n="input_months">Nhập số tháng:</label><input type="number" id="customDurInput" min="1" max="120" value="2" oninput="calculateTotal()" class="w-full p-2 text-sm border border-slate-300 dark:border-white/20 rounded outline-none focus:border-indigo-500 font-bold bg-white dark:bg-black text-center text-slate-800 dark:text-white"></div></div>
-              <div id="priceCalculation" class="mt-3 text-sm font-black text-indigo-700 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.8)] bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-500/30 p-2.5 rounded-lg text-center"></div>
+              <div id="priceCalculation" class="mt-3 text-sm font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-500/30 p-2.5 rounded-lg text-center"></div>
             </div>
-            <div class="sticky bottom-0 z-40 mt-auto pt-4 bg-white/90 dark:bg-[#0a0a0a]/90 backdrop-blur-md rounded-b-3xl pb-2"><button type="submit" id="btnConfirm" class="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md dark:shadow-[0_0_20px_rgba(99,102,241,0.5)]" data-i18n="btn_create_order">TẠO MÃ QR CHUYỂN KHOẢN</button></div>
+            <!-- Dòng Note Hoàn tiền (nền đỏ nhạt, viền đỏ, tĩnh không hiệu ứng) -->
+            <div class="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 p-3.5 rounded-2xl mb-4 text-left">
+              <p class="text-[11px] md:text-xs text-red-700 dark:text-red-400 font-medium leading-relaxed m-0">
+                <b class="font-bold text-red-800 dark:text-red-300">Hoàn tiền:</b> Website không hỗ trợ hoàn tiền sau khi đã mua hàng. Quý khách vui lòng chú ý trước khi thanh toán.
+              </p>
+            </div>
+            <div class="mt-auto pt-4"><button type="submit" id="btnConfirm" class="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md dark:shadow-[0_0_20px_rgba(99,102,241,0.5)]" data-i18n="btn_create_order">TẠO MÃ QR CHUYỂN KHOẢN</button></div>
           </div>
           <div id="checkoutRightCol" class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-5 md:p-8 rounded-3xl shadow-sm flex flex-col"></div>
         </div>
@@ -1186,23 +1192,27 @@ function renderDurationSelector(pkg) {
  if (pkg.time === 'lifetime') {
   block.innerHTML = `
    <label class="block font-bold text-xs text-slate-700 dark:text-slate-200 mb-2">Thời hạn gói:</label>
-   <div class="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-500/30 p-3 rounded-xl text-center font-black text-indigo-700 dark:text-indigo-300 text-sm">
-    <i class="fas fa-infinity mr-1.5 text-lg"></i>Thời hạn: Vĩnh viễn
+   <div class="grid grid-cols-1 gap-2 text-center">
+    <button type="button" id="dur-btn-1" class="dur-btn active !bg-indigo-600 !text-white font-bold py-2.5 rounded-xl text-sm shadow-md">
+     <i class="fas fa-infinity mr-1.5"></i>Thời hạn: Vĩnh viễn
+    </button>
    </div>
+   <div id="priceCalculation" class="mt-3 text-sm font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-500/30 p-2.5 rounded-lg text-center"></div>
   `;
   currentDurationMode = 1;
   return;
  }
 
- // 2. Gói 1 Năm (time: 12)
+ // 2. Gói 1 Năm (time: 12) - Gán ID chuẩn dur-btn-1 để luôn sáng viền tím / nền tím đúng chuẩn
  if (pkg.time === 12) {
   block.innerHTML = `
    <label class="block font-bold text-xs text-slate-700 dark:text-slate-200 mb-2">Thời hạn gói:</label>
    <div class="grid grid-cols-1 gap-2 text-center">
-    <button type="button" class="dur-btn active !bg-indigo-600 !text-white font-bold py-2.5 rounded-lg text-sm shadow-md">
+    <button type="button" id="dur-btn-1" class="dur-btn active !bg-indigo-600 !text-white font-bold py-2.5 rounded-xl text-sm shadow-md">
      12 Tháng (1 Năm)
     </button>
    </div>
+   <div id="priceCalculation" class="mt-3 text-sm font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-500/30 p-2.5 rounded-lg text-center"></div>
   `;
   currentDurationMode = 1;
   return;
@@ -1241,7 +1251,7 @@ function renderDurationSelector(pkg) {
  `;
  currentDurationMode = 1;
 }
-
+  
 function selectDuration(m){
  currentDurationMode=m;
  document.querySelectorAll('.dur-btn').forEach(b=>{
@@ -1270,25 +1280,34 @@ function selectPayMethod(method){
  calculateTotal();}
 
 function calculateTotal(){
- if(!currentPackage)return;currentMultiplier=currentDurationMode==='custom'?Math.max(1,Math.min(120,parseInt($('customDurInput').value)||1)):currentDurationMode;
+ if(!currentPackage)return;
+ currentMultiplier=currentDurationMode==='custom'?Math.max(1,Math.min(120,parseInt($('customDurInput')?.value)||1)):currentDurationMode;
  const m=$('payMethod').value;
+ const pCalc = $('priceCalculation');
  if(isUpgradeMode){
-  currentTotalVnd=Math.max(0,(currentPackage.vnd-baseOrderPriceVnd)*currentMultiplier);currentTotalCny=parseFloat((Math.max(0,currentPackage.cny-baseOrderPriceCny)*currentMultiplier).toFixed(2));currentTotalUsd=parseFloat((Math.max(0,currentPackage.usd-baseOrderPriceUsd)*currentMultiplier).toFixed(2));
+  currentTotalVnd=Math.max(0,(currentPackage.vnd-baseOrderPriceVnd)*currentMultiplier);
+  currentTotalCny=parseFloat((Math.max(0,currentPackage.cny-baseOrderPriceCny)*currentMultiplier).toFixed(2));
+  currentTotalUsd=parseFloat((Math.max(0,currentPackage.usd-baseOrderPriceUsd)*currentMultiplier).toFixed(2));
   const dpVnd=currentPackage.vnd-baseOrderPriceVnd,dpCny=parseFloat((Math.max(0,currentPackage.cny-baseOrderPriceCny)).toFixed(2)),dpUsd=parseFloat((Math.max(0,currentPackage.usd-baseOrderPriceUsd)).toFixed(2));
   let noteStr='', calcStr='';
   if(m==='bank'){ noteStr=`${dpVnd.toLocaleString('en-US')}VND`; calcStr=`${currentTotalVnd.toLocaleString('en-US')}VND`; }
   else if(m==='alipay'||m==='wechat'||m==='weixin'){ noteStr=`¥${dpCny}`; calcStr=`¥${currentTotalCny}`; }
   else { noteStr=`$${dpUsd}`; calcStr=`$${currentTotalUsd}`; }
-  $('upgradePriceNote').innerHTML=`Đơn giá nâng cấp: <b>${noteStr} / Tháng</b>`;
-  $('priceCalculation').innerText=`Thanh toán chênh lệch (${currentMultiplier} tháng): ${calcStr}`;
+  const upNote = $('upgradePriceNote');
+  if(upNote) upNote.innerHTML=`Đơn giá nâng cấp: <b>${noteStr} / Tháng</b>`;
+  if(pCalc) pCalc.innerText=`Thanh toán chênh lệch (${currentMultiplier} tháng): ${calcStr}`;
  }else{
-  currentTotalVnd=currentPackage.vnd*currentMultiplier;currentTotalCny=currentPackage.cny*currentMultiplier;currentTotalUsd=parseFloat((currentPackage.usd*currentMultiplier).toFixed(2));
+  currentTotalVnd=currentPackage.vnd*currentMultiplier;
+  currentTotalCny=parseFloat((currentPackage.cny*currentMultiplier).toFixed(2));
+  currentTotalUsd=parseFloat((currentPackage.usd*currentMultiplier).toFixed(2));
   let calcStr='';
-  if(m==='bank'){ calcStr=`${currentPackage.vnd.toLocaleString('en-US')}VND × ${currentMultiplier} = ${currentTotalVnd.toLocaleString('en-US')}VND`; }
-  else if(m==='alipay'||m==='wechat'||m==='weixin'){ calcStr=`¥${currentPackage.cny} × ${currentMultiplier} = ¥${currentTotalCny}`; }
-  else { calcStr=`$${currentPackage.usd} × ${currentMultiplier} = $${currentTotalUsd}`; }
-  $('priceCalculation').innerText=calcStr;
+  const isOneTime = currentPackage.time === 12 || currentPackage.time === 'lifetime';
+  if(m==='bank'){ calcStr=isOneTime ? `${currentTotalVnd.toLocaleString('en-US')}VND` : `${currentPackage.vnd.toLocaleString('en-US')}VND × ${currentMultiplier} = ${currentTotalVnd.toLocaleString('en-US')}VND`; }
+  else if(m==='alipay'||m==='wechat'||m==='weixin'){ calcStr=isOneTime ? `¥${currentTotalCny}` : `¥${currentPackage.cny} × ${currentMultiplier} = ¥${currentTotalCny}`; }
+  else { calcStr=isOneTime ? `$${currentTotalUsd}` : `$${currentPackage.usd} × ${currentMultiplier} = $${currentTotalUsd}`; }
+  if(pCalc) pCalc.innerText=calcStr;
  }
+ // Luôn tự động cập nhật ngay mã QR bên phải cho mọi gói cước nếu đơn đã được tạo
  if(currentOrderId||(isUpgradeMode&&upgradeConfirmed))renderPaymentBox();}
 
 function toggleZalo(){const z=$('cusZalo');z.classList.toggle('hidden');z.required=!z.classList.contains('hidden')&&!(isUpgradeMode||isRenewMode);}
@@ -1308,19 +1327,19 @@ function renderPaymentBox(){
  const col=$('checkoutRightCol'),m=$('payMethod').value,btn=$('btnConfirm'),l=i18n[lang];
  const fp=m==='bank'?`${currentTotalVnd.toLocaleString('en-US')}VND`:m==='alipay'||m==='wechat'||m==='weixin'?`¥${currentTotalCny}`:`$${currentTotalUsd}`;
  btn.innerHTML=l.btn_create_order;let guideHtml=l.guide_desc+(isUpgradeMode?"<br><br>"+l.guide_desc_upgrade:"");
- if(!currentOrderId&&!isUpgradeMode){col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 dark:text-indigo-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4><p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${guideHtml}</p></div>`;return;}
- if(isUpgradeMode&&!upgradeConfirmed){col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-purple-700 dark:text-purple-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-arrow-up mr-2"></i>${l.upgrade_confirm_title}</h4><p class="text-sm text-slate-600 dark:text-slate-300 mb-4">${l.upgrade_confirm_desc}</p><h4 class="font-extrabold text-base mb-2 text-indigo-700 dark:text-indigo-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4><p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${guideHtml}</p></div>`;return;}
+ if(!currentOrderId&&!isUpgradeMode){col.innerHTML=`<div class="flex flex-col h-full justify-between"><h4 class="font-extrabold text-base mb-2 text-indigo-700 dark:text-indigo-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4><p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${guideHtml}</p></div>`;return;}
+ if(isUpgradeMode&&!upgradeConfirmed){col.innerHTML=`<div class="flex flex-col h-full justify-between"><div><h4 class="font-extrabold text-base mb-2 text-purple-700 dark:text-purple-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-arrow-up mr-2"></i>${l.upgrade_confirm_title}</h4><p class="text-sm text-slate-600 dark:text-slate-300 mb-4">${l.upgrade_confirm_desc}</p><h4 class="font-extrabold text-base mb-2 text-indigo-700 dark:text-indigo-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4><p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${guideHtml}</p></div></div>`;return;}
  const dispId=isUpgradeMode?oCache.id:currentOrderId;
- const paid=`<button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center btn-heartbeat"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button>`;
- const memo=(cls,extra)=>`<div class="highlight-copy py-4 px-3 rounded-xl text-center cursor-pointer" onclick="copyText('${dispId}')"><span class="block text-[11px] font-black mb-2 uppercase text-[#854d0e] dark:text-indigo-200">${l.copy_memo}</span><strong class="block bg-white dark:bg-black font-mono ${cls} py-3 rounded-xl shadow-inner border-2 border-yellow-400 dark:border-indigo-500 text-[#854d0e] dark:text-indigo-100 flex items-center justify-center gap-2">${dispId} <i class="far fa-copy opacity-50"></i></strong><p class="text-[10px] mt-2 italic font-bold opacity-80 ${extra} text-[#854d0e] dark:text-indigo-300">${extra?l.input_manual:l.click_copy}</p></div>${paid}`;
+ const paidBtnHtml=`<div class="mt-auto pt-4 w-full"><button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center btn-heartbeat"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button></div>`;
+ const memo=(cls,extra)=>`<div class="highlight-copy py-4 px-3 rounded-xl text-center cursor-pointer" onclick="copyText('${dispId}')"><span class="block text-[11px] font-black mb-2 uppercase text-[#854d0e] dark:text-indigo-200">${l.copy_memo}</span><strong class="block bg-white dark:bg-black font-mono ${cls} py-3 rounded-xl shadow-inner border-2 border-yellow-400 dark:border-indigo-500 text-[#854d0e] dark:text-indigo-100 flex items-center justify-center gap-2">${dispId} <i class="far fa-copy opacity-50"></i></strong><p class="text-[10px] mt-2 italic font-bold opacity-80 ${extra} text-[#854d0e] dark:text-indigo-300">${extra?l.input_manual:l.click_copy}</p></div>`;
  if(m==='bank'){
-  col.innerHTML=`<div class="text-center w-full"><div class="bg-indigo-50 dark:bg-white p-2 rounded-xl inline-block mb-4 border border-transparent dark:border-indigo-500 shadow-sm dark:shadow-[0_0_15px_rgba(99,102,241,0.5)]"><img src="https://img.vietqr.io/image/mbbank-0917678211-compact.png?amount=${currentTotalVnd}&addInfo=${dispId}&accountName=TRINH THI XUAN HUONG" class="w-40 h-40 md:w-56 md:h-56 rounded-xl mx-auto object-contain mix-blend-multiply dark:mix-blend-normal"></div>
-  <div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_name}</span><strong class="dark:text-white">MB BANK</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_num}</span><strong class="text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.6)] cursor-pointer" onclick="copyText('0917678211')">0917678211 <i class="far fa-copy ml-1"></i></strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div></div>${memo('text-2xl md:text-3xl','')}</div>`;
+  col.innerHTML=`<div class="text-center w-full flex flex-col flex-1 justify-between h-full"><div><div class="bg-indigo-50 dark:bg-white p-2 rounded-xl inline-block mb-4 border border-transparent dark:border-indigo-500 shadow-sm dark:shadow-[0_0_15px_rgba(99,102,241,0.5)]"><img src="https://img.vietqr.io/image/mbbank-0917678211-compact.png?amount=${currentTotalVnd}&addInfo=${dispId}&accountName=TRINH THI XUAN HUONG" class="w-40 h-40 md:w-56 md:h-56 rounded-xl mx-auto object-contain mix-blend-multiply dark:mix-blend-normal"></div>
+  <div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_name}</span><strong class="dark:text-white">MB BANK</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_num}</span><strong class="text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.6)] cursor-pointer" onclick="copyText('0917678211')">0917678211 <i class="far fa-copy ml-1"></i></strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div></div>${memo('text-2xl md:text-3xl','')}</div>${paidBtnHtml}</div>`;
  }
  else{
   const ali=m==='alipay',img=ali?'https://i.pinimg.com/736x/44/57/9d/44579dfb5241614ddc897a21ce34e233.jpg':'https://i.pinimg.com/736x/28/b2/95/28b29577c6229ec943e8e13afe241db3.jpg';
-  col.innerHTML=`<div class="text-center w-full"><h4 class="font-extrabold text-lg mb-4 ${ali?'text-blue-600':'text-green-600'}">${ali?'Alipay <i class="fas fa-qrcode text-sm ml-1"></i>':'Weixin <i class="fas fa-qrcode text-sm ml-1"></i>'}</h4><div class="bg-slate-50 dark:bg-white p-2 rounded-xl inline-block mb-4 border border-slate-100 dark:border-transparent shadow-sm"><img src="${img}" class="w-48 max-w-full h-auto mx-auto rounded-lg object-contain mix-blend-multiply dark:mix-blend-normal"></div>
-  <div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div></div>${memo('text-2xl','uppercase')}</div>`;
+  col.innerHTML=`<div class="text-center w-full flex flex-col flex-1 justify-between h-full"><div><h4 class="font-extrabold text-lg mb-4 ${ali?'text-blue-600':'text-green-600'}">${ali?'Alipay <i class="fas fa-qrcode text-sm ml-1"></i>':'Weixin <i class="fas fa-qrcode text-sm ml-1"></i>'}</h4><div class="bg-slate-50 dark:bg-white p-2 rounded-xl inline-block mb-4 border border-slate-100 dark:border-transparent shadow-sm"><img src="${img}" class="w-48 max-w-full h-auto mx-auto rounded-lg object-contain mix-blend-multiply dark:mix-blend-normal"></div>
+  <div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div></div>${memo('text-2xl','uppercase')}</div>${paidBtnHtml}</div>`;
  }
 }
 function submitOrder(e){
