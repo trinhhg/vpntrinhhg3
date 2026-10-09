@@ -829,20 +829,42 @@ function renderBlocks(bl,gid){
    h+=`<div id="${aid}" class="flex gap-2 mb-2.5 items-start scroll-mt-24 ${jc}"><span class="bg-indigo-600 text-white min-w-[20px] h-[20px] px-1.5 flex items-center justify-center rounded-full text-[11px] font-bold shrink-0 mt-1">${lb}</span><p class="m-0 text-slate-700 dark:text-slate-300 leading-relaxed text-${al} ${txtCls}">${bText(b)}</p></div>`;
   }
   else if(b.t==='note'){
-   h+=`<div id="${aid}" class="my-2.5 scroll-mt-24 text-${al}"><div class="inline-block max-w-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 border-l-4 border-l-amber-500 px-3 py-2 rounded-md text-left"><p class="m-0 text-amber-900 dark:text-amber-200 leading-relaxed ${txtCls}"><b>⚠️ LƯU Ý:</b> ${bText(b)}</p></div></div>`;
+   // Khung Note đổi màu linh hoạt: Vàng (amber), Đỏ (red), Xanh (blue), Tím (purple), Xanh lá (green)
+   const theme = b.theme || 'amber';
+   const themeStyles = {
+     amber: 'bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-700/60 border-l-amber-500 text-amber-900 dark:text-amber-200',
+     red: 'bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-700/60 border-l-red-500 text-red-900 dark:text-red-200',
+     blue: 'bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-700/60 border-l-blue-500 text-blue-900 dark:text-blue-200',
+     purple: 'bg-purple-50 dark:bg-purple-950/30 border-purple-300 dark:border-purple-700/60 border-l-purple-500 text-purple-900 dark:text-purple-200',
+     green: 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-700/60 border-l-emerald-500 text-emerald-900 dark:text-emerald-200'
+   };
+   const noteIcon = theme==='red'?'⛔ CHÚ Ý:':theme==='blue'?'💡 HƯỚNG DẪN:':theme==='purple'?'✨ GHI CHÚ:':theme==='green'?'✔ MẸO HAY:':'⚠️ LƯU Ý:';
+   h+=`<div id="${aid}" class="my-3 scroll-mt-24 text-${al}"><div class="inline-block max-w-full ${themeStyles[theme] || themeStyles.amber} border border-l-4 px-4 py-2.5 rounded-xl text-left shadow-sm"><p class="m-0 leading-relaxed ${txtCls}"><b>${noteIcon}</b> ${bText(b)}</p></div></div>`;
   }
   else if(b.t==='toc'){
    const items=bl.map((x,i)=>({x,i})).filter(o=>o.x.t==='header'||o.x.t==='sub');
-   h+=`<div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-3 my-3"><div class="font-extrabold text-indigo-600 dark:text-indigo-400 mb-2 text-sm"><i class="fas fa-list-ul mr-1.5"></i>${esc(b.x||'Xem nhanh')}</div>${items.map(o=>`<a onclick="guideScroll('g-${g}-${o.i}')" class="block cursor-pointer py-1 text-[13px] hover:text-indigo-500 transition ${o.x.t==='sub'?'pl-4 text-slate-600 dark:text-slate-400 font-semibold':'text-indigo-800 dark:text-indigo-300 font-extrabold'}"><i class="fas fa-angle-right mr-1.5 text-indigo-400"></i>${esc(o.x.x)}</a>`).join('')||'<span class="text-xs text-slate-400">Chưa có mục nào</span>'}</div>`;
+   h+=`<div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 my-4 shadow-sm"><div class="font-extrabold text-indigo-600 dark:text-indigo-400 mb-2.5 text-base flex items-center gap-2"><i class="fas fa-list-ul"></i><span>${esc(b.x||'Xem nhanh')}</span></div><div class="space-y-1.5">${items.map(o=>`<a onclick="guideScroll('g-${g}-${o.i}')" class="block cursor-pointer py-1 text-sm hover:text-indigo-500 dark:hover:text-indigo-400 transition ${o.x.t==='sub'?'pl-4 text-slate-600 dark:text-slate-400 font-semibold':'text-indigo-800 dark:text-indigo-300 font-extrabold'}"><i class="fas fa-angle-right mr-1.5 text-indigo-400"></i>${esc(o.x.x)}</a>`).join('')||'<span class="text-xs text-slate-400">Chưa có mục nào</span>'}</div></div>`;
   }
   else if(b.t==='btn'){
-   h+=`<div id="${aid}" class="my-2.5 scroll-mt-24 text-${al}"><a href="${esc(safeUrl(b.u))}" target="_blank" rel="noopener" class="inline-block bg-gradient-to-br from-purple-500 to-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-md hover:scale-105 transition"><i class="fas fa-download mr-2"></i>${esc(b.x||'TẢI VỀ')}</a></div>`;
+   h+=`<div id="${aid}" class="my-3 scroll-mt-24 text-${al}"><a href="${esc(safeUrl(b.u))}" target="_blank" rel="noopener" class="inline-block bg-gradient-to-br from-purple-500 to-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-md hover:scale-105 transition"><i class="fas fa-download mr-2"></i>${esc(b.x||'TẢI VỀ')}</a></div>`;
   }
   else if(b.t==='img'){
-   h+=`<div id="${aid}" class="my-2.5 scroll-mt-24"><div class="text-${al}"><img src="${esc(safeUrl(b.u))}" onclick="openLightbox('${esc(safeUrl(b.u))}')" class="max-h-[280px] w-auto max-w-full object-contain rounded-lg border border-slate-200 dark:border-slate-700 inline-block shadow-sm cursor-zoom-in" /></div>${String(b.x||'')!==''?`<div class="text-${dAlign(b)} text-xs text-slate-500 dark:text-slate-400 mt-1.5">${bText(b)}</div>`:''}</div>`;
+   // Ảnh luôn căn giữa màn hình, có caption bên dưới, click là zoom to, click cái nữa là đóng
+   h+=`<div id="${aid}" class="my-4 scroll-mt-24 text-center">
+     <div class="inline-block max-w-full">
+       <img src="${esc(safeUrl(b.u))}" onclick="openLightbox('${esc(safeUrl(b.u))}')" title="Bấm để phóng to ảnh" class="max-h-[380px] w-auto max-w-full object-contain rounded-2xl border border-slate-200 dark:border-slate-700 shadow-md cursor-zoom-in transition-transform duration-200 hover:scale-[1.01] mx-auto" />
+       ${String(b.x||'').trim()!==''?`<div class="text-center text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-2 font-medium italic">${bText(b)}</div>`:''}
+     </div>
+   </div>`;
   }
   else if(b.t==='video'){
-   h+=`<div id="${aid}" class="my-2.5 scroll-mt-24">${videoEmbed(b.u)}${String(b.x||'')!==''?`<div class="text-${dAlign(b)} text-xs text-slate-500 dark:text-slate-400 mt-1.5">${bText(b)}</div>`:''}</div>`;
+   // Video căn giữa màn hình, có caption bên dưới
+   h+=`<div id="${aid}" class="my-4 scroll-mt-24 text-center">
+     <div class="inline-block w-full max-w-2xl mx-auto">
+       ${videoEmbed(b.u)}
+       ${String(b.x||'').trim()!==''?`<div class="text-center text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-2 font-medium italic">${bText(b)}</div>`:''}
+     </div>
+   </div>`;
   }
   else if(b.t==='qlink'){
    const ti=findTarget(bl,b.target);
@@ -1082,17 +1104,21 @@ renderDynamicFaqs(DEFAULT_FAQS_STATIC);
 function disableUpgradeMode(){isUpgradeMode=false;isRenewMode=false;upgradeConfirmed=false;baseOrderPriceVnd=baseOrderPriceUsd=baseOrderPriceCny=0;renderPackages('all');}
 function genHTML(pkg){
  const l = i18n[lang], p = pkg[lang] || pkg.vi;
- let displayTime = pkg.time === 'lifetime' ? 'Vĩnh viễn' : `${pkg.time} Tháng`;
- if((pkg.category || []).includes('usage') && !pkg.isCustom) displayTime = 'Vĩnh viễn';
+ const pkgRawName = String(pkg.vi?.name || pkg.name || 'Gói VPN').trim();
+ const pkgDisplayName = tx(pkgRawName);
+
+ let displayTime = pkg.time === 'lifetime' ? tx('Vĩnh viễn') : `${pkg.time} ${tx('Tháng')}`;
+ if((pkg.category || []).includes('usage') && !pkg.isCustom) displayTime = tx('Vĩnh viễn');
 
  let devText = '';
  const devRaw = String(pkg.dev ?? '').trim();
  if (devRaw.toLowerCase().includes('unlimited') || devRaw.toLowerCase().includes('không giới hạn')) {
-   devText = 'Không giới hạn thiết bị';
- } else if (devRaw === 'custom' || devRaw.toLowerCase().includes('tùy chọn')) {
-   devText = 'Tùy chọn';
+   devText = tx('Không giới hạn thiết bị');
+ } else if (devRaw.toLowerCase() === 'custom' || devRaw.toLowerCase().includes('tùy chọn')) {
+   devText = tx('Tùy chọn');
  } else {
-   devText = devRaw.toLowerCase().includes('thiết bị') ? devRaw : `${devRaw} Thiết bị`;
+   const devNum = devRaw.replace(/\D/g, '');
+   devText = devNum ? `${devNum} ${tx('Thiết bị')}` : tx(devRaw);
  }
 
  const isDisabled = isUpgradeMode && pkg.vnd <= baseOrderPriceVnd && !pkg.isCustom;
@@ -1118,7 +1144,7 @@ function genHTML(pkg){
  const featsHtml = extraFeats.map(f => `
    <li class="flex items-center gap-2">
      <i class="fas fa-check-circle text-green-500 shrink-0"></i>
-     <span>${esc(f)}</span>
+     <span class="feat-text">${esc(tx(f))}</span>
    </li>
  `).join('');
 
@@ -1126,17 +1152,18 @@ function genHTML(pkg){
  <div class="bg-white dark:bg-[#0a0a0a] p-5 md:p-6 rounded-3xl border border-slate-100 dark:border-indigo-500/50 shadow-sm relative flex flex-col justify-between transition-all duration-300 transform hover:-translate-y-2 hover:scale-[1.02] neon-animated-card mt-4 md:mt-0 ${isDisabled ? 'pkg-disabled' : ''}">
    ${tagBadges}
    <div class="${tagBadges ? 'pt-2' : ''}">
-     <h3 class="font-extrabold text-lg md:text-xl dark:text-white mb-0.5">${esc(p.name)}</h3>
+     <h3 class="font-extrabold text-lg md:text-xl dark:text-white mb-0.5">${esc(pkgDisplayName)}</h3>
      <p class="text-xs font-bold text-slate-500 dark:text-slate-300 mb-3">${esc(displayTime)}</p>
      ${priceHTML}
      <ul class="text-xs md:text-sm space-y-2.5 mb-6 font-medium text-slate-600 dark:text-white">
+       <!-- TÁCH RỜI NHÃN VÀ GIÁ TRỊ THÀNH 2 THẺ ĐỘC LẬP ĐỂ KHÔNG BỊ LỖI BĂM THẺ [[1]] -->
        <li class="flex items-center gap-2">
          <i class="fas fa-check-circle text-green-500 shrink-0"></i>
-         <span>Dung lượng: <b class="dark:text-white">${esc(pkg.data)}</b></span>
+         <span>Dung lượng:</span> <b class="dark:text-white font-black">${esc(pkg.data)}</b>
        </li>
        <li class="flex items-center gap-2">
          <i class="fas fa-check-circle text-green-500 shrink-0"></i>
-         <span>Giới hạn thiết bị: <b>${esc(devText)}</b></span>
+         <span>Giới hạn thiết bị:</span> <b class="dark:text-white font-black">${esc(devText)}</b>
        </li>
        ${featsHtml}
      </ul>
