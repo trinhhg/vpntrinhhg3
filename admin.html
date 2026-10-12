@@ -1132,7 +1132,8 @@ function ordCard(o,ro){
   <div class="font-bold text-slate-800 text-xs md:text-sm cp truncate pl-5 order-email-text" onclick="cp(${q(o.email)})">${esc(o.email||"—")}</div>
   <div class="text-[11px] md:text-sm text-slate-500 mt-0.5 pl-5 order-meta-text">Zalo: <span class="font-bold text-slate-700 cp" onclick="cp(${q(o.zalo)})">${esc(o.zalo||"")}</span></div>
   <div class="text-[11px] md:text-sm text-slate-500 mt-0.5 truncate pl-5 order-meta-text">${esc(displayPkg)}${o.expDate?` • HSD: <span class="font-bold text-slate-700">${esc(o.expDate)}</span>`:""}${daysLeft!==null&&daysLeft>=0?` <span class="font-black ${daysLeft<=1?"text-red-600":"text-orange-500"}">(còn ${daysLeft}n)</span>`:""}</div>${extra}</div>
-  <div class="flex flex-row md:flex-col items-center md:items-end justify-between gap-2 shrink-0 border-t border-slate-100 md:border-0 pt-2 md:pt-0"><span class="text-[10px] md:text-xs text-slate-400 font-semibold whitespace-nowrap">${esc(o.date || fmtBank(o.createdTs || 0))}</span>
+  <div class="flex flex-row md:flex-col items-center md:items-end justify-between gap-2 shrink-0 border-t border-slate-100 md:border-0 pt-2 md:pt-0"><span class="text-[10px] md:text-xs text-slate-400 font-semibold whitespace-nowrap">${esc(o.date || fmtBank(o.createdTs || 0))}</span>${acts}</div></div>`;}
+function renderOrd(){
  const counts={success:0,pending:0,failed:0};ordersDb.forEach(o=>{const s=normSt(o.status);if(counts[s]!==undefined)counts[s]++;});
  ["success","pending","failed"].forEach(t=>$("cnt-"+t).textContent=counts[t]);
  const list=ordersDb.filter(o=>normSt(o.status)===curOrdTab),tb=$("ordBody");
