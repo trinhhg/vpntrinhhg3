@@ -1104,7 +1104,7 @@ function go(id){
   if(id==="t-check")renderCheckTab();
   if(id==="t-dead")renderDead();
   if(id==="t-data")renderDataRequests();
-  if(id==="t-lnk")switchLinkMode(curLinkTab);
+  if(id==="t-lnk")renderLinks();
   if(id==="t-settings"){loadSettingsUI();loadStatus();loadQuota();}
   if(id==="t-trans"){localStorage.setItem(SITE_KEY+"_txSeen",Date.now());$("transBadge").classList.add("hidden");if(curTxTab==="rev")renderRevenue();else renderTransactions();}
   if(id==="t-mail")renderMailComposer();
@@ -1842,22 +1842,44 @@ function buildMasked(orig, fresh) {
   return PD + (lx ? "/v1" : "/v2") + "/VPNTrinhHg" + (lx ? "?OwO=" : "?token=") + tok + "#VPNTrinhHg";
 }
 
-// 2. Cơ chế Auto-Switching View tự động
+// 2. Chế độ hiển thị Link Sub (Duy nhất 1 giao diện Cây Link)
 function switchLinkMode(m){
-  curLinkTab = m;
-  $("btn-ls-pool").classList.toggle("active", m === "pool");
-  $("btn-ls-manual").classList.toggle("active", m === "manual");
-  $("panel-ls-pool").classList.toggle("hidden", m !== "pool");
-  $("panel-ls-manual").classList.toggle("hidden", m !== "manual");
-  if (m === "manual") switchLinkView("detailed"); // Bấm Tạo thủ công -> Tự chuyển danh sách sang xem tab CÂY
-  else if (m === "pool") switchLinkView("compact"); // Bấm Thêm nguồn -> Tự chuyển danh sách sang xem tab KHO
+  curLinkTab = m || "manual";
+  renderLinks();
 }
 
 function switchLinkView(v){
-  curLinkListView = v;
-  $("btn-view-compact").classList.toggle("active", v === "compact");
-  $("btn-view-detailed").classList.toggle("active", v === "detailed");
+  curLinkListView = v || "detailed";
   renderLinks();
+}
+
+// Hàm mở Modal Sửa Nguồn Cấp Cụm (Cây bút chì sửa cụm link)
+function openRootEditModal(groupKey){
+  const parts = groupKey.split("|");
+  const isCombo = (parts[0] === "COMBO");
+  const o1 = isCombo ? parts[1] : groupKey;
+  const o2 = isCombo ? parts[2] : "";
+
+  $("mREGroupKey").value = groupKey;
+  $("mREOrig1").value = o1;
+  $("mREOrig2").value = o2;
+
+  // Nạp thông số hiện tại từ Kho sang Modal để sửa
+  const p = linkPoolDb.find(x => isCombo ? (x.isCombo && x.url === o1 && x.url2 === o2) : (!x.isCombo && x.url === o1)) || {};
+  
+  // Thông số Chân 1
+  $("mREGb").value = p.gb || "";
+  $("mRERemain").value = p.remainGb || "";
+  $("mREExp").value = p.exp || "";
+  $("mREMax").value = p.max || 30;
+
+  // Thông số Chân 2
+  $("mREGb2").value = p.gb2 || "";
+  $("mRERemain2").value = p.remainGb2 || "";
+  $("mREExp2").value = p.exp2 || "";
+  $("mREMax2").value = p.max2 || 30;
+
+  $("mRootEdit").classList.remove("hidden");
 }
 
 const saveLinks = () => { healLinks(); return aj("/api/links", { method: "POST", body: linksDb }).then(() => { lastSig.l = JSON.stringify(linksDb); }); };
