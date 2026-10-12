@@ -352,11 +352,8 @@ textarea.autog{resize:none;overflow:hidden;}
    </div>
   </div>
 
-  <div class="grid grid-cols-2 gap-2 w-full mb-2">
-   <button id="btn-ls-manual" onclick="switchLinkMode('manual')" class="link-tab-btn active bg-white border border-slate-200 shadow-sm rounded-xl text-slate-600 font-bold text-[11px] py-2"><i class="fas fa-magic mr-1"></i>TẠO THỦ CÔNG</button>
-   <button id="btn-ls-pool" onclick="switchLinkMode('pool')" class="link-tab-btn bg-white border border-slate-200 shadow-sm rounded-xl text-slate-600 font-bold text-[11px] py-2"><i class="fas fa-plus-circle mr-1"></i>THÊM NGUỒN</button>
-  </div>
-  <div id="panel-ls-manual" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-4">
+  <!-- Form Tạo Link Sub thủ công -->
+  <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-4">
    <div class="mb-3">
     <div class="flex items-center justify-between mb-1">
      <label class="font-bold text-xs text-slate-700">Nguồn 1 (Liangxin hoặc DJJC)</label>
@@ -370,55 +367,51 @@ textarea.autog{resize:none;overflow:hidden;}
     <input id="lkOrig2" type="text" placeholder="https://gates.djjc... hoặc https://liangxin... (tự nhận diện nhà mạng)" class="w-full p-2 border border-indigo-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-xs bg-indigo-50/30">
    </div>
 
-   <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
+   <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
     <div><label class="block font-bold text-xs text-slate-700 mb-1">Email khách</label><input id="lkEmail" type="text" placeholder="khach@email.com" class="w-full p-2 border border-slate-200 bg-slate-50 rounded-xl outline-none text-xs"></div>
     <div><label class="block font-bold text-xs text-slate-700 mb-1">Hết hạn</label><input id="lkExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 border border-slate-200 bg-slate-50 rounded-xl outline-none text-xs text-center"></div>
-    <div><label class="block font-bold text-xs text-slate-700 mb-1">Index Máy</label><input id="lkIdx" type="number" min="1" placeholder="1, 2..." class="w-full p-2 border border-slate-200 bg-slate-50 rounded-xl outline-none text-xs text-center"></div>
+    <div><label class="block font-bold text-xs text-slate-700 mb-1">Số máy (Index)</label><input id="lkIdx" type="number" min="1" placeholder="1, 2..." class="w-full p-2 border border-slate-200 bg-slate-50 rounded-xl outline-none text-xs text-center"></div>
    </div>
-   <button onclick="createLink()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-6 py-2.5 rounded-xl shadow-md w-full text-xs"><i class="fas fa-mask mr-2"></i>TẠO LINK ẨN</button>
+
+   <!-- Nút thu gọn / mở rộng khai báo nguồn ngầm -->
+   <div class="mb-3">
+    <button type="button" onclick="$('extraSourceFields').classList.toggle('hidden');$('extraSrcIcon').classList.toggle('fa-rotate-180')" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1.5 py-1 outline-none transition">
+     <i class="fas fa-sliders text-indigo-500"></i>
+     <span>⚙️ Khai báo thông số nguồn mới (GB, HSD gốc, Max máy)</span>
+     <i id="extraSrcIcon" class="fas fa-chevron-down text-[10px] transition-transform duration-200"></i>
+    </button>
+    
+    <div id="extraSourceFields" class="hidden border border-indigo-100 bg-indigo-50/30 p-3 rounded-xl mt-2 space-y-3">
+     <div class="text-[11px] font-bold text-slate-500">Khai báo thông số để hệ thống tự nạp vào Kho phục vụ cấp link tự động:</div>
+     <!-- Thông số Nguồn 1 -->
+     <div class="border border-slate-200 rounded-lg p-2.5 bg-white space-y-1.5">
+      <div class="text-[11px] font-black text-emerald-700 flex justify-between"><span>Thông số Nguồn 1</span><span class="badge-lx">Chân 1</span></div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB</label><input id="lkGb1" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs"></div>
+       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB</label><input id="lkRemainGb1" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs"></div>
+       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">HSD gốc</label><input id="lkPoolExp1" type="text" placeholder="DD/MM/YYYY" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs text-center"></div>
+       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max máy</label><input id="lkMax1" type="number" min="1" value="30" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs text-center"></div>
+      </div>
+     </div>
+     <!-- Thông số Nguồn 2 -->
+     <div class="border border-indigo-200 rounded-lg p-2.5 bg-white space-y-1.5">
+      <div class="text-[11px] font-black text-blue-700 flex justify-between"><span>Thông số Nguồn 2 (khi làm Combo)</span><span class="badge-dj">Chân 2</span></div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB 2</label><input id="lkGb2" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs"></div>
+       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB 2</label><input id="lkRemainGb2" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs"></div>
+       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">HSD gốc 2</label><input id="lkPoolExp2" type="text" placeholder="DD/MM/YYYY" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs text-center"></div>
+       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max máy 2</label><input id="lkMax2" type="number" min="1" value="30" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs text-center"></div>
+      </div>
+     </div>
+    </div>
+   </div>
+
+   <button onclick="createLink()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold px-6 py-2.5 rounded-xl shadow-md w-full text-xs transition active:scale-95"><i class="fas fa-mask mr-2"></i>TẠO LINK ẨN</button>
   </div>
 
-  <div id="panel-ls-pool" class="hidden bg-white p-4 rounded-2xl border border-indigo-200 shadow-sm mb-4 space-y-3">
-   <div class="flex items-center justify-between">
-    <span class="font-extrabold text-xs text-slate-700">Thông tin nguồn nhập kho</span>
-    <span class="text-[10px] text-slate-400 font-medium">Nhập 1 ô = Nguồn Đơn · Nhập 2 ô = Khối Combo (Tự nhận diện LX / DJ)</span>
-   </div>
-
-   <!-- Bảng Nguồn A -->
-   <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2">
-    <div class="text-[11px] font-black text-emerald-700 flex items-center justify-between">
-     <span>Nguồn A (Liangxin hoặc DJJC)</span>
-     <span class="badge-lx">Chân 1</span>
-    </div>
-    <div><input id="poolOrig" type="text" placeholder="https://liangxin.xyz/... hoặc https://gates.djjc..." class="w-full p-2 border border-slate-200 rounded-xl outline-none font-mono text-xs bg-white"></div>
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB</label><input id="poolGb" type="number" placeholder="1670" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
-     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB</label><input id="poolRemainGb" type="number" placeholder="150" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
-     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Hết hạn</label><input id="poolExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-1.5 border rounded-lg bg-white text-xs text-center"></div>
-     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max thiết bị</label><input id="poolMax" type="number" min="1" value="30" class="w-full p-1.5 border rounded-lg bg-white text-xs text-center"></div>
-    </div>
-   </div>
-
-   <!-- Bảng Nguồn B (Để trống nếu nhập nguồn đơn) -->
-   <div id="poolLeg2Container" class="border border-indigo-200 rounded-xl p-3 bg-indigo-50/30 space-y-2">
-    <div class="text-[11px] font-black text-blue-700 flex items-center justify-between">
-     <span>Nguồn B (Để trống nếu là Nguồn Đơn)</span>
-     <span class="badge-dj">Chân 2</span>
-    </div>
-    <div><input id="poolOrig2" type="text" placeholder="https://gates.djjc... hoặc https://liangxin... (tự nhận diện)" class="w-full p-2 border border-indigo-200 rounded-xl outline-none font-mono text-xs bg-white"></div>
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB</label><input id="poolGb2" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
-     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB</label><input id="poolRemainGb2" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
-     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Hết hạn</label><input id="poolExp2" type="text" placeholder="DD/MM/YYYY" class="w-full p-1.5 border rounded-lg bg-white text-xs text-center"></div>
-     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max thiết bị</label><input id="poolMax2" type="number" min="1" value="30" class="w-full p-1.5 border rounded-lg bg-white text-xs text-center"></div>
-    </div>
-   </div>
-
-   <button onclick="addLinkToPool()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-md w-full text-xs">
-    <i class="fas fa-plus-circle mr-1.5"></i>LƯU KHO + NEO
-   </button>
+  <div class="flex items-center justify-between border-t border-slate-200 pt-3 mb-3">
+   <h3 class="font-extrabold text-slate-800 text-sm flex items-center gap-1.5"><i class="fas fa-sitemap text-indigo-600"></i>Cây Link Sub</h3>
   </div>
-  <div class="flex items-center justify-between border-t border-slate-200 pt-4 mb-3"><h3 class="font-extrabold text-slate-700 text-sm"><i class="fas fa-list mr-1"></i>Danh sách Link</h3><div class="view-switcher"><div id="btn-view-detailed" class="view-btn active" onclick="switchLinkView('detailed')">CÂY</div><div id="btn-view-compact" class="view-btn" onclick="switchLinkView('compact')">KHO</div></div></div>
   <div id="linksViewContainer" class="space-y-3 w-full min-w-0"></div>
  </div>
 
@@ -1139,8 +1132,7 @@ function ordCard(o,ro){
   <div class="font-bold text-slate-800 text-xs md:text-sm cp truncate pl-5 order-email-text" onclick="cp(${q(o.email)})">${esc(o.email||"—")}</div>
   <div class="text-[11px] md:text-sm text-slate-500 mt-0.5 pl-5 order-meta-text">Zalo: <span class="font-bold text-slate-700 cp" onclick="cp(${q(o.zalo)})">${esc(o.zalo||"")}</span></div>
   <div class="text-[11px] md:text-sm text-slate-500 mt-0.5 truncate pl-5 order-meta-text">${esc(displayPkg)}${o.expDate?` • HSD: <span class="font-bold text-slate-700">${esc(o.expDate)}</span>`:""}${daysLeft!==null&&daysLeft>=0?` <span class="font-black ${daysLeft<=1?"text-red-600":"text-orange-500"}">(còn ${daysLeft}n)</span>`:""}</div>${extra}</div>
-  <div class="flex flex-row md:flex-col items-center md:items-end justify-between gap-2 shrink-0 border-t border-slate-100 md:border-0 pt-2 md:pt-0"><span class="text-[10px] md:text-xs text-slate-400 font-semibold whitespace-nowrap">${fmtBank(oTs(o))}</span>${acts}</div></div>`;}
-function renderOrd(){
+  <div class="flex flex-row md:flex-col items-center md:items-end justify-between gap-2 shrink-0 border-t border-slate-100 md:border-0 pt-2 md:pt-0"><span class="text-[10px] md:text-xs text-slate-400 font-semibold whitespace-nowrap">${esc(o.date || fmtBank(o.createdTs || 0))}</span>
  const counts={success:0,pending:0,failed:0};ordersDb.forEach(o=>{const s=normSt(o.status);if(counts[s]!==undefined)counts[s]++;});
  ["success","pending","failed"].forEach(t=>$("cnt-"+t).textContent=counts[t]);
  const list=ordersDb.filter(o=>normSt(o.status)===curOrdTab),tb=$("ordBody");
@@ -1203,10 +1195,33 @@ function autoFillNickname(){const e=$("mOEmail").value.trim().toLowerCase();if(!
 function updMonths(){$("mOMonths").value=fmtMonths($("mODays").value);}
 function updAmountUi(){const bank=!/alipay|weixin/i.test($("mOMethod").value);$("mOAmountLbl").textContent=bank?"Số tiền thu (VND) — lưu vào totalVnd":"Số tiền đã nhận (¥ CNY) — lưu vào totalCny";$("mOAmountNote").textContent=bank?"Bank VN: totalCny để trống.":"Alipay/Weixin: totalVnd để trống. Đơn mới tự lấy tiền từ gói; đơn cũ thiếu tiền thì bạn tự nhập.";}
 function fillAmount(){const pk=PKG_DB[$("mOPkg").value];if(!pk)return;const bank=!/alipay|weixin/i.test($("mOMethod").value),d=parseInt($("mODays").value)||0,qty=pk.m===1?Math.max(1,Math.floor(d/30)):1,v=bank?pk.vnd*qty:(pk.cny?pk.cny*qty:0);$("mOAmount").value=v?trimNum(v):"";updAmountUi();}
-function autoFillDays(){const p=PKG_LIST.find(x=>x[0]===$("mOPkg").value);if(!p)return;if(!modalNew&&expLocked()){updMonths();return;}if(p[2]>0){$("mODays").value=p[2];$("mOExp").value=dmyOf(nowMs()+p[2]*864e5);}else{$("mODays").value="";$("mOExp").value="Vĩnh viễn";}updMonths();}
-function onPkgChange(){autoFillDays();fillAmount();}
-function onMethodChange(){if(modalNew)fillAmount();else updAmountUi();}
-function recalcExpFromDays(){updMonths();if(!modalNew&&expLocked())return;const d=parseInt($("mODays").value)||0;if(d)$("mOExp").value=dmyOf(nowMs()+d*864e5);if(modalNew)fillAmount();}
+function autoFillDays(){
+  const p = PKG_LIST.find(x => x[0] === $("mOPkg").value);
+  if (!p) return;
+  if (!modalNew && expLocked()) { updMonths(); return; }
+  
+  if (p[2] > 0) {
+    // Quy ước cứng: 1 tháng = 30 ngày, 1 năm = 365 ngày
+    const days = p[2];
+    $("mODays").value = days;
+    $("mOExp").value = dmyOf(nowMs() + days * 864e5);
+  } else {
+    $("mODays").value = "";
+    $("mOExp").value = "Vĩnh viễn";
+  }
+  updMonths();
+}
+function onPkgChange(){ autoFillDays(); fillAmount(); }
+function onMethodChange(){ if(modalNew) fillAmount(); else updAmountUi(); }
+function recalcExpFromDays(){
+  updMonths();
+  if(!modalNew && expLocked()) return;
+  const d = parseInt($("mODays").value) || 0;
+  if (d > 0) {
+    $("mOExp").value = dmyOf(nowMs() + d * 864e5);
+  }
+  if (modalNew) fillAmount();
+}
 function togSF(){const s=$("mOStatus").value;$("fSuc").classList.toggle("hidden",s!=="success");$("fFail").classList.toggle("hidden",s!=="failed");}
 function syncUpg(t){const ids={verify:"mOUpgVerify",success:"mOUpgSuccess",reject:"mOUpgReject"};if($(ids[t]).checked)for(const k in ids)if(k!==t)$(ids[k]).checked=false;}
 const curUpg=()=>$("mOUpgVerify").checked?"verify":$("mOUpgSuccess").checked?"success":$("mOUpgReject").checked?"reject":"none";
@@ -1693,12 +1708,33 @@ async function mcSend(){
  const subj=(mc.subject||"").trim();if(!subj)return toast("Nhập tiêu đề (subject) mail","err");if(!mc.blocks.length)return toast("Mail chưa có nội dung","err");
  if(!confirm(`Bắn mail "${subj}" cho ${list.length} người?\nHệ thống gửi lần lượt từng người một, xong người này mới tới người kia.`))return;
  mcSending=true;mcStop=false;$("mcProg").classList.remove("hidden");let ok=0;const tpl=mcToTpl();
+ 
+ // HẠNG MỤC 4: Gom toàn bộ nhật ký vào RAM trình duyệt, không gửi ghi KV từng mail một
+ const batchLogs = [];
+ 
  for(let i=0;i<list.length;i++){
   if(mcStop){toast("Đã dừng theo yêu cầu","warn");break;}
   const r=list[i];r.st="sending";mcRenderRecs();$("mcProgTxt").textContent=`Đang gửi ${i+1}/${list.length}: ${r.email}`;
-  try{const v=orderVars(r.o);await sendMailClient(r.email,subjVars(subj,v),mailRender(tpl,v,PD));r.st="ok";ok++;logEvent("ok","Gửi mail",`Thông báo "${subj}" → ${r.email}`,r.id);}catch(e){r.st="err";logEvent("error","Gửi mail",`Lỗi "${subj}" → ${r.email}`,r.id);}
-  $("mcBar").style.width=Math.round((i+1)/list.length*100)+"%";mcRenderRecs();await sleep(1500);}
- mcSending=false;$("mcProgTxt").textContent=`Hoàn tất: đã gửi ${ok}/${list.length} email. Xem chi tiết ở Cài đặt → Nhật ký.`;toast(`Đã gửi ${ok}/${list.length} email`);}
+  try{
+    const v=orderVars(r.o);
+    await sendMailClient(r.email,subjVars(subj,v),mailRender(tpl,v,PD));
+    r.st="ok";ok++;
+    batchLogs.push({ lvl: "ok", act: "Gửi mail", msg: `Thông báo "${subj}" → ${r.email}`, ref: r.id });
+  }catch(e){
+    r.st="err";
+    batchLogs.push({ lvl: "error", act: "Gửi mail", msg: `Lỗi "${subj}" → ${r.email}`, ref: r.id });
+  }
+  $("mcBar").style.width=Math.round((i+1)/list.length*100)+"%";mcRenderRecs();await sleep(1500);
+ }
+
+ // Gửi gom 1 request duy nhất lên Worker để ghi KV đúng 1 lần
+ if(batchLogs.length){
+   try{
+     await aj("/api/admin/log_batch", { method: "POST", body: { logs: batchLogs }, soft: true });
+   }catch(e){}
+ }
+
+ mcSending=false;$("mcProgTxt").textContent=`Hoàn tất: đã gửi ${ok}/${list.length} email. Đã gom log ghi KV 1 lần duy nhất.`;toast(`Đã gửi ${ok}/${list.length} email`);}
 
 // ===================== DUNG LƯỢNG =====================
 // Lấy nguyên tên gói từ Order theo chuẩn pkgLabel (so khớp orderId và email)
@@ -3313,12 +3349,50 @@ function mailProvCard(id) {
   } else if (id === "brevo" && q) {
     body = `<div class="text-[11px] text-slate-600">Credits còn: <b class="text-emerald-600">${q.credits ?? "—"}</b>${q.creditsType ? " (" + esc(q.creditsType) + ")" : ""}</div>`;
   } else if (id === "sendpulse" && q) {
+    const hSent = Number(q.hourSent) || 0;
+    const hLimit = Number(q.hourLimit) || 50;
+    const hPct = Math.min(100, Math.round(hSent / hLimit * 100));
+
+    // Quy chuẩn đổi 3 màu cảnh báo hạn mức 1 giờ
+    let hColorClass = "bg-emerald-500", hTextClass = "text-emerald-600 font-bold", alertBox = "";
+    if (hSent >= 46) {
+      hColorClass = "bg-red-600 animate-pulse";
+      hTextClass = "text-red-600 font-black";
+      alertBox = `
+      <div class="mt-2.5 p-2.5 bg-red-50 border-2 border-red-500 rounded-xl text-[11px] text-red-700 leading-snug">
+        <div class="font-black flex items-center gap-1 mb-1"><i class="fas fa-triangle-exclamation text-red-600"></i>CẢNH BÁO CHẠM ĐỈNH SENDPULSE!</div>
+        Đã gửi <b>${hSent}/50 email</b> trong 1 giờ qua. Hãy chuyển sang <b>Google Apps Script</b> hoặc <b>Brevo</b> ngay để tránh mất email đơn hàng của khách!
+      </div>`;
+    } else if (hSent >= 35) {
+      hColorClass = "bg-amber-500";
+      hTextClass = "text-amber-600 font-bold";
+    }
+
+    const hourBarHtml = `
+      <div class="mt-2 pt-2 border-t border-slate-100">
+        <div class="flex justify-between text-[11px] mb-1">
+          <span class="font-bold text-slate-700">Hạn mức 1 Giờ: <b class="${hTextClass}">${hSent} / ${hLimit} mail</b></span>
+          <span class="${hTextClass}">${hPct}%</span>
+        </div>
+        <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+          <div class="h-full ${hColorClass} rounded-full transition-all duration-300" style="width:${hPct}%"></div>
+        </div>
+        <div class="text-[10px] text-slate-400 mt-1 flex justify-between">
+          <span>Còn lại: <b>${Math.max(0, hLimit - hSent)}</b> mail</span>
+          <span class="italic">Tự dọn sạch sau 60p</span>
+        </div>
+        ${alertBox}
+      </div>
+    `;
+
     if (q.monthTotal !== undefined && q.monthTotal !== null) {
       const usedMonth = q.monthLeft !== undefined && q.monthLeft !== null ? Math.max(0, q.monthTotal - q.monthLeft) : (q.totalSent || 0);
-      body = `<div class="text-[11px] text-slate-600 mb-1.5 font-bold flex justify-between items-center"><span>${esc(q.tariff || "SMTP Free")}</span>${q.hourLimit || q.dayTotal ? `<span class="text-[10px] text-slate-400 font-normal">Giới hạn: ${q.hourLimit || q.dayTotal} mail/h</span>` : ""}</div>`
-           + qBar(usedMonth, q.monthTotal, "Tháng", "email", "");
+      body = `<div class="text-[11px] text-slate-600 mb-1.5 font-bold flex justify-between items-center"><span>${esc(q.tariff || "SMTP Free")}</span></div>`
+           + qBar(usedMonth, q.monthTotal, "Tháng", "email", "")
+           + hourBarHtml;
     } else {
-      body = `<div class="text-[11px] text-slate-600">Email còn: <b class="text-emerald-600">${q.emailsLeftFallback ?? (q.totalSent != null ? q.totalSent + " đã gửi" : "—")}</b>${q.tariff ? `<br><span class="text-slate-400">${esc(q.tariff)}</span>` : ""}</div>`;
+      body = `<div class="text-[11px] text-slate-600">Email tháng: <b class="text-emerald-600">${q.emailsLeftFallback ?? (q.totalSent != null ? q.totalSent + " đã gửi" : "—")}</b></div>`
+           + hourBarHtml;
     }
   }
 
