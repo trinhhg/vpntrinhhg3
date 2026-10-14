@@ -169,7 +169,10 @@ textarea.autog{resize:none;overflow:hidden;}
 </div>
 
 <header id="hdr" class="hidden bg-white px-4 py-2 border-b border-slate-200 justify-between items-center shadow-sm w-full sticky top-0 z-40">
- <h1 class="text-base md:text-xl font-extrabold text-indigo-600 truncate">VPN Trinh Hg</h1>
+ <div class="flex items-center gap-2 min-w-0">
+  <h1 class="text-base md:text-xl font-extrabold text-indigo-600 truncate">VPN Trinh Hg</h1>
+  <span id="hdrTestBadge" class="hidden text-[10px] font-black bg-amber-500 text-slate-900 px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse whitespace-nowrap"><i class="fas fa-flask mr-1"></i>TEST MODE</span>
+ </div>
  <div class="flex gap-2 shrink-0">
   <button onclick="fetchAll(true)" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm flex items-center"><i class="fas fa-sync-alt"></i><span class="hidden sm:inline ml-1.5">Làm mới</span></button>
   <button onclick="doLogout()" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm flex items-center"><i class="fas fa-sign-out-alt"></i><span class="hidden sm:inline ml-1.5">Thoát</span></button>
@@ -603,8 +606,41 @@ textarea.autog{resize:none;overflow:hidden;}
    </div>
   </div>
 
-  <!-- 1. VIEW SET WEB (BỐ CỤC 2 CỘT CÂN XỨNG HOÀN TOÀN) -->
-  <div id="settings-view-setweb" class="space-y-4">
+   <!-- KHU VỰC ĐIỀU KHIỂN CHẾ ĐỘ TEST (ALL_ORDERS_TEST) -->
+   <div class="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 border-2 border-amber-300 rounded-2xl p-4 md:p-5 shadow-sm space-y-3">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200 pb-3">
+     <div>
+      <div class="font-extrabold text-sm md:text-base text-amber-900 flex items-center gap-2">
+       <i class="fas fa-flask text-amber-600"></i>Khu vực Thử nghiệm (Kho ALL_ORDERS_TEST)
+      </div>
+      <p class="text-[11px] text-amber-800 mt-0.5">Bật công tắc để chuyển toàn bộ Admin sang đọc/ghi trên kho Test. Khách thật hoàn toàn không bị ảnh hưởng.</p>
+     </div>
+     <div class="flex items-center gap-2 shrink-0">
+      <span id="testStatusLabel" class="text-xs font-black px-2.5 py-1 rounded-full bg-slate-200 text-slate-600">TẮT</span>
+      <div class="toggle-wrap">
+       <input type="checkbox" id="toggleTestMode" onchange="toggleTestMode(this.checked)">
+       <span class="toggle-slider"></span>
+      </div>
+     </div>
+    </div>
+
+    <!-- Cụm 4 nút chức năng điều khiển kho Test -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+     <button type="button" onclick="testPingConnection()" class="bg-white hover:bg-amber-100 text-amber-900 font-bold py-2 rounded-xl text-xs border border-amber-300 shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
+      <i class="fas fa-plug text-amber-600"></i>Kiểm tra kết nối
+     </button>
+     <button type="button" onclick="createFakeTestOrder()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-xl text-xs shadow-md flex items-center justify-center gap-1.5 transition active:scale-95">
+      <i class="fas fa-plus-circle"></i>Tạo đơn giả lập
+     </button>
+     <button type="button" onclick="cloneProdOrdersToTest()" class="bg-white hover:bg-amber-100 text-amber-900 font-bold py-2 rounded-xl text-xs border border-amber-300 shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
+      <i class="fas fa-copy text-amber-600"></i>Sao chép Thật sang Test
+     </button>
+     <button type="button" onclick="clearTestOrders()" class="bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 rounded-xl text-xs border border-red-200 shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
+      <i class="fas fa-trash-can"></i>Xóa trắng Kho Test
+     </button>
+    </div>
+    <div id="testActionLog" class="text-[11px] text-amber-800 font-medium italic min-h-[18px]"></div>
+   </div>
    <!-- PHẦN TRÊN: 2 CỘT ĐỐI XỨNG NHAU -->
    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
     <!-- CỘT TRÁI: QUYỀN EMAIL, BÁO ADMIN, CRON & TRẠNG THÁI HỆ THỐNG -->
@@ -1196,32 +1232,59 @@ function autoFillNickname(){const e=$("mOEmail").value.trim().toLowerCase();if(!
 function updMonths(){$("mOMonths").value=fmtMonths($("mODays").value);}
 function updAmountUi(){const bank=!/alipay|weixin/i.test($("mOMethod").value);$("mOAmountLbl").textContent=bank?"Số tiền thu (VND) — lưu vào totalVnd":"Số tiền đã nhận (¥ CNY) — lưu vào totalCny";$("mOAmountNote").textContent=bank?"Bank VN: totalCny để trống.":"Alipay/Weixin: totalVnd để trống. Đơn mới tự lấy tiền từ gói; đơn cũ thiếu tiền thì bạn tự nhập.";}
 function fillAmount(){const pk=PKG_DB[$("mOPkg").value];if(!pk)return;const bank=!/alipay|weixin/i.test($("mOMethod").value),d=parseInt($("mODays").value)||0,qty=pk.m===1?Math.max(1,Math.floor(d/30)):1,v=bank?pk.vnd*qty:(pk.cny?pk.cny*qty:0);$("mOAmount").value=v?trimNum(v):"";updAmountUi();}
-function autoFillDays(){
+// Tính ngày 2 chiều tức thì, mỏ neo createdTs cố định, 1 tháng = 30 ngày, 1 năm = 365 ngày
+function getOrderAnchorTs() {
+  const curDateStr = $("mODate")?.value || "";
+  const parsed = parseAny(curDateStr);
+  return parsed || Number(modalInit.createdTs) || nowMs();
+}
+
+function autoFillDays() {
   const p = PKG_LIST.find(x => x[0] === $("mOPkg").value);
   if (!p) return;
   if (!modalNew && expLocked()) { updMonths(); return; }
-  
+  const anchor = getOrderAnchorTs();
   if (p[2] > 0) {
-    // Quy ước cứng: 1 tháng = 30 ngày, 1 năm = 365 ngày
     const days = p[2];
     $("mODays").value = days;
-    $("mOExp").value = dmyOf(nowMs() + days * 864e5);
+    $("mOExp").value = dmyOf(anchor + days * 864e5);
   } else {
     $("mODays").value = "";
     $("mOExp").value = "Vĩnh viễn";
   }
   updMonths();
 }
-function onPkgChange(){ autoFillDays(); fillAmount(); }
-function onMethodChange(){ if(modalNew) fillAmount(); else updAmountUi(); }
-function recalcExpFromDays(){
+
+function onPkgChange() { autoFillDays(); fillAmount(); }
+function onMethodChange() { if(modalNew) fillAmount(); else updAmountUi(); }
+
+// Khi người dùng sửa ô "Số ngày SD"
+function recalcExpFromDays() {
   updMonths();
-  if(!modalNew && expLocked()) return;
+  if (!modalNew && expLocked()) return;
   const d = parseInt($("mODays").value) || 0;
+  const anchor = getOrderAnchorTs();
   if (d > 0) {
-    $("mOExp").value = dmyOf(nowMs() + d * 864e5);
+    $("mOExp").value = dmyOf(anchor + d * 864e5);
   }
   if (modalNew) fillAmount();
+}
+
+// Khi người dùng sửa trực tiếp ô "HSD" (mOExp)
+function recalcDaysFromExp() {
+  const expStr = $("mOExp").value.trim();
+  if (isLife(expStr)) {
+    $("mODays").value = "";
+    updMonths();
+    return;
+  }
+  const expTs = parseDmy(expStr);
+  const anchor = getOrderAnchorTs();
+  if (expTs && expTs > anchor) {
+    const diffDays = Math.round((expTs - anchor) / 864e5);
+    $("mODays").value = diffDays;
+    updMonths();
+  }
 }
 function togSF(){const s=$("mOStatus").value;$("fSuc").classList.toggle("hidden",s!=="success");$("fFail").classList.toggle("hidden",s!=="failed");}
 function syncUpg(t){const ids={verify:"mOUpgVerify",success:"mOUpgSuccess",reject:"mOUpgReject"};if($(ids[t]).checked)for(const k in ids)if(k!==t)$(ids[k]).checked=false;}
@@ -3464,6 +3527,106 @@ function startApp(fresh){
  setInterval(pollMain,10000);setInterval(loadStatus,120000);setInterval(tickClocks,1000);
  document.addEventListener("visibilitychange",()=>{if(!document.hidden){pollMain();loadTx();}});
 }
+// ====================================================================
+// LOGIC TEST MODE TRONG TAB CÀI ĐẶT > SET WEB
+// ====================================================================
+let isTestModeActive = false;
+
+async function checkTestModeStatus() {
+  try {
+    const res = await aj("/api/admin/test/status");
+    isTestModeActive = !!res.active;
+    if ($("toggleTestMode")) $("toggleTestMode").checked = isTestModeActive;
+    updateTestModeUI();
+  } catch {}
+}
+
+function updateTestModeUI() {
+  const b = $("hdrTestBadge");
+  const lbl = $("testStatusLabel");
+  if (b) b.classList.toggle("hidden", !isTestModeActive);
+  if (lbl) {
+    lbl.className = isTestModeActive 
+      ? "text-xs font-black px-2.5 py-1 rounded-full bg-amber-500 text-slate-900" 
+      : "text-xs font-black px-2.5 py-1 rounded-full bg-slate-200 text-slate-600";
+    lbl.textContent = isTestModeActive ? "ĐANG BẬT (KHO TEST)" : "TẮT (KHO THẬT)";
+  }
+}
+
+async function toggleTestMode(checked) {
+  isTestModeActive = checked;
+  updateTestModeUI();
+  try {
+    await aj("/api/admin/test/toggle", { method: "POST", body: { active: checked } });
+    toast(checked ? "Đã BẬT Chế độ Test (ALL_ORDERS_TEST)" : "Đã chuyển về Kho Thật (ALL_ORDERS)");
+    fetchAll(true);
+  } catch(e) {
+    toast("Lỗi chuyển chế độ: " + e.message, "err");
+  }
+}
+
+async function testPingConnection() {
+  const logEl = $("testActionLog");
+  if (logEl) logEl.textContent = "Đang kiểm tra kết nối tới Supabase...";
+  try {
+    const res = await aj("/api/admin/test/status");
+    const ping = res.ping || {};
+    if (ping.ok) {
+      if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Kết nối Kho Test thành công (${ping.ms}ms) — Hiện có ${ping.count} đơn trong ALL_ORDERS_TEST.</span>`;
+      toast(`Kho Test phản hồi tốt: ${ping.ms}ms`);
+    } else {
+      if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Kết nối Kho Test thất bại!</span>`;
+    }
+  } catch(e) {
+    if (logEl) logEl.textContent = "Lỗi ping: " + e.message;
+  }
+}
+
+async function createFakeTestOrder() {
+  const logEl = $("testActionLog");
+  if (logEl) logEl.textContent = "Đang tạo đơn giả lập vào Kho Test...";
+  try {
+    const res = await aj("/api/admin/test/fake_order", { method: "POST" });
+    if (res.ok && res.order) {
+      if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Đã tạo đơn giả lập ${res.order.id} vào ALL_ORDERS_TEST thành công!</span>`;
+      toast(`Đã tạo đơn test ${res.order.id}!`);
+      if (isTestModeActive) fetchAll();
+    }
+  } catch(e) {
+    if (logEl) logEl.textContent = "Lỗi tạo đơn giả: " + e.message;
+  }
+}
+
+async function cloneProdOrdersToTest() {
+  if (!confirm("Sao chép toàn bộ đơn hàng thật sang Kho Test? Kho test cũ sẽ bị xóa trắng.")) return;
+  const logEl = $("testActionLog");
+  if (logEl) logEl.textContent = "Đang nhân bản toàn bộ đơn thật sang Kho Test...";
+  try {
+    const res = await aj("/api/admin/test/clone", { method: "POST" });
+    if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Đã clone ${res.count} đơn từ kho thật sang ALL_ORDERS_TEST!</span>`;
+    toast(`Đã sao chép ${res.count} đơn vào kho test!`);
+    if (isTestModeActive) fetchAll();
+  } catch(e) {
+    if (logEl) logEl.textContent = "Lỗi sao chép: " + e.message;
+  }
+}
+
+async function clearTestOrders() {
+  if (!confirm("Xóa sạch toàn bộ đơn hàng trong Kho Test về 0?")) return;
+  const logEl = $("testActionLog");
+  if (logEl) logEl.textContent = "Đang dọn sạch Kho Test...";
+  try {
+    await aj("/api/admin/test/clear", { method: "POST" });
+    if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Đã xóa trắng ALL_ORDERS_TEST thành công!</span>`;
+    toast("Đã dọn sạch kho test");
+    if (isTestModeActive) fetchAll();
+  } catch(e) {
+    if (logEl) logEl.textContent = "Lỗi xóa kho test: " + e.message;
+  }
+}
+
+setTimeout(checkTestModeStatus, 1500);
+
 window.onload=()=>{if(TOKEN)startApp(false);else{buildTabs();$("loginWrap").classList.remove("hidden");}};
 </script>
 </body>
