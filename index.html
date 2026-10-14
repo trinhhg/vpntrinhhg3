@@ -1022,8 +1022,18 @@ async function loadConfig(){
   }catch(e){}
 }
 
-async function wpost(path,body){const r=await fetch(WORKER_URL+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});let d={};try{d=await r.json();}catch{}return{ok:r.ok,status:r.status,data:d};}
-async function wpostRetry(path,body,n=3){let last;for(let i=0;i<n;i++){try{last=await wpost(path,body);if(last.ok||last.status<500)return last;}catch(e){last={ok:false,status:0,data:{error:String(e)}};}await new Promise(r=>setTimeout(r,800*(i+1)));}return last;}
+const isClientTestMode = new URLSearchParams(location.search).get('test') === '1';
+async function wpost(path,body){
+  const headers = { 'Content-Type': 'application/json' };
+  if (isClientTestMode) headers['X-Test-Mode'] = '1';
+  const r = await fetch(WORKER_URL + path + (isClientTestMode ? (path.includes('?') ? '&test=1' : '?test=1') : ''), {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body || {})
+  });
+  let d = {}; try { d = await r.json(); } catch {}
+  return { ok: r.ok, status: r.status, data: d };
+}async function wpostRetry(path,body,n=3){let last;for(let i=0;i<n;i++){try{last=await wpost(path,body);if(last.ok||last.status<500)return last;}catch(e){last={ok:false,status:0,data:{error:String(e)}};}await new Promise(r=>setTimeout(r,800*(i+1)));}return last;}
 
 function showToast(msg,type='success'){const c=$('toastContainer'),t=document.createElement('div');const bg=type==='error'?'bg-red-500':type==='info'?'bg-blue-500':'bg-green-500';const icon=type==='error'?'fa-times-circle':type==='info'?'fa-info-circle':'fa-check-circle';
  t.className=`${bg} text-white px-4 py-3 rounded-xl shadow-xl flex items-center transform transition-all duration-300 translate-x-full opacity-0 w-fit max-w-[90vw]`;
