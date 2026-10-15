@@ -567,6 +567,11 @@ def proxy_to_singbox_outbound(p: dict) -> dict | None:
         tls = {"enabled": True, "insecure": True} # Luôn bật insecure cho Hysteria2
         if p.get("sni"): tls["server_name"] = p["sni"]
         out["tls"] = tls
+        if p.get("obfs"):
+            out["obfs"] = {
+                "type": p["obfs"],
+                "password": p.get("obfs-password", "")
+            }
 
     elif p["type"] == "trojan":
         out["password"] = p.get("password", "")
@@ -915,7 +920,7 @@ def clean_universal_node(raw_name: str) -> str:
     return f"{s} - VPNTrinhHg"
 # Danh sách từ khóa node rác/quảng cáo cần loại bỏ sạch
 ADS_AND_INFO_KEYWORDS = [
-    "剩余流量", "距离下次重置", "套餐到期", "认准官网", "官网地址",
+    "剩余流量", "已用流量", "套餐总量", "距离下次重置", "套餐到期", "认准官网", "官网地址",
     "SKYLUMO", "如果现在只能看到", "立即更新教程", "群", "频道", "公告"
 ]
 def is_spam_node(name: str) -> bool:
