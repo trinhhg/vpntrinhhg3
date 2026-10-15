@@ -682,40 +682,63 @@ textarea.autog{resize:none;overflow:hidden;}
    </div>
   </div>
 
-   <!-- KHU VỰC ĐIỀU KHIỂN CHẾ ĐỘ TEST (ALL_ORDERS_TEST) -->
-   <div class="bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 border-2 border-amber-300 rounded-2xl p-4 md:p-5 shadow-sm space-y-3">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200 pb-3">
-     <div>
-      <div class="font-extrabold text-sm md:text-base text-amber-900 flex items-center gap-2">
-       <i class="fas fa-flask text-amber-600"></i>Khu vực Thử nghiệm (Kho ALL_ORDERS_TEST)
+   <!-- KHU VỰC 2 THẺ KHO DỮ LIỆU SUPABASE: KHO THẬT & KHO TEST SONG SONG -->
+   <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 mb-2">
+    <!-- 1. THẺ KHO THẬT (ALL_ORDERS) -->
+    <div class="bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-50 border-2 border-emerald-300 rounded-2xl p-3.5 sm:p-4 md:p-5 shadow-sm space-y-3 flex flex-col justify-between">
+     <div class="space-y-2">
+      <div class="flex items-center justify-between border-b border-emerald-200 pb-2.5 flex-wrap gap-1.5">
+       <div class="font-extrabold text-xs sm:text-sm text-emerald-900 flex items-center gap-1.5">
+        <i class="fas fa-database text-emerald-600"></i>Kho Thật (ALL_ORDERS)
+       </div>
+       <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">SẢN XUẤT</span>
       </div>
-      <p class="text-[11px] text-amber-800 mt-0.5">Bật công tắc để chuyển toàn bộ Admin sang đọc/ghi trên kho Test. Khách thật hoàn toàn không bị ảnh hưởng.</p>
+      <p class="text-[11px] text-emerald-800 leading-snug">Kho lưu trữ toàn bộ đơn hàng thật của khách hàng. Kết nối trực tiếp qua Supabase PostgreSQL.</p>
      </div>
-     <div class="flex items-center gap-2 shrink-0">
-      <span id="testStatusLabel" class="text-xs font-black px-2.5 py-1 rounded-full bg-slate-200 text-slate-600">TẮT</span>
-      <div class="toggle-wrap">
-       <input type="checkbox" id="toggleTestMode" onchange="toggleTestMode(this.checked)">
-       <span class="toggle-slider"></span>
-      </div>
+     <div class="space-y-2 pt-1">
+      <button type="button" id="btnPingProd" onclick="testPingProd()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
+       <i class="fas fa-plug"></i>Kiểm tra kết nối Kho Thật
+      </button>
+      <div id="prodActionLog" class="text-[11px] text-emerald-900 font-medium italic min-h-[18px] break-words"></div>
      </div>
     </div>
 
-    <!-- Cụm 4 nút chức năng điều khiển kho Test -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-     <button type="button" onclick="testPingConnection()" class="bg-white hover:bg-amber-100 text-amber-900 font-bold py-2 rounded-xl text-xs border border-amber-300 shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
-      <i class="fas fa-plug text-amber-600"></i>Kiểm tra kết nối
-     </button>
-     <button type="button" onclick="createFakeTestOrder()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-xl text-xs shadow-md flex items-center justify-center gap-1.5 transition active:scale-95">
-      <i class="fas fa-plus-circle"></i>Tạo đơn giả lập
-     </button>
-     <button type="button" onclick="cloneProdOrdersToTest()" class="bg-white hover:bg-amber-100 text-amber-900 font-bold py-2 rounded-xl text-xs border border-amber-300 shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
-      <i class="fas fa-copy text-amber-600"></i>Sao chép Thật sang Test
-     </button>
-     <button type="button" onclick="clearTestOrders()" class="bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 rounded-xl text-xs border border-red-200 shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
-      <i class="fas fa-trash-can"></i>Xóa trắng Kho Test
-     </button>
+    <!-- 2. THẺ KHO TEST (ALL_ORDERS_TEST) -->
+    <div class="bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 border-2 border-amber-300 rounded-2xl p-3.5 sm:p-4 md:p-5 shadow-sm space-y-3 flex flex-col justify-between">
+     <div class="space-y-2">
+      <div class="flex items-center justify-between border-b border-amber-200 pb-2.5 flex-wrap gap-1.5">
+       <div class="font-extrabold text-xs sm:text-sm text-amber-900 flex items-center gap-1.5">
+        <i class="fas fa-flask text-amber-600"></i>Kho Test (ALL_ORDERS_TEST)
+       </div>
+       <div class="flex items-center gap-1.5 shrink-0">
+        <span id="testStatusLabel" class="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">TẮT</span>
+        <div class="toggle-wrap">
+         <input type="checkbox" id="toggleTestMode" onchange="toggleTestMode(this.checked)">
+         <span class="toggle-slider"></span>
+        </div>
+       </div>
+      </div>
+      <p class="text-[11px] text-amber-800 leading-snug">Kho độc lập phục vụ thử nghiệm. Bật công tắc để chuyển toàn bộ Admin sang đọc/ghi tại kho này.</p>
+     </div>
+     <div class="space-y-2 pt-1">
+      <button type="button" id="btnPingTest" onclick="testPingTest()" class="w-full bg-white hover:bg-amber-100 text-amber-900 font-bold py-2 rounded-xl text-xs border border-amber-300 shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
+       <i class="fas fa-plug text-amber-600"></i>Kiểm tra kết nối Kho Test
+      </button>
+      <!-- Cụm 3 nút thao tác kho test được tối ưu chống tràn trên màn hình điện thoại -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+       <button type="button" onclick="createFakeTestOrder()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-xl text-[11px] shadow-sm flex items-center justify-center gap-1 transition active:scale-95 truncate">
+        <i class="fas fa-plus-circle text-xs shrink-0"></i>Tạo đơn giả lập
+       </button>
+       <button type="button" onclick="cloneProdOrdersToTest()" class="w-full bg-white hover:bg-amber-100 text-amber-900 font-bold py-2 rounded-xl text-[11px] border border-amber-300 shadow-sm flex items-center justify-center gap-1 transition active:scale-95 truncate">
+        <i class="fas fa-copy text-amber-600 text-xs shrink-0"></i>Clone Thật sang Test
+       </button>
+       <button type="button" onclick="clearTestOrders()" class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2 rounded-xl text-[11px] border border-red-200 shadow-sm flex items-center justify-center gap-1 transition active:scale-95 truncate">
+        <i class="fas fa-trash-can text-xs shrink-0"></i>Xóa trắng Test
+       </button>
+      </div>
+      <div id="testActionLog" class="text-[11px] text-amber-900 font-medium italic min-h-[18px] break-words"></div>
+     </div>
     </div>
-    <div id="testActionLog" class="text-[11px] text-amber-800 font-medium italic min-h-[18px]"></div>
    </div>
    <!-- PHẦN TRÊN: 2 CỘT ĐỐI XỨNG NHAU -->
    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
@@ -3793,23 +3816,56 @@ async function toggleTestMode(checked) {
   }
 }
 
-async function testPingConnection() {
-  const logEl = $("testActionLog");
-  if (logEl) logEl.textContent = "Đang kiểm tra kết nối tới Supabase...";
+// Kiểm tra kết nối Kho Thật (ALL_ORDERS)
+async function testPingProd() {
+  const logEl = $("prodActionLog");
+  const btn = $("btnPingProd");
+  if (btn) btn.disabled = true;
+  if (logEl) logEl.innerHTML = '<span class="text-emerald-700"><i class="fas fa-spinner fa-spin mr-1"></i>Đang kiểm tra kết nối Kho Thật...</span>';
   try {
     const res = await aj("/api/admin/test/status");
-    const ping = res.ping || {};
-    if (ping.ok) {
-      if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Kết nối Kho Test thành công (${ping.ms}ms) — Hiện có ${ping.count} đơn trong ALL_ORDERS_TEST.</span>`;
-      toast(`Kho Test phản hồi tốt: ${ping.ms}ms`);
+    const p = res.ping_prod || {};
+    if (p.ok) {
+      if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Kết nối Kho Thật thành công (${p.ms}ms) — Hiện có <b>${p.count}</b> đơn hàng trong ALL_ORDERS.</span>`;
+      toast(`Kho Thật phản hồi tốt: ${p.ms}ms (${p.count} đơn)`);
     } else {
-      if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Kết nối Kho Test thất bại!</span>`;
+      const errMsg = p.error || (p.status ? `Mã lỗi HTTP ${p.status}` : "Không kết nối được");
+      if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Kết nối Kho Thật thất bại: ${esc(errMsg)}</span>`;
+      toast("Kho Thật thất bại: " + errMsg, "err");
     }
-  } catch(e) {
-    if (logEl) logEl.textContent = "Lỗi ping: " + e.message;
+  } catch (e) {
+    if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Lỗi: ${esc(e.message)}</span>`;
+    toast("Lỗi ping: " + e.message, "err");
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 
+// Kiểm tra kết nối Kho Test (ALL_ORDERS_TEST)
+async function testPingTest() {
+  const logEl = $("testActionLog");
+  const btn = $("btnPingTest");
+  if (btn) btn.disabled = true;
+  if (logEl) logEl.innerHTML = '<span class="text-amber-800"><i class="fas fa-spinner fa-spin mr-1"></i>Đang kiểm tra kết nối Kho Test...</span>';
+  try {
+    const res = await aj("/api/admin/test/status");
+    const p = res.ping_test || res.ping || {};
+    if (p.ok) {
+      if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Kết nối Kho Test thành công (${p.ms}ms) — Hiện có <b>${p.count}</b> đơn trong ALL_ORDERS_TEST.</span>`;
+      toast(`Kho Test phản hồi tốt: ${p.ms}ms (${p.count} đơn)`);
+    } else {
+      const errMsg = p.error || (p.status ? `Mã lỗi HTTP ${p.status}` : "Không kết nối được");
+      if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Kết nối Kho Test thất bại: ${esc(errMsg)}</span>`;
+      toast("Kho Test thất bại: " + errMsg, "err");
+    }
+  } catch (e) {
+    if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Lỗi: ${esc(e.message)}</span>`;
+    toast("Lỗi ping: " + e.message, "err");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+const testPingConnection = testPingTest;
 async function createFakeTestOrder() {
   const logEl = $("testActionLog");
   if (logEl) logEl.textContent = "Đang tạo đơn giả lập vào Kho Test...";
