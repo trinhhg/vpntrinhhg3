@@ -928,37 +928,81 @@ def process_b64(raw_b64: str, provider_name: str):
         decoded = base64.b64decode(pad).decode("utf-8", errors="ignore")
     except Exception as e:
         print(f"  [!] b64 decode error: {e}"); return raw_b64, "", ""
-    lines = [l.strip() for l in decoded.splitlines() if l.strip() and "://" in l]
-    new_b64_lines = [INFO_VLESS_PREFIX + urllib.parse.quote(n, safe="") for n in INFO_NODES]
     proxy_list = []
     seen_names = {}
-    for line in lines:
-        if "127.0.0.1" in line or "://" not in line: continue
-        old_name = urllib.parse.unquote(line.split("#", 1)[-1]) if "#" in line else None
-        
-        # Lọc bỏ node quảng cáo, thông tin rác
-        if is_spam_node(old_name): continue
-        
-        # Chuẩn hóa tên node linh hoạt
-        p_lower = provider_name.lower()
-        if "liangxin" in p_lower:
-            new_name = clean_liangxin_node(old_name)
-        elif "djjc" in p_lower:
-            new_name = clean_djjc_node(old_name)
-        else:
-            new_name = clean_universal_node(old_name)
-        
-        # Chống trùng lặp tên node
-        if new_name in seen_names:
-            seen_names[new_name] += 1
-            new_name = f"{new_name} ({seen_names[new_name]})"
-        else:
-            seen_names[new_name] = 1
-        uri_base = line.split("#")[0]
-        new_line = uri_base + "#" + urllib.parse.quote(new_name or "", safe="")
-        new_b64_lines.append(new_line)
-        proxy = uri_to_proxy(new_line)
-        if proxy: proxy_list.append(proxy)
+    new_b64_lines = [INFO_VLESS_PREFIX + urllib.parse.quote(n, safe="") for n in INFO_NODES]
+
+    # TRƯỜNG HỢP 1: Nguồn trả về JSON Sing-box (như Skylumo outbounds)
+    if decoded.strip().startswith("{") and '"outbounds"' in decoded:
+        try:
+            sb_data = json.loads(decoded)
+            for ob in sb_data.get("outbounds", []):
+                old_name = ob.get("tag", "")
+                if is_spam_node(old_name): continue
+                if ob.get("server") in ("127.0.0.1", "1.1.1.1"): continue
+
+                new_name = clean_universal_node(old_name)
+                if new_name in seen_names:
+                    seen_names[new_name] += 1
+                    new_name = f"{new_name} ({seen_names[new_name]})"
+                else:
+                    seen_names[new_name] = 1
+
+                # Chuyển outbound Sing-box thành proxy dict chuẩn cho Clash/YAML
+                p_type = ob.get("type")
+                if p_type in ("hysteria2", "hy2"):
+                    px = {
+                        "name": new_name, "type": "hysteria2", "server": ob.get("server"),
+                        "port": int(ob.get("server_port") or 443), "password": ob.get("password"),
+                        "udp": True, "skip-cert-verify": True
+                    }
+                    tls = ob.get("tls", {})
+                    if tls.get("server_name"): px["sni"] = tls["server_name"]
+                    obfs = ob.get("obfs", {})
+                    if obfs.get("type"): px["obfs"] = obfs["type"]
+                    if obfs.get("password"): px["obfs-password"] = obfs["password"]
+                    proxy_list.append(px)
+                    # Tạo dòng URI tương ứng cho Base64
+                    sni_p = f"&sni={px['sni']}" if px.get("sni") else ""
+                    obfs_p = f"&obfs={px['obfs']}&obfs-password={urllib.parse.quote(px['obfs-password'])}" if px.get("obfs") else ""
+                    uri = f"hysteria2://{px['password']}@{px['server']}:{px['port']}?insecure=1{sni_p}{obfs_p}#{urllib.parse.quote(new_name)}"
+                    new_b64_lines.append(uri)
+                elif p_type == "vless":
+                    px = {
+                        "name": new_name, "type": "vless", "server": ob.get("server"),
+                        "port": int(ob.get("server_port") or 443), "uuid": ob.get("uuid"), "udp": True
+                    }
+                    proxy_list.append(px)
+        except Exception as e:
+            print(f"  [!] Lỗi parse Singbox JSON: {e}")
+
+    # TRƯỜNG HỢP 2: Nguồn trả về danh sách URI truyền thống
+    else:
+        lines = [l.strip() for l in decoded.splitlines() if l.strip() and "://" in l]
+        for line in lines:
+            if "127.0.0.1" in line or "://" not in line: continue
+            old_name = urllib.parse.unquote(line.split("#", 1)[-1]) if "#" in line else None
+            if is_spam_node(old_name): continue
+
+            p_lower = provider_name.lower()
+            if "liangxin" in p_lower:
+                new_name = clean_liangxin_node(old_name)
+            elif "djjc" in p_lower:
+                new_name = clean_djjc_node(old_name)
+            else:
+                new_name = clean_universal_node(old_name)
+
+            if new_name in seen_names:
+                seen_names[new_name] += 1
+                new_name = f"{new_name} ({seen_names[new_name]})"
+            else:
+                seen_names[new_name] = 1
+
+            uri_base = line.split("#")[0]
+            new_line = uri_base + "#" + urllib.parse.quote(new_name or "", safe="")
+            new_b64_lines.append(new_line)
+            proxy = uri_to_proxy(new_line)
+            if proxy: proxy_list.append(proxy)
     new_b64 = base64.b64encode("\n".join(new_b64_lines).encode("utf-8")).decode("ascii")
     print(f"  Parsed {len(proxy_list)} real proxies from {len(lines)} lines")
     mode = "liangxin" if "liangxin" in provider_name.lower() else "combo"
