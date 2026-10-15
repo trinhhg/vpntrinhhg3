@@ -343,7 +343,16 @@ textarea.autog{resize:none;overflow:hidden;}
 
  <!-- ===== LINK SUB ===== -->
  <div id="t-lnk" class="hidden space-y-4 w-full min-w-0">
-  <h2 class="text-lg md:text-2xl font-bold text-slate-800 mb-2">Quản lý Link Sub Ẩn</h2>
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+   <h2 class="text-lg md:text-2xl font-bold text-slate-800">Quản lý Link Sub Ẩn</h2>
+   <div class="bg-slate-200 p-1 rounded-xl flex gap-1 w-fit">
+    <button type="button" onclick="switchLinkSubPane('tree')" id="btn-lnk-tree" class="settings-sub-tab active text-center !px-3 font-bold"><i class="fas fa-sitemap mr-1.5"></i>Cây Link Sub</button>
+    <button type="button" onclick="switchLinkSubPane('sources')" id="btn-lnk-sources" class="settings-sub-tab text-center !px-3 font-bold"><i class="fas fa-database mr-1.5"></i>Bảng Quản Lý Link Nguồn</button>
+   </div>
+  </div>
+
+  <!-- PANE 1: CÂY LINK SUB (MẶC ĐỊNH) -->
+  <div id="pane-lnk-tree" class="space-y-4">
 
   <!-- Khối 4 nút bảo trì (nằm riêng biệt, không tiêu đề) -->
   <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm mb-3">
@@ -415,6 +424,74 @@ textarea.autog{resize:none;overflow:hidden;}
    <h3 class="font-extrabold text-slate-800 text-sm flex items-center gap-1.5"><i class="fas fa-sitemap text-indigo-600"></i>Cây Link Sub</h3>
   </div>
   <div id="linksViewContainer" class="space-y-3 w-full min-w-0"></div>
+  </div>
+
+  <!-- PANE 2: BẢNG QUẢN LÝ LINK NGUỒN GỐC -->
+  <div id="pane-lnk-sources" class="hidden space-y-4">
+   <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+     <div>
+      <h3 class="font-extrabold text-base text-slate-800 flex items-center gap-2">
+       <i class="fas fa-plus-circle text-indigo-600"></i>Thêm Link Nguồn Gốc Mới Vào Kho
+      </h3>
+      <p class="text-[11px] text-slate-500 mt-0.5">Dán bất kỳ link nguồn nào (Liangxin, DJJC, Skylumo hoặc nhà mạng bất kỳ). Hệ thống sẽ tự động nạp vào Kho và sinh node neo #1 Auto.</p>
+     </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+     <div>
+      <label class="block text-[10px] font-bold text-slate-600 mb-1">Tên nhà mạng / Tên nguồn</label>
+      <input type="text" id="newSrcName" placeholder="VD: Skylumo, Liangxin, DJJC..." class="w-full p-2 text-xs border border-slate-300 rounded-xl bg-slate-50 outline-none font-bold">
+     </div>
+     <div>
+      <label class="block text-[10px] font-bold text-slate-600 mb-1">Hạn mức tải thiết bị tối đa</label>
+      <input type="number" id="newSrcMax" value="30" min="1" class="w-full p-2 text-xs border border-slate-300 rounded-xl bg-slate-50 outline-none text-center font-bold">
+     </div>
+     <div class="sm:col-span-2">
+      <label class="block text-[10px] font-bold text-slate-600 mb-1">Link Subscription Nguồn Gốc (URL)</label>
+      <input type="text" id="newSrcUrl" placeholder="http://skylumo.com/... hoặc https://..." class="w-full p-2 text-xs border border-indigo-200 rounded-xl bg-indigo-50/20 font-mono outline-none focus:border-indigo-500">
+     </div>
+     <div>
+      <label class="block text-[10px] font-bold text-slate-600 mb-1">Tổng GB gói gốc (Tùy chọn)</label>
+      <input type="number" id="newSrcGb" placeholder="100" class="w-full p-2 text-xs border border-slate-300 rounded-xl bg-slate-50 outline-none">
+     </div>
+     <div>
+      <label class="block text-[10px] font-bold text-slate-600 mb-1">Hạn sử dụng gói gốc (Tùy chọn)</label>
+      <input type="text" id="newSrcExp" placeholder="DD/MM/YYYY hoặc Vĩnh viễn" class="w-full p-2 text-xs border border-slate-300 rounded-xl bg-slate-50 outline-none text-center">
+     </div>
+    </div>
+    <button type="button" onclick="addNewSourceProvider()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5">
+     <i class="fas fa-save"></i>LƯU LINK NGUỒN VÀO HỆ THỐNG
+    </button>
+   </div>
+
+   <!-- DANH SÁCH CÁC NGUỒN TRONG KHO -->
+   <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+     <h3 class="font-extrabold text-sm text-slate-800 flex items-center gap-2">
+      <i class="fas fa-list text-slate-600"></i>Danh Sách Link Nguồn Trong Kho
+     </h3>
+     <span id="srcCountBadge" class="bg-indigo-100 text-indigo-700 font-black text-xs px-2.5 py-0.5 rounded-full">0 Nguồn</span>
+    </div>
+    <div id="sourcesTableContainer" class="overflow-x-auto">
+     <table class="log-table">
+      <thead>
+       <tr>
+        <th>Nhà Mạng</th>
+        <th>URL Nguồn Gốc</th>
+        <th style="width: 100px;">HSD Gốc</th>
+        <th style="width: 100px;">Dung Lượng</th>
+        <th style="width: 90px;">Tải Thiết Bị</th>
+        <th class="col-x">Xóa</th>
+       </tr>
+      </thead>
+      <tbody id="sourcesTableBody">
+       <tr><td colspan="6" class="text-center py-6 text-slate-400">Đang tải nguồn...</td></tr>
+      </tbody>
+     </table>
+    </div>
+   </div>
+  </div>
  </div>
 
  <!-- ===== ĐÃ XÓA ===== -->
@@ -1899,12 +1976,94 @@ function detectProvider(u) {
 
 function buildMasked(orig, fresh) {
   const tok = fresh ? genHex(32) : (getT(orig) || genHex(32));
-  const lx = String(orig || "").includes("liangxin");
-  if (!lx && !String(orig || "").includes("djjc")) return "";
+  const lx = String(orig || "").toLowerCase().includes("liangxin");
   return PD + (lx ? "/v1" : "/v2") + "/VPNTrinhHg" + (lx ? "?OwO=" : "?token=") + tok + "#VPNTrinhHg";
 }
 
 // 2. Chế độ hiển thị Link Sub (Duy nhất 1 giao diện Cây Link)
+function switchLinkSubPane(pane){
+  const isTree = (pane === 'tree');
+  $("pane-lnk-tree").classList.toggle("hidden", !isTree);
+  $("pane-lnk-sources").classList.toggle("hidden", isTree);
+  $("btn-lnk-tree").classList.toggle("active", isTree);
+  $("btn-lnk-sources").classList.toggle("active", !isTree);
+  if (!isTree) renderSourcesTable();
+}
+
+function renderSourcesTable(){
+  const tb = $("sourcesTableBody"), countEl = $("srcCountBadge");
+  if (!tb) return;
+  if (countEl) countEl.textContent = `${linkPoolDb.length} Nguồn`;
+  if (!linkPoolDb.length) {
+    tb.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 font-bold">Chưa có link nguồn nào trong kho</td></tr>`;
+    return;
+  }
+  tb.innerHTML = linkPoolDb.map((p, idx) => {
+    const prov = detectProvider(p.url);
+    const badge = prov === "lx" ? `<span class="badge-lx">Liangxin</span>` : prov === "dj" ? `<span class="badge-dj">DJJC</span>` : prov === "sky" ? `<span class="inline-flex text-[10px] font-black text-cyan-700 bg-cyan-50 border border-cyan-300 px-2 py-0.5 rounded">Skylumo</span>` : `<span class="badge-ot">Nguồn Khác</span>`;
+    const used = linksDb.filter(l => l && (l.orig === p.url || l.orig2 === p.url)).length;
+    return `
+      <tr>
+        <td>${badge}</td>
+        <td><div class="font-mono text-xs font-bold text-slate-700 break-all cp" onclick="cp('${p.url}')">${esc(p.url)}</div></td>
+        <td class="text-xs font-semibold text-slate-600">${esc(p.exp || 'Vĩnh viễn')}</td>
+        <td class="text-xs font-semibold text-slate-600">${p.gb ? esc(p.gb) + ' GB' : '—'}</td>
+        <td class="text-xs font-black text-indigo-600 text-center">${used}/${p.max || 30}</td>
+        <td class="col-x"><button type="button" onclick="delPool('${p.id || p.url}')" class="bg-red-50 text-red-600 border border-red-100 hover:bg-red-500 hover:text-white font-bold w-8 h-8 rounded-lg text-xs"><i class="fas fa-trash"></i></button></td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function addNewSourceProvider(){
+  const name = $("newSrcName").value.trim();
+  const url = $("newSrcUrl").value.trim();
+  const max = parseInt($("newSrcMax").value) || 30;
+  const gb = $("newSrcGb").value.trim();
+  const exp = $("newSrcExp").value.trim();
+
+  if (!url) return toast("Vui lòng dán Link Subscription gốc!", "err");
+  try { new URL(url); } catch { return toast("Link không đúng định dạng URL!", "err"); }
+
+  // Thêm vào Kho Nguồn
+  const poolItem = linkPoolDb.find(p => p.url === url);
+  if (!poolItem) {
+    linkPoolDb.unshift({
+      id: "POOL-" + Date.now(),
+      url: url,
+      gb: gb,
+      remainGb: gb,
+      exp: exp || "Vĩnh viễn",
+      max: max
+    });
+  }
+
+  // Tự động sinh Node neo #1 Auto có Link Ẩn hoàn chỉnh
+  if (!linksDb.some(l => l.orig === url && String(l.linkIndex) === "1")) {
+    linksDb.unshift({
+      id: "LNK-" + Date.now() + "-ANC",
+      orig: url,
+      masked: buildMasked(url, false),
+      email: "Auto",
+      expDate: exp || "Vĩnh viễn",
+      linkIndex: "1",
+      isLocked: true,
+      createdTs: nowMs(),
+      date: fmtBank(nowMs())
+    });
+  }
+
+  try {
+    await aj("/api/admin/save_links_and_pool", { method: "POST", body: { links: linksDb, pool: linkPoolDb } });
+    toast(`Đã thêm link nguồn "${name || 'Mới'}" thành công!`);
+    $("newSrcName").value = ""; $("newSrcUrl").value = ""; $("newSrcGb").value = ""; $("newSrcExp").value = "";
+    renderSourcesTable();
+    renderLinks();
+  } catch(e) {
+    toast("Lỗi lưu nguồn: " + e.message, "err");
+  }
+}
+
 function switchLinkMode(m){
   curLinkTab = m || "manual";
   renderLinks();
@@ -2006,6 +2165,7 @@ function renderLinks(){
 
   // Render các link con trong cụm
   const rows = [...g.ch].sort((a,b) => (parseInt(a.linkIndex||1)) - (parseInt(b.linkIndex||1))).map(l => {
+   if (!l.masked) { l.masked = buildMasked(l.orig, true); saveLinks(); }
    const tok = getT(l.masked), locked = !!l.isLocked, idx = parseInt(l.linkIndex||1);
    const bottom = linkBottom(l);
    const nameDisplay = (idx === 1) ? "Auto" : esc(l.email || "Khách");
