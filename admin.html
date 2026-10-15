@@ -362,8 +362,7 @@ textarea.autog{resize:none;overflow:hidden;}
      <label class="font-bold text-xs text-slate-700">Nguồn 1 (Liangxin hoặc DJJC)</label>
      <span class="text-[10px] text-slate-400 font-medium">Nhập 1 ô = Link Đơn · Nhập 2 ô = Link Trộn</span>
     </div>
-    <input id="lkOrig" type="text" placeholder="https://liangxin... hoặc https://gates.djjc..." class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-xs bg-slate-50">
-   </div>
+<input id="lkOrig" type="text" placeholder="Dán link nguồn (Liangxin, DJJC, Skylumo hoặc bất kỳ link sub nào)..." class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-xs bg-slate-50">   </div>
    
    <div class="mb-3">
     <label class="block font-bold text-xs text-indigo-700 mb-1"><i class="fas fa-shuffle mr-1"></i>Nguồn 2 (Để trống nếu là Link Đơn)</label>
@@ -1894,6 +1893,7 @@ function detectProvider(u) {
   const s = String(u || "").toLowerCase();
   if (s.includes("liangxin")) return "lx";
   if (s.includes("djjc")) return "dj";
+  if (s.includes("skylumo") || s.includes("9999231.xyz")) return "sky";
   return "other";
 }
 
@@ -1992,8 +1992,8 @@ function renderLinks(){
   if (g.isCombo) {
     networkBadge = `<span class="inline-flex items-center gap-1.5 text-xs font-black text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200"><span class="w-2.5 h-2.5 rounded-full bg-purple-600 shrink-0"></span>Liangxin + DJJC</span>`;
   } else {
-    const lx = g.orig.includes("liangxin"), dj = g.orig.includes("djjc");
-    networkBadge = lx ? `<span class="badge-lx">Liangxin</span>` : dj ? `<span class="badge-dj">DJJC</span>` : `<span class="badge-ot">Other</span>`;
+    const lx = g.orig.includes("liangxin"), dj = g.orig.includes("djjc"), sky = (g.orig.includes("skylumo") || g.orig.includes("9999231.xyz"));
+    networkBadge = lx ? `<span class="badge-lx">Liangxin</span>` : dj ? `<span class="badge-dj">DJJC</span>` : sky ? `<span class="inline-flex items-center text-xs font-black text-cyan-700 bg-cyan-50 border border-cyan-300 px-2.5 py-0.5 rounded-md">Skylumo</span>` : `<span class="badge-ot">Other</span>`;
   }
 
   // Lấy thông số từ LINK_POOL
