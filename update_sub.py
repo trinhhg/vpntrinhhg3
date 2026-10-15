@@ -422,16 +422,16 @@ def parse_hysteria2(uri: str) -> dict | None:
             "port": u.port or 443,
             "password": urllib.parse.unquote(u.username or ""),
             "udp": True,
-            "skip-cert-verify": True, # Hysteria 2 mượn SNI giả lập luôn phải bật True
+            "skip-cert-verify": True,
         }
-        if p.get("sni"):   proxy["sni"]   = p["sni"]
-        if p.get("mport"): proxy["mport"] = p["mport"]
-        if p.get("ports"): proxy["ports"] = p["ports"]
+        if p.get("sni"):           proxy["sni"]           = p["sni"]
+        if p.get("mport"):         proxy["mport"]         = p["mport"]
+        if p.get("ports"):         proxy["ports"]         = p["ports"]
+        if p.get("obfs"):          proxy["obfs"]          = p["obfs"]
+        if p.get("obfs-password"): proxy["obfs-password"] = urllib.parse.unquote(p["obfs-password"])
         return proxy
     except Exception:
         return None
-
-
 def parse_vless(uri: str) -> dict | None:
     base = uri.split("#")[0]
     try:
@@ -468,8 +468,6 @@ def parse_vless(uri: str) -> dict | None:
         return proxy
     except Exception:
         return None
-
-
 def parse_trojan(uri: str) -> dict | None:
     base = uri.split("#")[0]
     try:
@@ -487,8 +485,25 @@ def parse_trojan(uri: str) -> dict | None:
         return proxy
     except Exception:
         return None
-
-
+def parse_anytls(uri: str) -> dict | None:
+    base = uri.split("#")[0]
+    try:
+        u = urllib.parse.urlparse(base)
+        p = {k: v[0] for k, v in urllib.parse.parse_qs(u.query).items()}
+        proxy = {
+            "type": "anytls",
+            "server": u.hostname,
+            "port": u.port or 443,
+            "password": urllib.parse.unquote(u.username or ""),
+            "udp": True,
+            "skip-cert-verify": True,
+        }
+        if p.get("sni"):  proxy["sni"] = p["sni"]
+        if p.get("fp"):   proxy["client-fingerprint"] = p["fp"]
+        if p.get("alpn"): proxy["alpn"] = [x.strip() for x in p["alpn"].split(",")]
+        return proxy
+    except Exception:
+        return None
 def uri_to_proxy(line: str) -> dict | None:
     line = line.strip()
     if "://" not in line: return None
@@ -498,6 +513,7 @@ def uri_to_proxy(line: str) -> dict | None:
     if proto in ("hysteria2", "hy2"):   proxy = parse_hysteria2(line)
     elif proto == "vless":              proxy = parse_vless(line)
     elif proto == "trojan":             proxy = parse_trojan(line)
+    elif proto == "anytls":             proxy = parse_anytls(line)
     if proxy and name: proxy["name"] = name
     return proxy if (proxy and proxy.get("name") and proxy.get("server")) else None
 
@@ -822,6 +838,9 @@ def build_yaml(proxy_list: list, mode: str) -> str:
         "mode: rule", "log-level: info",
         "external-controller: '127.0.0.1:9090'",
         "unified-delay: true", "tcp-concurrent: true",
+        "profile:",
+        "  store-selected: true",
+        "  interval: 60",  # Tự động cập nhật lại sub sau mỗi 60 phút (1 tiếng)
         dns_clash, "proxies:",
     ]
     for p in all_proxies:  lines.append(proxy_to_inline(p))
@@ -876,25 +895,10 @@ def clean_liangxin_node(raw_name: str) -> str:
 
 
 def clean_djjc_node(raw_name: str) -> str:
-    """
-    Quy tắc độc lập DJJC:
-    1. Chuẩn hóa hệ số nhân: 倍率 / 倍 -> x (1.5倍率 -> 1.5x, 0.1倍 -> 0.1x)
-    2. Số thứ tự bóc tách chữ 号:
-       - 1 chữ số kèm 号 (1号) -> 2 chữ số (01), xóa 号
-       - 2 chữ số kèm 号 (01号) -> 3 chữ số (001), xóa 号
-       - Số thứ tự lẻ cuối tên không có 号 (Đức2) -> 2 chữ số (02)
-       - Không có số -> giữ nguyên chữ
-    3. Bảo vệ số thập phân trong hệ số nhân (0.1x, 1.5x...)
-    4. Hậu tố: - VPNTrinhHg
-    5. Fallback an toàn: raw_name + ' - VPNTrinhHg'
-    """
     if not raw_name: return "DJJC - VPNTrinhHg"
     try:
         s = re.sub(r"\s*-\s*VPNTrinhHg$", "", raw_name.strip()).strip()
-        # 1. Đổi hệ số nhân tiếng Trung sang chuẩn x trước (bảo vệ các số này)
         s = re.sub(r"(\d+(?:\.\d+)?)\s*倍率?", r"\1x", s)
-        
-        # 2. Bóc tách số thứ tự kèm 号 hoặc đứng lẻ không có 号
         def _pad_dj_num(m):
             num = m.group(1)
             return ("00" + num[1]) if len(num) == 2 else ("0" + num)
@@ -903,49 +907,64 @@ def clean_djjc_node(raw_name: str) -> str:
     except Exception:
         fallback = raw_name.strip()
         return fallback if "VPNTrinhHg" in fallback else f"{fallback} - VPNTrinhHg"
-        
-# ── Process b64 (Có cơ chế chống trùng lặp tên node) ──────────────────────────
-def process_b64(raw_b64: str, is_liangxin: bool):
+def clean_universal_node(raw_name: str) -> str:
+    """Quy tắc chuẩn hóa tự động cho nguồn lạ/mới (Skylumo...):
+       Lọc sạch tên rác, giữ nguyên tên node gốc và tự động nối đuôi - VPNTrinhHg"""
+    if not raw_name: return "VPN - VPNTrinhHg"
+    s = re.sub(r"\s*-\s*VPNTrinhHg$", "", raw_name.strip()).strip()
+    return f"{s} - VPNTrinhHg"
+# Danh sách từ khóa node rác/quảng cáo cần loại bỏ sạch
+ADS_AND_INFO_KEYWORDS = [
+    "剩余流量", "距离下次重置", "套餐到期", "认准官网", "官网地址",
+    "SKYLUMO", "如果现在只能看到", "立即更新教程", "群", "频道", "公告"
+]
+def is_spam_node(name: str) -> bool:
+    if not name: return True
+    return any(kw in name for kw in ADS_AND_INFO_KEYWORDS)
+# ── Process b64 (Tự động nhận diện nguồn: Liangxin / DJJC / Nguồn mới) ──────────
+def process_b64(raw_b64: str, provider_name: str):
     pad = raw_b64 + "=" * ((-len(raw_b64)) % 4)
     try:
         decoded = base64.b64decode(pad).decode("utf-8", errors="ignore")
     except Exception as e:
         print(f"  [!] b64 decode error: {e}"); return raw_b64, "", ""
-
     lines = [l.strip() for l in decoded.splitlines() if l.strip() and "://" in l]
     new_b64_lines = [INFO_VLESS_PREFIX + urllib.parse.quote(n, safe="") for n in INFO_NODES]
     proxy_list = []
     seen_names = {}
-
     for line in lines:
         if "127.0.0.1" in line or "://" not in line: continue
         old_name = urllib.parse.unquote(line.split("#", 1)[-1]) if "#" in line else None
-        if old_name and any(kw in old_name for kw in INFO_SKIP_KW): continue
         
-        # Áp dụng hàm chuẩn hóa độc lập theo từng nguồn
-        new_name = clean_liangxin_node(old_name) if is_liangxin else clean_djjc_node(old_name)
+        # Lọc bỏ node quảng cáo, thông tin rác
+        if is_spam_node(old_name): continue
         
-        # Chống trùng lặp tuyệt đối: Nếu trùng tên sẽ tự thêm hậu tố (2), (3)...
+        # Chuẩn hóa tên node linh hoạt
+        p_lower = provider_name.lower()
+        if "liangxin" in p_lower:
+            new_name = clean_liangxin_node(old_name)
+        elif "djjc" in p_lower:
+            new_name = clean_djjc_node(old_name)
+        else:
+            new_name = clean_universal_node(old_name)
+        
+        # Chống trùng lặp tên node
         if new_name in seen_names:
             seen_names[new_name] += 1
             new_name = f"{new_name} ({seen_names[new_name]})"
         else:
             seen_names[new_name] = 1
-
         uri_base = line.split("#")[0]
         new_line = uri_base + "#" + urllib.parse.quote(new_name or "", safe="")
         new_b64_lines.append(new_line)
         proxy = uri_to_proxy(new_line)
         if proxy: proxy_list.append(proxy)
-
     new_b64 = base64.b64encode("\n".join(new_b64_lines).encode("utf-8")).decode("ascii")
     print(f"  Parsed {len(proxy_list)} real proxies from {len(lines)} lines")
-
-    mode = "liangxin" if is_liangxin else "djjc"
+    mode = "liangxin" if "liangxin" in provider_name.lower() else "combo"
     yaml_str    = build_yaml(proxy_list, mode)        if proxy_list else ""
     singbox_str = build_singbox_full(proxy_list, mode) if proxy_list else ""
     return new_b64, yaml_str, singbox_str
-
 
 # ── Parse traffic ─────────────────────────────────────────────────────────────
 def parse_traffic(header: str) -> dict:
@@ -986,8 +1005,15 @@ def update_all():
     global_subs_payload = {}
 
     for orig_token, orig_url in seen_orig.items():
-        is_liangxin = "liangxin" in orig_url
-        provider    = "Liangxin" if is_liangxin else "DJJC"
+        u_low = orig_url.lower()
+        if "liangxin" in u_low:
+            provider = "Liangxin"
+        elif "djjc" in u_low:
+            provider = "DJJC"
+        elif "skylumo" in u_low or "9999231.xyz" in u_low:
+            provider = "Skylumo"
+        else:
+            provider = "Custom_Source"
         print(f"\n→ [{provider}] token: {orig_token[:12]}... url: {orig_url[:55]}...")
         try:
             r = requests.get(orig_url, headers={"User-Agent": "v2rayN/6.23",
@@ -997,10 +1023,10 @@ def update_all():
             raw_b64   = r.text.strip()
             user_info = r.headers.get("subscription-userinfo", "")
             print(f"  b64 length: {len(raw_b64)} chars")
-            if len(raw_b64) < 1000 or "ERROR" in raw_b64:
+            if len(raw_b64) < 500 or "ERROR" in raw_b64:
                 print("  [!] Bỏ qua - b64 quá ngắn hoặc lỗi"); time.sleep(3); continue
             traffic = parse_traffic(user_info)
-            final_b64, final_yaml, final_singbox = process_b64(raw_b64, is_liangxin)
+            final_b64, final_yaml, final_singbox = process_b64(raw_b64, provider)
             try:
                 base64.b64decode(final_b64 + "=" * ((-len(final_b64)) % 4))
                 print(f"  [OK] b64 ({len(final_b64)} chars)")
