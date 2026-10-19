@@ -913,15 +913,14 @@ def clean_djjc_node(raw_name: str) -> str:
         fallback = raw_name.strip()
         return fallback if "VPNTrinhHg" in fallback else f"{fallback} - VPNTrinhHg"
 def clean_universal_node(raw_name: str) -> str:
-    """Quy tắc chuẩn hóa tự động cho nguồn lạ/mới (Skylumo...):
-       Lọc sạch tên rác, giữ nguyên tên node gốc và tự động nối đuôi - VPNTrinhHg"""
+    """Quy tắc chuẩn hóa tự động: Lọc sạch tên rác, giữ nguyên tên node gốc và tự động nối đuôi - VPNTrinhHg"""
     if not raw_name: return "VPN - VPNTrinhHg"
     s = re.sub(r"\s*-\s*VPNTrinhHg$", "", raw_name.strip()).strip()
     return f"{s} - VPNTrinhHg"
 # Danh sách từ khóa node rác/quảng cáo cần loại bỏ sạch
 ADS_AND_INFO_KEYWORDS = [
     "剩余流量", "已用流量", "套餐总量", "距离下次重置", "套餐到期", "认准官网", "官网地址",
-    "SKYLUMO", "如果现在只能看到", "立即更新教程", "群", "频道", "公告"
+    "如果现在只能看到", "立即更新教程", "群", "频道", "公告"
 ]
 def is_spam_node(name: str) -> bool:
     if not name: return True
@@ -937,23 +936,29 @@ def process_b64(raw_b64: str, provider_name: str):
     seen_names = {}
     new_b64_lines = [INFO_VLESS_PREFIX + urllib.parse.quote(n, safe="") for n in INFO_NODES]
 
-    # TRƯỜNG HỢP 1: Nguồn trả về JSON Sing-box (như Skylumo outbounds)
+    # TRƯỜNG HỢP 1: Nguồn trả về JSON Sing-box (như Liangxin và DJJC outbounds)
     if decoded.strip().startswith("{") and '"outbounds"' in decoded:
         try:
             sb_data = json.loads(decoded)
+            p_lower = provider_name.lower()
             for ob in sb_data.get("outbounds", []):
                 old_name = ob.get("tag", "")
                 if is_spam_node(old_name): continue
                 if ob.get("server") in ("127.0.0.1", "1.1.1.1"): continue
 
-                new_name = clean_universal_node(old_name)
+                if "liangxin" in p_lower:
+                    new_name = clean_liangxin_node(old_name)
+                elif "djjc" in p_lower:
+                    new_name = clean_djjc_node(old_name)
+                else:
+                    new_name = clean_universal_node(old_name)
+
                 if new_name in seen_names:
                     seen_names[new_name] += 1
                     new_name = f"{new_name} ({seen_names[new_name]})"
                 else:
                     seen_names[new_name] = 1
 
-                # Chuyển outbound Sing-box thành proxy dict chuẩn cho Clash/YAML
                 p_type = ob.get("type")
                 if p_type in ("hysteria2", "hy2"):
                     px = {
@@ -966,18 +971,123 @@ def process_b64(raw_b64: str, provider_name: str):
                     obfs = ob.get("obfs", {})
                     if obfs.get("type"): px["obfs"] = obfs["type"]
                     if obfs.get("password"): px["obfs-password"] = obfs["password"]
+                    mport = ob.get("mport") or ob.get("ports") or ob.get("server_ports")
+                    if mport:
+                        px["mport"] = str(mport)
+                        px["ports"] = str(mport)
                     proxy_list.append(px)
-                    # Tạo dòng URI tương ứng cho Base64
+                    
+                    # Tạo URI Hysteria2 hoàn chỉnh đưa vào new_b64_lines
                     sni_p = f"&sni={px['sni']}" if px.get("sni") else ""
+                    mport_p = f"&mport={px['mport']}" if px.get("mport") else ""
                     obfs_p = f"&obfs={px['obfs']}&obfs-password={urllib.parse.quote(px['obfs-password'])}" if px.get("obfs") else ""
-                    uri = f"hysteria2://{px['password']}@{px['server']}:{px['port']}?insecure=1{sni_p}{obfs_p}#{urllib.parse.quote(new_name)}"
+                    uri = f"hysteria2://{px['password']}@{px['server']}:{px['port']}?insecure=1{sni_p}{mport_p}{obfs_p}#{urllib.parse.quote(new_name)}"
                     new_b64_lines.append(uri)
+
                 elif p_type == "vless":
+                    tls_obj = ob.get("tls", {})
+                    transport_obj = ob.get("transport", {})
+                    flow = ob.get("flow", "")
+                    sec_type = "none"
+                    reality_obj = tls_obj.get("reality", {})
+                    
                     px = {
-                        "name": new_name, "type": "vless", "server": ob.get("server"),
-                        "port": int(ob.get("server_port") or 443), "uuid": ob.get("uuid"), "udp": True
+                        "name": new_name,
+                        "type": "vless",
+                        "server": ob.get("server"),
+                        "port": int(ob.get("server_port") or 443),
+                        "uuid": ob.get("uuid"),
+                        "udp": True,
                     }
+                    if flow:
+                        px["flow"] = flow
+                    
+                    utls = tls_obj.get("utls", {})
+                    fp = utls.get("fingerprint", "")
+                    if fp:
+                        px["client-fingerprint"] = fp
+                    
+                    sni = tls_obj.get("server_name", "")
+                    if sni:
+                        px["servername"] = sni
+
+                    if tls_obj.get("enabled"):
+                        px["tls"] = True
+                        if reality_obj.get("enabled") or reality_obj.get("public_key"):
+                            sec_type = "reality"
+                            ro = {}
+                            if reality_obj.get("public_key"):
+                                ro["public-key"] = reality_obj["public_key"]
+                            if reality_obj.get("short_id"):
+                                ro["short-id"] = reality_obj["short_id"]
+                            if ro:
+                                px["reality-opts"] = ro
+                        else:
+                            sec_type = "tls"
+                        if tls_obj.get("insecure"):
+                            px["skip-cert-verify"] = True
+
+                    tr_type = transport_obj.get("type", "tcp")
+                    if tr_type == "ws":
+                        px["network"] = "ws"
+                        ws_path = transport_obj.get("path", "/")
+                        ws_headers = transport_obj.get("headers", {})
+                        ws_host = ws_headers.get("Host") or sni or px["server"]
+                        px["ws-opts"] = {
+                            "path": ws_path,
+                            "headers": {"Host": ws_host}
+                        }
+                    elif tr_type == "grpc":
+                        px["network"] = "grpc"
+                        px["grpc-opts"] = {
+                            "grpc-service-name": transport_obj.get("service_name", "")
+                        }
+
                     proxy_list.append(px)
+
+                    # Tạo URI VLESS hoàn chỉnh đưa vào new_b64_lines
+                    params = []
+                    if tr_type == "ws":
+                        params.append("type=ws")
+                        ws_path = transport_obj.get("path", "/")
+                        ws_headers = transport_obj.get("headers", {})
+                        ws_host = ws_headers.get("Host") or sni or px["server"]
+                        params.append(f"path={urllib.parse.quote(ws_path)}")
+                        if ws_host:
+                            params.append(f"host={urllib.parse.quote(ws_host)}")
+                    elif tr_type == "grpc":
+                        params.append("type=grpc")
+                        service_name = transport_obj.get("service_name", "")
+                        if service_name:
+                            params.append(f"serviceName={urllib.parse.quote(service_name)}")
+                    else:
+                        params.append("type=tcp")
+
+                    params.append(f"security={sec_type}")
+                    if sec_type == "reality":
+                        if reality_obj.get("public_key"):
+                            params.append(f"pbk={reality_obj['public_key']}")
+                        if reality_obj.get("short_id"):
+                            params.append(f"sid={reality_obj['short_id']}")
+                        if sni:
+                            params.append(f"sni={sni}")
+                        if fp:
+                            params.append(f"fp={fp}")
+                    elif sec_type == "tls":
+                        if sni:
+                            params.append(f"sni={sni}")
+                        if fp:
+                            params.append(f"fp={fp}")
+                        if tls_obj.get("insecure"):
+                            params.append("insecure=1")
+
+                    if flow:
+                        params.append(f"flow={flow}")
+
+                    query_str = "&".join(params)
+                    vless_uri = f"vless://{px['uuid']}@{px['server']}:{px['port']}?{query_str}#{urllib.parse.quote(new_name)}"
+                    new_b64_lines.append(vless_uri)
+
         except Exception as e:
             print(f"  [!] Lỗi parse Singbox JSON: {e}")
 
@@ -1009,7 +1119,7 @@ def process_b64(raw_b64: str, provider_name: str):
             proxy = uri_to_proxy(new_line)
             if proxy: proxy_list.append(proxy)
     new_b64 = base64.b64encode("\n".join(new_b64_lines).encode("utf-8")).decode("ascii")
-    print(f"  Parsed {len(proxy_list)} real proxies from {len(lines)} lines")
+    print(f"  Parsed {len(proxy_list)} real proxies")
     mode = "liangxin" if "liangxin" in provider_name.lower() else "combo"
     yaml_str    = build_yaml(proxy_list, mode)        if proxy_list else ""
     singbox_str = build_singbox_full(proxy_list, mode) if proxy_list else ""
@@ -1059,8 +1169,6 @@ def update_all():
             provider = "Liangxin"
         elif "djjc" in u_low:
             provider = "DJJC"
-        elif "skylumo" in u_low or "9999231.xyz" in u_low:
-            provider = "Skylumo"
         else:
             provider = "Custom_Source"
         print(f"\n→ [{provider}] token: {orig_token[:12]}... url: {orig_url[:55]}...")
