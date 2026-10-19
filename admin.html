@@ -780,28 +780,36 @@ textarea.autog{resize:none;overflow:hidden;}
     </div>
    </div>
 
-   <!-- KHỐI QUẢN LÝ TELEGRAM CHANNEL BACKUP (TỰ ĐỘNG LÚC 01:00 AM VN) -->
-   <div class="bg-white border-2 border-sky-300 rounded-2xl shadow-sm p-4 md:p-5 space-y-3">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-sky-100 pb-3">
-     <div>
-      <div class="font-extrabold text-sm md:text-base text-sky-900 flex items-center gap-2">
-       <i class="fab fa-telegram text-sky-500 text-xl"></i>Telegram Backup Channel (Tự động 01:00 AM VN)
+   <!-- KHỐI QUẢN LÝ TELEGRAM CHANNEL BACKUP (THẺ DỌC GỌN GÀNG THEO CỘT) -->
+   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+    <div class="bg-white border-2 border-sky-300 rounded-2xl shadow-sm p-4 md:p-5 space-y-3">
+     <div class="flex items-center justify-between border-b border-sky-100 pb-2.5">
+      <div>
+       <div class="font-extrabold text-sm text-sky-900 flex items-center gap-2">
+        <i class="fab fa-telegram text-sky-500 text-lg"></i>Telegram Backup Channel (08:00 AM VN)
+       </div>
+       <p class="text-[11px] text-sky-700 mt-0.5">Xuất file JSON + CSV đơn hàng và toàn bộ KV Space vào Kênh Telegram.</p>
       </div>
-      <p class="text-[11px] text-sky-700 mt-0.5">Tự động xuất 2 file <b>Backup_Orders_YYYY_MM_DD.json</b> và <b>.csv</b> gửi trực tiếp vào Kênh riêng tư mỗi đêm.</p>
+      <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200 shrink-0">KÊNH PRIVATE</span>
      </div>
-     <span class="text-xs font-black px-2.5 py-1 rounded-full bg-sky-100 text-sky-800 border border-sky-200">KÊNH PRIVATE</span>
-    </div>
 
-    <!-- Cụm nút thao tác kiểm tra & bắn backup -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-     <button type="button" id="btnTgTest" onclick="testTelegramBot()" class="bg-sky-50 hover:bg-sky-100 text-sky-800 font-bold py-2.5 rounded-xl text-xs border border-sky-200 shadow-sm flex items-center justify-center gap-2 transition active:scale-95">
-      <i class="fas fa-paper-plane text-sky-600"></i>Kiểm tra kết nối Bot
-     </button>
-     <button type="button" id="btnTgBackupNow" onclick="triggerTelegramBackupNow()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md flex items-center justify-center gap-2 transition active:scale-95">
-      <i class="fas fa-file-export"></i>Bắn Backup ngay bây giờ
-     </button>
+     <!-- Cụm 4 nút thao tác: Bắn Đơn hàng, Bắn KV Space, Test Bot, Reset STT -->
+     <div class="grid grid-cols-2 gap-2 pt-1">
+      <button type="button" id="btnTgBackupNow" onclick="triggerTelegramBackupNow('Admin bấm Bắn All Orders ngay')" class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
+       <i class="fas fa-file-export"></i>Bắn All Orders
+      </button>
+      <button type="button" id="btnTgKvBackupNow" onclick="triggerTelegramKvBackupNow()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
+       <i class="fas fa-database"></i>Bắn Toàn bộ KV
+      </button>
+      <button type="button" id="btnTgTest" onclick="testTelegramBot()" class="bg-sky-50 hover:bg-sky-100 text-sky-800 font-bold py-2 rounded-xl text-xs border border-sky-200 shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
+       <i class="fas fa-paper-plane text-sky-600"></i>Test Bot
+      </button>
+      <button type="button" id="btnTgResetStt" onclick="resetTelegramStt()" class="bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold py-2 rounded-xl text-xs border border-amber-200 shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
+       <i class="fas fa-rotate-left text-amber-600"></i>Reset STT về 01
+      </button>
+     </div>
+     <div id="tgActionLog" class="text-[11px] text-slate-500 font-medium italic min-h-[18px]"></div>
     </div>
-    <div id="tgActionLog" class="text-[11px] text-slate-500 font-medium italic min-h-[18px]"></div>
    </div>
 
    <!-- PHẦN DƯỚI CÙNG: ICON DOCK TRANG CHỦ (TRẢI RỘNG FULL WIDTH) -->
@@ -1085,10 +1093,10 @@ const fmtMonths=d=>{d=Number(d)||0;return d>0?String(Math.round(d/30*100)/100):"
 function ordMonths(o){const p=pkgOf(o);if(p&&p.m===0)return 0;const d=Number(o.days);if(d>0)return Math.floor(d/30);return (p?p.m:1)*(Number(o.qty)||1);}
 function webLabel(v,wu){const t=String(v||"")+" "+String(wu||"");if(/vpntrinhhg3|lucastanora/i.test(t))return "Web 3";if(/vpntrinhhg2|onepiece/i.test(t))return "Web 2";if(/vpntrinhhg\.|doicucden/i.test(t))return "Web 1";return v?String(v).replace(/^https?:\/\//,"").replace(/\/$/,""):"—";}
 function linkBottom(l){
- if(isLife(l.expDate)) return "Vĩnh viễn";
+ if(!l || !l.expDate || isLife(l.expDate) || isLife(l.date)) return "Vĩnh viễn";
  const ts=Number(l.createdTs)||Number(((l.id||"").match(/^LNK-(\d{13})/)||[])[1])||parseAny(l.date);
- const hm=ts?fmtBank(ts).slice(9):"";
- return esc(l.expDate||"Vĩnh viễn")+(hm?" "+hm:"");
+ const hm=ts ? fmtBank(ts).slice(-5) : "";
+ return esc(l.expDate) + (hm ? " " + hm : "");
 }
 const payOf=o=>/alipay/i.test(o.method||"")?"Alipay":/weixin|wechat/i.test(o.method||"")?"Weixin":"Bank";
 
@@ -3807,6 +3815,42 @@ async function testTelegramBot() {
     toast("Lỗi: " + e.message, "err");
   } finally {
     btn.disabled = false;
+  }
+}
+
+async function triggerTelegramKvBackupNow() {
+  const logEl = $("tgActionLog");
+  const btn = $("btnTgKvBackupNow");
+  if (btn) btn.disabled = true;
+  if (logEl) logEl.innerHTML = '<span class="text-indigo-600"><i class="fas fa-spinner fa-spin mr-1"></i>Đang đóng gói toàn bộ KV Space gửi sang Telegram...</span>';
+  try {
+    const res = await aj("/api/admin/telegram/backup_kv_now", { method: "POST" });
+    if (res && res.ok) {
+      if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Đã bắn file sao lưu KV Space (${res.keysCount} keys) [${res.keyTitle}] sang Telegram!</span>`;
+      toast(`Đã gửi file sao lưu KV (${res.keysCount} keys)!`);
+    } else {
+      if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Gửi backup KV thất bại!</span>`;
+      toast("Gửi backup KV thất bại!", "err");
+    }
+  } catch(e) {
+    if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Lỗi: ${e.message}</span>`;
+    toast("Lỗi: " + e.message, "err");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function resetTelegramStt() {
+  if (!confirm("Reset số thứ tự STT tin nhắn backup về 01? Lượt bắn backup tiếp theo trong ngày hôm nay sẽ có mã _01.")) return;
+  const logEl = $("tgActionLog");
+  try {
+    const res = await aj("/api/admin/telegram/reset_stt", { method: "POST" });
+    if (res && res.ok) {
+      if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Đã reset STT về 0! Lượt bắn kế tiếp sẽ là _01.</span>`;
+      toast("Đã reset STT thành công!");
+    }
+  } catch(e) {
+    toast("Lỗi reset STT: " + e.message, "err");
   }
 }
 
