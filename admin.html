@@ -227,10 +227,10 @@ textarea.autog{resize:none;overflow:hidden;}
 
  <!-- ===== TAB KIỂM TRA & QUÉT (2 SUB-TAB CON) ===== -->
  <div id="t-check" class="hidden w-full min-w-0 space-y-3">
-  <!-- Thanh chuyển đổi 2 Sub-tab -->
-  <div class="bg-slate-200 p-1 rounded-xl flex gap-1 w-fit mb-1">
-   <button type="button" onclick="switchCheckSubTab('heal')" id="btn-chk-heal" class="settings-sub-tab active text-center !px-3.5 font-bold"><i class="fas fa-clipboard-check mr-1.5"></i>Kiểm tra bù link</button>
-   <button type="button" onclick="switchCheckSubTab('scan')" id="btn-chk-scan" class="settings-sub-tab text-center !px-3.5 font-bold"><i class="fas fa-magnifying-glass mr-1.5"></i>Rà quét & Map lại</button>
+  <!-- Thanh chuyển đổi 2 Sub-tab fit sát nội dung -->
+  <div class="inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 w-fit mb-1">
+   <button type="button" onclick="switchCheckSubTab('heal')" id="btn-chk-heal" class="settings-sub-tab active text-center !px-3 py-1.5 font-bold text-xs"><i class="fas fa-clipboard-check mr-1.5"></i>Kiểm tra bù link</button>
+   <button type="button" onclick="switchCheckSubTab('scan')" id="btn-chk-scan" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-xs"><i class="fas fa-magnifying-glass mr-1.5"></i>Rà quét & Map lại</button>
   </div>
 
   <!-- SUB-TAB 1: KIỂM TRA ĐƠN CHƯA ĐỦ LINK -->
@@ -598,14 +598,14 @@ textarea.autog{resize:none;overflow:hidden;}
  <div id="t-settings" class="hidden w-full min-w-0">
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
    <h2 class="text-lg md:text-2xl font-bold text-slate-800 shrink-0">Cài đặt hệ thống</h2>
-   <!-- Thanh 5 Sub-tab chuẩn: Set Web -> FAQ -> Nhật ký -> Thiết bị -> Thời gian -->
-   <div class="flex justify-end w-full sm:w-auto">
-    <div class="bg-slate-200/90 p-1 rounded-2xl grid grid-cols-3 sm:flex gap-1 w-full sm:w-fit shrink-0">
-     <button type="button" class="settings-sub-tab active text-center !px-3.5 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-setweb" onclick="switchSettingsTab('setweb')"><i class="fas fa-globe mr-1 hidden sm:inline"></i>Set Web</button>
-     <button type="button" class="settings-sub-tab text-center !px-3.5 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-faq" onclick="switchSettingsTab('faq')"><i class="fas fa-circle-question mr-1 hidden sm:inline"></i>FAQ</button>
-     <button type="button" class="settings-sub-tab text-center !px-3.5 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-log" onclick="switchSettingsTab('log')"><i class="fas fa-list-alt mr-1 hidden sm:inline"></i>Nhật ký</button>
-     <button type="button" class="settings-sub-tab text-center !px-3.5 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-dev" onclick="switchSettingsTab('dev')"><i class="fas fa-laptop mr-1 hidden sm:inline"></i>Thiết bị</button>
-     <button type="button" class="settings-sub-tab text-center !px-3.5 py-1.5 font-bold text-[11px] sm:text-xs" id="stab-time" onclick="switchSettingsTab('time')"><i class="fas fa-clock mr-1 hidden sm:inline"></i>Thời gian</button>
+   <!-- Thanh 5 Sub-tab chuẩn: Fit sát nội dung, tự co giãn mượt mà -->
+   <div class="flex justify-start sm:justify-end w-full sm:w-auto overflow-x-auto scroll-hide">
+    <div class="bg-slate-200/80 p-1 rounded-xl inline-flex items-center gap-1 w-fit shrink-0">
+     <button type="button" class="settings-sub-tab active text-center !px-3 py-1.5 font-bold text-xs" id="stab-setweb" onclick="switchSettingsTab('setweb')"><i class="fas fa-globe mr-1 hidden sm:inline"></i>Set Web</button>
+     <button type="button" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-xs" id="stab-faq" onclick="switchSettingsTab('faq')"><i class="fas fa-circle-question mr-1 hidden sm:inline"></i>FAQ</button>
+     <button type="button" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-xs" id="stab-log" onclick="switchSettingsTab('log')"><i class="fas fa-list-alt mr-1 hidden sm:inline"></i>Nhật ký</button>
+     <button type="button" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-xs" id="stab-dev" onclick="switchSettingsTab('dev')"><i class="fas fa-laptop mr-1 hidden sm:inline"></i>Thiết bị</button>
+     <button type="button" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-xs" id="stab-time" onclick="switchSettingsTab('time')"><i class="fas fa-clock mr-1 hidden sm:inline"></i>Thời gian</button>
     </div>
    </div>
   </div>
@@ -723,6 +723,34 @@ textarea.autog{resize:none;overflow:hidden;}
       <div id="statusBox" class="text-xs rounded-xl border p-3 bg-slate-50 border-slate-200 text-slate-600">Đang kiểm tra trạng thái...</div>
       <p class="text-[10px] text-slate-400">Không bao giờ hiển thị giá trị secret thật — chỉ báo Có / Không.</p>
      </div>
+
+     <!-- 5. Telegram Backup Channel (Nằm ngay dưới Cột Trái) -->
+     <div class="bg-white border-2 border-sky-300 rounded-2xl shadow-sm p-4 md:p-5 space-y-3">
+      <div class="flex items-center justify-between border-b border-sky-100 pb-2.5">
+       <div>
+        <div class="font-extrabold text-sm text-sky-900 flex items-center gap-1.5">
+         <i class="fab fa-telegram text-sky-500 text-base"></i>Telegram Backup (08:00 AM VN)
+        </div>
+        <p class="text-[10px] text-sky-700 mt-0.5">Xuất file JSON + CSV đơn hàng & toàn bộ KV Space.</p>
+       </div>
+       <span class="text-[9px] font-black px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200 shrink-0">PRIVATE</span>
+      </div>
+      <div class="grid grid-cols-2 gap-2 pt-1">
+       <button type="button" id="btnTgBackupNow" onclick="triggerTelegramBackupNow('Admin bấm Bắn All Orders ngay')" class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 rounded-xl text-xs shadow-sm flex items-center justify-center gap-1 transition active:scale-95">
+        <i class="fas fa-file-export"></i>Bắn All Orders
+       </button>
+       <button type="button" id="btnTgKvBackupNow" onclick="triggerTelegramKvBackupNow()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs shadow-sm flex items-center justify-center gap-1 transition active:scale-95">
+        <i class="fas fa-database"></i>Bắn Toàn bộ KV
+       </button>
+       <button type="button" id="btnTgTest" onclick="testTelegramBot()" class="bg-sky-50 hover:bg-sky-100 text-sky-800 font-bold py-1.5 rounded-xl text-[11px] border border-sky-200 shadow-sm flex items-center justify-center gap-1 transition active:scale-95">
+        <i class="fas fa-paper-plane text-sky-600"></i>Test Bot
+       </button>
+       <button type="button" id="btnTgResetStt" onclick="resetTelegramStt()" class="bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold py-1.5 rounded-xl text-[11px] border border-amber-200 shadow-sm flex items-center justify-center gap-1 transition active:scale-95">
+        <i class="fas fa-rotate-left text-amber-600"></i>Reset STT
+       </button>
+      </div>
+      <div id="tgActionLog" class="text-[11px] text-slate-500 font-medium italic min-h-[16px]"></div>
+     </div>
     </div>
 
     <!-- CỘT PHẢI: ĐỊNH TUYẾN GỐC, LÀM MỜ, WORKER VỆ TINH, KHÓA HẾT HẠN -->
@@ -777,38 +805,6 @@ textarea.autog{resize:none;overflow:hidden;}
     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-5 space-y-3">
      <div class="flex items-center justify-between border-b border-slate-100 pb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-gauge-high text-indigo-500 mr-1.5"></i>System Quota (chỉ web này)</div><button onclick="loadQuota()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2.5 py-1 rounded-lg hover:bg-indigo-100"><i class="fas fa-sync mr-1"></i>Làm mới</button></div>
      <div id="quotaBody" class="pt-1 flex flex-col gap-3 text-xs text-slate-500">Đang tải quota...</div>
-    </div>
-   </div>
-
-   <!-- KHỐI QUẢN LÝ TELEGRAM CHANNEL BACKUP (THẺ DỌC GỌN GÀNG THEO CỘT) -->
-   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-    <div class="bg-white border-2 border-sky-300 rounded-2xl shadow-sm p-4 md:p-5 space-y-3">
-     <div class="flex items-center justify-between border-b border-sky-100 pb-2.5">
-      <div>
-       <div class="font-extrabold text-sm text-sky-900 flex items-center gap-2">
-        <i class="fab fa-telegram text-sky-500 text-lg"></i>Telegram Backup Channel (08:00 AM VN)
-       </div>
-       <p class="text-[11px] text-sky-700 mt-0.5">Xuất file JSON + CSV đơn hàng và toàn bộ KV Space vào Kênh Telegram.</p>
-      </div>
-      <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200 shrink-0">KÊNH PRIVATE</span>
-     </div>
-
-     <!-- Cụm 4 nút thao tác: Bắn Đơn hàng, Bắn KV Space, Test Bot, Reset STT -->
-     <div class="grid grid-cols-2 gap-2 pt-1">
-      <button type="button" id="btnTgBackupNow" onclick="triggerTelegramBackupNow('Admin bấm Bắn All Orders ngay')" class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
-       <i class="fas fa-file-export"></i>Bắn All Orders
-      </button>
-      <button type="button" id="btnTgKvBackupNow" onclick="triggerTelegramKvBackupNow()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
-       <i class="fas fa-database"></i>Bắn Toàn bộ KV
-      </button>
-      <button type="button" id="btnTgTest" onclick="testTelegramBot()" class="bg-sky-50 hover:bg-sky-100 text-sky-800 font-bold py-2 rounded-xl text-xs border border-sky-200 shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
-       <i class="fas fa-paper-plane text-sky-600"></i>Test Bot
-      </button>
-      <button type="button" id="btnTgResetStt" onclick="resetTelegramStt()" class="bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold py-2 rounded-xl text-xs border border-amber-200 shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
-       <i class="fas fa-rotate-left text-amber-600"></i>Reset STT về 01
-      </button>
-     </div>
-     <div id="tgActionLog" class="text-[11px] text-slate-500 font-medium italic min-h-[18px]"></div>
     </div>
    </div>
 
@@ -1094,9 +1090,7 @@ function ordMonths(o){const p=pkgOf(o);if(p&&p.m===0)return 0;const d=Number(o.d
 function webLabel(v,wu){const t=String(v||"")+" "+String(wu||"");if(/vpntrinhhg3|lucastanora/i.test(t))return "Web 3";if(/vpntrinhhg2|onepiece/i.test(t))return "Web 2";if(/vpntrinhhg\.|doicucden/i.test(t))return "Web 1";return v?String(v).replace(/^https?:\/\//,"").replace(/\/$/,""):"—";}
 function linkBottom(l){
  if(!l || !l.expDate || isLife(l.expDate) || isLife(l.date)) return "Vĩnh viễn";
- const ts=Number(l.createdTs)||Number(((l.id||"").match(/^LNK-(\d{13})/)||[])[1])||parseAny(l.date);
- const hm=ts ? fmtBank(ts).slice(-5) : "";
- return esc(l.expDate) + (hm ? " " + hm : "");
+ return esc(l.expDate);
 }
 const payOf=o=>/alipay/i.test(o.method||"")?"Alipay":/weixin|wechat/i.test(o.method||"")?"Weixin":"Bank";
 
@@ -1437,12 +1431,14 @@ async function saveOrd(){
 async function forceOrder(id){if(lockFulfillOn())return toast("Đang bật Khóa fulfillment — tắt khóa mới được duyệt & cấp link","warn");if(!confirm(`Duyệt tay đơn ${id} (không cần khớp giao dịch) và cấp link ngay?`))return;
  try{const j=await aj("/api/admin/order",{method:"POST",body:{id,status:"success"}});const i=ordersDb.findIndex(x=>x.id===id);if(i>=0)ordersDb[i]=j.order;lastSig.o=JSON.stringify(ordersDb);renderOrd();toast("Đã duyệt & cấp link");}catch(e){toast("Lỗi: "+e.message,"err");}}
 async function delOrd(id){
- if(!confirm("Xóa đơn "+id+"?"))return;
+ if(!confirm("Xóa đơn "+id+"? Toàn bộ Link Sub của đơn này sẽ được khóa và chuyển sang tab Đã Xóa."))return;
  try{
    await api("/api/admin/order?id="+id,{method:"DELETE"});
    ordersDb=ordersDb.filter(x=>x.id!==id);
    lastSig.o=JSON.stringify(ordersDb);
-   renderOrd();renderCheckTab();toast("Đã xóa");
+   renderOrd();renderCheckTab();
+   fetchAll();
+   toast("Đã xóa đơn & thu hồi toàn bộ link sub liên quan");
    triggerTelegramBackupNow(`Xóa đơn hàng #${id}`);
  }catch(e){}
 }
@@ -2137,19 +2133,21 @@ function renderLinks(){
         </div>
       </div>
 
-      <!-- URL LINK GỐC: LUÔN HIỂN THỊ TRỰC QUAN TRÊN HEADER -->
-      <div class="bg-white p-2 rounded-xl border border-slate-100 space-y-1">
-        <div class="font-mono text-[11px] font-bold text-slate-700 break-all cp flex items-start gap-1" onclick="cp(${q(g.orig)})">
-          <span class="text-emerald-700 font-extrabold shrink-0">Nguồn 1:</span>
-          <span class="hover:text-indigo-600">${esc(g.orig)}</span>
+      <!-- URL LINK GỐC: KHUNG ĐẬM NỔI BẬT PHÂN BIỆT RÕ VỚI CARD LINK CON -->
+      <div class="bg-slate-900 border border-slate-800 p-2.5 rounded-xl space-y-1.5 shadow-inner">
+        <div class="font-mono text-[11px] font-semibold text-emerald-300 break-all cp flex items-start gap-2" onclick="cp('${g.orig}')">
+          <span class="bg-emerald-950 text-emerald-400 border border-emerald-800 text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 uppercase">Nguồn 1</span>
+          <span class="hover:underline flex-1">${esc(g.orig)}</span>
+          <i class="far fa-copy text-slate-400 text-xs shrink-0 mt-0.5"></i>
         </div>
         ${g.orig2 ? `
-        <div class="font-mono text-[11px] font-bold text-slate-700 break-all cp flex items-start gap-1 pt-1 border-t border-slate-50" onclick="cp(${q(g.orig2)})">
-          <span class="text-blue-700 font-extrabold shrink-0">Nguồn 2:</span>
-          <span class="hover:text-indigo-600">${esc(g.orig2)}</span>
+        <div class="font-mono text-[11px] font-semibold text-sky-300 break-all cp flex items-start gap-2 pt-1.5 border-t border-slate-800" onclick="cp('${g.orig2}')">
+          <span class="bg-sky-950 text-sky-400 border border-sky-800 text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 uppercase">Nguồn 2</span>
+          <span class="hover:underline flex-1">${esc(g.orig2)}</span>
+          <i class="far fa-copy text-slate-400 text-xs shrink-0 mt-0.5"></i>
         </div>` : ''}
       </div>
-
+      
       <!-- BẢNG THÔNG SỐ CHI TIẾT (MẶC ĐỊNH ẨN - BẤM CON MẮT ĐỂ MỞ) -->
       <div id="cluster-specs-${idxId}" class="hidden bg-slate-50 border border-slate-200 p-2.5 rounded-xl space-y-2 transition-all">
         <div class="text-[10px] font-bold text-slate-500 uppercase">Thông số chi tiết Node gốc (Kho):</div>
