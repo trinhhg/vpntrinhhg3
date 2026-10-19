@@ -345,13 +345,9 @@ textarea.autog{resize:none;overflow:hidden;}
  <div id="t-lnk" class="hidden space-y-4 w-full min-w-0">
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
    <h2 class="text-lg md:text-2xl font-bold text-slate-800">Quản lý Link Sub Ẩn</h2>
-   <div class="bg-slate-200 p-1 rounded-xl flex gap-1 w-fit">
-    <button type="button" onclick="switchLinkSubPane('tree')" id="btn-lnk-tree" class="settings-sub-tab active text-center !px-3 font-bold"><i class="fas fa-sitemap mr-1.5"></i>Cây Link Sub</button>
-    <button type="button" onclick="switchLinkSubPane('sources')" id="btn-lnk-sources" class="settings-sub-tab text-center !px-3 font-bold"><i class="fas fa-database mr-1.5"></i>Bảng Quản Lý Link Nguồn</button>
-   </div>
   </div>
 
-  <!-- PANE 1: CÂY LINK SUB (MẶC ĐỊNH) -->
+  <!-- CÂY LINK SUB (DUY NHẤT) -->
   <div id="pane-lnk-tree" class="space-y-4">
 
   <!-- Khối 4 nút bảo trì (nằm riêng biệt, không tiêu đề) -->
@@ -371,8 +367,7 @@ textarea.autog{resize:none;overflow:hidden;}
      <label class="font-bold text-xs text-slate-700">Nguồn 1 (Liangxin hoặc DJJC)</label>
      <span class="text-[10px] text-slate-400 font-medium">Nhập 1 ô = Link Đơn · Nhập 2 ô = Link Trộn</span>
     </div>
-<input id="lkOrig" type="text" placeholder="Dán link nguồn (Liangxin, DJJC, Skylumo hoặc bất kỳ link sub nào)..." class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-xs bg-slate-50">   </div>
-   
+<input id="lkOrig" type="text" placeholder="Dán link nguồn (Liangxin hoặc DJJC)..." class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-xs bg-slate-50">   </div>   
    <div class="mb-3">
     <label class="block font-bold text-xs text-indigo-700 mb-1"><i class="fas fa-shuffle mr-1"></i>Nguồn 2 (Để trống nếu là Link Đơn)</label>
     <input id="lkOrig2" type="text" placeholder="https://gates.djjc... hoặc https://liangxin... (tự nhận diện nhà mạng)" class="w-full p-2 border border-indigo-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-xs bg-indigo-50/30">
@@ -425,75 +420,8 @@ textarea.autog{resize:none;overflow:hidden;}
   </div>
   <div id="linksViewContainer" class="space-y-3 w-full min-w-0"></div>
   </div>
-
-  <!-- PANE 2: BẢNG QUẢN LÝ LINK NGUỒN GỐC -->
-  <div id="pane-lnk-sources" class="hidden space-y-4">
-   <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-     <div>
-      <h3 class="font-extrabold text-base text-slate-800 flex items-center gap-2">
-       <i class="fas fa-plus-circle text-indigo-600"></i>Thêm Link Nguồn Gốc Mới Vào Kho
-      </h3>
-      <p class="text-[11px] text-slate-500 mt-0.5">Dán bất kỳ link nguồn nào (Liangxin, DJJC, Skylumo hoặc nhà mạng bất kỳ). Hệ thống sẽ tự động nạp vào Kho và sinh node neo #1 Auto.</p>
-     </div>
-    </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-     <div>
-      <label class="block text-[10px] font-bold text-slate-600 mb-1">Tên nhà mạng / Tên nguồn</label>
-      <input type="text" id="newSrcName" placeholder="VD: Skylumo, Liangxin, DJJC..." class="w-full p-2 text-xs border border-slate-300 rounded-xl bg-slate-50 outline-none font-bold">
-     </div>
-     <div>
-      <label class="block text-[10px] font-bold text-slate-600 mb-1">Hạn mức tải thiết bị tối đa</label>
-      <input type="number" id="newSrcMax" value="30" min="1" class="w-full p-2 text-xs border border-slate-300 rounded-xl bg-slate-50 outline-none text-center font-bold">
-     </div>
-     <div class="sm:col-span-2">
-      <label class="block text-[10px] font-bold text-slate-600 mb-1">Link Subscription Nguồn Gốc (URL)</label>
-      <input type="text" id="newSrcUrl" placeholder="http://skylumo.com/... hoặc https://..." class="w-full p-2 text-xs border border-indigo-200 rounded-xl bg-indigo-50/20 font-mono outline-none focus:border-indigo-500">
-     </div>
-     <div>
-      <label class="block text-[10px] font-bold text-slate-600 mb-1">Tổng GB gói gốc (Tùy chọn)</label>
-      <input type="number" id="newSrcGb" placeholder="100" class="w-full p-2 text-xs border border-slate-300 rounded-xl bg-slate-50 outline-none">
-     </div>
-     <div>
-      <label class="block text-[10px] font-bold text-slate-600 mb-1">Hạn sử dụng gói gốc (Tùy chọn)</label>
-      <input type="text" id="newSrcExp" placeholder="DD/MM/YYYY hoặc Vĩnh viễn" class="w-full p-2 text-xs border border-slate-300 rounded-xl bg-slate-50 outline-none text-center">
-     </div>
-    </div>
-    <button type="button" onclick="addNewSourceProvider()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5">
-     <i class="fas fa-save"></i>LƯU LINK NGUỒN VÀO HỆ THỐNG
-    </button>
-   </div>
-
-   <!-- DANH SÁCH CÁC NGUỒN TRONG KHO -->
-   <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
-    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-     <h3 class="font-extrabold text-sm text-slate-800 flex items-center gap-2">
-      <i class="fas fa-list text-slate-600"></i>Danh Sách Link Nguồn Trong Kho
-     </h3>
-     <span id="srcCountBadge" class="bg-indigo-100 text-indigo-700 font-black text-xs px-2.5 py-0.5 rounded-full">0 Nguồn</span>
-    </div>
-    <div id="sourcesTableContainer" class="overflow-x-auto">
-     <table class="log-table">
-      <thead>
-       <tr>
-        <th>Nhà Mạng</th>
-        <th>URL Nguồn Gốc</th>
-        <th style="width: 100px;">HSD Gốc</th>
-        <th style="width: 100px;">Dung Lượng</th>
-        <th style="width: 90px;">Tải Thiết Bị</th>
-        <th class="col-x">Xóa</th>
-       </tr>
-      </thead>
-      <tbody id="sourcesTableBody">
-       <tr><td colspan="6" class="text-center py-6 text-slate-400">Đang tải nguồn...</td></tr>
-      </tbody>
-     </table>
-    </div>
-   </div>
-  </div>
  </div>
-
+    
  <!-- ===== ĐÃ XÓA ===== -->
  <div id="t-dead" class="hidden w-full min-w-0">
   <div class="flex items-center justify-between mb-4 gap-3"><div><h2 class="text-lg md:text-2xl font-bold text-slate-800">Lịch sử Đã Xóa</h2><p class="text-[11px] text-slate-500">Link bị xóa được giữ 48 giờ rồi hệ thống tự xóa hẳn khỏi KV. Link đã xóa sẽ không tự quay lại Link Sub.</p></div><button onclick="clearDeadLinks()" class="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm"><i class="fas fa-eraser mr-1"></i>Xóa hết</button></div>
@@ -682,6 +610,8 @@ textarea.autog{resize:none;overflow:hidden;}
    </div>
   </div>
 
+  <!-- 1. VIEW SET WEB (BỌC CHÍNH XÁC ID SETTINGS-VIEW-SETWEB) -->
+  <div id="settings-view-setweb" class="space-y-4">
    <!-- KHU VỰC 2 THẺ KHO DỮ LIỆU SUPABASE: KHO THẬT & KHO TEST SONG SONG -->
    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 mb-2">
     <!-- 1. THẺ KHO THẬT (ALL_ORDERS) -->
@@ -1488,6 +1418,9 @@ async function saveOrd(){
   if(body.newId&&o.id!==body.newId)toast("Worker chưa hỗ trợ đổi Mã đơn — mã đơn giữ nguyên "+o.id,"warn");
   let i=ordersDb.findIndex(x=>x.id===(oldId||o.id));if(i<0)i=ordersDb.findIndex(x=>x.id===o.id);if(i>=0)ordersDb[i]=o;else ordersDb.unshift(o);
   lastSig.o=JSON.stringify(ordersDb);renderOrd();cm("mOrd");toast("Đã lưu"+((j.kind==="new"||j.kind==="renew")&&!lockFulfillOn()?" & đã cấp link":""));
+  if (modalNew) {
+    triggerTelegramBackupNow(`Đơn hàng mới #${o.id} (${o.email || "Khách"})`);
+  }
   const st=normSt(o.status);
   if(mailOnSaveOn()&&!lockFulfillOn()&&o.email&&(body.status==="success"||body.status==="failed")&&(st==="success"||st==="failed")){
    if(!isMailMaster())toast("Web đang ở chế độ SLAVE, bỏ qua gửi mail","warn");else{const key=st==="success"?mailKeyOf(o):"failed";sendMailClient(o.email,subjVars(getTpl(key).subject,orderVars(o)),st==="success"?mailSuccess(o):mailFailed(o));logEvent("ok","Gửi mail",(st==="success"?"Kích hoạt thành công → ":"Kích hoạt thất bại → ")+o.email,o.id);}}
@@ -1495,8 +1428,16 @@ async function saveOrd(){
  btn.disabled=false;}
 async function forceOrder(id){if(lockFulfillOn())return toast("Đang bật Khóa fulfillment — tắt khóa mới được duyệt & cấp link","warn");if(!confirm(`Duyệt tay đơn ${id} (không cần khớp giao dịch) và cấp link ngay?`))return;
  try{const j=await aj("/api/admin/order",{method:"POST",body:{id,status:"success"}});const i=ordersDb.findIndex(x=>x.id===id);if(i>=0)ordersDb[i]=j.order;lastSig.o=JSON.stringify(ordersDb);renderOrd();toast("Đã duyệt & cấp link");}catch(e){toast("Lỗi: "+e.message,"err");}}
-async function delOrd(id){if(!confirm("Xóa đơn "+id+"?"))return;try{await api("/api/admin/order?id="+id,{method:"DELETE"});ordersDb=ordersDb.filter(x=>x.id!==id);lastSig.o=JSON.stringify(ordersDb);renderOrd();renderCheckTab();toast("Đã xóa");}catch(e){}}
-
+async function delOrd(id){
+ if(!confirm("Xóa đơn "+id+"?"))return;
+ try{
+   await api("/api/admin/order?id="+id,{method:"DELETE"});
+   ordersDb=ordersDb.filter(x=>x.id!==id);
+   lastSig.o=JSON.stringify(ordersDb);
+   renderOrd();renderCheckTab();toast("Đã xóa");
+   triggerTelegramBackupNow(`Xóa đơn hàng #${id}`);
+ }catch(e){}
+}
 // ===================== TAB KIỂM TRA ĐƠN CHƯA ĐỦ LINK =====================
 function getMissingOrders(){
  const now = nowMs();
@@ -1735,7 +1676,7 @@ function sendZaloMail(id){if(!isMailMaster())return toast("Đang ở chế độ
  sendMailClient(o.email,subjVars(getTpl("support").subject,orderVars(o)),mailZalo(o));logEvent("ok","Gửi mail","Hỗ trợ cài đặt → "+o.email,o.id);toast("Đã gửi mail nhắc hỗ trợ cài đặt");}
 // ===================== DOANH THU =====================
 let revTab="over",revMonth="all",revPayView=null;
-const REV_TABS=[["over","Tổng quan"],["pkg","Theo gói"],["pay","Thanh toán"],["rank","Xếp hạng"],["cost","Chi phí"]];
+const REV_TABS=[["over","Tổng quan"],["pay","Thanh toán"],["cost","Chi phí"]];
 const cnyRate=()=>Number(cmsDb.settings.cnyRate)||0;
 const shortN=v=>v>=1e6?(v/1e6).toFixed(v>=1e7?0:1).replace(/\.0$/,"")+"tr":v>=1e3?Math.round(v/1e3)+"k":String(Math.round(v));
 // Doanh thu: Bank = totalVnd thực thu; Alipay/Weixin = totalCny thực nhận (thiếu thì lấy theo giá CNY của gói) × tỷ giá. Số tháng = phần nguyên của days/30.
@@ -1748,20 +1689,35 @@ const box=(t,inner)=>`<div class="bg-white border border-slate-200 rounded-2xl p
 function monthTotals(){const m={};revList(true).forEach(x=>{const k=x.key;(m[k]=m[k]||{k,vnd:0,n:0}).vnd+=x.vnd;m[k].n++;});return m;}
 const monthLbl=k=>k==="000000"?"Không rõ":`${+k.slice(4)}/${k.slice(2,4)}`;
 function renderRevenue(){
- $("revTabs").innerHTML=REV_TABS.map(([k,l])=>`<button onclick="revTab='${k}';revPayView=null;renderRevenue()" class="settings-sub-tab text-center !px-1 ${revTab===k?"active":""}">${l}</button>`).join("");
+ $("revTabs").innerHTML=REV_TABS.map(([k,l])=>`<button onclick="revTab='${k}';revPayView=null;renderRevenue()" class="settings-sub-tab text-center !px-3 font-bold ${revTab===k?"active":""}">${l}</button>`).join("");
  const ms=new Set(ordersDb.map(o=>monthInfo(oTs(o)).key));(cmsDb.costs||[]).forEach(c=>ms.add(monthInfo(c.ts).key));
  $("revMonth").innerHTML=`<option value="all">Tất cả các tháng</option>`+[...ms].sort().reverse().map(k=>`<option value="${k}" ${revMonth===k?"selected":""}>Tháng ${monthLbl(k)}</option>`).join("");
- const R=revList(),b=$("revBody");({over:revOver,pkg:revPkg,pay:revPay,rank:revRank,cost:revCost}[revTab])(R,b);}
+ const R=revList(),b=$("revBody");({over:revOver,pay:revPay,cost:revCost}[revTab])(R,b);}
 function revOver(R,b){
  const sum=R.reduce((a,x)=>a+x.vnd,0),cost=costSum().total,warn=R.some(x=>x.pay!=="Bank")&&!cnyRate()?`<div class="bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold rounded-xl p-3">Có đơn Alipay/Weixin nhưng chưa nhập tỷ giá CNY → VND nên phần này chưa được cộng vào tổng. Vào tab "Thanh toán" để nhập.</div>`:"";
  const mt=monthTotals(),keys=Object.keys(mt).sort().slice(-12),by={Bank:0,Alipay:0,Weixin:0};R.forEach(x=>by[x.pay]+=x.vnd);
- b.innerHTML=warn+`<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">${kpi("Tổng doanh thu",fmtVnd(sum)+"đ",R.length+" đơn thành công")}${kpi("Trung bình / đơn",fmtVnd(R.length?sum/R.length:0)+"đ","","text-sky-600")}${kpi("Chi phí vốn",fmtVnd(cost)+"đ","tab Chi phí","text-orange-500")}${kpi("Lợi nhuận",fmtVnd(sum-cost)+"đ",sum?Math.round((sum-cost)/sum*100)+"% doanh thu":"",sum-cost>=0?"text-emerald-600":"text-red-600")}</div>`+
- box("Doanh thu theo tháng (12 tháng gần nhất)",vbar(keys.map(k=>({l:monthLbl(k),v:mt[k].vnd}))))+
- box("Tỷ trọng theo phương thức (quy đổi VND)",hbar([{l:"Ngân hàng VN",v:by.Bank},{l:"Alipay",v:by.Alipay},{l:"Weixin",v:by.Weixin}]));}
-function revPkg(R,b){
+
+ // Block 2: Thống kê theo gói
  const g={};R.forEach(x=>{const k=x.p?x.p.n+"|"+x.p.vnd+"|"+(x.p.old?"o":"n"):"other|"+(x.o.pkgName||"?");const e=g[k]=g[k]||{l:x.p?`${x.p.n} - ${fmtVnd(x.p.vnd)}VND (${x.p.d})${x.p.old?" (giá cũ)":""}`:(x.o.pkgName||"Gói khác"),n:0,vnd:0,q:{}};e.n++;e.vnd+=x.vnd;const mk=x.p&&x.p.m===0?"∞":x.months;e.q[mk]=(e.q[mk]||0)+1;});
  const rows=Object.values(g).sort((a,c)=>c.vnd-a.vnd);
- b.innerHTML=box("Số lượng bán theo từng mức giá",`<div class="overflow-x-auto"><table class="log-table"><thead><tr><th>Gói / giá</th><th>Số đơn</th><th>Theo số tháng (phần nguyên)</th><th>Doanh thu</th></tr></thead><tbody>${rows.map(r=>`<tr><td class="font-bold text-slate-700">${esc(r.l)}</td><td class="font-black text-indigo-600">${r.n}</td><td class="text-xs">${Object.entries(r.q).sort((a,c)=>(parseFloat(a[0])||999)-(parseFloat(c[0])||999)).map(([qq,n])=>`<span class="inline-block bg-slate-100 rounded px-1.5 py-0.5 mr-1 mb-0.5 font-bold">${qq==="∞"?"Vĩnh viễn":"x"+qq}: ${n} đơn</span>`).join("")}</td><td class="font-black text-emerald-600 whitespace-nowrap">${fmtVnd(r.vnd)}đ</td></tr>`).join("")||'<tr><td colspan="4" class="text-center py-6 text-slate-400 italic">Chưa có đơn</td></tr>'}</tbody></table></div>`)+box("Biểu đồ doanh thu theo gói",hbar(rows.map(r=>({l:r.l,v:r.vnd}))))+box("Biểu đồ số đơn theo gói",hbar(rows.map(r=>({l:r.l,v:r.n,t:r.n+" đơn"})),"bg-gradient-to-r from-sky-500 to-cyan-400"));}
+
+ // Block 3: Bảng xếp hạng doanh thu
+ const chrono=keys.map((k,i)=>({...mt[k],prev:i?mt[keys[i-1]].vnd:null})),rank=[...chrono].sort((a,c)=>c.vnd-a.vnd),med=["🥇","🥈","🥉"];
+
+ b.innerHTML=warn+
+ // BLOCK 1: Tổng quan KPI + Biểu đồ tháng + Tỷ trọng
+ `<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">${kpi("Tổng doanh thu",fmtVnd(sum)+"đ",R.length+" đơn thành công")}${kpi("Trung bình / đơn",fmtVnd(R.length?sum/R.length:0)+"đ","","text-sky-600")}${kpi("Chi phí vốn",fmtVnd(cost)+"đ","tab Chi phí","text-orange-500")}${kpi("Lợi nhuận",fmtVnd(sum-cost)+"đ",sum?Math.round((sum-cost)/sum*100)+"% doanh thu":"",sum-cost>=0?"text-emerald-600":"text-red-600")}</div>`+
+ box("Doanh thu theo tháng (12 tháng gần nhất)",vbar(keys.map(k=>({l:monthLbl(k),v:mt[k].vnd}))))+
+ box("Tỷ trọng theo phương thức (quy đổi VND)",hbar([{l:"Ngân hàng VN",v:by.Bank},{l:"Alipay",v:by.Alipay},{l:"Weixin",v:by.Weixin}]))+
+ 
+ // BLOCK 2: 3 bảng theo gói
+ box("Số lượng bán theo từng mức giá",`<div class="overflow-x-auto"><table class="log-table"><thead><tr><th>Gói / giá</th><th>Số đơn</th><th>Theo số tháng (phần nguyên)</th><th>Doanh thu</th></tr></thead><tbody>${rows.map(r=>`<tr><td class="font-bold text-slate-700">${esc(r.l)}</td><td class="font-black text-indigo-600">${r.n}</td><td class="text-xs">${Object.entries(r.q).sort((a,c)=>(parseFloat(a[0])||999)-(parseFloat(c[0])||999)).map(([qq,n])=>`<span class="inline-block bg-slate-100 rounded px-1.5 py-0.5 mr-1 mb-0.5 font-bold">${qq==="∞"?"Vĩnh viễn":"x"+qq}: ${n} đơn</span>`).join("")}</td><td class="font-black text-emerald-600 whitespace-nowrap">${fmtVnd(r.vnd)}đ</td></tr>`).join("")||'<tr><td colspan="4" class="text-center py-6 text-slate-400 italic">Chưa có đơn</td></tr>'}</tbody></table></div>`)+
+ box("Biểu đồ doanh thu theo gói",hbar(rows.map(r=>({l:r.l,v:r.vnd}))))+
+ box("Biểu đồ số đơn theo gói",hbar(rows.map(r=>({l:r.l,v:r.n,t:r.n+" đơn"})),"bg-gradient-to-r from-sky-500 to-cyan-400"))+
+
+ // BLOCK 3: Xếp hạng doanh thu
+ box("Xếp hạng doanh thu các tháng",`<div class="space-y-2">${rank.map((r,i)=>{const d=r.prev?Math.round((r.vnd-r.prev)/r.prev*100):null;return `<div class="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-xl p-3"><div class="text-2xl w-9 text-center shrink-0">${med[i]||"#"+(i+1)}</div><div class="flex-1 min-w-0"><div class="flex justify-between font-bold text-sm text-slate-800"><span>Tháng ${monthLbl(r.k)}</span><span class="text-emerald-600 font-black">${fmtVnd(r.vnd)}đ</span></div><div class="h-2 bg-slate-200 rounded-full mt-1 overflow-hidden"><div class="h-full bg-gradient-to-r from-amber-400 to-orange-500" style="width:${Math.max(2,r.vnd/(rank[0].vnd||1)*100)}%"></div></div><div class="text-[11px] text-slate-500 mt-0.5">${r.n} đơn${d===null?"":` · <span class="${d>=0?"text-emerald-600":"text-red-500"} font-bold">${d>=0?"▲":"▼"} ${Math.abs(d)}% so với tháng trước</span>`}</div></div></div>`;}).join("")||'<div class="text-xs text-slate-400 italic">Chưa có dữ liệu</div>'}</div>`);
+}
 const PAYLBL={Bank:"🏦 Ngân hàng VN",Alipay:"🔵 Alipay",Weixin:"🟢 Weixin"};
 function revPayDetail(b){
  const k=revPayView,list=ordersDb.filter(o=>payOf(o)===k&&(revMonth==="all"||monthInfo(oTs(o)).key===revMonth)).sort((a,c)=>oTs(c)-oTs(a)),ok=list.filter(o=>normSt(o.status)==="success").length;
@@ -1776,9 +1732,7 @@ function revPay(R,b){
  box("So sánh phương thức",hbar([{l:"Ngân hàng VN",v:m.Bank.vnd},{l:"Alipay",v:m.Alipay.vnd},{l:"Weixin",v:m.Weixin.vnd}]));}
 async function saveRate(){const v=Number($("rateInput").value)||0;if(v<=0)return toast("Nhập tỷ giá lớn hơn 0","err");cmsDb.settings.cnyRate=v;try{await saveCmsDb();toast("Đã quy đổi theo tỷ giá "+fmtVnd(v)+" VND / ¥");renderRevenue();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
 async function resetRate(){if(!confirm("Reset tỷ giá CNY→VND về 0đ? Doanh thu Alipay/Weixin sẽ tạm không quy đổi được cho tới khi nhập tỷ giá mới."))return;cmsDb.settings.cnyRate=0;try{await saveCmsDb();toast("Đã reset tỷ giá về 0đ");logEvent("warn","Doanh thu","Reset tỷ giá CNY→VND về 0đ");renderRevenue();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
-function revRank(R,b){
- const mt=monthTotals(),keys=Object.keys(mt).sort(),chrono=keys.map((k,i)=>({...mt[k],prev:i?mt[keys[i-1]].vnd:null})),rank=[...chrono].sort((a,c)=>c.vnd-a.vnd),med=["🥇","🥈","🥉"];
- b.innerHTML=box("Xếp hạng doanh thu theo tháng",`<div class="space-y-2">${rank.map((r,i)=>{const d=r.prev?Math.round((r.vnd-r.prev)/r.prev*100):null;return `<div class="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-xl p-3"><div class="text-2xl w-9 text-center shrink-0">${med[i]||"#"+(i+1)}</div><div class="flex-1 min-w-0"><div class="flex justify-between font-bold text-sm text-slate-800"><span>Tháng ${monthLbl(r.k)}</span><span class="text-emerald-600">${fmtVnd(r.vnd)}đ</span></div><div class="h-2 bg-slate-200 rounded-full mt-1 overflow-hidden"><div class="h-full bg-gradient-to-r from-amber-400 to-orange-500" style="width:${Math.max(2,r.vnd/(rank[0].vnd||1)*100)}%"></div></div><div class="text-[11px] text-slate-500 mt-0.5">${r.n} đơn${d===null?"":` · <span class="${d>=0?"text-emerald-600":"text-red-500"} font-bold">${d>=0?"▲":"▼"} ${Math.abs(d)}% so với tháng trước</span>`}</div></div></div>`;}).join("")||'<div class="text-xs text-slate-400 italic">Chưa có dữ liệu</div>'}</div>`);}
+
 function revCost(R,b){
  const cs=costSum(),sum=R.reduce((a,x)=>a+x.vnd,0),list=[...(cmsDb.costs||[])].filter(c=>revMonth==="all"||monthInfo(c.ts).key===revMonth).sort((a,c)=>c.ts-a.ts);
  b.innerHTML=box("Thêm chi phí vốn (mua gói VPN gốc)",`<div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2"><input id="cSrc" placeholder="Nguồn mua (VD: Liangxin)" class="p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 outline-none"><input id="cItem" placeholder="Gói / mô tả" class="p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 outline-none"><input id="cQty" type="number" placeholder="Số lượng" class="p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 outline-none"><input id="cUnit" type="number" step="any" placeholder="Đơn giá" class="p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 outline-none"><select id="cCur" class="p-2 border border-slate-200 rounded-lg text-xs bg-white"><option value="VND">VND</option><option value="CNY">CNY (¥)</option></select><input id="cDate" placeholder="Ngày mua DD/MM/YYYY" value="${dmyOf(nowMs())}" class="p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 outline-none"><input id="cNote" placeholder="Ghi chú" class="col-span-2 p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 outline-none"></div><button onclick="addCost()" class="w-full bg-slate-800 text-white font-bold py-2.5 rounded-lg text-xs hover:bg-slate-900"><i class="fas fa-plus mr-1"></i>Thêm chi phí</button>`)+
@@ -2017,7 +1971,6 @@ function detectProvider(u) {
   const s = String(u || "").toLowerCase();
   if (s.includes("liangxin")) return "lx";
   if (s.includes("djjc")) return "dj";
-  if (s.includes("skylumo") || s.includes("9999231.xyz")) return "sky";
   return "other";
 }
 
@@ -2026,91 +1979,6 @@ function buildMasked(orig, fresh) {
   const lx = String(orig || "").toLowerCase().includes("liangxin");
   return PD + (lx ? "/v1" : "/v2") + "/VPNTrinhHg" + (lx ? "?OwO=" : "?token=") + tok + "#VPNTrinhHg";
 }
-
-// 2. Chế độ hiển thị Link Sub (Duy nhất 1 giao diện Cây Link)
-function switchLinkSubPane(pane){
-  const isTree = (pane === 'tree');
-  $("pane-lnk-tree").classList.toggle("hidden", !isTree);
-  $("pane-lnk-sources").classList.toggle("hidden", isTree);
-  $("btn-lnk-tree").classList.toggle("active", isTree);
-  $("btn-lnk-sources").classList.toggle("active", !isTree);
-  if (!isTree) renderSourcesTable();
-}
-
-function renderSourcesTable(){
-  const tb = $("sourcesTableBody"), countEl = $("srcCountBadge");
-  if (!tb) return;
-  if (countEl) countEl.textContent = `${linkPoolDb.length} Nguồn`;
-  if (!linkPoolDb.length) {
-    tb.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 font-bold">Chưa có link nguồn nào trong kho</td></tr>`;
-    return;
-  }
-  tb.innerHTML = linkPoolDb.map((p, idx) => {
-    const prov = detectProvider(p.url);
-    const badge = prov === "lx" ? `<span class="badge-lx">Liangxin</span>` : prov === "dj" ? `<span class="badge-dj">DJJC</span>` : prov === "sky" ? `<span class="inline-flex text-[10px] font-black text-cyan-700 bg-cyan-50 border border-cyan-300 px-2 py-0.5 rounded">Skylumo</span>` : `<span class="badge-ot">Nguồn Khác</span>`;
-    const used = linksDb.filter(l => l && (l.orig === p.url || l.orig2 === p.url)).length;
-    return `
-      <tr>
-        <td>${badge}</td>
-        <td><div class="font-mono text-xs font-bold text-slate-700 break-all cp" onclick="cp('${p.url}')">${esc(p.url)}</div></td>
-        <td class="text-xs font-semibold text-slate-600">${esc(p.exp || 'Vĩnh viễn')}</td>
-        <td class="text-xs font-semibold text-slate-600">${p.gb ? esc(p.gb) + ' GB' : '—'}</td>
-        <td class="text-xs font-black text-indigo-600 text-center">${used}/${p.max || 30}</td>
-        <td class="col-x"><button type="button" onclick="delPool('${p.id || p.url}')" class="bg-red-50 text-red-600 border border-red-100 hover:bg-red-500 hover:text-white font-bold w-8 h-8 rounded-lg text-xs"><i class="fas fa-trash"></i></button></td>
-      </tr>
-    `;
-  }).join("");
-}
-
-async function addNewSourceProvider(){
-  const name = $("newSrcName").value.trim();
-  const url = $("newSrcUrl").value.trim();
-  const max = parseInt($("newSrcMax").value) || 30;
-  const gb = $("newSrcGb").value.trim();
-  const exp = $("newSrcExp").value.trim();
-
-  if (!url) return toast("Vui lòng dán Link Subscription gốc!", "err");
-  try { new URL(url); } catch { return toast("Link không đúng định dạng URL!", "err"); }
-
-  // Thêm vào Kho Nguồn
-  const poolItem = linkPoolDb.find(p => p.url === url);
-  if (!poolItem) {
-    linkPoolDb.unshift({
-      id: "POOL-" + Date.now(),
-      url: url,
-      gb: gb,
-      remainGb: gb,
-      exp: exp || "Vĩnh viễn",
-      max: max
-    });
-  }
-
-  // Tự động sinh Node neo #1 Auto có Link Ẩn hoàn chỉnh
-  if (!linksDb.some(l => l.orig === url && String(l.linkIndex) === "1")) {
-    linksDb.unshift({
-      id: "LNK-" + Date.now() + "-ANC",
-      orig: url,
-      masked: buildMasked(url, false),
-      email: "Auto",
-      expDate: exp || "Vĩnh viễn",
-      linkIndex: "1",
-      isLocked: true,
-      createdTs: nowMs(),
-      date: fmtBank(nowMs())
-    });
-  }
-
-  try {
-    await aj("/api/admin/save_links_and_pool", { method: "POST", body: { links: linksDb, pool: linkPoolDb } });
-    toast(`Đã thêm link nguồn "${name || 'Mới'}" thành công!`);
-    $("newSrcName").value = ""; $("newSrcUrl").value = ""; $("newSrcGb").value = ""; $("newSrcExp").value = "";
-    renderSourcesTable();
-    renderLinks();
-  } catch(e) {
-    toast("Lỗi lưu nguồn: " + e.message, "err");
-  }
-}
-
 function switchLinkMode(m){
   curLinkTab = m || "manual";
   renderLinks();
@@ -2198,8 +2066,8 @@ function renderLinks(){
   if (g.isCombo) {
     networkBadge = `<span class="inline-flex items-center gap-1.5 text-xs font-black text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200"><span class="w-2.5 h-2.5 rounded-full bg-purple-600 shrink-0"></span>Liangxin + DJJC</span>`;
   } else {
-    const lx = g.orig.includes("liangxin"), dj = g.orig.includes("djjc"), sky = (g.orig.includes("skylumo") || g.orig.includes("9999231.xyz"));
-    networkBadge = lx ? `<span class="badge-lx">Liangxin</span>` : dj ? `<span class="badge-dj">DJJC</span>` : sky ? `<span class="inline-flex items-center text-xs font-black text-cyan-700 bg-cyan-50 border border-cyan-300 px-2.5 py-0.5 rounded-md">Skylumo</span>` : `<span class="badge-ot">Other</span>`;
+    const lx = g.orig.includes("liangxin"), dj = g.orig.includes("djjc");
+    networkBadge = lx ? `<span class="badge-lx">Liangxin</span>` : dj ? `<span class="badge-dj">DJJC</span>` : `<span class="badge-ot">Other</span>`;
   }
 
   // Lấy thông số từ LINK_POOL
@@ -3391,8 +3259,7 @@ function qBar(used,total,label,unit,reset){
 const MAIL_PROV_META={
  google:{name:"Google Apps Script",sub:"Gửi qua Gmail — miễn phí",logo:'<svg viewBox="0 0 48 48" class="w-7 h-7 shrink-0"><path fill="#4285F4" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13 17.7 9.5 24 9.5z"/><path fill="#34A853" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.6c-.5 2.9-2.2 5.4-4.6 7l7.4 5.7c4.3-4 6.9-9.9 6.9-17.2z"/><path fill="#FBBC05" d="M10.5 19.3c-.5 1.5-.8 3.1-.8 4.7s.3 3.2.8 4.7l-7.9 6.1C1 31.4 0 27.8 0 24s1-7.4 2.6-10.8z"/><path fill="#EA4335" d="M24 48c6.3 0 11.9-2.1 15.9-5.6l-7.4-5.7c-2.1 1.4-4.9 2.3-8.5 2.3-6.3 0-11.6-3.5-13.5-9.3l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>'},
  brevo:{name:"Brevo",sub:"(Sendinblue) — 300 mail/ngày free",logo:'<img src="https://ps.w.org/mailin/assets/icon-256x256.png" class="w-7 h-7 shrink-0 rounded-lg shadow-sm object-contain bg-white">'},
- sendpulse:{name:"SendPulse",sub:"SMTP theo gói / balance",logo:'<img src="https://s3.amazonaws.com/appforest_uf/f1645282052830x986159287891572600/sendpulse-logo-symbol.png" class="w-7 h-7 shrink-0 rounded-lg shadow-sm object-contain bg-white">'}
-};
+sendpulse:{name:"SendPulse",sub:"SMTP theo gói / balance",logo:'<svg viewBox="0 0 32 32" class="w-7 h-7 shrink-0 rounded-lg shadow-sm bg-white p-0.5"><rect width="32" height="32" rx="6" fill="#007CF0"/><path d="M7 16h3.5l2.5-6 4 13 3-9 2 4H25" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'}};
 let mailProvQuota = {}, mailProvCfg = {}, mailProvErr = {}, selectedMailProv = null;
 
 // Thẻ hiển thị: click trực tiếp vào thẻ để chọn (sáng viền tím)
@@ -3635,12 +3502,21 @@ async function delDev(id){devicesDb=devicesDb.filter(x=>x.id!==id);renderDev();t
 // ---- chuẩn hóa dữ liệu KV (chỉ chạy khi admin bấm; có Quét thử)
 async function migrateDates(apply){
  if(apply&&!confirm("Ghi đè định dạng thời gian trong KV (đơn, link, đã xóa, thiết bị, yêu cầu dung lượng)?\nNên bấm Quét thử trước."))return;
+ if(apply){
+   toast("Đang sao lưu All Orders sang Telegram trước khi chuẩn hóa ngày...");
+   await triggerTelegramBackupNow("Sao lưu trước khi Chuẩn hóa định dạng thời gian");
+ }
  $("migReport").innerHTML="Đang xử lý...";
  try{const j=await aj("/api/admin/migrate_dates",{method:"POST",body:{apply}});
   $("migReport").innerHTML=(apply?'<div class="font-bold text-emerald-700 mb-1">✔ Đã áp dụng</div>':'<div class="font-bold text-slate-700 mb-1">Kết quả quét thử (chưa ghi gì)</div>')+Object.entries(j.report).map(([k,v])=>`<div><b>${k}:</b> ${v.changed}/${v.total} bản ghi cần đổi${v.sample.length?`<div class="font-mono text-[10px] text-slate-500 pl-3">${v.sample.map(esc).join("<br>")}</div>`:""}</div>`).join("");
   if(apply)fetchAll();}catch(e){$("migReport").innerHTML=`<span class="text-red-600">Lỗi: ${esc(e.message)}</span>`;}}
 async function migratePkg(apply){
- if(apply&&!confirm("Ghi đè cách lưu tên gói của các đơn trong KV? Nên bấm Quét thử trước."))return;$("pkgReport").innerHTML="Đang xử lý...";
+ if(apply&&!confirm("Ghi đè cách lưu tên gói của các đơn trong KV? Nên bấm Quét thử trước."))return;
+ if(apply){
+   toast("Đang sao lưu All Orders sang Telegram trước khi chuẩn hóa gói...");
+   await triggerTelegramBackupNow("Sao lưu trước khi Chuẩn hóa hiển thị gói");
+ }
+ $("pkgReport").innerHTML="Đang xử lý...";
  try{const j=await aj("/api/admin/migrate_pkg",{method:"POST",body:{apply}});$("pkgReport").innerHTML=(apply?'<div class="font-bold text-emerald-700 mb-1">✔ Đã áp dụng</div>':'<div class="font-bold text-slate-700 mb-1">Kết quả quét thử (chưa ghi gì)</div>')+`<div><b>Đơn hàng:</b> ${j.changed}/${j.total} bản ghi cần đổi${j.oldPrice?` · <span class="text-amber-600 font-bold">${j.oldPrice} đơn giá cũ được giữ nguyên</span>`:""}${j.sample.length?`<div class="font-mono text-[10px] text-slate-500 pl-3">${j.sample.map(esc).join("<br>")}</div>`:""}</div>`;if(apply)fetchAll();}
  catch(e){$("pkgReport").innerHTML=`<span class="text-red-600">Lỗi: ${esc(e.message)}</span>`;}}
 
@@ -3934,16 +3810,16 @@ async function testTelegramBot() {
   }
 }
 
-async function triggerTelegramBackupNow() {
+async function triggerTelegramBackupNow(reason = "Admin bấm Bắn Backup ngay", detail = "") {
   const logEl = $("tgActionLog");
   const btn = $("btnTgBackupNow");
-  btn.disabled = true;
+  if (btn) btn.disabled = true;
   if (logEl) logEl.innerHTML = '<span class="text-sky-600"><i class="fas fa-spinner fa-spin mr-1"></i>Đang xuất dữ liệu Supabase và gửi file Backup sang Telegram...</span>';
   try {
-    const res = await aj("/api/admin/telegram/backup_now", { method: "POST" });
+    const res = await aj("/api/admin/telegram/backup_now", { method: "POST", body: { reason, detail } });
     if (res && res.ok) {
-      if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Đã bắn 2 file Backup (${res.count} đơn) sang Telegram Channel thành công!</span>`;
-      toast(`Đã gửi file backup (${res.count} đơn) sang Telegram!`);
+      if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Đã gửi 2 file Backup (${res.count} đơn) [${res.keyTitle}] sang Telegram!</span>`;
+      toast(`Đã gửi backup (${res.count} đơn) sang Telegram!`);
     } else {
       if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Gửi backup thất bại!</span>`;
       toast("Gửi backup thất bại!", "err");
@@ -3952,7 +3828,7 @@ async function triggerTelegramBackupNow() {
     if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Lỗi: ${e.message}</span>`;
     toast("Lỗi: " + e.message, "err");
   } finally {
-    btn.disabled = false;
+    if (btn) btn.disabled = false;
   }
 }
 
