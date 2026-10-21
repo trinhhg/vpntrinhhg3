@@ -1868,43 +1868,6 @@ function revOver(R,b){
  // BLOCK 3: Xếp hạng doanh thu
  box("Xếp hạng doanh thu các tháng",`<div class="space-y-2">${rank.map((r,i)=>{const d=r.growth;return `<div class="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-xl p-3"><div class="text-2xl w-9 text-center shrink-0">${med[i]||"#"+(i+1)}</div><div class="flex-1 min-w-0"><div class="flex justify-between font-bold text-sm text-slate-800"><span>Tháng ${monthLbl(r.k)}</span><span class="text-emerald-600 font-black">${fmtVnd(r.vnd)}đ</span></div><div class="h-2 bg-slate-200 rounded-full mt-1 overflow-hidden"><div class="h-full bg-gradient-to-r from-amber-400 to-orange-500" style="width:${Math.max(2,r.vnd/(rank[0].vnd||1)*100)}%"></div></div><div class="text-[11px] text-slate-500 mt-0.5">${r.n} đơn${d===null?"":` · <span class="${d>=0?"text-emerald-600":"text-red-500"} font-bold">${d>=0?"▲":"▼"} ${Math.abs(d)}% so với tháng trước</span>`}</div></div></div>`;}).join("")||'<div class="text-xs text-slate-400 italic">Chưa có dữ liệu</div>'}</div>`);
 }
- const rows=Object.values(g).sort((a,c)=>c.vnd-a.vnd);
-
- // Block 3: Bảng xếp hạng doanh thu (Tính chuẩn % tăng trưởng theo thứ tự thời gian trước khi sort)
- const validChronoKeys = Object.keys(mt).filter(k => k !== "000000").sort();
- const growthMap = {};
- for (let i = 0; i < validChronoKeys.length; i++) {
-   const k = validChronoKeys[i];
-   const curVal = mt[k].vnd;
-   if (i > 0) {
-     const prevVal = mt[validChronoKeys[i-1]].vnd;
-     growthMap[k] = prevVal > 0 ? Math.round((curVal - prevVal) / prevVal * 100) : (curVal > 0 ? 100 : 0);
-   } else {
-     growthMap[k] = null;
-   }
- }
-
- const rank = Object.values(mt).map(item => ({
-   ...item,
-   growth: growthMap[item.k] ?? null
- })).sort((a, c) => c.vnd - a.vnd);
- const med = ["🥇", "🥈", "🥉"];
-
- b.innerHTML=warn+
- // BLOCK 1: Tổng quan KPI + Biểu đồ tháng + Tỷ trọng
- `<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">${kpi("Tổng doanh thu",fmtVnd(sum)+"đ",R.length+" đơn thành công")}${kpi("Trung bình / đơn",fmtVnd(R.length?sum/R.length:0)+"đ","","text-sky-600")}${kpi("Chi phí vốn",fmtVnd(cost)+"đ","tab Chi phí","text-orange-500")}${kpi("Lợi nhuận",fmtVnd(sum-cost)+"đ",sum?Math.round((sum-cost)/sum*100)+"% doanh thu":"",sum-cost>=0?"text-emerald-600":"text-red-600")}</div>`+
- box("Doanh thu theo tháng (12 tháng gần nhất)",vbar(keys.map(k=>({l:monthLbl(k),v:mt[k].vnd}))))+
- box("Tỷ trọng theo phương thức (quy đổi VND)",hbar([{l:"Ngân hàng VN",v:by.Bank},{l:"Alipay",v:by.Alipay},{l:"Weixin",v:by.Weixin}]))+
- 
- // BLOCK 2: 3 bảng theo gói
- box("Số lượng bán theo từng mức giá",`<div class="overflow-x-auto"><table class="log-table"><thead><tr><th>Gói / giá</th><th>Số đơn</th><th>Theo số tháng (phần nguyên)</th><th>Doanh thu</th></tr></thead><tbody>${rows.map(r=>`<tr><td class="font-bold text-slate-700">${esc(r.l)}</td><td class="font-black text-indigo-600">${r.n}</td><td class="text-xs">${Object.entries(r.q).sort((a,c)=>(parseFloat(a[0])||999)-(parseFloat(c[0])||999)).map(([qq,n])=>`<span class="inline-block bg-slate-100 rounded px-1.5 py-0.5 mr-1 mb-0.5 font-bold">${qq==="∞"?"Vĩnh viễn":"x"+qq}: ${n} đơn</span>`).join("")}</td><td class="font-black text-emerald-600 whitespace-nowrap">${fmtVnd(r.vnd)}đ</td></tr>`).join("")||'<tr><td colspan="4" class="text-center py-6 text-slate-400 italic">Chưa có đơn</td></tr>'}</tbody></table></div>`)+
- box("Biểu đồ doanh thu theo gói",hbar(rows.map(r=>({l:r.l,v:r.vnd}))))+
- box("Biểu đồ số đơn theo gói",hbar(rows.map(r=>({l:r.l,v:r.n,t:r.n+" đơn"})),"bg-gradient-to-r from-sky-500 to-cyan-40
- box("Biểu đồ số đơn theo gói",hbar(rows.map(r=>({l:r.l,v:r.n,t:r.n+" đơn"})),"bg-gradient-to-r from-sky-500 to-cyan-400"))+
-
- // BLOCK 3: Xếp hạng doanh thu
- box("Xếp hạng doanh thu các tháng",`<div class="space-y-2">${rank.map((r,i)=>{const d=r.growth;return `<div class="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-xl p-3"><div class="text-2xl w-9 text-center shrink-0">${med[i]||"#"+(i+1)}</div><div class="flex-1 min-w-0"><div class="flex justify-between font-bold text-sm text-slate-800"><span>Tháng ${monthLbl(r.k)}</span><span class="text-emerald-600 font-black">${fmtVnd(r.vnd)}đ</span></div><div class="h-2 bg-slate-200 rounded-full mt-1 overflow-hidden"><div class="h-full bg-gradient-to-r from-amber-400 to-orange-500" style="width:${Math.max(2,r.vnd/(rank[0].vnd||1)*100)}%"></div></div><div class="text-[11px] text-slate-500 mt-0.5">${r.n} đơn${d===null?"":` · <span class="${d>=0?"text-emerald-600":"text-red-500"} font-bold">${d>=0?"▲":"▼"} ${Math.abs(d)}% so với tháng trước</span>`}</div></div></div>`;}).join("")||'<div class="text-xs text-slate-400 italic">Chưa có dữ liệu</div>'}</div>`);
-}
 const PAYLBL={Bank:"🏦 Ngân hàng VN",Alipay:"🔵 Alipay",Weixin:"🟢 Weixin"};
 function revPayDetail(b){
  const k=revPayView,list=ordersDb.filter(o=>payOf(o)===k&&(revMonth==="all"||monthInfo(oTs(o)).key===revMonth)).sort((a,c)=>oTs(c)-oTs(a)),ok=list.filter(o=>normSt(o.status)==="success").length;
