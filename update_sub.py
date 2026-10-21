@@ -13,10 +13,9 @@ API_LINKS      = f"{WORKER_DOMAIN}/api/links"
 API_BATCH_PUSH = f"{WORKER_DOMAIN}/api/push_data_batch"
 
 INFO_NODES = [
-    "🇻🇳 Truy cập web bên dưới",
-    "🇻🇳 Để xem thêm gói khác",
+    "🇻🇳 Mua hàng tại website",
     "🌐 Website: vpntrinhhg.pages.dev",
-    "📞 Zalo: 0917678211",
+    "📞 Hoặc Zalo: 0917678211",
 ]
 INFO_SKIP_KW = ["剩余流量", "距离下次重置", "套餐到期"]
 INFO_VLESS_PREFIX = "vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1?type=tcp#"
