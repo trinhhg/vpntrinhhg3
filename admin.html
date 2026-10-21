@@ -670,9 +670,9 @@ textarea.autog{resize:none;overflow:hidden;}
      </div>
     </div>
    </div>
-   <!-- PHẦN TRÊN: 2 CỘT ĐỐI XỨNG NHAU -->
+   <!-- 2 CỘT TỰ DO KHÔNG ÉP CÂN BẰNG ĐỐI NHAU, SÁT NHAU THEO THỨ TỰ YÊU CẦU -->
    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-    <!-- CỘT TRÁI: QUYỀN EMAIL, BÁO ADMIN, CRON & TRẠNG THÁI HỆ THỐNG -->
+    <!-- CỘT TRÁI: EMAIL, BÁO ADMIN, CRON, TRẠNG THÁI, NHÀ CUNG CẤP MAIL & TELEGRAM BACKUP NẰM SÁT DƯỚI -->
     <div class="space-y-4">
      <!-- 1. Quyền gửi Email tự động -->
      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-5 space-y-3">
@@ -724,7 +724,15 @@ textarea.autog{resize:none;overflow:hidden;}
       <p class="text-[10px] text-slate-400">Không bao giờ hiển thị giá trị secret thật — chỉ báo Có / Không.</p>
      </div>
 
-     <!-- 5. Telegram Backup Channel (Nằm ngay dưới Cột Trái) -->
+     <!-- 5. Nhà cung cấp gửi mail -->
+     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-5 space-y-3">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2"><div class="font-extrabold text-sm text-slate-800"><i class="fas fa-paper-plane text-indigo-500 mr-1.5"></i>Nhà cung cấp gửi mail</div><button onclick="loadQuota()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2.5 py-1 rounded-lg hover:bg-indigo-100"><i class="fas fa-sync mr-1"></i>Làm mới quota</button></div>
+      <p class="text-[11px] text-slate-500">Chọn nơi Worker gửi mọi mail (báo khách, mail admin, nhắc hết hạn). Nhấp vào thẻ để chọn nhà cung cấp, sau đó bấm Lưu cấu hình.</p>
+      <div id="mailProvCards" class="flex flex-col gap-3"></div>
+      <button id="btnSaveMailProv" onclick="saveMailProvider()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md mt-2">LƯU CẤU HÌNH NHÀ CUNG CẤP MAIL</button>
+     </div>
+
+     <!-- 6. Telegram Backup Channel (Nằm ngay sát dưới Nhà cung cấp mail) -->
      <div class="bg-white border-2 border-sky-300 rounded-2xl shadow-sm p-4 md:p-5 space-y-3">
       <div class="flex items-center justify-between border-b border-sky-100 pb-2.5">
        <div>
@@ -753,7 +761,7 @@ textarea.autog{resize:none;overflow:hidden;}
      </div>
     </div>
 
-    <!-- CỘT PHẢI: ĐỊNH TUYẾN GỐC, LÀM MỜ, WORKER VỆ TINH, KHÓA HẾT HẠN -->
+    <!-- CỘT PHẢI: ĐỊNH TUYẾN GỐC, LÀM MỜ, WORKER VỆ TINH, KHÓA HẾT HẠN, SYSTEM QUOTA NẰM SÁT TRÊN -->
     <div class="space-y-4">
      <!-- 1. Định tuyến Gốc (Gán ô Link 1/2/3) -->
      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-5 space-y-2">
@@ -787,24 +795,12 @@ textarea.autog{resize:none;overflow:hidden;}
       <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-100"><span class="text-xs font-bold text-slate-700">Đang khóa thông tin hết hạn</span><div class="toggle-wrap"><input type="checkbox" id="toggleLockExpiry"><span class="toggle-slider"></span></div></div>
       <button onclick="saveLockExpiry()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU KHÓA HẠN</button>
      </div>
-    </div>
-   </div>
 
-   <!-- PHẦN GIỮA: NHÀ CUNG CẤP GỬI MAIL (XẾP DỌC) & SYSTEM QUOTA (XẾP DỌC 3 BẢNG) ĐỨNG SONG SONG -->
-   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-    <!-- CỘT 1: NHÀ CUNG CẤP GỬI MAIL (XẾP DỌC 3 THẺ) -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-5 space-y-3">
-     <div class="flex items-center justify-between border-b border-slate-100 pb-2"><div class="font-extrabold text-sm text-slate-800"><i class="fas fa-paper-plane text-indigo-500 mr-1.5"></i>Nhà cung cấp gửi mail</div><button onclick="loadQuota()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2.5 py-1 rounded-lg hover:bg-indigo-100"><i class="fas fa-sync mr-1"></i>Làm mới quota</button></div>
-     <p class="text-[11px] text-slate-500">Chọn nơi Worker gửi mọi mail (báo khách, mail admin, nhắc hết hạn). Nhấp vào thẻ để chọn nhà cung cấp, sau đó bấm Lưu cấu hình.</p>
-     <!-- Danh sách 3 thẻ xếp dọc từ trên xuống dưới -->
-     <div id="mailProvCards" class="flex flex-col gap-3"></div>
-     <button id="btnSaveMailProv" onclick="saveMailProvider()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md mt-2">LƯU CẤU HÌNH NHÀ CUNG CẤP MAIL</button>
-    </div>
-
-    <!-- CỘT 2: SYSTEM QUOTA (XẾP DỌC 3 BẢNG ĐỂ CÂN BẰNG CHIỀU CAO) -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-5 space-y-3">
-     <div class="flex items-center justify-between border-b border-slate-100 pb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-gauge-high text-indigo-500 mr-1.5"></i>System Quota (chỉ web này)</div><button onclick="loadQuota()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2.5 py-1 rounded-lg hover:bg-indigo-100"><i class="fas fa-sync mr-1"></i>Làm mới</button></div>
-     <div id="quotaBody" class="pt-1 flex flex-col gap-3 text-xs text-slate-500">Đang tải quota...</div>
+     <!-- 5. System Quota (Nằm sát ngay dưới Khóa thông tin hết hạn) -->
+     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-5 space-y-3">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2"><div class="font-extrabold text-sm text-slate-800"><i class="fas fa-gauge-high text-indigo-500 mr-1.5"></i>System Quota (chỉ web này)</div><button onclick="loadQuota()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2.5 py-1 rounded-lg hover:bg-indigo-100"><i class="fas fa-sync mr-1"></i>Làm mới</button></div>
+      <div id="quotaBody" class="pt-1 flex flex-col gap-3 text-xs text-slate-500">Đang tải quota...</div>
+     </div>
     </div>
    </div>
 
@@ -892,8 +888,7 @@ textarea.autog{resize:none;overflow:hidden;}
    <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5"><i class="fas fa-user-tag text-indigo-400 mr-1"></i>Nickname</label><input id="mONickname" type="text" placeholder="VD: Anh Tuấn FB..." class="w-full p-2 text-xs border rounded-lg outline-none bg-yellow-50 border-yellow-200"></div>
   </div>
   <div id="mOIdNote" class="hidden text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-1.5 mb-2"></div>
-  <div class="mb-2"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Email Khách</label><input id="mOEmail" type="text" onblur="autoFillNickname()" class="w-full p-2 text-xs border rounded-lg outline-none"></div>
-  <div class="mb-2"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Gói VPN</label><select id="mOPkg" onchange="onPkgChange()" class="w-full p-2 text-xs border rounded-lg font-bold text-indigo-700 bg-indigo-50 outline-none"></select></div>
+<div class="mb-2"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Email Khách</label><input id="mOEmail" type="text" onblur="autoFillNickname();if(modalNew)autoFillDays();" class="w-full p-2 text-xs border rounded-lg outline-none"></div>  <div class="mb-2"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Gói VPN</label><select id="mOPkg" onchange="onPkgChange()" class="w-full p-2 text-xs border rounded-lg font-bold text-indigo-700 bg-indigo-50 outline-none"></select></div>
   <div class="grid grid-cols-3 gap-2 mb-2">
    <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Trạng thái</label><select id="mOStatus" onchange="togSF()" class="w-full p-2 text-xs border rounded-lg font-bold outline-none"><option value="pending">Chờ duyệt</option><option value="success">Thành công</option><option value="failed">Từ chối</option></select></div>
    <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Thanh toán</label><select id="mOMethod" onchange="onMethodChange()" class="w-full p-2 text-xs border rounded-lg font-bold outline-none"><option value="Ngân hàng VN">Bank VN</option><option value="Alipay">Alipay</option><option value="Weixin">Weixin</option></select></div>
@@ -1089,7 +1084,15 @@ const fmtMonths=d=>{d=Number(d)||0;return d>0?String(Math.round(d/30*100)/100):"
 function ordMonths(o){const p=pkgOf(o);if(p&&p.m===0)return 0;const d=Number(o.days);if(d>0)return Math.floor(d/30);return (p?p.m:1)*(Number(o.qty)||1);}
 function webLabel(v,wu){const t=String(v||"")+" "+String(wu||"");if(/vpntrinhhg3|lucastanora/i.test(t))return "Web 3";if(/vpntrinhhg2|onepiece/i.test(t))return "Web 2";if(/vpntrinhhg\.|doicucden/i.test(t))return "Web 1";return v?String(v).replace(/^https?:\/\//,"").replace(/\/$/,""):"—";}
 function linkBottom(l){
- if(!l || !l.expDate || isLife(l.expDate) || isLife(l.date)) return "Vĩnh viễn";
+ if (!l) return "Vĩnh viễn";
+ // Ưu tiên đọc HSD thực tế từ đơn hàng tương ứng bên tab Đơn hàng
+ if (l.orderId) {
+   const od = ordersDb.find(o => normId(o.id) === normId(l.orderId));
+   if (od && od.expDate) {
+     return isLife(od.expDate) ? "Vĩnh viễn" : esc(od.expDate);
+   }
+ }
+ if (!l.expDate || isLife(l.expDate) || isLife(l.date)) return "Vĩnh viễn";
  return esc(l.expDate);
 }
 const payOf=o=>/alipay/i.test(o.method||"")?"Alipay":/weixin|wechat/i.test(o.method||"")?"Weixin":"Bank";
@@ -1297,6 +1300,31 @@ function autoFillDays() {
   const p = PKG_LIST.find(x => x[0] === $("mOPkg").value);
   if (!p) return;
   if (!modalNew && expLocked()) { updMonths(); return; }
+  
+  if (modalNew) {
+    const em = $("mOEmail").value.trim().toLowerCase();
+    if (em) {
+      const pastOrders = ordersDb.filter(o => o && normSt(o.status) === "success" && String(o.email || "").toLowerCase() === em && o.id !== $("mOId").value);
+      if (pastOrders.length > 0) {
+        const now = nowMs();
+        // Kiểm tra xem có đơn cũ nào còn hạn (qua 00:00:00 UTC+7 hôm nay) hay không
+        const hasActiveOrder = pastOrders.some(o => {
+          if (!o.expDate) return false;
+          if (isLife(o.expDate)) return true;
+          return parseDmy(o.expDate) > now;
+        });
+        if (hasActiveOrder) {
+          // Email cũ còn đơn còn hạn: Để trống ô HSD và số ngày để Admin tự nhập
+          $("mODays").value = "";
+          $("mOExp").value = "";
+          updMonths();
+          return;
+        }
+        // Nếu tất cả các đơn cũ đều đã hết hạn: Tính như đơn mới từ ngày mua hiện tại
+      }
+    }
+  }
+
   const anchor = getOrderAnchorTs();
   if (p[2] > 0) {
     const days = p[2];
@@ -2467,12 +2495,43 @@ async function runGC(){
 async function rebuildAllMAP(){
   const b = $("btnRebuildAll"); b.disabled = true;
   try {
+    // Kiểm tra từng nguồn node trong kho xem đã có link ẩn neo index #1 chưa, chưa thì tạo và khóa luôn
+    let addedAnchor = 0;
+    linkPoolDb.forEach(p => {
+      if (!p || !p.url || p.url === "Da_bi_khoa") return;
+      if (p.isCombo) {
+        const hasAnchor = linksDb.some(l => l && l.isCombo && l.orig === p.url && l.orig2 === p.url2 && String(l.linkIndex) === "1");
+        if (!hasAnchor) {
+          linksDb.unshift({
+            id: "LNK-" + Date.now() + "-ANC", isCombo: true,
+            orig: p.url, orig2: p.url2,
+            masked: PD + "/v1/VPNTrinhHg?OwO=" + genHex(32) + "#VPNTrinhHg",
+            email: "Auto", expDate: p.exp || p.exp2 || "Vĩnh viễn",
+            linkIndex: "1", isLocked: true, createdTs: nowMs(), date: fmtBank(nowMs())
+          });
+          addedAnchor++;
+        }
+      } else {
+        const hasAnchor = linksDb.some(l => l && !l.isCombo && l.orig === p.url && String(l.linkIndex) === "1");
+        if (!hasAnchor) {
+          linksDb.unshift({
+            id: "LNK-" + Date.now() + "-ANC", isCombo: false,
+            orig: p.url, masked: buildMasked(p.url, false),
+            email: "Auto", expDate: p.exp || "Vĩnh viễn",
+            linkIndex: "1", isLocked: true, createdTs: nowMs(), date: fmtBank(nowMs())
+          });
+          addedAnchor++;
+        }
+      }
+    });
+
     await saveLinks();
-    toast("Đã Rebuild MAP (link đã xóa được loại trước khi ghi)");
+    renderLinks();
+    toast("Đã Rebuild MAP" + (addedAnchor > 0 ? ` & đã tạo khóa ${addedAnchor} link neo Index #1` : ""));
   } catch (e) { toast("Lỗi: " + e.message, "err"); }
   b.disabled = false;
 }
-
+    
 // ===================== LOGIC TAB GIÁ GÓI LINH HOẠT =====================
 const FIXED_PKG_IDS = new Set(["t1", "t2", "c1", "c2", "c3", "d1", "d2", "d3", "custom"]);
 let adminPkgsList = [];
