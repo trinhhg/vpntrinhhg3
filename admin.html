@@ -292,7 +292,7 @@ textarea.autog{resize:none;overflow:hidden;}
        </div>
        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
         <div><label class="block font-bold text-slate-600 mb-1">Trạng thái đơn</label><select id="rsStatus" class="w-full p-2 border border-slate-200 rounded-xl bg-white text-xs font-semibold outline-none"><option value="all">Tất cả đơn</option><option value="active">Chỉ đơn còn hạn</option><option value="expired">Chỉ đơn đã hết hạn</option></select></div>
-        <div><label class="block font-bold text-slate-600 mb-1">Vị trí Info</label><select id="rsInfo" class="w-full p-2 border border-slate-200 rounded-xl bg-white text-xs font-semibold outline-none"><option value="all">Tất cả Info 1 / 2 / 3</option><option value="1">Info 1</option><option value="2">Info 2</option><option value="3">Info 3</option></select></div>
+        <div><label class="block font-bold text-slate-600 mb-1">Vị trí Info</label><select id="rsInfo" disabled class="w-full p-2 border border-slate-200 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold outline-none cursor-not-allowed"><option id="optRsInfo" value="auto">Info Web Này (Cục bộ)</option></select></div>
         <div class="sm:col-span-2"><label class="block font-bold text-slate-600 mb-1">Loại link trong ô</label><select id="rsLink" class="w-full p-2 border border-slate-200 rounded-xl bg-white text-xs font-semibold outline-none"><option value="dead">Chỉ link rác / không tồn tại / đã bị khóa</option><option value="all">Tất cả link trong Info</option></select></div>
        </div>
        <label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer pt-1"><input type="checkbox" id="rsManual" class="w-4 h-4 accent-amber-600">Bao gồm cả các ô đã bị đánh dấu Sửa tay</label>
@@ -310,7 +310,7 @@ textarea.autog{resize:none;overflow:hidden;}
         <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">Khớp Email &amp; HSD</span>
        </div>
        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-        <div><label class="block font-bold text-slate-600 mb-1">Vị trí Info cần map</label><select id="rmInfo" class="w-full p-2 border border-slate-200 rounded-xl bg-white text-xs font-semibold outline-none"><option value="all">Tất cả Info 1 / 2 / 3</option><option value="1">Info 1</option><option value="2">Info 2</option><option value="3">Info 3</option></select></div>
+        <div><label class="block font-bold text-slate-600 mb-1">Vị trí Info cần map</label><select id="rmInfo" disabled class="w-full p-2 border border-slate-200 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold outline-none cursor-not-allowed"><option id="optRmInfo" value="auto">Info Web Này (Cục bộ)</option></select></div>
         <div class="flex items-end pb-1"><label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer"><input type="checkbox" id="rmManual" class="w-4 h-4 accent-emerald-600">Ghi đè cả ô đã Sửa tay</label></div>
        </div>
        <button type="button" onclick="relinkMapRun()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition active:scale-95"><i class="fas fa-arrows-rotate mr-1.5"></i>QUÉT ĐỂ MAP LẠI</button>
@@ -422,10 +422,46 @@ textarea.autog{resize:none;overflow:hidden;}
   </div>
  </div>
     
- <!-- ===== ĐÃ XÓA ===== -->
- <div id="t-dead" class="hidden w-full min-w-0">
-  <div class="flex items-center justify-between mb-4 gap-3"><div><h2 class="text-lg md:text-2xl font-bold text-slate-800">Lịch sử Đã Xóa</h2><p class="text-[11px] text-slate-500">Link bị xóa được giữ 48 giờ rồi hệ thống tự xóa hẳn khỏi KV. Link đã xóa sẽ không tự quay lại Link Sub.</p></div><button onclick="clearDeadLinks()" class="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm"><i class="fas fa-eraser mr-1"></i>Xóa hết</button></div>
-  <div id="deadBody" class="space-y-3"></div>
+ <!-- ===== ĐÃ XÓA (2 SUB-TAB: LINK ĐÃ XÓA & QUẢN LÝ LINK NGUỒN) ===== -->
+ <div id="t-dead" class="hidden w-full min-w-0 space-y-3">
+  <!-- Thanh chuyển đổi 2 Sub-tab -->
+  <div class="inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 w-fit mb-1">
+   <button type="button" onclick="switchDeadSubTab('links')" id="btn-dead-links" class="settings-sub-tab active text-center !px-3 py-1.5 font-bold text-xs"><i class="fas fa-link-slash mr-1.5"></i>Link Sub Đã Xóa</button>
+   <button type="button" onclick="switchDeadSubTab('sources')" id="btn-dead-sources" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-xs"><i class="fas fa-server mr-1.5"></i>Quản Lý Link Nguồn</button>
+  </div>
+
+  <!-- SUB-TAB 1: LỊCH SỬ LINK SUB ĐÃ XÓA (48H) -->
+  <div id="pane-dead-links" class="space-y-3">
+   <div class="flex items-center justify-between gap-3 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+    <div>
+     <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
+      <i class="fas fa-ban text-red-500"></i>Lịch sử Link Sub Đã Xóa
+     </h2>
+     <p class="text-[11px] text-slate-500 mt-0.5">Link bị xóa được giữ 48 giờ rồi hệ thống tự xóa hẳn khỏi KV. Link đã xóa sẽ không bao giờ tự quay lại Link Sub.</p>
+    </div>
+    <button onclick="clearDeadLinks()" class="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm shrink-0">
+     <i class="fas fa-eraser mr-1"></i>Xóa hết lịch sử
+    </button>
+   </div>
+   <div id="deadBody" class="space-y-3"></div>
+  </div>
+
+  <!-- SUB-TAB 2: QUẢN LÝ LINK NGUỒN TRONG KHO (HARD DELETE KHỎI KV) -->
+  <div id="pane-dead-sources" class="hidden space-y-3">
+   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+    <div>
+     <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
+      <i class="fas fa-database text-indigo-600"></i>Quản lý Link Nguồn Kho KV
+      <span id="deadSourceCountBadge" class="bg-indigo-100 text-indigo-700 text-xs font-black px-2 py-0.5 rounded-full">0</span>
+     </h2>
+     <p class="text-[11px] text-slate-500 mt-0.5">Xóa triệt để các link nguồn mồ côi (không còn link ẩn hoạt động) khỏi Cloudflare KV để dọn sạch hệ thống.</p>
+    </div>
+    <button onclick="cleanUnusedSources()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition active:scale-95 shrink-0 flex items-center gap-1.5">
+     <i class="fas fa-broom"></i>Dọn sạch toàn bộ nguồn không dùng
+    </button>
+   </div>
+   <div id="deadSourcesBody" class="space-y-3"></div>
+  </div>
  </div>
 
  <!-- ===== HƯỚNG DẪN ===== -->
@@ -523,10 +559,11 @@ textarea.autog{resize:none;overflow:hidden;}
    <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-4">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
      <div>
-      <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
-       <i class="fas fa-shuffle text-indigo-600"></i>Cấu hình Cấp Link Tự Động (Auto Fulfillment)
+      <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2" id="checkHeaderTitle">
+       <i class="fas fa-clipboard-check text-purple-600"></i>Kiểm tra bù link
+       <span id="checkBadgeCount" class="bg-purple-100 text-purple-700 text-xs font-black px-2 py-0.5 rounded-full">0</span>
       </h2>
-      <p class="text-[11px] text-slate-500 mt-0.5">Cấu hình này chỉ áp dụng cho đơn mới phát sinh từ khi lưu trở đi. Đơn hàng và link cũ được bảo toàn 100%.</p>
+      <p class="text-[11px] text-slate-500 mt-0.5" id="checkHeaderDesc">Chứa các đơn thành công còn hạn bị thiếu ô link của web này. Bấm nút để cấp bù cục bộ từ kho nguồn.</p>
      </div>
      <button id="btnSaveFulfillMapping" onclick="saveFulfillmentMapping()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5 shrink-0">
       <i class="fas fa-save"></i>LƯU MAPPING FULFILLMENT
@@ -1015,7 +1052,7 @@ const PDS={1:"https://vpntrinhhg.pages.dev",2:"https://vpntrinhhg2.pages.dev",3:
 let PD=/pages\.dev$/.test(location.hostname)?location.origin:PDS[3];
 const GH_REPO="trinhhg/vpntrinhhg3";
 const PKG_LIST=[["t1","Gói 1 tháng - 60,000VND / $2.5 / ¥15.5 (100GB)",30],["t2","Gói 1 tháng - 70,000VND / $3 / ¥18 (500GB)",30],["c1","Gói 1 tháng - 80,000VND / $3.5 / ¥20.5 (1000GB)",30],["c2","Gói Cao Cấp - 200,000VND / $8 / ¥50 (3000GB)",30],["c3","Gói 1 Năm - 799,000VND / $30 / ¥199 (300GB/tháng)",365],["d1","Không Giới Hạn - 200,000VND / $8 / ¥52 (200GB)",0],["d2","Không Giới Hạn - 399,000VND / $16 / ¥102 (1000GB)",0],["d3","Không Giới Hạn - 999,000VND / $40 / ¥256 (5000GB)",0],["o1","[Giá cũ] Gói 1 tháng - 50,000VND / ¥12.5 (100GB)",30],["o2","[Giá cũ] Gói 1 tháng - 60,000VND / ¥15 (500GB)",30],["o3","[Giá cũ] Gói 1 tháng - 70,000VND / ¥17.5 (1000GB)",30]];
-const TABS=[["t-ord","fa-box","Đơn hàng"],["t-check","fa-clipboard-check","Kiểm tra"],["t-trans","fa-file-invoice-dollar","Giao dịch"],["t-data","fa-chart-pie","Dung lượng"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-cms","fa-book","H.Dẫn"],["t-mail","fa-envelope","Soạn mail"],["t-pkg","fa-boxes-stacked","Gói cước"],["t-settings","fa-cog","Cài đặt"]];
+const TABS=[["t-ord","fa-box","Đơn hàng"],["t-check","fa-clipboard-check","Kiểm tra"],["t-data","fa-chart-pie","Dung lượng"],["t-trans","fa-file-invoice-dollar","Giao dịch"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-pkg","fa-boxes-stacked","Gói cước"],["t-mail","fa-envelope","Soạn mail"],["t-cms","fa-book","H.Dẫn"],["t-settings","fa-cog","Cài đặt"]];
 // PKG_DB: giá hiện tại + giá cũ (o1/o2/o3) để nhận diện dữ liệu lịch sử — TUYỆT ĐỐI không quy đổi totalVnd của đơn cũ sang giá mới.
 const PKG_DB={t1:{n:"Gói 1 tháng",d:"100GB",vnd:60000,cny:15.5,m:1},t2:{n:"Gói 1 tháng",d:"500GB",vnd:70000,cny:18,m:1},c1:{n:"Gói 1 tháng",d:"1000GB",vnd:80000,cny:20.5,m:1},c2:{n:"Gói Cao Cấp",d:"3000GB",vnd:200000,cny:50,m:1},c3:{n:"Gói 1 Năm",d:"300GB/tháng",vnd:799000,cny:199,m:12},d1:{n:"Không Giới Hạn",d:"200GB",vnd:200000,cny:52,m:0},d2:{n:"Không Giới Hạn",d:"1000GB",vnd:399000,cny:102,m:0},d3:{n:"Không Giới Hạn",d:"5000GB",vnd:999000,cny:256,m:0},o1:{n:"Gói 1 tháng",d:"100GB",vnd:50000,cny:12.5,m:1,old:true},o2:{n:"Gói 1 tháng",d:"500GB",vnd:60000,cny:15,m:1,old:true},o3:{n:"Gói 1 tháng",d:"1000GB",vnd:70000,cny:17.5,m:1,old:true}};
 
@@ -1083,11 +1120,22 @@ const pkgLabel=o=>{const p=pkgOf(o);return p?`${p.n} - ${fmtVnd(p.vnd)}VND${p.ol
 const fmtMonths=d=>{d=Number(d)||0;return d>0?String(Math.round(d/30*100)/100):"";};
 function ordMonths(o){const p=pkgOf(o);if(p&&p.m===0)return 0;const d=Number(o.days);if(d>0)return Math.floor(d/30);return (p?p.m:1)*(Number(o.qty)||1);}
 function webLabel(v,wu){const t=String(v||"")+" "+String(wu||"");if(/vpntrinhhg3|lucastanora/i.test(t))return "Web 3";if(/vpntrinhhg2|onepiece/i.test(t))return "Web 2";if(/vpntrinhhg\.|doicucden/i.test(t))return "Web 1";return v?String(v).replace(/^https?:\/\//,"").replace(/\/$/,""):"—";}
+let myWebIndex = /vpntrinhhg2|onepiece/i.test(location.hostname) ? 2 : /vpntrinhhg\.|doicucden/i.test(location.hostname) ? 1 : 3;
+function getMe(){
+  const n = myWebIndex || 3;
+  return { n, field: "info" + n, PD: PDS[n] || PDS[3] };
+}
 function linkBottom(l){
  if (!l) return "Vĩnh viễn";
- // Ưu tiên đọc HSD thực tế từ đơn hàng tương ứng bên tab Đơn hàng
+ // Chuẩn hóa 3 nhánh 1 gốc: Tra cứu HSD từ Tab Đơn hàng (Single Source of Truth)
  if (l.orderId) {
    const od = ordersDb.find(o => normId(o.id) === normId(l.orderId));
+   if (od && od.expDate) {
+     return isLife(od.expDate) ? "Vĩnh viễn" : esc(od.expDate);
+   }
+ }
+ if (l.masked) {
+   const od = ordersDb.find(o => o.info1 === l.masked || o.info2 === l.masked || o.info3 === l.masked);
    if (od && od.expDate) {
      return isLife(od.expDate) ? "Vĩnh viễn" : esc(od.expDate);
    }
@@ -1470,13 +1518,14 @@ async function delOrd(id){
    triggerTelegramBackupNow(`Xóa đơn hàng #${id}`);
  }catch(e){}
 }
-// ===================== TAB KIỂM TRA ĐƠN CHƯA ĐỦ LINK =====================
+// ===================== TAB KIỂM TRA ĐƠN THIẾU LINK CỤC BỘ =====================
 function getMissingOrders(){
  const now = nowMs();
+ const me = getMe();
  return ordersDb.filter(o => 
    o && normSt(o.status) === "success" && 
    (!o.expDate || isLife(o.expDate) || (expEnd(o.expDate) >= now)) &&
-   (!o.info1 || !o.info2 || !o.info3)
+   !o[me.field]
  );
 }
 
@@ -1491,14 +1540,20 @@ function updateCheckBadge(){
 }
 
 function renderCheckTab(){
+ const me = getMe();
  updateCheckBadge();
  const tb = $("checkBody");
  if (!tb) return;
+
+ if ($("checkHeaderTitle")) $("checkHeaderTitle").innerHTML = `<i class="fas fa-clipboard-check text-purple-600 mr-1.5"></i>Kiểm tra bù link (${me.field.toUpperCase()}) <span id="checkBadgeCount" class="bg-purple-100 text-purple-700 text-xs font-black px-2 py-0.5 rounded-full ml-1">0</span>`;
+ if ($("optRsInfo")) $("optRsInfo").textContent = `${me.field.toUpperCase()} (Web này)`;
+ if ($("optRmInfo")) $("optRmInfo").textContent = `${me.field.toUpperCase()} (Web này)`;
+
  const list = getMissingOrders();
  if (!list.length) {
    tb.innerHTML = `<div class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-slate-200 shadow-sm font-bold">
      <i class="fas fa-circle-check text-emerald-500 text-3xl mb-2 block"></i>
-     Tuyệt vời! Tất cả đơn hàng còn hạn đều đã có đủ 3 link.
+     Tuyệt vời! Tất cả đơn hàng còn hạn đều đã có link ${me.field.toUpperCase()} của web này.
    </div>`;
    return;
  }
@@ -1520,7 +1575,7 @@ function renderCheckTab(){
        </div>
        <div class="flex gap-2 shrink-0">
          <button onclick="healSingleOrder('${o.id}')" class="bg-purple-50 text-purple-700 hover:bg-purple-600 hover:text-white font-bold px-3 py-1.5 rounded-xl text-xs border border-purple-200 transition">
-           <i class="fas fa-bolt mr-1"></i>Bù link
+           <i class="fas fa-bolt mr-1"></i>Bù link cục bộ
          </button>
          <button onclick="saveCheckManual('${o.id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm transition">
            <i class="fas fa-save mr-1"></i>Lưu link
@@ -1528,70 +1583,61 @@ function renderCheckTab(){
        </div>
      </div>
 
-     <!-- 3 ô sửa tay định tuyến -->
-     <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-       <div>
-         <label class="block text-[10px] font-bold ${o.info1 ? 'text-emerald-700' : 'text-purple-700'} mb-1">
-           ${o.info1 ? '<i class="fas fa-check-circle text-emerald-500 mr-1"></i>' : '<i class="fas fa-triangle-exclamation text-amber-500 mr-1"></i>'}Ô Link 1
-         </label>
-         <input type="text" id="chkLink1_${o.id}" value="${esc(o.info1 || '')}" placeholder="Dán Link 1 vào đây..." class="w-full p-2 text-xs border ${o.info1 ? 'border-slate-200 bg-slate-50' : 'border-purple-300 bg-purple-50/30'} rounded-lg font-mono outline-none focus:border-indigo-500">
-       </div>
-       <div>
-         <label class="block text-[10px] font-bold ${o.info2 ? 'text-emerald-700' : 'text-purple-700'} mb-1">
-           ${o.info2 ? '<i class="fas fa-check-circle text-emerald-500 mr-1"></i>' : '<i class="fas fa-triangle-exclamation text-amber-500 mr-1"></i>'}Ô Link 2
-         </label>
-         <input type="text" id="chkLink2_${o.id}" value="${esc(o.info2 || '')}" placeholder="Dán Link 2 vào đây..." class="w-full p-2 text-xs border ${o.info2 ? 'border-slate-200 bg-slate-50' : 'border-purple-300 bg-purple-50/30'} rounded-lg font-mono outline-none focus:border-indigo-500">
-       </div>
-       <div>
-         <label class="block text-[10px] font-bold ${o.info3 ? 'text-emerald-700' : 'text-purple-700'} mb-1">
-           ${o.info3 ? '<i class="fas fa-check-circle text-emerald-500 mr-1"></i>' : '<i class="fas fa-triangle-exclamation text-amber-500 mr-1"></i>'}Ô Link 3
-         </label>
-         <input type="text" id="chkLink3_${o.id}" value="${esc(o.info3 || '')}" placeholder="Dán Link 3 vào đây..." class="w-full p-2 text-xs border ${o.info3 ? 'border-slate-200 bg-slate-50' : 'border-purple-300 bg-purple-50/30'} rounded-lg font-mono outline-none focus:border-indigo-500">
-       </div>
+     <!-- Ô sửa tay định tuyến cục bộ của web này -->
+     <div>
+       <label class="block text-[10px] font-bold ${o[me.field] ? 'text-emerald-700' : 'text-purple-700'} mb-1">
+         ${o[me.field] ? '<i class="fas fa-check-circle text-emerald-500 mr-1"></i>' : '<i class="fas fa-triangle-exclamation text-amber-500 mr-1"></i>'}Ô Link ${me.field.toUpperCase()} (Định tuyến của web này)
+       </label>
+       <input type="text" id="chkLink_${o.id}" value="${esc(o[me.field] || '')}" placeholder="Dán link ${me.field.toUpperCase()} vào đây..." class="w-full p-2 text-xs border ${o[me.field] ? 'border-slate-200 bg-slate-50' : 'border-purple-300 bg-purple-50/30'} rounded-lg font-mono outline-none focus:border-indigo-500">
      </div>
    </div>`;
  }).join("");
 }
 
-// Lưu sửa tay trực tiếp 3 ô link từ tab Kiểm tra
+// Lưu sửa tay trực tiếp ô link cục bộ từ tab Kiểm tra
 async function saveCheckManual(orderId){
  const o = ordersDb.find(x => x.id === orderId);
  if (!o) return;
- const l1 = ($("chkLink1_" + orderId)?.value || "").trim();
- const l2 = ($("chkLink2_" + orderId)?.value || "").trim();
- const l3 = ($("chkLink3_" + orderId)?.value || "").trim();
+ const me = getMe();
+ const lk = ($("chkLink_" + orderId)?.value || "").trim();
 
  toast("Đang lưu link sửa tay...");
  try {
-   const body = { id: o.id, info1: l1, info2: l2, info3: l3, manualEdit: true };
+   const body = { id: o.id, [me.field]: lk, manualEdit: true };
    const j = await aj("/api/admin/order", { method: "POST", body });
    const idx = ordersDb.findIndex(x => x.id === o.id);
    if (idx >= 0) ordersDb[idx] = j.order;
    lastSig.o = JSON.stringify(ordersDb);
    renderCheckTab();
    renderOrd();
-   toast("Đã lưu link cho đơn " + o.id + (j.order.info1 && j.order.info2 && j.order.info3 ? " (đủ 3 link, tự biến mất khỏi tab)" : ""));
+   toast(`Đã lưu link ${me.field.toUpperCase()} cho đơn ${o.id}!`);
  } catch(e) {
    toast("Lỗi lưu link: " + e.message, "err");
  }
 }
 
-// Bấm nút bù link cho 1 đơn cụ thể
+// Bù link cục bộ cho 1 đơn cụ thể
 async function healSingleOrder(orderId){
- toast("Đang gửi lệnh xin bù link cho đơn " + orderId + "...");
+ const me = getMe();
+ toast(`Đang cấp bù link ${me.field.toUpperCase()} cho đơn ${orderId}...`);
  try {
-   await aj("/api/admin/heal", { method: "POST", body: { orderIds: [orderId] } });
-   toast("Đã gửi lệnh Nhạc trưởng, hệ thống đang xin bù link...");
-   setTimeout(fetchAll, 3000);
+   const res = await aj("/api/admin/heal", { method: "POST", body: { orderIds: [orderId] } });
+   if (res && res.details && res.details[0] && res.details[0].success) {
+     toast(`Đã cấp bù link ${me.field.toUpperCase()} thành công!`);
+   } else {
+     toast("Không thể cấp bù link (hết nguồn trống trong kho)!", "warn");
+   }
+   fetchAll();
  } catch(e) {
    toast("Lỗi: " + e.message, "err");
  }
 }
 
-// Bấm nút bù link: BATCHING 1 REQUEST DUY NHẤT - TIẾT KIỆM KV TUYỆT ĐỐI & LOG CHI TIẾT
+// Bù link cục bộ toàn bộ danh sách (1 request batching)
 async function healAllMissingWithProgress(){
  const list = getMissingOrders();
- if (!list.length) return toast("Tất cả đơn đã đủ 3 link!", "info");
+ const me = getMe();
+ if (!list.length) return toast(`Tất cả đơn đã đủ link ${me.field.toUpperCase()}!`, "info");
  const btn = $("btnHealAll");
  btn.disabled = true;
  const box = $("checkProgressBox"), bar = $("checkProgressBar"), pTxt = $("checkProgressPercent"), sTxt = $("checkProgressStatus"), logEl = $("checkLogTerminal");
@@ -1601,44 +1647,41 @@ async function healAllMissingWithProgress(){
  $("statTotal").textContent = list.length;
  $("statSuccess").textContent = "0";
  $("statFailed").textContent = "0";
- logEl.innerHTML = `<div class="text-purple-300">[BATCHING] Đang gửi gom ${list.length} đơn sang Nhạc Trưởng xử lý 1 lần duy nhất...</div>`;
- sTxt.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Đang yêu cầu cấp bù link toàn bộ danh sách...`;
+ logEl.innerHTML = `<div class="text-purple-300">[CỤC BỘ] Đang xử lý cấp bù link ${me.field.toUpperCase()} cho ${list.length} đơn...</div>`;
+ sTxt.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Đang cấp bù link từ kho cục bộ...`;
 
  try {
    const allIds = list.map(o => o.id);
-   // Gửi 1 request duy nhất chứa toàn bộ đơn, chờ nhận kết quả chi tiết
    const res = await aj("/api/admin/heal", { method: "POST", body: { orderIds: allIds } });
    bar.style.width = "75%";
    pTxt.textContent = "75%";
 
    const details = arr(res.details);
-   let full3Count = 0, partialCount = 0;
+   let successCount = 0, failCount = 0;
 
-   logEl.innerHTML += `<div class="text-slate-400 mt-1">// === CHI TIẾT KẾT QUẢ TỪNG ĐƠN ===</div>`;
+   logEl.innerHTML += `<div class="text-slate-400 mt-1">// === KẾT QUẢ CẤP BÙ CỤC BỘ ===</div>`;
 
    for (const item of details) {
-     const count = item.totalLinks || 0;
-     const isFull = count >= 3;
-     if (isFull) full3Count++; else partialCount++;
-
      const logLine = document.createElement("div");
-     if (isFull) {
+     if (item.success) {
+       successCount++;
        logLine.className = "text-emerald-300 font-bold";
-       logLine.textContent = `✔ [ĐỦ 3/3 LINK] Đơn ${item.id} (${item.email}): Link1: ${item.l1 ? 'Có' : 'Thiếu'} | Link2: ${item.l2 ? 'Có' : 'Thiếu'} | Link3: ${item.l3 ? 'Có' : 'Thiếu'} ${item.remoteNotes || ''}`;
+       logLine.textContent = `✔ [THÀNH CÔNG] Đơn ${item.id} (${item.email}): Đã gán link ${item.field.toUpperCase()}`;
      } else {
-       logLine.className = "text-amber-300";
-       logLine.textContent = `⚠ [MỚI ĐƯỢC ${count}/3 LINK] Đơn ${item.id} (${item.email}): ${item.l1 ? 'L1: OK' : 'L1: Trống'} | ${item.l2 ? 'L2: OK' : 'L2: Trống'} | ${item.l3 ? 'L3: OK' : 'L3: Trống'} ${item.remoteNotes || '(Chưa đủ 3 web vệ tinh)'}`;
+       failCount++;
+       logLine.className = "text-rose-400 font-bold";
+       logLine.textContent = `✘ [THẤT BẠI] Đơn ${item.id} (${item.email}): Hết node trống trong kho`;
      }
      logEl.appendChild(logLine);
    }
 
-   $("statSuccess").textContent = full3Count;
-   $("statFailed").textContent = partialCount;
+   $("statSuccess").textContent = successCount;
+   $("statFailed").textContent = failCount;
 
    bar.style.width = "100%";
    pTxt.textContent = "100%";
-   sTxt.innerHTML = `<i class="fas fa-circle-check text-emerald-400 mr-1"></i>Hoàn tất! ${full3Count} đơn đủ 3 link (tự ẩn khỏi tab), ${partialCount} đơn còn thiếu link.`;
-   toast(`Đã xử lý xong: ${full3Count} đơn đủ 3 link, ${partialCount} đơn còn thiếu link.`);
+   sTxt.innerHTML = `<i class="fas fa-circle-check text-emerald-400 mr-1"></i>Hoàn tất! ${successCount} đơn thành công, ${failCount} đơn lỗi.`;
+   toast(`Đã xử lý xong: ${successCount} đơn thành công, ${failCount} thất bại.`);
  } catch(e) {
    bar.style.width = "100%";
    sTxt.innerHTML = `<i class="fas fa-circle-xmark text-rose-400 mr-1"></i>Lỗi trong quá trình bù link!`;
@@ -2380,7 +2423,13 @@ function openLnkModal(id){
  const l = linksDb.find(x => x.id === id); if (!l) return;
  $("mLId").value = id; $("mLOrig").value = l.orig || "";
  if ($("mLOrig2")) $("mLOrig2").value = l.orig2 || "";
- $("mLEmail").value = l.email || ""; $("mLExp").value = l.expDate || "";
+ $("mLEmail").value = l.email || "";
+ let expVal = l.expDate || "";
+ if (l.orderId) {
+   const od = ordersDb.find(o => normId(o.id) === normId(l.orderId));
+   if (od && od.expDate) expVal = od.expDate;
+ }
+ $("mLExp").value = expVal;
  $("mLIdx").value = l.linkIndex || l.machine || "";
  $("mLnk").classList.remove("hidden");
 }
@@ -2850,13 +2899,118 @@ async function relinkApply(mode){
   fetchAll();}
  catch(e){toast("Lỗi: "+e.message,"err");}}
 
-// ===================== ĐÃ XÓA (tự xóa hẳn sau 48h) =====================
+// ===================== ĐÃ XÓA (SUB-TAB LINK ĐÃ XÓA & QUẢN LÝ LINK NGUỒN) =====================
+let curDeadTab = "links";
+function switchDeadSubTab(t){
+ curDeadTab = t;
+ $("pane-dead-links").classList.toggle("hidden", t !== "links");
+ $("pane-dead-sources").classList.toggle("hidden", t !== "sources");
+ $("btn-dead-links").classList.toggle("active", t === "links");
+ $("btn-dead-sources").classList.toggle("active", t === "sources");
+ renderDead();
+}
+
 const deadLive=()=>deadDb.filter(l=>nowMs()-(Number(l.deadTs)||parseAny(l.deadDate)||nowMs())<=48*36e5);
+
 function renderDead(){
+ if (curDeadTab === "sources") {
+   renderDeadSources();
+   return;
+ }
  const list=deadLive(),tb=$("deadBody");if(!list.length){tb.innerHTML=`<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold">Không có lịch sử xóa</div>`;return;}
  tb.innerHTML=list.map((l,i)=>{const t=Number(l.deadTs)||parseAny(l.deadDate),left=Math.max(0,Math.ceil((t+48*36e5-nowMs())/36e5));
   return `<div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex flex-col gap-2"><div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="font-bold text-xs text-slate-400">#${i+1}</span><span class="font-bold text-slate-800 text-sm cp truncate" onclick="cp(${q(l.email)})">${esc(l.email||"—")}</span></div><button onclick="restoreLink(${q(l.id)})" class="text-emerald-600 font-bold px-3 py-1.5 bg-emerald-50 rounded-lg text-xs hover:bg-emerald-500 hover:text-white border border-emerald-100"><i class="fas fa-rotate-left mr-1"></i>Khôi phục</button></div>
-  <div class="text-[10px] font-mono text-slate-500 break-all cp" onclick="cp(${q(l.orig)})">${esc(l.orig||"—")}</div><div class="text-[10px] font-mono text-indigo-500 break-all cp" onclick="cp(${q(l.masked)})">${esc(l.masked||"—")}</div><div class="text-xs text-slate-500 font-bold">Ngắt: ${fmtBank(t)} <span class="text-orange-500 ml-1">(tự xóa hẳn sau ${left}h)</span></div></div>`;}).join("");}
+  <div class="text-[10px] font-mono text-slate-500 break-all cp" onclick="cp(${q(l.orig)})">${esc(l.orig||"—")}</div><div class="text-[10px] font-mono text-indigo-500 break-all cp" onclick="cp(${q(l.masked)})">${esc(l.masked||"—")}</div><div class="text-xs text-slate-500 font-bold">Ngắt: ${fmtBank(t)} <span class="text-orange-500 ml-1">(tự xóa hẳn sau ${left}h)</span></div></div>`;}).join("");
+}
+
+function renderDeadSources(){
+ const container = $("deadSourcesBody");
+ if (!container) return;
+ if ($("deadSourceCountBadge")) $("deadSourceCountBadge").textContent = linkPoolDb.length;
+ if (!linkPoolDb.length) {
+   container.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold">Kho link nguồn đang trống</div>`;
+   return;
+ }
+
+ container.innerHTML = linkPoolDb.map((p, idx) => {
+   // Đếm số link ẩn hoạt động của khách (không tính link neo #1)
+   const activeLinks = linksDb.filter(l => l && String(l.linkIndex) !== "1" && (l.orig === p.url || l.orig2 === p.url));
+   const count = activeLinks.length;
+   const isCombo = !!p.isCombo;
+   const isUsing = count > 0;
+   
+   let netTag = isCombo 
+     ? `<span class="inline-flex items-center gap-1 text-xs font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">Combo Liangxin + DJJC</span>`
+     : (p.url.includes("liangxin") ? `<span class="badge-lx">Liangxin</span>` : (p.url.includes("djjc") ? `<span class="badge-dj">DJJC</span>` : `<span class="badge-ot">Other</span>`));
+
+   let statusBadge = isUsing 
+     ? `<span class="bg-emerald-100 text-emerald-800 font-black px-2.5 py-0.5 rounded-full text-xs border border-emerald-300 flex items-center gap-1 shrink-0"><i class="fas fa-check-circle text-emerald-600"></i>Đang dùng: ${count} link</span>`
+     : `<span class="bg-amber-100 text-amber-800 font-black px-2.5 py-0.5 rounded-full text-xs border border-amber-300 flex items-center gap-1 shrink-0"><i class="fas fa-triangle-exclamation text-amber-600"></i>Không có link ẩn</span>`;
+
+   let cardClass = isUsing 
+     ? "bg-emerald-50/50 border-2 border-emerald-200 hover:border-emerald-300" 
+     : "bg-slate-100/70 border-2 border-slate-200 hover:border-amber-300";
+
+   return `
+   <div class="${cardClass} rounded-2xl p-3.5 shadow-sm space-y-2.5 transition">
+     <div class="flex items-center justify-between gap-2 flex-wrap">
+       <div class="flex items-center gap-2">
+         <span class="text-xs font-bold text-slate-400">#${idx + 1}</span>
+         ${netTag}
+         <span class="text-[10px] font-mono font-bold text-slate-500">${esc(p.id)}</span>
+       </div>
+       <div class="flex items-center gap-2">
+         ${statusBadge}
+         <button onclick="hardDeleteSource('${p.id}', '${p.url}', '${p.url2 || ''}')" title="Xóa vĩnh viễn khỏi toàn bộ KV" class="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 font-bold px-3 py-1 rounded-xl text-xs shadow-sm transition active:scale-95 flex items-center gap-1">
+           <i class="fas fa-trash-can text-xs"></i>Xóa hẳn khỏi KV
+         </button>
+       </div>
+     </div>
+
+     <!-- URL Nguồn -->
+     <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl font-mono text-[11px] text-emerald-300 break-all cp space-y-1" onclick="cp('${p.url}')">
+       <div class="flex items-start gap-1.5"><span class="bg-emerald-950 text-emerald-400 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0">Nguồn 1</span><span class="flex-1">${esc(p.url)}</span></div>
+       ${p.url2 ? `<div class="flex items-start gap-1.5 pt-1 border-t border-slate-800 text-sky-300" onclick="event.stopPropagation();cp('${p.url2}')"><span class="bg-sky-950 text-sky-400 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0">Nguồn 2</span><span class="flex-1">${esc(p.url2)}</span></div>` : ''}
+     </div>
+
+     <!-- Thông số GB / HSD -->
+     <div class="flex items-center justify-between text-xs text-slate-600 pt-1 border-t border-slate-200/60 flex-wrap gap-2">
+       <div>Dung lượng: <b>${esc(p.remainGb || '—')} / ${esc(p.gb || '—')} GB</b> · HSD: <b>${esc(p.exp || 'Vĩnh viễn')}</b></div>
+       <div class="text-[11px] text-slate-500">Giới hạn tải: <b>${count}/${p.max || 30} thiết bị</b></div>
+     </div>
+   </div>`;
+ }).join("");
+}
+
+async function hardDeleteSource(id, url, url2){
+ if(!confirm("Xóa vĩnh viễn link nguồn này khỏi Cloudflare KV?\n(Hệ thống sẽ xóa trong LINK_POOL, cache node GLOBAL_SUBS, link neo #1 trong ALL_LINKS và build lại GLOBAL_ROUTER).")) return;
+ toast("Đang xóa nguồn khỏi KV...");
+ try {
+   await aj("/api/admin/source/delete", { method: "POST", body: { id, url, url2 } });
+   toast("Đã xóa vĩnh viễn link nguồn khỏi KV!");
+   fetchAll();
+ } catch(e) {
+   toast("Lỗi xóa nguồn: " + e.message, "err");
+ }
+}
+
+async function cleanUnusedSources(){
+ const unused = linkPoolDb.filter(p => {
+   const activeLinks = linksDb.filter(l => l && String(l.linkIndex) !== "1" && (l.orig === p.url || l.orig2 === p.url));
+   return activeLinks.length === 0;
+ });
+ if (!unused.length) return toast("Tất cả link nguồn đều đang có link ẩn hoạt động!", "info");
+ if (!confirm(`Tìm thấy ${unused.length} link nguồn không có bất kỳ link ẩn nào.\nXóa sạch toàn bộ ${unused.length} nguồn này khỏi Cloudflare KV?`)) return;
+ toast("Đang quét dọn các nguồn không dùng...");
+ try {
+   const res = await aj("/api/admin/source/clean_unused", { method: "POST" });
+   toast(`Đã quét sạch ${res.deleted || unused.length} link nguồn không dùng khỏi KV!`);
+   fetchAll();
+ } catch(e) {
+   toast("Lỗi dọn nguồn: " + e.message, "err");
+ }
+}
+
 async function restoreLink(id){const l=deadDb.find(x=>x.id===id);if(!l)return;const c={...l};delete c.deadDate;delete c.deadTs;
  deadDb=deadDb.filter(x=>x.id!==id);rmTomb(id);linksDb=linksDb.filter(x=>x.id!==id);linksDb.unshift(c);renderDead();renderLinks();
  try{await aj("/api/deadlinks",{method:"POST",body:deadDb});await saveLinks();toast("Đã khôi phục! Nhớ Rebuild MAP.");}catch(e){toast("Lỗi khôi phục: "+e.message,"err");}}
@@ -3307,7 +3461,7 @@ async function runCronNow(){toast("Đang chạy Cron...");const s=cmsDb.settings
 const yn=(v,okTxt,noTxt)=>v?`<b class="text-emerald-700">${okTxt}</b>`:`<b class="text-red-600">${noTxt}</b>`;
 async function loadStatus(){
  let j;try{j=await aj("/api/admin/status");}catch(e){return;}
- if(j.web&&PDS[j.web])PD=PDS[j.web];
+ if(j.web){myWebIndex=j.web;if(PDS[j.web])PD=PDS[j.web];}
  let bs={};try{const be=await aj("/api/cms");bs=(be&&be.settings)||{};}catch(e){}
  const c=j.cron,age=c?nowMs()-c.ts:null,ok=c&&age<40*60000,cb=$("cronBox"),sb=$("statusBox");
  if(cb){cb.className="text-xs rounded-xl border p-3 space-y-1 "+(ok?"bg-emerald-50 border-emerald-200 text-emerald-800":"bg-red-50 border-red-200 text-red-700");
