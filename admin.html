@@ -217,7 +217,7 @@ textarea.autog{resize:none;overflow:hidden;}
     <span id="badgeManualEdit" class="text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 shrink-0">TẮT</span>
    </button>
   </div>
-  <div class="bg-slate-100 p-1 rounded-xl flex gap-1 mb-4 w-fit max-w-full overflow-x-auto scroll-hide">
+  <div class="inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 mb-4 w-fit max-w-full overflow-x-auto scroll-hide">
    <div class="ord-sub-tab active" id="otab-success" onclick="switchOrdTab('success')"><div class="mac-dot mac-green"></div>Thành công<span id="cnt-success" class="bg-green-100 text-green-700 text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
    <div class="ord-sub-tab" id="otab-pending" onclick="switchOrdTab('pending')"><div class="mac-dot mac-yellow"></div>Chờ duyệt<span id="cnt-pending" class="bg-yellow-100 text-yellow-700 text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
    <div class="ord-sub-tab" id="otab-failed" onclick="switchOrdTab('failed')"><div class="mac-dot mac-red"></div>Thất bại<span id="cnt-failed" class="bg-red-100 text-red-700 text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
@@ -359,10 +359,10 @@ textarea.autog{resize:none;overflow:hidden;}
  <!-- ===== GIAO DỊCH D1 ===== -->
  <div id="t-trans" class="hidden w-full min-w-0">
   <div class="flex items-center justify-between gap-2 mb-3"><h2 class="text-base sm:text-lg md:text-2xl font-bold text-slate-800 min-w-0">Đối soát giao dịch D1</h2><button onclick="loadTx(true)" class="shrink-0 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs md:text-sm shadow-sm"><i class="fas fa-sync mr-1"></i>Tải lại</button></div>
-  <div class="bg-slate-200 p-1 rounded-xl grid grid-cols-3 gap-1 w-full sm:w-96 mb-3"><button onclick="switchTxTab('giamsat')" id="tx-giamsat" class="settings-sub-tab text-center !px-2 active">Đối Soát</button><button onclick="switchTxTab('raw')" id="tx-raw" class="settings-sub-tab text-center !px-2">Giao Dịch Thô</button><button onclick="switchTxTab('rev')" id="tx-rev" class="settings-sub-tab text-center !px-2"><i class="fas fa-chart-line mr-1"></i>Doanh thu</button></div>
+  <div class="inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 w-fit mb-3"><button onclick="switchTxTab('giamsat')" id="tx-giamsat" class="settings-sub-tab text-center !px-3 active">Đối Soát</button><button onclick="switchTxTab('raw')" id="tx-raw" class="settings-sub-tab text-center !px-3">Giao Dịch Thô</button><button onclick="switchTxTab('rev')" id="tx-rev" class="settings-sub-tab text-center !px-3"><i class="fas fa-chart-line mr-1"></i>Doanh thu</button></div>
   <div id="txTableWrap" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden"><div class="overflow-x-auto"><table class="log-table"><thead id="transHead"></thead><tbody id="transBody"></tbody></table></div></div>
   <div id="revPane" class="hidden">
-   <div class="flex flex-col sm:flex-row gap-2 mb-3 items-stretch sm:items-center justify-between"><div id="revTabs" class="grid grid-cols-5 gap-1 bg-slate-100 p-1 rounded-xl w-full sm:w-auto"></div><select id="revMonth" onchange="revMonth=this.value;renderRevenue()" class="p-2 border border-slate-200 rounded-lg text-xs bg-white font-bold"></select></div>
+   <div class="flex flex-col sm:flex-row gap-2 mb-3 items-stretch sm:items-center justify-between"><div id="revTabs" class="inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 w-fit"></div><select id="revMonth" onchange="revMonth=this.value;renderRevenue()" class="p-2 border border-slate-200 rounded-lg text-xs bg-white font-bold"></select></div>
    <div id="revBody" class="space-y-4"></div>
   </div>
  </div>
@@ -1302,22 +1302,46 @@ function go(id){
 function switchOrdTab(t){curOrdTab=t;["success","pending","failed"].forEach(x=>$("otab-"+x).classList.toggle("active",x===t));renderOrd();}
 const ordAmountTxt=o=>{const pay=payOf(o),p=pkgOf(o);if(pay==="Bank")return Number(o.totalVnd)>0?fmtVnd(o.totalVnd)+"đ":"—";const c=Number(o.totalCny)>0?Number(o.totalCny):0;if(c)return "¥"+trimNum(c);return p&&p.cny?"¥"+trimNum(p.cny*(Number(o.qty)||1))+" (theo gói)":"—";};
 function ordCard(o,ro){
- const now=nowMs(),st=normSt(o.status),displayPkg=pkgLabel(o);let daysLeft=null,expiring=false,expired=false;
- if(st==="success"&&o.expDate&&!isLife(o.expDate)){const e=expEnd(o.expDate);if(e){daysLeft=Math.ceil((e-now)/864e5);expiring=daysLeft>=0&&daysLeft<=3;expired=daysLeft<0;}}
+ const now=nowMs(),st=normSt(o.status);let daysLeft=null,expiring=false,expired=false;
+ if(st==="success"&&o.expDate&&!isLife(o.expDate)){
+  const e=expEnd(o.expDate);
+  if(e){
+   if(now>e){
+    expired=true;
+    daysLeft=-1;
+   }else{
+    expired=false;
+    daysLeft=Math.max(0,Math.ceil((e-now)/864e5));
+    expiring=daysLeft<=3;
+   }
+  }
+ }
  const dot=expired?'<div class="dot-gray"></div>':st==="success"?'<div class="dot-green"></div>':st==="pending"?'<div class="dot-yellow"></div>':'<div class="dot-red"></div>';
  const card=expired?'card-expired-done border border-slate-300':expiring?'card-expiring':'bg-white border border-slate-200';
  let bu="";if(o.pendingUpgrade)bu=`<span class="bg-yellow-100 text-yellow-800 border border-yellow-200 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 uppercase">Xác minh Nâng gói</span>`;else if(o.upgradeStatus==="failed")bu=`<span class="bg-red-100 text-red-800 border border-red-200 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 uppercase">Từ chối Nâng gói</span>`;else if(o.isUpgrade)bu=`<span class="bg-green-100 text-green-800 border border-green-200 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 uppercase">Nâng gói Thành công</span>`;
  const kind=o.orderType==="renew"?`<span class="bg-sky-100 text-sky-700 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 uppercase">Gia hạn</span>`:"";
  const nick=o.nickname?`<span class="text-[10px] font-black bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded ml-1"><i class="fas fa-user-tag mr-0.5"></i>${esc(o.nickname)}</span>`:"";
  const lk=o.lockInfo?Object.keys(o.lockInfo).filter(k=>o.lockInfo[k]):[];const lkb=lk.length?`<span title="Ô đã khóa (sửa tay): ${esc(lk.join(", "))}" class="text-[9px] font-black bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded ml-1"><i class="fas fa-lock mr-0.5"></i>${lk.map(k=>k.replace("info","")).join("/")}</span>`:"";
- const extra=ro?`<div class="pl-5 mt-1.5 flex flex-wrap gap-1 text-[10px] font-bold"><span class="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded">${esc(o.method||"—")}</span><span class="bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded">Thực nhận: ${esc(ordAmountTxt(o))}</span><span class="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded">${pkgOf(o)&&pkgOf(o).m===0?"Vĩnh viễn":ordMonths(o)+" tháng"}</span><span class="${st==="success"?"bg-green-100 text-green-700":st==="pending"?"bg-yellow-100 text-yellow-700":"bg-red-100 text-red-700"} px-1.5 py-0.5 rounded">${st==="success"?"Thành công":st==="pending"?"Chờ duyệt":"Thất bại"}</span></div>`:"";
+
+ // Hàng 3: HSD trước, Zalo sau chia đôi ngăn cách bằng |
+ const hsdStr = o.expDate ? `HSD: <span class="font-bold text-slate-700">${esc(o.expDate)}</span>${daysLeft!==null&&daysLeft>=0?` <span class="font-black ${daysLeft<=1?"text-red-600":"text-orange-500"}">(còn ${daysLeft}n)</span>`:""}` : 'HSD: —';
+ const zaloStr = `|Zalo: <span class="font-bold text-slate-700 cp" onclick="cp(${q(o.zalo)})">${esc(o.zalo||"")}</span>`;
+
+ // Hàng 4: 3 Badge riêng biệt (Method tag màu giống tab doanh thu + Thực nhận + Số tháng)
+ const pay = payOf(o);
+ const methodBadge = pay === "Alipay" ? '<span class="bg-sky-100 text-sky-700 px-2 py-0.5 rounded text-[10px] font-black">Alipay</span>'
+                   : pay === "Weixin" ? '<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-black">Weixin</span>'
+                   : '<span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-black">Bank VN</span>';
+ const amtBadge = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded text-[10px] font-bold">Thực nhận: ${esc(ordAmountTxt(o))}</span>`;
+ const mBadge = `<span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded text-[10px] font-bold">${pkgOf(o)&&pkgOf(o).m===0?"Vĩnh viễn":ordMonths(o)+" tháng"}</span>`;
+
  const acts=ro?"":`<div class="flex gap-1.5">${st==="success"&&o.expDate&&!expired&&!isLife(o.expDate)?`<button onclick="sendExpMail(${q(o.id)})" title="Nhắc hết hạn" class="text-amber-500 font-bold px-2.5 py-1.5 bg-amber-50 border border-amber-100 rounded-lg text-xs hover:bg-amber-500 hover:text-white"><i class="fas fa-clock"></i></button>`:""}<button onclick="sendZaloMail(${q(o.id)})" title="Nhắc hỗ trợ cài đặt (Zalo)" class="text-blue-500 font-bold px-2.5 py-1.5 bg-blue-50 border border-blue-100 rounded-lg text-xs hover:bg-blue-500 hover:text-white"><i class="fas fa-comment-dots"></i></button><button onclick="openOrdModal(${q(o.id)})" title="Sửa" class="text-indigo-600 font-bold px-3 py-1.5 bg-indigo-50 border border-indigo-100 rounded-lg text-xs hover:bg-indigo-600 hover:text-white"><i class="fas fa-pen md:mr-1"></i><span class="hidden md:inline">Sửa</span></button><button onclick="delOrd(${q(o.id)})" title="Xóa" class="text-red-500 font-bold px-2.5 py-1.5 bg-red-50 border border-red-100 rounded-lg text-xs hover:bg-red-500 hover:text-white"><i class="fas fa-trash"></i></button></div>`;
- // Desktop: giờ tạo ở góc TRÊN-PHẢI, 4 nút ở góc DƯỚI-PHẢI. Mobile: hàng dưới "giờ tạo (trái) | các nút (phải)".
+
  return `<div class="${card} rounded-xl p-3 shadow-sm flex flex-col md:flex-row md:items-stretch justify-between gap-2 md:gap-3 w-full min-w-0"><div class="flex-1 min-w-0">
   <div class="flex items-center gap-2 mb-1 flex-wrap">${dot}<span class="font-bold text-[10px] text-slate-400">#${ordersDb.indexOf(o)+1}</span><span class="font-mono font-extrabold text-indigo-600 text-xs md:text-base cp order-id-text" onclick="cp(${q(o.id)})">${esc(o.id)}</span>${nick}${kind}${st==="pending"?`<span class="bg-yellow-100 text-yellow-800 text-[10px] font-bold px-1.5 py-0.5 rounded ml-1">Chưa xác nhận CK</span>`:""}${bu}${lkb}${expired?`<span class="text-[10px] font-black bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1">ĐÃ HẾT HẠN</span>`:""}</div>
   <div class="font-bold text-slate-800 text-xs md:text-sm cp truncate pl-5 order-email-text" onclick="cp(${q(o.email)})">${esc(o.email||"—")}</div>
-  <div class="text-[11px] md:text-sm text-slate-500 mt-0.5 pl-5 order-meta-text">Zalo: <span class="font-bold text-slate-700 cp" onclick="cp(${q(o.zalo)})">${esc(o.zalo||"")}</span></div>
-  <div class="text-[11px] md:text-sm text-slate-500 mt-0.5 truncate pl-5 order-meta-text">${esc(displayPkg)}${o.expDate?` • HSD: <span class="font-bold text-slate-700">${esc(o.expDate)}</span>`:""}${daysLeft!==null&&daysLeft>=0?` <span class="font-black ${daysLeft<=1?"text-red-600":"text-orange-500"}">(còn ${daysLeft}n)</span>`:""}</div>${extra}</div>
+  <div class="text-[11px] md:text-sm text-slate-500 mt-1 pl-5 order-meta-text flex items-center gap-2 flex-wrap"><span>${hsdStr}</span><span>${zaloStr}</span></div>
+  <div class="pl-5 mt-2 flex flex-wrap items-center gap-1.5">${methodBadge}${amtBadge}${mBadge}</div></div>
   <div class="flex flex-row md:flex-col items-center md:items-end justify-between gap-2 shrink-0 border-t border-slate-100 md:border-0 pt-2 md:pt-0"><span class="text-[10px] md:text-xs text-slate-400 font-semibold whitespace-nowrap">${esc(o.date || fmtBank(o.createdTs || 0))}</span>${acts}</div></div>`;}
 function renderOrd(){
  const counts={success:0,pending:0,failed:0};ordersDb.forEach(o=>{const s=normSt(o.status);if(counts[s]!==undefined)counts[s]++;});
@@ -1827,11 +1851,27 @@ function renderRevenue(){
  $("revMonth").innerHTML=`<option value="all">Tất cả các tháng</option>`+[...ms].sort().reverse().map(k=>`<option value="${k}" ${revMonth===k?"selected":""}>Tháng ${monthLbl(k)}</option>`).join("");
  const R=revList(),b=$("revBody");({over:revOver,pay:revPay,cost:revCost}[revTab])(R,b);}
 function revOver(R,b){
- const sum=R.reduce((a,x)=>a+x.vnd,0),cost=costSum().total,warn=R.some(x=>x.pay!=="Bank")&&!cnyRate()?`<div class="bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold rounded-xl p-3">Có đơn Alipay/Weixin nhưng chưa nhập tỷ giá CNY → VND nên phần này chưa được cộng vào tổng. Vào tab "Thanh toán" để nhập.</div>`:"";
- const mt=monthTotals(),keys=Object.keys(mt).sort().slice(-12),by={Bank:0,Alipay:0,Weixin:0};R.forEach(x=>by[x.pay]+=x.vnd);
+ const sum=R.reduce((a,x)=>a+x.vnd,0),cost=costSum().total,profit=sum-cost;
+ const warn=R.some(x=>x.pay!=="Bank")&&!cnyRate()?`<div class="bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold rounded-xl p-3">Có đơn Alipay/Weixin nhưng chưa nhập tỷ giá CNY → VND nên phần này chưa được cộng vào tổng. Vào tab "Thanh toán" để nhập.</div>`:"";
+ const mt=monthTotals(),keys=Object.keys(mt).sort().slice(-12);
+ const by={Bank:0,Alipay:0,Weixin:0};R.forEach(x=>by[x.pay]+=x.vnd);
 
- // Block 2: Thống kê theo gói
- const g={};R.forEach(x=>{const k=x.p?x.p.n+"|"+x.p.vnd+"|"+(x.p.old?"o":"n"):"other|"+(x.o.pkgName||"?");const e=g[k]=g[k]||{l:x.p?`${x.p.n} - ${fmtVnd(x.p.vnd)}VND (${x.p.d})${x.p.old?" (giá cũ)":""}`:(x.o.pkgName||"Gói khác"),n:0,vnd:0,q:{}};e.n++;e.vnd+=x.vnd;const mk=x.p&&x.p.m===0?"∞":x.months;e.q[mk]=(e.q[mk]||0)+1;});
+ const g={};
+ R.forEach(x=>{
+  const k=x.p?x.p.n+"|"+x.p.vnd+"|"+(x.p.old?"o":"n"):"other|"+(x.o.pkgName||"?");
+  const e=g[k]=g[k]||{l:x.p?`${x.p.n} - ${fmtVnd(x.p.vnd)}VND (${x.p.d})${x.p.old?" (giá cũ)":""}`:(x.o.pkgName||"Gói khác"),n:0,vnd:0};
+  e.n++;e.vnd+=x.vnd;
+ });
+
+ b.innerHTML = warn +
+  `<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    ${kpi("Tổng Doanh Thu", fmtVnd(sum)+"đ", `${R.length} đơn thành công`)}
+    ${kpi("Tổng Chi Phí", fmtVnd(cost)+"đ", "Chi phí mua gói/vận hành", "text-orange-500")}
+    ${kpi("Lợi Nhuận Ròng", fmtVnd(profit)+"đ", sum ? Math.round(profit/sum*100)+"% doanh thu" : "", profit>=0?"text-emerald-600":"text-red-600")}
+  </div>` +
+  box("Doanh thu 12 tháng gần nhất", vbar(keys.map(k=>({l:monthLbl(k), v:mt[k].vnd})))) +
+  box("Cơ cấu Phương thức thanh toán", hbar([{l:"Ngân hàng VN", v:by.Bank}, {l:"Alipay", v:by.Alipay}, {l:"Weixin", v:by.Weixin}])) +
+  box("Doanh thu theo Gói cước", hbar(Object.values(g).sort((a,c)=>c.vnd-a.vnd).map(it=>({l:`${it.l} (${it.n} đơn)`, v:it.vnd}))));
 }
 const PAYLBL={Bank:"🏦 Ngân hàng VN",Alipay:"🔵 Alipay",Weixin:"🟢 Weixin"};
 function revPayDetail(b){
@@ -2090,7 +2130,7 @@ function detectProvider(u) {
 }
 
 function buildMasked(orig, fresh) {
-  const tok = fresh ? genHex(32) : (getT(orig) || genHex(32));
+  const tok = genHex(32);
   const lx = String(orig || "").toLowerCase().includes("liangxin");
   return PD + (lx ? "/v1" : "/v2") + "/VPNTrinhHg" + (lx ? "?OwO=" : "?token=") + tok + "#VPNTrinhHg";
 }
@@ -2172,7 +2212,16 @@ function renderLinks(){
  });
 
  let clusterIndex = 0;
- c.innerHTML = Object.values(grps).map(g => {
+ // Cụm Da_bi_khoa luôn luôn bị ghim ở CUỐI BẢNG dù có link mới chuyển vào
+ const sortedGroups = Object.values(grps).sort((a, b) => {
+  const aLocked = (a.orig === "Da_bi_khoa" || a.key.includes("Da_bi_khoa"));
+  const bLocked = (b.orig === "Da_bi_khoa" || b.key.includes("Da_bi_khoa"));
+  if (aLocked && !bLocked) return 1;
+  if (!aLocked && bLocked) return -1;
+  return 0;
+ });
+
+ c.innerHTML = sortedGroups.map(g => {
   clusterIndex++;
   const idxId = clusterIndex;
   
@@ -2526,19 +2575,56 @@ async function delLink(id){
 
 async function sortAllLinks(){
   const b = $("btnSortLinks"); b.disabled = true;
-  const pe = s => { const t = expEnd(s); return t || 0; };
-  const g = {}; linksDb.forEach(l => { (g[l.orig || "?"] = g[l.orig || "?"] || []).push(l); });
+  // Lấy HSD từ Tab Đơn hàng làm chuẩn duy nhất để so sánh
+  const getOrderExp = l => {
+    if (l.orderId) {
+      const od = ordersDb.find(o => normId(o.id) === normId(l.orderId));
+      if (od && od.expDate) return od.expDate;
+    }
+    return l.expDate || "";
+  };
+  const pe = s => {
+    if (!s || isLife(s)) return 9999999999999;
+    return expEnd(s) || 0;
+  };
+
+  const g = {};
+  linksDb.forEach(l => {
+    const k = l.isCombo ? `COMBO|${l.orig}|${l.orig2}` : (l.orig || "?");
+    (g[k] = g[k] || []).push(l);
+  });
+
   for (const k in g) {
-    const ot = getT(k); let first = null; const rest = [];
-    g[k].forEach(l => { if (!first && ot && getT(l.masked) === ot) first = l; else rest.push(l); });
-    rest.sort((a, b) => { const x = pe(a.expDate), y = pe(b.expDate); return x && y ? x - y : x ? -1 : y ? 1 : 0; });
-    if (first) first.linkIndex = "1";
-    let n = 2; rest.forEach(l => { l.linkIndex = String(n++); });
+    const cluster = g[k];
+    const isLockedCluster = (k === "Da_bi_khoa" || k.includes("Da_bi_khoa"));
+    
+    // Tìm node kỹ thuật (nếu có)
+    let techNode = null;
+    const clientLinks = [];
+    cluster.forEach(l => {
+      if (isLockedCluster && (l.orig === "Da_bi_khoa" || l.id === "POOL-179017008791528" || String(l.email).toLowerCase() === "auto")) {
+        techNode = l;
+      } else {
+        clientLinks.push(l);
+      }
+    });
+
+    // Sắp xếp link khách: gần hết hạn nhất lên đầu (#1), lâu hết hạn hơn xếp sau
+    clientLinks.sort((a, b) => pe(getOrderExp(a)) - pe(getOrderExp(b)));
+
+    if (techNode) {
+      techNode.linkIndex = "1";
+      let n = 2;
+      clientLinks.forEach(l => { l.linkIndex = String(n++); });
+    } else {
+      let n = 1;
+      clientLinks.forEach(l => { l.linkIndex = String(n++); });
+    }
   }
   renderLinks();
   try {
     await saveLinks();
-    toast("Đã sắp xếp lại Index theo ngày hết hạn");
+    toast("Đã sắp xếp lại Index từ gần nhất (#1) đến xa nhất");
   } catch (e) {}
   b.disabled = false;
 }
@@ -2966,6 +3052,15 @@ function renderDeadSources(){
    return;
  }
 
+ // Node kỹ thuật Da_bi_khoa luôn luôn ở vị trí đầu tiên (#1) trong kho quản lý nguồn
+ dedupedPool.sort((a, b) => {
+   const aLocked = (a.url === "Da_bi_khoa" || a.id === "POOL-179017008791528");
+   const bLocked = (b.url === "Da_bi_khoa" || b.id === "POOL-179017008791528");
+   if (aLocked && !bLocked) return -1;
+   if (!aLocked && bLocked) return 1;
+   return 0;
+ });
+
  container.innerHTML = dedupedPool.map((p, idx) => {
    const isLockedNode = (p.url === "Da_bi_khoa" || p.id === "POOL-179017008791528");
    const isCombo = !!p.isCombo;
@@ -3026,7 +3121,7 @@ function renderDeadSources(){
                <div class="flex items-center gap-1.5 truncate">
                  <span class="font-bold text-slate-700">${esc(l.email || "Khách")}</span>
                  <span class="text-slate-400 font-mono text-[10px]">#${l.linkIndex || 1}</span>
-                 <span class="font-mono text-indigo-600 text-[10px] truncate max-w-[200px]" onclick="cp('${esc(l.masked)}')">${esc(l.masked)}</span>
+                 <span class="font-mono text-indigo-600 text-[10px] break-all select-all flex-1" onclick="cp('${esc(l.masked)}')">${esc(l.masked)}</span>
                </div>
                <span class="text-[10px] text-slate-500 shrink-0">${linkBottom(l)}</span>
              </div>
