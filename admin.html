@@ -151,6 +151,17 @@ textarea.autog{resize:none;overflow:hidden;}
 .g-preview img{cursor:zoom-in;}
 .lb{position:fixed;inset:0;background:rgba(15,23,42,.88);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px;cursor:zoom-out;}
 .lb img{max-width:100%;max-height:100%;border-radius:8px;}
+.word-editor{min-height:480px;max-height:75vh;overflow-y:auto;outline:none;line-height:1.75;font-size:15px;color:#1e293b;}
+.word-editor h2,.g-preview h2{font-size:1.35rem;font-weight:800;color:#0f172a;margin:1.25rem 0 0.6rem;line-height:1.35;}
+.word-editor h3,.g-preview h3{font-size:1.12rem;font-weight:800;color:#1e293b;margin:1rem 0 0.5rem;line-height:1.4;}
+.word-editor p,.g-preview p{margin:0 0 0.75rem;line-height:1.75;}
+.word-editor ul,.g-preview ul{list-style-type:disc;padding-left:1.5rem;margin:0.5rem 0 0.85rem;}
+.word-editor ol,.g-preview ol{list-style-type:decimal;padding-left:1.5rem;margin:0.5rem 0 0.85rem;}
+.word-editor li,.g-preview li{margin-bottom:0.35rem;line-height:1.7;}
+.word-editor a,.g-preview a.word-link{color:#2563eb;text-decoration:underline;font-weight:inherit;cursor:pointer;}
+.word-editor a:hover,.g-preview a.word-link:hover{color:#1d4ed8;}
+.tb-btn{height:32px;padding:0 9px;border-radius:7px;border:1px solid #e2e8f0;background:#fff;color:#334155;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:4px;cursor:pointer;transition:.15s;}
+.tb-btn:hover{background:#f1f5f9;border-color:#cbd5e1;color:#4f46e5;}
 </style>
 
 <script>try{if(localStorage.getItem(location.hostname.replace(/\./g,"_")+"_tok"))document.documentElement.classList.add('has-tok');}catch(e){}</script>
@@ -498,23 +509,29 @@ textarea.autog{resize:none;overflow:hidden;}
 
  <!-- ===== HƯỚNG DẪN ===== -->
  <div id="t-cms" class="hidden w-full min-w-0">
-  <div class="flex items-center justify-between mb-2"><h2 class="text-lg md:text-2xl font-bold text-slate-800">Soạn Hướng Dẫn</h2><span class="text-[11px] text-slate-500 hidden sm:block">Kéo <i class="fas fa-grip-vertical"></i> để đổi thứ tự tab / khối · tab đầu tiên là tab mặc định</span></div>
+  <div class="flex items-center justify-between mb-2"><h2 class="text-lg md:text-2xl font-bold text-slate-800">Soạn Hướng Dẫn (Chuẩn Word)</h2><span class="text-[11px] text-slate-500 hidden sm:block">Gõ tự do hoặc Copy-Paste từ Word · Tiêu đề H2/H3 tự động vào Mục lục</span></div>
   <div class="flex flex-wrap gap-2 mb-3 items-center" id="cmsDevBtns"></div>
   <div id="cmsTabEdit" class="bg-white border border-slate-200 rounded-xl p-3 mb-3 grid grid-cols-1 sm:grid-cols-4 gap-2 items-end"></div>
   <div id="cmsArtList" class="bg-white border border-slate-200 rounded-xl p-3 mb-3"></div>
   <div id="cmsEditorWrap" class="hidden">
-   <div id="cmsArtMeta" class="bg-white border border-slate-200 rounded-xl p-3 mb-3 grid grid-cols-1 sm:grid-cols-3 gap-2 items-end"></div>
+   <div id="cmsArtMeta" class="bg-white border border-slate-200 rounded-xl p-3 mb-3 grid grid-cols-1 sm:grid-cols-4 gap-2 items-end"></div>
    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-     <div class="bg-slate-50 p-2 border-b border-slate-200 flex gap-1.5 flex-wrap items-center" id="cmsAddBtns"></div>
-     <div id="cmsList" class="p-2 space-y-2"></div>
-     <div class="p-3 border-t border-slate-100 bg-slate-50"><button onclick="saveCms()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md text-sm"><i class="fas fa-save mr-2"></i>LƯU BÀI VIẾT (Cục bộ web này)</button></div>    </div>
-    <div class="bg-slate-100 border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-     <div class="bg-white px-4 py-2 border-b border-slate-200"><span class="text-xs font-bold text-slate-500 uppercase"><i class="fas fa-eye mr-1"></i>Xem trước (giống hệt trang khách)</span></div>
-     <div class="p-4 bg-slate-50"><div id="cmsPreview" class="g-preview text-slate-800 leading-relaxed font-medium bg-white p-5 rounded-xl border border-slate-200" style="font-size:16px"></div></div>
+     <div class="bg-slate-50 p-2 border-b border-slate-200 flex gap-1.5 flex-wrap items-center sticky top-0 z-20" id="cmsAddBtns"></div>
+     <div id="cmsWordEditor" contenteditable="true" oninput="onWordEditorInput()" class="word-editor p-4 bg-white"></div>
+     <div class="p-3 border-t border-slate-100 bg-slate-50"><button onclick="saveCms()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md text-sm"><i class="fas fa-save mr-2"></i>LƯU BÀI VIẾT (Cục bộ web này)</button></div>
+    </div>
+    <div class="bg-slate-100 border border-slate-200 rounded-2xl shadow-sm overflow-hidden sticky top-16">
+     <div class="bg-white px-4 py-2 border-b border-slate-200 flex items-center justify-between"><span class="text-xs font-bold text-slate-500 uppercase"><i class="fas fa-eye mr-1"></i>Xem trước (kèm Mục lục tự động)</span><button type="button" onclick="copyArtDeepLink(curCms, curArt)" class="text-[11px] font-bold text-indigo-600 hover:underline"><i class="fas fa-link mr-1"></i>Copy Link Bài Này</button></div>
+     <div class="p-4 bg-slate-50 max-h-[80vh] overflow-y-auto"><div id="cmsPreview" class="g-preview text-slate-800 leading-relaxed font-medium bg-white p-5 rounded-xl border border-slate-200" style="font-size:15px"></div></div>
     </div>
    </div>
   </div>
+ </div>
+
+ <!-- MODAL CHÈN LIÊN KẾT / ẢNH / VIDEO TRONG TRÌNH SOẠN WORD -->
+ <div id="mWordInsert" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="glass-card p-5 w-full max-w-md space-y-3" id="mWordInsertBody"></div>
  </div>
 
  <!-- ===== SOẠN MAIL ===== -->
@@ -3163,14 +3180,60 @@ function ensureArts(){
 const artsOf=tab=>arr((guides._articles||{})[tab]);
 function initGuides(){ensureArts();curArtsReady=true;const tabs=guideTabList();if(!tabs.some(t=>t.id===curCms))curCms=tabs[0].id;curArt=null;curBlocks=[];curArtWatermark="";renderGuideAll();}
 function renderGuideAll(){renderCmsTabBtns();renderCmsTabEdit();renderArtList();renderCmsEditor();}
-function commitCms(){if(!curArt)return;const a=artsOf(curCms).find(x=>x.id===curArt);if(!a)return;a.blocks=curBlocks.map(b=>({...b}));a.name=curArtName;a.author=curArtAuthor;a.watermark=curArtWatermark;}
-function setCms(dev){commitCms();ensureArts();const tabs=guideTabList();if(!tabs.some(t=>t.id===dev))dev=tabs[0].id;curCms=dev;curArt=null;curBlocks=[];curArtWatermark="";cmsSel=-1;renderGuideAll();}
-function openArt(id){commitCms();const a=artsOf(curCms).find(x=>x.id===id);if(!a)return;curArt=id;curBlocks=arr(a.blocks).map(b=>({...b}));curArtName=a.name||"";curArtAuthor=a.author||"";curArtWatermark=a.watermark||"";cmsSel=-1;renderArtList();renderCmsEditor();}
-function artAdd(){commitCms();const a={id:newArtId(),name:"Bài mới",author:"Admin",updated:0,blocks:[],watermark:""};guides._articles[curCms].push(a);openArt(a.id);}
-function artDel(id){const list=artsOf(curCms);if(list.length<=1)return toast("Mỗi tab cần ít nhất 1 bài","err");if(!confirm("Xóa bài này? (bấm LƯU BÀI để áp dụng lên các web)"))return;guides._articles[curCms]=list.filter(a=>a.id!==id);if(curArt===id){curArt=null;curBlocks=[];curArtWatermark="";}renderArtList();renderCmsEditor();}
+let curArtHtml="", curArtShowToc=true, savedWordRange=null;
+function blocksToHtmlConvert(bl){
+ if(!Array.isArray(bl)||!bl.length)return "<p>Bắt đầu gõ nội dung hướng dẫn tại đây...</p>";
+ return bl.filter(b=>b.t!=="toc").map(b=>{
+  const al=b.al==="c"?"text-align:center;":b.al==="r"?"text-align:right;":"";
+  if(b.t==="header")return `<h2 style="${al}">${esc(b.x||"")}</h2>`;
+  if(b.t==="sub")return `<h3 style="${al}">${esc(b.x||"")}</h3>`;
+  if(b.t==="step")return `<p style="${al}"><b>Bước ${esc(b.n||"1")}:</b> ${esc(b.x||"").replace(/\n/g,"<br>")}</p>`;
+  if(b.t==="note"){
+   const th=b.theme||"amber";
+   const c=th==="red"?["#fef2f2","#ef4444","#991b1b","⛔ CHÚ Ý:"]:th==="blue"?["#eff6ff","#3b82f6","#1e40af","💡 HƯỚNG DẪN:"]:th==="green"?["#f0fdf4","#10b981","#065f46","✔ MẸO HAY:"]:["#fffbeb","#f59e0b","#92400e","⚠️ LƯU Ý:"];
+   return `<div class="word-callout" data-theme="${th}" style="background:${c[0]};border-left:4px solid ${c[1]};color:${c[2]};padding:12px 16px;border-radius:10px;margin:12px 0;"><b>${c[3]}</b> ${esc(b.x||"").replace(/\n/g,"<br>")}</div>`;
+  }
+  if(b.t==="btn")return `<div style="text-align:center;margin:16px 0;"><a href="${esc(safeUrl(b.u))}" target="_blank" data-cta="1" style="display:inline-block;background:#f97316;color:#ffffff;font-weight:800;padding:12px 28px;border-radius:10px;text-decoration:none;text-transform:uppercase;">${esc(b.x||"TẢI VỀ NGAY")}</a></div>`;
+  if(b.t==="img")return `<figure style="text-align:center;margin:16px 0;"><img src="${esc(safeUrl(b.u))}" style="max-height:380px;width:auto;max-width:100%;border-radius:10px;border:1px solid #e2e8f0;margin:0 auto;display:inline-block;">${b.x?`<figcaption style="font-size:13px;color:#64748b;margin-top:6px;font-style:italic;">${esc(b.x)}</figcaption>`:""}</figure>`;
+  if(b.t==="video")return `<div style="text-align:center;margin:16px 0;">${videoEmbed(b.u)}${b.x?`<div style="font-size:13px;color:#64748b;margin-top:6px;font-style:italic;">${esc(b.x)}</div>`:""}</div>`;
+  if(b.t==="divider")return `<hr style="border:0;border-top:1px solid #e2e8f0;margin:16px 0;">`;
+  if(b.t==="qlink")return `<p style="${al}"><a href="#anchor:${encodeURIComponent(b.target||"")}" class="word-link">${esc(b.x||"Liên kết nhanh")}</a></p>`;
+  if(b.t==="qtab")return `<p style="${al}"><a href="#gototab:${encodeURIComponent(b.tab||"")}:${encodeURIComponent(b.art||"")}" class="word-link">${esc(b.x||"Chuyển tab")}</a></p>`;
+  if(b.t==="qart")return `<p style="${al}"><a href="#gotoart:${encodeURIComponent(b.tab||"")}:${encodeURIComponent(b.art||"")}" class="word-link">${esc(b.x||"Mở bài viết")}</a></p>`;
+  return `<p style="${al}">${esc(b.x||"").replace(/\n/g,"<br>")}</p>`;
+ }).join("");
+}
+function copyArtDeepLink(tabId, artId){
+ if(!tabId||!artId)return toast("Hãy mở hoặc lưu bài viết trước!","warn");
+ const link = `${PD.replace(/\/$/,"")}/?guide=${encodeURIComponent(tabId)}&art=${encodeURIComponent(artId)}`;
+ cp(link);
+}
+function commitCms(){
+ if(!curArt)return;
+ const a=artsOf(curCms).find(x=>x.id===curArt);if(!a)return;
+ const ed=$("cmsWordEditor");
+ if(ed)curArtHtml=ed.innerHTML;
+ a.html=curArtHtml;
+ a.showToc=curArtShowToc;
+ a.blocks=curBlocks.map(b=>({...b}));
+ a.name=curArtName;a.author=curArtAuthor;a.watermark=curArtWatermark;
+}
+function setCms(dev){commitCms();ensureArts();const tabs=guideTabList();if(!tabs.some(t=>t.id===dev))dev=tabs[0].id;curCms=dev;curArt=null;curBlocks=[];curArtHtml="";curArtWatermark="";cmsSel=-1;renderGuideAll();}
+function openArt(id){
+ commitCms();
+ const a=artsOf(curCms).find(x=>x.id===id);if(!a)return;
+ curArt=id;
+ curBlocks=arr(a.blocks).map(b=>({...b}));
+ curArtHtml=(typeof a.html==="string"&&a.html.trim()!=="")?a.html:blocksToHtmlConvert(curBlocks);
+ curArtShowToc=a.showToc!==false;
+ curArtName=a.name||"";curArtAuthor=a.author||"";curArtWatermark=a.watermark||"";cmsSel=-1;
+ renderArtList();renderCmsEditor();
+}
+function artAdd(){commitCms();const a={id:newArtId(),name:"Bài mới",author:"Admin",updated:0,blocks:[],html:"<h2>1. Tiêu đề mục đầu tiên</h2><p>Nhập nội dung hướng dẫn tại đây...</p>",showToc:true,watermark:""};guides._articles[curCms].push(a);openArt(a.id);}
+function artDel(id){const list=artsOf(curCms);if(list.length<=1)return toast("Mỗi tab cần ít nhất 1 bài","err");if(!confirm("Xóa bài này? (bấm LƯU BÀI để áp dụng lên các web)"))return;guides._articles[curCms]=list.filter(a=>a.id!==id);if(curArt===id){curArt=null;curBlocks=[];curArtHtml="";curArtWatermark="";}renderArtList();renderCmsEditor();}
 function renderArtList(){
  const list=artsOf(curCms);
- $("cmsArtList").innerHTML=`<div class="flex items-center justify-between mb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-newspaper text-indigo-500 mr-1"></i>Bài viết của tab này (${list.length}) <span class="text-[10px] font-normal text-slate-400">— bấm vào bài để mở trình soạn</span></div><button onclick="artAdd()" class="bg-indigo-50 text-indigo-600 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-indigo-100"><i class="fas fa-plus mr-1"></i>Bài mới</button></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2">${list.map(a=>`<div onclick="openArt(${q(a.id)})" class="cursor-pointer border-2 ${a.id===curArt?"border-indigo-500 bg-indigo-50":"border-slate-200 hover:border-indigo-300 bg-white"} rounded-xl p-2.5 flex items-center justify-between gap-2"><div class="min-w-0"><div class="font-bold text-sm text-slate-800 truncate">${esc(a.name||"(chưa đặt tên)")}</div><div class="text-[10px] text-slate-500">Cập nhật: ${a.updated?fmtBank(a.updated):"chưa lưu"} · Tác giả: ${esc(a.author||"—")}</div></div><div class="flex gap-1 shrink-0"><button onclick="event.stopPropagation();openArt(${q(a.id)})" class="text-indigo-600 bg-white border border-indigo-100 px-2 py-1 rounded-lg text-xs"><i class="fas fa-pen"></i></button><button onclick="event.stopPropagation();artDel(${q(a.id)})" class="text-red-500 bg-white border border-red-100 px-2 py-1 rounded-lg text-xs"><i class="fas fa-trash"></i></button></div></div>`).join("")}</div>`;}
+ $("cmsArtList").innerHTML=`<div class="flex items-center justify-between mb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-newspaper text-indigo-500 mr-1"></i>Bài viết của tab này (${list.length}) <span class="text-[10px] font-normal text-slate-400">— bấm vào bài để soạn · bấm icon Link để lấy link gửi khách</span></div><button onclick="artAdd()" class="bg-indigo-50 text-indigo-600 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-indigo-100"><i class="fas fa-plus mr-1"></i>Bài mới</button></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2">${list.map(a=>`<div onclick="openArt(${q(a.id)})" class="cursor-pointer border-2 ${a.id===curArt?"border-indigo-500 bg-indigo-50":"border-slate-200 hover:border-indigo-300 bg-white"} rounded-xl p-2.5 flex items-center justify-between gap-2"><div class="min-w-0"><div class="flex items-center gap-1.5"><span class="font-bold text-sm text-slate-800 truncate">${esc(a.name||"(chưa đặt tên)")}</span><span class="font-mono text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200">ID: ${esc(a.id)}</span></div><div class="text-[10px] text-slate-500 mt-0.5">Cập nhật: ${a.updated?fmtBank(a.updated):"chưa lưu"} · Tác giả: ${esc(a.author||"—")}</div></div><div class="flex gap-1 shrink-0"><button title="Copy Link trực tiếp tới bài viết này" onclick="event.stopPropagation();copyArtDeepLink(${q(curCms)},${q(a.id)})" class="text-emerald-600 bg-emerald-50 border border-emerald-200 hover:bg-emerald-600 hover:text-white px-2.5 py-1 rounded-lg text-xs font-bold transition"><i class="fas fa-link mr-1"></i>Link</button><button onclick="event.stopPropagation();openArt(${q(a.id)})" class="text-indigo-600 bg-white border border-indigo-100 px-2 py-1 rounded-lg text-xs"><i class="fas fa-pen"></i></button><button onclick="event.stopPropagation();artDel(${q(a.id)})" class="text-red-500 bg-white border border-red-100 px-2 py-1 rounded-lg text-xs"><i class="fas fa-trash"></i></button></div></div>`).join("")}</div>`;}
 function renderCmsTabBtns(){
  const tabs=guideTabList();
  $("cmsDevBtns").innerHTML=tabs.map((t,i)=>{const on=t.id===curCms;const ic=t.img?`<img src="${esc(safeUrl(t.img))}" class="w-5 h-5 mr-2 rounded object-contain">`:`<i class="${esc(t.ic||"fas fa-book")} ${on?"":esc(t.col||"")} mr-2"></i>`;
@@ -3263,14 +3326,240 @@ function cmsRow(b,i){
 function cmsQTab(i,v){curBlocks[i].tab=v;curBlocks[i].art="";curBlocks[i].target="";renderCmsEditor();}
 function cmsQArt2(i,v){curBlocks[i].art=v;curBlocks[i].target="";renderCmsEditor();}
 function cmsQArt(i,v){const k=v.indexOf("::");curBlocks[i].tab=k>=0?v.slice(0,k):"";curBlocks[i].art=k>=0?v.slice(k+2):"";cmsPrev();}
-function cmsPrev(){$("cmsPreview").innerHTML=renderBlocks(curBlocks,`${curCms}-${curArt}`);}
+function saveWordSelection(){
+ const sel=window.getSelection();
+ if(sel&&sel.rangeCount>0){
+  const r=sel.getRangeAt(0),ed=$("cmsWordEditor");
+  if(ed&&ed.contains(r.commonAncestorContainer))savedWordRange=r.cloneRange();
+ }
+}
+function restoreWordSelection(){
+ const ed=$("cmsWordEditor");if(!ed)return;
+ ed.focus();
+ if(savedWordRange){
+  const sel=window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(savedWordRange);
+ }
+}
+function wCmd(cmd,val=null){
+ restoreWordSelection();
+ document.execCommand(cmd,false,val);
+ saveWordSelection();
+ onWordEditorInput();
+}
+function wInsertHtml(html){
+ restoreWordSelection();
+ document.execCommand("insertHTML",false,html);
+ saveWordSelection();
+ onWordEditorInput();
+}
+function onWordEditorInput(){
+ const ed=$("cmsWordEditor");
+ if(ed)curArtHtml=ed.innerHTML;
+ cmsPrev();
+}
+function buildRichArticleView(rawHtml, showToc, gid){
+ const temp=document.createElement("div");
+ temp.innerHTML=rawHtml||"";
+ const headings=[];
+ let h2Count=0, h3Count=0;
+ temp.querySelectorAll("h2, h3").forEach((el, idx)=>{
+  const txt=(el.textContent||"").trim();
+  if(!txt)return;
+  const tag=el.tagName.toLowerCase();
+  const hid=`toc-${gid}-${idx}`;
+  el.id=hid;
+  el.style.scrollMarginTop="90px";
+  let numLabel="";
+  if(tag==="h2"){h2Count++;h3Count=0;numLabel=`${h2Count}. `;}
+  else{h3Count++;numLabel=h2Count>0?`${h2Count}.${h3Count}. `:`• `;}
+  const cleanTxt=txt.replace(/^\d+(\.\d+)*\.?\s*/,"");
+  headings.push({id:hid,tag,label:numLabel+cleanTxt,raw:txt});
+ });
+ temp.querySelectorAll("img").forEach(img=>{
+  const src=img.getAttribute("src")||"";
+  img.setAttribute("onclick",`openLightbox(${q(src)})`);
+  img.style.cursor="zoom-in";
+ });
+ temp.querySelectorAll("a").forEach(a=>{
+  const href=a.getAttribute("href")||"";
+  if(!a.getAttribute("data-cta")){
+   a.classList.add("word-link");
+   a.style.color="#2563eb";
+   a.style.textDecoration="underline";
+  }
+  if(href.startsWith("#anchor:")){
+   const tgTxt=decodeURIComponent(href.slice(8));
+   a.removeAttribute("href");
+   a.setAttribute("onclick",`scrollToHeadingText(${q(tgTxt)})`);
+  }else if(href.startsWith("#gototab:")){
+   const parts=href.slice(9).split(":");
+   const tb=decodeURIComponent(parts[0]||""), ar=decodeURIComponent(parts[1]||"");
+   a.removeAttribute("href");
+   a.setAttribute("onclick",`cmsGoto(${q(tb)},${q(ar)},'')`);
+  }else if(href.startsWith("#gotoart:")){
+   const parts=href.slice(9).split(":");
+   const tb=decodeURIComponent(parts[0]||""), ar=decodeURIComponent(parts[1]||"");
+   a.removeAttribute("href");
+   a.setAttribute("onclick",`cmsGotoArt(${q(tb)},${q(ar)})`);
+  }else if(/^https?:\/\//i.test(href)){
+   a.setAttribute("target","_blank");
+   a.setAttribute("rel","noopener");
+  }
+ });
+ let tocHtml="";
+ if(showToc && headings.length>0){
+  const bodyId=`toc-body-${gid}`;
+  const btnId=`toc-btn-${gid}`;
+  tocHtml=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px;margin:0 0 18px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><span style="font-weight:800;font-size:16px;color:#0f172a;">Mục lục</span><button type="button" id="${btnId}" onclick="const b=document.getElementById('${bodyId}');const h=b.classList.toggle('hidden');this.innerHTML=h?'Hiện <i class=\\'fas fa-chevron-down ml-1\\'></i>':'Ẩn <i class=\\'fas fa-chevron-up ml-1\\'></i>';" style="font-size:13px;font-weight:700;color:#2563eb;background:transparent;border:0;cursor:pointer;">Ẩn <i class="fas fa-chevron-up ml-1"></i></button></div><div id="${bodyId}" style="display:flex;flex-direction:column;gap:6px;">${headings.map(h=>`<a onclick="guideScroll('${h.id}')" style="cursor:pointer;color:#2563eb;text-decoration:none;font-weight:${h.tag==='h2'?'600':'500'};font-size:14.5px;padding-left:${h.tag==='h3'?'20px':'0'};line-height:1.5;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${esc(h.label)}</a>`).join("")}</div></div>`;
+ }
+ return tocHtml + temp.innerHTML;
+}
+function scrollToHeadingText(txt){
+ const container=$("cmsPreview");if(!container)return;
+ for(const el of container.querySelectorAll("h2, h3")){
+  if((el.textContent||"").trim()===txt.trim()){el.scrollIntoView({behavior:"smooth",block:"start"});return;}
+ }
+}
+function cmsPrev(){
+ const el=$("cmsPreview");if(!el)return;
+ el.innerHTML=buildRichArticleView(curArtHtml, curArtShowToc, `${curCms}-${curArt}`);
+}
+function openWordInsertModal(type){
+ saveWordSelection();
+ const m=$("mWordInsert"), b=$("mWordInsertBody");
+ const selTxt=window.getSelection()?String(window.getSelection()).trim():"";
+ if(type==="link"){
+  const ed=$("cmsWordEditor");
+  const headOpts=ed?[...ed.querySelectorAll("h2, h3")].map(h=>(h.textContent||"").trim()).filter(Boolean):[];
+  const tabs=guideTabList();
+  const allArts=tabs.flatMap(t=>artsOf(t.id).map(a=>({tabId:t.id,tabName:t.name,artId:a.id,artName:a.name})));
+  b.innerHTML=`
+   <h3 class="font-extrabold text-base text-slate-800"><i class="fas fa-link text-blue-600 mr-1.5"></i>Chèn liên kết (Chữ xanh gạch chân như Word)</h3>
+   <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Chữ hiển thị trên bài viết</label><input id="wiLinkText" value="${esc(selTxt)}" placeholder="VD: văn bản tiếng Anh trên Word" class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none"></div>
+   <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Loại đích đến khi bấm vào chữ</label>
+    <select id="wiLinkType" onchange="toggleWiLinkType(this.value)" class="w-full p-2 text-xs border border-slate-300 rounded-lg bg-white font-bold">
+     <option value="url">1. Mở trang web / Link tải ngoài (https://...)</option>
+     <option value="anchor">2. Nhảy tới Tiêu đề mục trong bài viết này</option>
+     <option value="art">3. Chuyển sang Bài viết / Tab hướng dẫn khác</option>
+    </select>
+   </div>
+   <div id="wiBoxUrl"><label class="block text-[11px] font-bold text-slate-600 mb-1">Địa chỉ URL</label><input id="wiLinkUrl" placeholder="https://..." class="w-full p-2 text-xs border border-slate-300 rounded-lg font-mono outline-none"></div>
+   <div id="wiBoxAnchor" class="hidden"><label class="block text-[11px] font-bold text-slate-600 mb-1">Chọn Tiêu đề trong bài</label><select id="wiLinkAnchor" class="w-full p-2 text-xs border border-slate-300 rounded-lg bg-white">${headOpts.map(h=>`<option value="${esc(h)}">${esc(h)}</option>`).join("")||'<option value="">(Hãy tạo tiêu đề H2/H3 trước)</option>'}</select></div>
+   <div id="wiBoxArt" class="hidden"><label class="block text-[11px] font-bold text-slate-600 mb-1">Chọn Bài viết đích</label><select id="wiLinkArt" class="w-full p-2 text-xs border border-slate-300 rounded-lg bg-white">${allArts.map(x=>`<option value="${esc(x.tabId)}::${esc(x.artId)}">[${esc(x.tabName)}] ${esc(x.artName)}</option>`).join("")}</select></div>
+   <div class="flex gap-2 pt-2"><button type="button" onclick="confirmWiLink()" class="flex-1 bg-indigo-600 text-white font-bold py-2 rounded-lg text-xs">CHÈN LIÊN KẾT</button><button type="button" onclick="cm('mWordInsert')" class="bg-slate-100 text-slate-700 font-bold px-4 py-2 rounded-lg text-xs">Hủy</button></div>`;
+ }else if(type==="img"){
+  b.innerHTML=`
+   <h3 class="font-extrabold text-base text-slate-800"><i class="fas fa-image text-pink-600 mr-1.5"></i>Chèn Ảnh kèm Chú thích (Caption)</h3>
+   <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Link ảnh (URL)</label><input id="wiImgUrl" placeholder="https://..." class="w-full p-2 text-xs border border-slate-300 rounded-lg font-mono outline-none"></div>
+   <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Chú thích dưới ảnh (để trống nếu không cần)</label><input id="wiImgCap" placeholder="VD: Vào File và chọn Options" class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none"></div>
+   <div class="flex gap-2 pt-2"><button type="button" onclick="confirmWiImg()" class="flex-1 bg-indigo-600 text-white font-bold py-2 rounded-lg text-xs">CHÈN ẢNH</button><button type="button" onclick="cm('mWordInsert')" class="bg-slate-100 text-slate-700 font-bold px-4 py-2 rounded-lg text-xs">Hủy</button></div>`;
+ }else if(type==="video"){
+  b.innerHTML=`
+   <h3 class="font-extrabold text-base text-slate-800"><i class="fas fa-video text-rose-600 mr-1.5"></i>Chèn Video (YouTube / MP4)</h3>
+   <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Link Video</label><input id="wiVidUrl" placeholder="https://youtube.com/watch?v=... hoặc .mp4" class="w-full p-2 text-xs border border-slate-300 rounded-lg font-mono outline-none"></div>
+   <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Chú thích dưới video (tùy chọn)</label><input id="wiVidCap" placeholder="Mô tả video..." class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none"></div>
+   <div class="flex gap-2 pt-2"><button type="button" onclick="confirmWiVideo()" class="flex-1 bg-indigo-600 text-white font-bold py-2 rounded-lg text-xs">CHÈN VIDEO</button><button type="button" onclick="cm('mWordInsert')" class="bg-slate-100 text-slate-700 font-bold px-4 py-2 rounded-lg text-xs">Hủy</button></div>`;
+ }else if(type==="callout"){
+  b.innerHTML=`
+   <h3 class="font-extrabold text-base text-slate-800"><i class="fas fa-square-pen text-amber-500 mr-1.5"></i>Chèn Khung Lưu Ý / Banner CTA</h3>
+   <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Kiểu khung</label>
+    <select id="wiCallType" class="w-full p-2 text-xs border border-slate-300 rounded-lg bg-white font-bold">
+     <option value="amber">⚠️ Khung Lưu ý (Vàng)</option>
+     <option value="red">⛔ Khung Cảnh báo (Đỏ)</option>
+     <option value="blue">💡 Khung Hướng dẫn (Xanh dương)</option>
+     <option value="green">✔ Khung Mẹo hay (Xanh lá)</option>
+     <option value="banner">⭐ Dải Banner điểm nhấn (Xanh đậm như Ảnh 1)</option>
+     <option value="cta">🔥 Nút Cam kêu gọi hành động (CTA như Ảnh 3)</option>
+    </select>
+   </div>
+   <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Nội dung chữ</label><textarea id="wiCallText" rows="3" placeholder="Nhập nội dung..." class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none">${esc(selTxt)}</textarea></div>
+   <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Link khi bấm (chỉ dùng cho Nút Cam CTA)</label><input id="wiCallUrl" placeholder="https://..." class="w-full p-2 text-xs border border-slate-300 rounded-lg font-mono outline-none"></div>
+   <div class="flex gap-2 pt-2"><button type="button" onclick="confirmWiCallout()" class="flex-1 bg-indigo-600 text-white font-bold py-2 rounded-lg text-xs">CHÈN VÀO BÀI</button><button type="button" onclick="cm('mWordInsert')" class="bg-slate-100 text-slate-700 font-bold px-4 py-2 rounded-lg text-xs">Hủy</button></div>`;
+ }
+ m.classList.remove("hidden");
+}
+function toggleWiLinkType(v){
+ $("wiBoxUrl").classList.toggle("hidden",v!=="url");
+ $("wiBoxAnchor").classList.toggle("hidden",v!=="anchor");
+ $("wiBoxArt").classList.toggle("hidden",v!=="art");
+}
+function confirmWiLink(){
+ const txt=($("wiLinkText").value||"").trim()||"Xem tại đây";
+ const tp=$("wiLinkType").value;
+ let href="#";
+ if(tp==="url")href=($("wiLinkUrl").value||"").trim()||"#";
+ else if(tp==="anchor")href="#anchor:"+encodeURIComponent($("wiLinkAnchor").value||"");
+ else if(tp==="art"){
+  const [tb,ar]=($("wiLinkArt").value||"::").split("::");
+  href="#gototab:"+encodeURIComponent(tb)+":"+encodeURIComponent(ar);
+ }
+ cm("mWordInsert");
+ wInsertHtml(`<a href="${esc(href)}" class="word-link" style="color:#2563eb;text-decoration:underline;">${esc(txt)}</a>&nbsp;`);
+}
+function confirmWiImg(){
+ const u=($("wiImgUrl").value||"").trim();if(!u)return toast("Chưa nhập link ảnh","err");
+ const cap=($("wiImgCap").value||"").trim();
+ cm("mWordInsert");
+ wInsertHtml(`<figure style="text-align:center;margin:16px 0;"><img src="${esc(u)}" style="max-height:380px;width:auto;max-width:100%;border-radius:10px;border:1px solid #e2e8f0;margin:0 auto;display:inline-block;">${cap?`<figcaption style="font-size:13px;color:#64748b;margin-top:6px;font-style:italic;">${esc(cap)}</figcaption>`:""}</figure><p><br></p>`);
+}
+function confirmWiVideo(){
+ const u=($("wiVidUrl").value||"").trim();if(!u)return toast("Chưa nhập link video","err");
+ const cap=($("wiVidCap").value||"").trim();
+ cm("mWordInsert");
+ wInsertHtml(`<div style="text-align:center;margin:16px 0;">${videoEmbed(u)}${cap?`<div style="font-size:13px;color:#64748b;margin-top:6px;font-style:italic;">${esc(cap)}</div>`:""}</div><p><br></p>`);
+}
+function confirmWiCallout(){
+ const tp=$("wiCallType").value, txt=($("wiCallText").value||"").trim(), u=($("wiCallUrl").value||"").trim()||"#";
+ if(!txt)return toast("Nhập nội dung","err");
+ cm("mWordInsert");
+ if(tp==="banner"){
+  wInsertHtml(`<div style="background:linear-gradient(90deg,#3b5998,#4f73b8);color:#ffffff;padding:14px 20px;border-radius:10px;margin:14px 0;font-weight:700;font-size:16px;display:flex;align-items:center;gap:12px;"><span style="background:#0f172a;color:#3b82f6;width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">★</span><span>${esc(txt)}</span></div><p><br></p>`);
+ }else if(tp==="cta"){
+  wInsertHtml(`<div style="text-align:center;margin:18px 0;"><a href="${esc(u)}" target="_blank" data-cta="1" style="display:inline-block;background:#f97316;color:#ffffff;font-weight:800;padding:14px 32px;border-radius:10px;text-decoration:none;text-transform:uppercase;line-height:1.4;box-shadow:0 4px 12px rgba(249,115,22,.35);">${esc(txt).replace(/\n/g,"<br>")}</a></div><p><br></p>`);
+ }else{
+  const c=tp==="red"?["#fef2f2","#ef4444","#991b1b","⛔ CHÚ Ý:"]:tp==="blue"?["#eff6ff","#3b82f6","#1e40af","💡 HƯỚNG DẪN:"]:tp==="green"?["#f0fdf4","#10b981","#065f46","✔ MẸO HAY:"]:["#fffbeb","#f59e0b","#92400e","⚠️ LƯU Ý:"];
+  wInsertHtml(`<div style="background:${c[0]};border-left:4px solid ${c[1]};color:${c[2]};padding:12px 16px;border-radius:10px;margin:12px 0;"><b>${c[3]}</b> ${esc(txt).replace(/\n/g,"<br>")}</div><p><br></p>`);
+ }
+}
 function renderCmsEditor(){
  const w=$("cmsEditorWrap");if(!curArt){w.classList.add("hidden");return;}w.classList.remove("hidden");
  const a=artsOf(curCms).find(x=>x.id===curArt);
-$("cmsArtMeta").innerHTML=`<div class="sm:col-span-2"><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tên bài (Quick Article Link khớp 100% theo tên này)</label><input value="${esc(curArtName)}" oninput="curArtName=this.value" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-bold"></div><div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tác giả</label><input value="${esc(curArtAuthor)}" oninput="curArtAuthor=this.value" class="expand-inp w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div><div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Watermark (ẩn mờ phía sau text)</label><input value="${esc(curArtWatermark)}" oninput="curArtWatermark=this.value" placeholder="VD: VPNTrinhHg" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div><div class="sm:col-span-4 text-[10px] text-slate-400 mt-1">Cập nhật lần cuối: ${a&&a.updated?fmtBank(a.updated):"chưa lưu"}</div>`;
- $("cmsAddBtns").innerHTML=`<span class="text-[10px] font-bold text-slate-400 px-1">THÊM KHỐI:</span>`+BT.map(([t,l,ic,c])=>`<button onclick="cmsAdd('${t}')" class="bg-white border shadow-sm px-2 py-1 rounded text-[11px] font-bold ${c} hover:bg-slate-50"><i class="fas ${ic} mr-1"></i>${l}</button>`).join("");
- $("cmsList").innerHTML=curBlocks.length?curBlocks.map(cmsRow).join(""):`<div class="p-6 text-center text-slate-400 text-xs font-bold">Chưa có khối nào. Bấm "Thêm khối" ở trên.</div>`;
- document.querySelectorAll("#cmsList textarea.autog").forEach(autoGrow);cmsPrev();}
+ const deepLink = `${PD.replace(/\/$/,"")}/?guide=${encodeURIComponent(curCms)}&art=${encodeURIComponent(curArt)}`;
+ $("cmsArtMeta").innerHTML=`
+  <div class="sm:col-span-2"><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tên bài viết</label><input value="${esc(curArtName)}" oninput="curArtName=this.value" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-bold"></div>
+  <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tác giả</label><input value="${esc(curArtAuthor)}" oninput="curArtAuthor=this.value" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div>
+  <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Watermark nền</label><input value="${esc(curArtWatermark)}" oninput="curArtWatermark=this.value" placeholder="VD: VPNTrinhHg" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div>
+  <div class="sm:col-span-4 flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 mt-1">
+   <label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer"><input type="checkbox" ${curArtShowToc?"checked":""} onchange="curArtShowToc=this.checked;cmsPrev()" class="w-4 h-4 accent-indigo-600">Tự động hiện khung Mục lục (từ H2, H3)</label>
+   <div class="flex items-center gap-1.5 max-w-full"><span class="text-[11px] font-bold text-slate-500">Link riêng:</span><code class="text-[11px] bg-slate-100 text-indigo-700 px-2 py-1 rounded border border-slate-200 truncate max-w-[260px]">${esc(deepLink)}</code><button type="button" onclick="copyArtDeepLink(${q(curCms)},${q(curArt)})" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold px-2.5 py-1 rounded-lg text-xs transition"><i class="fas fa-copy mr-1"></i>Copy Link</button></div>
+  </div>`;
+ $("cmsAddBtns").innerHTML=`
+  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('formatBlock','H2')" class="tb-btn" title="Tiêu đề mục lớn (Tự vào Mục lục 1, 2, 3...)"><b class="text-indigo-600">H2</b> Mục lớn</button>
+  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('formatBlock','H3')" class="tb-btn" title="Tiêu đề mục con (Tự vào Mục lục 1.1, 1.2...)"><b class="text-purple-600">H3</b> Mục con</button>
+  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('formatBlock','P')" class="tb-btn" title="Chữ văn bản bình thường">Chữ thường</button>
+  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('bold')" class="tb-btn" title="In đậm (Ctrl+B)"><i class="fas fa-bold"></i></button>
+  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('italic')" class="tb-btn" title="In nghiêng (Ctrl+I)"><i class="fas fa-italic"></i></button>
+  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('underline')" class="tb-btn" title="Gạch chân (Ctrl+U)"><i class="fas fa-underline"></i></button>
+  <label class="tb-btn" title="Đổi màu chữ"><i class="fas fa-palette text-rose-500"></i><input type="color" value="#dc2626" onchange="wCmd('foreColor',this.value)" class="w-4 h-4 border-0 p-0 bg-transparent cursor-pointer"></label>
+  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('insertUnorderedList')" class="tb-btn" title="Danh sách dấu chấm tròn"><i class="fas fa-list-ul"></i></button>
+  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('insertOrderedList')" class="tb-btn" title="Danh sách đánh số 1, 2, 3"><i class="fas fa-list-ol"></i></button>
+  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('justifyLeft')" class="tb-btn"><i class="fas fa-align-left"></i></button>
+  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('justifyCenter')" class="tb-btn"><i class="fas fa-align-center"></i></button>
+  <button type="button" onmousedown="event.preventDefault()" onclick="openWordInsertModal('link')" class="tb-btn !border-blue-200 !bg-blue-50 !text-blue-700"><i class="fas fa-link"></i>Chèn Link</button>
+  <button type="button" onmousedown="event.preventDefault()" onclick="openWordInsertModal('img')" class="tb-btn !border-pink-200 !bg-pink-50 !text-pink-700"><i class="fas fa-image"></i>Ảnh</button>
+  <button type="button" onmousedown="event.preventDefault()" onclick="openWordInsertModal('video')" class="tb-btn !border-rose-200 !bg-rose-50 !text-rose-700"><i class="fas fa-video"></i>Video</button>
+  <button type="button" onmousedown="event.preventDefault()" onclick="openWordInsertModal('callout')" class="tb-btn !border-amber-200 !bg-amber-50 !text-amber-800"><i class="fas fa-star"></i>Lưu ý / Banner</button>
+  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('removeFormat')" class="tb-btn text-slate-400" title="Xóa định dạng rác"><i class="fas fa-eraser"></i></button>`;
+ const ed=$("cmsWordEditor");
+ if(ed){
+  ed.innerHTML=curArtHtml;
+  ed.onmouseup=saveWordSelection;
+  ed.onkeyup=saveWordSelection;
+ }
+ cmsPrev();
+}
 // Block trống / chỉ có dấu cách vẫn được giữ nguyên — không trim, không tự xóa.
 function cmsSet(i,k,v,re){curBlocks[i][k]=v;if(re)renderCmsEditor();else cmsPrev();}
 function cmsUl(i){const b=curBlocks[i];b.ul=!b.ul?"black":b.ul==="black"?"red":"";renderCmsEditor();}
