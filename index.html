@@ -203,8 +203,12 @@ html.dark .loader-ring.amber i{color:#E6C078;}
     <button type="button" onclick="closeQrModal()" title="Đóng" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition">
       <i class="fas fa-times text-sm"></i>
     </button>
-    <h3 id="qrSubModalTitle" class="font-extrabold text-lg text-slate-800 dark:text-slate-100 mb-1">Mã QR Cài Đặt VPN</h3>
-    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-4">Dùng app VPN (Shadowrocket, v2rayN, Sing-box, Clash...) để quét mã</p>
+    <h3 id="qrSubModalTitle" class="font-extrabold text-lg text-slate-800 dark:text-slate-100 mb-1">Mã QR Link Sub #1</h3>
+    <div class="text-xs font-bold text-slate-600 dark:text-slate-300 space-y-0.5 mb-3">
+      <p>Dùng app VPN đã cài để quét mã</p>
+      <p class="text-indigo-600 dark:text-indigo-400">Mua VPN tại vpntrinhhg.pages.dev</p>
+      <p class="text-emerald-600 dark:text-emerald-400">Zalo: 0917678211</p>
+    </div>
     <div class="bg-white p-3.5 rounded-2xl mb-4 border border-slate-200 shadow-inner flex justify-center items-center mx-auto w-[216px] h-[216px]" id="qrCanvasBox" translate="no"></div>
     <div class="mb-2">
       <div class="flex justify-between items-center text-xs font-bold mb-1.5">
@@ -1372,27 +1376,64 @@ async function copyText(t){try{await navigator.clipboard.writeText(t);}catch(e){
 async function copyToClipboard(id){
   const e = $(id);
   if (!e) return;
-  if (e.dataset.blurred === '1' || e.dataset.locked === '1') {
+  if (e.dataset.blurred === '1') {
     showToast("Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!", "error");
     return;
   }
+  const linkVal = (e.value || '').trim();
+  if (e.dataset.locked === '1' || !linkVal || !/^https?:\/\//i.test(linkVal)) {
+    showToast("Link chưa được khởi tạo hoặc đang chờ cấp, vui lòng thử lại sau!", "error");
+    return;
+  }
   e.select();
-  await copyText(e.value);
+  await copyText(linkVal);
 }
 
 let qrSubTimer = null;
 let qrSubTimeLeft = 30;
 
+function drawQrCenterLogo(box) {
+  const canvas = box.querySelector('canvas');
+  const img = box.querySelector('img');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  const w = canvas.width, h = canvas.height;
+  const bw = 66, bh = 24;
+  const bx = (w - bw) / 2, by = (h - bh) / 2;
+
+  ctx.save();
+  ctx.fillStyle = '#ffffff';
+  ctx.strokeStyle = '#4f46e5';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(bx, by, bw, bh, 6);
+  else ctx.rect(bx, by, bw, bh);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = '#4f46e5';
+  ctx.font = '900 12px "Plus Jakarta Sans", Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('TrinhHg', w / 2, h / 2 + 0.5);
+  ctx.restore();
+
+  if (img) {
+    try { img.src = canvas.toDataURL('image/png'); } catch (e) {}
+  }
+}
+
 function openQrModal(id, idx){
   const e = $(id);
   if (!e) return;
-  if (e.dataset.blurred === '1' || e.dataset.locked === '1') {
+  if (e.dataset.blurred === '1') {
     showToast("Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!", "error");
     return;
   }
   const linkVal = (e.value || '').trim();
-  if (!linkVal || !/^https?:\/\//i.test(linkVal)) {
-    showToast("Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!", "error");
+  if (e.dataset.locked === '1' || !linkVal || !/^https?:\/\//i.test(linkVal)) {
+    showToast("Link chưa được khởi tạo hoặc đang chờ cấp, vui lòng thử lại sau!", "error");
     return;
   }
   if (typeof QRCode === 'undefined') {
@@ -1403,7 +1444,7 @@ function openQrModal(id, idx){
   const modal = $('qrSubModal');
   if (!box || !modal) return;
   box.innerHTML = '';
-  $('qrSubModalTitle').innerText = idx ? `Mã QR Link Sub #${idx}` : 'Mã QR Cài Đặt VPN';
+  $('qrSubModalTitle').innerText = idx ? `Mã QR Link Sub #${idx}` : 'Mã QR Link Sub #1';
 
   new QRCode(box, {
     text: linkVal,
@@ -1411,8 +1452,10 @@ function openQrModal(id, idx){
     height: 188,
     colorDark: "#0f172a",
     colorLight: "#ffffff",
-    correctLevel: QRCode.CorrectLevel.M
+    correctLevel: QRCode.CorrectLevel.H
   });
+
+  setTimeout(() => drawQrCenterLogo(box), 30);
 
   clearInterval(qrSubTimer);
   qrSubTimeLeft = 30;
