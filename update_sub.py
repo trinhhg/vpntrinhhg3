@@ -838,13 +838,20 @@ def build_yaml(proxy_list: list, mode: str) -> str:
     ]
 
     lines = [
+        "# profile-update-interval: 1",
+        "# subscription-update-interval: 60",
+        "update-interval: 60",
+        "profile-update-interval: 1",
+        "subscription-update-interval: 60",
         "mixed-port: 7890", "allow-lan: false", "bind-address: '*'",
         "mode: rule", "log-level: info",
         "external-controller: '127.0.0.1:9090'",
         "unified-delay: true", "tcp-concurrent: true",
         "profile:",
         "  store-selected: true",
+        "  store-fake-ip: false",
         "  interval: 60",  # Tự động cập nhật lại sub sau mỗi 60 phút (1 tiếng)
+        "  update-interval: 60",
         dns_clash, "proxies:",
     ]
     for p in all_proxies:  lines.append(proxy_to_inline(p))
