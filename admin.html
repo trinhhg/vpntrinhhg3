@@ -3654,7 +3654,7 @@ async function loadStatus(){
  let j;try{j=await aj("/api/admin/status");}catch(e){return;}
  if(j.web){myWebIndex=j.web;if(PDS[j.web])PD=PDS[j.web];}
  let bs={};try{const be=await aj("/api/cms");bs=(be&&be.settings)||{};}catch(e){}
- const c=j.cron,age=c?nowMs()-c.ts:null,ok=c&&age<40*60000,cb=$("cronBox"),sb=$("statusBox");
+ const c=j.cron,age=c?nowMs()-c.ts:null,ok=c&&age<90*60000,cb=$("cronBox"),sb=$("statusBox");
  if(cb){cb.className="text-xs rounded-xl border p-3 space-y-1 "+(ok?"bg-emerald-50 border-emerald-200 text-emerald-800":"bg-red-50 border-red-200 text-red-700");
   cb.innerHTML=c?`<div><i class="fas ${ok?"fa-circle-check":"fa-triangle-exclamation"} mr-1"></i><b>Lần chạy cuối:</b> ${fmtBank(c.ts)} (${Math.round(age/60000)} phút trước)${c.sim?" · GIỜ TÙY CHỈNH":""}</div><div class="grid grid-cols-2 gap-x-3"><div>Khóa link: <b>${c.locked||0}</b></div><div>Luân chuyển node: <b>${c.migrated||0}</b></div><div>Xóa node rỗng: <b>${c.delNodes||0}</b></div><div>Mail nhắc hạn: <b>${c.mails||0}</b></div><div>Dọn "Đã xóa": <b>${c.deadDel||0}</b></div><div>Thử lại D1: <b>${c.d1Retry||0}</b></div></div><div>Auto Migrate (backend): ${yn(bs.autoMigrateNode!==false,"BẬT","TẮT")} · chu kỳ 15 phút</div>`:`<div><i class="fas fa-triangle-exclamation mr-1"></i><b>Cron CHƯA từng chạy</b> — kiểm tra Cron Trigger của Worker (*/15 * * * *)</div>`;}
  if(sb){const good=j.d1&&j.hasPassword&&j.hasSecret2;sb.className="text-xs rounded-xl border p-3 space-y-1 "+(good?"bg-emerald-50 border-emerald-200 text-slate-700":"bg-amber-50 border-amber-200 text-slate-700");
