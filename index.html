@@ -1390,7 +1390,7 @@ async function confirmPaid(){
  const orig=btn.innerHTML;btn.innerHTML=`<i class="fas fa-spinner fa-spin mr-2"></i>${l.sending}`;btn.disabled=true;
  const mn=$('payMethod').value,mname=mn==='bank'?'Ngân hàng VN':mn==='alipay'?'Alipay':'Weixin';
  let res;
- if(isUpgradeMode)res=await wpostRetry('/api/public/upgrade',{orderId:oCache.id,pkgId:currentPackage.id,qty:currentMultiplier});
+ if(isUpgradeMode)res=await wpostRetry('/api/public/upgrade',{orderId:oCache.id,pkgId:currentPackage.id,qty:currentMultiplier,method:mname});
  else res=await wpostRetry('/api/public/order',{id:currentOrderId,email:$('cusEmail').value.trim(),zalo:$('cusZalo').value.trim(),pkgId:currentPackage.id,qty:currentMultiplier,method:mname,needSupport:$('needSupport').checked,sourceWeb:currentTargetWeb,renewOf:isRenewMode&&oCache?oCache.id:undefined});
  if(!res||!res.ok){showToast((res&&res.data&&res.data.error)||l.req_err,'error');btn.innerHTML=orig;btn.disabled=false;return;}
  const o=res.data.order;
