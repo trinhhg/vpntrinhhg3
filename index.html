@@ -15,6 +15,7 @@
   }
 </script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -42,8 +43,7 @@ html.dark .highlight-copy{animation:borderPulseDark 2s infinite;background:rgba(
 html.dark .mobile-tab-btn.active{color:#fff;background:rgba(255,255,255,.12);}
 #guideText{word-wrap:break-word;}
 .pkg-disabled{filter:grayscale(1);opacity:.6;pointer-events:none;}
-.blur-link{filter:blur(6px);transition:filter .3s cubic-bezier(.4,0,.2,1);cursor:pointer;}
-.blur-link:hover,.blur-link:focus,.blur-link:active{filter:blur(0);}
+.blur-link{filter:blur(5px);user-select:none;pointer-events:none;opacity:.55;}
 .dur-btn{transition:all .2s;}
 .dur-btn.active{background-color:#4f46e5!important;color:white!important;border-color:#4f46e5!important;box-shadow:0 4px 10px rgba(79,70,229,.3);}
 .dock-wrapper{width:100%;overflow:hidden;padding:12px 0 16px;position:relative;cursor:grab;}
@@ -196,6 +196,25 @@ html.dark .loader-ring.amber i{color:#E6C078;}
     <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Lưu ảnh hoặc dùng chức năng quét mã của WeChat để thêm Admin.</p>
     <div class="bg-slate-50 dark:bg-[#111111] p-2 rounded-2xl mb-4 border border-slate-200 dark:border-white/10 shadow-inner overflow-hidden flex justify-center"><img src="https://i.pinimg.com/736x/93/29/1e/93291e3f736f05f2f5722ecbcb7ca428.jpg" alt="WeChat QR" class="max-w-[250px] w-full h-auto rounded-xl object-contain"></div>
     <button onclick="document.getElementById('wechatModal').classList.add('hidden')" class="w-full bg-slate-800 dark:bg-slate-700 text-white font-bold py-3 rounded-xl hover:bg-slate-900 dark:hover:bg-slate-600 transition">ĐÓNG BẢNG NÀY</button>
+  </div>
+</div>
+<div id="qrSubModal" class="hidden fixed inset-0 z-[99999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all" onclick="closeQrModal()">
+  <div class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-6 rounded-3xl text-center max-w-sm w-full shadow-2xl relative" onclick="event.stopPropagation()">
+    <button type="button" onclick="closeQrModal()" title="Đóng" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition">
+      <i class="fas fa-times text-sm"></i>
+    </button>
+    <h3 id="qrSubModalTitle" class="font-extrabold text-lg text-slate-800 dark:text-slate-100 mb-1">Mã QR Cài Đặt VPN</h3>
+    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-4">Dùng app VPN (Shadowrocket, v2rayN, Sing-box, Clash...) để quét mã</p>
+    <div class="bg-white p-3.5 rounded-2xl mb-4 border border-slate-200 shadow-inner flex justify-center items-center mx-auto w-[216px] h-[216px]" id="qrCanvasBox" translate="no"></div>
+    <div class="mb-2">
+      <div class="flex justify-between items-center text-xs font-bold mb-1.5">
+        <span class="text-slate-500 dark:text-slate-400">Mã QR tự hủy sau:</span>
+        <span id="qrCountdownText" class="text-indigo-600 dark:text-indigo-400 font-mono text-sm font-black" translate="no">30s</span>
+      </div>
+      <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+        <div id="qrProgressBar" class="bg-gradient-to-r from-indigo-500 to-purple-600 h-full w-full transition-all duration-1000 ease-linear" style="width:100%"></div>
+      </div>
+    </div>
   </div>
 </div>
 <nav id="mainNav" class="fixed top-0 w-full z-[70] border-b border-slate-200 dark:border-white/10 bg-white/95 dark:bg-black/90 backdrop-blur-md py-3 transition-colors duration-300">
@@ -1352,12 +1371,75 @@ function toggleZalo(){const z=$('cusZalo');z.classList.toggle('hidden');z.requir
 async function copyText(t){try{await navigator.clipboard.writeText(t);}catch(e){try{const ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);}catch(e2){}}showToast(i18n[lang].copy_success);}
 async function copyToClipboard(id){
   const e = $(id);
-  if (e.dataset.locked === '1') {
+  if (!e) return;
+  if (e.dataset.blurred === '1' || e.dataset.locked === '1') {
     showToast("Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!", "error");
     return;
   }
   e.select();
   await copyText(e.value);
+}
+
+let qrSubTimer = null;
+let qrSubTimeLeft = 30;
+
+function openQrModal(id, idx){
+  const e = $(id);
+  if (!e) return;
+  if (e.dataset.blurred === '1' || e.dataset.locked === '1') {
+    showToast("Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!", "error");
+    return;
+  }
+  const linkVal = (e.value || '').trim();
+  if (!linkVal || !/^https?:\/\//i.test(linkVal)) {
+    showToast("Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!", "error");
+    return;
+  }
+  if (typeof QRCode === 'undefined') {
+    showToast("Không tải được bộ tạo mã QR, vui lòng thử lại!", "error");
+    return;
+  }
+  const box = $('qrCanvasBox');
+  const modal = $('qrSubModal');
+  if (!box || !modal) return;
+  box.innerHTML = '';
+  $('qrSubModalTitle').innerText = idx ? `Mã QR Link Sub #${idx}` : 'Mã QR Cài Đặt VPN';
+
+  new QRCode(box, {
+    text: linkVal,
+    width: 188,
+    height: 188,
+    colorDark: "#0f172a",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.M
+  });
+
+  clearInterval(qrSubTimer);
+  qrSubTimeLeft = 30;
+  $('qrCountdownText').innerText = '30s';
+  $('qrProgressBar').style.width = '100%';
+  modal.classList.remove('hidden');
+
+  qrSubTimer = setInterval(() => {
+    qrSubTimeLeft--;
+    if (qrSubTimeLeft <= 0) {
+      closeQrModal();
+      return;
+    }
+    $('qrCountdownText').innerText = qrSubTimeLeft + 's';
+    $('qrProgressBar').style.width = Math.max(0, (qrSubTimeLeft / 30) * 100) + '%';
+  }, 1000);
+}
+
+function closeQrModal(){
+  if (qrSubTimer) {
+    clearInterval(qrSubTimer);
+    qrSubTimer = null;
+  }
+  const modal = $('qrSubModal');
+  const box = $('qrCanvasBox');
+  if (modal) modal.classList.add('hidden');
+  if (box) box.innerHTML = '';
 }
 
 function renderPaymentBox(){
@@ -1435,18 +1517,22 @@ function fillDashboard(o){
  if(o.pendingUpgrade){ut=L.upg_pending;uc='bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400';}else if(o.upgradeStatus==='failed'){ut=L.upg_failed;uc='bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400';}else if(o.isUpgrade){ut=L.upg_ok;uc='bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400';}
  $('displayUpgradeStatus').innerText=ut;$('displayUpgradeStatus').className='text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap '+uc;
  const titles=['Link Subscription URL:','Link Subscription URL dự phòng 2:','Link Subscription URL dự phòng 3:'];
- $('linkBoxes').innerHTML=[1,2,3].map(i=>`<div class="w-full ${i>1?'mt-2 border-t border-green-200/50 dark:border-green-800/50 pt-3':''}"><h3 class="text-green-700 dark:text-green-500 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>${titles[i-1]}</h3><div class="flex flex-col sm:flex-row gap-2 w-full items-stretch"><input type="text" id="subLink${i}" readonly class="w-full sm:flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()"><button onclick="copyToClipboard('subLink${i}')" class="shrink-0 w-full sm:w-[120px] bg-green-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button></div></div>`).join('')+
+ $('linkBoxes').innerHTML=[1,2,3].map(i=>`<div class="w-full ${i>1?'mt-2 border-t border-green-200/50 dark:border-green-800/50 pt-3':''}"><h3 class="text-green-700 dark:text-green-500 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>${titles[i-1]}</h3><div class="flex flex-col sm:flex-row gap-2 w-full items-stretch"><div class="relative w-full sm:flex-1 flex items-center overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"><input type="text" id="subLink${i}" readonly class="w-full bg-transparent text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()"><div id="subBlurOverlay${i}" onclick="copyToClipboard('subLink${i}')" class="hidden absolute inset-0 z-10 flex items-center justify-center px-3 bg-white/25 dark:bg-black/30 backdrop-blur-[2px] cursor-pointer select-none"><span class="text-red-600 dark:text-amber-300 font-extrabold text-[11px] md:text-xs text-center leading-tight">🔒 Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!</span></div></div><div class="flex gap-2 shrink-0 w-full sm:w-auto"><button type="button" onclick="copyToClipboard('subLink${i}')" class="flex-1 sm:flex-none sm:w-[105px] bg-green-600 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button><button type="button" onclick="openQrModal('subLink${i}', ${i})" class="flex-1 sm:flex-none sm:w-[105px] bg-indigo-600 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center z-10"><i class="fas fa-qrcode mr-1"></i>LẤY QR</button></div></div></div>`).join('')+
   `<div class="mt-4 grid grid-cols-2 gap-3 border-t border-green-300 dark:border-green-800 pt-4"><button onclick="startUpgrade()" class="w-full bg-amber-500 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-amber-600 transition flex items-center justify-center shadow-md"><i class="fas fa-arrow-up mr-1.5"></i> NÂNG GÓI</button><button onclick="startRenew()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center shadow-md"><i class="fas fa-redo-alt mr-1.5"></i> ${L.btn_renew}</button></div>`;
   [1,2,3].forEach(i=>{
-   const inp = $('subLink' + i), v = o['info' + i];
+   const inp = $('subLink' + i), ov = $('subBlurOverlay' + i), v = o['info' + i];
    if (o['blur' + i]) {
-     inp.value = tx("🔒 Link này đang bảo trì / tạm ẩn");
+     inp.value = `https://vpntrinhhg${i===1?'':i}.pages.dev/v1/VPNTrinhHg?OwO=f8a9d2c4e1b7039a5d8e2f1c4b6a9d0e#VPNTrinhHg`;
      inp.classList.add('blur-link', 'select-none', 'pointer-events-none');
+     inp.dataset.blurred = '1';
      inp.dataset.locked = '1';
+     if (ov) ov.classList.remove('hidden');
    } else {
      inp.value = v || '';
      inp.classList.remove('blur-link', 'select-none', 'pointer-events-none');
+     inp.dataset.blurred = '';
      inp.dataset.locked = v ? '' : '1';
+     if (ov) ov.classList.add('hidden');
      if (!v && Date.now() + skew - (o.createdTs || 0) < 180000) inp.value = tx(L.link_generating);
    }
  });
@@ -1511,7 +1597,7 @@ function logout(){
  localStorage.removeItem(SESSION_KEY);history.replaceState(null,'',location.pathname);
  $('view-portal').classList.remove('active');$('view-store').classList.add('active');$('userMenu').classList.add('hidden');$('loginInput').value='';$('mobileNavWrapper').classList.add('hidden');
  const dn=$('desktopPortalNav');dn.classList.remove('md:flex','opacity-100','w-auto');dn.classList.add('hidden','opacity-0','w-0');
- oCache=null;clearTimeout(pollT);stopTick();disableUpgradeMode();
+ oCache=null;clearTimeout(pollT);stopTick();closeQrModal();disableUpgradeMode();
  document.documentElement.classList.remove('has-user-session');document.body.classList.remove('checkout-active');window.scrollTo(0,0);}
 
 window.onload=async function(){
