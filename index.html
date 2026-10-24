@@ -41,7 +41,17 @@ html.dark .highlight-copy{animation:borderPulseDark 2s infinite;background:rgba(
 .desktop-tab-btn.active{background:#4f46e5;color:white!important;box-shadow:0 4px 15px rgba(79,70,229,.3);}
 .mobile-tab-btn.active{color:#4f46e5;background:#e0e7ff;}
 html.dark .mobile-tab-btn.active{color:#fff;background:rgba(255,255,255,.12);}
-#guideText{word-wrap:break-word;}
+#guideText{word-wrap:break-word;line-height:1.75;font-size:15px;}
+#guideText h2{font-size:1.35rem;font-weight:800;color:#0f172a;margin:1.35rem 0 0.6rem;line-height:1.35;}
+html.dark #guideText h2{color:#f8fafc;}
+#guideText h3{font-size:1.12rem;font-weight:800;color:#1e293b;margin:1.1rem 0 0.5rem;line-height:1.4;}
+html.dark #guideText h3{color:#e2e8f0;}
+#guideText p{margin:0 0 0.75rem;line-height:1.75;}
+#guideText ul{list-style-type:disc;padding-left:1.5rem;margin:0.5rem 0 0.85rem;}
+#guideText ol{list-style-type:decimal;padding-left:1.5rem;margin:0.5rem 0 0.85rem;}
+#guideText li{margin-bottom:0.35rem;line-height:1.7;}
+#guideText a.word-link{color:#2563eb!important;text-decoration:underline!important;font-weight:inherit;cursor:pointer;}
+html.dark #guideText a.word-link{color:#60a5fa!important;}
 .pkg-disabled{filter:grayscale(1);opacity:.6;pointer-events:none;}
 .blur-link{filter:blur(5px);user-select:none;pointer-events:none;opacity:.55;}
 .dur-btn{transition:all .2s;}
@@ -189,6 +199,25 @@ html.dark .loader-ring.amber i{color:#E6C078;}
   <a href="https://t.me/hoaian57" target="_blank" class="w-12 h-12 bg-tele text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.1s"><i class="fab fa-telegram-plane"></i></a>
   <a href="https://www.facebook.com/trinh.hg.57" target="_blank" class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.2s"><i class="fab fa-facebook-messenger"></i></a>
   <a href="https://zalo.me/0917678211" target="_blank" class="w-12 h-12 bg-[#0068ff] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.3s"><span class="font-bold text-[14px]">Zalo</span></a>
+</div>
+<div id="guideAuthModal" class="hidden fixed inset-0 z-[99999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all">
+  <div class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-6 md:p-8 rounded-3xl text-center max-w-md w-full shadow-2xl relative" onclick="event.stopPropagation()">
+    <button type="button" onclick="closeGuideAuthModal()" title="Đóng" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition">
+      <i class="fas fa-times text-sm"></i>
+    </button>
+    <div class="w-14 h-14 bg-indigo-100 dark:bg-indigo-900/40 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-600 dark:text-indigo-400 text-2xl shadow-inner">
+      <i class="fas fa-lock"></i>
+    </div>
+    <h3 class="font-extrabold text-lg md:text-xl text-slate-800 dark:text-slate-100 mb-1">Mở khóa Bài viết Hướng dẫn</h3>
+    <p id="guideAuthArtTitle" class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 mb-2"></p>
+    <p class="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">Nhập <b>Email</b> hoặc <b>Mã đơn hàng (DH...)</b> của bạn để mở thẳng bài viết này và lưu đăng nhập 24h.</p>
+    <form onsubmit="submitGuideAuth(event)" class="space-y-3">
+      <input type="text" id="guideAuthInput" required placeholder="Nhập Email hoặc Mã đơn hàng..." class="w-full bg-slate-50 dark:bg-black border-2 border-indigo-100 dark:border-white/15 rounded-xl px-4 py-3 text-sm text-center font-bold text-slate-800 dark:text-white outline-none focus:border-indigo-500 transition">
+      <button type="submit" id="btnGuideAuthSubmit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 rounded-xl text-xs md:text-sm uppercase transition shadow-md">
+        <i class="fas fa-unlock-keyhole mr-1.5"></i>VÀO XEM BÀI VIẾT NGAY
+      </button>
+    </form>
+  </div>
 </div>
 <div id="wechatModal" class="hidden fixed inset-0 z-[99999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all" onclick="this.classList.add('hidden')">
   <div class="bg-white dark:bg-[#0a0a0a] border dark:border-white/10 p-6 rounded-3xl text-center max-w-sm w-full shadow-2xl" onclick="event.stopPropagation()">
@@ -891,13 +920,13 @@ function renderBlocks(bl,gid){
   }
   else if(b.t==='qlink'){
    const ti=findTarget(bl,b.target);
-   h+=`<div class="my-2 text-${al}"><a ${ti>=0?`onclick="guideScroll('g-${g}-${ti}')"`:''} class="inline-flex items-center gap-1.5 font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 border-b-2 border-indigo-500 dark:border-purple-500 pb-0.5 text-sm md:text-base ${ti>=0?'cursor-pointer hover:opacity-80':'cursor-not-allowed opacity-50'} transition"><i class="fas fa-link text-indigo-500 dark:text-purple-400"></i>${esc(b.x||'Liên kết nhanh')}</a></div>`;
+   h+=`<div class="my-2 text-${al}"><a ${ti>=0?`onclick="guideScroll('g-${g}-${ti}')"`:''} class="word-link text-base ${ti>=0?'cursor-pointer':'cursor-not-allowed opacity-50'}">${esc(b.x||'Liên kết nhanh')}</a></div>`;
   }
   else if(b.t==='qtab'){
-   h+=`<div class="my-2 text-${al}"><a onclick="pubGoto('${esc(b.tab||'')}','${esc(b.art||'')}','${esc(b.target||'')}')" class="inline-flex items-center gap-1.5 font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 border-b-2 border-indigo-500 dark:border-purple-500 pb-0.5 text-sm md:text-base cursor-pointer hover:opacity-80 transition"><i class="fas fa-layer-group text-indigo-500 dark:text-purple-400"></i>${esc(b.x||'Chuyển tab')}</a></div>`;
+   h+=`<div class="my-2 text-${al}"><a onclick="pubGoto('${esc(b.tab||'')}','${esc(b.art||'')}','${esc(b.target||'')}')" class="word-link text-base cursor-pointer">${esc(b.x||'Chuyển tab')}</a></div>`;
   }
   else if(b.t==='qart'){
-   h+=`<div class="my-2 text-${al}"><a onclick="pubGotoArt('${esc(b.tab||'')}','${esc(b.art||'')}')" class="inline-flex items-center gap-1.5 font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 border-b-2 border-indigo-500 dark:border-purple-500 pb-0.5 text-sm md:text-base cursor-pointer hover:opacity-80 transition"><i class="fas fa-newspaper text-indigo-500 dark:text-purple-400"></i>${esc(b.x||'Mở bài viết')}</a></div>`;
+   h+=`<div class="my-2 text-${al}"><a onclick="pubGotoArt('${esc(b.tab||'')}','${esc(b.art||'')}')" class="word-link text-base cursor-pointer">${esc(b.x||'Mở bài viết')}</a></div>`;
   }
   else if(b.t==='spacer') h+=`<div style="height:${Math.max(4,Math.min(200,parseInt(b.h)||16))}px"></div>`;
   else if(b.t==='divider') h+=`<hr class="border-0 border-t border-slate-200 dark:border-slate-700 my-4">`;
@@ -968,8 +997,72 @@ function openGuideArticle(tabId, artId) {
    $('guideDetailWatermark').classList.add('hidden');$('guideDetailWatermark').innerHTML = '';
  }
   
-  $('guideText').innerHTML = art.blocks && art.blocks.length ? renderBlocks(art.blocks, `${tabId}-${curGuideArt}`) : i18n[lang].guide_empty;
+  if (typeof art.html === 'string' && art.html.trim() !== '') {
+    $('guideText').innerHTML = renderRichGuideHtml(art.html, art.showToc !== false, `${tabId}-${curGuideArt}`);
+  } else {
+    $('guideText').innerHTML = art.blocks && art.blocks.length ? renderBlocks(art.blocks, `${tabId}-${curGuideArt}`) : i18n[lang].guide_empty;
+  }
   $('view-portal').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function pubScrollToHeadingText(txt){
+ const container=$('guideText');if(!container)return;
+ for(const el of container.querySelectorAll('h2, h3')){
+  if((el.textContent||'').trim()===txt.trim()){el.scrollIntoView({behavior:'smooth',block:'start'});return;}
+ }
+}
+
+function renderRichGuideHtml(rawHtml, showToc, gid){
+ const temp=document.createElement('div');
+ temp.innerHTML=rawHtml||'';
+ const headings=[];
+ let h2Count=0, h3Count=0;
+ temp.querySelectorAll('h2, h3').forEach((el, idx)=>{
+  const txt=(el.textContent||'').trim();
+  if(!txt)return;
+  const tag=el.tagName.toLowerCase();
+  const hid=`toc-${gid}-${idx}`;
+  el.id=hid;
+  el.style.scrollMarginTop='90px';
+  let numLabel='';
+  if(tag==='h2'){h2Count++;h3Count=0;numLabel=`${h2Count}. `;}
+  else{h3Count++;numLabel=h2Count>0?`${h2Count}.${h3Count}. `:`• `;}
+  const cleanTxt=txt.replace(/^\d+(\.\d+)*\.?\s*/,'');
+  headings.push({id:hid,tag,label:numLabel+cleanTxt});
+ });
+ temp.querySelectorAll('img').forEach(img=>{
+  const src=img.getAttribute('src')||'';
+  img.setAttribute('onclick',`openLightbox('${esc(src)}')`);
+  img.classList.add('cursor-zoom-in');
+ });
+ temp.querySelectorAll('a').forEach(a=>{
+  const href=a.getAttribute('href')||'';
+  if(!a.getAttribute('data-cta'))a.classList.add('word-link');
+  if(href.startsWith('#anchor:')){
+   const tgTxt=decodeURIComponent(href.slice(8));
+   a.removeAttribute('href');
+   a.setAttribute('onclick',`pubScrollToHeadingText('${esc(tgTxt)}')`);
+  }else if(href.startsWith('#gototab:')){
+   const parts=href.slice(9).split(':');
+   const tb=decodeURIComponent(parts[0]||''), ar=decodeURIComponent(parts[1]||'');
+   a.removeAttribute('href');
+   a.setAttribute('onclick',`pubGoto('${esc(tb)}','${esc(ar)}','')`);
+  }else if(href.startsWith('#gotoart:')){
+   const parts=href.slice(9).split(':');
+   const tb=decodeURIComponent(parts[0]||''), ar=decodeURIComponent(parts[1]||'');
+   a.removeAttribute('href');
+   a.setAttribute('onclick',`pubGotoArt('${esc(tb)}','${esc(ar)}')`);
+  }else if(/^https?:\/\//i.test(href)){
+   a.setAttribute('target','_blank');
+   a.setAttribute('rel','noopener');
+  }
+ });
+ let tocHtml='';
+ if(showToc && headings.length>0){
+  const bodyId=`toc-body-${gid}`;
+  tocHtml=`<div class="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-5 shadow-sm"><div class="flex items-center justify-between mb-2.5"><span class="font-extrabold text-base text-slate-900 dark:text-white">Mục lục</span><button type="button" onclick="const b=document.getElementById('${bodyId}');const h=b.classList.toggle('hidden');this.innerHTML=h?'Hiện <i class=\\'fas fa-chevron-down ml-1\\'></i>':'Ẩn <i class=\\'fas fa-chevron-up ml-1\\'></i>';" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">Ẩn <i class="fas fa-chevron-up ml-1"></i></button></div><div id="${bodyId}" class="flex flex-col gap-1.5">${headings.map(h=>`<a onclick="guideScroll('${h.id}')" class="cursor-pointer text-blue-600 dark:text-blue-400 hover:underline text-sm ${h.tag==='h3'?'pl-5 font-medium':'font-semibold'}">${esc(h.label)}</a>`).join('')}</div></div>`;
+ }
+ return tocHtml + temp.innerHTML;
 }
 
 function closeGuideArticle() {
@@ -1643,13 +1736,89 @@ function logout(){
  oCache=null;clearTimeout(pollT);stopTick();closeQrModal();disableUpgradeMode();
  document.documentElement.classList.remove('has-user-session');document.body.classList.remove('checkout-active');window.scrollTo(0,0);}
 
+let pendingDeepGuide = null;
+
+function resolveDeepGuideParams(){
+ const sp = new URLSearchParams(location.search);
+ const gTab = sp.get('guide'), gArt = sp.get('art');
+ if(gTab) return { tab: gTab, art: gArt || '' };
+ const hm = location.hash.match(/^#guide\/([^/]+)(?:\/([^/]+))?$/);
+ if(hm) return { tab: decodeURIComponent(hm[1]), art: decodeURIComponent(hm[2] || '') };
+ return null;
+}
+
+function openDeepGuideNow(target){
+ if(!target)return;
+ const tabs = guideTabList();
+ let tabId = target.tab;
+ let artObj = findArt(tabId, target.art);
+ if(!artObj){
+  for(const t of tabs){
+   const found = guideArts(t.id).find(a => a.id === target.art || a.id === target.tab);
+   if(found){ tabId = t.id; artObj = found; break; }
+  }
+ }
+ if(!tabs.some(t => t.id === tabId)) tabId = (tabs[0] || {}).id || 'android';
+ switchPortalTab('p-guide', true);
+ showGuide(tabId, artObj ? artObj.id : target.art);
+}
+
+function closeGuideAuthModal(){
+ $('guideAuthModal').classList.add('hidden');
+}
+
+async function submitGuideAuth(e){
+ e.preventDefault();
+ const qVal = ($('guideAuthInput').value || '').trim();
+ if(!qVal) return;
+ const btn = $('btnGuideAuthSubmit'), orig = btn.innerHTML;
+ btn.disabled = true;
+ btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1.5"></i>ĐANG KIỂM TRA...`;
+ try{
+  const res = await wpost('/api/public/lookup', { q: qVal });
+  if(!res || !res.ok || !res.data || !res.data.order){
+   showToast(i18n[lang].not_found, 'error');
+   btn.disabled = false; btn.innerHTML = orig;
+   return;
+  }
+  const o = res.data.order;
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ id: o.id, time: Date.now() }));
+  localStorage.setItem(CACHE_KEY, JSON.stringify(o));
+  $('loginInput').value = o.id;
+  closeGuideAuthModal();
+  showToast(i18n[lang].login_success, 'info');
+  enterPortal(o, true);
+  if(pendingDeepGuide){
+   setTimeout(() => openDeepGuideNow(pendingDeepGuide), 100);
+  }
+ }catch(err){
+  showToast(i18n[lang].req_err, 'error');
+ }
+ btn.disabled = false; btn.innerHTML = orig;
+}
+
 window.onload=async function(){
  changeLanguage('vi');renderDock();
  await loadConfig();
  if(location.hash==='#wechat')$('wechatModal').classList.remove('hidden');
+ pendingDeepGuide = resolveDeepGuideParams();
  let s=null;try{s=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');}catch{}
- if(s&&Date.now()-s.time<864e5){$('loginInput').value=s.id;await login(true);}
- else{if(s)localStorage.removeItem(SESSION_KEY);document.documentElement.classList.remove('has-user-session');$('view-store').classList.add('active');renderPackages('all');}
+ if(s&&Date.now()-s.time<864e5){
+  $('loginInput').value=s.id;
+  await login(true);
+  if(pendingDeepGuide) setTimeout(() => openDeepGuideNow(pendingDeepGuide), 150);
+ }else{
+  if(s)localStorage.removeItem(SESSION_KEY);
+  document.documentElement.classList.remove('has-user-session');
+  $('view-store').classList.add('active');
+  renderPackages('all');
+  if(pendingDeepGuide){
+   const artObj = findArt(pendingDeepGuide.tab, pendingDeepGuide.art);
+   $('guideAuthArtTitle').innerText = artObj && artObj.name ? `📖 Bài viết: ${artObj.name}` : '';
+   $('guideAuthModal').classList.remove('hidden');
+   setTimeout(() => $('guideAuthInput')?.focus(), 100);
+  }
+ }
  const f=$('footerArea');if(f)obs.observe(f);};
 
 async function requestDataCheck(){
