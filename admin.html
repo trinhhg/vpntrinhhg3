@@ -982,36 +982,6 @@ textarea.autog{resize:none;overflow:hidden;}
  </div>
 </div>
 
-<div id="mPoolEdit" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
- <div class="glass-card p-5 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-  <div class="flex items-center justify-between mb-3">
-   <h3 class="font-extrabold text-lg text-slate-800" id="mPETitle">Sửa Nguồn Node Trong Kho</h3>
-   <span id="mPEBadge" class="text-xs font-black px-2 py-0.5 rounded"></span>
-  </div>
-  <input type="hidden" id="mPEId">
-  <input type="hidden" id="mPEOldOrig">
-  <input type="hidden" id="mPEOldOrig2">
-
-  <!-- BẢNG CHÂN 1 -->
-  <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/50 mb-3 space-y-2">
-   <div class="text-xs font-black text-slate-700 flex justify-between"><span>Thông số Chân 1</span><span id="mPELeg1Badge" class="badge-lx">Chân 1</span></div>
-   <div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link gốc 1</label><input id="mPEOrig" type="text" class="w-full p-2 text-xs border border-slate-300 rounded-lg font-mono outline-none bg-white"></div>
-   <div class="grid grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Tổng GB</label><input id="mPEGb" type="number" class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none bg-white"></div><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Còn lại GB</label><input id="mPERemain" type="number" class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none bg-white"></div></div>
-   <div class="grid grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Hết hạn</label><input id="mPEExp" type="text" class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none text-center bg-white"></div><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Max thiết bị</label><input id="mPEMax" type="number" min="1" class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none text-center bg-white"></div></div>
-  </div>
-
-  <!-- BẢNG CHÂN 2 (Bung đủ khi là Khối Combo) -->
-  <div id="mPEContainer2" class="hidden border border-indigo-200 rounded-xl p-3 bg-indigo-50/30 mb-4 space-y-2">
-   <div class="text-xs font-black text-blue-700 flex justify-between"><span>Thông số Chân 2</span><span class="badge-dj">Chân 2</span></div>
-   <div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link gốc 2</label><input id="mPEOrig2" type="text" class="w-full p-2 text-xs border border-indigo-300 rounded-lg font-mono outline-none bg-white"></div>
-   <div class="grid grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Tổng GB 2</label><input id="mPEGb2" type="number" class="w-full p-2 text-xs border border-indigo-300 rounded-lg outline-none bg-white"></div><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Còn lại GB 2</label><input id="mPERemain2" type="number" class="w-full p-2 text-xs border border-indigo-300 rounded-lg outline-none bg-white"></div></div>
-   <div class="grid grid-cols-2 gap-2"><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Hết hạn 2</label><input id="mPEExp2" type="text" class="w-full p-2 text-xs border border-indigo-300 rounded-lg outline-none text-center bg-white"></div><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Max thiết bị 2</label><input id="mPEMax2" type="number" min="1" class="w-full p-2 text-xs border border-indigo-300 rounded-lg outline-none text-center bg-white"></div></div>
-  </div>
-
-  <div class="flex gap-2"><button onclick="savePoolEdit()" class="flex-1 bg-indigo-600 text-white font-bold py-2.5 rounded-lg text-xs shadow-md">LƯU THAY ĐỔI</button><button onclick="cm('mPoolEdit')" class="bg-white border border-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-lg text-xs shadow-sm">Hủy</button></div>
- </div>
-</div>
-
 <!-- MODAL SỬA NGUỒN CẤP CỤM (ROOT SOURCE - 2 CHÂN ĐẦY ĐỦ THÔNG SỐ) -->
 <div id="mRootEdit" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
  <div class="glass-card p-5 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -1211,7 +1181,7 @@ function doLogout(){localStorage.removeItem(SITE_KEY+"_tok");location.reload();}
 
 // ===================== DỮ LIỆU =====================
 let ordersDb=[],linksDb=[],linkPoolDb=[],dataReqDb=[],deadDb=[],devicesDb=[],cmsDb={settings:{},link_origins:{}},guides={},txData=[],txSince="",txPollT=null,txFails=0;
-let curOrdTab="success",curLinkTab="manual",curLinkListView="detailed",curTxTab="giamsat",logsData={worker:[],d1:[]},lastSig={},modalInit={},modalNew=false,modalOldId="",upgInit="";
+let curOrdTab="success",curTxTab="giamsat",logsData={worker:[],d1:[]},lastSig={},modalInit={},modalNew=false,modalOldId="",upgInit="";
 const isMailMaster=()=>cmsDb.settings.emailRole==="master";
 const expLocked=()=>!!(cmsDb.settings&&cmsDb.settings.lockExpiry);
 const lockFulfillOn=()=>!!(cmsDb.settings&&cmsDb.settings.lockFulfill);
@@ -1575,8 +1545,6 @@ async function saveOrd(){
    if(!isMailMaster())toast("Web đang ở chế độ SLAVE, bỏ qua gửi mail","warn");else{const key=st==="success"?mailKeyOf(o):"failed";sendMailClient(o.email,subjVars(getTpl(key).subject,orderVars(o)),st==="success"?mailSuccess(o):mailFailed(o));logEvent("ok","Gửi mail",(st==="success"?"Kích hoạt thành công → ":"Kích hoạt thất bại → ")+o.email,o.id);}}
  }catch(e){if(e.message!=="401")toast("Lỗi lưu đơn: "+e.message,"err");}
  btn.disabled=false;}
-async function forceOrder(id){if(lockFulfillOn())return toast("Đang bật Khóa fulfillment — tắt khóa mới được duyệt & cấp link","warn");if(!confirm(`Duyệt tay đơn ${id} (không cần khớp giao dịch) và cấp link ngay?`))return;
- try{const j=await aj("/api/admin/order",{method:"POST",body:{id,status:"success"}});const i=ordersDb.findIndex(x=>x.id===id);if(i>=0)ordersDb[i]=j.order;lastSig.o=JSON.stringify(ordersDb);renderOrd();toast("Đã duyệt & cấp link");}catch(e){toast("Lỗi: "+e.message,"err");}}
 async function delOrd(id){
  if(!confirm("Xóa đơn "+id+"? Toàn bộ Link Sub của đơn này sẽ được khóa và chuyển sang tab Đã Xóa."))return;
  try{
@@ -1618,8 +1586,6 @@ function renderCheckTab(){
 
  if ($("checkHeaderTitle")) $("checkHeaderTitle").innerHTML = `<i class="fas fa-clipboard-check text-indigo-600 mr-1.5"></i>Kiểm tra bù link (${me.field.toUpperCase()}) <span id="checkBadgeCount" class="bg-indigo-100 text-indigo-700 text-xs font-black px-2 py-0.5 rounded-full ml-1">0</span>`;
  if ($("scanRoutingFieldTxt")) $("scanRoutingFieldTxt").textContent = me.field.toUpperCase();
- if ($("optRsInfo")) $("optRsInfo").textContent = `${me.field.toUpperCase()} (Web này)`;
- if ($("optRmInfo")) $("optRmInfo").textContent = `${me.field.toUpperCase()} (Web này)`;
 
  const list = getMissingOrders();
  if (!list.length) {
@@ -2136,15 +2102,6 @@ function buildMasked(orig, fresh) {
   const lx = String(orig || "").toLowerCase().includes("liangxin");
   return PD + (lx ? "/v1" : "/v2") + "/VPNTrinhHg" + (lx ? "?OwO=" : "?token=") + tok + "#VPNTrinhHg";
 }
-function switchLinkMode(m){
-  curLinkTab = m || "manual";
-  renderLinks();
-}
-
-function switchLinkView(v){
-  curLinkListView = v || "detailed";
-  renderLinks();
-}
 
 // Hàm mở Modal Sửa Nguồn Cấp Cụm (Cây bút chì sửa cụm link)
 function openRootEditModal(groupKey){
@@ -2480,16 +2437,6 @@ async function createLink(){
    ["lkOrig","lkOrig2","lkEmail","lkExp","lkIdx","lkGb1","lkRemainGb1","lkPoolExp1","lkGb2","lkRemainGb2","lkPoolExp2"].forEach(f => { if ($(f)) $(f).value = ""; });
    renderLinks();
  } catch(e) { toast("Lỗi: " + e.message, "err"); }
-}
-async function delPool(idOrUrl){
-  if(!confirm("Xóa nguồn này khỏi kho?")) return;
-  linkPoolDb = linkPoolDb.filter(p => p.id !== idOrUrl && p.url !== idOrUrl);
-  renderLinks();
-  try {
-    await savePool();
-    toast("Đã xóa khỏi Kho");
-    logEvent("info", "Xóa nguồn", String(idOrUrl).slice(0, 40));
-  } catch(e) {}
 }
 
 function openLnkModal(id){
@@ -2943,7 +2890,7 @@ async function saveAllPkgs() {
   btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i>ĐANG LƯU...';
   try {
     const j = await aj("/api/packages", { method: "POST", body: { packages: adminPkgsList } });
-    toast(`Đã lưu ${j.count || adminPkgsList.length} gói cước và đồng bộ sang D1 thành công!`);
+    toast(`Đã lưu cấu hình ${j.count || adminPkgsList.length} gói cước thành công!`);
     renderPkgAdmin();
   } catch (e) {
     toast("Lỗi lưu gói: " + e.message, "err");
@@ -3053,15 +3000,6 @@ function renderDeadSources(){
    container.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold">Kho link nguồn đang trống</div>`;
    return;
  }
-
- // Node kỹ thuật Da_bi_khoa luôn luôn ở vị trí đầu tiên (#1) trong kho quản lý nguồn
- dedupedPool.sort((a, b) => {
-   const aLocked = (a.url === "Da_bi_khoa" || a.id === "POOL-179017008791528");
-   const bLocked = (b.url === "Da_bi_khoa" || b.id === "POOL-179017008791528");
-   if (aLocked && !bLocked) return -1;
-   if (!aLocked && bLocked) return 1;
-   return 0;
- });
 
  // Node kỹ thuật Da_bi_khoa luôn luôn ở vị trí đầu tiên (#1) trong kho quản lý nguồn
  dedupedPool.sort((a, b) => {
@@ -3946,11 +3884,6 @@ async function migratePkg(apply){
 
 // ===================== LOGIC FULFILLMENT CONFIG & LINK TRỘN =====================
 let currentFulfillmentConfig = { mapping: {}, failover_pref: "lx" };
-
-function togglePoolComboForm(isCombo) {
-  $("poolLeg2Container").classList.toggle("hidden", !isCombo);
-  $("poolLeg1Label").textContent = isCombo ? "Nguồn 1: Liangxin" : "Nguồn Liangxin (hoặc nguồn duy nhất)";
-}
 
 async function loadFulfillmentConfig() {
   try {
