@@ -20,7 +20,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc;color:#0f172a
 .glass-card{background:#fff;border:1px solid #e2e8f0;box-shadow:0 10px 40px -10px rgba(0,0,0,.05);border-radius:1.25rem;}
 .tab-btn{transition:all .15s;}
 .tab-btn.active{background:#4f46e5;color:#fff;box-shadow:0 4px 12px rgba(79,70,229,.35);border-color:#4f46e5;}
-.toast{position:fixed;top:1rem;right:1rem;z-index:9999;display:flex;flex-direction:column;align-items:flex-end;gap:.5rem;pointer-events:none;}
+.toast{position:fixed;top:1rem;right:1rem;z-index:99999;display:flex;flex-direction:column;align-items:flex-end;gap:.5rem;pointer-events:none;}
 .toast-item{width:fit-content;max-width:90vw;padding:.75rem 1.25rem;border-radius:.75rem;font-weight:700;font-size:.85rem;color:#fff;background:#1e293b;box-shadow:0 10px 15px -3px rgba(0,0,0,.1);transform:translateX(120%);transition:transform .2s;border:1px solid #334155;}
 .toast-item.show{transform:translateX(0);}
 .badge-lx{background:#dcfce7;color:#15803d;font-size:.65rem;font-weight:800;padding:2px 6px;border-radius:4px;}
@@ -149,8 +149,10 @@ input,select,textarea{font-family:inherit;}
 .tab-dragging{opacity:.55;}
 textarea.autog{resize:none;overflow:hidden;}
 .g-preview img{cursor:zoom-in;}
-.lb{position:fixed;inset:0;background:rgba(15,23,42,.88);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px;cursor:zoom-out;}
-.lb img{max-width:100%;max-height:100%;border-radius:8px;}
+.lb{position:fixed;inset:0;background:rgba(15,23,42,.9);z-index:99990;display:flex;align-items:center;justify-content:center;padding:16px;cursor:zoom-out;backdrop-filter:blur(4px);}
+.lb img{max-width:92vw;max-height:88vh;border-radius:10px;box-shadow:0 20px 50px rgba(0,0,0,.5);cursor:default;}
+.lb-close{position:fixed;top:16px;right:16px;width:42px;height:42px;border-radius:50%;background:rgba(15,23,42,.85);border:2px solid rgba(255,255,255,.35);color:#fff;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:99995;transition:all .15s;}
+.lb-close:hover{background:#ef4444;border-color:#ef4444;transform:scale(1.08);}
 .word-editor{min-height:480px;max-height:75vh;overflow-y:auto;outline:none;line-height:1.75;font-size:15px;color:#1e293b;}
 .word-editor h2,.g-preview h2{font-size:1.35rem;font-weight:800;color:#0f172a;margin:1.25rem 0 0.6rem;line-height:1.35;}
 .word-editor h3,.g-preview h3{font-size:1.12rem;font-weight:800;color:#1e293b;margin:1rem 0 0.5rem;line-height:1.4;}
@@ -863,6 +865,24 @@ textarea.autog{resize:none;overflow:hidden;}
       <p class="text-[11px] text-slate-500">Nhập tên ô định tuyến muốn làm mờ và gạt Bật/Tắt. Cài đặt này chỉ áp dụng trên chính web này, không đồng bộ sang web khác.</p>
       <div id="blurRows" class="space-y-2"></div>
       <button onclick="saveBlur()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md mt-1">LƯU CẤU HÌNH LÀM MỜ</button>
+     </div>
+
+     <!-- 2.1. Quản lý thời gian tự hủy mã QR (giây) -->
+     <div class="bg-white border border-indigo-200 rounded-2xl shadow-sm p-4 md:p-5 space-y-2.5">
+      <div class="font-bold text-sm text-indigo-900 flex items-center justify-between">
+       <span><i class="fas fa-qrcode text-indigo-600 mr-1.5"></i>Thời gian tự hủy mã QR</span>
+       <span class="text-[10px] font-black px-2 py-0.5 rounded bg-indigo-100 text-indigo-700">Đơn vị: Giây</span>
+      </div>
+      <p class="text-[11px] text-slate-500">Số giây mã QR xuất hiện và có hiệu lực quét trước khi tự hủy (mặc định: <b>30</b> giây). Quá thời gian này, mã QR biến mất và nếu quét lại sẽ báo lỗi.</p>
+      <div class="flex items-center gap-2">
+       <div class="relative flex-1">
+        <input id="qrExpireSecondsInp" type="number" min="5" max="3600" placeholder="30" class="w-full p-2 pr-14 border border-slate-200 rounded-xl outline-none font-bold text-sm text-indigo-700 bg-slate-50 focus:bg-white focus:border-indigo-500">
+        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">giây</span>
+       </div>
+       <button type="button" onclick="saveQrExpireSeconds()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md shrink-0 transition active:scale-95">
+        <i class="fas fa-save mr-1"></i>LƯU THỜI GIAN QR
+       </button>
+      </div>
      </div>
 
      <!-- 3. Worker vệ tinh (2 web còn lại) -->
@@ -3193,9 +3213,9 @@ function blocksToHtmlConvert(bl){
    const c=th==="red"?["#fef2f2","#ef4444","#991b1b","⛔ CHÚ Ý:"]:th==="blue"?["#eff6ff","#3b82f6","#1e40af","💡 HƯỚNG DẪN:"]:th==="green"?["#f0fdf4","#10b981","#065f46","✔ MẸO HAY:"]:["#fffbeb","#f59e0b","#92400e","⚠️ LƯU Ý:"];
    return `<div class="word-callout" data-theme="${th}" style="background:${c[0]};border-left:4px solid ${c[1]};color:${c[2]};padding:12px 16px;border-radius:10px;margin:12px 0;"><b>${c[3]}</b> ${esc(b.x||"").replace(/\n/g,"<br>")}</div>`;
   }
-  if(b.t==="btn")return `<div style="text-align:center;margin:16px 0;"><a href="${esc(safeUrl(b.u))}" target="_blank" data-cta="1" style="display:inline-block;background:#f97316;color:#ffffff;font-weight:800;padding:12px 28px;border-radius:10px;text-decoration:none;text-transform:uppercase;">${esc(b.x||"TẢI VỀ NGAY")}</a></div>`;
+  if(b.t==="btn"){const btnAl=b.al==="l"?"left":b.al==="r"?"right":"center";const mt=Number(b.mt??16),mb=Number(b.mb??16),ml=Number(b.ml??0),mr=Number(b.mr??0);return `<div style="text-align:${btnAl};margin:${mt}px ${mr}px ${mb}px ${ml}px;"><a href="${esc(safeUrl(b.u))}" target="_blank" data-cta="1" style="display:inline-block;background:#f97316;color:#ffffff;font-weight:800;padding:12px 28px;border-radius:10px;text-decoration:none;text-transform:uppercase;">${esc(b.x||"TẢI VỀ NGAY")}</a></div>`;}
   if(b.t==="img")return `<figure style="text-align:center;margin:16px 0;"><img src="${esc(safeUrl(b.u))}" style="max-height:380px;width:auto;max-width:100%;border-radius:10px;border:1px solid #e2e8f0;margin:0 auto;display:inline-block;">${b.x?`<figcaption style="font-size:13px;color:#64748b;margin-top:6px;font-style:italic;">${esc(b.x)}</figcaption>`:""}</figure>`;
-  if(b.t==="video")return `<div style="text-align:center;margin:16px 0;">${videoEmbed(b.u)}${b.x?`<div style="font-size:13px;color:#64748b;margin-top:6px;font-style:italic;">${esc(b.x)}</div>`:""}</div>`;
+  if(b.t==="video")return `<div style="text-align:center;margin:16px auto;max-width:600px;">${videoEmbed(b.u)}${b.x?`<div style="font-size:13px;color:#64748b;margin-top:6px;font-style:italic;">${esc(b.x)}</div>`:""}</div>`;
   if(b.t==="divider")return `<hr style="border:0;border-top:1px solid #e2e8f0;margin:16px 0;">`;
   if(b.t==="qlink")return `<p style="${al}"><a href="#anchor:${encodeURIComponent(b.target||"")}" class="word-link">${esc(b.x||"Liên kết nhanh")}</a></p>`;
   if(b.t==="qtab")return `<p style="${al}"><a href="#gototab:${encodeURIComponent(b.tab||"")}:${encodeURIComponent(b.art||"")}" class="word-link">${esc(b.x||"Chuyển tab")}</a></p>`;
@@ -3204,8 +3224,8 @@ function blocksToHtmlConvert(bl){
  }).join("");
 }
 function copyArtDeepLink(tabId, artId){
- if(!tabId||!artId)return toast("Hãy mở hoặc lưu bài viết trước!","warn");
- const link = `${PD.replace(/\/$/,"")}/?guide=${encodeURIComponent(tabId)}&art=${encodeURIComponent(artId)}`;
+ if(!artId)return toast("Hãy mở hoặc lưu bài viết trước!","warn");
+ const link = `${PD.replace(/\/$/,"")}/#guide/${encodeURIComponent(artId)}`;
  cp(link);
 }
 function commitCms(){
@@ -3259,11 +3279,23 @@ const SZ={s:13,m:16,l:20,xl:26};
 function bStyle(b,def){let st="";if(b.b)st+="font-weight:800;";if(b.i)st+="font-style:italic;";if(b.ul)st+=`text-decoration:underline;text-decoration-color:${b.ul==="red"?"#dc2626":"#0f172a"};text-underline-offset:3px;`;st+=`font-size:${SZ[b.sz]||def}px;`;return st;}
 const bText=b=>esc(b.x).replace(/\n/g,"<br>")||"&nbsp;";
 function guideScroll(id){const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:"smooth",block:"start"});}
-function openLightbox(u){const d=document.createElement("div");d.className="lb";d.innerHTML=`<img src="${esc(u)}">`;d.onclick=()=>d.remove();document.body.appendChild(d);}
+function openLightbox(u){
+ const d=document.createElement("div");
+ d.className="lb";
+ const prevOverflow=document.body.style.overflow;
+ document.body.style.overflow="hidden";
+ const closeLb=()=>{document.body.style.overflow=prevOverflow;d.remove();document.removeEventListener("keydown",onKey);};
+ const onKey=e=>{if(e.key==="Escape")closeLb();};
+ document.addEventListener("keydown",onKey);
+ d.innerHTML=`<button type="button" class="lb-close" title="Đóng ảnh (ESC)"><i class="fas fa-xmark"></i></button><img src="${esc(u)}" onclick="event.stopPropagation()">`;
+ d.onclick=closeLb;
+ d.querySelector(".lb-close").onclick=e=>{e.stopPropagation();closeLb();};
+ document.body.appendChild(d);
+}
 function videoEmbed(u){u=String(u||"");let m;
- if(m=u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/))([\w-]{6,})/))return `<div style="position:relative;width:100%;aspect-ratio:16/9"><iframe src="https://www.youtube.com/embed/${m[1]}" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:10px" allowfullscreen loading="lazy"></iframe></div>`;
- if(m=u.match(/vimeo\.com\/(?:video\/)?(\d+)/))return `<div style="position:relative;width:100%;aspect-ratio:16/9"><iframe src="https://player.vimeo.com/video/${m[1]}" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:10px" allowfullscreen loading="lazy"></iframe></div>`;
- if(/^https?:\/\//i.test(u))return `<video src="${esc(u)}" controls playsinline style="width:100%;max-width:100%;border-radius:10px;background:#000"></video>`;
+ if(m=u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/))([\w-]{6,})/))return `<div style="position:relative;width:100%;max-width:600px;margin:0 auto;aspect-ratio:16/9"><iframe src="https://www.youtube.com/embed/${m[1]}" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.1)" allowfullscreen loading="lazy"></iframe></div>`;
+ if(m=u.match(/vimeo\.com\/(?:video\/)?(\d+)/))return `<div style="position:relative;width:100%;max-width:600px;margin:0 auto;aspect-ratio:16/9"><iframe src="https://player.vimeo.com/video/${m[1]}" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.1)" allowfullscreen loading="lazy"></iframe></div>`;
+ if(/^https?:\/\//i.test(u))return `<div style="width:100%;max-width:600px;margin:0 auto;"><video src="${esc(u)}" controls playsinline style="width:100%;max-height:420px;border-radius:12px;background:#000;box-shadow:0 4px 14px rgba(0,0,0,.1)"></video></div>`;
  return `<div style="padding:14px;background:#f1f5f9;border-radius:8px;color:#94a3b8;font-size:13px;text-align:center">Chưa có URL video hợp lệ</div>`;}
 // Khớp 100% ký tự (không trim, không phân biệt-hoa-thường-không, không "contains"): target === nội dung khối
 const findTarget=(bl,text)=>{const s=String(text??"");if(s==="")return -1;return bl.findIndex(x=>ANCH.has(x.t)&&String(x.x??"")===s);};
@@ -3463,19 +3495,37 @@ function openWordInsertModal(type){
    <div class="flex gap-2 pt-2"><button type="button" onclick="confirmWiVideo()" class="flex-1 bg-indigo-600 text-white font-bold py-2 rounded-lg text-xs">CHÈN VIDEO</button><button type="button" onclick="cm('mWordInsert')" class="bg-slate-100 text-slate-700 font-bold px-4 py-2 rounded-lg text-xs">Hủy</button></div>`;
  }else if(type==="callout"){
   b.innerHTML=`
-   <h3 class="font-extrabold text-base text-slate-800"><i class="fas fa-square-pen text-amber-500 mr-1.5"></i>Chèn Khung Lưu Ý / Banner CTA</h3>
-   <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Kiểu khung</label>
+   <h3 class="font-extrabold text-base text-slate-800"><i class="fas fa-square-pen text-amber-500 mr-1.5"></i>Chèn Khung Lưu Ý / Nút CTA</h3>
+   <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Kiểu khung / Nút</label>
     <select id="wiCallType" class="w-full p-2 text-xs border border-slate-300 rounded-lg bg-white font-bold">
+     <option value="cta">🔥 Nút Cam tải App / Kêu gọi hành động (CTA)</option>
      <option value="amber">⚠️ Khung Lưu ý (Vàng)</option>
      <option value="red">⛔ Khung Cảnh báo (Đỏ)</option>
      <option value="blue">💡 Khung Hướng dẫn (Xanh dương)</option>
      <option value="green">✔ Khung Mẹo hay (Xanh lá)</option>
-     <option value="banner">⭐ Dải Banner điểm nhấn (Xanh đậm như Ảnh 1)</option>
-     <option value="cta">🔥 Nút Cam kêu gọi hành động (CTA như Ảnh 3)</option>
+     <option value="banner">⭐ Dải Banner điểm nhấn (Xanh đậm)</option>
     </select>
    </div>
-   <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Nội dung chữ</label><textarea id="wiCallText" rows="3" placeholder="Nhập nội dung..." class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none">${esc(selTxt)}</textarea></div>
-   <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Link khi bấm (chỉ dùng cho Nút Cam CTA)</label><input id="wiCallUrl" placeholder="https://..." class="w-full p-2 text-xs border border-slate-300 rounded-lg font-mono outline-none"></div>
+   <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Nội dung chữ</label><textarea id="wiCallText" rows="2" placeholder="Nhập chữ trên nút hoặc nội dung lưu ý..." class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none">${esc(selTxt)}</textarea></div>
+   <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Link khi bấm (dùng cho Nút CTA)</label><input id="wiCallUrl" placeholder="https://..." class="w-full p-2 text-xs border border-slate-300 rounded-lg font-mono outline-none"></div>
+   <div class="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+    <div>
+     <label class="block text-[10px] font-bold text-slate-600 mb-1">Vị trí ngang</label>
+     <select id="wiCallAlign" class="w-full p-1.5 text-xs border border-slate-300 rounded-lg bg-white font-bold">
+      <option value="center">Căn giữa</option>
+      <option value="left">Căn lề trái</option>
+      <option value="right">Căn lề phải</option>
+     </select>
+    </div>
+    <div>
+     <label class="block text-[10px] font-bold text-slate-600 mb-1">Lề trên/dưới (px)</label>
+     <input id="wiCallMarginY" type="number" value="16" min="0" max="120" class="w-full p-1.5 text-xs border border-slate-300 rounded-lg bg-white text-center font-bold">
+    </div>
+    <div>
+     <label class="block text-[10px] font-bold text-slate-600 mb-1">Lề trái/phải (px)</label>
+     <input id="wiCallMarginX" type="number" value="0" min="0" max="200" class="w-full p-1.5 text-xs border border-slate-300 rounded-lg bg-white text-center font-bold">
+    </div>
+   </div>
    <div class="flex gap-2 pt-2"><button type="button" onclick="confirmWiCallout()" class="flex-1 bg-indigo-600 text-white font-bold py-2 rounded-lg text-xs">CHÈN VÀO BÀI</button><button type="button" onclick="cm('mWordInsert')" class="bg-slate-100 text-slate-700 font-bold px-4 py-2 rounded-lg text-xs">Hủy</button></div>`;
  }
  m.classList.remove("hidden");
@@ -3508,25 +3558,28 @@ function confirmWiVideo(){
  const u=($("wiVidUrl").value||"").trim();if(!u)return toast("Chưa nhập link video","err");
  const cap=($("wiVidCap").value||"").trim();
  cm("mWordInsert");
- wInsertHtml(`<div style="text-align:center;margin:16px 0;">${videoEmbed(u)}${cap?`<div style="font-size:13px;color:#64748b;margin-top:6px;font-style:italic;">${esc(cap)}</div>`:""}</div><p><br></p>`);
+ wInsertHtml(`<div style="text-align:center;margin:16px auto;max-width:600px;">${videoEmbed(u)}${cap?`<div style="font-size:13px;color:#64748b;margin-top:6px;font-style:italic;">${esc(cap)}</div>`:""}</div><p><br></p>`);
 }
 function confirmWiCallout(){
  const tp=$("wiCallType").value, txt=($("wiCallText").value||"").trim(), u=($("wiCallUrl").value||"").trim()||"#";
+ const al=$("wiCallAlign")?.value||"center";
+ const my=Math.max(0,parseInt($("wiCallMarginY")?.value)||16);
+ const mx=Math.max(0,parseInt($("wiCallMarginX")?.value)||0);
  if(!txt)return toast("Nhập nội dung","err");
  cm("mWordInsert");
  if(tp==="banner"){
-  wInsertHtml(`<div style="background:linear-gradient(90deg,#3b5998,#4f73b8);color:#ffffff;padding:14px 20px;border-radius:10px;margin:14px 0;font-weight:700;font-size:16px;display:flex;align-items:center;gap:12px;"><span style="background:#0f172a;color:#3b82f6;width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">★</span><span>${esc(txt)}</span></div><p><br></p>`);
+  wInsertHtml(`<div style="background:linear-gradient(90deg,#3b5998,#4f73b8);color:#ffffff;padding:14px 20px;border-radius:10px;margin:${my}px ${mx}px;font-weight:700;font-size:16px;display:flex;align-items:center;gap:12px;"><span style="background:#0f172a;color:#3b82f6;width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">★</span><span>${esc(txt)}</span></div><p><br></p>`);
  }else if(tp==="cta"){
-  wInsertHtml(`<div style="text-align:center;margin:18px 0;"><a href="${esc(u)}" target="_blank" data-cta="1" style="display:inline-block;background:#f97316;color:#ffffff;font-weight:800;padding:14px 32px;border-radius:10px;text-decoration:none;text-transform:uppercase;line-height:1.4;box-shadow:0 4px 12px rgba(249,115,22,.35);">${esc(txt).replace(/\n/g,"<br>")}</a></div><p><br></p>`);
+  wInsertHtml(`<div style="text-align:${al};margin:${my}px ${mx}px;"><a href="${esc(u)}" target="_blank" data-cta="1" style="display:inline-block;background:#f97316;color:#ffffff;font-weight:800;padding:14px 32px;border-radius:10px;text-decoration:none;text-transform:uppercase;line-height:1.4;box-shadow:0 4px 12px rgba(249,115,22,.35);">${esc(txt).replace(/\n/g,"<br>")}</a></div><p><br></p>`);
  }else{
   const c=tp==="red"?["#fef2f2","#ef4444","#991b1b","⛔ CHÚ Ý:"]:tp==="blue"?["#eff6ff","#3b82f6","#1e40af","💡 HƯỚNG DẪN:"]:tp==="green"?["#f0fdf4","#10b981","#065f46","✔ MẸO HAY:"]:["#fffbeb","#f59e0b","#92400e","⚠️ LƯU Ý:"];
-  wInsertHtml(`<div style="background:${c[0]};border-left:4px solid ${c[1]};color:${c[2]};padding:12px 16px;border-radius:10px;margin:12px 0;"><b>${c[3]}</b> ${esc(txt).replace(/\n/g,"<br>")}</div><p><br></p>`);
+  wInsertHtml(`<div style="background:${c[0]};border-left:4px solid ${c[1]};color:${c[2]};padding:12px 16px;border-radius:10px;margin:${my}px ${mx}px;text-align:${al==="center"?"center":al==="right"?"right":"left"};"><b>${c[3]}</b> ${esc(txt).replace(/\n/g,"<br>")}</div><p><br></p>`);
  }
 }
 function renderCmsEditor(){
  const w=$("cmsEditorWrap");if(!curArt){w.classList.add("hidden");return;}w.classList.remove("hidden");
  const a=artsOf(curCms).find(x=>x.id===curArt);
- const deepLink = `${PD.replace(/\/$/,"")}/?guide=${encodeURIComponent(curCms)}&art=${encodeURIComponent(curArt)}`;
+ const deepLink = `${PD.replace(/\/$/,"")}/#guide/${encodeURIComponent(curArt)}`;
  $("cmsArtMeta").innerHTML=`
   <div class="sm:col-span-2"><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tên bài viết</label><input value="${esc(curArtName)}" oninput="curArtName=this.value" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-bold"></div>
   <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tác giả</label><input value="${esc(curArtAuthor)}" oninput="curArtAuthor=this.value" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div>
@@ -3545,8 +3598,9 @@ function renderCmsEditor(){
   <label class="tb-btn" title="Đổi màu chữ"><i class="fas fa-palette text-rose-500"></i><input type="color" value="#dc2626" onchange="wCmd('foreColor',this.value)" class="w-4 h-4 border-0 p-0 bg-transparent cursor-pointer"></label>
   <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('insertUnorderedList')" class="tb-btn" title="Danh sách dấu chấm tròn"><i class="fas fa-list-ul"></i></button>
   <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('insertOrderedList')" class="tb-btn" title="Danh sách đánh số 1, 2, 3"><i class="fas fa-list-ol"></i></button>
-  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('justifyLeft')" class="tb-btn"><i class="fas fa-align-left"></i></button>
-  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('justifyCenter')" class="tb-btn"><i class="fas fa-align-center"></i></button>
+  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('justifyLeft')" class="tb-btn" title="Căn lề trái"><i class="fas fa-align-left"></i></button>
+  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('justifyCenter')" class="tb-btn" title="Căn giữa"><i class="fas fa-align-center"></i></button>
+  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('justifyRight')" class="tb-btn" title="Căn lề phải"><i class="fas fa-align-right"></i></button>
   <button type="button" onmousedown="event.preventDefault()" onclick="openWordInsertModal('link')" class="tb-btn !border-blue-200 !bg-blue-50 !text-blue-700"><i class="fas fa-link"></i>Chèn Link</button>
   <button type="button" onmousedown="event.preventDefault()" onclick="openWordInsertModal('img')" class="tb-btn !border-pink-200 !bg-pink-50 !text-pink-700"><i class="fas fa-image"></i>Ảnh</button>
   <button type="button" onmousedown="event.preventDefault()" onclick="openWordInsertModal('video')" class="tb-btn !border-rose-200 !bg-rose-50 !text-rose-700"><i class="fas fa-video"></i>Video</button>
@@ -3804,8 +3858,22 @@ async function saveFaqs() {
     toast("Lỗi lưu FAQ: " + e.message, "err");
   }
 } 
+async function saveQrExpireSeconds(){
+ const val = Math.max(5, Math.min(3600, parseInt($("qrExpireSecondsInp")?.value) || 30));
+ cmsDb.settings = cmsDb.settings || {};
+ cmsDb.settings.qrExpireSeconds = val;
+ if($("qrExpireSecondsInp")) $("qrExpireSecondsInp").value = val;
+ try {
+   await saveCmsDb();
+   toast(`Đã lưu thời gian tự hủy mã QR: ${val} giây!`);
+   logEvent("ok", "Lưu cấu hình", `Thời gian tự hủy QR: ${val}s`);
+ } catch(e) {
+   toast("Lỗi lưu thời gian QR: " + e.message, "err");
+ }
+}
 function loadSettingsUI(){
  const s=cmsDb.settings;renderRouteRows();renderBlurRows();renderSyncWorkers();renderDockRows();renderMailProvCards();
+ if($("qrExpireSecondsInp")) $("qrExpireSecondsInp").value = Number(s.qrExpireSeconds) || 30;
  const rr=document.querySelector(`input[name=emailRoleRad][value=${s.emailRole==="master"?"master":"slave"}]`);if(rr)rr.checked=true;
  if($("toggleAutoMail")) $("toggleAutoMail").checked=!!s.autoMailEnabled;
  if($("toggleAutoMigrate")) $("toggleAutoMigrate").checked=s.autoMigrateNode!==false;
