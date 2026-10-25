@@ -520,7 +520,10 @@ textarea.autog{resize:none;overflow:hidden;}
    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
      <div class="bg-slate-50 p-2 border-b border-slate-200 flex gap-1.5 flex-wrap items-center sticky top-0 z-20" id="cmsAddBtns"></div>
-     <div id="cmsWordEditor" contenteditable="true" oninput="onWordEditorInput()" class="word-editor p-4 bg-white"></div>
+     <div class="flex relative bg-white">
+      <div id="cmsLineGutter" class="select-none py-4 px-2 bg-slate-50 border-r border-slate-200 text-slate-400 font-mono text-xs text-right leading-[1.75] min-w-[38px] overflow-hidden">1</div>
+      <div id="cmsWordEditor" contenteditable="true" oninput="onWordEditorInput()" onscroll="syncCmsLines()" class="word-editor p-4 bg-white flex-1 outline-none"></div>
+     </div>
      <div class="p-3 border-t border-slate-100 bg-slate-50"><button onclick="saveCms()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md text-sm"><i class="fas fa-save mr-2"></i>LƯU BÀI VIẾT (Cục bộ web này)</button></div>
     </div>
     <div class="bg-slate-100 border border-slate-200 rounded-2xl shadow-sm overflow-hidden sticky top-16">
@@ -1303,6 +1306,7 @@ function go(id){
   if(id==="t-mail")renderMailComposer();
   if(id==="t-cms"&&curArtsReady)renderGuideAll();
  }catch(e){console.error("go("+id+") lỗi:",e);toast("Lỗi mở tab: "+e.message,"err");}
+ restoreAdminScroll(id);
 }
 
 // ===================== ĐƠN HÀNG =====================
@@ -1332,9 +1336,9 @@ function ordCard(o,ro){
  const nick=o.nickname?`<span class="text-[10px] font-black bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded ml-1"><i class="fas fa-user-tag mr-0.5"></i>${esc(o.nickname)}</span>`:"";
  const lk=o.lockInfo?Object.keys(o.lockInfo).filter(k=>o.lockInfo[k]):[];const lkb=lk.length?`<span title="Ô đã khóa (sửa tay): ${esc(lk.join(", "))}" class="text-[9px] font-black bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded ml-1"><i class="fas fa-lock mr-0.5"></i>${lk.map(k=>k.replace("info","")).join("/")}</span>`:"";
 
- // Hàng 3: HSD trước, Zalo sau chia đôi 1 hàng ngăn cách bằng dấu gạch đứng |
- const hsdStr = o.expDate ? `HSD: <span class="font-bold text-slate-700">${esc(o.expDate)}</span>${daysLeft!==null&&daysLeft>=0?` <span class="font-black ${daysLeft<=1?"text-red-600":"text-orange-500"}">(còn ${daysLeft}n)</span>`:""}` : 'HSD: —';
- const zaloStr = `|Zalo: <span class="font-bold text-slate-700 cp" onclick="cp(${q(o.zalo)})">${esc(o.zalo||"")}</span>`;
+ // Hàng 3: Zalo trước, HSD sau - chia đôi cố định 50/50, Zalo trống vẫn giữ đất 50%
+ const zaloPart = `Zalo: <span class="font-bold text-slate-700 cp" onclick="cp(${q(o.zalo)})">${esc(o.zalo||"")}</span>`;
+ const hsdPart = `|HSD: <span class="font-bold text-slate-700">${esc(o.expDate||"—")}</span>${daysLeft!==null&&daysLeft>=0?` <span class="font-black ${daysLeft<=1?"text-red-600":"text-orange-500"}">(còn ${daysLeft}n)</span>`:""}`;
 
  // Hàng 4: 3 Badge riêng biệt (Method tag màu giống tab doanh thu + Thực nhận + Số tháng)
  const pay = payOf(o);
@@ -1349,7 +1353,7 @@ function ordCard(o,ro){
  return `<div class="${card} rounded-xl p-3 shadow-sm flex flex-col md:flex-row md:items-stretch justify-between gap-2 md:gap-3 w-full min-w-0"><div class="flex-1 min-w-0">
   <div class="flex items-center gap-2 mb-1 flex-wrap">${dot}<span class="font-bold text-[10px] text-slate-400">#${ordersDb.indexOf(o)+1}</span><span class="font-mono font-extrabold text-indigo-600 text-xs md:text-base cp order-id-text" onclick="cp(${q(o.id)})">${esc(o.id)}</span>${nick}${kind}${st==="pending"?`<span class="bg-yellow-100 text-yellow-800 text-[10px] font-bold px-1.5 py-0.5 rounded ml-1">Chưa xác nhận CK</span>`:""}${bu}${lkb}${expired?`<span class="text-[10px] font-black bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1">ĐÃ HẾT HẠN</span>`:""}</div>
   <div class="font-bold text-slate-800 text-xs md:text-sm cp truncate pl-5 order-email-text" onclick="cp(${q(o.email)})">${esc(o.email||"—")}</div>
-  <div class="text-[11px] md:text-sm text-slate-500 mt-1 pl-5 order-meta-text flex items-center gap-2 flex-wrap"><span>${hsdStr}</span><span>${zaloStr}</span></div>
+  <div class="text-[11px] md:text-sm text-slate-500 mt-1 pl-5 order-meta-text grid grid-cols-2 gap-2 w-full"><div class="truncate">${zaloPart}</div><div class="truncate">${hsdPart}</div></div>
   <div class="pl-5 mt-2 flex flex-wrap items-center gap-1.5">${methodBadge}${amtBadge}${mBadge}</div></div>
   <div class="flex flex-row md:flex-col items-center md:items-end justify-between gap-2 shrink-0 border-t border-slate-100 md:border-0 pt-2 md:pt-0"><span class="text-[10px] md:text-xs text-slate-400 font-semibold whitespace-nowrap">${esc(o.date || fmtBank(o.createdTs || 0))}</span>${acts}</div></div>`;}
 function renderOrd(){
@@ -3213,7 +3217,7 @@ function blocksToHtmlConvert(bl){
    const c=th==="red"?["#fef2f2","#ef4444","#991b1b","⛔ CHÚ Ý:"]:th==="blue"?["#eff6ff","#3b82f6","#1e40af","💡 HƯỚNG DẪN:"]:th==="green"?["#f0fdf4","#10b981","#065f46","✔ MẸO HAY:"]:["#fffbeb","#f59e0b","#92400e","⚠️ LƯU Ý:"];
    return `<div class="word-callout" data-theme="${th}" style="background:${c[0]};border-left:4px solid ${c[1]};color:${c[2]};padding:12px 16px;border-radius:10px;margin:12px 0;"><b>${c[3]}</b> ${esc(b.x||"").replace(/\n/g,"<br>")}</div>`;
   }
-  if(b.t==="btn"){const btnAl=b.al==="l"?"left":b.al==="r"?"right":"center";const mt=Number(b.mt??16),mb=Number(b.mb??16),ml=Number(b.ml??0),mr=Number(b.mr??0);return `<div style="text-align:${btnAl};margin:${mt}px ${mr}px ${mb}px ${ml}px;"><a href="${esc(safeUrl(b.u))}" target="_blank" data-cta="1" style="display:inline-block;background:#f97316;color:#ffffff;font-weight:800;padding:12px 28px;border-radius:10px;text-decoration:none;text-transform:uppercase;">${esc(b.x||"TẢI VỀ NGAY")}</a></div>`;}
+  if(b.t==="btn"){const btnAl=b.al==="l"?"left":b.al==="r"?"right":"center";const mt=Number(b.mt??10),mb=Number(b.mb??10),ml=Number(b.ml??0),mr=Number(b.mr??0);return `<div style="text-align:${btnAl};margin:${mt}px ${mr}px ${mb}px ${ml}px;"><a href="${esc(safeUrl(b.u))}" target="_blank" data-cta="1" style="display:inline-block;background:#4f46e5;color:#ffffff;font-weight:700;font-size:12.5px;padding:7px 18px;border-radius:8px;text-decoration:none;text-transform:uppercase;box-shadow:0 2px 6px rgba(79,70,229,.3);">${esc(b.x||"TẢI VỀ NGAY")}</a></div>`;}
   if(b.t==="img")return `<figure style="text-align:center;margin:16px 0;"><img src="${esc(safeUrl(b.u))}" style="max-height:380px;width:auto;max-width:100%;border-radius:10px;border:1px solid #e2e8f0;margin:0 auto;display:inline-block;">${b.x?`<figcaption style="font-size:13px;color:#64748b;margin-top:6px;font-style:italic;">${esc(b.x)}</figcaption>`:""}</figure>`;
   if(b.t==="video")return `<div style="text-align:center;margin:16px auto;max-width:600px;">${videoEmbed(b.u)}${b.x?`<div style="font-size:13px;color:#64748b;margin-top:6px;font-style:italic;">${esc(b.x)}</div>`:""}</div>`;
   if(b.t==="divider")return `<hr style="border:0;border-top:1px solid #e2e8f0;margin:16px 0;">`;
@@ -3386,9 +3390,21 @@ function wInsertHtml(html){
  saveWordSelection();
  onWordEditorInput();
 }
+function syncCmsLines(){
+ const ed=$("cmsWordEditor"), gut=$("cmsLineGutter");
+ if(!ed||!gut)return;
+ gut.scrollTop = ed.scrollTop;
+ const text = ed.innerText || "";
+ const count = Math.max(1, text.split("\n").length);
+ let numStr = "";
+ for(let i=1; i<=count; i++) numStr += i + "<br>";
+ gut.innerHTML = numStr;
+}
+
 function onWordEditorInput(){
  const ed=$("cmsWordEditor");
  if(ed)curArtHtml=ed.innerHTML;
+ syncCmsLines();
  cmsPrev();
 }
 function buildRichArticleView(rawHtml, showToc, gid){
@@ -3443,8 +3459,11 @@ function buildRichArticleView(rawHtml, showToc, gid){
  let tocHtml="";
  if(showToc && headings.length>0){
   const bodyId=`toc-body-${gid}`;
-  const btnId=`toc-btn-${gid}`;
-  tocHtml=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:14px 18px;margin:0 0 18px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><span style="font-weight:800;font-size:16px;color:#0f172a;">Mục lục</span><button type="button" id="${btnId}" onclick="const b=document.getElementById('${bodyId}');const h=b.classList.toggle('hidden');this.innerHTML=h?'Hiện <i class=\\'fas fa-chevron-down ml-1\\'></i>':'Ẩn <i class=\\'fas fa-chevron-up ml-1\\'></i>';" style="font-size:13px;font-weight:700;color:#2563eb;background:transparent;border:0;cursor:pointer;">Ẩn <i class="fas fa-chevron-up ml-1"></i></button></div><div id="${bodyId}" style="display:flex;flex-direction:column;gap:6px;">${headings.map(h=>`<a onclick="guideScroll('${h.id}')" style="cursor:pointer;color:#2563eb;text-decoration:none;font-weight:${h.tag==='h2'?'600':'500'};font-size:14.5px;padding-left:${h.tag==='h3'?'20px':'0'};line-height:1.5;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${esc(h.label)}</a>`).join("")}</div></div>`;
+  const icId=`toc-ic-${gid}`;
+  tocHtml=`<div style="background:#f8faff;border:1px solid #e0e7ff;border-radius:14px;padding:14px 18px;margin:0 0 18px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><span style="font-weight:800;font-size:15px;color:#4f46e5;display:flex;align-items:center;gap:6px;"><i class="fas fa-list-ul"></i>Xem nhanh</span><button type="button" onclick="const b=document.getElementById('${bodyId}'),ic=document.getElementById('${icId}');const h=b.classList.toggle('hidden');ic.className=h?'fas fa-chevron-down':'fas fa-chevron-up';" style="background:transparent;border:0;color:#4f46e5;cursor:pointer;"><i id="${icId}" class="fas fa-chevron-up text-xs"></i></button></div><div id="${bodyId}" style="display:flex;flex-direction:column;gap:6px;">${headings.map(h=>{
+   if(h.tag==='h2') return `<a onclick="guideScroll('${h.id}')" style="cursor:pointer;color:#1e1b4b;text-decoration:none;font-weight:700;font-size:14px;display:flex;gap:6px;align-items:flex-start;line-height:1.5;"><span style="color:#818cf8;font-weight:900;">›</span><span>${esc(h.label)}</span></a>`;
+   return `<a onclick="guideScroll('${h.id}')" style="cursor:pointer;color:#475569;text-decoration:none;font-weight:500;font-size:13px;padding-left:16px;display:flex;gap:6px;align-items:flex-start;line-height:1.5;"><span style="color:#c7d2fe;font-weight:900;">›</span><span>${esc(h.label)}</span></a>`;
+  }).join("")}</div></div>`;
  }
  return tocHtml + temp.innerHTML;
 }
@@ -3570,7 +3589,7 @@ function confirmWiCallout(){
  if(tp==="banner"){
   wInsertHtml(`<div style="background:linear-gradient(90deg,#3b5998,#4f73b8);color:#ffffff;padding:14px 20px;border-radius:10px;margin:${my}px ${mx}px;font-weight:700;font-size:16px;display:flex;align-items:center;gap:12px;"><span style="background:#0f172a;color:#3b82f6;width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">★</span><span>${esc(txt)}</span></div><p><br></p>`);
  }else if(tp==="cta"){
-  wInsertHtml(`<div style="text-align:${al};margin:${my}px ${mx}px;"><a href="${esc(u)}" target="_blank" data-cta="1" style="display:inline-block;background:#f97316;color:#ffffff;font-weight:800;padding:14px 32px;border-radius:10px;text-decoration:none;text-transform:uppercase;line-height:1.4;box-shadow:0 4px 12px rgba(249,115,22,.35);">${esc(txt).replace(/\n/g,"<br>")}</a></div><p><br></p>`);
+  wInsertHtml(`<div style="text-align:${al};margin:${my}px ${mx}px;"><a href="${esc(u)}" target="_blank" data-cta="1" style="display:inline-block;background:#4f46e5;color:#ffffff;font-weight:700;font-size:12.5px;padding:7px 18px;border-radius:8px;text-decoration:none;text-transform:uppercase;line-height:1.4;box-shadow:0 2px 6px rgba(79,70,229,.3);">${esc(txt).replace(/\n/g,"<br>")}</a></div><p><br></p>`);
  }else{
   const c=tp==="red"?["#fef2f2","#ef4444","#991b1b","⛔ CHÚ Ý:"]:tp==="blue"?["#eff6ff","#3b82f6","#1e40af","💡 HƯỚNG DẪN:"]:tp==="green"?["#f0fdf4","#10b981","#065f46","✔ MẸO HAY:"]:["#fffbeb","#f59e0b","#92400e","⚠️ LƯU Ý:"];
   wInsertHtml(`<div style="background:${c[0]};border-left:4px solid ${c[1]};color:${c[2]};padding:12px 16px;border-radius:10px;margin:${my}px ${mx}px;text-align:${al==="center"?"center":al==="right"?"right":"left"};"><b>${c[3]}</b> ${esc(txt).replace(/\n/g,"<br>")}</div><p><br></p>`);
@@ -4365,8 +4384,24 @@ function startApp(fresh){
  go(localStorage.getItem(SITE_KEY+"_lastTab")||"t-ord");
  if(fresh)toast("Đăng nhập thành công!");
  fetchAll();loadTx(true);loadQuota();
- setInterval(pollMain,10000);setInterval(loadStatus,120000);setInterval(tickClocks,1000);
- document.addEventListener("visibilitychange",()=>{if(!document.hidden){pollMain();loadTx();}});
+setInterval(pollMain,10000);setInterval(loadStatus,120000);setInterval(tickClocks,1000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){pollMain();loadTx();}});
+
+let adminScrollTimer = null;
+window.addEventListener("scroll", () => {
+  clearTimeout(adminScrollTimer);
+  adminScrollTimer = setTimeout(() => {
+    const curTab = localStorage.getItem(SITE_KEY + "_lastTab") || "t-ord";
+    sessionStorage.setItem("adm_scroll_" + curTab, String(window.scrollY));
+  }, 150);
+});
+
+function restoreAdminScroll(tabId){
+  const saved = sessionStorage.getItem("adm_scroll_" + tabId);
+  if(saved !== null && !isNaN(Number(saved))){
+    setTimeout(() => window.scrollTo({ top: Number(saved), behavior: 'instant' }), 60);
+  }
+}
 }
 // ====================================================================
 // LOGIC TEST MODE TRONG TAB CÀI ĐẶT > SET WEB
