@@ -4386,6 +4386,7 @@ function startApp(fresh){
  fetchAll();loadTx(true);loadQuota();
 setInterval(pollMain,10000);setInterval(loadStatus,120000);setInterval(tickClocks,1000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden){pollMain();loadTx();}});
+}
 
 let adminScrollTimer = null;
 window.addEventListener("scroll", () => {
@@ -4402,7 +4403,7 @@ function restoreAdminScroll(tabId){
     setTimeout(() => window.scrollTo({ top: Number(saved), behavior: 'instant' }), 60);
   }
 }
-}
+
 // ====================================================================
 // LOGIC TEST MODE TRONG TAB CÀI ĐẶT > SET WEB
 // ====================================================================
