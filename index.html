@@ -188,9 +188,24 @@ html.dark .loader-ring.amber::after{border-top-color:#E6AA46;border-right-color:
 html.dark .loader-ring.amber i{color:#E6C078;}
 </style>
 <script>
- try{const s=JSON.parse(localStorage.getItem('vpn_portal_session_24h')||'null');if(s&&Date.now()-s.time<864e5)document.documentElement.classList.add('has-user-session');}catch(e){}
+ try{
+  const s=JSON.parse(localStorage.getItem('vpn_portal_session_24h')||'null');
+  if(s&&Date.now()-s.time<864e5){
+    document.documentElement.classList.add('has-user-session');
+    const h=location.hash||'';
+    if(h.startsWith('#guide'))document.documentElement.setAttribute('data-tab','guide');
+    else if(h.startsWith('#packages'))document.documentElement.setAttribute('data-tab','store');
+    else document.documentElement.setAttribute('data-tab','home');
+  }
+ }catch(e){}
  try{const t=localStorage.getItem('vpn_theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark');}catch(e){}
 </script>
+<style>
+html[data-tab="guide"] #p-home{display:none!important;}
+html[data-tab="guide"] #p-guide{display:block!important;}
+html[data-tab="store"] #p-home{display:none!important;}
+html[data-tab="store"] #p-store{display:block!important;}
+</style>
 </head>
 <body class="min-h-screen flex flex-col w-full overflow-x-hidden bg-slate-50 dark:bg-black text-slate-800 dark:text-slate-200 transition-colors duration-300">
 <!-- LAYER CAO NHẤT (z-[999999]): TOAST POPUP LUÔN NẰM TRÊN MỌI MODAL & QR -->
@@ -226,7 +241,7 @@ html.dark .loader-ring.amber i{color:#E6C078;}
         <span class="w-9 h-9 bg-[#0068ff] text-white rounded-full flex items-center justify-center text-[11px] font-black shadow">Zalo</span>
       </a>
     </div>
-    <button type="button" id="mobileFabBtn" onclick="toggleMobileFab()" aria-label="Hỗ trợ" class="w-11 h-11 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white shadow-xl flex items-center justify-center text-lg border-2 border-white dark:border-slate-800 active:scale-95 transition">
+    <button type="button" id="mobileFabBtn" onclick="toggleMobileFab()" aria-label="Hỗ trợ" class="w-12 h-12 md:w-12 md:h-12 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white shadow-xl flex items-center justify-center text-xl border-2 border-white dark:border-slate-800 active:scale-95 transition btn-heartbeat">
       <i id="mobileFabIcon" class="fas fa-headset"></i>
     </button>
   </div>
@@ -294,16 +309,16 @@ html.dark .loader-ring.amber i{color:#E6C078;}
 <nav id="mainNav" class="fixed top-0 w-full z-[70] border-b border-slate-200 dark:border-white/10 bg-white/95 dark:bg-black/90 backdrop-blur-md py-3 transition-colors duration-300">
   <div class="max-w-[1400px] mx-auto px-4 w-full flex flex-col md:flex-row items-center justify-between gap-3">
     <div class="flex items-center justify-between w-full md:w-auto shrink-0">
-      <div class="font-extrabold text-xl md:text-2xl tracking-tighter cursor-pointer text-indigo-700 dark:text-indigo-400" onclick="navigateRoute('#packages')"><span data-i18n="brand">VPN Trinh Hg</span></div>
+      <div class="font-extrabold text-xl md:text-2xl tracking-tighter cursor-pointer text-indigo-700 dark:text-indigo-400" onclick="resetToGuest()"><span data-i18n="brand">VPN Trinh Hg</span></div>
       <div class="flex md:hidden items-center gap-2">
         <select id="langSelectMobile" onchange="changeLanguage(this.value)" class="hidden"><option value="vi">VN</option><option value="en">EN</option><option value="zh">CN</option></select>
         <!-- Dropdown ngôn ngữ Mobile có Cờ SVG -->
         <div class="relative" translate="no">
           <button type="button" onclick="toggleLangMenu('mobile')" id="langBtnMobile" class="bg-indigo-50 dark:bg-[#0a0a0a] text-indigo-700 dark:text-white border border-indigo-100 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 outline-none"></button>
           <div id="langMenuMobile" class="hidden absolute right-0 mt-1.5 w-36 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 rounded-xl shadow-xl py-1 z-[100]">
-            <button type="button" onclick="pickLangOption('vi')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2"><img src="https://flagcdn.com/w40/vn.png" class="w-4 h-3 object-cover rounded-[2px]"><span>VN - Tiếng Việt</span></button>
-            <button type="button" onclick="pickLangOption('en')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2"><img src="https://flagcdn.com/w40/gb.png" class="w-4 h-3 object-cover rounded-[2px]"><span>EN - English</span></button>
-            <button type="button" onclick="pickLangOption('zh')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2"><img src="https://flagcdn.com/w40/cn.png" class="w-4 h-3 object-cover rounded-[2px]"><span>CN - 中文</span></button>
+            <button type="button" onclick="pickLangOption('vi')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2"><img src="https://flagcdn.com/w40/vn.png" class="w-4 h-3 object-cover rounded-[2px]"><span>Tiếng Việt</span></button>
+            <button type="button" onclick="pickLangOption('en')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2"><img src="https://flagcdn.com/w40/gb.png" class="w-4 h-3 object-cover rounded-[2px]"><span>English</span></button>
+            <button type="button" onclick="pickLangOption('zh')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2"><img src="https://flagcdn.com/w40/cn.png" class="w-4 h-3 object-cover rounded-[2px]"><span>中文</span></button>
           </div>
         </div>
         <button id="themeToggleMobile" onclick="toggleTheme()" title="Sáng / Tối" class="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0 transition bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-[#0a0a0a] dark:text-indigo-400 dark:hover:bg-[#111111]"></button>
@@ -327,9 +342,9 @@ html.dark .loader-ring.amber i{color:#E6C078;}
       <div class="relative" translate="no">
         <button type="button" onclick="toggleLangMenu('desktop')" id="langBtnDesktop" class="bg-indigo-50 dark:bg-[#0a0a0a] text-indigo-700 dark:text-white border border-indigo-100 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold flex items-center gap-2 outline-none hover:border-indigo-300 transition"></button>
         <div id="langMenuDesktop" class="hidden absolute right-0 mt-2 w-44 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 rounded-2xl shadow-2xl py-1.5 z-[100]">
-          <button type="button" onclick="pickLangOption('vi')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/vn.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>VN - Tiếng Việt</span></button>
-          <button type="button" onclick="pickLangOption('en')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/gb.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>EN - English</span></button>
-          <button type="button" onclick="pickLangOption('zh')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/cn.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>CN - 中文</span></button>
+          <button type="button" onclick="pickLangOption('vi')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/vn.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>Tiếng Việt</span></button>
+          <button type="button" onclick="pickLangOption('en')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/gb.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>English</span></button>
+          <button type="button" onclick="pickLangOption('zh')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/cn.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>中文</span></button>
         </div>
       </div>
       <button id="themeToggleDesktop" onclick="toggleTheme()" title="Sáng / Tối" class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-[#0a0a0a] dark:text-yellow-400 dark:hover:bg-[#111111]"></button>
@@ -338,7 +353,7 @@ html.dark .loader-ring.amber i{color:#E6C078;}
   </div>
 </nav>
 <div class="h-[120px] md:h-[80px]"></div>
-<div id="mobileNavWrapper" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60]">
+<div id="mobileNavWrapper" class="hidden fixed bottom-2.5 left-1/2 -translate-x-1/2 z-[60] transition-all duration-300">
   <div class="md:hidden bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md shadow-lg rounded-full px-3 py-1.5 flex gap-2 border border-slate-200 dark:border-white/10">
     <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home mobile-tab-btn active flex items-center justify-center text-slate-500 dark:text-slate-400 w-10 h-10 rounded-full transition"><i class="fas fa-tv text-lg"></i></button>
     <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store mobile-tab-btn flex items-center justify-center text-slate-500 dark:text-slate-400 w-10 h-10 rounded-full transition"><i class="fas fa-shopping-cart text-lg"></i></button>
@@ -961,25 +976,26 @@ function videoEmbed(u){
  if(/^https?:\/\//i.test(u))return `<div style="width:100%;max-width:600px;margin:0 auto;"><video src="${esc(u)}" controls playsinline class="w-full max-h-[420px] rounded-xl bg-black shadow-md"></video></div>`;
  return `<div class="p-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-400 text-center text-xs">Video chưa sẵn sàng</div>`;
 }
+let lightboxScrollY = 0;
 function openLightbox(u){
+ lightboxScrollY = window.scrollY;
  const d=document.createElement('div');
  d.className='lb-overlay-active fixed inset-0 bg-black/90 z-[99950] flex items-center justify-center p-4 backdrop-blur-sm';
  lockBodyScroll();
- const closeLb=fromPop=>{
+ const closeLb=()=>{
   if(!d.isConnected)return;
   d.remove();
   document.removeEventListener('keydown',onKey);
   unlockBodyScroll();
-  if(!fromPop&&history.state&&history.state.modal==='lightbox')history.back();
+  window.scrollTo(0, lightboxScrollY);
  };
- const onKey=e=>{if(e.key==='Escape')closeLb(false);};
+ const onKey=e=>{if(e.key==='Escape')closeLb();};
  document.addEventListener('keydown',onKey);
- d.__closeLb=()=>closeLb(true);
+ d.__closeLb=closeLb;
  d.innerHTML=`<button type="button" title="Đóng ảnh" class="fixed top-4 right-4 z-[99960] w-10 h-10 rounded-full bg-slate-900/80 hover:bg-red-600 text-white border-2 border-white/30 flex items-center justify-center text-lg font-bold shadow-lg transition"><i class="fas fa-xmark"></i></button><img src="${esc(u)}" class="max-w-[92vw] max-h-[88vh] rounded-xl shadow-2xl object-contain" onclick="event.stopPropagation()">`;
- d.onclick=()=>closeLb(false);
- d.querySelector('button').onclick=e=>{e.stopPropagation();closeLb(false);};
+ d.onclick=closeLb;
+ d.querySelector('button').onclick=e=>{e.stopPropagation();closeLb();};
  document.body.appendChild(d);
- pushOverlayState('lightbox');
 }
 
 // Khớp 100% ký tự với nội dung 1 khối trong CÙNG bài viết (giống cơ chế của Admin)
@@ -1203,7 +1219,13 @@ function renderRichGuideHtml(rawHtml, showToc, gid){
  let tocHtml='';
  if(showToc && headings.length>0){
   const bodyId=`toc-body-${gid}`;
-  tocHtml=`<div class="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 mb-5 shadow-sm"><div class="flex items-center justify-between mb-2.5"><span class="font-extrabold text-base text-slate-900 dark:text-white">Mục lục</span><button type="button" onclick="const b=document.getElementById('${bodyId}');const h=b.classList.toggle('hidden');this.innerHTML=h?'Hiện <i class=\\'fas fa-chevron-down ml-1\\'></i>':'Ẩn <i class=\\'fas fa-chevron-up ml-1\\'></i>';" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">Ẩn <i class="fas fa-chevron-up ml-1"></i></button></div><div id="${bodyId}" class="flex flex-col gap-1.5">${headings.map(h=>`<a onclick="guideScroll('${h.id}')" class="cursor-pointer text-blue-600 dark:text-blue-400 hover:underline text-sm ${h.tag==='h3'?'pl-5 font-medium':'font-semibold'}">${esc(h.label)}</a>`).join('')}</div></div>`;
+  const icId=`toc-ic-${gid}`;
+  tocHtml=`<div class="bg-[#f8faff] dark:bg-[#14151a] border border-indigo-100 dark:border-white/10 rounded-2xl p-4 md:p-5 mb-5 shadow-sm"><div class="flex items-center justify-between mb-3"><span class="font-extrabold text-indigo-600 dark:text-indigo-400 text-sm md:text-base flex items-center gap-2"><i class="fas fa-list-ul text-sm"></i>Xem nhanh</span><button type="button" onclick="const b=document.getElementById('${bodyId}'),ic=document.getElementById('${icId}');const h=b.classList.toggle('hidden');ic.className=h?'fas fa-chevron-down':'fas fa-chevron-up';" class="text-indigo-600 dark:text-indigo-400 p-1 hover:opacity-80 transition"><i id="${icId}" class="fas fa-chevron-up text-xs"></i></button></div><div id="${bodyId}" class="flex flex-col gap-2">${headings.map(h=>{
+   if(h.tag==='h2'){
+     return `<a onclick="guideScroll('${h.id}')" class="cursor-pointer text-indigo-950 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold text-xs md:text-sm flex items-start gap-2 leading-relaxed"><span class="text-indigo-400 text-xs mt-0.5 shrink-0 font-black">›</span><span>${esc(h.label)}</span></a>`;
+   }
+   return `<a onclick="guideScroll('${h.id}')" class="cursor-pointer text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium text-xs md:text-[13px] pl-4 flex items-start gap-2 leading-relaxed"><span class="text-indigo-300 dark:text-indigo-500 text-xs mt-0.5 shrink-0 font-black">›</span><span>${esc(h.label)}</span></a>`;
+  }).join('')}</div></div>`;
  }
  return tocHtml + temp.innerHTML;
 }
@@ -1304,24 +1326,48 @@ function showToast(msg,type='success'){const c=$('toastContainer'),t=document.cr
  t.className=`${bg} text-white px-4 py-3 rounded-xl shadow-xl flex items-center transform transition-all duration-300 translate-x-full opacity-0 w-fit max-w-[90vw]`;
  t.innerHTML=`<i class="fas ${icon} mr-2 shrink-0"></i><span class="font-bold text-xs md:text-sm">${esc(msg)}</span>`;c.appendChild(t);setTimeout(()=>t.classList.remove('translate-x-full','opacity-0'),10);setTimeout(()=>{t.classList.add('translate-x-full','opacity-0');setTimeout(()=>t.remove(),300);},3000);}
 
+let indexScrollTimer = null;
 window.addEventListener('scroll',()=>{
   const nav=$('mainNav'), sc=window.scrollY;
-  // Header: Kéo xuống ẩn, kéo lên hiện mượt mà cho cả Light & Dark
   if(sc>lastScrollY && sc>80) nav.classList.add('nav-hidden');
   else nav.classList.remove('nav-hidden');
   lastScrollY=sc;
 
-  // 4 Bong bóng trên điện thoại: Chỉ ẩn khi cuộn vào đúng khu vực form thanh toán, kéo lên trên lại hiện
-  const co=$('checkoutSection'), fs=$('floatingSocials');
-  if(window.innerWidth<768 && co && !co.classList.contains('hidden') && fs){
-    const r=co.getBoundingClientRect();
-    if(r.top < window.innerHeight - 80 && r.bottom > 120){
-      fs.style.opacity='0'; fs.style.pointerEvents='none'; fs.style.transform='translateY(20px)';
-    } else if(!fs.dataset.footerHidden){
-      fs.style.opacity='1'; fs.style.pointerEvents='auto'; fs.style.transform='translateY(0)';
+  clearTimeout(indexScrollTimer);
+  indexScrollTimer = setTimeout(() => {
+    const pageKey = location.hash || '#packages';
+    sessionStorage.setItem('idx_scroll_' + pageKey, String(window.scrollY));
+  }, 150);
+
+  const co=$('checkoutSection'), fs=$('floatingSocials'), mnw=$('mobileNavWrapper');
+  if(window.innerWidth<768){
+    let hideBottomWidgets = false;
+    if(co && !co.classList.contains('hidden')){
+      const r=co.getBoundingClientRect();
+      if(r.top < window.innerHeight - 80 && r.bottom > 120) hideBottomWidgets = true;
+    }
+    const ft=$('footerArea');
+    if(ft){
+      const fr=ft.getBoundingClientRect();
+      if(fr.top < window.innerHeight) hideBottomWidgets = true;
+    }
+    if(hideBottomWidgets){
+      if(fs){fs.style.opacity='0'; fs.style.pointerEvents='none'; fs.style.transform='translateY(20px)';}
+      if(mnw){mnw.style.opacity='0'; mnw.style.pointerEvents='none'; mnw.style.transform='translate(-50%, 20px)';}
+    }else{
+      if(fs && !fs.dataset.footerHidden){fs.style.opacity='1'; fs.style.pointerEvents='auto'; fs.style.transform='translateY(0)';}
+      if(mnw){mnw.style.opacity='1'; mnw.style.pointerEvents='auto'; mnw.style.transform='translate(-50%, 0)';}
     }
   }
 });
+
+function restoreIndexScroll(){
+  const pageKey = location.hash || '#packages';
+  const saved = sessionStorage.getItem('idx_scroll_' + pageKey);
+  if(saved !== null && !isNaN(Number(saved))){
+    setTimeout(() => window.scrollTo({ top: Number(saved), behavior: 'instant' }), 60);
+  }
+}
 
 // 4 Bong bóng: Chỉ ẩn khi cuộn chạm tới footer
 const obs=new IntersectionObserver(es=>es.forEach(e=>{
@@ -1897,6 +1943,7 @@ function enterPortal(o, auto){
  $('view-portal').classList.add('active');
  $('userMenu').classList.remove('hidden');
  $('userMenuMobile')?.classList.remove('hidden');
+ $('mobileNavWrapper')?.classList.remove('hidden');
  $('checkoutSection').classList.add('hidden');
  document.documentElement.classList.add('has-user-session');
  lastSig = JSON.stringify({...o, serverTime: 0});
@@ -2002,11 +2049,19 @@ function logout(){
  oCache=null;clearTimeout(pollT);stopTick();closeQrModal(true);disableUpgradeMode();
  $('userMenu').classList.add('hidden');
  $('userMenuMobile')?.classList.add('hidden');
+ $('mobileNavWrapper')?.classList.add('hidden');
  $('loginInput').value='';
  document.documentElement.classList.remove('has-user-session');
+ document.documentElement.removeAttribute('data-tab');
  document.body.classList.remove('checkout-active');
  switchPortalTab('p-store', false, false);
  window.scrollTo(0,0);
+}
+
+function resetToGuest(){
+ localStorage.removeItem(SESSION_KEY);
+ localStorage.removeItem(CACHE_KEY);
+ location.href = location.pathname;
 }
 
 function resolveDeepGuideParams(){
@@ -2093,6 +2148,7 @@ async function handleRouteChange(fromPop){
   setRouteHash('#packages', true);
   switchPortalTab('p-store', false, true);
  }
+ restoreIndexScroll();
 }
 
 // Lắng nghe nút Back chuột / Cử chỉ vuốt quay lại trên điện thoại
