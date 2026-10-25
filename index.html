@@ -193,41 +193,81 @@ html.dark .loader-ring.amber i{color:#E6C078;}
 </script>
 </head>
 <body class="min-h-screen flex flex-col w-full overflow-x-hidden bg-slate-50 dark:bg-black text-slate-800 dark:text-slate-200 transition-colors duration-300">
-<div id="toastContainer" class="fixed top-[90px] md:top-[100px] right-5 z-[9999] flex flex-col items-end gap-2 pointer-events-none"></div>
-<div id="floatingSocials" class="fixed bottom-24 md:bottom-6 right-4 md:right-6 flex flex-col gap-3 z-40 transition-all duration-500">
-  <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="w-12 h-12 bg-wechat text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce"><i class="fab fa-weixin"></i></button>
-  <a href="https://t.me/hoaian57" target="_blank" class="w-12 h-12 bg-tele text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.1s"><i class="fab fa-telegram-plane"></i></a>
-  <a href="https://www.facebook.com/trinh.hg.57" target="_blank" class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.2s"><i class="fab fa-facebook-messenger"></i></a>
-  <a href="https://zalo.me/0917678211" target="_blank" class="w-12 h-12 bg-[#0068ff] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.3s"><span class="font-bold text-[14px]">Zalo</span></a>
+<!-- LAYER CAO NHẤT (z-[999999]): TOAST POPUP LUÔN NẰM TRÊN MỌI MODAL & QR -->
+<div id="toastContainer" class="fixed top-5 md:top-6 right-5 z-[999999] flex flex-col items-end gap-2 pointer-events-none"></div>
+
+<!-- 4 BONG BÓNG HỖ TRỢ: TRÊN MÁY TÍNH GIỮ NGUYÊN 100%, TRÊN ĐIỆN THOẠI THU GỌN THÀNH 1 NÚT FAB SPEED DIAL -->
+<div id="floatingSocials" class="fixed bottom-6 right-4 md:right-6 z-50 transition-all duration-300">
+  <!-- Giao diện Máy tính (md trở lên): Giữ nguyên 100% vị trí và kích thước 4 nút -->
+  <div class="hidden md:flex flex-col gap-3">
+    <button onclick="openWechatModal()" class="w-12 h-12 bg-wechat text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce"><i class="fab fa-weixin"></i></button>
+    <a href="https://t.me/hoaian57" target="_blank" class="w-12 h-12 bg-tele text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.1s"><i class="fab fa-telegram-plane"></i></a>
+    <a href="https://www.facebook.com/trinh.hg.57" target="_blank" class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.2s"><i class="fab fa-facebook-messenger"></i></a>
+    <a href="https://zalo.me/0917678211" target="_blank" class="w-12 h-12 bg-[#0068ff] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.3s"><span class="font-bold text-[14px]">Zalo</span></a>
+  </div>
+
+  <!-- Giao diện Điện thoại (nhỏ hơn md): 1 nút FAB gọn gàng, bấm vào mới bung 4 kênh -->
+  <div class="md:hidden relative flex flex-col items-end">
+    <div id="mobileFabMenu" class="hidden flex-col items-end gap-2.5 mb-3 transition-all duration-200">
+      <button type="button" onclick="openWechatModal();toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl">
+        <span class="text-xs font-extrabold text-slate-700 dark:text-white">WeChat</span>
+        <span class="w-9 h-9 bg-wechat text-white rounded-full flex items-center justify-center text-lg shadow"><i class="fab fa-weixin"></i></span>
+      </button>
+      <a href="https://t.me/hoaian57" target="_blank" onclick="toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl">
+        <span class="text-xs font-extrabold text-slate-700 dark:text-white">Telegram</span>
+        <span class="w-9 h-9 bg-tele text-white rounded-full flex items-center justify-center text-lg shadow"><i class="fab fa-telegram-plane"></i></span>
+      </a>
+      <a href="https://www.facebook.com/trinh.hg.57" target="_blank" onclick="toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl">
+        <span class="text-xs font-extrabold text-slate-700 dark:text-white">Messenger</span>
+        <span class="w-9 h-9 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg shadow"><i class="fab fa-facebook-messenger"></i></span>
+      </a>
+      <a href="https://zalo.me/0917678211" target="_blank" onclick="toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl">
+        <span class="text-xs font-extrabold text-slate-700 dark:text-white">Chat Zalo</span>
+        <span class="w-9 h-9 bg-[#0068ff] text-white rounded-full flex items-center justify-center text-[11px] font-black shadow">Zalo</span>
+      </a>
+    </div>
+    <button type="button" id="mobileFabBtn" onclick="toggleMobileFab()" aria-label="Hỗ trợ" class="w-11 h-11 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white shadow-xl flex items-center justify-center text-lg border-2 border-white dark:border-slate-800 active:scale-95 transition">
+      <i id="mobileFabIcon" class="fas fa-headset"></i>
+    </button>
+  </div>
 </div>
-<div id="guideAuthModal" class="hidden fixed inset-0 z-[99999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all">
+
+<!-- MODAL ĐĂNG NHẬP PORTAL (LAYER z-[99900] - DƯỚI TOAST) -->
+<div id="guideAuthModal" class="hidden fixed inset-0 z-[99900] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all" onclick="closeGuideAuthModal()">
   <div class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-6 md:p-8 rounded-3xl text-center max-w-md w-full shadow-2xl relative" onclick="event.stopPropagation()">
     <button type="button" onclick="closeGuideAuthModal()" title="Đóng" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition">
       <i class="fas fa-times text-sm"></i>
     </button>
     <div class="w-14 h-14 bg-indigo-100 dark:bg-indigo-900/40 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-600 dark:text-indigo-400 text-2xl shadow-inner">
-      <i class="fas fa-lock"></i>
+      <i class="fas fa-shield-halved"></i>
     </div>
-    <h3 class="font-extrabold text-lg md:text-xl text-slate-800 dark:text-slate-100 mb-1">Mở khóa Bài viết Hướng dẫn</h3>
+    <h3 class="font-extrabold text-lg md:text-xl text-slate-800 dark:text-slate-100 mb-1">Truy cập Cổng Đơn Hàng</h3>
     <p id="guideAuthArtTitle" class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 mb-2"></p>
-    <p class="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">Nhập <b>Email</b> hoặc <b>Mã đơn hàng (DH...)</b> của bạn để mở thẳng bài viết này và lưu đăng nhập 24h.</p>
+    <p class="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">Nhập <b>Email</b> hoặc <b>Mã đơn hàng (DH...)</b> của bạn để xem thông tin đơn hàng & lấy Link Subscription.</p>
     <form onsubmit="submitGuideAuth(event)" class="space-y-3">
       <input type="text" id="guideAuthInput" required placeholder="Nhập Email hoặc Mã đơn hàng..." class="w-full bg-slate-50 dark:bg-black border-2 border-indigo-100 dark:border-white/15 rounded-xl px-4 py-3 text-sm text-center font-bold text-slate-800 dark:text-white outline-none focus:border-indigo-500 transition">
       <button type="submit" id="btnGuideAuthSubmit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 rounded-xl text-xs md:text-sm uppercase transition shadow-md">
-        <i class="fas fa-unlock-keyhole mr-1.5"></i>VÀO XEM BÀI VIẾT NGAY
+        <i class="fas fa-unlock-keyhole mr-1.5"></i>ĐĂNG NHẬP PORTAL NGAY
       </button>
     </form>
   </div>
 </div>
-<div id="wechatModal" class="hidden fixed inset-0 z-[99999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all" onclick="this.classList.add('hidden')">
-  <div class="bg-white dark:bg-[#0a0a0a] border dark:border-white/10 p-6 rounded-3xl text-center max-w-sm w-full shadow-2xl" onclick="event.stopPropagation()">
+
+<!-- MODAL WECHAT (LAYER z-[99900] - DƯỚI TOAST) -->
+<div id="wechatModal" class="hidden fixed inset-0 z-[99900] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all" onclick="closeWechatModal()">
+  <div class="bg-white dark:bg-[#0a0a0a] border dark:border-white/10 p-6 rounded-3xl text-center max-w-sm w-full shadow-2xl relative" onclick="event.stopPropagation()">
+    <button type="button" onclick="closeWechatModal()" title="Đóng" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition">
+      <i class="fas fa-times text-sm"></i>
+    </button>
     <h3 class="font-extrabold text-xl text-slate-800 dark:text-slate-100 mb-2">WeChat Hỗ trợ</h3>
     <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Lưu ảnh hoặc dùng chức năng quét mã của WeChat để thêm Admin.</p>
     <div class="bg-slate-50 dark:bg-[#111111] p-2 rounded-2xl mb-4 border border-slate-200 dark:border-white/10 shadow-inner overflow-hidden flex justify-center"><img src="https://i.pinimg.com/736x/93/29/1e/93291e3f736f05f2f5722ecbcb7ca428.jpg" alt="WeChat QR" class="max-w-[250px] w-full h-auto rounded-xl object-contain"></div>
-    <button onclick="document.getElementById('wechatModal').classList.add('hidden')" class="w-full bg-slate-800 dark:bg-slate-700 text-white font-bold py-3 rounded-xl hover:bg-slate-900 dark:hover:bg-slate-600 transition">ĐÓNG BẢNG NÀY</button>
+    <button onclick="closeWechatModal()" class="w-full bg-slate-800 dark:bg-slate-700 text-white font-bold py-3 rounded-xl hover:bg-slate-900 dark:hover:bg-slate-600 transition">ĐÓNG BẢNG NÀY</button>
   </div>
 </div>
-<div id="qrSubModal" class="hidden fixed inset-0 z-[99999] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all" onclick="closeQrModal()">
+
+<!-- MODAL MÃ QR LINK SUB (LAYER z-[99900] - DƯỚI TOAST, KHÓA CUỘN NỀN) -->
+<div id="qrSubModal" class="hidden fixed inset-0 z-[99900] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all" onclick="closeQrModal()">
   <div class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-6 rounded-3xl text-center max-w-sm w-full shadow-2xl relative" onclick="event.stopPropagation()">
     <button type="button" onclick="closeQrModal()" title="Đóng" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition">
       <i class="fas fa-times text-sm"></i>
@@ -250,13 +290,24 @@ html.dark .loader-ring.amber i{color:#E6C078;}
     </div>
   </div>
 </div>
+
 <nav id="mainNav" class="fixed top-0 w-full z-[70] border-b border-slate-200 dark:border-white/10 bg-white/95 dark:bg-black/90 backdrop-blur-md py-3 transition-colors duration-300">
   <div class="max-w-[1400px] mx-auto px-4 w-full flex flex-col md:flex-row items-center justify-between gap-3">
     <div class="flex items-center justify-between w-full md:w-auto shrink-0">
-      <div class="font-extrabold text-xl md:text-2xl tracking-tighter cursor-pointer text-indigo-700 dark:text-indigo-400" onclick="logout()"><span data-i18n="brand">VPN Trinh Hg</span></div>
+      <div class="font-extrabold text-xl md:text-2xl tracking-tighter cursor-pointer text-indigo-700 dark:text-indigo-400" onclick="navigateRoute('#packages')"><span data-i18n="brand">VPN Trinh Hg</span></div>
       <div class="flex md:hidden items-center gap-2">
-        <select id="langSelectMobile" onchange="changeLanguage(this.value)" class="bg-indigo-50 dark:bg-[#0a0a0a] text-indigo-700 dark:text-white border border-indigo-100 dark:border-white/10 rounded-lg px-2 py-1.5 text-xs font-bold outline-none"><option value="vi">🇻🇳 VN</option><option value="en">🇬🇧 EN</option><option value="zh">🇨🇳 CN</option></select>
-<button id="themeToggleMobile" onclick="toggleTheme()" title="Sáng / Tối" class="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0 transition bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-[#0a0a0a] dark:text-indigo-400 dark:hover:bg-[#111111]"></button>
+        <select id="langSelectMobile" onchange="changeLanguage(this.value)" class="hidden"><option value="vi">VN</option><option value="en">EN</option><option value="zh">CN</option></select>
+        <!-- Dropdown ngôn ngữ Mobile có Cờ SVG -->
+        <div class="relative" translate="no">
+          <button type="button" onclick="toggleLangMenu('mobile')" id="langBtnMobile" class="bg-indigo-50 dark:bg-[#0a0a0a] text-indigo-700 dark:text-white border border-indigo-100 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 outline-none"></button>
+          <div id="langMenuMobile" class="hidden absolute right-0 mt-1.5 w-36 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 rounded-xl shadow-xl py-1 z-[100]">
+            <button type="button" onclick="pickLangOption('vi')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2"><img src="https://flagcdn.com/w40/vn.png" class="w-4 h-3 object-cover rounded-[2px]"><span>VN - Tiếng Việt</span></button>
+            <button type="button" onclick="pickLangOption('en')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2"><img src="https://flagcdn.com/w40/gb.png" class="w-4 h-3 object-cover rounded-[2px]"><span>EN - English</span></button>
+            <button type="button" onclick="pickLangOption('zh')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2"><img src="https://flagcdn.com/w40/cn.png" class="w-4 h-3 object-cover rounded-[2px]"><span>CN - 中文</span></button>
+          </div>
+        </div>
+        <button id="themeToggleMobile" onclick="toggleTheme()" title="Sáng / Tối" class="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0 transition bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-[#0a0a0a] dark:text-indigo-400 dark:hover:bg-[#111111]"></button>
+        <div id="userMenuMobile" class="hidden"><button onclick="logout()" title="Thoát" class="w-9 h-9 rounded-full bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center text-sm shadow-sm"><i class="fas fa-sign-out-alt"></i></button></div>
       </div>
     </div>
     <div class="flex-1 w-full md:flex-1 flex items-center justify-center mx-0 md:mx-2">
@@ -266,19 +317,28 @@ html.dark .loader-ring.amber i{color:#E6C078;}
       </div>
     </div>
     <div class="hidden md:flex items-center justify-end w-auto gap-3 shrink-0">
-      <div id="desktopPortalNav" class="hidden items-center gap-2 shrink-0 opacity-0 w-0 overflow-hidden whitespace-nowrap transition-all duration-500">
+      <div id="desktopPortalNav" class="flex items-center gap-2 shrink-0 whitespace-nowrap transition-all duration-300">
         <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center"><i class="fas fa-tv mr-2"></i><span data-i18n="tab_p_home">Trang chủ</span></button>
         <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center"><i class="fas fa-shopping-cart mr-2"></i><span data-i18n="tab_p_store">Cửa hàng</span></button>
         <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center"><i class="fas fa-book mr-2"></i><span data-i18n="tab_p_guide">Hướng dẫn</span></button>
       </div>
-      <select id="langSelectDesktop" onchange="changeLanguage(this.value)" class="bg-indigo-50 dark:bg-[#0a0a0a] text-indigo-700 dark:text-white border border-indigo-100 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold outline-none"><option value="vi">VN - Tiếng Việt</option><option value="en">EN - English</option><option value="zh">CN - 中文</option></select>
-<button id="themeToggleDesktop" onclick="toggleTheme()" title="Sáng / Tối" class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-[#0a0a0a] dark:text-yellow-400 dark:hover:bg-[#111111]"></button>
+      <select id="langSelectDesktop" onchange="changeLanguage(this.value)" class="hidden"><option value="vi">VN - Tiếng Việt</option><option value="en">EN - English</option><option value="zh">CN - 中文</option></select>
+      <!-- Dropdown ngôn ngữ Desktop có Cờ SVG hiển thị chuẩn trên Windows -->
+      <div class="relative" translate="no">
+        <button type="button" onclick="toggleLangMenu('desktop')" id="langBtnDesktop" class="bg-indigo-50 dark:bg-[#0a0a0a] text-indigo-700 dark:text-white border border-indigo-100 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold flex items-center gap-2 outline-none hover:border-indigo-300 transition"></button>
+        <div id="langMenuDesktop" class="hidden absolute right-0 mt-2 w-44 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 rounded-2xl shadow-2xl py-1.5 z-[100]">
+          <button type="button" onclick="pickLangOption('vi')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/vn.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>VN - Tiếng Việt</span></button>
+          <button type="button" onclick="pickLangOption('en')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/gb.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>EN - English</span></button>
+          <button type="button" onclick="pickLangOption('zh')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/cn.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>CN - 中文</span></button>
+        </div>
+      </div>
+      <button id="themeToggleDesktop" onclick="toggleTheme()" title="Sáng / Tối" class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-[#0a0a0a] dark:text-yellow-400 dark:hover:bg-[#111111]"></button>
       <div id="userMenu" class="hidden"><button onclick="logout()" class="text-sm bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-bold px-4 py-2 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/50 transition shadow-sm flex items-center justify-center whitespace-nowrap"><i class="fas fa-sign-out-alt md:mr-1"></i><span class="hidden md:inline" data-i18n="btn_logout">Thoát</span></button></div>
     </div>
   </div>
 </nav>
 <div class="h-[120px] md:h-[80px]"></div>
-<div id="mobileNavWrapper" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[60]">
+<div id="mobileNavWrapper" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60]">
   <div class="md:hidden bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md shadow-lg rounded-full px-3 py-1.5 flex gap-2 border border-slate-200 dark:border-white/10">
     <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home mobile-tab-btn active flex items-center justify-center text-slate-500 dark:text-slate-400 w-10 h-10 rounded-full transition"><i class="fas fa-tv text-lg"></i></button>
     <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store mobile-tab-btn flex items-center justify-center text-slate-500 dark:text-slate-400 w-10 h-10 rounded-full transition"><i class="fas fa-shopping-cart text-lg"></i></button>
@@ -845,14 +905,82 @@ function guideArts(tabId){
 function findArt(tabId,artId){const list=guideArts(tabId);return list.find(a=>a.id===artId)||list[0]||null;}
 function findArtByName(tabId,name){return guideArts(tabId).find(a=>String(a.name||'')===String(name||''))||null;}
 
+function lockBodyScroll(){document.body.style.overflow='hidden';}
+function unlockBodyScroll(){
+ const anyOpen=['qrSubModal','guideAuthModal','wechatModal'].some(id=>{const el=$(id);return el&&!el.classList.contains('hidden');})||document.querySelector('.lb-overlay-active');
+ if(!anyOpen)document.body.style.overflow='';
+}
+function openWechatModal(){
+ const m=$('wechatModal');if(!m)return;
+ m.classList.remove('hidden');lockBodyScroll();
+ pushOverlayState('wechat');
+}
+function closeWechatModal(fromPop){
+ const m=$('wechatModal');if(!m||m.classList.contains('hidden'))return;
+ m.classList.add('hidden');unlockBodyScroll();
+ if(!fromPop&&history.state&&history.state.modal==='wechat')history.back();
+}
+function toggleMobileFab(force){
+ const menu=$('mobileFabMenu'),ic=$('mobileFabIcon');if(!menu)return;
+ const open=typeof force==='boolean'?force:menu.classList.contains('hidden');
+ menu.classList.toggle('hidden',!open);
+ menu.classList.toggle('flex',open);
+ if(ic)ic.className=open?'fas fa-times':'fas fa-headset';
+}
+document.addEventListener('click',e=>{
+ const fs=$('floatingSocials'),lmM=$('langMenuMobile'),lmD=$('langMenuDesktop');
+ if(fs&&!fs.contains(e.target))toggleMobileFab(false);
+ if(lmM&&!lmM.parentElement.contains(e.target))lmM.classList.add('hidden');
+ if(lmD&&!lmD.parentElement.contains(e.target))lmD.classList.add('hidden');
+});
+const LANG_META={
+ vi:{flag:'https://flagcdn.com/w40/vn.png',short:'VN',full:'VN - Tiếng Việt'},
+ en:{flag:'https://flagcdn.com/w40/gb.png',short:'EN',full:'EN - English'},
+ zh:{flag:'https://flagcdn.com/w40/cn.png',short:'CN',full:'CN - 中文'}
+};
+function paintLangButtons(val){
+ const m=LANG_META[val]||LANG_META.vi;
+ const bm=$('langBtnMobile'),bd=$('langBtnDesktop');
+ if(bm)bm.innerHTML=`<img src="${m.flag}" class="w-4 h-3 object-cover rounded-[2px] shadow-sm"><span>${m.short}</span><i class="fas fa-chevron-down text-[9px] opacity-70"></i>`;
+ if(bd)bd.innerHTML=`<img src="${m.flag}" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>${m.full}</span><i class="fas fa-chevron-down text-[10px] opacity-70 ml-0.5"></i>`;
+}
+function toggleLangMenu(kind){
+ const el=$(kind==='mobile'?'langMenuMobile':'langMenuDesktop');
+ if(el)el.classList.toggle('hidden');
+}
+function pickLangOption(val){
+ $('langMenuMobile')?.classList.add('hidden');
+ $('langMenuDesktop')?.classList.add('hidden');
+ changeLanguage(val);
+}
+
 function videoEmbed(u){
  u=String(u||'');let m;
- if(m=u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/))([\w-]{6,})/))return `<div style="position:relative;width:100%;aspect-ratio:16/9"><iframe src="https://www.youtube.com/embed/${m[1]}" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:10px" allowfullscreen loading="lazy"></iframe></div>`;
- if(m=u.match(/vimeo\.com\/(?:video\/)?(\d+)/))return `<div style="position:relative;width:100%;aspect-ratio:16/9"><iframe src="https://player.vimeo.com/video/${m[1]}" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:10px" allowfullscreen loading="lazy"></iframe></div>`;
- if(/^https?:\/\//i.test(u))return `<video src="${esc(u)}" controls playsinline class="w-full max-w-full rounded-xl bg-black"></video>`;
+ if(m=u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/))([\w-]{6,})/))return `<div style="position:relative;width:100%;max-width:600px;margin:0 auto;aspect-ratio:16/9"><iframe src="https://www.youtube.com/embed/${m[1]}" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.12)" allowfullscreen loading="lazy"></iframe></div>`;
+ if(m=u.match(/vimeo\.com\/(?:video\/)?(\d+)/))return `<div style="position:relative;width:100%;max-width:600px;margin:0 auto;aspect-ratio:16/9"><iframe src="https://player.vimeo.com/video/${m[1]}" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.12)" allowfullscreen loading="lazy"></iframe></div>`;
+ if(/^https?:\/\//i.test(u))return `<div style="width:100%;max-width:600px;margin:0 auto;"><video src="${esc(u)}" controls playsinline class="w-full max-h-[420px] rounded-xl bg-black shadow-md"></video></div>`;
  return `<div class="p-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-400 text-center text-xs">Video chưa sẵn sàng</div>`;
 }
-function openLightbox(u){const d=document.createElement('div');d.className='fixed inset-0 bg-black/85 z-[99999] flex items-center justify-center p-4 cursor-zoom-out';d.innerHTML=`<img src="${esc(u)}" class="max-w-full max-h-full rounded-lg">`;d.onclick=()=>d.remove();document.body.appendChild(d);}
+function openLightbox(u){
+ const d=document.createElement('div');
+ d.className='lb-overlay-active fixed inset-0 bg-black/90 z-[99950] flex items-center justify-center p-4 backdrop-blur-sm';
+ lockBodyScroll();
+ const closeLb=fromPop=>{
+  if(!d.isConnected)return;
+  d.remove();
+  document.removeEventListener('keydown',onKey);
+  unlockBodyScroll();
+  if(!fromPop&&history.state&&history.state.modal==='lightbox')history.back();
+ };
+ const onKey=e=>{if(e.key==='Escape')closeLb(false);};
+ document.addEventListener('keydown',onKey);
+ d.__closeLb=()=>closeLb(true);
+ d.innerHTML=`<button type="button" title="Đóng ảnh" class="fixed top-4 right-4 z-[99960] w-10 h-10 rounded-full bg-slate-900/80 hover:bg-red-600 text-white border-2 border-white/30 flex items-center justify-center text-lg font-bold shadow-lg transition"><i class="fas fa-xmark"></i></button><img src="${esc(u)}" class="max-w-[92vw] max-h-[88vh] rounded-xl shadow-2xl object-contain" onclick="event.stopPropagation()">`;
+ d.onclick=()=>closeLb(false);
+ d.querySelector('button').onclick=e=>{e.stopPropagation();closeLb(false);};
+ document.body.appendChild(d);
+ pushOverlayState('lightbox');
+}
 
 // Khớp 100% ký tự với nội dung 1 khối trong CÙNG bài viết (giống cơ chế của Admin)
 const ANCH=new Set(['header','sub','step','note','text','btn','img','video']);
@@ -898,7 +1026,8 @@ function renderBlocks(bl,gid){
    h+=`<div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 my-4 shadow-sm"><div class="font-extrabold text-indigo-600 dark:text-indigo-400 mb-2.5 text-base flex items-center gap-2"><i class="fas fa-list-ul"></i><span>${esc(b.x||'Xem nhanh')}</span></div><div class="space-y-1.5">${items.map(o=>`<a onclick="guideScroll('g-${g}-${o.i}')" class="block cursor-pointer py-1 text-sm hover:text-indigo-500 dark:hover:text-indigo-400 transition ${o.x.t==='sub'?'pl-4 text-slate-600 dark:text-slate-400 font-semibold':'text-indigo-800 dark:text-indigo-300 font-extrabold'}"><i class="fas fa-angle-right mr-1.5 text-indigo-400"></i>${esc(o.x.x)}</a>`).join('')||'<span class="text-xs text-slate-400">Chưa có mục nào</span>'}</div></div>`;
   }
   else if(b.t==='btn'){
-   h+=`<div id="${aid}" class="my-3 scroll-mt-24 text-${al}"><a href="${esc(safeUrl(b.u))}" target="_blank" rel="noopener" class="inline-block bg-gradient-to-br from-purple-500 to-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-md hover:scale-105 transition"><i class="fas fa-download mr-2"></i>${esc(b.x||'TẢI VỀ')}</a></div>`;
+   const mt=Number(b.mt??12),mb=Number(b.mb??12),ml=Number(b.ml??0),mr=Number(b.mr??0);
+   h+=`<div id="${aid}" class="scroll-mt-24 text-${al}" style="margin:${mt}px ${mr}px ${mb}px ${ml}px"><a href="${esc(safeUrl(b.u))}" target="_blank" rel="noopener" class="inline-block bg-gradient-to-br from-purple-500 to-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-md hover:scale-105 transition"><i class="fas fa-download mr-2"></i>${esc(b.x||'TẢI VỀ')}</a></div>`;
   }
   else if(b.t==='img'){
    // Ảnh luôn căn giữa màn hình, có caption bên dưới, click là zoom to, click cái nữa là đóng
@@ -972,19 +1101,33 @@ function renderGuideCategories() {
   container.innerHTML = html || i18n[lang].guide_empty;
 }
 
-function openGuideArticle(tabId, artId) {
-  curGuide = tabId;
-  const arts = guideArts(tabId);
-  const art = arts.find(a => a.id === artId) || arts[0];
+async function openGuideArticle(tabId, artId, skipPush) {
+  await loadConfig();
+  const tabs = guideTabList();
+  let foundTab = tabId, art = null;
+  if (foundTab) {
+    const arts = guideArts(foundTab);
+    art = arts.find(a => a.id === artId);
+  }
+  if (!art) {
+    for (const t of tabs) {
+      const f = guideArts(t.id).find(a => a.id === artId || a.id === tabId);
+      if (f) { foundTab = t.id; art = f; break; }
+    }
+  }
+  if (!art && foundTab) art = guideArts(foundTab)[0];
   if (!art) return;
-  
+
+  curGuide = foundTab;
   curGuideArt = art.id;
-  
+  if (!skipPush) setRouteHash(`#guide/${encodeURIComponent(curGuideArt)}`);
+
   $('guideCategoryList').classList.add('hidden');
-  $('guideDetailView').classList.remove('hidden');$('guideDetailTitle').innerText = art.name || 'Bài viết';
+  $('guideDetailView').classList.remove('hidden');
+  $('guideDetailTitle').innerText = art.name || 'Bài viết';
   const timeStr = art.updated ? new Date(art.updated).toLocaleDateString('vi-VN') + ' ' + new Date(art.updated).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'}) : 'Mới';
   $('guideDetailMeta').innerText = `Được viết bởi: ${art.author || "Admin"} · Cập nhật lần cuối: ${timeStr}`;
-  
+
   if (art.watermark && art.watermark.trim()) {
    $('guideDetailWatermark').classList.remove('hidden');
    const wmText = esc(art.watermark.trim());
@@ -996,11 +1139,11 @@ function openGuideArticle(tabId, artId) {
  } else {
    $('guideDetailWatermark').classList.add('hidden');$('guideDetailWatermark').innerHTML = '';
  }
-  
+
   if (typeof art.html === 'string' && art.html.trim() !== '') {
-    $('guideText').innerHTML = renderRichGuideHtml(art.html, art.showToc !== false, `${tabId}-${curGuideArt}`);
+    $('guideText').innerHTML = renderRichGuideHtml(art.html, art.showToc !== false, `${foundTab}-${curGuideArt}`);
   } else {
-    $('guideText').innerHTML = art.blocks && art.blocks.length ? renderBlocks(art.blocks, `${tabId}-${curGuideArt}`) : i18n[lang].guide_empty;
+    $('guideText').innerHTML = art.blocks && art.blocks.length ? renderBlocks(art.blocks, `${foundTab}-${curGuideArt}`) : i18n[lang].guide_empty;
   }
   $('view-portal').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -1065,9 +1208,15 @@ function renderRichGuideHtml(rawHtml, showToc, gid){
  return tocHtml + temp.innerHTML;
 }
 
-function closeGuideArticle() {
-  $('guideDetailView').classList.add('hidden');$('guideCategoryList').classList.remove('hidden');
-  $('guideText').innerHTML = '';$('view-portal').scrollIntoView({ behavior: 'smooth', block: 'start' });
+async function closeGuideArticle(skipPush) {
+  curGuideArt = '';
+  if (!skipPush) setRouteHash('#guide');
+  await loadConfig();
+  renderGuideCategories();
+  $('guideDetailView').classList.add('hidden');
+  $('guideCategoryList').classList.remove('hidden');
+  $('guideText').innerHTML = '';
+  $('view-portal').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function showGuide(dev,artId){
@@ -1187,7 +1336,7 @@ const obs=new IntersectionObserver(es=>es.forEach(e=>{
 }),{threshold:.1});
 
 async function changeLanguage(val){
- const cy=window.scrollY;lang=val;$('langSelectMobile').value=val;$('langSelectDesktop').value=val;
+ const cy=window.scrollY;lang=val;$('langSelectMobile').value=val;$('langSelectDesktop').value=val;paintLangButtons(val);
  document.querySelectorAll('[data-i18n]').forEach(el=>el.innerHTML=i18n[lang][el.getAttribute('data-i18n')]||el.innerHTML);
  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>el.placeholder=i18n[lang][el.getAttribute('data-i18n-placeholder')]||el.placeholder);
  renderPackages('all');
@@ -1517,7 +1666,7 @@ function drawQrCenterLogo(box) {
   }
 }
 
-function openQrModal(id, idx){
+async function openQrModal(id, idx){
   const e = $(id);
   if (!e) return;
   if (e.dataset.blurred === '1') {
@@ -1536,11 +1685,30 @@ function openQrModal(id, idx){
   const box = $('qrCanvasBox');
   const modal = $('qrSubModal');
   if (!box || !modal) return;
-  box.innerHTML = '';
-  $('qrSubModalTitle').innerText = idx ? `Mã QR Link Sub #${idx}` : 'Mã QR Link Sub #1';
 
+  const totalSec = Math.max(5, Number(cfgCache.qrExpireSeconds) || 30);
+  box.innerHTML = '<div class="text-xs font-bold text-slate-400"><i class="fas fa-spinner fa-spin mr-1"></i>Đang tạo mã QR bảo mật...</div>';
+  $('qrSubModalTitle').innerText = idx ? `Mã QR Link Sub #${idx}` : 'Mã QR Link Sub #1';
+  $('qrCountdownText').innerText = totalSec + 's';
+  $('qrProgressBar').style.width = '100%';
+  modal.classList.remove('hidden');
+  lockBodyScroll();
+  pushOverlayState('qr');
+
+  let qrPayload = linkVal;
+  let activeSec = totalSec;
+  try {
+    const res = await wpost('/api/public/qr_ticket', { url: linkVal });
+    if (res && res.ok && res.data && res.data.qrUrl) {
+      qrPayload = res.data.qrUrl;
+      activeSec = Number(res.data.expireSeconds) || totalSec;
+    }
+  } catch (err) {}
+
+  if (modal.classList.contains('hidden')) return;
+  box.innerHTML = '';
   new QRCode(box, {
-    text: linkVal,
+    text: qrPayload,
     width: 188,
     height: 188,
     colorDark: "#0f172a",
@@ -1551,31 +1719,36 @@ function openQrModal(id, idx){
   setTimeout(() => drawQrCenterLogo(box), 30);
 
   clearInterval(qrSubTimer);
-  qrSubTimeLeft = 30;
-  $('qrCountdownText').innerText = '30s';
+  qrSubTimeLeft = activeSec;
+  $('qrCountdownText').innerText = qrSubTimeLeft + 's';
   $('qrProgressBar').style.width = '100%';
-  modal.classList.remove('hidden');
 
   qrSubTimer = setInterval(() => {
     qrSubTimeLeft--;
     if (qrSubTimeLeft <= 0) {
+      clearInterval(qrSubTimer);
+      qrSubTimer = null;
+      showToast(`Mã QR đã tự hủy sau ${activeSec}s!`, 'info');
       closeQrModal();
       return;
     }
     $('qrCountdownText').innerText = qrSubTimeLeft + 's';
-    $('qrProgressBar').style.width = Math.max(0, (qrSubTimeLeft / 30) * 100) + '%';
+    $('qrProgressBar').style.width = Math.max(0, (qrSubTimeLeft / activeSec) * 100) + '%';
   }, 1000);
 }
 
-function closeQrModal(){
+function closeQrModal(fromPop){
   if (qrSubTimer) {
     clearInterval(qrSubTimer);
     qrSubTimer = null;
   }
   const modal = $('qrSubModal');
   const box = $('qrCanvasBox');
-  if (modal) modal.classList.add('hidden');
+  if (!modal || modal.classList.contains('hidden')) return;
+  modal.classList.add('hidden');
   if (box) box.innerHTML = '';
+  unlockBodyScroll();
+  if (!fromPop && history.state && history.state.modal === 'qr') history.back();
 }
 
 function renderPaymentBox(){
@@ -1653,7 +1826,7 @@ function fillDashboard(o){
  if(o.pendingUpgrade){ut=L.upg_pending;uc='bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400';}else if(o.upgradeStatus==='failed'){ut=L.upg_failed;uc='bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400';}else if(o.isUpgrade){ut=L.upg_ok;uc='bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400';}
  $('displayUpgradeStatus').innerText=ut;$('displayUpgradeStatus').className='text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap '+uc;
  const titles=['Link Subscription URL:','Link Subscription URL dự phòng 2:','Link Subscription URL dự phòng 3:'];
- $('linkBoxes').innerHTML=[1,2,3].map(i=>`<div class="w-full ${i>1?'mt-2 border-t border-green-200/50 dark:border-green-800/50 pt-3':''}"><h3 class="text-green-700 dark:text-green-500 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>${titles[i-1]}</h3><div class="flex flex-col sm:flex-row gap-2 w-full items-stretch"><div class="relative w-full sm:flex-1 flex items-center overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"><input type="text" id="subLink${i}" readonly class="w-full bg-transparent text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()"><div id="subBlurOverlay${i}" onclick="copyToClipboard('subLink${i}')" class="hidden absolute inset-0 z-10 flex items-center justify-center px-3 bg-white/25 dark:bg-black/30 backdrop-blur-[2px] cursor-pointer select-none"><span class="text-red-600 dark:text-amber-300 font-extrabold text-[11px] md:text-xs text-center leading-tight">🔒 Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!</span></div></div><div class="flex gap-2 shrink-0 w-full sm:w-auto"><button type="button" onclick="copyToClipboard('subLink${i}')" class="flex-1 sm:flex-none sm:w-[105px] bg-green-600 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button><button type="button" onclick="openQrModal('subLink${i}', ${i})" class="flex-1 sm:flex-none sm:w-[105px] bg-indigo-600 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center z-10"><i class="fas fa-qrcode mr-1"></i>LẤY QR</button></div></div></div>`).join('')+
+ $('linkBoxes').innerHTML=[1,2,3].map(i=>`<div class="w-full ${i>1?'mt-2 border-t border-green-200/50 dark:border-green-800/50 pt-3':''}"><h3 class="text-green-700 dark:text-green-500 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>${titles[i-1]}</h3><div class="flex flex-col sm:flex-row gap-2 w-full items-stretch"><div class="relative w-full sm:flex-1 flex items-center overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"><input type="text" id="subLink${i}" readonly class="w-full bg-transparent text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()"><div id="subBlurOverlay${i}" onclick="copyToClipboard('subLink${i}')" class="hidden absolute inset-0 z-10 flex items-center justify-start pl-3.5 pr-3 bg-white/25 dark:bg-black/30 backdrop-blur-[2px] cursor-pointer select-none"><span class="text-red-600 dark:text-amber-300 font-extrabold text-[11px] md:text-xs text-left leading-tight">🔒 Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!</span></div></div><div class="flex gap-2 shrink-0 w-full sm:w-auto"><button type="button" onclick="copyToClipboard('subLink${i}')" class="flex-1 sm:flex-none sm:w-[105px] bg-green-600 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm hover:bg-green-700 transition flex items-center justify-center z-10"><i class="fas fa-copy mr-1"></i>COPY</button><button type="button" onclick="openQrModal('subLink${i}', ${i})" class="flex-1 sm:flex-none sm:w-[105px] bg-indigo-600 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center z-10"><i class="fas fa-qrcode mr-1"></i>LẤY QR</button></div></div></div>`).join('')+
   `<div class="mt-4 grid grid-cols-2 gap-3 border-t border-green-300 dark:border-green-800 pt-4"><button onclick="startUpgrade()" class="w-full bg-amber-500 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-amber-600 transition flex items-center justify-center shadow-md"><i class="fas fa-arrow-up mr-1.5"></i> NÂNG GÓI</button><button onclick="startRenew()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl text-xs md:text-sm hover:bg-indigo-700 transition flex items-center justify-center shadow-md"><i class="fas fa-redo-alt mr-1.5"></i> ${L.btn_renew}</button></div>`;
   [1,2,3].forEach(i=>{
    const inp = $('subLink' + i), ov = $('subBlurOverlay' + i), v = o['info' + i];
@@ -1696,14 +1869,45 @@ function pollLoop(){clearTimeout(pollT);if(!oCache)return;const fast=oCache.stat
  pollT=setTimeout(async()=>{if(!document.hidden)await refreshOrder();pollLoop();},fast?3000:10000);}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&oCache)refreshOrder();});
 
-function enterPortal(o,auto){
- $('view-store').classList.remove('active');$('view-portal').classList.add('active');$('userMenu').classList.remove('hidden');$('checkoutSection').classList.add('hidden');
+// ===== HỆ THỐNG ĐỊNH TUYẾN SPA (HASH ROUTER) & CHỐNG VĂNG WEB KHI VUỐT / BACK =====
+function pushOverlayState(modalName){
+ try { history.pushState({ modal: modalName, hash: location.hash }, '', location.href); } catch(e){}
+}
+function setRouteHash(newHash, replace){
+ if (!newHash.startsWith('#')) newHash = '#' + newHash;
+ if (location.hash === newHash) return;
+ try {
+  if (replace) history.replaceState({ route: newHash }, '', location.pathname + newHash);
+  else history.pushState({ route: newHash }, '', location.pathname + newHash);
+ } catch(e) { location.hash = newHash; }
+}
+function navigateRoute(hash){
+ setRouteHash(hash, false);
+ handleRouteChange(true);
+}
+function highlightNavBtns(tabId){
+ document.querySelectorAll('.desktop-tab-btn').forEach(el=>{el.classList.remove('active','text-white','bg-indigo-600');el.classList.add('text-slate-600','dark:text-slate-300','hover:bg-slate-100','dark:hover:bg-slate-800');});
+ document.querySelectorAll('.mobile-tab-btn').forEach(el=>{el.classList.remove('active','text-indigo-600','bg-[#e0e7ff]','dark:text-[#818cf8]','dark:bg-[#312e81]');el.classList.add('text-slate-500','dark:text-slate-400');});
+ document.querySelectorAll('.desktop-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','bg-indigo-600','text-white');el.classList.remove('text-slate-600','dark:text-slate-300','hover:bg-slate-100','dark:hover:bg-slate-800');});
+ document.querySelectorAll('.mobile-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','text-indigo-600','bg-[#e0e7ff]','dark:text-[#818cf8]','dark:bg-[#312e81]');el.classList.remove('text-slate-500','dark:text-slate-400');});
+}
+
+function enterPortal(o, auto){
+ $('view-store').classList.remove('active');
+ $('view-portal').classList.add('active');
+ $('userMenu').classList.remove('hidden');
+ $('userMenuMobile')?.classList.remove('hidden');
+ $('checkoutSection').classList.add('hidden');
  document.documentElement.classList.add('has-user-session');
- const dn=$('desktopPortalNav');dn.classList.remove('hidden','opacity-0','w-0');dn.classList.add('md:flex','opacity-100','w-auto');$('mobileNavWrapper').classList.remove('hidden');
- if(!auto)switchPortalTab('p-home');
- lastSig=JSON.stringify({...o,serverTime:0});updatePortalInfo(o);
- loadConfig().then(()=>{showGuide(curGuide);if(oCache)updatePortalInfo(oCache);});
- renderPackages('all');pollLoop();document.body.classList.remove('checkout-active');}
+ lastSig = JSON.stringify({...o, serverTime: 0});
+ updatePortalInfo(o);
+ if (!auto) {
+   switchPortalTab('p-home', false, false);
+ }
+ renderPackages('all');
+ pollLoop();
+ document.body.classList.remove('checkout-active');
+}
 
 async function login(auto=false){
  if(auto&&auto.type)auto=false;
@@ -1715,56 +1919,115 @@ async function login(auto=false){
   if(auto&&c){enterPortal(c,true);return;}
   showToast(i18n[lang].req_err,'error');if(auto)logout();return;}
  const o=res.data.order;
- if(!auto){localStorage.setItem(SESSION_KEY,JSON.stringify({id:o.id,time:Date.now()}));showToast(i18n[lang].login_success,'info');history.replaceState(null,'','#portal');}
- localStorage.setItem(CACHE_KEY,JSON.stringify(o));enterPortal(o,auto);
- if(!auto)window.scrollTo({top:0,behavior:'smooth'});}
+ localStorage.setItem(SESSION_KEY,JSON.stringify({id:o.id,time:Date.now()}));
+ localStorage.setItem(CACHE_KEY,JSON.stringify(o));
+ enterPortal(o,auto);
+ if(!auto){
+  showToast(i18n[lang].login_success,'info');
+  setRouteHash('#portal/order', false);
+  window.scrollTo({top:0,behavior:'smooth'});
+ }
+}
 
-function switchPortalTab(tabId,fromUpgrade=false){
+function openPortalAuthModal(){
+ $('guideAuthArtTitle').innerText = '🔒 Khu vực quản lý đơn hàng & Link Sub';
+ $('guideAuthModal').classList.remove('hidden');
+ lockBodyScroll();
+ pushOverlayState('auth');
+ setTimeout(() => $('guideAuthInput')?.focus(), 80);
+}
+
+function closeGuideAuthModal(fromPop){
+ const m=$('guideAuthModal');
+ if(!m||m.classList.contains('hidden'))return;
+ m.classList.add('hidden');
+ unlockBodyScroll();
+ if(!fromPop&&history.state&&history.state.modal==='auth')history.back();
+}
+
+function switchPortalTab(tabId, fromUpgrade=false, skipPush=false){
  if(!fromUpgrade)disableUpgradeMode();
- document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
- document.querySelectorAll('.desktop-tab-btn').forEach(el=>{el.classList.remove('active','text-white','bg-indigo-600');el.classList.add('text-slate-600','dark:text-slate-300','hover:bg-slate-100','dark:hover:bg-slate-800');});
- document.querySelectorAll('.mobile-tab-btn').forEach(el=>{el.classList.remove('active','text-indigo-600','bg-[#e0e7ff]','dark:text-[#818cf8]','dark:bg-[#312e81]');el.classList.add('text-slate-500','dark:text-slate-400');});
- $(tabId).classList.add('active');
- document.querySelectorAll('.desktop-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','bg-indigo-600','text-white');el.classList.remove('text-slate-600','dark:text-slate-300','hover:bg-slate-100','dark:hover:bg-slate-800');});
- document.querySelectorAll('.mobile-tab-btn.btn-nav-'+tabId).forEach(el=>{el.classList.add('active','text-indigo-600','bg-[#e0e7ff]','dark:text-[#818cf8]','dark:bg-[#312e81]');el.classList.remove('text-slate-500','dark:text-slate-400');});
- if(tabId==='p-guide')showGuide((guideTabList()[0]||{}).id);}
+
+ // 1. Tab Trang chủ Portal (/#portal/order): Bắt buộc đăng nhập mới xem được đơn hàng
+ if(tabId==='p-home'){
+  if(!oCache){
+   openPortalAuthModal();
+   return;
+  }
+  $('view-store').classList.remove('active');
+  $('view-portal').classList.add('active');
+  document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
+  $('p-home').classList.add('active');
+  highlightNavBtns('p-home');
+  if(!skipPush) setRouteHash('#portal/order', false);
+  return;
+ }
+
+ // 2. Tab Cửa hàng (/#packages): Công khai cho cả khách chưa đăng nhập & đã đăng nhập
+ if(tabId==='p-store'){
+  highlightNavBtns('p-store');
+  if(!skipPush) setRouteHash('#packages', false);
+  if(oCache){
+   $('view-store').classList.remove('active');
+   $('view-portal').classList.add('active');
+   document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
+   $('p-store').classList.add('active');
+  }else{
+   $('view-portal').classList.remove('active');
+   $('view-store').classList.add('active');
+  }
+  renderPackages('all');
+  return;
+ }
+
+ // 3. Tab Hướng dẫn (/#guide): Công khai 100%, tự làm mới dữ liệu từ Worker
+ if(tabId==='p-guide'){
+  $('view-store').classList.remove('active');
+  $('view-portal').classList.add('active');
+  document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
+  $('p-guide').classList.add('active');
+  highlightNavBtns('p-guide');
+  if(!skipPush) setRouteHash('#guide', false);
+  loadConfig().then(() => {
+   if(!curGuideArt) showGuide((guideTabList()[0]||{}).id);
+  });
+  showGuide((guideTabList()[0]||{}).id);
+  return;
+ }
+}
 
 function logout(){
- localStorage.removeItem(SESSION_KEY);history.replaceState(null,'',location.pathname);
- $('view-portal').classList.remove('active');$('view-store').classList.add('active');$('userMenu').classList.add('hidden');$('loginInput').value='';$('mobileNavWrapper').classList.add('hidden');
- const dn=$('desktopPortalNav');dn.classList.remove('md:flex','opacity-100','w-auto');dn.classList.add('hidden','opacity-0','w-0');
- oCache=null;clearTimeout(pollT);stopTick();closeQrModal();disableUpgradeMode();
- document.documentElement.classList.remove('has-user-session');document.body.classList.remove('checkout-active');window.scrollTo(0,0);}
-
-let pendingDeepGuide = null;
+ localStorage.removeItem(SESSION_KEY);
+ localStorage.removeItem(CACHE_KEY);
+ oCache=null;clearTimeout(pollT);stopTick();closeQrModal(true);disableUpgradeMode();
+ $('userMenu').classList.add('hidden');
+ $('userMenuMobile')?.classList.add('hidden');
+ $('loginInput').value='';
+ document.documentElement.classList.remove('has-user-session');
+ document.body.classList.remove('checkout-active');
+ switchPortalTab('p-store', false, false);
+ window.scrollTo(0,0);
+}
 
 function resolveDeepGuideParams(){
  const sp = new URLSearchParams(location.search);
  const gTab = sp.get('guide'), gArt = sp.get('art');
- if(gTab) return { tab: gTab, art: gArt || '' };
- const hm = location.hash.match(/^#guide\/([^/]+)(?:\/([^/]+))?$/);
- if(hm) return { tab: decodeURIComponent(hm[1]), art: decodeURIComponent(hm[2] || '') };
+ if(gTab || gArt) return { tab: gTab || '', art: gArt || gTab || '' };
+ const hm2 = location.hash.match(/^#guide\/([^/]+)\/([^/]+)$/);
+ if(hm2) return { tab: decodeURIComponent(hm2[1]), art: decodeURIComponent(hm2[2]) };
+ const hm1 = location.hash.match(/^#guide\/([^/]+)$/);
+ if(hm1) return { tab: '', art: decodeURIComponent(hm1[1]) };
  return null;
 }
 
-function openDeepGuideNow(target){
+async function openDeepGuideNow(target, skipPush){
  if(!target)return;
- const tabs = guideTabList();
- let tabId = target.tab;
- let artObj = findArt(tabId, target.art);
- if(!artObj){
-  for(const t of tabs){
-   const found = guideArts(t.id).find(a => a.id === target.art || a.id === target.tab);
-   if(found){ tabId = t.id; artObj = found; break; }
-  }
- }
- if(!tabs.some(t => t.id === tabId)) tabId = (tabs[0] || {}).id || 'android';
- switchPortalTab('p-guide', true);
- showGuide(tabId, artObj ? artObj.id : target.art);
-}
-
-function closeGuideAuthModal(){
- $('guideAuthModal').classList.add('hidden');
+ $('view-store').classList.remove('active');
+ $('view-portal').classList.add('active');
+ document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
+ $('p-guide').classList.add('active');
+ highlightNavBtns('p-guide');
+ await openGuideArticle(target.tab, target.art, skipPush);
 }
 
 async function submitGuideAuth(e){
@@ -1785,41 +2048,122 @@ async function submitGuideAuth(e){
   localStorage.setItem(SESSION_KEY, JSON.stringify({ id: o.id, time: Date.now() }));
   localStorage.setItem(CACHE_KEY, JSON.stringify(o));
   $('loginInput').value = o.id;
-  closeGuideAuthModal();
+  closeGuideAuthModal(true);
   showToast(i18n[lang].login_success, 'info');
-  enterPortal(o, true);
-  if(pendingDeepGuide){
-   setTimeout(() => openDeepGuideNow(pendingDeepGuide), 100);
-  }
+  enterPortal(o, false);
+  setRouteHash('#portal/order', false);
  }catch(err){
   showToast(i18n[lang].req_err, 'error');
  }
  btn.disabled = false; btn.innerHTML = orig;
 }
 
-window.onload=async function(){
- changeLanguage('vi');renderDock();
- await loadConfig();
- if(location.hash==='#wechat')$('wechatModal').classList.remove('hidden');
- pendingDeepGuide = resolveDeepGuideParams();
- let s=null;try{s=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');}catch{}
- if(s&&Date.now()-s.time<864e5){
-  $('loginInput').value=s.id;
-  await login(true);
-  if(pendingDeepGuide) setTimeout(() => openDeepGuideNow(pendingDeepGuide), 150);
- }else{
-  if(s)localStorage.removeItem(SESSION_KEY);
+async function handleRouteChange(fromPop){
+ const h = location.hash || '';
+ if (h === '#wechat') { openWechatModal(); return; }
+ const deep = resolveDeepGuideParams();
+ if (deep && deep.art) {
+  await openDeepGuideNow(deep, true);
+  return;
+ }
+ if (h === '#guide') {
+  curGuideArt = '';
+  switchPortalTab('p-guide', false, true);
+  return;
+ }
+ if (h === '#packages') {
+  switchPortalTab('p-store', false, true);
+  return;
+ }
+ if (h === '#portal/order' || h === '#portal') {
+  if (oCache) {
+   setRouteHash('#portal/order', true);
+   switchPortalTab('p-home', false, true);
+  } else {
+   switchPortalTab('p-store', false, true);
+   openPortalAuthModal();
+  }
+  return;
+ }
+ // Mặc định nếu không có hash
+ if (oCache) {
+  setRouteHash('#portal/order', true);
+  switchPortalTab('p-home', false, true);
+ } else {
+  setRouteHash('#packages', true);
+  switchPortalTab('p-store', false, true);
+ }
+}
+
+// Lắng nghe nút Back chuột / Cử chỉ vuốt quay lại trên điện thoại
+window.addEventListener('popstate', () => {
+ // 1. Nếu đang mở Lightbox ảnh -> đóng ảnh
+ const lb = document.querySelector('.lb-overlay-active');
+ if (lb && lb.__closeLb) { lb.__closeLb(); return; }
+ // 2. Nếu đang mở Modal QR -> đóng QR
+ if (!$('qrSubModal').classList.contains('hidden')) { closeQrModal(true); return; }
+ // 3. Nếu đang mở Modal WeChat -> đóng WeChat
+ if (!$('wechatModal').classList.contains('hidden')) { closeWechatModal(true); return; }
+ // 4. Nếu đang mở Modal Đăng nhập -> đóng Modal
+ if (!$('guideAuthModal').classList.contains('hidden')) { closeGuideAuthModal(true); return; }
+ // 5. Chuyển trang theo URL Hash
+ handleRouteChange(true);
+});
+
+window.onload = async function(){
+ paintLangButtons('vi');
+ changeLanguage('vi');
+ renderDock();
+
+ // Khởi tạo mỏ neo lịch sử để vuốt Back trên điện thoại không bị văng khỏi trình duyệt
+ const initHash = location.hash || '';
+ if (!initHash) {
+  try { history.replaceState({ base: true }, '', location.pathname + '#packages'); } catch(e){}
+ } else {
+  try {
+   const curUrl = location.pathname + location.search + initHash;
+   history.replaceState({ base: true }, '', location.pathname + '#packages');
+   if (initHash !== '#packages') history.pushState({ route: initHash }, '', curUrl);
+  } catch(e){}
+ }
+
+ // TỐI ƯU TỐC ĐỘ F5 < 0.2 GIÂY (SWR CACHE):
+ // Nếu có phiên 24h và cache đơn hàng, hiển thị Portal NGAY LẬP TỨC không chờ mạng!
+ let s = null, cachedOrd = null;
+ try { s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){}
+ try { cachedOrd = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch(e){}
+
+ const hasValidSession = !!(s && Date.now() - s.time < 864e5);
+ if (hasValidSession) {
+  $('loginInput').value = s.id;
+  if (cachedOrd && cachedOrd.id) {
+   enterPortal(cachedOrd, true);
+  }
+ } else if (s) {
+  localStorage.removeItem(SESSION_KEY);
   document.documentElement.classList.remove('has-user-session');
-  $('view-store').classList.add('active');
-  renderPackages('all');
-  if(pendingDeepGuide){
-   const artObj = findArt(pendingDeepGuide.tab, pendingDeepGuide.art);
-   $('guideAuthArtTitle').innerText = artObj && artObj.name ? `📖 Bài viết: ${artObj.name}` : '';
-   $('guideAuthModal').classList.remove('hidden');
-   setTimeout(() => $('guideAuthInput')?.focus(), 100);
+ }
+
+ // Chạy song song tải Config và làm mới Đơn hàng ngầm
+ const tasks = [loadConfig()];
+ if (hasValidSession) {
+  tasks.push(cachedOrd ? refreshOrder() : login(true));
+ }
+ await Promise.all(tasks);
+
+ // Nếu URL ban đầu là ?guide=...&art=..., chuẩn hóa sang /#guide/{artId}
+ const sp = new URLSearchParams(location.search);
+ if (sp.get('guide') || sp.get('art')) {
+  const target = resolveDeepGuideParams();
+  if (target && target.art) {
+   try { history.replaceState({ route: `#guide/${target.art}` }, '', `${location.pathname}#guide/${encodeURIComponent(target.art)}`); } catch(e){}
   }
  }
- const f=$('footerArea');if(f)obs.observe(f);};
+
+ await handleRouteChange(true);
+ const f = $('footerArea');
+ if (f) obs.observe(f);
+};
 
 async function requestDataCheck(){
  if(!oCache)return;const L=i18n[lang],key='data_req_'+oCache.id,last=localStorage.getItem(key);
