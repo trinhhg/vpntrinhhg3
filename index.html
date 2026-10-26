@@ -16,6 +16,7 @@
 </script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/navigo@8.11.1/lib/navigo.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -926,9 +927,10 @@ function setupDockDrag(){
  wrap.addEventListener('wheel',e=>{if(Math.abs(e.deltaX)<Math.abs(e.deltaY)&&!e.shiftKey)return;e.preventDefault();wrap.classList.add('dragging');const m=/translateX\((-?[\d.]+)px\)/.exec(track.style.transform);let nx=(m?parseFloat(m[1]):0)-(e.deltaX||e.deltaY);const uw=unitWidth();if(uw){while(nx<=-uw)nx+=uw;while(nx>0)nx-=uw;}setX(nx);
   clearTimeout(wrap._wheelT);wrap._wheelT=setTimeout(()=>{wrap.classList.remove('dragging');track.style.transform='';},500);},{passive:false});}
 
-// ---------- Hướng dẫn cài đặt: nhiều tab + nhiều bài viết mỗi tab (khớp Admin) ----------
+// ---------- Hướng dẫn cài đặt: Định danh hoàn toàn bằng Slug (xóa sạch tàn dư ID) ----------
 const DEF_TABS=[{id:'android',name:'Android',ic:'fab fa-android',col:'text-green-500'},{id:'windows',name:'Windows',ic:'fab fa-windows',col:'text-blue-500'},{id:'macos',name:'MacOS',ic:'fab fa-apple',col:'text-slate-800'},{id:'ios',name:'iOS',ic:'fab fa-app-store-ios',col:'text-blue-400'}];
-let curGuide='android', curGuideArt='';
+let curGuide='android', curGuideSlug='';
+const toSlug=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'bai-viet';
 const guideTabList=()=>{const t=cfgCache.guides&&cfgCache.guides._tabs;return Array.isArray(t)&&t.length?t:DEF_TABS;};
 function shortcodeToBlocks(t){return String(t||'').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const m=l.match(/^\[(HEADER|SUB|STEP|NOTE|BTN|IMG|TOC)\]\s*(.*)$/i);if(!m)return{t:'text',x:l};const T=m[1].toLowerCase();if(T==='btn'){const p=m[2].split('|');return{t:'btn',x:(p[0]||'').trim(),u:(p[1]||'').trim()};}if(T==='img')return{t:'img',u:m[2].trim(),x:''};return{t:T,x:m[2]};});}
 const normGuide=g=>Array.isArray(g)?g:shortcodeToBlocks(g);
@@ -937,14 +939,18 @@ const bAlign=b=>b.al==='c'?'center':b.al==='r'?'right':'left';
 const dAlign=b=>b.dal==='l'?'left':b.dal==='r'?'right':'center';
 const bText=b=>esc(b.x).replace(/\n/g,'<br>');
 
-// Danh sách bài viết của 1 tab: ưu tiên _articles (nhiều bài, dữ liệu mới của Admin); nếu không có thì dùng guides[tabId] (1 bài, tương thích ngược)
+// Danh sách bài viết: Sử dụng slug, xóa sạch tàn dư _legacy
 function guideArts(tabId){
  const a=cfgCache.guides&&cfgCache.guides._articles&&cfgCache.guides._articles[tabId];
- if(Array.isArray(a)&&a.length)return a;
+ if(Array.isArray(a)&&a.length)return a.map(x=>({...x,slug:x.slug||toSlug(x.name||'bai-viet')}));
  const bl=normGuide(cfgCache.guides&&cfgCache.guides[tabId]);
- return bl.length?[{id:'_legacy',name:'',blocks:bl}]:[];
+ return bl.length?[{slug:toSlug(tabId),name:'',blocks:bl}]:[];
 }
-function findArt(tabId,artId){const list=guideArts(tabId);return list.find(a=>a.id===artId)||list[0]||null;}
+function findArt(tabId,slug){
+ const list=guideArts(tabId);
+ const s=String(slug||'').toLowerCase();
+ return list.find(a=>String(a.slug||toSlug(a.name||'')).toLowerCase()===s)||list[0]||null;
+}
 function findArtByName(tabId,name){return guideArts(tabId).find(a=>String(a.name||'')===String(name||''))||null;}
 
 function lockBodyScroll(){document.body.style.overflow='hidden';}
@@ -1128,8 +1134,9 @@ function renderGuideCategories() {
       <div class="flex flex-col gap-3">
         ${arts.map(a => {
           const timeStr = a.updated ? new Date(a.updated).toLocaleDateString('vi-VN') + ' ' + new Date(a.updated).toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'}) : 'Mới';
+          const sl = a.slug || toSlug(a.name || 'bai-viet');
           return `
-          <div onclick="openGuideArticle('${esc(tab.id)}', '${esc(a.id)}')" class="cursor-pointer bg-white dark:bg-[#0a0a0a] border-2 border-slate-200 dark:border-white/10 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-2xl p-4 flex items-center justify-between gap-3 transition-transform duration-300 hover:-translate-y-1 shadow-sm">
+          <div onclick="openGuideArticle('${esc(tab.id)}', '${esc(sl)}')" class="cursor-pointer bg-white dark:bg-[#0a0a0a] border-2 border-slate-200 dark:border-white/10 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-2xl p-4 flex items-center justify-between gap-3 transition-transform duration-300 hover:-translate-y-1 shadow-sm">
             <div class="min-w-0">
               <div class="font-extrabold text-sm md:text-base text-slate-800 dark:text-white truncate">${esc(a.name || 'Bài viết')}</div>
               <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Được viết bởi: ${esc(a.author || "Admin")} · Cập nhật lần cuối: ${timeStr}</div>
@@ -1144,17 +1151,18 @@ function renderGuideCategories() {
   container.innerHTML = html || i18n[lang].guide_empty;
 }
 
-async function openGuideArticle(tabId, artId, skipPush) {
+async function openGuideArticle(tabId, slug, skipPush) {
   await loadConfig();
   const tabs = guideTabList();
   let foundTab = tabId, art = null;
+  const targetSlug = String(slug || '').toLowerCase();
   if (foundTab) {
     const arts = guideArts(foundTab);
-    art = arts.find(a => a.id === artId);
+    art = arts.find(a => String(a.slug || toSlug(a.name)).toLowerCase() === targetSlug);
   }
   if (!art) {
     for (const t of tabs) {
-      const f = guideArts(t.id).find(a => a.id === artId || a.id === tabId);
+      const f = guideArts(t.id).find(a => String(a.slug || toSlug(a.name)).toLowerCase() === targetSlug);
       if (f) { foundTab = t.id; art = f; break; }
     }
   }
@@ -1162,8 +1170,10 @@ async function openGuideArticle(tabId, artId, skipPush) {
   if (!art) return;
 
   curGuide = foundTab;
-  curGuideArt = art.id;
-  if (!skipPush) setRouteHash(`#guide/${encodeURIComponent(curGuideArt)}`);
+  curGuideSlug = art.slug || toSlug(art.name);
+  if (!skipPush && typeof router !== 'undefined') {
+    router.navigate(`/portal/guide/${encodeURIComponent(curGuide)}/${encodeURIComponent(curGuideSlug)}`);
+  }
 
   $('guideCategoryList').classList.add('hidden');
   $('guideDetailView').classList.remove('hidden');
@@ -1185,8 +1195,8 @@ async function openGuideArticle(tabId, artId, skipPush) {
  }
 
   let mainBody = (typeof art.html === 'string' && art.html.trim() !== '') 
-    ? renderRichGuideHtml(art.html, art.showToc !== false, `${foundTab}-${curGuideArt}`)
-    : (art.blocks && art.blocks.length ? renderBlocks(art.blocks, `${foundTab}-${curGuideArt}`) : i18n[lang].guide_empty);
+    ? renderRichGuideHtml(art.html, art.showToc !== false, `${foundTab}-${curGuideSlug}`)
+    : (art.blocks && art.blocks.length ? renderBlocks(art.blocks, `${foundTab}-${curGuideSlug}`) : i18n[lang].guide_empty);
 
   // 1. Render FAQ riêng của bài viết (nếu có)
   let faqBlockHtml = '';
@@ -1215,7 +1225,7 @@ async function openGuideArticle(tabId, artId, skipPush) {
   let relBlockHtml = '';
   if (Array.isArray(art.relatedArts) && art.relatedArts.length) {
     const tabs = guideTabList();
-    const otherList = tabs.flatMap(t => guideArts(t.id)).filter(x => art.relatedArts.includes(x.id));
+    const otherList = tabs.flatMap(t => guideArts(t.id)).filter(x => art.relatedArts.includes(x.slug || toSlug(x.name)));
     if (otherList.length) {
       relBlockHtml = `
         <div class="mt-8 pt-6 border-t border-slate-200 dark:border-white/10">
@@ -1224,8 +1234,8 @@ async function openGuideArticle(tabId, artId, skipPush) {
           </h4>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             ${otherList.map(item => `
-              <div onclick="openGuideArticle('', '${esc(item.id)}')" class="cursor-pointer bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-xl p-3 flex items-center justify-between gap-2 transition hover:-translate-y-0.5 shadow-sm">
-                <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">${esc(item.name || item.id)}</span>
+              <div onclick="openGuideArticle('', '${esc(item.slug || toSlug(item.name))}')" class="cursor-pointer bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-xl p-3 flex items-center justify-between gap-2 transition hover:-translate-y-0.5 shadow-sm">
+                <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">${esc(item.name || item.slug)}</span>
                 <i class="fas fa-arrow-right text-xs text-indigo-500 shrink-0"></i>
               </div>
             `).join('')}
@@ -1306,8 +1316,10 @@ function renderRichGuideHtml(rawHtml, showToc, gid){
 }
 
 async function closeGuideArticle(skipPush) {
-  curGuideArt = '';
-  if (!skipPush) setRouteHash('#guide');
+  curGuideSlug = '';
+  if (!skipPush && typeof router !== 'undefined') {
+    router.navigate(`/portal/guide/${encodeURIComponent(curGuide || 'android')}`);
+  }
   await loadConfig();
   renderGuideCategories();
   $('guideDetailView').classList.add('hidden');
@@ -1316,32 +1328,32 @@ async function closeGuideArticle(skipPush) {
   $('view-portal').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function showGuide(dev,artId){
+function showGuide(dev,slug){
   renderGuideCategories();
-  if (dev && artId) {
-    openGuideArticle(dev, artId);
+  if (dev && slug) {
+    openGuideArticle(dev, slug);
   } else {
     $('guideDetailView').classList.add('hidden');$('guideCategoryList').classList.remove('hidden');
   }
 }
 
 // Quick Tab Link: chuyển sang tab khác (+ chọn đúng bài nếu chỉ định, + cuộn tới mục nếu có)
-function pubGoto(tab,artId,target){
+function pubGoto(tab,slug,target){
  if(!tab||!guideTabList().some(t=>t.id===tab))return;
  switchPortalTab('p-guide',true);
- if (artId) {
-   openGuideArticle(tab, artId);
+ if (slug) {
+   openGuideArticle(tab, slug);
  } else {
    const arts = guideArts(tab);
-   if(arts.length) openGuideArticle(tab, arts[0].id);
+   if(arts.length) openGuideArticle(tab, arts[0].slug || toSlug(arts[0].name));
  }
- if(target){const bl=(artId?findArt(tab,artId):guideArts(tab)[0])?.blocks||[];const i=findTarget(bl,target);if(i>=0)setTimeout(()=>guideScroll('g-'+tab+'-'+curGuideArt+'-'+i),120);}
+ if(target){const bl=(slug?findArt(tab,slug):guideArts(tab)[0])?.blocks||[];const i=findTarget(bl,target);if(i>=0)setTimeout(()=>guideScroll('g-'+tab+'-'+curGuideSlug+'-'+i),120);}
 }
 // Quick Article Link: mở đúng bài viết theo tên (khớp 100%), tự tìm đúng tab nếu cần
 function pubGotoArt(tab,name){
  let t=tab,a=findArtByName(t,name);
  if(!a){for(const tt of guideTabList()){const f=findArtByName(tt.id,name);if(f){t=tt.id;a=f;break;}}}
- if(!a)return;pubGoto(t,a.id,'');
+ if(!a)return;pubGoto(t,a.slug||toSlug(a.name),'');
 }
 
 async function loadConfig(){
@@ -2029,22 +2041,13 @@ function pollLoop(){clearTimeout(pollT);if(!oCache)return;const fast=oCache.stat
  pollT=setTimeout(async()=>{if(!document.hidden)await refreshOrder();pollLoop();},fast?3000:10000);}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&oCache)refreshOrder();});
 
-// ===== HỆ THỐNG ĐỊNH TUYẾN SPA (HASH ROUTER) & CHỐNG VĂNG WEB KHI VUỐT / BACK =====
+// ===== HỆ THỐNG ĐỊNH TUYẾN CLEAN PATH ROUTER (NAVIGO) =====
+const router = new Navigo('/', { hash: false });
+
 function pushOverlayState(modalName){
- try { history.pushState({ modal: modalName, hash: location.hash }, '', location.href); } catch(e){}
+ try { history.pushState({ modal: modalName }, '', location.href); } catch(e){}
 }
-function setRouteHash(newHash, replace){
- if (!newHash.startsWith('#')) newHash = '#' + newHash;
- if (location.hash === newHash) return;
- try {
-  if (replace) history.replaceState({ route: newHash }, '', location.pathname + newHash);
-  else history.pushState({ route: newHash }, '', location.pathname + newHash);
- } catch(e) { location.hash = newHash; }
-}
-function navigateRoute(hash){
- setRouteHash(hash, false);
- handleRouteChange(true);
-}
+
 function highlightNavBtns(tabId){
  document.querySelectorAll('.desktop-tab-btn').forEach(el=>{el.classList.remove('active','text-white','bg-indigo-600');el.classList.add('text-slate-600','dark:text-slate-300','hover:bg-slate-100','dark:hover:bg-slate-800');});
  document.querySelectorAll('.mobile-tab-btn').forEach(el=>{el.classList.remove('active','text-indigo-600','bg-[#e0e7ff]','dark:text-[#818cf8]','dark:bg-[#312e81]');el.classList.add('text-slate-500','dark:text-slate-400');});
@@ -2085,7 +2088,7 @@ async function login(auto=false){
  enterPortal(o,auto);
  if(!auto){
   showToast(i18n[lang].login_success,'info');
-  setRouteHash('#portal/order', false);
+  router.navigate('/portal/order');
   window.scrollTo({top:0,behavior:'smooth'});
  }
 }
@@ -2098,19 +2101,12 @@ function openPortalAuthModal(){
  setTimeout(() => $('guideAuthInput')?.focus(), 80);
 }
 
-function goGuestHome(){
-  try{history.replaceState({base:true},'',location.pathname);}catch(e){}
-  curGuideArt='';
-  showLandingPage();
-  window.scrollTo(0,0);
-}
-
 function closeGuideAuthModal(fromPop){
   const m=$('guideAuthModal');
   if(!m||m.classList.contains('hidden'))return;
   m.classList.add('hidden');
   unlockBodyScroll();
-  if(!oCache && !localStorage.getItem(SESSION_KEY)) goGuestHome();
+  if(!oCache && !localStorage.getItem(SESSION_KEY)) router.navigate('/');
 }
 
 // Bật giao diện Portal thật sự (với 3 tab ở Header trên cả Desktop & Mobile)
@@ -2135,38 +2131,42 @@ function switchPortalTab(tabId, fromUpgrade=false, skipPush=false){
 
  enablePortalFrame();
 
- // 1. Tab Trang chủ Portal (/#portal/order): Chỉ có tab này là yêu cầu tra cứu đơn hàng
+ // 1. Tab Quản lý Đơn hàng (/portal/order): Có Auth Guard
  if(tabId==='p-home'){
   document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
   $('p-home').classList.add('active');
   highlightNavBtns('p-home');
-  if(!skipPush) setRouteHash('#portal/order', false);
-  if(!oCache){
+  if(!skipPush) router.navigate('/portal/order');
+  if(!oCache && !localStorage.getItem(SESSION_KEY)){
    openPortalAuthModal();
   }
   return;
  }
 
- // 2. Tab Cửa hàng Portal (/#portal/packages): Xem tự do trong khung Portal thật (có 3 tab header)
+ // 2. Tab Cửa hàng Portal (/portal/packages): Xem tự do trong khung Portal
  if(tabId==='p-store'){
   document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
   $('p-store').classList.add('active');
   highlightNavBtns('p-store');
-  if(!skipPush) setRouteHash('#portal/packages', false);
+  if(!skipPush) router.navigate('/portal/packages');
   renderPackages('all');
   return;
  }
 
- // 3. Tab Hướng dẫn Portal (/#portal/guide): Xem tự do trong khung Portal thật (có 3 tab header)
+ // 3. Tab Hướng dẫn Portal (/portal/guide): Xem tự do
  if(tabId==='p-guide'){
   document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
   $('p-guide').classList.add('active');
   highlightNavBtns('p-guide');
-  if(!skipPush) setRouteHash('#portal/guide', false);
+  const targetCat = curGuide || (guideTabList()[0]||{}).id || 'android';
+  if(!skipPush) {
+    if(curGuideSlug) router.navigate(`/portal/guide/${encodeURIComponent(targetCat)}/${encodeURIComponent(curGuideSlug)}`);
+    else router.navigate(`/portal/guide/${encodeURIComponent(targetCat)}`);
+  }
   loadConfig().then(() => {
-   if(!curGuideArt) showGuide((guideTabList()[0]||{}).id);
+   if(!curGuideSlug) showGuide(targetCat);
   });
-  showGuide((guideTabList()[0]||{}).id);
+  showGuide(targetCat);
   return;
  }
 }
@@ -2181,10 +2181,7 @@ function logout(){
  document.documentElement.classList.remove('has-user-session');
  document.documentElement.removeAttribute('data-tab');
  document.body.classList.remove('checkout-active');
- if(location.hash){
-  try{history.replaceState(null,'',location.pathname);}catch(e){location.hash='';}
- }
- showLandingPage();
+ router.navigate('/');
  window.scrollTo(0,0);
 }
 
@@ -2192,27 +2189,6 @@ function resetToGuest(){
   ['guideAuthModal','policyModal'].forEach(id=>{const m=$(id);if(m&&!m.classList.contains('hidden')){m.classList.add('hidden');unlockBodyScroll();}});
   if($('guideAuthInput'))$('guideAuthInput').value='';
   logout();
-  try{history.replaceState({base:true},'',location.pathname);}catch(e){}
-}
-
-function resolveDeepGuideParams(){
- const sp = new URLSearchParams(location.search);
- const gTab = sp.get('guide'), gArt = sp.get('art');
- if(gTab || gArt) return { tab: gTab || '', art: gArt || gTab || '' };
- const hm2 = location.hash.match(/^#(portal\/)?guide\/([^/]+)\/([^/]+)$/);
- if(hm2) return { tab: decodeURIComponent(hm2[2]), art: decodeURIComponent(hm2[3]) };
- const hm1 = location.hash.match(/^#(portal\/)?guide\/([^/]+)$/);
- if(hm1) return { tab: '', art: decodeURIComponent(hm1[2]) };
- return null;
-}
-
-async function openDeepGuideNow(target, skipPush){
- if(!target)return;
- enablePortalFrame();
- document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
- $('p-guide').classList.add('active');
- highlightNavBtns('p-guide');
- await openGuideArticle(target.tab, target.art, skipPush);
 }
 
 async function submitGuideAuth(e){
@@ -2236,7 +2212,7 @@ async function submitGuideAuth(e){
   closeGuideAuthModal(true);
   showToast(i18n[lang].login_success, 'info');
   enterPortal(o, false);
-  setRouteHash('#portal/order', false);
+  router.navigate('/portal/order');
  }catch(err){
   showToast(i18n[lang].req_err, 'error');
  }
@@ -2276,69 +2252,80 @@ function clickFooterServiceLink(type){
       const target = ($('htab-all') && $('htab-all').parentElement) || $('packagesContainerHome'); if(target) target.style.scrollMarginTop='90px';
       if(target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else {
-      switchPortalTab('p-store');
+      router.navigate('/portal/packages');
     }
     return;
   }
   if(type === 'data'){
-    if(oCache){
-      switchPortalTab('p-home');
-      requestDataCheck();
-    } else {
-      switchPortalTab('p-home');
-    }
+    router.navigate('/portal/order');
+    if(oCache) requestDataCheck();
     return;
   }
 }
 
 function clickFooterGuideLink(tabName){
-  navigateRoute('#portal/guide');
-  setTimeout(() => {
-    const targetTab = guideTabList().find(t => t.id === tabName || t.name.toLowerCase().includes(tabName));
-    if(targetTab) showGuide(targetTab.id);
-  }, 100);
-}
-
-async function handleRouteChange(fromPop){
- const h = location.hash || '';
- if (h === '#wechat') { openWechatModal(); return; }
- if (h.startsWith('#portal/guide/') || h.startsWith('#guide/')) {
-  const artId = h.replace(/^#(portal\/)?guide\//, '');
-  await openDeepGuideNow({ tab: '', art: decodeURIComponent(artId) }, true);
-  return;
- }
- if (h === '#portal/guide' || h === '#guide') {
-  curGuideArt = '';
-  switchPortalTab('p-guide', false, true);
-  return;
- }
- if (h === '#portal/packages' || h === '#packages') {
-  switchPortalTab('p-store', false, true);
-  return;
- }
- if (h === '#portal/order' || h === '#portal') {
-  switchPortalTab('p-home', false, true);
-  return;
- }
- // Nếu không có hash hoặc hash là #home -> Hiển thị Trang chủ gốc (Hero, Dock icon)
- showLandingPage();
- restoreIndexScroll();
+  router.navigate(`/portal/guide/${encodeURIComponent(tabName)}`);
 }
 
 // Lắng nghe nút Back chuột / Cử chỉ vuốt quay lại trên điện thoại
 window.addEventListener('popstate', () => {
- // 1. Nếu đang mở Lightbox ảnh -> đóng ảnh
  const lb = document.querySelector('.lb-overlay-active');
  if (lb && lb.__closeLb) { lb.__closeLb(); return; }
- // 2. Nếu đang mở Modal QR -> đóng QR
  if (!$('qrSubModal').classList.contains('hidden')) { closeQrModal(true); return; }
- // 3. Nếu đang mở Modal WeChat -> đóng WeChat
  if (!$('wechatModal').classList.contains('hidden')) { closeWechatModal(true); return; }
- // 4. Nếu đang mở Modal Đăng nhập -> đóng Modal
  if (!$('guideAuthModal').classList.contains('hidden')) { closeGuideAuthModal(true); return; }
- // 5. Chuyển trang theo URL Hash
- handleRouteChange(true);
 });
+
+// KHAI BÁO CÁC ROUTE CHUẨN TRÊN NAVIGO
+function setupAppRoutes(){
+  router.on('/', () => {
+    showLandingPage();
+    restoreIndexScroll();
+  });
+
+  // Tuyệt đối không dùng /packages lẻ bên ngoài -> Tự động chuyển về trang chủ /
+  router.on('/packages', () => {
+    router.navigate('/');
+  });
+
+  router.on('/portal/order', () => {
+    switchPortalTab('p-home', false, true);
+  });
+
+  router.on('/portal/packages', () => {
+    switchPortalTab('p-store', false, true);
+  });
+
+  router.on('/portal/guide', () => {
+    curGuideSlug = '';
+    switchPortalTab('p-guide', false, true);
+  });
+
+  router.on('/portal/guide/:category', (match) => {
+    const cat = match && match.data && match.data.category;
+    curGuide = cat || 'android';
+    curGuideSlug = '';
+    enablePortalFrame();
+    document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
+    $('p-guide').classList.add('active');
+    highlightNavBtns('p-guide');
+    showGuide(curGuide);
+  });
+
+  router.on('/portal/guide/:category/:slug', async (match) => {
+    const cat = match && match.data && match.data.category;
+    const sl = match && match.data && match.data.slug;
+    enablePortalFrame();
+    document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
+    $('p-guide').classList.add('active');
+    highlightNavBtns('p-guide');
+    await openGuideArticle(cat, decodeURIComponent(sl), true);
+  });
+
+  router.notFound(() => {
+    router.navigate('/');
+  });
+}
 
 window.onload = async function(){
  paintLangButtons('vi');
@@ -2346,18 +2333,7 @@ window.onload = async function(){
  renderDock();
 
  try{const fc=JSON.parse(localStorage.getItem('vpn_footer_cache')||'null');if(fc){cfgCache.footer=fc;renderDynamicFooter(fc);}}catch(e){}
- const initHash = location.hash || '';
- if (!initHash) {
-  try { history.replaceState({ base: true }, '', location.pathname); } catch(e){}
- } else {
-  try {
-   const curUrl = location.pathname + location.search + initHash;
-   history.replaceState({ base: true }, '', curUrl);
-  } catch(e){}
- }
 
- // TỐI ƯU TỐC ĐỘ F5 < 0.2 GIÂY (SWR CACHE):
- // Nếu có phiên 24h và cache đơn hàng, hiển thị Portal NGAY LẬP TỨC không chờ mạng!
  let s = null, cachedOrd = null;
  try { s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){}
  try { cachedOrd = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch(e){}
@@ -2373,23 +2349,15 @@ window.onload = async function(){
   document.documentElement.classList.remove('has-user-session');
  }
 
- // Chạy song song tải Config và làm mới Đơn hàng ngầm
  const tasks = [loadConfig()];
  if (hasValidSession) {
   tasks.push(cachedOrd ? refreshOrder() : login(true));
  }
  await Promise.all(tasks);
 
- // Nếu URL ban đầu là ?guide=...&art=..., chuẩn hóa sang /#guide/{artId}
- const sp = new URLSearchParams(location.search);
- if (sp.get('guide') || sp.get('art')) {
-  const target = resolveDeepGuideParams();
-  if (target && target.art) {
-   try { history.replaceState({ route: `#guide/${target.art}` }, '', `${location.pathname}#guide/${encodeURIComponent(target.art)}`); } catch(e){}
-  }
- }
+ setupAppRoutes();
+ router.resolve();
 
- await handleRouteChange(true);
  const f = $('footerArea');
  if (f) obs.observe(f);
 };
