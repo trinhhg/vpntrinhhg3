@@ -261,7 +261,7 @@ html[data-tab="store"] #p-store{display:block!important;}
     <p id="guideAuthArtTitle" class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 mb-2"></p>
     <p class="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">Nhập <b>Email</b> hoặc <b>Mã đơn hàng (DH...)</b> của bạn để xem thông tin đơn hàng & lấy Link Subscription.</p>
     <form onsubmit="submitGuideAuth(event)" class="space-y-3">
-      <input type="text" id="guideAuthInput" required placeholder="Nhập Email hoặc Mã đơn hàng..." class="w-full bg-slate-50 dark:bg-black border-2 border-indigo-100 dark:border-white/15 rounded-xl px-4 py-3 text-sm text-center font-bold text-slate-800 dark:text-white outline-none focus:border-indigo-500 transition">
+      <input type="text" id="guideAuthInput" name="vpn_portal_no_autofill_auth" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-lpignore="true" required placeholder="Nhập Email hoặc Mã đơn hàng..." class="w-full bg-slate-50 dark:bg-black border-2 border-indigo-100 dark:border-white/15 rounded-xl px-4 py-3 text-sm text-center font-bold text-slate-800 dark:text-white outline-none focus:border-indigo-500 transition">
       <button type="submit" id="btnGuideAuthSubmit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 rounded-xl text-xs md:text-sm uppercase transition shadow-md">
         <i class="fas fa-unlock-keyhole mr-1.5"></i>ĐĂNG NHẬP PORTAL NGAY
       </button>
@@ -328,7 +328,7 @@ html[data-tab="store"] #p-store{display:block!important;}
     </div>
     <div class="flex-1 w-full md:flex-1 flex items-center justify-center mx-0 md:mx-2">
       <div class="w-full relative min-w-0">
-        <input type="text" id="loginInput" onkeyup="if(event.key==='Enter'){event.preventDefault();login();}" class="w-full bg-white dark:bg-[#0a0a0a] border-2 border-indigo-100 dark:border-white/10 rounded-full pl-5 pr-12 py-2.5 text-sm outline-none font-bold text-slate-700 dark:text-white focus:border-indigo-400 dark:focus:border-indigo-500 transition shadow-sm placeholder:dark:text-slate-500" placeholder="Nhập Mã Đơn hoặc Email..." data-i18n-placeholder="search_placeholder">
+        <input type="text" id="loginInput" name="vpn_no_autofill_order_search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-lpignore="true" onkeyup="if(event.key==='Enter'){event.preventDefault();login();}" class="w-full bg-white dark:bg-[#0a0a0a] border-2 border-indigo-100 dark:border-white/10 rounded-full pl-5 pr-12 py-2.5 text-sm outline-none font-bold text-slate-700 dark:text-white focus:border-indigo-400 dark:focus:border-indigo-500 transition shadow-sm placeholder:dark:text-slate-500" placeholder="Nhập Mã Đơn hoặc Email..." data-i18n-placeholder="search_placeholder">
         <button onclick="login()" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 bg-indigo-600 dark:bg-indigo-500 rounded-full text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 flex items-center justify-center transition shadow-sm"><i class="fas fa-search text-xs"></i></button>
       </div>
     </div>
@@ -611,17 +611,85 @@ html[data-tab="store"] #p-store{display:block!important;}
     <div id="faqStoreContainer" class="space-y-3"></div>
   </div>
 </main>
-<footer id="footerArea" class="bg-white dark:bg-black border-t border-slate-200 dark:border-white/10 py-6 z-10 w-full mt-auto transition-colors duration-300">
-  <div class="max-w-[1400px] mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
-    <p class="text-xs font-bold text-slate-500 dark:text-slate-400">© 2026 VPN Trinh Hg. All rights reserved.</p>
-    <div class="flex flex-wrap justify-center gap-2">
-      <a href="https://zalo.me/0917678211" target="_blank" class="bg-[#0068ff]/10 text-[#0068ff] dark:bg-[#0068ff]/20 dark:text-[#66a3ff] px-3 py-2 rounded-xl font-bold text-xs hover:bg-[#0068ff]/20 dark:hover:bg-[#0068ff]/30 transition"><i class="fas fa-phone mr-1"></i>Zalo Support</a>
-      <a href="https://www.facebook.com/trinh.hg.57" target="_blank" class="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 px-3 py-2 rounded-xl font-bold text-xs hover:bg-blue-100 dark:hover:bg-blue-900/50 transition"><i class="fab fa-facebook-messenger mr-1"></i>Mess Support</a>
-      <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="bg-green-50 text-[#07C160] dark:bg-green-900/30 dark:text-[#20d877] px-3 py-2 rounded-xl font-bold text-xs hover:bg-green-100 dark:hover:bg-green-900/50 transition"><i class="fab fa-weixin mr-1"></i>WeChat</button>
-      <a href="https://t.me/hoaian57" target="_blank" class="bg-sky-50 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400 px-3 py-2 rounded-xl font-bold text-xs hover:bg-sky-100 dark:hover:bg-sky-900/50 transition"><i class="fab fa-telegram-plane mr-1"></i>Telegram</a>
+<footer id="footerArea" class="bg-white dark:bg-black border-t border-slate-200 dark:border-white/10 pt-10 pb-8 z-10 w-full mt-auto transition-colors duration-300">
+  <div class="max-w-[1400px] mx-auto px-4">
+    <!-- KHỐI 4 CỘT CHÍNH -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mb-8 pb-8 border-b border-slate-100 dark:border-white/10 text-xs">
+      <!-- CỘT 1: THƯƠNG HIỆU -->
+      <div class="col-span-2 md:col-span-1 space-y-2.5">
+        <div class="font-extrabold text-lg text-indigo-700 dark:text-indigo-400">VPN Trinh Hg</div>
+        <p class="text-slate-500 dark:text-slate-400 leading-relaxed">Chặn thì vượt. Lướt mượt như gió. Hệ thống hạ tầng VPN tự động hóa 100%, bảo mật &amp; ẩn danh tuyệt đối.</p>
+        <div class="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Hệ thống trực tuyến 24/7</span>
+        </div>
+      </div>
+
+      <!-- CỘT 2: TRUY CẬP NHANH -->
+      <div class="space-y-2">
+        <div class="font-extrabold text-sm text-slate-800 dark:text-white uppercase tracking-wider">Dịch vụ</div>
+        <ul class="space-y-1.5 text-slate-600 dark:text-slate-300 font-medium">
+          <li><a href="#portal/packages" onclick="navigateRoute('#portal/packages')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> Bảng giá gói cước</a></li>
+          <li><a href="#portal/order" onclick="navigateRoute('#portal/order')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> Tra cứu đơn hàng</a></li>
+          <li><a href="#portal/order" onclick="navigateRoute('#portal/order')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> Kiểm tra dung lượng</a></li>
+        </ul>
+      </div>
+
+      <!-- CỘT 3: HƯỚNG DẪN CÀI ĐẶT -->
+      <div class="space-y-2">
+        <div class="font-extrabold text-sm text-slate-800 dark:text-white uppercase tracking-wider">Hướng dẫn</div>
+        <ul class="space-y-1.5 text-slate-600 dark:text-slate-300 font-medium">
+          <li><a href="#portal/guide" onclick="navigateRoute('#portal/guide')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> Cài đặt Android</a></li>
+          <li><a href="#portal/guide" onclick="navigateRoute('#portal/guide')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> Cài đặt iOS (iPhone/iPad)</a></li>
+          <li><a href="#portal/guide" onclick="navigateRoute('#portal/guide')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> Cài đặt Windows</a></li>
+          <li><a href="#portal/guide" onclick="navigateRoute('#portal/guide')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> Cài đặt MacOS</a></li>
+        </ul>
+      </div>
+
+      <!-- CỘT 4: PHÁP LÝ & ĐIỀU KHOẢN -->
+      <div class="space-y-2">
+        <div class="font-extrabold text-sm text-slate-800 dark:text-white uppercase tracking-wider">Pháp lý</div>
+        <ul class="space-y-1.5 text-slate-600 dark:text-slate-300 font-medium">
+          <li><button type="button" onclick="openPolicyModal('terms')" class="hover:text-indigo-600 transition flex items-center gap-1.5 text-left"><span>›</span> Chính sách sử dụng</button></li>
+          <li><button type="button" onclick="openPolicyModal('disclaimer')" class="hover:text-indigo-600 transition flex items-center gap-1.5 text-left"><span>›</span> Miễn trừ trách nhiệm</button></li>
+          <li><button type="button" onclick="openPolicyModal('refund')" class="hover:text-indigo-600 transition flex items-center gap-1.5 text-left"><span>›</span> Quy định hoàn tiền</button></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- HÀNG TIỆN ÍCH DƯỚI: WEB DỰ PHÒNG & 4 NÚT HỖ TRỢ -->
+    <div class="flex flex-col lg:flex-row justify-between items-center gap-4 py-2 border-b border-slate-100 dark:border-white/10 mb-6">
+      <div class="flex items-center gap-2 flex-wrap text-xs" id="footerBackupsContainer">
+        <span class="font-extrabold text-slate-500 dark:text-slate-400"><i class="fas fa-globe mr-1"></i>Web dự phòng:</span>
+        <a href="https://vpntrinhhg.pages.dev" target="_blank" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 font-bold hover:bg-indigo-50">Web 1</a>
+        <a href="https://vpntrinhhg2.pages.dev" target="_blank" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 font-bold hover:bg-indigo-50">Web 2</a>
+        <a href="https://vpntrinhhg3.pages.dev" target="_blank" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 font-bold hover:bg-indigo-50">Web 3</a>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <a href="https://zalo.me/0917678211" target="_blank" class="bg-[#0068ff]/10 text-[#0068ff] dark:bg-[#0068ff]/20 dark:text-[#66a3ff] px-3 py-1.5 rounded-xl font-bold text-xs hover:bg-[#0068ff]/20 transition flex items-center gap-1"><i class="fas fa-phone text-xs"></i>Zalo Support</a>
+        <a href="https://www.facebook.com/trinh.hg.57" target="_blank" class="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 px-3 py-1.5 rounded-xl font-bold text-xs hover:bg-blue-100 transition flex items-center gap-1"><i class="fab fa-facebook-messenger text-xs"></i>Mess Support</a>
+        <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="bg-green-50 text-[#07C160] dark:bg-green-900/30 dark:text-[#20d877] px-3 py-1.5 rounded-xl font-bold text-xs hover:bg-green-100 transition flex items-center gap-1"><i class="fab fa-weixin text-xs"></i>WeChat</button>
+        <a href="https://t.me/hoaian57" target="_blank" class="bg-sky-50 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400 px-3 py-1.5 rounded-xl font-bold text-xs hover:bg-sky-100 transition flex items-center gap-1"><i class="fab fa-telegram-plane text-xs"></i>Telegram</a>
+      </div>
+    </div>
+
+    <!-- DÒNG ĐÁY COPYRIGHT -->
+    <div class="text-center text-xs font-bold text-slate-400">
+      © 2026 VPN Trinh Hg. All rights reserved.
     </div>
   </div>
 </footer>
+
+<!-- MODAL XEM NỘI DUNG CHÍNH SÁCH / MIỄN TRỪ PHÁP LÝ -->
+<div id="policyModal" class="hidden fixed inset-0 z-[99900] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm" onclick="closePolicyModal()">
+  <div class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-6 md:p-8 rounded-3xl max-w-xl w-full shadow-2xl relative max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
+    <button type="button" onclick="closePolicyModal()" title="Đóng" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition">
+      <i class="fas fa-times text-sm"></i>
+    </button>
+    <h3 id="policyModalTitle" class="font-extrabold text-lg md:text-xl text-slate-800 dark:text-slate-100 mb-3 pb-2 border-b border-slate-100 dark:border-white/10"></h3>
+    <div id="policyModalContent" class="overflow-y-auto text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium space-y-2.5 pr-1"></div>
+  </div>
+</div>
 <script>
 // ===== CẤU HÌNH: địa chỉ Worker của web này (gọi thẳng, không qua proxy Pages) =====
 const WORKER_URL = "https://vpntrinhhg3worker.lucastanora.workers.dev";
@@ -1157,11 +1225,58 @@ async function openGuideArticle(tabId, artId, skipPush) {
    $('guideDetailWatermark').classList.add('hidden');$('guideDetailWatermark').innerHTML = '';
  }
 
-  if (typeof art.html === 'string' && art.html.trim() !== '') {
-    $('guideText').innerHTML = renderRichGuideHtml(art.html, art.showToc !== false, `${foundTab}-${curGuideArt}`);
-  } else {
-    $('guideText').innerHTML = art.blocks && art.blocks.length ? renderBlocks(art.blocks, `${foundTab}-${curGuideArt}`) : i18n[lang].guide_empty;
+  let mainBody = (typeof art.html === 'string' && art.html.trim() !== '') 
+    ? renderRichGuideHtml(art.html, art.showToc !== false, `${foundTab}-${curGuideArt}`)
+    : (art.blocks && art.blocks.length ? renderBlocks(art.blocks, `${foundTab}-${curGuideArt}`) : i18n[lang].guide_empty);
+
+  // 1. Render FAQ riêng của bài viết (nếu có)
+  let faqBlockHtml = '';
+  if (Array.isArray(art.faqs) && art.faqs.length) {
+    faqBlockHtml = `
+      <div class="mt-8 pt-6 border-t border-slate-200 dark:border-white/10">
+        <h3 class="text-base font-extrabold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
+          <i class="fas fa-circle-question text-indigo-500"></i>Câu hỏi thường gặp về bài viết này
+        </h3>
+        <div class="space-y-2">
+          ${art.faqs.map(f => `
+            <details class="bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl p-3.5 group cursor-pointer" onclick="event.preventDefault();this.open=!this.open;">
+              <summary class="font-bold text-xs md:text-sm text-indigo-700 dark:text-indigo-300 flex justify-between items-center select-none">
+                <span>${esc(f.q)}</span>
+                <i class="fas fa-chevron-down text-slate-400 group-open:rotate-180 transition-transform"></i>
+              </summary>
+              <p class="text-xs text-slate-600 dark:text-slate-300 mt-2 font-medium leading-relaxed">${esc(f.a)}</p>
+            </details>
+          `).join('')}
+        </div>
+      </div>
+    `;
   }
+
+  // 2. Render Mục bài viết liên quan khác
+  let relBlockHtml = '';
+  if (Array.isArray(art.relatedArts) && art.relatedArts.length) {
+    const tabs = guideTabList();
+    const otherList = tabs.flatMap(t => guideArts(t.id)).filter(x => art.relatedArts.includes(x.id));
+    if (otherList.length) {
+      relBlockHtml = `
+        <div class="mt-8 pt-6 border-t border-slate-200 dark:border-white/10">
+          <h4 class="text-sm font-extrabold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
+            <i class="fas fa-newspaper text-indigo-500"></i>Bài viết khác có thể bạn quan tâm:
+          </h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            ${otherList.map(item => `
+              <div onclick="openGuideArticle('', '${esc(item.id)}')" class="cursor-pointer bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-xl p-3 flex items-center justify-between gap-2 transition hover:-translate-y-0.5 shadow-sm">
+                <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">${esc(item.name || item.id)}</span>
+                <i class="fas fa-arrow-right text-xs text-indigo-500 shrink-0"></i>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  $('guideText').innerHTML = mainBody + faqBlockHtml + relBlockHtml;
   $('view-portal').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -2017,31 +2132,33 @@ function switchPortalTab(tabId, fromUpgrade=false, skipPush=false){
   return;
  }
 
- // 2. Tab Cửa hàng (/#packages): Công khai cho cả khách chưa đăng nhập & đã đăng nhập
+ // 2. Tab Cửa hàng (/#portal/packages): Xem được ngay bên trong Portal
  if(tabId==='p-store'){
   highlightNavBtns('p-store');
-  if(!skipPush) setRouteHash('#packages', false);
-  if(oCache){
-   $('view-store').classList.remove('active');
-   $('view-portal').classList.add('active');
-   document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
-   $('p-store').classList.add('active');
-  }else{
-   $('view-portal').classList.remove('active');
-   $('view-store').classList.add('active');
-  }
+  if(!skipPush) setRouteHash('#portal/packages', false);
+  $('view-store').classList.remove('active');
+  $('view-portal').classList.add('active');
+  document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
+  $('p-store').classList.add('active');
   renderPackages('all');
   return;
  }
 
- // 3. Tab Hướng dẫn (/#guide): Công khai 100%, tự làm mới dữ liệu từ Worker
+ // 3. Tab Hướng dẫn (/#portal/guide): Xem được ngay bên trong Portal, ẩn sạch FAQ chung của web
  if(tabId==='p-guide'){
   $('view-store').classList.remove('active');
   $('view-portal').classList.add('active');
   document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
   $('p-guide').classList.add('active');
   highlightNavBtns('p-guide');
-  if(!skipPush) setRouteHash('#guide', false);
+  if(!skipPush) setRouteHash('#portal/guide', false);
+  // Ẩn hoàn toàn FAQ chung của website khi vào tab Hướng dẫn
+  const faqG = $('faqPortalContainer');
+  if(faqG) {
+    faqG.classList.add('hidden');
+    const h3 = faqG.previousElementSibling;
+    if(h3 && h3.tagName === 'H3') h3.classList.add('hidden');
+  }
   loadConfig().then(() => {
    if(!curGuideArt) showGuide((guideTabList()[0]||{}).id);
   });
@@ -2126,20 +2243,47 @@ async function submitGuideAuth(e){
  btn.disabled = false; btn.innerHTML = orig;
 }
 
+function openPolicyModal(kind){
+  const m=$('policyModal'), t=$('policyModalTitle'), c=$('policyModalContent');
+  if(!m||!t||!c)return;
+  const ft = cfgCache.footer || {};
+  if(kind==='terms'){
+    t.innerText = "Chính sách sử dụng";
+    c.innerHTML = ft.terms ? `<p class="whitespace-pre-line">${esc(ft.terms)}</p>` : "<p>Quý khách sử dụng dịch vụ VPN vui lòng tuân thủ quy định pháp luật nước sở tại, không sử dụng dịch vụ vào các mục đích vi phạm pháp luật.</p>";
+  } else if(kind==='disclaimer'){
+    t.innerText = "Miễn trừ trách nhiệm pháp lý";
+    c.innerHTML = ft.disclaimer ? `<p class="whitespace-pre-line">${esc(ft.disclaimer)}</p>` : "<p>Chúng tôi chỉ cung cấp giải pháp mạng kỹ thuật. Khách hàng chịu toàn bộ trách nhiệm về các hoạt động và nội dung truy cập cá nhân.</p>";
+  } else {
+    t.innerText = "Quy định hoàn tiền";
+    c.innerHTML = "<p>Website không áp dụng chính sách hoàn tiền cho các đơn hàng đã thanh toán và kích hoạt thành công. Quý khách vui lòng lưu ý và cân nhắc trước khi thanh toán.</p>";
+  }
+  m.classList.remove('hidden');
+  lockBodyScroll();
+  pushOverlayState('policy');
+}
+
+function closePolicyModal(fromPop){
+  const m=$('policyModal');
+  if(!m||m.classList.contains('hidden'))return;
+  m.classList.add('hidden');
+  unlockBodyScroll();
+  if(!fromPop && history.state && history.state.modal==='policy') history.back();
+}
+
 async function handleRouteChange(fromPop){
  const h = location.hash || '';
  if (h === '#wechat') { openWechatModal(); return; }
- const deep = resolveDeepGuideParams();
- if (deep && deep.art) {
-  await openDeepGuideNow(deep, true);
+ if (h.startsWith('#portal/guide/') || h.startsWith('#guide/')) {
+  const artId = h.replace(/^#(portal\/)?guide\//, '');
+  await openDeepGuideNow({ tab: '', art: decodeURIComponent(artId) }, true);
   return;
  }
- if (h === '#guide') {
+ if (h === '#portal/guide' || h === '#guide') {
   curGuideArt = '';
   switchPortalTab('p-guide', false, true);
   return;
  }
- if (h === '#packages') {
+ if (h === '#portal/packages' || h === '#packages') {
   switchPortalTab('p-store', false, true);
   return;
  }
@@ -2148,7 +2292,7 @@ async function handleRouteChange(fromPop){
    setRouteHash('#portal/order', true);
    switchPortalTab('p-home', false, true);
   } else {
-   switchPortalTab('p-store', false, true);
+   switchPortalTab('p-home', false, true);
    openPortalAuthModal();
   }
   return;
@@ -2158,14 +2302,7 @@ async function handleRouteChange(fromPop){
   setRouteHash('#portal/order', true);
   switchPortalTab('p-home', false, true);
  } else {
-  if (h === '#packages') {
-   switchPortalTab('p-store', false, true);
-  } else {
-   $('view-portal').classList.remove('active');
-   $('view-store').classList.add('active');
-   $('desktopPortalNav')?.classList.add('hidden');
-   renderPackages('all');
-  }
+  switchPortalTab('p-store', false, true);
  }
  restoreIndexScroll();
 }
