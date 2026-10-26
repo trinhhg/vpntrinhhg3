@@ -937,13 +937,13 @@ textarea.autog{resize:none;overflow:hidden;}
 
    <!-- SUB-PANE 2: TÙY BIẾN FOOTER -->
    <div id="pane-footer-cfg" class="hidden space-y-4">
-    <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-4">
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-5">
      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
       <div>
-       <h3 class="font-extrabold text-base text-slate-800"><i class="fas fa-shoe-prints text-indigo-600 mr-1.5"></i>Cấu hình Footer &amp; Liên kết dự phòng</h3>
-       <p class="text-[11px] text-slate-500 mt-0.5">Quản lý các liên kết web dự phòng, Chính sách sử dụng, Miễn trừ trách nhiệm pháp lý.</p>
+       <h3 class="font-extrabold text-base text-slate-800"><i class="fas fa-shoe-prints text-indigo-600 mr-1.5"></i>Cấu hình Footer &amp; Liên kết nhanh</h3>
+       <p class="text-[11px] text-slate-500 mt-0.5">Tùy biến các cột Dịch vụ, Hướng dẫn, Pháp lý, Website dự phòng và 3 nội dung điều khoản.</p>
       </div>
-      <button type="button" onclick="saveFooterConfig()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md"><i class="fas fa-save mr-1.5"></i>LƯU CẤU HÌNH FOOTER</button>
+      <button type="button" onclick="saveFooterConfig()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition active:scale-95"><i class="fas fa-save mr-1.5"></i>LƯU CẤU HÌNH FOOTER</button>
      </div>
 
      <!-- Danh sách web dự phòng -->
@@ -968,16 +968,60 @@ textarea.autog{resize:none;overflow:hidden;}
       </div>
      </div>
 
-     <!-- Chính sách sử dụng -->
-     <div class="space-y-1">
-      <label class="block font-bold text-xs text-slate-700">2. Nội dung "Chính sách sử dụng" (Terms of Service):</label>
-      <textarea id="ftTermsText" rows="4" placeholder="Nhập nội dung quy định, điều khoản sử dụng VPN..." class="w-full p-2.5 border rounded-xl text-xs outline-none bg-slate-50 leading-relaxed"></textarea>
+     <!-- Quản lý 3 cột liên kết nhanh -->
+     <div class="space-y-3 pt-2 border-t border-slate-100">
+      <label class="block font-bold text-xs text-slate-700">2. Quản lý các Liên kết nhanh dưới từng cột Footer:</label>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+       <!-- Cột Dịch vụ -->
+       <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2">
+        <div class="flex items-center justify-between pb-1 border-b border-slate-200">
+         <span class="font-extrabold text-xs text-slate-700">Cột: DỊCH VỤ</span>
+         <button type="button" onclick="addFooterLinkRow('services')" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800"><i class="fas fa-plus mr-0.5"></i>Thêm link</button>
+        </div>
+        <div id="ftLinksWrap_services" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
+       </div>
+
+       <!-- Cột Hướng dẫn -->
+       <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2">
+        <div class="flex items-center justify-between pb-1 border-b border-slate-200">
+         <span class="font-extrabold text-xs text-slate-700">Cột: HƯỚNG DẪN</span>
+         <button type="button" onclick="addFooterLinkRow('guides')" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800"><i class="fas fa-plus mr-0.5"></i>Thêm link</button>
+        </div>
+        <div id="ftLinksWrap_guides" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
+       </div>
+
+       <!-- Cột Pháp lý -->
+       <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2">
+        <div class="flex items-center justify-between pb-1 border-b border-slate-200">
+         <span class="font-extrabold text-xs text-slate-700">Cột: PHÁP LÝ</span>
+         <button type="button" onclick="addFooterLinkRow('legal')" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800"><i class="fas fa-plus mr-0.5"></i>Thêm link</button>
+        </div>
+        <div id="ftLinksWrap_legal" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
+       </div>
+      </div>
      </div>
 
-     <!-- Miễn trừ trách nhiệm pháp lý -->
-     <div class="space-y-1">
-      <label class="block font-bold text-xs text-slate-700">3. Nội dung "Miễn trừ trách nhiệm pháp lý" (Disclaimer):</label>
-      <textarea id="ftDisclaimerText" rows="4" placeholder="Nhập nội dung miễn trừ trách nhiệm pháp lý đối với hành vi người dùng..." class="w-full p-2.5 border rounded-xl text-xs outline-none bg-slate-50 leading-relaxed"></textarea>
+     <!-- 3 Nội dung chính sách pháp lý -->
+     <div class="space-y-3 pt-2 border-t border-slate-100">
+      <label class="block font-bold text-xs text-slate-700">3. Nội dung chi tiết các điều khoản Pháp lý (Bật popup khi khách bấm):</label>
+      
+      <!-- 1. Chính sách sử dụng -->
+      <div class="space-y-1">
+       <label class="block text-[11px] font-bold text-slate-600">3.1. Nội dung "Chính sách sử dụng" (Terms of Service):</label>
+       <textarea id="ftTermsText" rows="3" placeholder="Nhập nội dung quy định, điều khoản sử dụng VPN..." class="w-full p-2.5 border rounded-xl text-xs outline-none bg-slate-50 leading-relaxed"></textarea>
+      </div>
+
+      <!-- 2. Miễn trừ trách nhiệm -->
+      <div class="space-y-1">
+       <label class="block text-[11px] font-bold text-slate-600">3.2. Nội dung "Miễn trừ trách nhiệm pháp lý" (Disclaimer):</label>
+       <textarea id="ftDisclaimerText" rows="3" placeholder="Nhập nội dung miễn trừ trách nhiệm pháp lý đối với hành vi người dùng..." class="w-full p-2.5 border rounded-xl text-xs outline-none bg-slate-50 leading-relaxed"></textarea>
+      </div>
+
+      <!-- 3. Quy định hoàn tiền -->
+      <div class="space-y-1">
+       <label class="block text-[11px] font-bold text-slate-600">3.3. Nội dung "Quy định hoàn tiền" (Refund Policy):</label>
+       <textarea id="ftRefundText" rows="3" placeholder="Nhập nội dung quy định hoàn tiền (VD: Website không áp dụng hoàn tiền cho đơn đã mua...)" class="w-full p-2.5 border rounded-xl text-xs outline-none bg-slate-50 leading-relaxed"></textarea>
+      </div>
      </div>
     </div>
    </div>
@@ -3795,7 +3839,6 @@ function switchSettingsTab(t){
    initAdminNotifyUI();
    renderRouteRows();
    renderBlurRows();
-   renderSyncWorkers();
    renderDockRows();
    renderMailProvCards();
  }
@@ -3989,6 +4032,53 @@ function switchFaqSubTab(tab){
   if(tab === "footer") loadFooterConfigUI();
 }
 
+let adminFooterLinks = { services: [], guides: [], legal: [] };
+
+const DEFAULT_FOOTER_LINKS = {
+  services: [
+    { title: "Bảng giá gói cước", url: "#portal/packages" },
+    { title: "Tra cứu đơn hàng", url: "#portal/order" },
+    { title: "Kiểm tra dung lượng", url: "#portal/order" }
+  ],
+  guides: [
+    { title: "Cài đặt Android", url: "#portal/guide" },
+    { title: "Cài đặt iOS (iPhone/iPad)", url: "#portal/guide" },
+    { title: "Cài đặt Windows", url: "#portal/guide" },
+    { title: "Cài đặt MacOS", url: "#portal/guide" }
+  ],
+  legal: [
+    { title: "Chính sách sử dụng", url: "modal:terms" },
+    { title: "Miễn trừ trách nhiệm", url: "modal:disclaimer" },
+    { title: "Quy định hoàn tiền", url: "modal:refund" }
+  ]
+};
+
+function renderFooterLinkCol(colKey) {
+  const wrap = $("ftLinksWrap_" + colKey);
+  if (!wrap) return;
+  const list = adminFooterLinks[colKey] || [];
+  wrap.innerHTML = list.map((item, idx) => `
+    <div class="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200">
+      <input type="text" value="${esc(item.title || '')}" oninput="adminFooterLinks['${colKey}'][${idx}].title = this.value" placeholder="Tên" class="w-1/2 p-1 text-[11px] border border-slate-200 rounded outline-none font-bold">
+      <input type="text" value="${esc(item.url || '')}" oninput="adminFooterLinks['${colKey}'][${idx}].url = this.value" placeholder="Link/Hash" class="w-1/2 p-1 text-[11px] border border-slate-200 rounded outline-none font-mono">
+      <button type="button" onclick="delFooterLinkRow('${colKey}', ${idx})" class="text-red-500 hover:text-red-700 px-1 text-xs shrink-0"><i class="fas fa-times"></i></button>
+    </div>
+  `).join('') || '<div class="text-[10px] text-slate-400 italic">Trống</div>';
+}
+
+function addFooterLinkRow(colKey) {
+  if (!adminFooterLinks[colKey]) adminFooterLinks[colKey] = [];
+  adminFooterLinks[colKey].push({ title: "Liên kết mới", url: "#portal/guide" });
+  renderFooterLinkCol(colKey);
+}
+
+function delFooterLinkRow(colKey, idx) {
+  if (adminFooterLinks[colKey]) {
+    adminFooterLinks[colKey].splice(idx, 1);
+    renderFooterLinkCol(colKey);
+  }
+}
+
 function loadFooterConfigUI(){
   const ft = cmsDb.footer || {};
   const b = ft.backups || [];
@@ -3999,6 +4089,15 @@ function loadFooterConfigUI(){
   }
   if($("ftTermsText")) $("ftTermsText").value = ft.terms || "";
   if($("ftDisclaimerText")) $("ftDisclaimerText").value = ft.disclaimer || "";
+  if($("ftRefundText")) $("ftRefundText").value = ft.refund || "Website không áp dụng hoàn tiền cho đơn hàng đã mua, khách hàng vui lòng chú ý và cân nhắc khi thanh toán.";
+
+  adminFooterLinks = {
+    services: Array.isArray(ft.services) && ft.services.length ? JSON.parse(JSON.stringify(ft.services)) : JSON.parse(JSON.stringify(DEFAULT_FOOTER_LINKS.services)),
+    guides: Array.isArray(ft.guides) && ft.guides.length ? JSON.parse(JSON.stringify(ft.guides)) : JSON.parse(JSON.stringify(DEFAULT_FOOTER_LINKS.guides)),
+    legal: Array.isArray(ft.legal) && ft.legal.length ? JSON.parse(JSON.stringify(ft.legal)) : JSON.parse(JSON.stringify(DEFAULT_FOOTER_LINKS.legal))
+  };
+
+  ['services', 'guides', 'legal'].forEach(renderFooterLinkCol);
 }
 
 async function saveFooterConfig(){
@@ -4010,8 +4109,12 @@ async function saveFooterConfig(){
   }
   cmsDb.footer = {
     backups,
+    services: adminFooterLinks.services,
+    guides: adminFooterLinks.guides,
+    legal: adminFooterLinks.legal,
     terms: ($("ftTermsText")?.value || "").trim(),
-    disclaimer: ($("ftDisclaimerText")?.value || "").trim()
+    disclaimer: ($("ftDisclaimerText")?.value || "").trim(),
+    refund: ($("ftRefundText")?.value || "").trim()
   };
   try {
     await saveCmsDb();
@@ -4035,7 +4138,7 @@ async function saveQrExpireSeconds(){
  }
 }
 function loadSettingsUI(){
- const s=cmsDb.settings;renderRouteRows();renderBlurRows();renderSyncWorkers();renderDockRows();renderMailProvCards();
+ const s=cmsDb.settings;renderRouteRows();renderBlurRows();renderDockRows();renderMailProvCards();
  if($("qrExpireSecondsInp")) $("qrExpireSecondsInp").value = Number(s.qrExpireSeconds) || 30;
  const rr=document.querySelector(`input[name=emailRoleRad][value=${s.emailRole==="master"?"master":"slave"}]`);if(rr)rr.checked=true;
  if($("toggleAutoMail")) $("toggleAutoMail").checked=!!s.autoMailEnabled;
