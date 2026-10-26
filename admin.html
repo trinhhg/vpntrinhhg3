@@ -521,7 +521,7 @@ textarea.autog{resize:none;overflow:hidden;}
     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
      <div class="bg-slate-50 p-2 border-b border-slate-200 flex gap-1.5 flex-wrap items-center sticky top-0 z-20" id="cmsAddBtns"></div>
      <div class="flex relative bg-white border-t border-slate-100">
-      <div id="cmsLineGutter" class="select-none py-4 px-2.5 bg-slate-50 border-r border-slate-200 text-slate-400 font-mono text-xs text-right min-w-[48px] overflow-hidden"></div>
+      <div id="cmsLineGutter" class="select-none py-0 px-2.5 bg-slate-50 border-r border-slate-200 text-slate-400 font-mono text-xs text-right min-w-[48px] overflow-hidden"></div>
       <div id="cmsWordEditor" contenteditable="true" oninput="onWordEditorInput()" onscroll="$('cmsLineGutter').scrollTop=this.scrollTop" class="word-editor p-4 bg-white flex-1 outline-none leading-relaxed"></div>
      </div>
      <div class="p-3 border-t border-slate-100 bg-slate-50"><button onclick="saveCms()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md text-sm"><i class="fas fa-save mr-2"></i>LƯU BÀI VIẾT (Cục bộ web này)</button></div>
@@ -968,38 +968,27 @@ textarea.autog{resize:none;overflow:hidden;}
       </div>
      </div>
 
-     <!-- Quản lý 3 cột liên kết nhanh -->
-     <div class="space-y-3 pt-2 border-t border-slate-100">
-      <label class="block font-bold text-xs text-slate-700">2. Quản lý các Liên kết nhanh dưới từng cột Footer:</label>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-       <!-- Cột Dịch vụ -->
-       <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2">
-        <div class="flex items-center justify-between pb-1 border-b border-slate-200">
-         <span class="font-extrabold text-xs text-slate-700">Cột: DỊCH VỤ</span>
-         <button type="button" onclick="addFooterLinkRow('services')" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800"><i class="fas fa-plus mr-0.5"></i>Thêm link</button>
+      <!-- Cột & liên kết footer: thêm/xóa/sửa tự do -->
+      <div class="space-y-3 pt-2 border-t border-slate-100">
+       <div class="flex flex-wrap items-center justify-between gap-2">
+        <label class="font-bold text-xs text-slate-700">2. Cột &amp; liên kết nhanh ở Footer (cột trống sẽ không hiện):</label>
+        <div class="flex gap-1.5">
+         <button type="button" onclick="ftLoadTemplate()" class="text-[11px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg">Nạp mẫu gợi ý</button>
+         <button type="button" onclick="ftAddCol()" class="text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-2.5 py-1 rounded-lg"><i class="fas fa-plus mr-1"></i>Thêm cột</button>
         </div>
-        <div id="ftLinksWrap_services" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
        </div>
-
-       <!-- Cột Hướng dẫn -->
-       <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2">
-        <div class="flex items-center justify-between pb-1 border-b border-slate-200">
-         <span class="font-extrabold text-xs text-slate-700">Cột: HƯỚNG DẪN</span>
-         <button type="button" onclick="addFooterLinkRow('guides')" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800"><i class="fas fa-plus mr-0.5"></i>Thêm link</button>
-        </div>
-        <div id="ftLinksWrap_guides" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
-       </div>
-
-       <!-- Cột Pháp lý -->
-       <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2">
-        <div class="flex items-center justify-between pb-1 border-b border-slate-200">
-         <span class="font-extrabold text-xs text-slate-700">Cột: PHÁP LÝ</span>
-         <button type="button" onclick="addFooterLinkRow('legal')" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-800"><i class="fas fa-plus mr-0.5"></i>Thêm link</button>
-        </div>
-        <div id="ftLinksWrap_legal" class="space-y-1.5 max-h-48 overflow-y-auto pr-1"></div>
-       </div>
+       <div id="ftColsWrap" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
+       <datalist id="ftUrlPresets">
+        <option value="#portal/packages">Bảng giá (trang chủ: cuộn tới gói · trong Portal: tab Cửa hàng)</option>
+        <option value="#portal/order">Tra cứu đơn / Kiểm tra dung lượng</option>
+        <option value="#portal/guide">Tab Hướng dẫn</option>
+        <option value="#portal/guide/ID_BAI_VIET">Một bài hướng dẫn cụ thể</option>
+        <option value="modal:terms">Popup Chính sách sử dụng</option>
+        <option value="modal:disclaimer">Popup Miễn trừ trách nhiệm</option>
+        <option value="modal:refund">Popup Quy định hoàn tiền</option>
+        <option value="https://">Link ngoài (mở tab mới)</option>
+       </datalist>
       </div>
-     </div>
 
      <!-- 3 Nội dung chính sách pháp lý -->
      <div class="space-y-3 pt-2 border-t border-slate-100">
@@ -1401,7 +1390,7 @@ function go(id){
 
 // ===================== ĐƠN HÀNG =====================
 function switchOrdTab(t){curOrdTab=t;["success","pending","failed"].forEach(x=>$("otab-"+x).classList.toggle("active",x===t));renderOrd();}
-const ordAmountTxt=o=>{const pay=payOf(o),p=pkgOf(o);if(pay==="Bank")return Number(o.totalVnd)>0?fmtVnd(o.totalVnd)+"đ":"—";const c=Number(o.totalCny)>0?Number(o.totalCny):0;if(c)return "¥"+trimNum(c);return p&&p.cny?"¥"+trimNum(p.cny*(Number(o.qty)||1))+" (theo gói)":"—";};
+const ordAmountTxt=o=>{const pay=payOf(o),p=pkgOf(o);if(pay==="Bank")return Number(o.totalVnd)>0?fmtVnd(o.totalVnd)+"vnd":"—";const c=Number(o.totalCny)>0?Number(o.totalCny):0;if(c)return "¥"+trimNum(c);return p&&p.cny?"¥"+trimNum(p.cny*(Number(o.qty)||1))+" (theo gói)":"—";};
 function ordCard(o,ro){
  const now=nowMs(),st=normSt(o.status);let daysLeft=null,expiring=false,expired=false;
  if(st==="success"&&o.expDate&&!isLife(o.expDate)){
@@ -1443,7 +1432,7 @@ function ordCard(o,ro){
  return `<div class="${card} rounded-xl p-3 shadow-sm flex flex-col md:flex-row md:items-stretch justify-between gap-2 md:gap-3 w-full min-w-0"><div class="flex-1 min-w-0">
   <div class="flex items-center gap-2 mb-1 flex-wrap">${dot}<span class="font-bold text-[10px] text-slate-400">#${ordersDb.indexOf(o)+1}</span><span class="font-mono font-extrabold text-indigo-600 text-xs md:text-base cp order-id-text" onclick="cp(${q(o.id)})">${esc(o.id)}</span>${nick}${kind}${st==="pending"?`<span class="bg-yellow-100 text-yellow-800 text-[10px] font-bold px-1.5 py-0.5 rounded ml-1">Chưa xác nhận CK</span>`:""}${bu}${lkb}${expired?`<span class="text-[10px] font-black bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1">ĐÃ HẾT HẠN</span>`:""}</div>
   <div class="font-bold text-slate-800 text-xs md:text-sm cp truncate pl-5 order-email-text" onclick="cp(${q(o.email)})">${esc(o.email||"—")}</div>
-  <div class="text-[11px] md:text-sm text-slate-500 mt-1 pl-5 order-meta-text flex items-center gap-2 w-full"><div class="w-[140px] shrink-0 truncate">${zaloPart}</div><div class="flex-1 min-w-0 truncate">${hsdPart}</div></div>
+  <div class="text-[11px] md:text-sm text-slate-500 mt-1 pl-5 order-meta-text flex items-center gap-2 w-full"><div class="shrink-0 whitespace-nowrap">${zaloPart}</div><div class="flex-1 min-w-0 truncate">${hsdPart}</div></div>
   <div class="pl-5 mt-2 flex flex-wrap items-center gap-1.5">${methodBadge}${amtBadge}${mBadge}</div></div>
   <div class="flex flex-row md:flex-col items-center md:items-end justify-between gap-2 shrink-0 border-t border-slate-100 md:border-0 pt-2 md:pt-0"><span class="text-[10px] md:text-xs text-slate-400 font-semibold whitespace-nowrap">${esc(o.date || fmtBank(o.createdTs || 0))}</span>${acts}</div></div>`;}
 function renderOrd(){
@@ -1970,7 +1959,8 @@ function revOver(R,b){
   </div>` +
   box("Doanh thu 12 tháng gần nhất", vbar(keys.map(k=>({l:monthLbl(k), v:mt[k].vnd})))) +
   box("Cơ cấu Phương thức thanh toán", hbar([{l:"Ngân hàng VN", v:by.Bank}, {l:"Alipay", v:by.Alipay}, {l:"Weixin", v:by.Weixin}])) +
-  box("Doanh thu theo Gói cước", hbar(Object.values(g).sort((a,c)=>c.vnd-a.vnd).map(it=>({l:`${it.l} (${it.n} đơn)`, v:it.vnd}))));
+  box("Doanh thu theo Gói cước", hbar(Object.values(g).sort((a,c)=>c.vnd-a.vnd).map(it=>({l:`${it.l} (${it.n} đơn)`, v:it.vnd})))) +
+  box("Xếp hạng tháng theo doanh thu", hbar(Object.values(mt).sort((a,c)=>c.vnd-a.vnd).map((m,i)=>({l:`#${i+1} · Tháng ${monthLbl(m.k)} (${m.n} đơn)`, v:m.vnd}))));
 }
 const PAYLBL={Bank:"🏦 Ngân hàng VN",Alipay:"🔵 Alipay",Weixin:"🟢 Weixin"};
 function revPayDetail(b){
@@ -3391,7 +3381,7 @@ function openLightbox(u){
  document.body.appendChild(d);
 }
 function videoEmbed(u){u=String(u||"");let m;
- if(m=u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/))([\w-]{6,})/))return `<div style="position:relative;width:100%;max-width:600px;margin:0 auto;aspect-ratio:16/9"><iframe src="https://www.youtube.com/embed/${m[1]}" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.1)" allowfullscreen loading="lazy"></iframe></div>`;
+ if(m=u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/))([\w-]{6,})/))return `<div style="position:relative;width:100%;max-width:600px;margin:0 auto;aspect-ratio:16/9"><iframe src="https://www.youtube-nocookie.com/embed/${m[1]}?rel=0" referrerpolicy="strict-origin-when-cross-origin" title="Video" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.1)" allowfullscreen loading="lazy"></iframe></div>`;
  if(m=u.match(/vimeo\.com\/(?:video\/)?(\d+)/))return `<div style="position:relative;width:100%;max-width:600px;margin:0 auto;aspect-ratio:16/9"><iframe src="https://player.vimeo.com/video/${m[1]}" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.1)" allowfullscreen loading="lazy"></iframe></div>`;
  if(/^https?:\/\//i.test(u))return `<div style="width:100%;max-width:600px;margin:0 auto;"><video src="${esc(u)}" controls playsinline style="width:100%;max-height:420px;border-radius:12px;background:#000;box-shadow:0 4px 14px rgba(0,0,0,.1)"></video></div>`;
  return `<div style="padding:14px;background:#f1f5f9;border-radius:8px;color:#94a3b8;font-size:13px;text-align:center">Chưa có URL video hợp lệ</div>`;}
@@ -3485,28 +3475,20 @@ function wInsertHtml(html){
  onWordEditorInput();
 }
 function syncCmsLines(){
- const ed=$("cmsWordEditor"), gut=$("cmsLineGutter");
- if(!ed||!gut)return;
- const children = ed.children;
- let numStr = "";
- let lineCounter = 1;
- const LINE_H = 26; // Chuẩn line-height 26px
- if(!children || children.length === 0){
-  const total = Math.max(1, Math.ceil((ed.scrollHeight || 100) / LINE_H));
-  for(let i=1; i<=total; i++) numStr += `<div style="height:${LINE_H}px;line-height:${LINE_H}px;">${i}</div>`;
- } else {
-  for(let i=0; i<children.length; i++){
-   const el = children[i];
-   const elH = el.offsetHeight || LINE_H;
-   const span = Math.max(1, Math.round(elH / LINE_H));
-   const itemH = elH / span;
-   for(let s=0; s<span; s++){
-    numStr += `<div style="height:${itemH}px;line-height:${Math.min(itemH, LINE_H)}px;">${lineCounter++}</div>`;
-   }
-  }
- }
- gut.innerHTML = numStr;
- gut.scrollTop = ed.scrollTop;
+  const ed=$("cmsWordEditor"), gut=$("cmsLineGutter");
+  if(!ed||!gut)return;
+  let h="", n=1;
+  const kids=[...ed.children];
+  if(!kids.length){
+   h=`<div style="position:absolute;right:0;top:${parseFloat(getComputedStyle(ed).paddingTop)||16}px;line-height:26px">1</div>`;
+  }else kids.forEach(el=>{
+   const cs=getComputedStyle(el), lh=parseFloat(cs.lineHeight)||26;
+   const pt=parseFloat(cs.paddingTop)||0, pb=parseFloat(cs.paddingBottom)||0;
+   const lines=Math.max(1,Math.round((el.offsetHeight-pt-pb)/lh));
+   for(let i=0;i<lines;i++) h+=`<div style="position:absolute;right:0;top:${el.offsetTop+pt+i*lh}px;height:${lh}px;line-height:${lh}px">${n++}</div>`;
+  });
+  gut.innerHTML=`<div style="position:relative;height:${ed.scrollHeight}px">${h}</div>`;
+  gut.scrollTop=ed.scrollTop;
 }
 
 function onWordEditorInput(){
@@ -3536,7 +3518,7 @@ function buildRichArticleView(rawHtml, showToc, gid){
  temp.querySelectorAll("img").forEach(img=>{
   const src=img.getAttribute("src")||"";
   img.setAttribute("onclick",`openLightbox(${q(src)})`);
-  img.style.cursor="zoom-in";
+  img.style.cursor="zoom-in";img.setAttribute("referrerpolicy","no-referrer");img.setAttribute("loading","lazy");
  });
  temp.querySelectorAll("a").forEach(a=>{
   const href=a.getAttribute("href")||"";
@@ -3582,8 +3564,16 @@ function scrollToHeadingText(txt){
  }
 }
 function cmsPrev(){
- const el=$("cmsPreview");if(!el)return;
- el.innerHTML=buildRichArticleView(curArtHtml, curArtShowToc, `${curCms}-${curArt}`);
+  const el=$("cmsPreview");if(!el)return;
+  let html=buildRichArticleView(curArtHtml, curArtShowToc, `${curCms}-${curArt}`);
+  const faqs=curArtFaqs.filter(f=>(f.q||"").trim());
+  if(faqs.length) html+=`<div style="margin-top:28px;padding-top:18px;border-top:1px solid #e2e8f0"><div style="font-weight:800;font-size:15px;margin-bottom:10px;color:#1e293b">❓ Câu hỏi thường gặp về bài viết này</div>${faqs.map(f=>`<details style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px;margin-bottom:8px"><summary style="font-weight:700;font-size:13px;color:#4338ca;cursor:pointer">${esc(f.q)}</summary><p style="margin:8px 0 0;font-size:13px;color:#475569;line-height:1.6">${esc(f.a)}</p></details>`).join("")}</div>`;
+  const rel=guideTabList().flatMap(t=>artsOf(t.id)).filter(x=>curArtRelated.includes(x.id));
+  if(rel.length) html+=`<div style="margin-top:24px;padding-top:18px;border-top:1px solid #e2e8f0"><div style="font-weight:800;font-size:14px;margin-bottom:10px;color:#1e293b">📰 Bài viết khác có thể bạn quan tâm:</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${rel.map(x=>`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;font-size:12px;font-weight:700;color:#334155">${esc(x.name||x.id)} →</div>`).join("")}</div></div>`;
+  el.innerHTML=html;
+  const wm=(curArtWatermark||"").trim();
+  if(wm){const w=Math.max(240,wm.length*15+90);const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='170'><text x='${w/2}' y='85' text-anchor='middle' dominant-baseline='middle' transform='rotate(-30 ${w/2} 85)' font-family='Arial,sans-serif' font-size='24' font-weight='800' fill='#64748b' fill-opacity='0.13'>${esc(wm)}</text></svg>`;el.style.backgroundImage=`url("data:image/svg+xml,${encodeURIComponent(svg)}")`;el.style.backgroundRepeat="repeat";}
+  else el.style.backgroundImage="none";
 }
 function openWordInsertModal(type){
  saveWordSelection();
@@ -3709,6 +3699,7 @@ function addArtFaqRow(){
 }
 function delArtFaqRow(idx){
  curArtFaqs.splice(idx,1);
+ cmsPrev();
  renderArtFaqsUI();
 }
 function renderArtFaqsUI(){
@@ -3720,8 +3711,8 @@ function renderArtFaqsUI(){
     <span class="text-[10px] font-black text-indigo-700 uppercase">Câu hỏi #${idx+1}</span>
     <button type="button" onclick="delArtFaqRow(${idx})" class="text-red-500 hover:text-red-700 text-xs px-1"><i class="fas fa-trash"></i></button>
    </div>
-   <input type="text" value="${esc(f.q)}" oninput="curArtFaqs[${idx}].q=this.value" placeholder="Nhập câu hỏi riêng cho bài này..." class="w-full p-1.5 text-xs border rounded-lg bg-white font-bold outline-none">
-   <textarea rows="2" oninput="curArtFaqs[${idx}].a=this.value" placeholder="Nhập câu trả lời..." class="w-full p-1.5 text-xs border rounded-lg bg-white outline-none leading-relaxed">${esc(f.a)}</textarea>
+   <input type="text" value="${esc(f.q)}" oninput="curArtFaqs[${idx}].q=this.value;cmsPrev()" placeholder="Nhập câu hỏi riêng cho bài này..." class="w-full p-1.5 text-xs border rounded-lg bg-white font-bold outline-none">
+   <textarea rows="2" oninput="curArtFaqs[${idx}].a=this.value;cmsPrev()" placeholder="Nhập câu trả lời..." class="w-full p-1.5 text-xs border rounded-lg bg-white outline-none leading-relaxed">${esc(f.a)}</textarea>
   </div>
  `).join('');
 }
@@ -3729,6 +3720,7 @@ function toggleRelatedArtPick(artId, checked){
  let s = new Set(curArtRelated);
  if(checked) s.add(artId); else s.delete(artId);
  curArtRelated = [...s];
+ cmsPrev();
 }
 
 function renderCmsEditor(){
@@ -3738,12 +3730,13 @@ function renderCmsEditor(){
  $("cmsArtMeta").innerHTML=`
   <div class="sm:col-span-2"><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tên bài viết</label><input value="${esc(curArtName)}" oninput="curArtName=this.value" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-bold"></div>
   <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tác giả</label><input value="${esc(curArtAuthor)}" oninput="curArtAuthor=this.value" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div>
-  <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Watermark nền</label><input value="${esc(curArtWatermark)}" oninput="curArtWatermark=this.value" placeholder="VD: VPNTrinhHg" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div>
+  <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Watermark nền</label><input value="${esc(curArtWatermark)}" oninput="curArtWatermark=this.value;cmsPrev()" placeholder="VD: VPNTrinhHg" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div>
   <div class="sm:col-span-4 flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 mt-1">
    <label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer"><input type="checkbox" ${curArtShowToc?"checked":""} onchange="curArtShowToc=this.checked;cmsPrev()" class="w-4 h-4 accent-indigo-600">Tự động hiện khung Mục lục (từ H2, H3)</label>
    <div class="flex items-center gap-1.5 max-w-full"><span class="text-[11px] font-bold text-slate-500">Link riêng:</span><code class="text-[11px] bg-slate-100 text-indigo-700 px-2 py-1 rounded border border-slate-200 truncate max-w-[260px]">${esc(deepLink)}</code><button type="button" onclick="copyArtDeepLink(${q(curCms)},${q(curArt)})" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold px-2.5 py-1 rounded-lg text-xs transition"><i class="fas fa-copy mr-1"></i>Copy Link</button></div>
   </div>
-  <!-- KHỐI FAQ RIÊNG CỦA BÀI VIẾT -->
+  <details class="sm:col-span-4 border-t border-slate-100 pt-2"><summary class="cursor-pointer select-none text-xs font-extrabold text-indigo-900 py-1"><i class="fas fa-sliders text-indigo-600 mr-1.5"></i>Nâng cao: FAQ riêng &amp; Bài viết liên quan (bấm để mở)</summary><div class="space-y-3 pt-2">
+   <!-- KHỐI FAQ RIÊNG CỦA BÀI VIẾT -->
   <div class="sm:col-span-4 border-t border-slate-100 pt-3 space-y-2">
    <div class="flex items-center justify-between">
     <label class="font-extrabold text-xs text-indigo-900 flex items-center gap-1.5"><i class="fas fa-circle-question text-indigo-600"></i>Câu hỏi thường gặp riêng của bài viết này (FAQ)</label>
@@ -3763,7 +3756,7 @@ function renderCmsEditor(){
       </label>
     `)).join('') || '<div class="text-[11px] text-slate-400 italic">Chưa có bài viết khác trên website.</div>'}
    </div>
-  </div>`;
+  </div></div></details>`;
  setTimeout(renderArtFaqsUI, 20);
  $("cmsAddBtns").innerHTML=`
   <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('formatBlock','H2')" class="tb-btn" title="Tiêu đề mục lớn (Tự vào Mục lục 1, 2, 3...)"><b class="text-indigo-600">H2</b> Mục lớn</button>
@@ -3788,6 +3781,8 @@ function renderCmsEditor(){
   ed.innerHTML=curArtHtml;
   ed.onmouseup=saveWordSelection;
   ed.onkeyup=saveWordSelection;
+  setTimeout(syncCmsLines,30);
+  if(!ed._ln){ed._ln=1;ed.addEventListener("load",syncCmsLines,true);if(window.ResizeObserver)new ResizeObserver(syncCmsLines).observe(ed);}
  }
  cmsPrev();
 }
@@ -4032,51 +4027,44 @@ function switchFaqSubTab(tab){
   if(tab === "footer") loadFooterConfigUI();
 }
 
-let adminFooterLinks = { services: [], guides: [], legal: [] };
-
-const DEFAULT_FOOTER_LINKS = {
-  services: [
-    { title: "Bảng giá gói cước", url: "#portal/packages" },
-    { title: "Tra cứu đơn hàng", url: "#portal/order" },
-    { title: "Kiểm tra dung lượng", url: "#portal/order" }
-  ],
-  guides: [
-    { title: "Cài đặt Android", url: "#portal/guide" },
-    { title: "Cài đặt iOS (iPhone/iPad)", url: "#portal/guide" },
-    { title: "Cài đặt Windows", url: "#portal/guide" },
-    { title: "Cài đặt MacOS", url: "#portal/guide" }
-  ],
-  legal: [
-    { title: "Chính sách sử dụng", url: "modal:terms" },
-    { title: "Miễn trừ trách nhiệm", url: "modal:disclaimer" },
-    { title: "Quy định hoàn tiền", url: "modal:refund" }
-  ]
-};
-
-function renderFooterLinkCol(colKey) {
-  const wrap = $("ftLinksWrap_" + colKey);
-  if (!wrap) return;
-  const list = adminFooterLinks[colKey] || [];
-  wrap.innerHTML = list.map((item, idx) => `
-    <div class="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200">
-      <input type="text" value="${esc(item.title || '')}" oninput="adminFooterLinks['${colKey}'][${idx}].title = this.value" placeholder="Tên" class="w-1/2 p-1 text-[11px] border border-slate-200 rounded outline-none font-bold">
-      <input type="text" value="${esc(item.url || '')}" oninput="adminFooterLinks['${colKey}'][${idx}].url = this.value" placeholder="Link/Hash" class="w-1/2 p-1 text-[11px] border border-slate-200 rounded outline-none font-mono">
-      <button type="button" onclick="delFooterLinkRow('${colKey}', ${idx})" class="text-red-500 hover:text-red-700 px-1 text-xs shrink-0"><i class="fas fa-times"></i></button>
+let ftCols = [];
+const FT_TEMPLATE = [
+  { title: "Dịch vụ", links: [{ title: "Bảng giá gói cước", url: "#portal/packages" }, { title: "Tra cứu đơn hàng", url: "#portal/order" }, { title: "Kiểm tra dung lượng", url: "#portal/order" }] },
+  { title: "Hướng dẫn", links: [{ title: "Cài đặt Android", url: "#portal/guide" }, { title: "Cài đặt iOS (iPhone/iPad)", url: "#portal/guide" }, { title: "Cài đặt Windows", url: "#portal/guide" }, { title: "Cài đặt MacOS", url: "#portal/guide" }] },
+  { title: "Pháp lý", links: [{ title: "Chính sách sử dụng", url: "modal:terms" }, { title: "Miễn trừ trách nhiệm", url: "modal:disclaimer" }, { title: "Quy định hoàn tiền", url: "modal:refund" }] }
+];
+const ftClone = (x) => JSON.parse(JSON.stringify(x));
+function ftColsFromDb(ft) {
+  if (Array.isArray(ft.columns)) return ftClone(ft.columns);
+  return [["Dịch vụ", ft.services], ["Hướng dẫn", ft.guides], ["Pháp lý", ft.legal]].filter(x => Array.isArray(x[1]) && x[1].length).map(x => ({ title: x[0], links: ftClone(x[1]) }));
+}
+function renderFtCols() {
+  const w = $("ftColsWrap"); if (!w) return;
+  w.innerHTML = ftCols.map((c, ci) => `
+   <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2">
+    <div class="flex items-center gap-1 pb-1 border-b border-slate-200">
+     <input value="${esc(c.title || '')}" oninput="ftCols[${ci}].title=this.value" placeholder="Tên cột" class="flex-1 min-w-0 p-1 text-xs font-extrabold border border-slate-200 rounded bg-white uppercase outline-none">
+     <button type="button" onclick="ftMoveCol(${ci},-1)" class="text-slate-400 hover:text-indigo-600 px-1 text-xs"><i class="fas fa-arrow-left"></i></button>
+     <button type="button" onclick="ftMoveCol(${ci},1)" class="text-slate-400 hover:text-indigo-600 px-1 text-xs"><i class="fas fa-arrow-right"></i></button>
+     <button type="button" onclick="ftDelCol(${ci})" title="Xóa cả cột" class="text-red-500 hover:text-red-700 px-1 text-xs"><i class="fas fa-trash"></i></button>
     </div>
-  `).join('') || '<div class="text-[10px] text-slate-400 italic">Trống</div>';
+    <div class="space-y-1.5">${(c.links || []).map((l, li) => `
+     <div class="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200">
+      <input value="${esc(l.title || '')}" oninput="ftCols[${ci}].links[${li}].title=this.value" placeholder="Tên link" class="w-1/2 p-1 text-[11px] border border-slate-200 rounded outline-none font-bold">
+      <input list="ftUrlPresets" value="${esc(l.url || '')}" oninput="ftCols[${ci}].links[${li}].url=this.value" placeholder="URL / #hash / modal:..." class="w-1/2 p-1 text-[11px] border border-slate-200 rounded outline-none font-mono">
+      <button type="button" onclick="ftDelLink(${ci},${li})" class="text-red-500 hover:text-red-700 px-1 text-xs shrink-0"><i class="fas fa-times"></i></button>
+     </div>`).join('') || '<div class="text-[10px] text-slate-400 italic">Cột trống (không hiện ở trang khách)</div>'}</div>
+    <button type="button" onclick="ftAddLink(${ci})" class="w-full text-[11px] font-bold text-indigo-600 border border-dashed border-indigo-300 rounded-lg py-1 hover:bg-indigo-50"><i class="fas fa-plus mr-1"></i>Thêm link</button>
+   </div>`).join('') || '<div class="col-span-full text-xs text-slate-400 italic p-3 border border-dashed border-slate-300 rounded-xl text-center">Chưa có cột nào. Footer trang khách sẽ không hiện cột liên kết.</div>';
 }
-
-function addFooterLinkRow(colKey) {
-  if (!adminFooterLinks[colKey]) adminFooterLinks[colKey] = [];
-  adminFooterLinks[colKey].push({ title: "Liên kết mới", url: "#portal/guide" });
-  renderFooterLinkCol(colKey);
-}
-
-function delFooterLinkRow(colKey, idx) {
-  if (adminFooterLinks[colKey]) {
-    adminFooterLinks[colKey].splice(idx, 1);
-    renderFooterLinkCol(colKey);
-  }
+function ftAddCol() { ftCols.push({ title: "Cột mới", links: [] }); renderFtCols(); }
+function ftDelCol(ci) { if (!confirm("Xóa cả cột này và mọi link trong cột?")) return; ftCols.splice(ci, 1); renderFtCols(); }
+function ftMoveCol(ci, d) { const j = ci + d; if (j < 0 || j >= ftCols.length) return; const [x] = ftCols.splice(ci, 1); ftCols.splice(j, 0, x); renderFtCols(); }
+function ftAddLink(ci) { (ftCols[ci].links = ftCols[ci].links || []).push({ title: "Liên kết mới", url: "#portal/guide" }); renderFtCols(); }
+function ftDelLink(ci, li) { ftCols[ci].links.splice(li, 1); renderFtCols(); }
+function ftLoadTemplate() {
+  if (ftCols.length && !confirm("Thay toàn bộ cột hiện tại bằng mẫu gợi ý? (chưa lưu cho tới khi bấm LƯU)")) return;
+  ftCols = ftClone(FT_TEMPLATE); renderFtCols();
 }
 
 function loadFooterConfigUI(){
@@ -4089,15 +4077,9 @@ function loadFooterConfigUI(){
   }
   if($("ftTermsText")) $("ftTermsText").value = ft.terms || "";
   if($("ftDisclaimerText")) $("ftDisclaimerText").value = ft.disclaimer || "";
-  if($("ftRefundText")) $("ftRefundText").value = ft.refund || "Website không áp dụng hoàn tiền cho đơn hàng đã mua, khách hàng vui lòng chú ý và cân nhắc khi thanh toán.";
-
-  adminFooterLinks = {
-    services: Array.isArray(ft.services) && ft.services.length ? JSON.parse(JSON.stringify(ft.services)) : JSON.parse(JSON.stringify(DEFAULT_FOOTER_LINKS.services)),
-    guides: Array.isArray(ft.guides) && ft.guides.length ? JSON.parse(JSON.stringify(ft.guides)) : JSON.parse(JSON.stringify(DEFAULT_FOOTER_LINKS.guides)),
-    legal: Array.isArray(ft.legal) && ft.legal.length ? JSON.parse(JSON.stringify(ft.legal)) : JSON.parse(JSON.stringify(DEFAULT_FOOTER_LINKS.legal))
-  };
-
-  ['services', 'guides', 'legal'].forEach(renderFooterLinkCol);
+  if($("ftRefundText")) $("ftRefundText").value = ft.refund || "";
+  ftCols = ftColsFromDb(ft);
+  renderFtCols();
 }
 
 async function saveFooterConfig(){
@@ -4109,9 +4091,7 @@ async function saveFooterConfig(){
   }
   cmsDb.footer = {
     backups,
-    services: adminFooterLinks.services,
-    guides: adminFooterLinks.guides,
-    legal: adminFooterLinks.legal,
+    columns: ftCols.map(c => ({ title: (c.title || "").trim(), links: (c.links || []).filter(l => (l.title || "").trim()).map(l => ({ title: l.title.trim(), url: (l.url || "").trim() || "#" })) })),
     terms: ($("ftTermsText")?.value || "").trim(),
     disclaimer: ($("ftDisclaimerText")?.value || "").trim(),
     refund: ($("ftRefundText")?.value || "").trim()
@@ -4123,7 +4103,7 @@ async function saveFooterConfig(){
   } catch(e) {
     toast("Lỗi lưu footer: " + e.message, "err");
   }
-} 
+}
 async function saveQrExpireSeconds(){
  const val = Math.max(5, Math.min(3600, parseInt($("qrExpireSecondsInp")?.value) || 30));
  cmsDb.settings = cmsDb.settings || {};
