@@ -85,9 +85,6 @@ html.dark #guideText a.word-link{color:#60a5fa!important;}
 @keyframes ringSpin{to{transform:rotate(360deg)}}
 @keyframes dotBlink{0%,80%,100%{opacity:.25}40%{opacity:1}}
 .dots span{display:inline-block;animation:dotBlink 1.4s infinite;font-weight:900}.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
-html.has-user-session #view-store{display:none!important;}
-html.has-user-session #view-portal{display:block!important;}
-html.has-user-session #desktopPortalNav{display:flex!important;}
 .countdown-wrap{position:relative;width:100%;max-width:320px;margin:0 auto 12px;display:flex;flex-direction:column;align-items:center;gap:10px;}
 .countdown-wrap #countdownTimer{position:static;}
 /* ===== SIGNATURE PURPLE CHARCOAL GLASS (Nền tím signature tỏa từ tâm + Kính mờ than chì) ===== */
@@ -625,31 +622,31 @@ html[data-tab="store"] #p-store{display:block!important;}
         </div>
       </div>
 
-      <!-- CỘT 2: TRUY CẬP NHANH -->
+      <!-- CỘT 2: TRUY CẬP NHANH (DỊCH VỤ) -->
       <div class="space-y-2">
         <div class="font-extrabold text-sm text-slate-800 dark:text-white uppercase tracking-wider">Dịch vụ</div>
-        <ul class="space-y-1.5 text-slate-600 dark:text-slate-300 font-medium">
-          <li><a href="#portal/packages" onclick="navigateRoute('#portal/packages')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> Bảng giá gói cước</a></li>
+        <ul id="footerCol_services" class="space-y-1.5 text-slate-600 dark:text-slate-300 font-medium">
+          <li><button type="button" onclick="clickFooterServiceLink('pricing')" class="hover:text-indigo-600 transition flex items-center gap-1.5 text-left"><span>›</span> Bảng giá gói cước</button></li>
           <li><a href="#portal/order" onclick="navigateRoute('#portal/order')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> Tra cứu đơn hàng</a></li>
-          <li><a href="#portal/order" onclick="navigateRoute('#portal/order')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> Kiểm tra dung lượng</a></li>
+          <li><button type="button" onclick="clickFooterServiceLink('data')" class="hover:text-indigo-600 transition flex items-center gap-1.5 text-left"><span>›</span> Kiểm tra dung lượng</button></li>
         </ul>
       </div>
 
       <!-- CỘT 3: HƯỚNG DẪN CÀI ĐẶT -->
       <div class="space-y-2">
         <div class="font-extrabold text-sm text-slate-800 dark:text-white uppercase tracking-wider">Hướng dẫn</div>
-        <ul class="space-y-1.5 text-slate-600 dark:text-slate-300 font-medium">
-          <li><a href="#portal/guide" onclick="navigateRoute('#portal/guide')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> Cài đặt Android</a></li>
-          <li><a href="#portal/guide" onclick="navigateRoute('#portal/guide')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> Cài đặt iOS (iPhone/iPad)</a></li>
-          <li><a href="#portal/guide" onclick="navigateRoute('#portal/guide')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> Cài đặt Windows</a></li>
-          <li><a href="#portal/guide" onclick="navigateRoute('#portal/guide')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> Cài đặt MacOS</a></li>
+        <ul id="footerCol_guides" class="space-y-1.5 text-slate-600 dark:text-slate-300 font-medium">
+          <li><a href="#portal/guide" onclick="clickFooterGuideLink('android')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> Cài đặt Android</a></li>
+          <li><a href="#portal/guide" onclick="clickFooterGuideLink('ios')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> Cài đặt iOS (iPhone/iPad)</a></li>
+          <li><a href="#portal/guide" onclick="clickFooterGuideLink('windows')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> Cài đặt Windows</a></li>
+          <li><a href="#portal/guide" onclick="clickFooterGuideLink('macos')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> Cài đặt MacOS</a></li>
         </ul>
       </div>
 
       <!-- CỘT 4: PHÁP LÝ & ĐIỀU KHOẢN -->
       <div class="space-y-2">
         <div class="font-extrabold text-sm text-slate-800 dark:text-white uppercase tracking-wider">Pháp lý</div>
-        <ul class="space-y-1.5 text-slate-600 dark:text-slate-300 font-medium">
+        <ul id="footerCol_legal" class="space-y-1.5 text-slate-600 dark:text-slate-300 font-medium">
           <li><button type="button" onclick="openPolicyModal('terms')" class="hover:text-indigo-600 transition flex items-center gap-1.5 text-left"><span>›</span> Chính sách sử dụng</button></li>
           <li><button type="button" onclick="openPolicyModal('disclaimer')" class="hover:text-indigo-600 transition flex items-center gap-1.5 text-left"><span>›</span> Miễn trừ trách nhiệm</button></li>
           <li><button type="button" onclick="openPolicyModal('refund')" class="hover:text-indigo-600 transition flex items-center gap-1.5 text-left"><span>›</span> Quy định hoàn tiền</button></li>
@@ -657,24 +654,25 @@ html[data-tab="store"] #p-store{display:block!important;}
       </div>
     </div>
 
-    <!-- HÀNG TIỆN ÍCH DƯỚI: WEB DỰ PHÒNG & 4 NÚT HỖ TRỢ -->
-    <div class="flex flex-col lg:flex-row justify-between items-center gap-4 py-2 border-b border-slate-100 dark:border-white/10 mb-6">
-      <div class="flex items-center gap-2 flex-wrap text-xs" id="footerBackupsContainer">
+    <!-- HÀNG TIỆN ÍCH DƯỚI: WEB DỰ PHÒNG & 4 NÚT HỖ TRỢ (CÂN XỨNG TUYỆT ĐỐI) -->
+    <div class="flex flex-col lg:flex-row justify-between items-center gap-3.5 py-3 border-b border-slate-100 dark:border-white/10 mb-4">
+      <div class="flex items-center justify-center lg:justify-start gap-2 flex-wrap text-xs w-full lg:w-auto" id="footerBackupsContainer">
         <span class="font-extrabold text-slate-500 dark:text-slate-400"><i class="fas fa-globe mr-1"></i>Web dự phòng:</span>
         <a href="https://vpntrinhhg.pages.dev" target="_blank" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 font-bold hover:bg-indigo-50">Web 1</a>
         <a href="https://vpntrinhhg2.pages.dev" target="_blank" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 font-bold hover:bg-indigo-50">Web 2</a>
         <a href="https://vpntrinhhg3.pages.dev" target="_blank" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 font-bold hover:bg-indigo-50">Web 3</a>
       </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <a href="https://zalo.me/0917678211" target="_blank" class="bg-[#0068ff]/10 text-[#0068ff] dark:bg-[#0068ff]/20 dark:text-[#66a3ff] px-3 py-1.5 rounded-xl font-bold text-xs hover:bg-[#0068ff]/20 transition flex items-center gap-1"><i class="fas fa-phone text-xs"></i>Zalo Support</a>
-        <a href="https://www.facebook.com/trinh.hg.57" target="_blank" class="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 px-3 py-1.5 rounded-xl font-bold text-xs hover:bg-blue-100 transition flex items-center gap-1"><i class="fab fa-facebook-messenger text-xs"></i>Mess Support</a>
-        <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="bg-green-50 text-[#07C160] dark:bg-green-900/30 dark:text-[#20d877] px-3 py-1.5 rounded-xl font-bold text-xs hover:bg-green-100 transition flex items-center gap-1"><i class="fab fa-weixin text-xs"></i>WeChat</button>
-        <a href="https://t.me/hoaian57" target="_blank" class="bg-sky-50 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400 px-3 py-1.5 rounded-xl font-bold text-xs hover:bg-sky-100 transition flex items-center gap-1"><i class="fab fa-telegram-plane text-xs"></i>Telegram</a>
+      <!-- 4 nút hỗ trợ: Mobile dàn thành lưới 2x2 vuông vắn cân xứng 50% mỗi nút -->
+      <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto">
+        <a href="https://zalo.me/0917678211" target="_blank" class="bg-[#0068ff]/10 text-[#0068ff] dark:bg-[#0068ff]/20 dark:text-[#66a3ff] px-3 py-2 rounded-xl font-bold text-xs hover:bg-[#0068ff]/20 transition flex items-center justify-center gap-1.5"><i class="fas fa-phone text-xs"></i><span>Zalo Support</span></a>
+        <a href="https://www.facebook.com/trinh.hg.57" target="_blank" class="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 px-3 py-2 rounded-xl font-bold text-xs hover:bg-blue-100 transition flex items-center justify-center gap-1.5"><i class="fab fa-facebook-messenger text-xs"></i><span>Mess Support</span></a>
+        <button type="button" onclick="openWechatModal()" class="bg-green-50 text-[#07C160] dark:bg-green-900/30 dark:text-[#20d877] px-3 py-2 rounded-xl font-bold text-xs hover:bg-green-100 transition flex items-center justify-center gap-1.5"><i class="fab fa-weixin text-xs"></i><span>WeChat</span></button>
+        <a href="https://t.me/hoaian57" target="_blank" class="bg-sky-50 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400 px-3 py-2 rounded-xl font-bold text-xs hover:bg-sky-100 transition flex items-center justify-center gap-1.5"><i class="fab fa-telegram-plane text-xs"></i><span>Telegram</span></a>
       </div>
     </div>
 
-    <!-- DÒNG ĐÁY COPYRIGHT -->
-    <div class="text-center text-xs font-bold text-slate-400">
+    <!-- DÒNG ĐÁY COPYRIGHT GỌN GÀNG LIỀN MẠCH -->
+    <div class="text-center text-[11px] md:text-xs font-semibold text-slate-400 dark:text-slate-500 py-1">
       © 2026 VPN Trinh Hg. All rights reserved.
     </div>
   </div>
@@ -1421,8 +1419,36 @@ async function loadConfig(){
       if(Array.isArray(cfgCache.faqs) && cfgCache.faqs.length){
         renderDynamicFaqs(cfgCache.faqs);
       }
+      if(cfgCache.footer && typeof cfgCache.footer === 'object'){
+        renderDynamicFooter(cfgCache.footer);
+      }
     }
   }catch(e){}
+}
+
+function renderDynamicFooter(ft){
+  if(Array.isArray(ft.services) && ft.services.length && $('footerCol_services')){
+    $('footerCol_services').innerHTML = ft.services.map(s => {
+      if(s.url === '#portal/packages' || s.title.includes('Bảng giá')) return `<li><button type="button" onclick="clickFooterServiceLink('pricing')" class="hover:text-indigo-600 transition flex items-center gap-1.5 text-left"><span>›</span> ${esc(s.title)}</button></li>`;
+      if(s.title.includes('dung lượng')) return `<li><button type="button" onclick="clickFooterServiceLink('data')" class="hover:text-indigo-600 transition flex items-center gap-1.5 text-left"><span>›</span> ${esc(s.title)}</button></li>`;
+      return `<li><a href="${esc(s.url)}" onclick="navigateRoute('${esc(s.url)}')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> ${esc(s.title)}</a></li>`;
+    }).join('');
+  }
+  if(Array.isArray(ft.guides) && ft.guides.length && $('footerCol_guides')){
+    $('footerCol_guides').innerHTML = ft.guides.map(g => `
+      <li><a href="${esc(g.url || '#portal/guide')}" onclick="navigateRoute('${esc(g.url || '#portal/guide')}')" class="hover:text-indigo-600 transition flex items-center gap-1.5"><span>›</span> ${esc(g.title)}</a></li>
+    `).join('');
+  }
+  if(Array.isArray(ft.legal) && ft.legal.length && $('footerCol_legal')){
+    $('footerCol_legal').innerHTML = ft.legal.map(l => {
+      const modalKind = l.url && l.url.startsWith('modal:') ? l.url.slice(6) : (l.title.includes('hoàn tiền') ? 'refund' : l.title.includes('trách nhiệm') ? 'disclaimer' : 'terms');
+      return `<li><button type="button" onclick="openPolicyModal('${modalKind}')" class="hover:text-indigo-600 transition flex items-center gap-1.5 text-left"><span>›</span> ${esc(l.title)}</button></li>`;
+    }).join('');
+  }
+  if(Array.isArray(ft.backups) && ft.backups.length && $('footerBackupsContainer')){
+    $('footerBackupsContainer').innerHTML = `<span class="font-extrabold text-slate-500 dark:text-slate-400"><i class="fas fa-globe mr-1"></i>Web dự phòng:</span>` +
+      ft.backups.map(b => `<a href="${esc(b.url)}" target="_blank" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 font-bold hover:bg-indigo-50">${esc(b.name)}</a>`).join('');
+  }
 }
 
 const isClientTestMode = new URLSearchParams(location.search).get('test') === '1';
@@ -2114,45 +2140,56 @@ function closeGuideAuthModal(fromPop){
  if(!fromPop&&history.state&&history.state.modal==='auth')history.back();
 }
 
+// Bật giao diện Portal thật sự (với 3 tab ở Header trên cả Desktop & Mobile)
+function enablePortalFrame(){
+  $('view-store').classList.remove('active');
+  $('view-portal').classList.add('active');
+  $('desktopPortalNav')?.classList.remove('hidden');
+  $('mobileNavWrapper')?.classList.remove('hidden');
+}
+
+// Bật giao diện Trang chủ gốc ngoài (Landing page với Hero Chặn thì vượt, Dock icon...)
+function showLandingPage(){
+  $('view-portal').classList.remove('active');
+  $('view-store').classList.add('active');
+  $('desktopPortalNav')?.classList.add('hidden');
+  $('mobileNavWrapper')?.classList.add('hidden');
+  renderPackages('all');
+}
+
 function switchPortalTab(tabId, fromUpgrade=false, skipPush=false){
  if(!fromUpgrade)disableUpgradeMode();
 
- // 1. Tab Trang chủ Portal (/#portal/order): Bắt buộc đăng nhập mới xem được đơn hàng
+ enablePortalFrame();
+
+ // 1. Tab Trang chủ Portal (/#portal/order): Chỉ có tab này là yêu cầu tra cứu đơn hàng
  if(tabId==='p-home'){
-  if(!oCache){
-   openPortalAuthModal();
-   return;
-  }
-  $('view-store').classList.remove('active');
-  $('view-portal').classList.add('active');
   document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
   $('p-home').classList.add('active');
   highlightNavBtns('p-home');
   if(!skipPush) setRouteHash('#portal/order', false);
+  if(!oCache){
+   openPortalAuthModal();
+  }
   return;
  }
 
- // 2. Tab Cửa hàng (/#portal/packages): Xem được ngay bên trong Portal
+ // 2. Tab Cửa hàng Portal (/#portal/packages): Xem tự do trong khung Portal thật (có 3 tab header)
  if(tabId==='p-store'){
-  highlightNavBtns('p-store');
-  if(!skipPush) setRouteHash('#portal/packages', false);
-  $('view-store').classList.remove('active');
-  $('view-portal').classList.add('active');
   document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
   $('p-store').classList.add('active');
+  highlightNavBtns('p-store');
+  if(!skipPush) setRouteHash('#portal/packages', false);
   renderPackages('all');
   return;
  }
 
- // 3. Tab Hướng dẫn (/#portal/guide): Xem được ngay bên trong Portal, ẩn sạch FAQ chung của web
+ // 3. Tab Hướng dẫn Portal (/#portal/guide): Xem tự do trong khung Portal thật (có 3 tab header)
  if(tabId==='p-guide'){
-  $('view-store').classList.remove('active');
-  $('view-portal').classList.add('active');
   document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
   $('p-guide').classList.add('active');
   highlightNavBtns('p-guide');
   if(!skipPush) setRouteHash('#portal/guide', false);
-  // Ẩn hoàn toàn FAQ chung của website khi vào tab Hướng dẫn
   const faqG = $('faqPortalContainer');
   if(faqG) {
     faqG.classList.add('hidden');
@@ -2173,8 +2210,6 @@ function logout(){
  oCache=null;clearTimeout(pollT);stopTick();closeQrModal(true);disableUpgradeMode();
  $('userMenu').classList.add('hidden');
  $('userMenuMobile')?.classList.add('hidden');
- $('mobileNavWrapper')?.classList.add('hidden');
- $('desktopPortalNav')?.classList.add('hidden');
  $('loginInput').value='';
  document.documentElement.classList.remove('has-user-session');
  document.documentElement.removeAttribute('data-tab');
@@ -2182,33 +2217,34 @@ function logout(){
  if(location.hash){
   try{history.replaceState(null,'',location.pathname);}catch(e){location.hash='';}
  }
- $('view-portal').classList.remove('active');
- $('view-store').classList.add('active');
- renderPackages('all');
+ showLandingPage();
  window.scrollTo(0,0);
 }
 
 function resetToGuest(){
- localStorage.removeItem(SESSION_KEY);
- localStorage.removeItem(CACHE_KEY);
- location.href = location.origin + location.pathname;
+ if(location.hash && location.hash.startsWith('#portal/')){
+   setRouteHash('', false);
+   showLandingPage();
+   window.scrollTo(0, 0);
+   return;
+ }
+ window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function resolveDeepGuideParams(){
  const sp = new URLSearchParams(location.search);
  const gTab = sp.get('guide'), gArt = sp.get('art');
  if(gTab || gArt) return { tab: gTab || '', art: gArt || gTab || '' };
- const hm2 = location.hash.match(/^#guide\/([^/]+)\/([^/]+)$/);
- if(hm2) return { tab: decodeURIComponent(hm2[1]), art: decodeURIComponent(hm2[2]) };
- const hm1 = location.hash.match(/^#guide\/([^/]+)$/);
- if(hm1) return { tab: '', art: decodeURIComponent(hm1[1]) };
+ const hm2 = location.hash.match(/^#(portal\/)?guide\/([^/]+)\/([^/]+)$/);
+ if(hm2) return { tab: decodeURIComponent(hm2[2]), art: decodeURIComponent(hm2[3]) };
+ const hm1 = location.hash.match(/^#(portal\/)?guide\/([^/]+)$/);
+ if(hm1) return { tab: '', art: decodeURIComponent(hm1[2]) };
  return null;
 }
 
 async function openDeepGuideNow(target, skipPush){
  if(!target)return;
- $('view-store').classList.remove('active');
- $('view-portal').classList.add('active');
+ enablePortalFrame();
  document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
  $('p-guide').classList.add('active');
  highlightNavBtns('p-guide');
@@ -2255,7 +2291,7 @@ function openPolicyModal(kind){
     c.innerHTML = ft.disclaimer ? `<p class="whitespace-pre-line">${esc(ft.disclaimer)}</p>` : "<p>Chúng tôi chỉ cung cấp giải pháp mạng kỹ thuật. Khách hàng chịu toàn bộ trách nhiệm về các hoạt động và nội dung truy cập cá nhân.</p>";
   } else {
     t.innerText = "Quy định hoàn tiền";
-    c.innerHTML = "<p>Website không áp dụng chính sách hoàn tiền cho các đơn hàng đã thanh toán và kích hoạt thành công. Quý khách vui lòng lưu ý và cân nhắc trước khi thanh toán.</p>";
+    c.innerHTML = ft.refund ? `<p class="whitespace-pre-line">${esc(ft.refund)}</p>` : "<p>Website không áp dụng chính sách hoàn tiền cho các đơn hàng đã thanh toán và kích hoạt thành công. Quý khách vui lòng lưu ý và cân nhắc trước khi thanh toán.</p>";
   }
   m.classList.remove('hidden');
   lockBodyScroll();
@@ -2268,6 +2304,35 @@ function closePolicyModal(fromPop){
   m.classList.add('hidden');
   unlockBodyScroll();
   if(!fromPop && history.state && history.state.modal==='policy') history.back();
+}
+
+function clickFooterServiceLink(type){
+  if(type === 'pricing'){
+    if($('view-store').classList.contains('active')){
+      const target = $('packagesContainerHome') || $('htab-all');
+      if(target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      switchPortalTab('p-store');
+    }
+    return;
+  }
+  if(type === 'data'){
+    if(oCache){
+      switchPortalTab('p-home');
+      requestDataCheck();
+    } else {
+      switchPortalTab('p-home');
+    }
+    return;
+  }
+}
+
+function clickFooterGuideLink(tabName){
+  navigateRoute('#portal/guide');
+  setTimeout(() => {
+    const targetTab = guideTabList().find(t => t.id === tabName || t.name.toLowerCase().includes(tabName));
+    if(targetTab) showGuide(targetTab.id);
+  }, 100);
 }
 
 async function handleRouteChange(fromPop){
@@ -2288,22 +2353,11 @@ async function handleRouteChange(fromPop){
   return;
  }
  if (h === '#portal/order' || h === '#portal') {
-  if (oCache) {
-   setRouteHash('#portal/order', true);
-   switchPortalTab('p-home', false, true);
-  } else {
-   switchPortalTab('p-home', false, true);
-   openPortalAuthModal();
-  }
+  switchPortalTab('p-home', false, true);
   return;
  }
- // Mặc định nếu không có hash
- if (oCache) {
-  setRouteHash('#portal/order', true);
-  switchPortalTab('p-home', false, true);
- } else {
-  switchPortalTab('p-store', false, true);
- }
+ // Nếu không có hash hoặc hash là #home -> Hiển thị Trang chủ gốc (Hero, Dock icon)
+ showLandingPage();
  restoreIndexScroll();
 }
 
