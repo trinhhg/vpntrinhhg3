@@ -153,7 +153,7 @@ textarea.autog{resize:none;overflow:hidden;}
 .lb img{max-width:92vw;max-height:88vh;border-radius:10px;box-shadow:0 20px 50px rgba(0,0,0,.5);cursor:default;}
 .lb-close{position:fixed;top:16px;right:16px;width:42px;height:42px;border-radius:50%;background:rgba(15,23,42,.85);border:2px solid rgba(255,255,255,.35);color:#fff;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:99995;transition:all .15s;}
 .lb-close:hover{background:#ef4444;border-color:#ef4444;transform:scale(1.08);}
-.word-editor{min-height:480px;max-height:75vh;overflow-y:auto;outline:none;line-height:1.75;font-size:15px;color:#1e293b;}
+.word-editor{min-height:260px;max-height:75vh;overflow-y:auto;outline:none;line-height:1.75;font-size:15px;color:#1e293b;position:relative;}
 .word-editor h2,.g-preview h2{font-size:1.35rem;font-weight:800;color:#0f172a;margin:1.25rem 0 0.6rem;line-height:1.35;}
 .word-editor h3,.g-preview h3{font-size:1.12rem;font-weight:800;color:#1e293b;margin:1rem 0 0.5rem;line-height:1.4;}
 .word-editor p,.g-preview p{margin:0 0 0.75rem;line-height:1.75;}
@@ -520,11 +520,17 @@ textarea.autog{resize:none;overflow:hidden;}
    <div class="w-full">
     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
      <div class="bg-slate-50 p-2 border-b border-slate-200 flex gap-1.5 flex-wrap items-center sticky top-0 z-20" id="cmsAddBtns"></div>
-     <div class="flex relative bg-white border-t border-slate-100 min-h-[550px]">
-      <div id="cmsLineGutter" class="select-none py-4 px-2.5 bg-slate-900 border-r border-slate-800 text-slate-400 font-mono text-xs text-right min-w-[52px] overflow-hidden"></div>
-      <div id="cmsWordEditor" contenteditable="true" oninput="onWordEditorInput()" onscroll="$('cmsLineGutter').scrollTop=this.scrollTop" class="word-editor p-4 bg-white flex-1 outline-none leading-relaxed"></div>
+     <div class="flex relative bg-white border-t border-slate-100 min-h-[300px]">
+      <div id="cmsLineGutter" class="select-none py-4 px-2 bg-slate-900 border-r border-slate-800 text-slate-400 font-mono text-xs text-right min-w-[50px] overflow-hidden"></div>
+      <div class="flex-1 flex flex-col relative min-w-0">
+        <div id="cmsWordEditor" contenteditable="true" oninput="onWordEditorInput()" onscroll="$('cmsLineGutter').scrollTop=this.scrollTop" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='s'){event.preventDefault();saveCms();}" class="word-editor p-4 bg-white flex-1 outline-none leading-relaxed min-h-[260px]"></div>
+        <div class="p-4 border-t border-slate-100 bg-slate-50/80">
+          <button type="button" onclick="saveCms()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md text-sm transition active:scale-[0.99] flex items-center justify-center gap-2">
+            <i class="fas fa-save text-base"></i>LƯU BÀI VIẾT (Cục bộ web này)
+          </button>
+        </div>
+      </div>
      </div>
-     <div class="p-3 border-t border-slate-100 bg-slate-50"><button onclick="saveCms()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md text-sm"><i class="fas fa-save mr-2"></i>LƯU BÀI VIẾT (Cục bộ web này)</button></div>
     </div>
    </div>
   </div>
@@ -937,14 +943,53 @@ textarea.autog{resize:none;overflow:hidden;}
      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
       <div>
        <h3 class="font-extrabold text-base text-slate-800"><i class="fas fa-shoe-prints text-indigo-600 mr-1.5"></i>Cấu hình Footer &amp; Liên kết nhanh</h3>
-       <p class="text-[11px] text-slate-500 mt-0.5">Tùy biến các cột Dịch vụ, Hướng dẫn, Pháp lý, Website dự phòng và 3 nội dung điều khoản.</p>
+       <p class="text-[11px] text-slate-500 mt-0.5">Tùy biến đường dẫn hệ thống, cột liên kết, website dự phòng và 3 trang chính sách pháp lý.</p>
       </div>
-      <button type="button" onclick="saveFooterConfig()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition active:scale-95"><i class="fas fa-save mr-1.5"></i>LƯU CẤU HÌNH FOOTER</button>
+      <button type="button" onclick="saveFooterConfig()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition active:scale-95"><i class="fas fa-save mr-1.5"></i>LƯU TOÀN BỘ CẤU HÌNH FOOTER</button>
      </div>
 
-     <!-- Danh sách web dự phòng -->
+     <!-- 1. CẤU HÌNH ĐƯỜNG DẪN HỆ THỐNG (URL ROUTES) -->
+     <div class="bg-indigo-50/60 border-2 border-indigo-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-3">
+      <div class="flex items-center justify-between border-b border-indigo-200 pb-2.5 flex-wrap gap-2">
+       <div>
+        <h4 class="font-extrabold text-sm md:text-base text-indigo-900 flex items-center gap-2">
+         <i class="fas fa-route text-indigo-600"></i>1. Cấu hình Đường Dẫn Hệ Thống (URL Routes)
+        </h4>
+        <p class="text-[11px] text-indigo-700 mt-0.5">Tùy biến đường dẫn website không cần sửa code HTML. Mặc định có fallback, khi sửa sẽ lưu KV và trang khách tự động đổi theo.</p>
+       </div>
+       <button type="button" onclick="saveRoutesConfig()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center gap-1.5 shrink-0">
+        <i class="fas fa-save"></i>LƯU CẤU HÌNH ĐƯỜNG DẪN
+       </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+       <div>
+        <label class="block font-bold text-slate-700 mb-1">Quản lý Đơn hàng</label>
+        <input id="rtOrder" placeholder="/portal/order" class="w-full p-2 border border-indigo-200 rounded-xl bg-white font-mono font-bold text-indigo-700 outline-none focus:border-indigo-500">
+        <span class="text-[10px] text-slate-400 mt-0.5 block">Mặc định: /portal/order</span>
+       </div>
+       <div>
+        <label class="block font-bold text-slate-700 mb-1">Cửa hàng trong Portal</label>
+        <input id="rtPackages" placeholder="/portal/packages" class="w-full p-2 border border-indigo-200 rounded-xl bg-white font-mono font-bold text-indigo-700 outline-none focus:border-indigo-500">
+        <span class="text-[10px] text-slate-400 mt-0.5 block">Mặc định: /portal/packages</span>
+       </div>
+       <div>
+        <label class="block font-bold text-slate-700 mb-1">Chuyên mục Hướng dẫn</label>
+        <input id="rtGuide" placeholder="/portal/guide" class="w-full p-2 border border-indigo-200 rounded-xl bg-white font-mono font-bold text-indigo-700 outline-none focus:border-indigo-500">
+        <span class="text-[10px] text-slate-400 mt-0.5 block">Mặc định: /portal/guide</span>
+       </div>
+       <div>
+        <label class="block font-bold text-slate-700 mb-1">Trang Chính sách pháp lý</label>
+        <input id="rtPolicy" placeholder="/policy" class="w-full p-2 border border-indigo-200 rounded-xl bg-white font-mono font-bold text-indigo-700 outline-none focus:border-indigo-500">
+        <span class="text-[10px] text-slate-400 mt-0.5 block">Mặc định: /policy</span>
+       </div>
+      </div>
+      <div id="routeValidateMsg" class="text-[11px] text-slate-500 italic"></div>
+     </div>
+
+     <!-- 2. DANH SÁCH WEB DỰ PHÒNG -->
      <div class="space-y-2">
-      <label class="block font-bold text-xs text-slate-700">1. Danh sách Website dự phòng hiển thị ở Footer:</label>
+      <label class="block font-bold text-xs text-slate-700">2. Danh sách Website dự phòng hiển thị ở Footer:</label>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
        <div>
         <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Web Dự Phòng 1 (Tên | Link)</label>
@@ -964,10 +1009,10 @@ textarea.autog{resize:none;overflow:hidden;}
       </div>
      </div>
 
-      <!-- Cột & liên kết footer: thêm/xóa/sửa tự do -->
+      <!-- 3. CÁC CỘT LIÊN KẾT FOOTER (DYNAMIC COLUMNS) -->
       <div class="space-y-3 pt-2 border-t border-slate-100">
        <div class="flex flex-wrap items-center justify-between gap-2">
-        <label class="font-bold text-xs text-slate-700">2. Cột &amp; liên kết nhanh ở Footer (cột trống sẽ không hiện):</label>
+        <label class="font-bold text-xs text-slate-700">3. Các Cột &amp; Liên kết nhanh Footer (Hỗ trợ Kéo - Thả):</label>
         <div class="flex gap-1.5">
          <button type="button" onclick="ftLoadTemplate()" class="text-[11px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg">Nạp mẫu gợi ý</button>
          <button type="button" onclick="ftAddCol()" class="text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-2.5 py-1 rounded-lg"><i class="fas fa-plus mr-1"></i>Thêm cột</button>
@@ -986,25 +1031,25 @@ textarea.autog{resize:none;overflow:hidden;}
        </datalist>
       </div>
 
-     <!-- 3 Nội dung chính sách pháp lý -->
+     <!-- 4. NỘI DUNG 3 TRANG CHÍNH SÁCH PHÁP LÝ -->
      <div class="space-y-3 pt-2 border-t border-slate-100">
-      <label class="block font-bold text-xs text-slate-700">3. Nội dung chi tiết các điều khoản Pháp lý (Bật popup khi khách bấm):</label>
+      <label class="block font-bold text-xs text-slate-700">4. Nội dung 3 trang Chính sách pháp lý (Hiển thị trang URL riêng biệt chuẩn SEO thay vì popup):</label>
       
-      <!-- 1. Chính sách sử dụng -->
+      <!-- 4.1. Chính sách sử dụng -->
       <div class="space-y-1">
-       <label class="block text-[11px] font-bold text-slate-600">3.1. Nội dung "Chính sách sử dụng" (Terms of Service):</label>
+       <label class="block text-[11px] font-bold text-slate-600">4.1. Nội dung "Chính sách sử dụng" (Trang URL /policy/terms):</label>
        <textarea id="ftTermsText" rows="3" placeholder="Nhập nội dung quy định, điều khoản sử dụng VPN..." class="w-full p-2.5 border rounded-xl text-xs outline-none bg-slate-50 leading-relaxed"></textarea>
       </div>
 
-      <!-- 2. Miễn trừ trách nhiệm -->
+      <!-- 4.2. Miễn trừ trách nhiệm -->
       <div class="space-y-1">
-       <label class="block text-[11px] font-bold text-slate-600">3.2. Nội dung "Miễn trừ trách nhiệm pháp lý" (Disclaimer):</label>
+       <label class="block text-[11px] font-bold text-slate-600">4.2. Nội dung "Miễn trừ trách nhiệm pháp lý" (Trang URL /policy/disclaimer):</label>
        <textarea id="ftDisclaimerText" rows="3" placeholder="Nhập nội dung miễn trừ trách nhiệm pháp lý đối với hành vi người dùng..." class="w-full p-2.5 border rounded-xl text-xs outline-none bg-slate-50 leading-relaxed"></textarea>
       </div>
 
-      <!-- 3. Quy định hoàn tiền -->
+      <!-- 4.3. Quy định hoàn tiền -->
       <div class="space-y-1">
-       <label class="block text-[11px] font-bold text-slate-600">3.3. Nội dung "Quy định hoàn tiền" (Refund Policy):</label>
+       <label class="block text-[11px] font-bold text-slate-600">4.3. Nội dung "Quy định hoàn tiền" (Trang URL /policy/refund):</label>
        <textarea id="ftRefundText" rows="3" placeholder="Nhập nội dung quy định hoàn tiền (VD: Website không áp dụng hoàn tiền cho đơn đã mua...)" class="w-full p-2.5 border rounded-xl text-xs outline-none bg-slate-50 leading-relaxed"></textarea>
       </div>
      </div>
@@ -3383,7 +3428,7 @@ function renderCmsTabEdit(){
  const tabs=guideTabList(),t=tabs.find(x=>x.id===curCms)||tabs[0],isDef=DEF_TABS.some(d=>d.id===t.id);
  $("cmsTabEdit").innerHTML=`<div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tên tab đang sửa</label><input value="${esc(t.name)}" oninput="cmsTabSet('name',this.value)" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div><div class="sm:col-span-2"><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Link ảnh làm icon tab (để trống = icon mặc định)</label><input value="${esc(t.img||"")}" oninput="cmsTabSet('img',this.value)" placeholder="https://..." class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-mono"></div><div>${isDef?"":`<button onclick="cmsDelTab()" class="w-full bg-red-50 text-red-600 font-bold py-2 rounded-lg text-xs border border-red-100"><i class="fas fa-trash mr-1"></i>Xóa tab này</button>`}</div>`;}
 function cmsTabSet(k,v){cmsEnsureTabs();const t=guides._tabs.find(x=>x.id===curCms);if(t){t[k]=v;renderCmsTabBtns();}}
-function cmsAddTab(){const name=prompt("Tên tab mới:","");if(!name||!name.trim())return;commitCms();cmsEnsureTabs();ensureArts();const id="t"+Date.now().toString(36);guides._tabs.push({id,name:name.trim(),img:""});guides[id]=[];guides._articles[id]=[{id:newArtId(),name:name.trim(),author:"Admin",updated:0,blocks:[]}];setCms(id);}
+function cmsAddTab(){const name=prompt("Tên tab mới:","");if(!name||!name.trim())return;commitCms();cmsEnsureTabs();ensureArts();const id="t"+Date.now().toString(36);guides._tabs.push({id,name:name.trim(),img:""});guides[id]=[];guides._articles[id]=[{slug:toSlug(name.trim()),name:name.trim(),author:"Admin",updated:0,blocks:[],html:"<h2>1. Tiêu đề mục đầu tiên</h2><p>Nhập nội dung hướng dẫn tại đây...</p>",showToc:true,watermark:""}];setCms(id);}
 function cmsDelTab(){if(!confirm("Xóa tab này và toàn bộ bài viết của nó?"))return;cmsEnsureTabs();guides._tabs=guides._tabs.filter(x=>x.id!==curCms);delete guides[curCms];if(guides._articles)delete guides._articles[curCms];curArt=null;setCms(guides._tabs[0].id);}
 
 // ---- nội dung khối
@@ -3507,18 +3552,15 @@ function syncCmsLines(){
   let h="", n=1;
   const kids=[...ed.children];
   const padT=parseFloat(getComputedStyle(ed).paddingTop)||16;
+  const edRect=ed.getBoundingClientRect();
   if(!kids.length){
-   h=`<div style="position:absolute;right:8px;top:${padT}px;height:24px;line-height:24px">1</div>`;
+   h=`<div style="position:absolute;right:8px;top:${padT}px;height:24px;line-height:24px;font-weight:700;">1</div>`;
   }else kids.forEach(el=>{
-   const top=el.offsetTop;
-   const hEl=el.offsetHeight;
-   const lh=parseFloat(getComputedStyle(el).lineHeight)||24;
-   const count=Math.max(1,Math.round(hEl/lh));
-   for(let i=0;i<count;i++){
-    h+=`<div style="position:absolute;right:8px;top:${top+i*lh}px;height:${lh}px;line-height:${lh}px">${n++}</div>`;
-   }
+   const elRect=el.getBoundingClientRect();
+   const top=(elRect.top - edRect.top) + ed.scrollTop;
+   h+=`<div style="position:absolute;right:8px;top:${top}px;height:24px;line-height:24px;font-weight:700;">${n++}</div>`;
   });
-  gut.innerHTML=`<div style="position:relative;height:${Math.max(ed.scrollHeight,550)}px">${h}</div>`;
+  gut.innerHTML=`<div style="position:relative;height:${Math.max(ed.scrollHeight, 260)}px;">${h}</div>`;
   gut.scrollTop=ed.scrollTop;
 }
 
@@ -3614,7 +3656,7 @@ function openWordInsertModal(type){
   const ed=$("cmsWordEditor");
   const headOpts=ed?[...ed.querySelectorAll("h2, h3")].map(h=>(h.textContent||"").trim()).filter(Boolean):[];
   const tabs=guideTabList();
-  const allArts=tabs.flatMap(t=>artsOf(t.id).map(a=>({tabId:t.id,tabName:t.name,artId:a.id,artName:a.name})));
+  const allArts=tabs.flatMap(t=>artsOf(t.id).map(a=>({tabId:t.id,tabName:t.name,slug:a.slug||toSlug(a.name),artName:a.name})));
   b.innerHTML=`
    <h3 class="font-extrabold text-base text-slate-800"><i class="fas fa-link text-blue-600 mr-1.5"></i>Chèn liên kết (Chữ xanh gạch chân như Word)</h3>
    <div><label class="block text-[11px] font-bold text-slate-600 mb-1">Chữ hiển thị trên bài viết</label><input id="wiLinkText" value="${esc(selTxt)}" placeholder="VD: văn bản tiếng Anh trên Word" class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none"></div>
@@ -3627,7 +3669,7 @@ function openWordInsertModal(type){
    </div>
    <div id="wiBoxUrl"><label class="block text-[11px] font-bold text-slate-600 mb-1">Địa chỉ URL</label><input id="wiLinkUrl" placeholder="https://..." class="w-full p-2 text-xs border border-slate-300 rounded-lg font-mono outline-none"></div>
    <div id="wiBoxAnchor" class="hidden"><label class="block text-[11px] font-bold text-slate-600 mb-1">Chọn Tiêu đề trong bài</label><select id="wiLinkAnchor" class="w-full p-2 text-xs border border-slate-300 rounded-lg bg-white">${headOpts.map(h=>`<option value="${esc(h)}">${esc(h)}</option>`).join("")||'<option value="">(Hãy tạo tiêu đề H2/H3 trước)</option>'}</select></div>
-   <div id="wiBoxArt" class="hidden"><label class="block text-[11px] font-bold text-slate-600 mb-1">Chọn Bài viết đích</label><select id="wiLinkArt" class="w-full p-2 text-xs border border-slate-300 rounded-lg bg-white">${allArts.map(x=>`<option value="${esc(x.tabId)}::${esc(x.artId)}">[${esc(x.tabName)}] ${esc(x.artName)}</option>`).join("")}</select></div>
+   <div id="wiBoxArt" class="hidden"><label class="block text-[11px] font-bold text-slate-600 mb-1">Chọn Bài viết đích</label><select id="wiLinkArt" class="w-full p-2 text-xs border border-slate-300 rounded-lg bg-white">${allArts.map(x=>`<option value="${esc(x.tabId)}::${esc(x.slug)}">[${esc(x.tabName)}] ${esc(x.artName)}</option>`).join("")}</select></div>
    <div class="flex gap-2 pt-2"><button type="button" onclick="confirmWiLink()" class="flex-1 bg-indigo-600 text-white font-bold py-2 rounded-lg text-xs">CHÈN LIÊN KẾT</button><button type="button" onclick="cm('mWordInsert')" class="bg-slate-100 text-slate-700 font-bold px-4 py-2 rounded-lg text-xs">Hủy</button></div>`;
  }else if(type==="img"){
   b.innerHTML=`
@@ -3747,9 +3789,9 @@ function renderArtFaqsUI(){
   </div>
  `).join('');
 }
-function toggleRelatedArtPick(artId, checked){
+function toggleRelatedArtPick(artSlug, checked){
  let s = new Set(curArtRelated);
- if(checked) s.add(artId); else s.delete(artId);
+ if(checked) s.add(artSlug); else s.delete(artSlug);
  curArtRelated = [...s];
  cmsPrev();
 }
@@ -3780,11 +3822,11 @@ function renderCmsEditor(){
   <div class="sm:col-span-4 border-t border-slate-100 pt-3 space-y-2">
    <label class="font-extrabold text-xs text-slate-800 flex items-center gap-1.5"><i class="fas fa-newspaper text-indigo-600"></i>Mục bài viết khác (Khách bấm vào sẽ nhảy sang link bài đó)</label>
    <div class="max-h-36 overflow-y-auto border border-slate-200 rounded-xl p-2 bg-slate-50 space-y-1.5 scroll-hide">
-    ${guideTabList().flatMap(t=>artsOf(t.id).filter(x=>x.id!==curArt).map(other=>`
+    ${guideTabList().flatMap(t=>artsOf(t.id).filter(x=>(x.slug||toSlug(x.name))!==curArt).map(other=>`
       <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white p-1.5 rounded-lg border border-slate-100 cursor-pointer hover:bg-indigo-50/50">
-       <input type="checkbox" ${curArtRelated.includes(other.id)?'checked':''} onchange="toggleRelatedArtPick('${other.id}', this.checked)" class="accent-indigo-600 w-4 h-4">
+       <input type="checkbox" ${curArtRelated.includes(other.slug||toSlug(other.name))?'checked':''} onchange="toggleRelatedArtPick('${esc(other.slug||toSlug(other.name))}', this.checked)" class="accent-indigo-600 w-4 h-4">
        <span class="text-[10px] font-bold text-slate-400">[${esc(t.name)}]</span>
-       <span class="truncate flex-1">${esc(other.name||other.id)}</span>
+       <span class="truncate flex-1">${esc(other.name||other.slug)}</span>
       </label>
     `)).join('') || '<div class="text-[11px] text-slate-400 italic">Chưa có bài viết khác trên website.</div>'}
    </div>
@@ -3807,7 +3849,8 @@ function renderCmsEditor(){
   <button type="button" onmousedown="event.preventDefault()" onclick="openWordInsertModal('img')" class="tb-btn !border-pink-200 !bg-pink-50 !text-pink-700"><i class="fas fa-image"></i>Ảnh</button>
   <button type="button" onmousedown="event.preventDefault()" onclick="openWordInsertModal('video')" class="tb-btn !border-rose-200 !bg-rose-50 !text-rose-700"><i class="fas fa-video"></i>Video</button>
   <button type="button" onmousedown="event.preventDefault()" onclick="openWordInsertModal('callout')" class="tb-btn !border-amber-200 !bg-amber-50 !text-amber-800"><i class="fas fa-star"></i>Lưu ý / Banner</button>
-  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('removeFormat')" class="tb-btn text-slate-400" title="Xóa định dạng rác"><i class="fas fa-eraser"></i></button>`;
+  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('removeFormat')" class="tb-btn text-slate-400" title="Xóa định dạng rác"><i class="fas fa-eraser"></i></button>
+  <button type="button" onmousedown="event.preventDefault()" onclick="saveCms()" class="tb-btn !bg-indigo-600 !text-white !border-indigo-600 hover:!bg-indigo-700 ml-auto shadow-sm" title="Lưu nhanh bài viết (Ctrl+S)"><i class="fas fa-floppy-disk"></i>Lưu nhanh</button>`;
  const ed=$("cmsWordEditor");
  if(ed){
   ed.innerHTML=curArtHtml;
@@ -4062,40 +4105,133 @@ function switchFaqSubTab(tab){
   if(tab === "footer") loadFooterConfigUI();
 }
 
+const DEFAULT_SYS_ROUTES = {
+  order: "/portal/order",
+  packages: "/portal/packages",
+  guide: "/portal/guide",
+  policy: "/policy"
+};
+
+function normRouteInput(val, def) {
+  if (!val || typeof val !== 'string') return def;
+  let s = val.trim();
+  if (!s) return def;
+  if (!s.startsWith('/')) s = '/' + s;
+  s = s.replace(/\/+$/, '');
+  return s || def;
+}
+
+function loadRoutesConfigUI() {
+  const r = (cmsDb && cmsDb.settings && cmsDb.settings.routes) || {};
+  if ($("rtOrder")) $("rtOrder").value = r.order || "";
+  if ($("rtPackages")) $("rtPackages").value = r.packages || "";
+  if ($("rtGuide")) $("rtGuide").value = r.guide || "";
+  if ($("rtPolicy")) $("rtPolicy").value = r.policy || "";
+}
+
+async function saveRoutesConfig() {
+  const o = normRouteInput($("rtOrder")?.value, DEFAULT_SYS_ROUTES.order);
+  const p = normRouteInput($("rtPackages")?.value, DEFAULT_SYS_ROUTES.packages);
+  const g = normRouteInput($("rtGuide")?.value, DEFAULT_SYS_ROUTES.guide);
+  const pol = normRouteInput($("rtPolicy")?.value, DEFAULT_SYS_ROUTES.policy);
+
+  const set = new Set([o, p, g, pol]);
+  if (set.size < 4) {
+    toast("Lỗi: Các đường dẫn không được trùng nhau!", "err");
+    return;
+  }
+
+  cmsDb.settings = cmsDb.settings || {};
+  cmsDb.settings.routes = { order: o, packages: p, guide: g, policy: pol };
+  if ($("rtOrder")) $("rtOrder").value = o === DEFAULT_SYS_ROUTES.order ? "" : o;
+  if ($("rtPackages")) $("rtPackages").value = p === DEFAULT_SYS_ROUTES.packages ? "" : p;
+  if ($("rtGuide")) $("rtGuide").value = g === DEFAULT_SYS_ROUTES.guide ? "" : g;
+  if ($("rtPolicy")) $("rtPolicy").value = pol === DEFAULT_SYS_ROUTES.policy ? "" : pol;
+
+  try {
+    await saveCmsDb();
+    toast("Đã lưu Cấu hình Đường dẫn Hệ thống thành công!");
+    logEvent("ok", "Routes", `Cấu hình routes: ${o}, ${p}, ${g}, ${pol}`);
+  } catch(e) {
+    toast("Lỗi lưu routes: " + e.message, "err");
+  }
+}
+
 let ftCols = [];
+let ftDragColIdx = -1;
+let ftDragLinkData = null;
+
 const FT_TEMPLATE = [
-  { title: "Dịch vụ", links: [{ title: "Bảng giá gói cước", url: "#portal/packages" }, { title: "Tra cứu đơn hàng", url: "#portal/order" }, { title: "Kiểm tra dung lượng", url: "#portal/order" }] },
-  { title: "Hướng dẫn", links: [{ title: "Cài đặt Android", url: "#portal/guide" }, { title: "Cài đặt iOS (iPhone/iPad)", url: "#portal/guide" }, { title: "Cài đặt Windows", url: "#portal/guide" }, { title: "Cài đặt MacOS", url: "#portal/guide" }] },
-  { title: "Pháp lý", links: [{ title: "Chính sách sử dụng", url: "modal:terms" }, { title: "Miễn trừ trách nhiệm", url: "modal:disclaimer" }, { title: "Quy định hoàn tiền", url: "modal:refund" }] }
+  { title: "Dịch vụ", links: [{ title: "Bảng giá gói cước", url: "/portal/packages" }, { title: "Tra cứu đơn hàng", url: "/portal/order" }, { title: "Kiểm tra dung lượng", url: "/portal/order" }] },
+  { title: "Hướng dẫn", links: [{ title: "Cài đặt Android", url: "/portal/guide" }, { title: "Cài đặt iOS (iPhone/iPad)", url: "/portal/guide" }, { title: "Cài đặt Windows", url: "/portal/guide" }, { title: "Cài đặt MacOS", url: "/portal/guide" }] },
+  { title: "Pháp lý", links: [{ title: "Chính sách sử dụng", url: "/policy/terms" }, { title: "Miễn trừ trách nhiệm", url: "/policy/disclaimer" }, { title: "Quy định hoàn tiền", url: "/policy/refund" }] }
 ];
 const ftClone = (x) => JSON.parse(JSON.stringify(x));
 function ftColsFromDb(ft) {
   if (Array.isArray(ft.columns)) return ftClone(ft.columns);
   return [["Dịch vụ", ft.services], ["Hướng dẫn", ft.guides], ["Pháp lý", ft.legal]].filter(x => Array.isArray(x[1]) && x[1].length).map(x => ({ title: x[0], links: ftClone(x[1]) }));
 }
+
+function ftColDragStart(e, ci) {
+  ftDragColIdx = ci;
+  try { e.dataTransfer.setData('text/plain', String(ci)); } catch(err){}
+}
+function ftColDrop(e, targetCi) {
+  e.preventDefault();
+  if (ftDragColIdx < 0 || ftDragColIdx === targetCi) return;
+  const [col] = ftCols.splice(ftDragColIdx, 1);
+  ftCols.splice(targetCi, 0, col);
+  ftDragColIdx = -1;
+  renderFtCols();
+}
+
+function ftLinkDragStart(e, ci, li) {
+  ftDragLinkData = { ci, li };
+  try { e.dataTransfer.setData('text/plain', ci + ',' + li); } catch(err){}
+  e.stopPropagation();
+}
+function ftLinkDrop(e, targetCi, targetLi) {
+  e.preventDefault();
+  e.stopPropagation();
+  if (!ftDragLinkData) return;
+  const { ci, li } = ftDragLinkData;
+  const [link] = ftCols[ci].links.splice(li, 1);
+  ftCols[targetCi].links.splice(targetLi, 0, link);
+  ftDragLinkData = null;
+  renderFtCols();
+}
+
 function renderFtCols() {
   const w = $("ftColsWrap"); if (!w) return;
   w.innerHTML = ftCols.map((c, ci) => `
-   <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2">
-    <div class="flex items-center gap-1 pb-1 border-b border-slate-200">
-     <input value="${esc(c.title || '')}" oninput="ftCols[${ci}].title=this.value" placeholder="Tên cột" class="flex-1 min-w-0 p-1 text-xs font-extrabold border border-slate-200 rounded bg-white uppercase outline-none">
+   <div data-col-idx="${ci}" ondragover="event.preventDefault()" ondrop="ftColDrop(event, ${ci})" class="border-2 border-slate-200 rounded-2xl p-3.5 bg-slate-50/70 space-y-3 transition hover:border-indigo-300">
+    <div class="flex items-center gap-1.5 pb-2 border-b border-slate-200">
+     <span draggable="true" ondragstart="ftColDragStart(event, ${ci})" class="cursor-grab text-slate-400 hover:text-indigo-600 px-1" title="Kéo để đổi vị trí cột"><i class="fas fa-grip-vertical"></i></span>
+     <input value="${esc(c.title || '')}" oninput="ftCols[${ci}].title=this.value" placeholder="Tên cột" class="flex-1 min-w-0 p-1.5 text-xs font-black border border-slate-200 rounded-lg bg-white uppercase outline-none focus:border-indigo-500">
      <button type="button" onclick="ftMoveCol(${ci},-1)" class="text-slate-400 hover:text-indigo-600 px-1 text-xs"><i class="fas fa-arrow-left"></i></button>
      <button type="button" onclick="ftMoveCol(${ci},1)" class="text-slate-400 hover:text-indigo-600 px-1 text-xs"><i class="fas fa-arrow-right"></i></button>
-     <button type="button" onclick="ftDelCol(${ci})" title="Xóa cả cột" class="text-red-500 hover:text-red-700 px-1 text-xs"><i class="fas fa-trash"></i></button>
+     <button type="button" onclick="ftDelCol(${ci})" title="Xóa cả cột" class="text-red-500 hover:text-red-700 px-1.5 text-xs"><i class="fas fa-trash"></i></button>
     </div>
-    <div class="space-y-1.5">${(c.links || []).map((l, li) => `
-     <div class="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200">
-      <input value="${esc(l.title || '')}" oninput="ftCols[${ci}].links[${li}].title=this.value" placeholder="Tên link" class="w-1/2 p-1 text-[11px] border border-slate-200 rounded outline-none font-bold">
-      <input list="ftUrlPresets" value="${esc(l.url || '')}" oninput="ftCols[${ci}].links[${li}].url=this.value" placeholder="URL / #hash / modal:..." class="w-1/2 p-1 text-[11px] border border-slate-200 rounded outline-none font-mono">
-      <button type="button" onclick="ftDelLink(${ci},${li})" class="text-red-500 hover:text-red-700 px-1 text-xs shrink-0"><i class="fas fa-times"></i></button>
-     </div>`).join('') || '<div class="text-[10px] text-slate-400 italic">Cột trống (không hiện ở trang khách)</div>'}</div>
-    <button type="button" onclick="ftAddLink(${ci})" class="w-full text-[11px] font-bold text-indigo-600 border border-dashed border-indigo-300 rounded-lg py-1 hover:bg-indigo-50"><i class="fas fa-plus mr-1"></i>Thêm link</button>
+    <div class="space-y-2">${(c.links || []).map((l, li) => `
+     <div draggable="true" ondragstart="ftLinkDragStart(event, ${ci}, ${li})" ondragover="event.preventDefault()" ondrop="ftLinkDrop(event, ${ci}, ${li})" class="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm space-y-1.5 transition hover:border-indigo-300">
+      <div class="flex items-center gap-1.5">
+       <span class="cursor-grab text-slate-300 hover:text-indigo-600 px-0.5"><i class="fas fa-grip-vertical text-xs"></i></span>
+       <span class="text-[10px] font-bold text-slate-400 shrink-0">Tên:</span>
+       <input value="${esc(l.title || '')}" oninput="ftCols[${ci}].links[${li}].title=this.value" placeholder="Tên hiển thị (VD: Cài đặt Android)" class="flex-1 p-1 text-xs border border-slate-200 rounded-lg outline-none font-bold text-slate-800 focus:border-indigo-500">
+       <button type="button" onclick="ftDelLink(${ci},${li})" title="Xóa liên kết" class="text-red-400 hover:text-red-600 px-1 text-xs shrink-0"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="flex items-center gap-1.5 pl-5">
+       <span class="text-[10px] font-bold text-indigo-400 shrink-0">URL:</span>
+       <input list="ftUrlPresets" value="${esc(l.url || '')}" oninput="ftCols[${ci}].links[${li}].url=this.value" placeholder="URL (VD: /portal/guide/android/...)" class="flex-1 p-1 text-xs border border-slate-200 rounded-lg outline-none font-mono text-indigo-700 focus:border-indigo-500 bg-slate-50 focus:bg-white">
+      </div>
+     </div>`).join('') || '<div class="text-[10px] text-slate-400 italic text-center py-2">Cột trống (không hiện ở trang khách)</div>'}</div>
+    <button type="button" onclick="ftAddLink(${ci})" class="w-full text-xs font-bold text-indigo-600 border border-dashed border-indigo-300 rounded-xl py-1.5 hover:bg-indigo-50 transition"><i class="fas fa-plus mr-1"></i>Thêm liên kết</button>
    </div>`).join('') || '<div class="col-span-full text-xs text-slate-400 italic p-3 border border-dashed border-slate-300 rounded-xl text-center">Chưa có cột nào. Footer trang khách sẽ không hiện cột liên kết.</div>';
 }
 function ftAddCol() { ftCols.push({ title: "Cột mới", links: [] }); renderFtCols(); }
 function ftDelCol(ci) { if (!confirm("Xóa cả cột này và mọi link trong cột?")) return; ftCols.splice(ci, 1); renderFtCols(); }
 function ftMoveCol(ci, d) { const j = ci + d; if (j < 0 || j >= ftCols.length) return; const [x] = ftCols.splice(ci, 1); ftCols.splice(j, 0, x); renderFtCols(); }
-function ftAddLink(ci) { (ftCols[ci].links = ftCols[ci].links || []).push({ title: "Liên kết mới", url: "#portal/guide" }); renderFtCols(); }
+function ftAddLink(ci) { (ftCols[ci].links = ftCols[ci].links || []).push({ title: "Liên kết mới", url: "/portal/guide" }); renderFtCols(); }
 function ftDelLink(ci, li) { ftCols[ci].links.splice(li, 1); renderFtCols(); }
 function ftLoadTemplate() {
   if (ftCols.length && !confirm("Thay toàn bộ cột hiện tại bằng mẫu gợi ý? (chưa lưu cho tới khi bấm LƯU)")) return;
@@ -4103,6 +4239,7 @@ function ftLoadTemplate() {
 }
 
 function loadFooterConfigUI(){
+  loadRoutesConfigUI();
   const ft = cmsDb.footer || {};
   const b = ft.backups || [];
   for(let i=1; i<=3; i++){
@@ -4118,6 +4255,7 @@ function loadFooterConfigUI(){
 }
 
 async function saveFooterConfig(){
+  await saveRoutesConfig();
   const backups = [];
   for(let i=1; i<=3; i++){
     const name = ($("ftBackupName"+i)?.value || "").trim();
@@ -4133,8 +4271,8 @@ async function saveFooterConfig(){
   };
   try {
     await saveCmsDb();
-    toast("Đã lưu toàn bộ cấu hình Footer thành công!");
-    logEvent("ok", "Footer", "Lưu cấu hình Footer");
+    toast("Đã lưu toàn bộ cấu hình Footer & Đường dẫn thành công!");
+    logEvent("ok", "Footer", "Lưu cấu hình Footer & Routes");
   } catch(e) {
     toast("Lỗi lưu footer: " + e.message, "err");
   }
