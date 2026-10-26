@@ -7,6 +7,7 @@
 <title>VPNTrinhHg – Lướt mượt như gió</title>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#ffffff">
+<meta name="referrer" content="no-referrer">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
@@ -596,6 +597,26 @@ html.dark .loader-ring.amber i{color:#E6C078;}
     <h3 class="text-xl font-extrabold text-center mt-16 mb-6 text-slate-800 dark:text-slate-200" data-i18n="faq_title">Câu hỏi thường gặp (FAQ)</h3>
     <div id="faqStoreContainer" class="space-y-3"></div>
   </div>
+  <div id="view-policy" class="view-section mb-20 w-full">
+    <div class="bg-white dark:bg-[#0a0a0a] p-5 md:p-8 rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm w-full">
+      <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-white/10 flex-wrap gap-3">
+        <div>
+          <button onclick="router.navigate('/')" class="text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-2 hover:opacity-80 transition text-xs md:text-sm mb-2"><i class="fas fa-arrow-left"></i> Quay lại trang chủ</button>
+          <h1 class="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-white">Chính Sách &amp; Pháp Lý</h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Các điều khoản, quy định sử dụng và chính sách hoàn tiền chính thức của VPN Trinh Hg.</p>
+        </div>
+        <div class="flex gap-1.5 bg-slate-100 dark:bg-black/50 p-1.5 rounded-2xl border border-slate-200 dark:border-white/10">
+          <button type="button" onclick="showPolicyPage('terms')" id="policy-tab-terms" class="px-3.5 py-2 rounded-xl font-bold text-xs transition">Điều khoản</button>
+          <button type="button" onclick="showPolicyPage('disclaimer')" id="policy-tab-disclaimer" class="px-3.5 py-2 rounded-xl font-bold text-xs transition">Miễn trừ</button>
+          <button type="button" onclick="showPolicyPage('refund')" id="policy-tab-refund" class="px-3.5 py-2 rounded-xl font-bold text-xs transition">Hoàn tiền</button>
+        </div>
+      </div>
+      <div class="max-w-4xl">
+        <h2 id="policyPageTitle" class="text-lg md:text-xl font-extrabold text-indigo-700 dark:text-indigo-400 mb-4 pb-2 border-b border-slate-100 dark:border-white/10 flex items-center gap-2"></h2>
+        <div id="policyPageBody" class="text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium space-y-3"></div>
+      </div>
+    </div>
+  </div>
 </main>
 <footer id="footerArea" class="bg-white dark:bg-black border-t border-slate-200 dark:border-white/10 pt-8 pb-3 z-10 w-full mt-auto transition-colors duration-300">
   <div class="max-w-[1400px] mx-auto px-4">
@@ -655,6 +676,28 @@ const WORKER_URL = "https://vpntrinhhg3worker.lucastanora.workers.dev";
 const SESSION_KEY = 'vpn_portal_session_24h', CACHE_KEY = 'vpn_portal_last_order';
 const currentTargetWeb = location.origin + "/";
 let lang='vi', currentPackage=null, currentOrderId='', currentMultiplier=1, oCache=null, cfgCache={guides:{},blur:[false,false,false],dock:null};
+const DEFAULT_ROUTES = { order: '/portal/order', packages: '/portal/packages', guide: '/portal/guide', policy: '/policy' };
+let appRoutes = { ...DEFAULT_ROUTES };
+try {
+  const sR = JSON.parse(localStorage.getItem('vpn_routes_cache') || 'null');
+  if (sR && typeof sR === 'object') appRoutes = { ...DEFAULT_ROUTES, ...sR };
+} catch(e){}
+function normRoutePath(p, def) {
+  if (!p || typeof p !== 'string') return def;
+  let s = p.trim();
+  if (!s) return def;
+  if (!s.startsWith('/')) s = '/' + s;
+  s = s.replace(/\/+$/, '');
+  return s || def;
+}
+function updateAppRoutes(customRoutes) {
+  if (!customRoutes || typeof customRoutes !== 'object') return;
+  appRoutes.order = normRoutePath(customRoutes.order, DEFAULT_ROUTES.order);
+  appRoutes.packages = normRoutePath(customRoutes.packages, DEFAULT_ROUTES.packages);
+  appRoutes.guide = normRoutePath(customRoutes.guide, DEFAULT_ROUTES.guide);
+  appRoutes.policy = normRoutePath(customRoutes.policy, DEFAULT_ROUTES.policy);
+  try { localStorage.setItem('vpn_routes_cache', JSON.stringify(appRoutes)); } catch(e){}
+}
 let currentTotalVnd=0, currentTotalCny=0, currentTotalUsd=0, currentDurationMode=1;
 let isUpgradeMode=false, isRenewMode=false, upgradeConfirmed=false, baseOrderPriceVnd=0, baseOrderPriceUsd=0, baseOrderPriceCny=0;
 let lastScrollY=0, pollT=null, tickT=null, skew=0, lastSig='';
@@ -1172,7 +1215,7 @@ async function openGuideArticle(tabId, slug, skipPush) {
   curGuide = foundTab;
   curGuideSlug = art.slug || toSlug(art.name);
   if (!skipPush && typeof router !== 'undefined') {
-    router.navigate(`/portal/guide/${encodeURIComponent(curGuide)}/${encodeURIComponent(curGuideSlug)}`);
+    router.navigate(`${appRoutes.guide}/${encodeURIComponent(curGuide)}/${encodeURIComponent(curGuideSlug)}`);
   }
 
   $('guideCategoryList').classList.add('hidden');
@@ -1318,7 +1361,7 @@ function renderRichGuideHtml(rawHtml, showToc, gid){
 async function closeGuideArticle(skipPush) {
   curGuideSlug = '';
   if (!skipPush && typeof router !== 'undefined') {
-    router.navigate(`/portal/guide/${encodeURIComponent(curGuide || 'android')}`);
+    router.navigate(`${appRoutes.guide}/${encodeURIComponent(curGuide || 'android')}`);
   }
   await loadConfig();
   renderGuideCategories();
@@ -1392,6 +1435,9 @@ async function loadConfig(){
       if(Array.isArray(cfgCache.faqs) && cfgCache.faqs.length){
         renderDynamicFaqs(cfgCache.faqs);
       }
+      if(cfgCache.routes && typeof cfgCache.routes === 'object'){
+        updateAppRoutes(cfgCache.routes);
+      }
       renderDynamicFooter(cfgCache.footer && typeof cfgCache.footer === 'object' ? cfgCache.footer : {});
     }
   }catch(e){}
@@ -1405,9 +1451,23 @@ function footerLinkClick(e,a){
   const u=a.getAttribute('data-u')||'';
   if(/^https?:\/\//i.test(u)) return true;
   e.preventDefault();
-  if(u.startsWith('modal:')){openPolicyModal(u.slice(6));return false;}
-  if(u==='#portal/packages'||u==='#packages'){clickFooterServiceLink('pricing');return false;}
-  if(u.startsWith('#')&&u.length>1){navigateRoute(u);return false;}
+  if(u.startsWith('modal:')){showPolicyPage(u.slice(6));return false;}
+  if(u.startsWith('/policy') || u.startsWith(appRoutes.policy)){
+    const parts = u.split('/');
+    showPolicyPage(parts[parts.length - 1] || 'terms');
+    return false;
+  }
+  if(u==='#portal/packages'||u==='#packages'||u===appRoutes.packages||u==='/portal/packages'){switchPortalTab('p-store');return false;}
+  if(u==='#portal/order'||u===appRoutes.order||u==='/portal/order'){switchPortalTab('p-home');return false;}
+  if(u==='#portal/guide'||u===appRoutes.guide||u==='/portal/guide'){switchPortalTab('p-guide');return false;}
+  if(u.startsWith('/portal/guide/')||u.startsWith(appRoutes.guide+'/')){
+    const segs = u.split('/').filter(Boolean);
+    const cat = segs[2] || 'android', sl = segs[3] || '';
+    switchPortalTab('p-guide', false, true);
+    if(sl) openGuideArticle(cat, sl); else showGuide(cat);
+    return false;
+  }
+  if(u.startsWith('/')){router.navigate(u);return false;}
   return false;
 }
 function renderDynamicFooter(ft){
@@ -2088,7 +2148,7 @@ async function login(auto=false){
  enterPortal(o,auto);
  if(!auto){
   showToast(i18n[lang].login_success,'info');
-  router.navigate('/portal/order');
+  router.navigate(appRoutes.order);
   window.scrollTo({top:0,behavior:'smooth'});
  }
 }
@@ -2112,6 +2172,7 @@ function closeGuideAuthModal(fromPop){
 // Bật giao diện Portal thật sự (với 3 tab ở Header trên cả Desktop & Mobile)
 function enablePortalFrame(){
   $('view-store').classList.remove('active');
+  $('view-policy')?.classList.remove('active');
   $('view-portal').classList.add('active');
   $('desktopPortalNav')?.classList.remove('hidden');
   $('mobileNavWrapper')?.classList.remove('hidden');
@@ -2120,10 +2181,50 @@ function enablePortalFrame(){
 // Bật giao diện Trang chủ gốc ngoài (Landing page với Hero Chặn thì vượt, Dock icon...)
 function showLandingPage(){
   $('view-portal').classList.remove('active');
+  $('view-policy')?.classList.remove('active');
   $('view-store').classList.add('active');
   $('desktopPortalNav')?.classList.add('hidden');
   $('mobileNavWrapper')?.classList.add('hidden');
   renderPackages('all');
+}
+
+// Bật trang Chính sách pháp lý chuyên nghiệp URL riêng chuẩn SEO thay vì modal popup
+function showPolicyPage(kind, skipPush=false){
+  kind = kind || 'terms';
+  if(!skipPush && typeof router !== 'undefined'){
+    router.navigate(`${appRoutes.policy}/${kind}`);
+  }
+  $('view-store').classList.remove('active');
+  $('view-portal').classList.remove('active');
+  $('view-policy')?.classList.add('active');
+  $('desktopPortalNav')?.classList.add('hidden');
+  $('mobileNavWrapper')?.classList.add('hidden');
+
+  ['terms','disclaimer','refund'].forEach(k => {
+    const btn = $('policy-tab-' + k);
+    if(btn){
+      if(k === kind){
+        btn.className = 'px-3.5 py-2 rounded-xl font-extrabold text-xs bg-indigo-600 text-white shadow-sm';
+      } else {
+        btn.className = 'px-3.5 py-2 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10 transition';
+      }
+    }
+  });
+
+  const ft = cfgCache.footer || {};
+  const t = $('policyPageTitle'), c = $('policyPageBody');
+  if(!t || !c) return;
+  if(kind === 'terms'){
+    t.innerHTML = '<i class="fas fa-shield-halved text-indigo-500 mr-2"></i>Chính sách sử dụng dịch vụ';
+    c.innerHTML = ft.terms ? `<p class="whitespace-pre-line leading-relaxed">${esc(ft.terms)}</p>` : "<p>Quý khách sử dụng dịch vụ VPN vui lòng tuân thủ quy định pháp luật nước sở tại, không sử dụng dịch vụ vào các mục đích vi phạm pháp luật.</p>";
+  } else if(kind === 'disclaimer'){
+    t.innerHTML = '<i class="fas fa-scale-balanced text-indigo-500 mr-2"></i>Miễn trừ trách nhiệm pháp lý';
+    c.innerHTML = ft.disclaimer ? `<p class="whitespace-pre-line leading-relaxed">${esc(ft.disclaimer)}</p>` : "<p>Chúng tôi chỉ cung cấp giải pháp mạng kỹ thuật. Khách hàng chịu toàn bộ trách nhiệm về các hoạt động và nội dung truy cập cá nhân.</p>";
+  } else {
+    t.innerHTML = '<i class="fas fa-hand-holding-dollar text-indigo-500 mr-2"></i>Quy định hoàn tiền';
+    c.innerHTML = ft.refund ? `<p class="whitespace-pre-line leading-relaxed">${esc(ft.refund)}</p>` : "<p>Website không áp dụng chính sách hoàn tiền cho các đơn hàng đã thanh toán và kích hoạt thành công. Quý khách vui lòng lưu ý và cân nhắc trước khi thanh toán.</p>";
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function switchPortalTab(tabId, fromUpgrade=false, skipPush=false){
@@ -2131,37 +2232,37 @@ function switchPortalTab(tabId, fromUpgrade=false, skipPush=false){
 
  enablePortalFrame();
 
- // 1. Tab Quản lý Đơn hàng (/portal/order): Có Auth Guard
+ // 1. Tab Quản lý Đơn hàng (Auth Guard): Chưa đăng nhập thì Modal khóa lại
  if(tabId==='p-home'){
   document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
   $('p-home').classList.add('active');
   highlightNavBtns('p-home');
-  if(!skipPush) router.navigate('/portal/order');
+  if(!skipPush) router.navigate(appRoutes.order);
   if(!oCache && !localStorage.getItem(SESSION_KEY)){
    openPortalAuthModal();
   }
   return;
  }
 
- // 2. Tab Cửa hàng Portal (/portal/packages): Xem tự do trong khung Portal
+ // 2. Tab Cửa hàng Portal: Xem tự do trong khung Portal
  if(tabId==='p-store'){
   document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
   $('p-store').classList.add('active');
   highlightNavBtns('p-store');
-  if(!skipPush) router.navigate('/portal/packages');
+  if(!skipPush) router.navigate(appRoutes.packages);
   renderPackages('all');
   return;
  }
 
- // 3. Tab Hướng dẫn Portal (/portal/guide): Xem tự do
+ // 3. Tab Hướng dẫn Portal: Xem tự do
  if(tabId==='p-guide'){
   document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
   $('p-guide').classList.add('active');
   highlightNavBtns('p-guide');
   const targetCat = curGuide || (guideTabList()[0]||{}).id || 'android';
   if(!skipPush) {
-    if(curGuideSlug) router.navigate(`/portal/guide/${encodeURIComponent(targetCat)}/${encodeURIComponent(curGuideSlug)}`);
-    else router.navigate(`/portal/guide/${encodeURIComponent(targetCat)}`);
+    if(curGuideSlug) router.navigate(`${appRoutes.guide}/${encodeURIComponent(targetCat)}/${encodeURIComponent(curGuideSlug)}`);
+    else router.navigate(`${appRoutes.guide}/${encodeURIComponent(targetCat)}`);
   }
   loadConfig().then(() => {
    if(!curGuideSlug) showGuide(targetCat);
@@ -2212,7 +2313,7 @@ async function submitGuideAuth(e){
   closeGuideAuthModal(true);
   showToast(i18n[lang].login_success, 'info');
   enterPortal(o, false);
-  router.navigate('/portal/order');
+  router.navigate(appRoutes.order);
  }catch(err){
   showToast(i18n[lang].req_err, 'error');
  }
@@ -2252,19 +2353,19 @@ function clickFooterServiceLink(type){
       const target = ($('htab-all') && $('htab-all').parentElement) || $('packagesContainerHome'); if(target) target.style.scrollMarginTop='90px';
       if(target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else {
-      router.navigate('/portal/packages');
+      router.navigate(appRoutes.packages);
     }
     return;
   }
   if(type === 'data'){
-    router.navigate('/portal/order');
+    router.navigate(appRoutes.order);
     if(oCache) requestDataCheck();
     return;
   }
 }
 
 function clickFooterGuideLink(tabName){
-  router.navigate(`/portal/guide/${encodeURIComponent(tabName)}`);
+  router.navigate(`${appRoutes.guide}/${encodeURIComponent(tabName)}`);
 }
 
 // Lắng nghe nút Back chuột / Cử chỉ vuốt quay lại trên điện thoại
@@ -2276,7 +2377,7 @@ window.addEventListener('popstate', () => {
  if (!$('guideAuthModal').classList.contains('hidden')) { closeGuideAuthModal(true); return; }
 });
 
-// KHAI BÁO CÁC ROUTE CHUẨN TRÊN NAVIGO
+// KHAI BÁO CÁC ROUTE ĐỘNG TRÊN NAVIGO (NẠP ĐƯỜNG DẪN TỪ KV HOẶC FALLBACK MẶC ĐỊNH)
 function setupAppRoutes(){
   router.on('/', () => {
     showLandingPage();
@@ -2288,39 +2389,63 @@ function setupAppRoutes(){
     router.navigate('/');
   });
 
-  router.on('/portal/order', () => {
-    switchPortalTab('p-home', false, true);
-  });
+  const bindOrderRoute = (path) => {
+    router.on(path, () => {
+      switchPortalTab('p-home', false, true);
+    });
+  };
+  bindOrderRoute(appRoutes.order);
+  if (appRoutes.order !== DEFAULT_ROUTES.order) bindOrderRoute(DEFAULT_ROUTES.order);
 
-  router.on('/portal/packages', () => {
-    switchPortalTab('p-store', false, true);
-  });
+  const bindPackagesRoute = (path) => {
+    router.on(path, () => {
+      switchPortalTab('p-store', false, true);
+    });
+  };
+  bindPackagesRoute(appRoutes.packages);
+  if (appRoutes.packages !== DEFAULT_ROUTES.packages) bindPackagesRoute(DEFAULT_ROUTES.packages);
 
-  router.on('/portal/guide', () => {
-    curGuideSlug = '';
-    switchPortalTab('p-guide', false, true);
-  });
+  const bindGuideRoutes = (basePath) => {
+    router.on(basePath, () => {
+      curGuideSlug = '';
+      switchPortalTab('p-guide', false, true);
+    });
 
-  router.on('/portal/guide/:category', (match) => {
-    const cat = match && match.data && match.data.category;
-    curGuide = cat || 'android';
-    curGuideSlug = '';
-    enablePortalFrame();
-    document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
-    $('p-guide').classList.add('active');
-    highlightNavBtns('p-guide');
-    showGuide(curGuide);
-  });
+    router.on(`${basePath}/:category`, (match) => {
+      const cat = match && match.data && match.data.category;
+      curGuide = cat || 'android';
+      curGuideSlug = '';
+      enablePortalFrame();
+      document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
+      $('p-guide').classList.add('active');
+      highlightNavBtns('p-guide');
+      showGuide(curGuide);
+    });
 
-  router.on('/portal/guide/:category/:slug', async (match) => {
-    const cat = match && match.data && match.data.category;
-    const sl = match && match.data && match.data.slug;
-    enablePortalFrame();
-    document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
-    $('p-guide').classList.add('active');
-    highlightNavBtns('p-guide');
-    await openGuideArticle(cat, decodeURIComponent(sl), true);
-  });
+    router.on(`${basePath}/:category/:slug`, async (match) => {
+      const cat = match && match.data && match.data.category;
+      const sl = match && match.data && match.data.slug;
+      enablePortalFrame();
+      document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
+      $('p-guide').classList.add('active');
+      highlightNavBtns('p-guide');
+      await openGuideArticle(cat, decodeURIComponent(sl), true);
+    });
+  };
+  bindGuideRoutes(appRoutes.guide);
+  if (appRoutes.guide !== DEFAULT_ROUTES.guide) bindGuideRoutes(DEFAULT_ROUTES.guide);
+
+  const bindPolicyRoutes = (basePath) => {
+    router.on(basePath, () => {
+      showPolicyPage('terms', true);
+    });
+    router.on(`${basePath}/:type`, (match) => {
+      const tp = match && match.data && match.data.type;
+      showPolicyPage(tp || 'terms', true);
+    });
+  };
+  bindPolicyRoutes(appRoutes.policy);
+  if (appRoutes.policy !== DEFAULT_ROUTES.policy) bindPolicyRoutes(DEFAULT_ROUTES.policy);
 
   router.notFound(() => {
     router.navigate('/');
