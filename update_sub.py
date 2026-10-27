@@ -1,4 +1,4 @@
-# v2.3 - Full Singbox/Hiddify Config khớp sát config gốc + Batch Push
+# v2.4 - Full Singbox/Hiddify Config khớp sát config gốc + Batch Push,kitty
 """
 update_sub.py — VPN Trinh Hg
 GitHub Actions: Chạy 1 lần/ngày lúc 00:00 UTC
@@ -17,9 +17,23 @@ INFO_NODES = [
     "🌐 Website: vpntrinhhg.pages.dev",
     "📞 Hoặc Zalo: 0917678211",
 ]
-INFO_SKIP_KW = ["剩余流量", "距离下次重置", "套餐到期"]
+INFO_SKIP_KW = ["剩余流量", "距离下次重置", "套餐到期", "官网", "kitty.fo"]
 INFO_VLESS_PREFIX = "vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1?type=tcp#"
 ISP_DROP_KEYWORDS = ["CUCM", "CMCU", "CTCUCM", "CTCU"]
+
+KITTY_COUNTRY_MAP = [
+    ("United States", "美国", "🇺🇸"),
+    ("Malaysia", "马来西亚", "🇲🇾"),
+    ("Singapore", "新加坡", "🇸🇬"),
+    ("Japan", "日本", "🇯🇵"),
+    ("Korea", "韩国", "🇰🇷"),
+    ("Netherlands", "荷兰", "🇳🇱"),
+    ("United Kingdom", "英国", "🇬🇧"),
+    ("Hong Kong", "香港", "🇭🇰"),
+    ("Hongkong", "香港", "🇭🇰"),
+    ("Taiwan", "台湾", "🇹🇼"),
+    ("Germany", "德国", "🇩🇪")
+]
 
 # ── 3 BỘ DNS CLASH ĐỘC LẬP TƯỜNG MINH 100% (CHUẨN GỐC TỪ FILE CẤU HÌNH) ───────
 LIANGXIN_DNS_CLASH = """\
@@ -84,6 +98,201 @@ dns:
     fake-ip-ttl: 1
     default-nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]
     proxy-server-nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]"""
+
+KITTY_DNS_CLASH = """\
+dns:
+  enable: true
+  prefer-h3: false
+  ipv6: false
+  ipv6-timeout: 100
+  use-hosts: true
+  use-system-hosts: false
+  respect-rules: true
+  nameserver:
+    - "https://dns.cloudflare.com/dns-query#VPN Trinh Hg"
+    - "https://dns.google/dns-query#VPN Trinh Hg"
+  fallback: null
+  fallback-filter:
+    geoip: true
+    geoip-code: "CN"
+    ipcidr: []
+    domain: null
+    geosite: []
+  fallback-lazy-query: false
+  listen: ""
+  listen-routing-mark: 0
+  enhanced-mode: "fake-ip"
+  fake-ip-range: "198.18.0.1/16"
+  fake-ip-range6: ""
+  fake-ip-filter:
+    - "*.lan"
+    - "*.local"
+    - "*.direct"
+    - "*.localhost"
+    - "time.*.com"
+    - "ntp.*.com"
+    - "time.*.gov"
+    - "time.*.apple.com"
+    - "time.windows.com"
+    - "time.nist.gov"
+    - "+.pool.ntp.org"
+    - "*.msftconnecttest.com"
+    - "*.msftncsi.com"
+    - "localhost.ptlogin2.qq.com"
+    - "*.cmpassport.com"
+    - "*.mcdn.bilivideo.cn"
+    - "*.battlenet.com.cn"
+    - "+.wotgame.cn"
+    - "+.wggames.cn"
+    - "+.wowsgame.cn"
+    - "id6.me"
+    - "lens.l.google.com"
+    - "captive.apple.com"
+    - "connectivitycheck.gstatic.com"
+  fake-ip-filter-mode: "blacklist"
+  fake-ip-ttl: 1
+  default-nameserver:
+    - "223.5.5.5"
+    - "119.29.29.29"
+  cache-algorithm: "arc"
+  cache-max-size: 0
+  nameserver-policy:
+    rule-set:category-ads-all,awavenue-ads: "rcode://success"
+    rule-set:cn:
+      - "https://doh.pub/dns-query"
+      - "https://dns.alidns.com/dns-query"
+  proxy-server-nameserver:
+    - "https://dns.alidns.com/dns-query"
+    - "https://doh.pub/dns-query"
+  direct-nameserver:
+    - "https://doh.pub/dns-query"
+    - "https://dns.alidns.com/dns-query"
+  direct-nameserver-follow-policy: false"""
+
+KITTY_RULE_PROVIDERS = """\
+rule-providers:
+  apple-cn:
+    behavior: "domain"
+    format: "mrs"
+    interval: 86400
+    path: "./ruleset/kitty/apple-cn.mrs"
+    type: "http"
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/apple-cn.mrs"
+  awavenue-ads:
+    behavior: "domain"
+    format: "mrs"
+    interval: 86400
+    path: "./ruleset/kitty/awavenue-ads.mrs"
+    type: "http"
+    url: "https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Clash.mrs"
+  category-ads-all:
+    behavior: "domain"
+    format: "mrs"
+    interval: 86400
+    path: "./ruleset/kitty/category-ads-all.mrs"
+    type: "http"
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ads-all.mrs"
+  cn:
+    behavior: "domain"
+    format: "mrs"
+    interval: 86400
+    path: "./ruleset/kitty/cn.mrs"
+    type: "http"
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/cn.mrs"
+  cn-ip:
+    behavior: "ipcidr"
+    format: "mrs"
+    interval: 86400
+    path: "./ruleset/kitty/cn-ip.mrs"
+    type: "http"
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cn.mrs"
+  google:
+    behavior: "domain"
+    format: "mrs"
+    interval: 86400
+    path: "./ruleset/kitty/google.mrs"
+    type: "http"
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/google.mrs"
+  microsoft@cn:
+    behavior: "domain"
+    format: "mrs"
+    interval: 86400
+    path: "./ruleset/kitty/microsoft-cn.mrs"
+    type: "http"
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/microsoft@cn.mrs"
+  overseas-ai:
+    behavior: "classical"
+    format: "text"
+    interval: 86400
+    path: "./ruleset/kitty/overseas-ai.list"
+    type: "http"
+    url: "https://raw.githubusercontent.com/viewer12/OverseasAI.list/main/rule/Clash/OverseasAI/OverseasAI.list"
+  private:
+    behavior: "domain"
+    format: "mrs"
+    interval: 86400
+    path: "./ruleset/kitty/private.mrs"
+    type: "http"
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/private.mrs"
+  steam@cn:
+    behavior: "domain"
+    format: "mrs"
+    interval: 86400
+    path: "./ruleset/kitty/steam-cn.mrs"
+    type: "http"
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/steam@cn.mrs"
+  tiktok:
+    behavior: "domain"
+    format: "mrs"
+    interval: 86400
+    path: "./ruleset/kitty/tiktok.mrs"
+    type: "http"
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/tiktok.mrs\""""
+
+KITTY_RULES = [
+    "DOMAIN,m1.tohno-1.top,DIRECT",
+    "RULE-SET,private,DIRECT",
+    "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve",
+    "IP-CIDR,10.0.0.0/8,DIRECT,no-resolve",
+    "IP-CIDR,172.16.0.0/12,DIRECT,no-resolve",
+    "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve",
+    "IP-CIDR,100.64.0.0/10,DIRECT,no-resolve",
+    "IP-CIDR,169.254.0.0/16,DIRECT,no-resolve",
+    "IP-CIDR6,::1/128,DIRECT,no-resolve",
+    "IP-CIDR6,fc00::/7,DIRECT,no-resolve",
+    "IP-CIDR6,fe80::/10,DIRECT,no-resolve",
+    "RULE-SET,awavenue-ads,REJECT",
+    "RULE-SET,category-ads-all,REJECT",
+    "DOMAIN-SUFFIX,trace.qq.com,REJECT",
+    "DOMAIN-SUFFIX,beacon.qq.com,REJECT",
+    "DOMAIN-SUFFIX,report.qq.com,REJECT",
+    "DOMAIN-SUFFIX,pingtas.qq.com,REJECT",
+    "DOMAIN-SUFFIX,pingtcss.qq.com,REJECT",
+    "DOMAIN-SUFFIX,stats.g.qq.com,REJECT",
+    "DOMAIN-SUFFIX,isdspeed.qq.com,REJECT",
+    "DOMAIN-SUFFIX,tp.linksgo.qq.com,REJECT",
+    "DOMAIN-SUFFIX,webpush.wx.qq.com,REJECT",
+    "DOMAIN-SUFFIX,mi.gdt.qq.com,REJECT",
+    "DOMAIN-SUFFIX,t.gdt.qq.com,REJECT",
+    "DOMAIN-SUFFIX,e.qq.com,REJECT",
+    "DOMAIN-SUFFIX,l.qq.com,REJECT",
+    "DOMAIN-SUFFIX,btrace.qq.com,REJECT",
+    "DOMAIN-SUFFIX,gdt.qq.com,REJECT",
+    "DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT",
+    "DOMAIN-SUFFIX,adsmind.gdtimg.com,REJECT",
+    "RULE-SET,overseas-ai,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,googleapis.cn,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,google.cn,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,xn--ngstr-lra8j.com,VPN Trinh Hg",
+    "RULE-SET,google,VPN Trinh Hg",
+    "RULE-SET,tiktok,VPN Trinh Hg",
+    "RULE-SET,steam@cn,DIRECT",
+    "RULE-SET,apple-cn,DIRECT",
+    "RULE-SET,microsoft@cn,DIRECT",
+    "RULE-SET,cn,DIRECT",
+    "RULE-SET,cn-ip,DIRECT,no-resolve",
+    "MATCH,VPN Trinh Hg"
+]
 
 # ── 3 BỘ RULES CLASH ĐỘC LẬP TƯỜNG MINH 100% (KHÔNG KẾ THỪA RÚT GỌN) ───────────
 LIANGXIN_RULES = [
@@ -801,15 +1010,26 @@ def group_to_inline(g: dict) -> str:
     return line + " }"
 
 def build_yaml(proxy_list: list, mode: str) -> str:
-    if mode == "combo":
+    m_low = str(mode).lower()
+    has_rp = False
+    
+    if m_low in ("kitty", "single_kt"):
+        dns_clash = KITTY_DNS_CLASH
+        rules_list = KITTY_RULES
+        has_rp = True
+    elif m_low in ("combo_liki", "combo_kidj"):
+        dns_clash = KITTY_DNS_CLASH
+        rules_list = list(dict.fromkeys(KITTY_RULES + (LIANGXIN_RULES if "liki" in m_low else DJJC_RULES)))
+        has_rp = True
+    elif m_low in ("combo", "combo_lidj"):
         dns_clash  = COMBO_DNS_CLASH
         rules_list = COMBO_RULES
-    elif mode == "liangxin" or mode is True:
-        dns_clash  = LIANGXIN_DNS_CLASH
-        rules_list = LIANGXIN_RULES
-    else:
+    elif m_low == "djjc" or m_low == "single_dj":
         dns_clash  = DJJC_DNS_CLASH
         rules_list = DJJC_RULES
+    else:
+        dns_clash  = LIANGXIN_DNS_CLASH
+        rules_list = LIANGXIN_RULES
 
     info_proxies = []
     for name in INFO_NODES:
@@ -824,18 +1044,28 @@ def build_yaml(proxy_list: list, mode: str) -> str:
     all_names   = [p["name"] for p in all_proxies]
     real_names  = [p["name"] for p in proxy_list]
 
-    groups = [
-        {"name": "VPN Trinh Hg", "type": "select",
-         "proxies": ["Auto Select", "Fallback"] + all_names},
-        {"name": "Auto Select", "type": "url-test",
-         "proxies": real_names,
-         "url": "http://www.gstatic.com/generate_204",
-         "interval": 86400, "tolerance": 50},
-        {"name": "Fallback", "type": "fallback",
-         "proxies": real_names,
-         "url": "http://www.gstatic.com/generate_204",
-         "interval": 7200},
-    ]
+    if m_low in ("kitty", "single_kt"):
+        groups = [
+            {"name": "VPN Trinh Hg", "type": "select",
+             "proxies": ["Auto Select", "DIRECT"] + all_names},
+            {"name": "Auto Select", "type": "url-test",
+             "proxies": real_names,
+             "url": "http://cp.cloudflare.com/generate_204",
+             "interval": 300, "tolerance": 50},
+        ]
+    else:
+        groups = [
+            {"name": "VPN Trinh Hg", "type": "select",
+             "proxies": ["Auto Select", "Fallback"] + all_names},
+            {"name": "Auto Select", "type": "url-test",
+             "proxies": real_names,
+             "url": "http://www.gstatic.com/generate_204",
+             "interval": 86400, "tolerance": 50},
+            {"name": "Fallback", "type": "fallback",
+             "proxies": real_names,
+             "url": "http://www.gstatic.com/generate_204",
+             "interval": 7200},
+        ]
 
     lines = [
         "# profile-update-interval: 1",
@@ -850,10 +1080,13 @@ def build_yaml(proxy_list: list, mode: str) -> str:
         "profile:",
         "  store-selected: true",
         "  store-fake-ip: false",
-        "  interval: 60",  # Tự động cập nhật lại sub sau mỗi 60 phút (1 tiếng)
+        "  interval: 60",
         "  update-interval: 60",
-        dns_clash, "proxies:",
     ]
+    if has_rp:
+        lines.append(KITTY_RULE_PROVIDERS)
+    lines.append(dns_clash)
+    lines.append("proxies:")
     for p in all_proxies:  lines.append(proxy_to_inline(p))
     lines.append("proxy-groups:")
     for g in groups:       lines.append(group_to_inline(g))
@@ -918,6 +1151,24 @@ def clean_djjc_node(raw_name: str) -> str:
     except Exception:
         fallback = raw_name.strip()
         return fallback if "VPNTrinhHg" in fallback else f"{fallback} - VPNTrinhHg"
+
+def clean_kitty_node(raw_name: str) -> str:
+    if not raw_name: return "Kitty - VPNTrinhHg"
+    try:
+        s = re.sub(r"\s*-\s*VPNTrinhHg$", "", raw_name.strip()).strip()
+        for eng, cn, default_flag in KITTY_COUNTRY_MAP:
+            pattern = rf"({eng})\s*(\d+)"
+            m = re.search(pattern, s, re.IGNORECASE)
+            if m:
+                num = m.group(2)
+                flag_match = re.search(r"[\U0001F1E6-\U0001F1FF]{2}", s)
+                flag = flag_match.group(0) if flag_match else default_flag
+                return f"{flag} VIP {cn} {num} - VPNTrinhHg"
+        fallback = raw_name.strip()
+        return fallback if "VPNTrinhHg" in fallback else f"{fallback} - VPNTrinhHg"
+    except Exception:
+        fallback = raw_name.strip()
+        return fallback if "VPNTrinhHg" in fallback else f"{fallback} - VPNTrinhHg"
 def clean_universal_node(raw_name: str) -> str:
     """Quy tắc chuẩn hóa tự động: Lọc sạch tên rác, giữ nguyên tên node gốc và tự động nối đuôi - VPNTrinhHg"""
     if not raw_name: return "VPN - VPNTrinhHg"
@@ -952,7 +1203,9 @@ def process_b64(raw_b64: str, provider_name: str):
                 if is_spam_node(old_name): continue
                 if ob.get("server") in ("127.0.0.1", "1.1.1.1"): continue
 
-                if "liangxin" in p_lower:
+                if "kitty" in p_lower or "tohno-1.top" in p_lower or "oosaka" in p_lower:
+                    new_name = clean_kitty_node(old_name)
+                elif "liangxin" in p_lower:
                     new_name = clean_liangxin_node(old_name)
                 elif "djjc" in p_lower:
                     new_name = clean_djjc_node(old_name)
@@ -1106,7 +1359,9 @@ def process_b64(raw_b64: str, provider_name: str):
             if is_spam_node(old_name): continue
 
             p_lower = provider_name.lower()
-            if "liangxin" in p_lower:
+            if "kitty" in p_lower or "tohno-1.top" in p_lower or "oosaka" in p_lower:
+                new_name = clean_kitty_node(old_name)
+            elif "liangxin" in p_lower:
                 new_name = clean_liangxin_node(old_name)
             elif "djjc" in p_lower:
                 new_name = clean_djjc_node(old_name)
@@ -1126,7 +1381,15 @@ def process_b64(raw_b64: str, provider_name: str):
             if proxy: proxy_list.append(proxy)
     new_b64 = base64.b64encode("\n".join(new_b64_lines).encode("utf-8")).decode("ascii")
     print(f"  Parsed {len(proxy_list)} real proxies")
-    mode = "liangxin" if "liangxin" in provider_name.lower() else "combo"
+    p_low = provider_name.lower()
+    if "kitty" in p_low or "tohno-1.top" in p_low or "oosaka" in p_low:
+        mode = "kitty"
+    elif "liangxin" in p_low:
+        mode = "liangxin"
+    elif "djjc" in p_low:
+        mode = "djjc"
+    else:
+        mode = "combo"
     yaml_str    = build_yaml(proxy_list, mode)        if proxy_list else ""
     singbox_str = build_singbox_full(proxy_list, mode) if proxy_list else ""
     return new_b64, yaml_str, singbox_str
@@ -1159,8 +1422,13 @@ def update_all():
             u_val = lnk.get(u_key, "")
             if not u_val or u_val == "Da_bi_khoa": continue
             try:
+                m_kt = re.search(r'/oosaka/([a-zA-Z0-9]+)', u_val)
+                if m_kt:
+                    t = m_kt.group(1)
+                    if t not in seen_orig: seen_orig[t] = u_val
+                    continue
                 qs = urllib.parse.parse_qs(urllib.parse.urlparse(u_val).query)
-                tok_list = qs.get("OwO") or qs.get("token")
+                tok_list = qs.get("OwO") or qs.get("token") or qs.get("top") or qs.get("liki") or qs.get("lidj") or qs.get("kidj")
                 if tok_list:
                     t = tok_list[0]
                     if t not in seen_orig: seen_orig[t] = u_val
@@ -1171,7 +1439,9 @@ def update_all():
 
     for orig_token, orig_url in seen_orig.items():
         u_low = orig_url.lower()
-        if "liangxin" in u_low:
+        if "tohno-1.top" in u_low or "oosaka" in u_low or "kitty" in u_low:
+            provider = "Kitty"
+        elif "liangxin" in u_low:
             provider = "Liangxin"
         elif "djjc" in u_low:
             provider = "DJJC"
