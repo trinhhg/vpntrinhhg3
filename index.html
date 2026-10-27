@@ -58,9 +58,9 @@ html.dark #guideText a.word-link{color:#60a5fa!important;}
 .blur-link{filter:blur(5px);user-select:none;pointer-events:none;opacity:.55;}
 .dur-btn{transition:all .2s;}
 .dur-btn.active{background-color:#4f46e5!important;color:white!important;border-color:#4f46e5!important;box-shadow:0 4px 10px rgba(79,70,229,.3);}
-.dock-wrapper{width:100%;overflow:hidden;padding:12px 0 16px;position:relative;cursor:grab;}
+.dock-wrapper{width:100%;overflow:hidden;padding:4px 0 8px;position:relative;cursor:grab;}
 .dock-wrapper:active{cursor:grabbing;}
-.dock-marquee{display:flex;align-items:center;gap:16px;width:max-content;padding:22px 0;animation:scrollX 25s linear infinite;will-change:transform;touch-action:pan-x;}
+.dock-marquee{display:flex;align-items:center;gap:16px;width:max-content;padding:12px 0 14px;animation:scrollX 25s linear infinite;will-change:transform;touch-action:pan-x;}
 .dock-marquee:hover{animation-play-state:paused;}
 .dock-wrapper.dragging .dock-marquee{animation-play-state:paused;}
 @keyframes scrollX{0%{transform:translateX(0)}100%{transform:translateX(-25%)}}
@@ -519,9 +519,9 @@ html.dark .loader-ring.amber i{color:#E6C078;}
     </div>
   </div>
   <div id="view-store" class="view-section active mb-20 w-full">
-        <div class="text-center mb-8 mt-2 md:mt-4 px-2 w-full">
-      <h1 class="text-3xl md:text-5xl font-extrabold mb-3 text-slate-800 dark:text-slate-100 leading-tight" data-i18n="hero_title"></h1>
-      <p class="text-xs md:text-base text-slate-600 dark:text-slate-400 font-medium mb-5" data-i18n="hero_desc"></p>
+        <div class="text-center mb-4 mt-2 md:mt-3 px-2 w-full">
+      <h1 class="text-3xl md:text-5xl font-extrabold mb-2.5 text-slate-800 dark:text-slate-100 leading-tight" data-i18n="hero_title"></h1>
+      <p class="text-xs md:text-base text-slate-600 dark:text-slate-400 font-medium mb-3" data-i18n="hero_desc"></p>
       <div class="dock-wrapper" id="dockWrapper"><div class="dock-marquee" id="dockMarquee"></div></div>
     </div>
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 mb-10 w-full">
@@ -599,21 +599,46 @@ html.dark .loader-ring.amber i{color:#E6C078;}
   </div>
   <div id="view-policy" class="view-section mb-20 w-full">
     <div class="bg-white dark:bg-[#0a0a0a] p-5 md:p-8 rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm w-full">
-      <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-white/10 flex-wrap gap-3">
-        <div>
-          <button onclick="router.navigate('/')" class="text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-2 hover:opacity-80 transition text-xs md:text-sm mb-2"><i class="fas fa-arrow-left"></i> Quay lại trang chủ</button>
-          <h1 class="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-white">Chính Sách &amp; Pháp Lý</h1>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Các điều khoản, quy định sử dụng và chính sách hoàn tiền chính thức của VPN Trinh Hg.</p>
+      <div class="mb-6 pb-4 border-b border-slate-100 dark:border-white/10">
+        <button onclick="router.navigate('/')" class="text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-2 hover:opacity-80 transition text-xs md:text-sm mb-2"><i class="fas fa-arrow-left"></i> Quay lại trang chủ</button>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-white">Chính Sách &amp; Pháp Lý</h1>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Các điều khoản, quy định sử dụng và chính sách hoàn tiền chính thức của VPN Trinh Hg.</p>
+      </div>
+
+      <!-- Mục lục xem nhanh -->
+      <div class="bg-[#f8faff] dark:bg-[#14151a] border border-indigo-100 dark:border-white/10 rounded-2xl p-4 md:p-5 mb-8 shadow-sm">
+        <div class="font-extrabold text-indigo-600 dark:text-indigo-400 text-sm md:text-base flex items-center gap-2 mb-3">
+          <i class="fas fa-list-ul"></i><span>Mục lục xem nhanh</span>
         </div>
-        <div class="flex gap-1.5 bg-slate-100 dark:bg-black/50 p-1.5 rounded-2xl border border-slate-200 dark:border-white/10">
-          <button type="button" onclick="showPolicyPage('terms')" id="policy-tab-terms" class="px-3.5 py-2 rounded-xl font-bold text-xs transition">Điều khoản</button>
-          <button type="button" onclick="showPolicyPage('disclaimer')" id="policy-tab-disclaimer" class="px-3.5 py-2 rounded-xl font-bold text-xs transition">Miễn trừ</button>
-          <button type="button" onclick="showPolicyPage('refund')" id="policy-tab-refund" class="px-3.5 py-2 rounded-xl font-bold text-xs transition">Hoàn tiền</button>
+        <div class="flex flex-col gap-2">
+          <a onclick="scrollToPolicySection('policy-terms')" class="cursor-pointer text-indigo-950 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold text-xs md:text-sm flex items-center gap-2"><span class="text-indigo-400 font-black">›</span><span>Chính sách sử dụng</span></a>
+          <a onclick="scrollToPolicySection('policy-disclaimer')" class="cursor-pointer text-indigo-950 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold text-xs md:text-sm flex items-center gap-2"><span class="text-indigo-400 font-black">›</span><span>Miễn trừ trách nhiệm</span></a>
+          <a onclick="scrollToPolicySection('policy-refund')" class="cursor-pointer text-indigo-950 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold text-xs md:text-sm flex items-center gap-2"><span class="text-indigo-400 font-black">›</span><span>Quy định hoàn tiền</span></a>
         </div>
       </div>
-      <div class="max-w-4xl">
-        <h2 id="policyPageTitle" class="text-lg md:text-xl font-extrabold text-indigo-700 dark:text-indigo-400 mb-4 pb-2 border-b border-slate-100 dark:border-white/10 flex items-center gap-2"></h2>
-        <div id="policyPageBody" class="text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium space-y-3"></div>
+
+      <!-- 3 Phần nội dung nối tiếp -->
+      <div class="max-w-4xl space-y-8">
+        <section id="policy-terms" class="scroll-mt-24 pt-2">
+          <h2 class="text-lg md:text-xl font-extrabold text-indigo-700 dark:text-indigo-400 mb-3 pb-2 border-b border-slate-100 dark:border-white/10 flex items-center gap-2">
+            <i class="fas fa-shield-halved text-indigo-500"></i>1. Chính sách sử dụng dịch vụ
+          </h2>
+          <div id="policyBodyTerms" class="text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium space-y-2.5"></div>
+        </section>
+
+        <section id="policy-disclaimer" class="scroll-mt-24 pt-2">
+          <h2 class="text-lg md:text-xl font-extrabold text-indigo-700 dark:text-indigo-400 mb-3 pb-2 border-b border-slate-100 dark:border-white/10 flex items-center gap-2">
+            <i class="fas fa-scale-balanced text-indigo-500"></i>2. Miễn trừ trách nhiệm pháp lý
+          </h2>
+          <div id="policyBodyDisclaimer" class="text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium space-y-2.5"></div>
+        </section>
+
+        <section id="policy-refund" class="scroll-mt-24 pt-2">
+          <h2 class="text-lg md:text-xl font-extrabold text-indigo-700 dark:text-indigo-400 mb-3 pb-2 border-b border-slate-100 dark:border-white/10 flex items-center gap-2">
+            <i class="fas fa-hand-holding-dollar text-indigo-500"></i>3. Quy định hoàn tiền
+          </h2>
+          <div id="policyBodyRefund" class="text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium space-y-2.5"></div>
+        </section>
       </div>
     </div>
   </div>
@@ -1453,8 +1478,9 @@ function footerLinkClick(e,a){
   e.preventDefault();
   if(u.startsWith('modal:')){showPolicyPage(u.slice(6));return false;}
   if(u.startsWith('/policy') || u.startsWith(appRoutes.policy)){
-    const parts = u.split('/');
-    showPolicyPage(parts[parts.length - 1] || 'terms');
+    const parts = u.split('/').filter(Boolean);
+    const section = parts.length > 1 ? parts[parts.length - 1] : 'terms';
+    showPolicyPage(section);
     return false;
   }
   if(u==='#portal/packages'||u==='#packages'||u===appRoutes.packages||u==='/portal/packages'){switchPortalTab('p-store');return false;}
@@ -1475,18 +1501,23 @@ function renderDynamicFooter(ft){
   try{localStorage.setItem('vpn_footer_cache',JSON.stringify(ft));}catch(e){}
   const wrap=$('footerDynCols');
   if(wrap){
-    wrap.innerHTML=footerColsOf(ft).filter(c=>c&&Array.isArray(c.links)&&c.links.length).map(c=>
+    let colsHtml = footerColsOf(ft).filter(c=>c&&Array.isArray(c.links)&&c.links.length).map(c=>
       `<div class="space-y-2"><div class="font-extrabold text-sm text-slate-800 dark:text-white uppercase tracking-wider">${esc(c.title||'')}</div><ul class="space-y-1.5 text-slate-600 dark:text-slate-300 font-medium">${c.links.map(l=>{
         const u=String(l.url||''), ext=/^https?:\/\//i.test(u);
         return `<li><a href="${ext?esc(u):'#'}" ${ext?'target="_blank" rel="noopener"':''} data-u="${esc(u)}" onclick="return footerLinkClick(event,this)" class="hover:text-indigo-600 transition flex items-center gap-1.5 text-left"><span>›</span> ${esc(l.title||'')}</a></li>`;
       }).join('')}</ul></div>`).join('');
+
+    // Đưa danh sách Web dự phòng thành cột danh mục liên kết thứ 4 trong footer
+    if(Array.isArray(ft.backups)){
+      const bl=ft.backups.filter(b=>b&&b.url);
+      if(bl.length){
+        colsHtml += `<div class="space-y-2"><div class="font-extrabold text-sm text-slate-800 dark:text-white uppercase tracking-wider">Web dự phòng</div><ul class="space-y-1.5 text-slate-600 dark:text-slate-300 font-medium">${bl.map(b=>`<li><a href="${esc(b.url)}" target="_blank" rel="noopener" class="hover:text-indigo-600 transition flex items-center gap-1.5 text-left"><span>›</span> ${esc(b.name||b.url)}</a></li>`).join('')}</ul></div>`;
+      }
+    }
+    wrap.innerHTML = colsHtml;
   }
   const bc=$('footerBackupsContainer');
-  if(bc && Array.isArray(ft.backups)){
-    const bl=ft.backups.filter(b=>b&&b.url);
-    bc.style.display=bl.length?'':'none';
-    bc.innerHTML=`<span class="font-extrabold text-slate-500 dark:text-slate-400"><i class="fas fa-globe mr-1"></i>Web dự phòng:</span>`+bl.map(b=>`<a href="${esc(b.url)}" target="_blank" rel="noopener" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 font-bold hover:bg-indigo-50">${esc(b.name||b.url)}</a>`).join('');
-  }
+  if(bc) bc.style.display='none';
 }
 
 const isClientTestMode = new URLSearchParams(location.search).get('test') === '1';
@@ -1868,24 +1899,38 @@ function drawQrCenterLogo(box) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
   const w = canvas.width, h = canvas.height;
-  const bw = 66, bh = 24;
+  const bw = 84, bh = 26;
   const bx = (w - bw) / 2, by = (h - bh) / 2;
+  const radius = 13;
 
   ctx.save();
+
+  // Đổ bóng mờ nhẹ tạo độ nổi 3D cao cấp
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.22)';
+  ctx.shadowBlur = 6;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 2;
+
+  // Nền trắng tinh khiết bo tròn capsule
   ctx.fillStyle = '#ffffff';
-  ctx.strokeStyle = '#4f46e5';
-  ctx.lineWidth = 2;
   ctx.beginPath();
-  if (ctx.roundRect) ctx.roundRect(bx, by, bw, bh, 6);
+  if (ctx.roundRect) ctx.roundRect(bx, by, bw, bh, radius);
   else ctx.rect(bx, by, bw, bh);
   ctx.fill();
+
+  // Tắt bóng để vẽ viền nổi sắc nét
+  ctx.shadowColor = 'transparent';
+  ctx.strokeStyle = '#4f46e5';
+  ctx.lineWidth = 2;
   ctx.stroke();
 
-  ctx.fillStyle = '#4f46e5';
-  ctx.font = '900 12px "Plus Jakarta Sans", Arial, sans-serif';
+  // Render chữ VPNTrinhHg đồng bộ thương hiệu
+  ctx.fillStyle = '#4338ca';
+  ctx.font = '900 11.5px "Plus Jakarta Sans", Arial, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('TrinhHg', w / 2, h / 2 + 0.5);
+  ctx.letterSpacing = '0.4px';
+  ctx.fillText('VPNTrinhHg', w / 2, h / 2 + 0.5);
   ctx.restore();
 
   if (img) {
@@ -2188,11 +2233,15 @@ function showLandingPage(){
   renderPackages('all');
 }
 
-// Bật trang Chính sách pháp lý chuyên nghiệp URL riêng chuẩn SEO thay vì modal popup
-function showPolicyPage(kind, skipPush=false){
-  kind = kind || 'terms';
+function scrollToPolicySection(id){
+  const el = document.getElementById(id);
+  if(el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function showPolicyPage(targetSection, skipPush=false){
   if(!skipPush && typeof router !== 'undefined'){
-    router.navigate(`${appRoutes.policy}/${kind}`);
+    const sub = targetSection ? `/${targetSection}` : '';
+    router.navigate(`${appRoutes.policy}${sub}`);
   }
   $('view-store').classList.remove('active');
   $('view-portal').classList.remove('active');
@@ -2200,31 +2249,17 @@ function showPolicyPage(kind, skipPush=false){
   $('desktopPortalNav')?.classList.add('hidden');
   $('mobileNavWrapper')?.classList.add('hidden');
 
-  ['terms','disclaimer','refund'].forEach(k => {
-    const btn = $('policy-tab-' + k);
-    if(btn){
-      if(k === kind){
-        btn.className = 'px-3.5 py-2 rounded-xl font-extrabold text-xs bg-indigo-600 text-white shadow-sm';
-      } else {
-        btn.className = 'px-3.5 py-2 rounded-xl font-bold text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10 transition';
-      }
-    }
-  });
-
   const ft = cfgCache.footer || {};
-  const t = $('policyPageTitle'), c = $('policyPageBody');
-  if(!t || !c) return;
-  if(kind === 'terms'){
-    t.innerHTML = '<i class="fas fa-shield-halved text-indigo-500 mr-2"></i>Chính sách sử dụng dịch vụ';
-    c.innerHTML = ft.terms ? `<p class="whitespace-pre-line leading-relaxed">${esc(ft.terms)}</p>` : "<p>Quý khách sử dụng dịch vụ VPN vui lòng tuân thủ quy định pháp luật nước sở tại, không sử dụng dịch vụ vào các mục đích vi phạm pháp luật.</p>";
-  } else if(kind === 'disclaimer'){
-    t.innerHTML = '<i class="fas fa-scale-balanced text-indigo-500 mr-2"></i>Miễn trừ trách nhiệm pháp lý';
-    c.innerHTML = ft.disclaimer ? `<p class="whitespace-pre-line leading-relaxed">${esc(ft.disclaimer)}</p>` : "<p>Chúng tôi chỉ cung cấp giải pháp mạng kỹ thuật. Khách hàng chịu toàn bộ trách nhiệm về các hoạt động và nội dung truy cập cá nhân.</p>";
+  if($('policyBodyTerms')) $('policyBodyTerms').innerHTML = ft.terms ? `<p class="whitespace-pre-line leading-relaxed">${esc(ft.terms)}</p>` : "<p>Quý khách sử dụng dịch vụ VPN vui lòng tuân thủ quy định pháp luật nước sở tại, không sử dụng dịch vụ vào các mục đích vi phạm pháp luật.</p>";
+  if($('policyBodyDisclaimer')) $('policyBodyDisclaimer').innerHTML = ft.disclaimer ? `<p class="whitespace-pre-line leading-relaxed">${esc(ft.disclaimer)}</p>` : "<p>Chúng tôi chỉ cung cấp giải pháp mạng kỹ thuật. Khách hàng chịu toàn bộ trách nhiệm về các hoạt động và nội dung truy cập cá nhân.</p>";
+  if($('policyBodyRefund')) $('policyBodyRefund').innerHTML = ft.refund ? `<p class="whitespace-pre-line leading-relaxed">${esc(ft.refund)}</p>` : "<p>Website không áp dụng chính sách hoàn tiền cho các đơn hàng đã thanh toán và kích hoạt thành công. Quý khách vui lòng lưu ý và cân nhắc trước khi thanh toán.</p>";
+
+  if(targetSection){
+    const targetId = targetSection.startsWith('policy-') ? targetSection : `policy-${targetSection}`;
+    setTimeout(() => scrollToPolicySection(targetId), 60);
   } else {
-    t.innerHTML = '<i class="fas fa-hand-holding-dollar text-indigo-500 mr-2"></i>Quy định hoàn tiền';
-    c.innerHTML = ft.refund ? `<p class="whitespace-pre-line leading-relaxed">${esc(ft.refund)}</p>` : "<p>Website không áp dụng chính sách hoàn tiền cho các đơn hàng đã thanh toán và kích hoạt thành công. Quý khách vui lòng lưu ý và cân nhắc trước khi thanh toán.</p>";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function switchPortalTab(tabId, fromUpgrade=false, skipPush=false){
@@ -2452,12 +2487,15 @@ function setupAppRoutes(){
   });
 }
 
-window.onload = async function(){
+ window.onload = async function(){
  paintLangButtons('vi');
  changeLanguage('vi');
  renderDock();
 
  try{const fc=JSON.parse(localStorage.getItem('vpn_footer_cache')||'null');if(fc){cfgCache.footer=fc;renderDynamicFooter(fc);}}catch(e){}
+
+ const curPath = window.location.pathname;
+ const isPolicyOrGuide = curPath.startsWith('/policy') || curPath.startsWith('/portal/guide') || curPath.startsWith(appRoutes.policy) || curPath.startsWith(appRoutes.guide);
 
  let s = null, cachedOrd = null;
  try { s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){}
@@ -2467,7 +2505,14 @@ window.onload = async function(){
  if (hasValidSession) {
   $('loginInput').value = s.id;
   if (cachedOrd && cachedOrd.id) {
-   enterPortal(cachedOrd, true);
+   if (!isPolicyOrGuide) {
+    enterPortal(cachedOrd, true);
+   } else {
+    oCache = cachedOrd;
+    document.documentElement.classList.add('has-user-session');
+    $('userMenu')?.classList.remove('hidden');
+    $('userMenuMobile')?.classList.remove('hidden');
+   }
   }
  } else if (s) {
   localStorage.removeItem(SESSION_KEY);
@@ -2475,8 +2520,8 @@ window.onload = async function(){
  }
 
  const tasks = [loadConfig()];
- if (hasValidSession) {
-  tasks.push(cachedOrd ? refreshOrder() : login(true));
+ if (hasValidSession && cachedOrd) {
+  tasks.push(refreshOrder());
  }
  await Promise.all(tasks);
 
