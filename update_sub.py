@@ -1098,7 +1098,7 @@ def build_yaml(proxy_list: list, mode: str) -> str:
         parsed = yaml.safe_load(result)
         pnames = {p["name"] for p in parsed.get("proxies", [])}
         gnames = {g["name"] for g in parsed.get("proxy-groups", [])}
-        all_n  = pnames | gnames
+        all_n  = pnames | gnames | {"DIRECT", "REJECT", "GLOBAL"}
         errs   = [ref for g in parsed.get("proxy-groups",[]) for ref in g.get("proxies",[]) if ref not in all_n]
         if errs:  print(f"  [WARN] YAML verify errors: {errs[:3]}")
         else:     print(f"  [OK] YAML ✅ ({len(pnames)} proxies, {len(gnames)} groups)")
