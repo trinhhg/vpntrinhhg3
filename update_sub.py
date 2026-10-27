@@ -108,22 +108,38 @@ dns:
   use-hosts: true
   use-system-hosts: false
   respect-rules: true
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  proxy-server-nameserver:
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
+    - 223.5.5.5
+    - 119.29.29.29
+  direct-nameserver:
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+    - 223.5.5.5
+    - 119.29.29.29
   nameserver:
-    - "https://dns.cloudflare.com/dns-query#VPN Trinh Hg"
-    - "https://dns.google/dns-query#VPN Trinh Hg"
-  fallback: null
+    - https://dns.cloudflare.com/dns-query
+    - https://dns.google/dns-query
+    - 1.1.1.1
+    - 8.8.8.8
+  fallback:
+    - 1.1.1.1
+    - 8.8.8.8
   fallback-filter:
     geoip: true
     geoip-code: "CN"
-    ipcidr: []
-    domain: null
-    geosite: []
-  fallback-lazy-query: false
-  listen: ""
-  listen-routing-mark: 0
-  enhanced-mode: "fake-ip"
-  fake-ip-range: "198.18.0.1/16"
-  fake-ip-range6: ""
+    ipcidr:
+      - 240.0.0.0/4
+    domain:
+      - "+.google.com"
+      - "+.facebook.com"
+      - "+.youtube.com"
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
   fake-ip-filter:
     - "*.lan"
     - "*.local"
@@ -149,110 +165,28 @@ dns:
     - "lens.l.google.com"
     - "captive.apple.com"
     - "connectivitycheck.gstatic.com"
-  fake-ip-filter-mode: "blacklist"
+  fake-ip-filter-mode: blacklist
   fake-ip-ttl: 1
-  default-nameserver:
-    - "223.5.5.5"
-    - "119.29.29.29"
-  cache-algorithm: "arc"
-  cache-max-size: 0
-  nameserver-policy:
-    'rule-set:category-ads-all,awavenue-ads': "rcode://success"
-    'rule-set:cn':
-      - "https://doh.pub/dns-query"
-      - "https://dns.alidns.com/dns-query"
-  proxy-server-nameserver:
-    - "https://dns.alidns.com/dns-query"
-    - "https://doh.pub/dns-query"
-  direct-nameserver:
-    - "https://doh.pub/dns-query"
-    - "https://dns.alidns.com/dns-query"
-  direct-nameserver-follow-policy: false"""
-
-KITTY_RULE_PROVIDERS = """\
-rule-providers:
-  apple-cn:
-    behavior: "domain"
-    format: "mrs"
-    interval: 86400
-    path: "./ruleset/kitty/apple-cn.mrs"
-    type: "http"
-    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/apple-cn.mrs"
-  awavenue-ads:
-    behavior: "domain"
-    format: "mrs"
-    interval: 86400
-    path: "./ruleset/kitty/awavenue-ads.mrs"
-    type: "http"
-    url: "https://cdn.jsdelivr.net/gh/TG-Twilight/AWAvenue-Ads-Rule@main/Filters/AWAvenue-Ads-Rule-Clash.mrs"
-  category-ads-all:
-    behavior: "domain"
-    format: "mrs"
-    interval: 86400
-    path: "./ruleset/kitty/category-ads-all.mrs"
-    type: "http"
-    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/category-ads-all.mrs"
-  cn:
-    behavior: "domain"
-    format: "mrs"
-    interval: 86400
-    path: "./ruleset/kitty/cn.mrs"
-    type: "http"
-    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/cn.mrs"
-  cn-ip:
-    behavior: "ipcidr"
-    format: "mrs"
-    interval: 86400
-    path: "./ruleset/kitty/cn-ip.mrs"
-    type: "http"
-    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geoip/cn.mrs"
-  google:
-    behavior: "domain"
-    format: "mrs"
-    interval: 86400
-    path: "./ruleset/kitty/google.mrs"
-    type: "http"
-    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/google.mrs"
-  microsoft@cn:
-    behavior: "domain"
-    format: "mrs"
-    interval: 86400
-    path: "./ruleset/kitty/microsoft-cn.mrs"
-    type: "http"
-    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/microsoft@cn.mrs"
-  overseas-ai:
-    behavior: "classical"
-    format: "text"
-    interval: 86400
-    path: "./ruleset/kitty/overseas-ai.list"
-    type: "http"
-    url: "https://raw.githubusercontent.com/viewer12/OverseasAI.list/main/rule/Clash/OverseasAI/OverseasAI.list"
-  private:
-    behavior: "domain"
-    format: "mrs"
-    interval: 86400
-    path: "./ruleset/kitty/private.mrs"
-    type: "http"
-    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/private.mrs"
-  steam@cn:
-    behavior: "domain"
-    format: "mrs"
-    interval: 86400
-    path: "./ruleset/kitty/steam-cn.mrs"
-    type: "http"
-    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/steam@cn.mrs"
-  tiktok:
-    behavior: "domain"
-    format: "mrs"
-    interval: 86400
-    path: "./ruleset/kitty/tiktok.mrs"
-    type: "http"
-    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/tiktok.mrs"
-"""
+  cache-algorithm: arc
+  cache-max-size: 0"""
 
 KITTY_RULES = [
+    # 1. Domain nguồn & node của Kitty (kết nối trực tiếp, không bị vòng lặp)
     "DOMAIN,m1.tohno-1.top,DIRECT",
-    "RULE-SET,private,DIRECT",
+    "DOMAIN-SUFFIX,tohno-1.top,DIRECT",
+    "DOMAIN-SUFFIX,oh-node.com,DIRECT",
+    "DOMAIN-SUFFIX,hoyoverse.com,DIRECT",
+    "DOMAIN-SUFFIX,setel.com,DIRECT",
+    "DOMAIN-SUFFIX,capcom.co.jp,DIRECT",
+    "DOMAIN-SUFFIX,bandainamcoent.co.jp,DIRECT",
+    "DOMAIN-SUFFIX,coway.com,DIRECT",
+    "DOMAIN-SUFFIX,philips.com,DIRECT",
+    "DOMAIN-SUFFIX,bp.com,DIRECT",
+    "DOMAIN-SUFFIX,siemens.com,DIRECT",
+    "DOMAIN-SUFFIX,asus.com,DIRECT",
+    "DOMAIN-SUFFIX,hsbc.com.hk,DIRECT",
+    "DOMAIN-SUFFIX,susercontent.com,DIRECT",
+    # 2. Mạng nội bộ Private
     "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve",
     "IP-CIDR,10.0.0.0/8,DIRECT,no-resolve",
     "IP-CIDR,172.16.0.0/12,DIRECT,no-resolve",
@@ -262,8 +196,7 @@ KITTY_RULES = [
     "IP-CIDR6,::1/128,DIRECT,no-resolve",
     "IP-CIDR6,fc00::/7,DIRECT,no-resolve",
     "IP-CIDR6,fe80::/10,DIRECT,no-resolve",
-    "RULE-SET,awavenue-ads,REJECT",
-    "RULE-SET,category-ads-all,REJECT",
+    # 3. Chặn quảng cáo & Telemetry (từ awavenue-ads & category-ads-all)
     "DOMAIN-SUFFIX,trace.qq.com,REJECT",
     "DOMAIN-SUFFIX,beacon.qq.com,REJECT",
     "DOMAIN-SUFFIX,report.qq.com,REJECT",
@@ -281,17 +214,106 @@ KITTY_RULES = [
     "DOMAIN-SUFFIX,gdt.qq.com,REJECT",
     "DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT",
     "DOMAIN-SUFFIX,adsmind.gdtimg.com,REJECT",
-    "RULE-SET,overseas-ai,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,admarvel,REJECT",
+    "DOMAIN-KEYWORD,admaster,REJECT",
+    "DOMAIN-KEYWORD,adsage,REJECT",
+    "DOMAIN-KEYWORD,adwords,REJECT",
+    "DOMAIN-SUFFIX,doubleclick.net,REJECT",
+    "DOMAIN-SUFFIX,appsflyer.com,REJECT",
+    # 4. Trọn bộ AI nước ngoài (giải nén từ overseas-ai.list) -> Đi VPN
+    "DOMAIN-SUFFIX,openai.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,chatgpt.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,oaistatic.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,oaiusercontent.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,anthropic.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,claude.ai,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,ai.google.dev,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,generativelanguage.googleapis.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,midjourney.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,poe.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,cursor.sh,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,cursor.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,perplexity.ai,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,sora.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,v0.dev,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,cohere.ai,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,cohere.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,deepseek.com,VPN Trinh Hg",
+    "DOMAIN,api.githubcopilot.com,VPN Trinh Hg",
+    "DOMAIN,api.jetbrains.ai,VPN Trinh Hg",
+    # 5. TikTok & Google (từ tiktok.mrs & google.mrs) -> Đi VPN
+    "DOMAIN-SUFFIX,tiktok.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,tiktokcdn.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,tiktokv.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,byteoversea.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,ibytedtos.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,musical.ly,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,snssdk.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,google.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,youtube.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,googlevideo.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,googleapis.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,gstatic.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,googleusercontent.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,g.co,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,gmail.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,ggpht.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,ytimg.com,VPN Trinh Hg",
     "DOMAIN-SUFFIX,googleapis.cn,VPN Trinh Hg",
     "DOMAIN-SUFFIX,google.cn,VPN Trinh Hg",
     "DOMAIN-SUFFIX,xn--ngstr-lra8j.com,VPN Trinh Hg",
-    "RULE-SET,google,VPN Trinh Hg",
-    "RULE-SET,tiktok,VPN Trinh Hg",
-    "RULE-SET,steam@cn,DIRECT",
-    "RULE-SET,apple-cn,DIRECT",
-    "RULE-SET,microsoft@cn,DIRECT",
-    "RULE-SET,cn,DIRECT",
-    "RULE-SET,cn-ip,DIRECT,no-resolve",
+    # 6. Mạng xã hội & nền tảng quốc tế phổ biến -> Đi VPN
+    "DOMAIN-KEYWORD,facebook,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,fb.me,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,fbcdn.net,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,twitter,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,instagram,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,twimg.com,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,telegram,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,t.me,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,telegra.ph,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,telegram.org,VPN Trinh Hg",
+    "IP-CIDR,91.108.4.0/22,VPN Trinh Hg,no-resolve",
+    "IP-CIDR,91.108.56.0/22,VPN Trinh Hg,no-resolve",
+    "IP-CIDR,149.154.160.0/20,VPN Trinh Hg,no-resolve",
+    "DOMAIN-SUFFIX,netflix.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,netflix.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,nflximg.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,nflxvideo.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,spotify.com,VPN Trinh Hg",
+    # 7. Steam CN, Apple CN, Microsoft CN (từ steam@cn, apple-cn, microsoft@cn) -> Đi DIRECT tải max speed
+    "DOMAIN-SUFFIX,cm.steampowered.com,DIRECT",
+    "DOMAIN-SUFFIX,steamcontent.com,DIRECT",
+    "DOMAIN-SUFFIX,steamstatic.com,DIRECT",
+    "DOMAIN-SUFFIX,steamchina.com,DIRECT",
+    "DOMAIN-SUFFIX,steamserver.net,DIRECT",
+    "DOMAIN-SUFFIX,apple.com,DIRECT",
+    "DOMAIN-SUFFIX,icloud.com,DIRECT",
+    "DOMAIN-SUFFIX,icloud-content.com,DIRECT",
+    "DOMAIN-SUFFIX,aaplimg.com,DIRECT",
+    "DOMAIN-SUFFIX,cdn-apple.com,DIRECT",
+    "DOMAIN-SUFFIX,mzstatic.com,DIRECT",
+    "DOMAIN-SUFFIX,apple-dns.net,DIRECT",
+    "DOMAIN-SUFFIX,microsoft.com,DIRECT",
+    "DOMAIN-SUFFIX,windows.com,DIRECT",
+    "DOMAIN-SUFFIX,windowsupdate.com,DIRECT",
+    "DOMAIN-SUFFIX,msedge.net,DIRECT",
+    "DOMAIN-SUFFIX,office.com,DIRECT",
+    "DOMAIN-SUFFIX,office365.com,DIRECT",
+    "DOMAIN-KEYWORD,officecdn,DIRECT",
+    # 8. Nội địa Trung Quốc & Việt Nam -> Đi DIRECT
+    "DOMAIN-SUFFIX,cn,DIRECT",
+    "DOMAIN-KEYWORD,-cn,DIRECT",
+    "DOMAIN-SUFFIX,126.com,DIRECT",
+    "DOMAIN-SUFFIX,163.com,DIRECT",
+    "DOMAIN-SUFFIX,baidu.com,DIRECT",
+    "DOMAIN-SUFFIX,bilibili.com,DIRECT",
+    "DOMAIN-SUFFIX,qq.com,DIRECT",
+    "DOMAIN-SUFFIX,taobao.com,DIRECT",
+    "DOMAIN-SUFFIX,weibo.com,DIRECT",
+    "DOMAIN-SUFFIX,zhihu.com,DIRECT",
+    "GEOIP,CN,DIRECT",
+    # 9. Chốt chặn tất cả các trang quốc tế còn lại -> Đi VPN
     "MATCH,VPN Trinh Hg"
 ]
 
@@ -802,12 +824,18 @@ def build_singbox_full(proxy_list: list, mode: str) -> str:
     Hỗ trợ 3 mode: 'liangxin', 'djjc', 'combo'
     """
     real_names   = [p["name"] for p in proxy_list]
-    if mode == "combo":
+    m_low = str(mode).lower()
+    if m_low in ("kitty", "single_kt"):
+        active_rules = KITTY_RULES
+    elif m_low in ("combo_liki", "combo_kidj"):
+        base_r = LIANGXIN_RULES if "liki" in m_low else DJJC_RULES
+        active_rules = list(dict.fromkeys(KITTY_RULES + base_r))
+    elif m_low in ("combo", "combo_lidj"):
         active_rules = COMBO_RULES
-    elif mode == "liangxin" or mode is True:
-        active_rules = LIANGXIN_RULES
-    else:
+    elif m_low == "djjc" or m_low == "single_dj":
         active_rules = DJJC_RULES
+    else:
+        active_rules = LIANGXIN_RULES
     proxy_group  = "节点选择"
 
     # ── Outbounds — thứ tự giống hệt file gốc ─────────────────────────────
@@ -1010,16 +1038,13 @@ def group_to_inline(g: dict) -> str:
 
 def build_yaml(proxy_list: list, mode: str) -> str:
     m_low = str(mode).lower()
-    has_rp = False
     
     if m_low in ("kitty", "single_kt"):
         dns_clash = KITTY_DNS_CLASH
         rules_list = KITTY_RULES
-        has_rp = True
     elif m_low in ("combo_liki", "combo_kidj"):
         dns_clash = KITTY_DNS_CLASH
         rules_list = list(dict.fromkeys(KITTY_RULES + (LIANGXIN_RULES if "liki" in m_low else DJJC_RULES)))
-        has_rp = True
     elif m_low in ("combo", "combo_lidj"):
         dns_clash  = COMBO_DNS_CLASH
         rules_list = COMBO_RULES
@@ -1043,14 +1068,18 @@ def build_yaml(proxy_list: list, mode: str) -> str:
     all_names   = [p["name"] for p in all_proxies]
     real_names  = [p["name"] for p in proxy_list]
 
-    if m_low in ("kitty", "single_kt"):
+    if m_low in ("kitty", "single_kt", "combo_liki", "combo_kidj"):
         groups = [
             {"name": "VPN Trinh Hg", "type": "select",
-             "proxies": ["Auto Select", "DIRECT"] + all_names},
+             "proxies": ["Auto Select", "Fallback", "DIRECT"] + all_names},
             {"name": "Auto Select", "type": "url-test",
              "proxies": real_names,
              "url": "http://cp.cloudflare.com/generate_204",
              "interval": 300, "tolerance": 50},
+            {"name": "Fallback", "type": "fallback",
+             "proxies": real_names,
+             "url": "http://cp.cloudflare.com/generate_204",
+             "interval": 7200},
         ]
     else:
         groups = [
@@ -1072,8 +1101,6 @@ def build_yaml(proxy_list: list, mode: str) -> str:
         "external-controller: '127.0.0.1:9090'",
         "unified-delay: true", "tcp-concurrent: true",
     ]
-    if has_rp:
-        lines.append(KITTY_RULE_PROVIDERS)
     lines.append(dns_clash)
     lines.append("proxies:")
     for p in all_proxies:  lines.append(proxy_to_inline(p))
@@ -1165,7 +1192,7 @@ def clean_universal_node(raw_name: str) -> str:
     return f"{s} - VPNTrinhHg"
 # Danh sách từ khóa node rác/quảng cáo cần loại bỏ sạch
 ADS_AND_INFO_KEYWORDS = [
-    "剩余流量", "已用流量", "套餐总量", "距离下次重置", "套餐到期", "认准官网", "官网地址",
+    "剩余流量", "已用流量", "套餐总量", "距离下次重置", "套餐到期", "认准官网", "官网地址", "官网", "kitty.fo",
     "如果现在只能看到", "立即更新教程", "群", "频道", "公告"
 ]
 def is_spam_node(name: str) -> bool:
