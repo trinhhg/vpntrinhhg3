@@ -157,8 +157,8 @@ dns:
   cache-algorithm: "arc"
   cache-max-size: 0
   nameserver-policy:
-    rule-set:category-ads-all,awavenue-ads: "rcode://success"
-    rule-set:cn:
+    'rule-set:category-ads-all,awavenue-ads': "rcode://success"
+    'rule-set:cn':
       - "https://doh.pub/dns-query"
       - "https://dns.alidns.com/dns-query"
   proxy-server-nameserver:
@@ -874,9 +874,7 @@ def build_singbox_full(proxy_list: list, mode: str) -> str:
         "rules": [
             {"outbound": "any",    "server": "direct-dns"},
             {"clash_mode": "Direct", "server": "direct-dns"},
-            {"clash_mode": "Global", "server": "proxy-dns"},
-            {"rule_set": ["geosite-cn"], "server": "direct-dns"},
-            {"rule_set": ["geosite-category-ads-all"], "server": "block-dns"}
+            {"clash_mode": "Global", "server": "proxy-dns"}
         ],
         "final":            "proxy-dns",
         "independent_cache": True
@@ -1069,20 +1067,10 @@ def build_yaml(proxy_list: list, mode: str) -> str:
         ]
 
     lines = [
-        "# profile-update-interval: 1",
-        "# subscription-update-interval: 60",
-        "update-interval: 60",
-        "profile-update-interval: 1",
-        "subscription-update-interval: 60",
         "mixed-port: 7890", "allow-lan: false", "bind-address: '*'",
         "mode: rule", "log-level: info",
         "external-controller: '127.0.0.1:9090'",
         "unified-delay: true", "tcp-concurrent: true",
-        "profile:",
-        "  store-selected: true",
-        "  store-fake-ip: false",
-        "  interval: 60",
-        "  update-interval: 60",
     ]
     if has_rp:
         lines.append(KITTY_RULE_PROVIDERS)
