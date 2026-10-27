@@ -25,6 +25,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc;color:#0f172a
 .toast-item.show{transform:translateX(0);}
 .badge-lx{background:#dcfce7;color:#15803d;font-size:.65rem;font-weight:800;padding:2px 6px;border-radius:4px;}
 .badge-dj{background:#dbeafe;color:#1d4ed8;font-size:.65rem;font-weight:800;padding:2px 6px;border-radius:4px;}
+.badge-kt{background:#fdf2f8;color:#db2777;border:1px solid #fbcfe8;font-size:.65rem;font-weight:800;padding:2px 6px;border-radius:4px;}
 .badge-ot{background:#f3f4f6;color:#475569;font-size:.65rem;font-weight:800;padding:2px 6px;border-radius:4px;}
 .cp{cursor:pointer;transition:color .15s;}.cp:hover{color:#4f46e5;}
 .dot-green,.dot-yellow,.dot-red,.dot-gray{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
@@ -1229,7 +1230,7 @@ const genHex=n=>{const a=new Uint8Array(Math.ceil(n/2));crypto.getRandomValues(a
 const normId=v=>String(v||"").trim().toUpperCase().replace(/[-_.\s]/g,"");
 const isLife=s=>/vĩnh viễn|lifetime|永久/i.test(String(s||""));
 const normSt=s=>s==="paid"?"success":s==="rejected"?"failed":(s||"pending");
-const getT=m=>{try{const u=new URL(m);return u.searchParams.get("OwO")||u.searchParams.get("token")||"";}catch{return "";}};
+const getT=m=>{try{const u=new URL(m);return u.searchParams.get("top")||u.searchParams.get("liki")||u.searchParams.get("lidj")||u.searchParams.get("kidj")||u.searchParams.get("OwO")||u.searchParams.get("token")||u.searchParams.get("oos")||"";}catch{return "";}};
 const trimNum=v=>String(Math.round((Number(v)||0)*100)/100);
 const VND_SEP=",";
 const fmtVnd=n=>String(Math.round(Number(n)||0)).replace(/\B(?=(\d{3})+(?!\d))/g,VND_SEP);
@@ -2254,15 +2255,26 @@ async function approveTransaction(id){
 // 1. Hàm nhận diện nhà mạng (Khai báo dạng function chuẩn để hoist lên đầu phạm vi)
 function detectProvider(u) {
   const s = String(u || "").toLowerCase();
+  if (s.includes("tohno-1.top") || s.includes("oosaka") || s.includes("kitty")) return "kt";
   if (s.includes("liangxin")) return "lx";
   if (s.includes("djjc")) return "dj";
   return "other";
 }
 
-function buildMasked(orig, fresh) {
+function buildMasked(orig, fresh, orig2) {
   const tok = genHex(32);
-  const lx = String(orig || "").toLowerCase().includes("liangxin");
-  return PD + (lx ? "/v1" : "/v2") + "/VPNTrinhHg" + (lx ? "?OwO=" : "?token=") + tok + "#VPNTrinhHg";
+  const p1 = detectProvider(orig);
+  const p2 = orig2 ? detectProvider(orig2) : null;
+  if (p2) {
+    const s = new Set([p1, p2]);
+    if (s.has("lx") && s.has("kt")) return PD + "/v4/VPNTrinhHg?liki=" + tok + "#VPNTrinhHg";
+    if (s.has("lx") && s.has("dj")) return PD + "/v5/VPNTrinhHg?lidj=" + tok + "#VPNTrinhHg";
+    if (s.has("kt") && s.has("dj")) return PD + "/v6/VPNTrinhHg?kidj=" + tok + "#VPNTrinhHg";
+    return PD + "/v5/VPNTrinhHg?lidj=" + tok + "#VPNTrinhHg";
+  }
+  if (p1 === "kt") return PD + "/v3/VPNTrinhHg?top=" + tok + "#VPNTrinhHg";
+  if (p1 === "dj") return PD + "/v2/VPNTrinhHg?token=" + tok + "#VPNTrinhHg";
+  return PD + "/v1/VPNTrinhHg?OwO=" + tok + "#VPNTrinhHg";
 }
 
 // Hàm mở Modal Sửa Nguồn Cấp Cụm (Cây bút chì sửa cụm link)
@@ -2346,13 +2358,18 @@ function renderLinks(){
   clusterIndex++;
   const idxId = clusterIndex;
   
-  // Tên nhà mạng: Link Trộn chỉ dùng một chấm tròn màu tím + chữ gọn "Liangxin + DJJC"
   let networkBadge = "";
   if (g.isCombo) {
-    networkBadge = `<span class="inline-flex items-center gap-1.5 text-xs font-black text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200"><span class="w-2.5 h-2.5 rounded-full bg-purple-600 shrink-0"></span>Liangxin + DJJC</span>`;
+    const p1 = detectProvider(g.orig), p2 = detectProvider(g.orig2);
+    const s = new Set([p1, p2]);
+    let cLabel = "Combo Trộn";
+    if (s.has("lx") && s.has("kt")) cLabel = "Liangxin + Kitty (v4)";
+    else if (s.has("lx") && s.has("dj")) cLabel = "Liangxin + DJJC (v5)";
+    else if (s.has("kt") && s.has("dj")) cLabel = "Kitty + DJJC (v6)";
+    networkBadge = `<span class="inline-flex items-center gap-1.5 text-xs font-black text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200"><span class="w-2.5 h-2.5 rounded-full bg-purple-600 shrink-0"></span>${cLabel}</span>`;
   } else {
-    const lx = g.orig.includes("liangxin"), dj = g.orig.includes("djjc");
-    networkBadge = lx ? `<span class="badge-lx">Liangxin</span>` : dj ? `<span class="badge-dj">DJJC</span>` : `<span class="badge-ot">Other</span>`;
+    const p = detectProvider(g.orig);
+    networkBadge = p === "kt" ? `<span class="badge-kt">Kitty</span>` : (p === "lx" ? `<span class="badge-lx">Liangxin</span>` : (p === "dj" ? `<span class="badge-dj">DJJC</span>` : `<span class="badge-ot">Other</span>`));
   }
 
   // Lấy thông số từ LINK_POOL
@@ -2582,7 +2599,7 @@ async function createLink(){
  }
 
  const masked = isCombo 
-   ? (PD + "/v1/VPNTrinhHg?OwO=" + genHex(32) + "#VPNTrinhHg")
+   ? buildMasked(finalOrig1, true, finalOrig2)
    : buildMasked(finalOrig1, true);
 
  linksDb.unshift({
@@ -3193,9 +3210,16 @@ function renderDeadSources(){
    if (isLockedNode) {
      netTag = `<span class="bg-slate-200 text-slate-800 font-black px-2.5 py-0.5 rounded-full text-xs border border-slate-300">🔒 Node Kỹ Thuật (Khóa Link Hệ Thống)</span>`;
    } else if (isCombo) {
-     netTag = `<span class="inline-flex items-center gap-1 text-xs font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">Combo Liangxin + DJJC</span>`;
+     const p1 = detectProvider(p.url), p2 = detectProvider(p.url2);
+     const s = new Set([p1, p2]);
+     let cTag = "Combo Trộn";
+     if (s.has("lx") && s.has("kt")) cTag = "Combo Liangxin + Kitty";
+     else if (s.has("lx") && s.has("dj")) cTag = "Combo Liangxin + DJJC";
+     else if (s.has("kt") && s.has("dj")) cTag = "Combo Kitty + DJJC";
+     netTag = `<span class="inline-flex items-center gap-1 text-xs font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">${cTag}</span>`;
    } else {
-     netTag = (p.url.includes("liangxin") ? `<span class="badge-lx">Liangxin</span>` : (p.url.includes("djjc") ? `<span class="badge-dj">DJJC</span>` : `<span class="badge-ot">Other</span>`));
+     const pr = detectProvider(p.url);
+     netTag = pr === "kt" ? `<span class="badge-kt">Kitty</span>` : (pr === "lx" ? `<span class="badge-lx">Liangxin</span>` : (pr === "dj" ? `<span class="badge-dj">DJJC</span>` : `<span class="badge-ot">Other</span>`));
    }
 
    let statusBadge = "";
@@ -4695,7 +4719,10 @@ function renderFulfillmentUI() {
           <select id="sel_fulfill_${p.id}" ${isHidden ? 'disabled' : ''} class="w-full p-2 text-xs border border-slate-200 rounded-lg ${isHidden ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-white font-bold text-slate-700 outline-none focus:border-indigo-500'}">
             <option value="single_lx" ${curVal === "single_lx" || !curVal ? "selected" : ""}>Link đơn Liangxin (Mặc định)</option>
             <option value="single_dj" ${curVal === "single_dj" ? "selected" : ""}>Link đơn DJJC</option>
-            <option value="combo" ${curVal === "combo" ? "selected" : ""}>Link Trộn (Combo Liangxin + DJJC)</option>
+            <option value="single_kt" ${curVal === "single_kt" ? "selected" : ""}>Link đơn Kitty (Mới)</option>
+            <option value="combo_lidj" ${curVal === "combo_lidj" || curVal === "combo" ? "selected" : ""}>Link Trộn (Liangxin + DJJC)</option>
+            <option value="combo_liki" ${curVal === "combo_liki" ? "selected" : ""}>Link Trộn (Liangxin + Kitty)</option>
+            <option value="combo_kidj" ${curVal === "combo_kidj" ? "selected" : ""}>Link Trộn (Kitty + DJJC)</option>
           </select>
         </td>
       </tr>
