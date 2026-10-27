@@ -3,7 +3,7 @@ export default {
     const url = new URL(request.url);
 
     // Nếu là Link Sub hoặc API -> Bẻ lái ngầm sang con Worker Test (Nơi chứa Database)
-    if (url.pathname.startsWith("/v1") || url.pathname.startsWith("/v2") || url.pathname.startsWith("/api")) {
+    if (url.pathname.match(/^\/v[1-6]/) || url.pathname.startsWith("/api") || url.pathname.startsWith("/qr")) {
       const workerUrl = new URL(request.url);
       workerUrl.hostname = "vpntrinhhg3worker.lucastanora.workers.dev";
       const newRequest = new Request(workerUrl.toString(), request);
