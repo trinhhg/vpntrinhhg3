@@ -643,12 +643,12 @@ html.dark .loader-ring.amber i{color:#E6C078;}
     </div>
   </div>
 </main>
-<footer id="footerArea" class="bg-white dark:bg-black border-t border-slate-200 dark:border-white/10 pt-8 pb-3 z-10 w-full mt-auto transition-colors duration-300">
+<footer id="footerArea" class="bg-white dark:bg-black border-t border-slate-200 dark:border-white/10 pt-8 pb-4 z-10 w-full mt-auto transition-colors duration-300">
   <div class="max-w-[1400px] mx-auto px-4">
-    <!-- KHỐI 4 CỘT CHÍNH -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-5 md:gap-8 mb-4 pb-5 border-b border-slate-100 dark:border-white/10 text-xs">
+    <!-- KHỐI 5 CỘT TRÊN MÁY TÍNH / 2x2 TRÊN ĐIỆN THOẠI -->
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-5 md:gap-6 mb-4 pb-5 border-b border-slate-100 dark:border-white/10 text-xs">
       <!-- CỘT 1: THƯƠNG HIỆU -->
-      <div class="col-span-2 md:col-span-1 space-y-2.5">
+      <div class="col-span-2 lg:col-span-1 space-y-2.5">
         <div class="font-extrabold text-lg text-indigo-700 dark:text-indigo-400">VPN Trinh Hg</div>
         <p class="text-slate-500 dark:text-slate-400 leading-relaxed">Chặn thì vượt. Lướt mượt như gió. Hệ thống hạ tầng VPN tự động hóa 100%, bảo mật &amp; ẩn danh tuyệt đối.</p>
         <div class="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
@@ -657,30 +657,24 @@ html.dark .loader-ring.amber i{color:#E6C078;}
         </div>
       </div>
 
-      <!-- CÁC CỘT LIÊN KẾT: 100% do Admin cấu hình, không có mặc định -->
+      <!-- 4 CỘT TIẾP THEO (DỊCH VỤ, HƯỚNG DẪN, PHÁP LÝ, WEB DỰ PHÒNG) -->
       <div id="footerDynCols" class="contents"></div>
     </div>
 
-    <!-- HÀNG TIỆN ÍCH DƯỚI: WEB DỰ PHÒNG & 4 NÚT HỖ TRỢ (CÂN XỨNG TUYỆT ĐỐI) -->
-    <div class="flex flex-col lg:flex-row justify-between items-center gap-3 py-3 border-b border-slate-100 dark:border-white/10 mb-2.5">
-      <div class="flex items-center justify-center lg:justify-start gap-2 flex-wrap text-xs w-full lg:w-auto" id="footerBackupsContainer">
-        <span class="font-extrabold text-slate-500 dark:text-slate-400"><i class="fas fa-globe mr-1"></i>Web dự phòng:</span>
-        <a href="https://vpntrinhhg.pages.dev" target="_blank" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 font-bold hover:bg-indigo-50">Web 1</a>
-        <a href="https://vpntrinhhg2.pages.dev" target="_blank" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 font-bold hover:bg-indigo-50">Web 2</a>
-        <a href="https://vpntrinhhg3.pages.dev" target="_blank" class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 font-bold hover:bg-indigo-50">Web 3</a>
-      </div>
-      <!-- 4 nút hỗ trợ: Mobile dàn thành lưới 2x2 vuông vắn cân xứng 50% mỗi nút -->
-      <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full lg:w-auto">
+    <!-- HÀNG TIỆN ÍCH DƯỚI: 4 NÚT HỖ TRỢ BÊN TRÁI & COPYRIGHT BÊN PHẢI -->
+    <div class="flex flex-col md:flex-row justify-between items-center gap-3 py-2">
+      <div class="hidden" id="footerBackupsContainer"></div>
+      <!-- 4 nút hỗ trợ: Mobile dàn thành lưới 2x2, máy tính căn lề trái -->
+      <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full md:w-auto">
         <a href="https://zalo.me/0917678211" target="_blank" class="bg-[#0068ff]/10 text-[#0068ff] dark:bg-[#0068ff]/20 dark:text-[#66a3ff] px-3 py-2 rounded-xl font-bold text-xs hover:bg-[#0068ff]/20 transition flex items-center justify-center gap-1.5"><i class="fas fa-phone text-xs"></i><span>Zalo Support</span></a>
         <a href="https://www.facebook.com/trinh.hg.57" target="_blank" class="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 px-3 py-2 rounded-xl font-bold text-xs hover:bg-blue-100 transition flex items-center justify-center gap-1.5"><i class="fab fa-facebook-messenger text-xs"></i><span>Mess Support</span></a>
         <button type="button" onclick="openWechatModal()" class="bg-green-50 text-[#07C160] dark:bg-green-900/30 dark:text-[#20d877] px-3 py-2 rounded-xl font-bold text-xs hover:bg-green-100 transition flex items-center justify-center gap-1.5"><i class="fab fa-weixin text-xs"></i><span>WeChat</span></button>
         <a href="https://t.me/hoaian57" target="_blank" class="bg-sky-50 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400 px-3 py-2 rounded-xl font-bold text-xs hover:bg-sky-100 transition flex items-center justify-center gap-1.5"><i class="fab fa-telegram-plane text-xs"></i><span>Telegram</span></a>
       </div>
-    </div>
-
-    <!-- DÒNG ĐÁY COPYRIGHT GỌN GÀNG LIỀN MẠCH -->
-    <div class="text-center text-[11px] md:text-xs font-semibold text-slate-400 dark:text-slate-500 pt-0.5 pb-0 leading-tight">
-      © 2026 VPN Trinh Hg. All rights reserved.
+      <!-- Dòng copyright cùng 1 hàng bên phải trên máy tính, căn giữa trên điện thoại -->
+      <div class="text-center md:text-right text-[11px] md:text-xs font-semibold text-slate-400 dark:text-slate-500 shrink-0">
+        © 2026 VPN Trinh Hg. All rights reserved.
+      </div>
     </div>
   </div>
 </footer>
@@ -1194,7 +1188,7 @@ function renderGuideCategories() {
     const arts = [...guideArts(tab.id)].sort((a, b) => (b.updated || 0) - (a.updated || 0));
     if (!arts.length) return;
     
-    html += `<div class="mb-8 last:mb-0">
+    html += `<div class="mb-8 last:mb-0 scroll-mt-24" id="guide-cat-${esc(tab.id)}">
       <h3 class="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
         ${tab.img ? `<img src="${esc(safeUrl(tab.img))}" class="w-5 h-5 rounded object-contain">` : `<i class="${esc(tab.ic || 'fas fa-book')} ${esc(tab.col || 'text-indigo-500')}"></i>`}
         ${esc(tab.name)}
@@ -1472,14 +1466,31 @@ function footerColsOf(ft){
   if(Array.isArray(ft.columns)) return ft.columns;
   return [['Dịch vụ',ft.services],['Hướng dẫn',ft.guides],['Pháp lý',ft.legal]].filter(x=>Array.isArray(x[1])&&x[1].length).map(x=>({title:x[0],links:x[1]}));
 }
+function toRelativeAppUrl(rawUrl){
+  if(!rawUrl) return '';
+  try {
+    if(/^https?:\/\//i.test(rawUrl)){
+      const p = new URL(rawUrl);
+      if(p.hostname === location.hostname || p.hostname.includes('pages.dev') || p.hostname.includes('vpntrinhhg')){
+        return p.pathname + p.search + p.hash;
+      }
+      return rawUrl;
+    }
+    return rawUrl;
+  } catch(e){
+    return rawUrl;
+  }
+}
+
 function footerLinkClick(e,a){
-  const u=a.getAttribute('data-u')||'';
+  const raw=a.getAttribute('data-u')||'';
+  const u = toRelativeAppUrl(raw);
   if(/^https?:\/\//i.test(u)) return true;
   e.preventDefault();
   if(u.startsWith('modal:')){showPolicyPage(u.slice(6));return false;}
   if(u.startsWith('/policy') || u.startsWith(appRoutes.policy)){
     const parts = u.split('/').filter(Boolean);
-    const section = parts.length > 1 ? parts[parts.length - 1] : 'terms';
+    const section = parts.length > 1 ? parts[parts.length - 1] : '';
     showPolicyPage(section);
     return false;
   }
@@ -1487,10 +1498,24 @@ function footerLinkClick(e,a){
   if(u==='#portal/order'||u===appRoutes.order||u==='/portal/order'){switchPortalTab('p-home');return false;}
   if(u==='#portal/guide'||u===appRoutes.guide||u==='/portal/guide'){switchPortalTab('p-guide');return false;}
   if(u.startsWith('/portal/guide/')||u.startsWith(appRoutes.guide+'/')){
-    const segs = u.split('/').filter(Boolean);
+    const clean = u.split('?')[0].split('#')[0];
+    const segs = clean.split('/').filter(Boolean);
     const cat = segs[2] || 'android', sl = segs[3] || '';
     switchPortalTab('p-guide', false, true);
-    if(sl) openGuideArticle(cat, sl); else showGuide(cat);
+    if(sl){
+      openGuideArticle(cat, sl);
+    } else {
+      const arts = guideArts(cat);
+      if(arts.length === 1){
+        openGuideArticle(cat, arts[0].slug || toSlug(arts[0].name));
+      } else {
+        showGuide(cat);
+        setTimeout(()=>{
+          const targetEl = document.getElementById(`guide-cat-${cat}`);
+          if(targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    }
     return false;
   }
   if(u.startsWith('/')){router.navigate(u);return false;}
@@ -1503,8 +1528,8 @@ function renderDynamicFooter(ft){
   if(wrap){
     let colsHtml = footerColsOf(ft).filter(c=>c&&Array.isArray(c.links)&&c.links.length).map(c=>
       `<div class="space-y-2"><div class="font-extrabold text-sm text-slate-800 dark:text-white uppercase tracking-wider">${esc(c.title||'')}</div><ul class="space-y-1.5 text-slate-600 dark:text-slate-300 font-medium">${c.links.map(l=>{
-        const u=String(l.url||''), ext=/^https?:\/\//i.test(u);
-        return `<li><a href="${ext?esc(u):'#'}" ${ext?'target="_blank" rel="noopener"':''} data-u="${esc(u)}" onclick="return footerLinkClick(event,this)" class="hover:text-indigo-600 transition flex items-center gap-1.5 text-left"><span>›</span> ${esc(l.title||'')}</a></li>`;
+        const raw=String(l.url||''), rel=toRelativeAppUrl(raw), ext=/^https?:\/\//i.test(rel);
+        return `<li><a href="${ext?esc(rel):'#'}" ${ext?'target="_blank" rel="noopener"':''} data-u="${esc(raw)}" onclick="return footerLinkClick(event,this)" class="hover:text-indigo-600 transition flex items-center gap-1.5 text-left"><span>›</span> ${esc(l.title||'')}</a></li>`;
       }).join('')}</ul></div>`).join('');
 
     // Đưa danh sách Web dự phòng thành cột danh mục liên kết thứ 4 trong footer
@@ -2519,14 +2544,14 @@ function setupAppRoutes(){
   document.documentElement.classList.remove('has-user-session');
  }
 
+ setupAppRoutes();
+ router.resolve();
+
  const tasks = [loadConfig()];
  if (hasValidSession && cachedOrd) {
   tasks.push(refreshOrder());
  }
  await Promise.all(tasks);
-
- setupAppRoutes();
- router.resolve();
 
  const f = $('footerArea');
  if (f) obs.observe(f);
