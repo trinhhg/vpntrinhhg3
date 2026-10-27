@@ -13,9 +13,8 @@ API_LINKS      = f"{WORKER_DOMAIN}/api/links"
 API_BATCH_PUSH = f"{WORKER_DOMAIN}/api/push_data_batch"
 
 INFO_NODES = [
-    "🇻🇳 Mua hàng tại website",
     "🌐 Website: vpntrinhhg.pages.dev",
-    "📞 Hoặc Zalo: 0917678211",
+    "📞 Zalo hỗ trợ: 0917678211",
 ]
 INFO_SKIP_KW = ["剩余流量", "距离下次重置", "套餐到期", "官网", "kitty.fo"]
 INFO_VLESS_PREFIX = "vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1?type=tcp#"
@@ -1068,7 +1067,16 @@ def build_yaml(proxy_list: list, mode: str) -> str:
     all_names   = [p["name"] for p in all_proxies]
     real_names  = [p["name"] for p in proxy_list]
 
-    if m_low in ("kitty", "single_kt", "combo_liki", "combo_kidj"):
+    if m_low in ("kitty", "single_kt"):
+        groups = [
+            {"name": "VPN Trinh Hg", "type": "select",
+             "proxies": ["Auto Select", "DIRECT"] + all_names},
+            {"name": "Auto Select", "type": "url-test",
+             "proxies": real_names,
+             "url": "http://cp.cloudflare.com/generate_204",
+             "interval": 300, "tolerance": 50},
+        ]
+    elif m_low in ("combo_liki", "combo_kidj"):
         groups = [
             {"name": "VPN Trinh Hg", "type": "select",
              "proxies": ["Auto Select", "Fallback", "DIRECT"] + all_names},
