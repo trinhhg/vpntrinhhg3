@@ -247,7 +247,8 @@ rule-providers:
     interval: 86400
     path: "./ruleset/kitty/tiktok.mrs"
     type: "http"
-    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/tiktok.mrs\""""
+    url: "https://cdn.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@meta/geo/geosite/tiktok.mrs"
+"""
 
 KITTY_RULES = [
     "DOMAIN,m1.tohno-1.top,DIRECT",
