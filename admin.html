@@ -522,9 +522,8 @@ textarea.autog{resize:none;overflow:hidden;}
     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
      <div class="bg-slate-50 p-2 border-b border-slate-200 flex gap-1.5 flex-wrap items-center sticky top-0 z-20" id="cmsAddBtns"></div>
      <div class="flex relative bg-white border-t border-slate-100 min-h-[300px]">
-      <div id="cmsLineGutter" class="select-none py-4 px-2 bg-slate-900 border-r border-slate-800 text-slate-400 font-mono text-xs text-right min-w-[50px] overflow-hidden"></div>
       <div class="flex-1 flex flex-col relative min-w-0">
-        <div id="cmsWordEditor" contenteditable="true" oninput="onWordEditorInput()" onscroll="$('cmsLineGutter').scrollTop=this.scrollTop" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='s'){event.preventDefault();saveCms();}" class="word-editor p-4 bg-white flex-1 outline-none leading-relaxed min-h-[260px]"></div>
+        <div id="cmsWordEditor" contenteditable="true" oninput="onWordEditorInput()" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='s'){event.preventDefault();saveCms();}" class="word-editor p-4 bg-white flex-1 outline-none leading-relaxed min-h-[260px]"></div>
         <div class="p-4 border-t border-slate-100 bg-slate-50/80">
           <button type="button" onclick="saveCms()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md text-sm transition active:scale-[0.99] flex items-center justify-center gap-2">
             <i class="fas fa-save text-base"></i>LƯU BÀI VIẾT (Cục bộ web này)
@@ -3571,28 +3570,9 @@ function wInsertHtml(html){
  saveWordSelection();
  onWordEditorInput();
 }
-function syncCmsLines(){
-  const ed=$("cmsWordEditor"), gut=$("cmsLineGutter");
-  if(!ed||!gut)return;
-  let h="", n=1;
-  const kids=[...ed.children];
-  const padT=parseFloat(getComputedStyle(ed).paddingTop)||16;
-  const edRect=ed.getBoundingClientRect();
-  if(!kids.length){
-   h=`<div style="position:absolute;right:8px;top:${padT}px;height:24px;line-height:24px;font-weight:700;">1</div>`;
-  }else kids.forEach(el=>{
-   const elRect=el.getBoundingClientRect();
-   const top=(elRect.top - edRect.top) + ed.scrollTop;
-   h+=`<div style="position:absolute;right:8px;top:${top}px;height:24px;line-height:24px;font-weight:700;">${n++}</div>`;
-  });
-  gut.innerHTML=`<div style="position:relative;height:${Math.max(ed.scrollHeight, 260)}px;">${h}</div>`;
-  gut.scrollTop=ed.scrollTop;
-}
-
 function onWordEditorInput(){
  const ed=$("cmsWordEditor");
  if(ed)curArtHtml=ed.innerHTML;
- syncCmsLines();
  cmsPrev();
 }
 function buildRichArticleView(rawHtml, showToc, gid){
@@ -3881,8 +3861,6 @@ function renderCmsEditor(){
   ed.innerHTML=curArtHtml;
   ed.onmouseup=saveWordSelection;
   ed.onkeyup=saveWordSelection;
-  setTimeout(syncCmsLines,30);
-  if(!ed._ln){ed._ln=1;ed.addEventListener("load",syncCmsLines,true);if(window.ResizeObserver)new ResizeObserver(syncCmsLines).observe(ed);}
  }
  cmsPrev();
 }
