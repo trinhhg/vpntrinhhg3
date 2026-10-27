@@ -1252,6 +1252,7 @@ function parseAny(v){
 function fmtBank(v){const t=parseAny(v);if(!t)return v?String(v):"—";const p=new Intl.DateTimeFormat("en-GB",{timeZone:TZN(),day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date(t));const g=k=>p.find(x=>x.type===k).value;return `${g("day")}/${g("month")}/${g("year")} ${g("hour")}:${g("minute")}`;}
 const oTs=o=>Number(o.createdTs)||parseAny(o.date);
 const dmyOf=ts=>{const d=new Date(ts+off()*36e5);return `${String(d.getUTCDate()).padStart(2,"0")}/${String(d.getUTCMonth()+1).padStart(2,"0")}/${d.getUTCFullYear()}`;};
+const parseDmy=s=>{const m=String(s||"").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?Date.UTC(+m[3],m[2]-1,+m[1])-off()*36e5:0;};
 const expEnd=e=>{const m=String(e||"").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?Date.UTC(+m[3],m[2]-1,+m[1],23,59,59)-off()*36e5:0;};
 function monthInfo(ts){if(!ts)return{key:"000000",label:"Không rõ tháng"};const d=new Date(ts+off()*36e5);return{key:d.getUTCFullYear()+String(d.getUTCMonth()+1).padStart(2,"0"),label:`Tháng ${d.getUTCMonth()+1} năm ${d.getUTCFullYear()}`};}
 const fmtFull=(ms,tz)=>new Intl.DateTimeFormat("vi-VN",{timeZone:tz,hour:"2-digit",minute:"2-digit",second:"2-digit",day:"2-digit",month:"2-digit",year:"numeric",hourCycle:"h23"}).format(new Date(ms));
@@ -1436,16 +1437,16 @@ const ordAmountTxt=o=>{const pay=payOf(o),p=pkgOf(o);if(pay==="Bank")return Numb
 function ordCard(o,ro){
  const now=nowMs(),st=normSt(o.status);let daysLeft=null,expiring=false,expired=false;
  if(st==="success"&&o.expDate&&!isLife(o.expDate)){
-  const e=expEnd(o.expDate); // 23:59:59 của ngày hết hạn
-  if(e){
-   if(now>e){
-    // Đã qua ngày hết hạn (từ 00:00:00 ngày hôm sau) -> Xám ngoét ngay lập tức!
+  const lockTs=parseDmy(o.expDate); // 00:00:00 ngày hết hạn theo chuẩn Worker
+  if(lockTs){
+   if(now>=lockTs){
+    // Chạm 00:00:00 ngày hết hạn -> Khóa link & đổi sang ĐÃ HẾT HẠN (xám ngoét)
     expired=true;
     daysLeft=-1;
    }else{
-    // Trong ngày hết hạn -> Vẫn hiện bình thường (còn 0n), chưa bị xám ngoét
+    // Đang trong hạn: đếm lùi số ngày nguyên còn lại (mua hôm nay 27/10 gói 30 ngày -> còn 29n)
     expired=false;
-    daysLeft=Math.max(0,Math.ceil((e-now)/864e5));
+    daysLeft=Math.floor((lockTs-now)/864e5);
     expiring=daysLeft<=3;
    }
   }
@@ -1947,7 +1948,7 @@ function mailRender(tpl,v,PDx){
   if(b.t==="spacer")return `<div style="height:${Math.max(4,Math.min(200,parseInt(b.h)||16))}px"></div>`;
   return "";}).join("");
  return mailShell(tpl.c1,tpl.c2,htmlEscape(rp(tpl.title)).replace(/\n/g,"<br>"),inner,tpl.ang,tpl.stop);}
-function orderVars(o,extra){const pk=pkgOf(o),dl=o.expDate&&!isLife(o.expDate)?Math.ceil((expEnd(o.expDate)-nowMs())/864e5):"";
+function orderVars(o,extra){const pk=pkgOf(o),lockTs=parseDmy(o.expDate),dl=o.expDate&&!isLife(o.expDate)&&lockTs>nowMs()?Math.floor((lockTs-nowMs())/864e5):"";
  return {email:o.email||"",orderId:o.id||"",pkgName:o.pkgName||"",pkg:pk?pkgLabel(o):(o.pkgName||""),exp:o.expDate||"",daysLeft:dl,nickname:o.nickname||"",zalo:o.zalo||"",reason:o.reason||"Vui lòng liên hệ Admin",...(extra||{})};}
 const mailKeyOf=o=>o.orderType==="renew"?"renew":"success";
 const mailSuccess=o=>mailRender(getTpl(mailKeyOf(o)),orderVars(o),PD);
@@ -1957,7 +1958,7 @@ const mailZalo=o=>mailRender(getTpl("support"),orderVars(o),PD);
 const dataVars=(r,gb)=>{const oi=ordersDb.find(o=>normId(o.id)===normId(r.orderId));return {...(oi?orderVars(oi):{email:r.email||"",orderId:r.orderId||"",pkgName:r.pkgName||"",pkg:r.pkgName||"",exp:"",daysLeft:"",nickname:"",zalo:"",reason:""}),email:r.email||"",orderId:r.orderId||"",gb};};
 const mailData=(r,gb)=>mailRender(getTpl("data"),dataVars(r,gb),PD);
 function sendExpMail(id){if(!isMailMaster())return toast("Đang ở chế độ SLAVE Email","err");const o=ordersDb.find(x=>x.id===id);if(!o?.email)return toast("Chưa có email","err");
- const dl=Math.ceil((expEnd(o.expDate)-nowMs())/864e5);const msg=dl<=1?"**ngày mai hết hạn**":`còn **${dl} ngày** (hết hạn **${o.expDate}**)`;
+ const lockTs=parseDmy(o.expDate),dl=lockTs>nowMs()?Math.floor((lockTs-nowMs())/864e5):0;const msg=dl<=1?"**ngày mai hết hạn**":`còn **${dl} ngày** (hết hạn **${o.expDate}**)`;
  sendMailClient(o.email,subjVars(getTpl("exp").subject,orderVars(o,{expText:msg.replace(/\*\*/g,"")})),mailExp(o,msg));logEvent("ok","Gửi mail","Nhắc hết hạn (thủ công) → "+o.email,o.id);toast("Đã gửi mail nhắc hết hạn");}
 function sendZaloMail(id){if(!isMailMaster())return toast("Đang ở chế độ SLAVE Email","err");const o=ordersDb.find(x=>x.id===id);if(!o?.email)return toast("Chưa có email","err");
  sendMailClient(o.email,subjVars(getTpl("support").subject,orderVars(o)),mailZalo(o));logEvent("ok","Gửi mail","Hỗ trợ cài đặt → "+o.email,o.id);toast("Đã gửi mail nhắc hỗ trợ cài đặt");}
