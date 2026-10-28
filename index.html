@@ -18,6 +18,8 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/navigo@8.11.1/lib/navigo.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3.10.0/notyf.min.css">
+<script src="https://cdn.jsdelivr.net/npm/notyf@3.10.0/notyf.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -198,8 +200,19 @@ html.dark .loader-ring.amber i{color:#E6C078;}
 </script>
 </head>
 <body class="min-h-screen flex flex-col w-full overflow-x-hidden bg-slate-50 dark:bg-black text-slate-800 dark:text-slate-200 transition-colors duration-300">
-<!-- LAYER CAO NHẤT (z-[999999]): TOAST POPUP LUÔN NẰM TRÊN MỌI MODAL & QR -->
-<div id="toastContainer" class="fixed top-5 md:top-6 right-5 z-[999999] flex flex-col items-end gap-2 pointer-events-none"></div>
+<!-- HEADER ANNOUNCEMENT DRAWER (THÔNG BÁO KHUYẾN MÃI ĐỈNH WEB) -->
+<div id="headerAnnouncementDrawer" class="hidden fixed top-0 left-0 w-full z-[80] bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white text-xs py-2 px-3 shadow-md transition-all duration-300">
+  <div class="max-w-[1400px] mx-auto flex items-center justify-between gap-3">
+    <div class="flex items-center gap-2 truncate font-bold">
+      <span class="w-2 h-2 rounded-full bg-yellow-300 animate-ping shrink-0"></span>
+      <span id="headerDrawerContentText" class="truncate"></span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <a id="headerDrawerBtnLink" href="#packages" class="bg-white/20 hover:bg-white/30 text-white font-black px-3 py-1 rounded-full text-[10px] md:text-xs transition uppercase whitespace-nowrap">Xem ngay</a>
+      <button type="button" onclick="closeHeaderDrawer()" class="text-white/80 hover:text-white px-1.5 py-0.5"><i class="fas fa-times text-xs"></i></button>
+    </div>
+  </div>
+</div>
 
 <!-- 4 BONG BÓNG HỖ TRỢ: TRÊN MÁY TÍNH GIỮ NGUYÊN 100%, TRÊN ĐIỆN THOẠI THU GỌN THÀNH 1 NÚT FAB SPEED DIAL -->
 <div id="floatingSocials" class="fixed bottom-6 right-4 md:right-6 z-50 transition-all duration-300">
@@ -972,22 +985,9 @@ function renderDock(){
  $('dockMarquee').innerHTML=one+one+one+one;
  setupDockDrag();}
 
-function setupDockDrag(){
- const wrap=$('dockWrapper'),track=$('dockMarquee');if(!wrap||!track)return;
- let dragging=false,startX=0,startScroll=0,curX=0;
- const setX=x=>{track.style.transform=`translateX(${x}px)`;};
- const unitWidth=()=>track.scrollWidth/4;
- const onDown=x=>{dragging=true;wrap.classList.add('dragging');startX=x;const m=/translateX\((-?[\d.]+)px\)/.exec(track.style.transform);curX=m?parseFloat(m[1]):0;startScroll=curX;};
- const onMove=x=>{if(!dragging)return;let nx=startScroll+(x-startX);const uw=unitWidth();if(uw){while(nx<=-uw)nx+=uw;while(nx>0)nx-=uw;}curX=nx;setX(nx);};
- const onUp=()=>{if(!dragging)return;dragging=false;wrap.classList.remove('dragging');track.style.transform='';};
- wrap.addEventListener('mousedown',e=>{onDown(e.clientX);e.preventDefault();});
- window.addEventListener('mousemove',e=>onMove(e.clientX));
- window.addEventListener('mouseup',onUp);
- wrap.addEventListener('touchstart',e=>onDown(e.touches[0].clientX),{passive:true});
- wrap.addEventListener('touchmove',e=>{if(dragging){onMove(e.touches[0].clientX);e.preventDefault();}},{passive:false});
- wrap.addEventListener('touchend',onUp);
- wrap.addEventListener('wheel',e=>{if(Math.abs(e.deltaX)<Math.abs(e.deltaY)&&!e.shiftKey)return;e.preventDefault();wrap.classList.add('dragging');const m=/translateX\((-?[\d.]+)px\)/.exec(track.style.transform);let nx=(m?parseFloat(m[1]):0)-(e.deltaX||e.deltaY);const uw=unitWidth();if(uw){while(nx<=-uw)nx+=uw;while(nx>0)nx-=uw;}setX(nx);
-  clearTimeout(wrap._wheelT);wrap._wheelT=setTimeout(()=>{wrap.classList.remove('dragging');track.style.transform='';},500);},{passive:false});}
+function setupDockDrag() {
+  // Đã chuyển sang CSS Marquee tự nhiên, giải phóng hoàn toàn sự kiện kéo chuột
+}
 
 // ---------- Hướng dẫn cài đặt: Định danh hoàn toàn bằng Slug (xóa sạch tàn dư ID) ----------
 const DEF_TABS=[{id:'android',name:'Android',ic:'fab fa-android',col:'text-green-500'},{id:'windows',name:'Windows',ic:'fab fa-windows',col:'text-blue-500'},{id:'macos',name:'MacOS',ic:'fab fa-apple',col:'text-slate-800'},{id:'ios',name:'iOS',ic:'fab fa-app-store-ios',col:'text-blue-400'}];
@@ -1437,6 +1437,9 @@ async function loadConfig(){
             usd: Number(p.usd) || 0,
             vnd: Number(p.vnd) || 0,
             cny: Number(p.cny) || 0,
+            original_vnd: Number(p.original_vnd) || 0,
+            promo_sticker: p.promo_sticker || '',
+            bonus_days: Number(p.bonus_days) || 0,
             data: p.data || '',
             dev: p.dev || 'unlimited',
             time: p.time !== undefined ? p.time : (p.m === 0 ? 'lifetime' : (p.m || 1)),
@@ -1458,6 +1461,7 @@ async function loadConfig(){
         updateAppRoutes(cfgCache.routes);
       }
       renderDynamicFooter(cfgCache.footer && typeof cfgCache.footer === 'object' ? cfgCache.footer : {});
+      renderHeaderDrawer(cfgCache.headerDrawer || (cfgCache.settings && cfgCache.settings.headerDrawer));
     }
   }catch(e){}
 }
@@ -1482,43 +1486,18 @@ function toRelativeAppUrl(rawUrl){
   }
 }
 
-function footerLinkClick(e,a){
-  const raw=a.getAttribute('data-u')||'';
+function footerLinkClick(e, a) {
+  const raw = a.getAttribute('data-u') || '';
   const u = toRelativeAppUrl(raw);
-  if(/^https?:\/\//i.test(u)) return true;
+  if (/^https?:\/\//i.test(u)) return true;
   e.preventDefault();
-  if(u.startsWith('modal:')){showPolicyPage(u.slice(6));return false;}
-  if(u.startsWith('/policy') || u.startsWith(appRoutes.policy)){
+  if (u.startsWith('modal:')) { showPolicyPage(u.slice(6)); return false; }
+  if (u.startsWith('/policy') || u.startsWith(appRoutes.policy)) {
     const parts = u.split('/').filter(Boolean);
-    const section = parts.length > 1 ? parts[parts.length - 1] : '';
-    showPolicyPage(section);
+    showPolicyPage(parts[1] || 'terms');
     return false;
   }
-  if(u==='#portal/packages'||u==='#packages'||u===appRoutes.packages||u==='/portal/packages'){switchPortalTab('p-store');return false;}
-  if(u==='#portal/order'||u===appRoutes.order||u==='/portal/order'){switchPortalTab('p-home');return false;}
-  if(u==='#portal/guide'||u===appRoutes.guide||u==='/portal/guide'){switchPortalTab('p-guide');return false;}
-  if(u.startsWith('/portal/guide/')||u.startsWith(appRoutes.guide+'/')){
-    const clean = u.split('?')[0].split('#')[0];
-    const segs = clean.split('/').filter(Boolean);
-    const cat = segs[2] || 'android', sl = segs[3] || '';
-    switchPortalTab('p-guide', false, true);
-    if(sl){
-      openGuideArticle(cat, sl);
-    } else {
-      const arts = guideArts(cat);
-      if(arts.length === 1){
-        openGuideArticle(cat, arts[0].slug || toSlug(arts[0].name));
-      } else {
-        showGuide(cat);
-        setTimeout(()=>{
-          const targetEl = document.getElementById(`guide-cat-${cat}`);
-          if(targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
-      }
-    }
-    return false;
-  }
-  if(u.startsWith('/')){router.navigate(u);return false;}
+  router.navigate(u);
   return false;
 }
 function renderDynamicFooter(ft){
@@ -1545,6 +1524,28 @@ function renderDynamicFooter(ft){
   if(bc) bc.style.display='none';
 }
 
+function renderHeaderDrawer(drawerCfg) {
+  const d = $('headerAnnouncementDrawer');
+  if (!d) return;
+  const cfg = drawerCfg || {};
+  if (!cfg.enabled || !cfg.text) {
+    d.classList.add('hidden');
+    $('mainNav').style.top = '0px';
+    return;
+  }
+  $('headerDrawerContentText').textContent = cfg.text;
+  if ($('headerDrawerBtnLink')) $('headerDrawerBtnLink').href = cfg.link || '#packages';
+  d.classList.remove('hidden');
+  const drawerH = d.offsetHeight || 36;
+  $('mainNav').style.top = drawerH + 'px';
+}
+
+function closeHeaderDrawer() {
+  const d = $('headerAnnouncementDrawer');
+  if (d) d.classList.add('hidden');
+  $('mainNav').style.top = '0px';
+}
+
 const isClientTestMode = new URLSearchParams(location.search).get('test') === '1';
 async function wpost(path,body){
   const headers = { 'Content-Type': 'application/json' };
@@ -1558,9 +1559,13 @@ async function wpost(path,body){
   return { ok: r.ok, status: r.status, data: d };
 }async function wpostRetry(path,body,n=3){let last;for(let i=0;i<n;i++){try{last=await wpost(path,body);if(last.ok||last.status<500)return last;}catch(e){last={ok:false,status:0,data:{error:String(e)}};}await new Promise(r=>setTimeout(r,800*(i+1)));}return last;}
 
-function showToast(msg,type='success'){const c=$('toastContainer'),t=document.createElement('div');const bg=type==='error'?'bg-red-500':type==='info'?'bg-blue-500':'bg-green-500';const icon=type==='error'?'fa-times-circle':type==='info'?'fa-info-circle':'fa-check-circle';
- t.className=`${bg} text-white px-4 py-3 rounded-xl shadow-xl flex items-center transform transition-all duration-300 translate-x-full opacity-0 w-fit max-w-[90vw]`;
- t.innerHTML=`<i class="fas ${icon} mr-2 shrink-0"></i><span class="font-bold text-xs md:text-sm">${esc(msg)}</span>`;c.appendChild(t);setTimeout(()=>t.classList.remove('translate-x-full','opacity-0'),10);setTimeout(()=>{t.classList.add('translate-x-full','opacity-0');setTimeout(()=>t.remove(),300);},3000);}
+const notyf = typeof Notyf !== 'undefined' ? new Notyf({ duration: 3200, position: { x: 'right', y: 'top' }, dismissible: true }) : null;
+function showToast(msg, type = 'success') {
+  if (!notyf) { alert(msg); return; }
+  if (type === 'error') notyf.error(msg);
+  else if (type === 'info') notyf.open({ type: 'info', message: msg, background: '#4f46e5', icon: { className: 'fas fa-info-circle', tagName: 'i', color: '#fff' } });
+  else notyf.success(msg);
+}
 
 let indexScrollTimer = null;
 window.addEventListener('scroll',()=>{
@@ -1680,9 +1685,12 @@ function genHTML(pkg){
 
  const isDisabled = isUpgradeMode && pkg.vnd <= baseOrderPriceVnd && !pkg.isCustom;
  const priceStr = (p.price || '').replace('VND','<span class="text-sm md:text-base font-bold ml-0.5">VND</span>');
+ const hasSale = !pkg.isCustom && Number(pkg.original_vnd) > Number(pkg.vnd);
+ const origPriceStr = hasSale ? `<span class="line-through text-slate-400 dark:text-slate-500 font-bold text-sm md:text-base mr-2">${Number(pkg.original_vnd).toLocaleString('en-US')}VND</span>` : '';
+ const promoStickerHtml = pkg.promo_sticker ? `<div class="inline-flex items-center gap-1 bg-gradient-to-r from-rose-500 to-pink-500 text-white font-black text-[10px] md:text-[11px] px-2.5 py-0.5 rounded-full shadow-sm mb-2"><i class="fas fa-gift text-[9px]"></i><span>${esc(pkg.promo_sticker)}</span></div>` : '';
  const priceHTML = pkg.isCustom
    ? `<div class="text-xl font-black text-red-600 dark:text-red-400 dark:drop-shadow-[0_0_8px_rgba(248,113,113,0.8)] mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${priceStr}</div>`
-   : `<div class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_10px_rgba(165,180,252,0.8)] mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${priceStr}</div>`;
+   : `<div class="mb-4 border-b border-slate-100 dark:border-white/10 pb-3 mt-1.5 flex flex-wrap items-baseline">${origPriceStr}<span class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_10px_rgba(165,180,252,0.8)]">${priceStr}</span></div>`;
 
  const btn = isDisabled
    ? `<button disabled class="w-full bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 font-bold py-3 rounded-xl text-sm cursor-not-allowed">Không khả dụng</button>`
@@ -1709,8 +1717,11 @@ function genHTML(pkg){
  <div class="bg-white dark:bg-[#0a0a0a] p-5 md:p-6 rounded-3xl border border-slate-100 dark:border-indigo-500/50 shadow-sm relative flex flex-col justify-between transition-all duration-300 transform hover:-translate-y-2 hover:scale-[1.02] neon-animated-card mt-4 md:mt-0 ${isDisabled ? 'pkg-disabled' : ''}">
    ${tagBadges}
    <div class="${tagBadges ? 'pt-2' : ''}">
-     <h3 class="font-extrabold text-lg md:text-xl dark:text-white mb-0.5">${esc(pkgDisplayName)}</h3>
-     <p class="text-xs font-bold text-slate-500 dark:text-slate-300 mb-3">${esc(displayTime)}</p>
+     <div class="flex items-center justify-between gap-1 flex-wrap">
+       <h3 class="font-extrabold text-lg md:text-xl dark:text-white mb-0.5">${esc(pkgDisplayName)}</h3>
+       ${promoStickerHtml}
+     </div>
+     <p class="text-xs font-bold text-slate-500 dark:text-slate-300 mb-2">${esc(displayTime)}${pkg.bonus_days ? ` <span class="text-rose-500 font-extrabold">(+${pkg.bonus_days} ngày tặng)</span>` : ''}</p>
      ${priceHTML}
      <ul class="text-xs md:text-sm space-y-2.5 mb-6 font-medium text-slate-600 dark:text-white">
        <!-- TÁCH RỜI NHÃN VÀ GIÁ TRỊ THÀNH 2 THẺ ĐỘC LẬP ĐỂ KHÔNG BỊ LỖI BĂM THẺ [[1]] -->
@@ -1924,37 +1935,28 @@ function drawQrCenterLogo(box) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
   const w = canvas.width, h = canvas.height;
-  const bw = 84, bh = 26;
+  const bw = 82, bh = 24;
   const bx = (w - bw) / 2, by = (h - bh) / 2;
-  const radius = 13;
+  const radius = 6; // Bo nhẹ phẳng hiện đại, tuyệt đối không khoét viên thuốc
 
   ctx.save();
-
-  // Đổ bóng mờ nhẹ tạo độ nổi 3D cao cấp
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.22)';
-  ctx.shadowBlur = 6;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 2;
-
-  // Nền trắng tinh khiết bo tròn capsule
+  // Nền trắng phẳng sắc nét
   ctx.fillStyle = '#ffffff';
   ctx.beginPath();
   if (ctx.roundRect) ctx.roundRect(bx, by, bw, bh, radius);
   else ctx.rect(bx, by, bw, bh);
   ctx.fill();
 
-  // Tắt bóng để vẽ viền nổi sắc nét
-  ctx.shadowColor = 'transparent';
+  // Viền tím phẳng sắc nét (không bóng mờ)
   ctx.strokeStyle = '#4f46e5';
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // Render chữ VPNTrinhHg đồng bộ thương hiệu
-  ctx.fillStyle = '#4338ca';
+  // Chữ thương hiệu in đậm rõ ràng
+  ctx.fillStyle = '#312e81';
   ctx.font = '900 11.5px "Plus Jakarta Sans", Arial, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.letterSpacing = '0.4px';
   ctx.fillText('VPNTrinhHg', w / 2, h / 2 + 0.5);
   ctx.restore();
 
@@ -2476,17 +2478,21 @@ function setupAppRoutes(){
       curGuide = cat || 'android';
       curGuideSlug = '';
       enablePortalFrame();
-      document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
+      document.querySelectorAll('.portal-tab-content').forEach(el => el.classList.remove('active'));
       $('p-guide').classList.add('active');
       highlightNavBtns('p-guide');
       showGuide(curGuide);
+      setTimeout(() => {
+        const catEl = document.getElementById(`guide-cat-${curGuide}`);
+        if (catEl) catEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 60);
     });
 
     router.on(`${basePath}/:category/:slug`, async (match) => {
       const cat = match && match.data && match.data.category;
       const sl = match && match.data && match.data.slug;
       enablePortalFrame();
-      document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
+      document.querySelectorAll('.portal-tab-content').forEach(el => el.classList.remove('active'));
       $('p-guide').classList.add('active');
       highlightNavBtns('p-guide');
       await openGuideArticle(cat, decodeURIComponent(sl), true);
@@ -2494,6 +2500,7 @@ function setupAppRoutes(){
   };
   bindGuideRoutes(appRoutes.guide);
   if (appRoutes.guide !== DEFAULT_ROUTES.guide) bindGuideRoutes(DEFAULT_ROUTES.guide);
+  if (!appRoutes.guide.startsWith('/guide')) bindGuideRoutes('/guide');
 
   const bindPolicyRoutes = (basePath) => {
     router.on(basePath, () => {
@@ -2506,8 +2513,10 @@ function setupAppRoutes(){
   };
   bindPolicyRoutes(appRoutes.policy);
   if (appRoutes.policy !== DEFAULT_ROUTES.policy) bindPolicyRoutes(DEFAULT_ROUTES.policy);
+  if (!appRoutes.policy.startsWith('/policy')) bindPolicyRoutes('/policy');
 
   router.notFound(() => {
+    showToast('Nội dung đang cập nhật hoặc liên kết không tồn tại!', 'info');
     router.navigate('/');
   });
 }
