@@ -13,6 +13,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<!-- Bộ 4 CDN chuẩn quốc tế tối ưu admin.html -->
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/plugin/customParseFormat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/plugin/utc.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/plugin/timezone.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 
 <style>
 *{box-sizing:border-box;}
@@ -520,16 +529,14 @@ textarea.autog{resize:none;overflow:hidden;}
    <div id="cmsArtMeta" class="bg-white border border-slate-200 rounded-xl p-3 mb-3 grid grid-cols-1 sm:grid-cols-4 gap-2 items-end"></div>
    <div class="w-full">
     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-     <div class="bg-slate-50 p-2 border-b border-slate-200 flex gap-1.5 flex-wrap items-center sticky top-0 z-20" id="cmsAddBtns"></div>
-     <div class="flex relative bg-white border-t border-slate-100 min-h-[300px]">
-      <div class="flex-1 flex flex-col relative min-w-0">
-        <div id="cmsWordEditor" contenteditable="true" oninput="onWordEditorInput()" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='s'){event.preventDefault();saveCms();}" class="word-editor p-4 bg-white flex-1 outline-none leading-relaxed min-h-[260px]"></div>
-        <div class="p-4 border-t border-slate-100 bg-slate-50/80">
-          <button type="button" onclick="saveCms()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md text-sm transition active:scale-[0.99] flex items-center justify-center gap-2">
-            <i class="fas fa-save text-base"></i>LƯU BÀI VIẾT (Cục bộ web này)
-          </button>
-        </div>
-      </div>
+     <div class="bg-slate-50 p-2.5 border-b border-slate-200 flex justify-between items-center" id="cmsAddBtns"></div>
+     <div class="bg-white min-h-[320px]">
+      <div id="quillEditor" class="text-sm text-slate-800 leading-relaxed min-h-[280px]"></div>
+     </div>
+     <div class="p-3 bg-slate-50/80 border-t border-slate-100">
+      <button type="button" onclick="saveCms()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md text-sm transition active:scale-[0.99] flex items-center justify-center gap-2">
+        <i class="fas fa-save text-base"></i>LƯU BÀI VIẾT (Cục bộ web này)
+      </button>
      </div>
     </div>
    </div>
@@ -1238,24 +1245,65 @@ const cp=t=>{if(!t)return;navigator.clipboard.writeText(t).catch(()=>{});toast("
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function autoGrow(el){if(!el)return;el.style.height="auto";el.style.height=(el.scrollHeight+2)+"px";}
 
-// ---- thời gian: mọi mốc lưu dạng epoch, hiển thị DD/MM/YY HH:MM
-const off=()=>(cmsDb.settings&&cmsDb.settings.tz)==="CN"?8:7;
-const TZN=()=>off()===8?"Asia/Shanghai":"Asia/Ho_Chi_Minh";
-const nowMs=()=>Date.now()+((cmsDb.settings&&cmsDb.settings.simMode)?Number(cmsDb.settings.simOffset)||0:0);
-function parseAny(v){
- if(typeof v==="number")return v;const s=String(v||"").trim();if(!s)return 0;let m;
- m=s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*-?\s*(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);if(m){let y=+m[6];if(y<100)y+=2000;return Date.UTC(y,m[5]-1,+m[4],m[1]-7,+m[2],+(m[3]||0));}
- m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?$/);if(m){let y=+m[3];if(y<100)y+=2000;return Date.UTC(y,m[2]-1,+m[1],m[4]-7,+m[5],+(m[6]||0));}
- m=s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/);if(m)return Date.UTC(+m[1],m[2]-1,+m[3],m[4]-7,+m[5],+(m[6]||0));
- const t=Date.parse(s);return isNaN(t)?0:t;}
-function fmtBank(v){const t=parseAny(v);if(!t)return v?String(v):"—";const p=new Intl.DateTimeFormat("en-GB",{timeZone:TZN(),day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(new Date(t));const g=k=>p.find(x=>x.type===k).value;return `${g("day")}/${g("month")}/${g("year")} ${g("hour")}:${g("minute")}`;}
-const oTs=o=>Number(o.createdTs)||parseAny(o.date);
-const dmyOf=ts=>{const d=new Date(ts+off()*36e5);return `${String(d.getUTCDate()).padStart(2,"0")}/${String(d.getUTCMonth()+1).padStart(2,"0")}/${d.getUTCFullYear()}`;};
-const parseDmy=s=>{const m=String(s||"").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?Date.UTC(+m[3],m[2]-1,+m[1])-off()*36e5:0;};
-const expEnd=e=>{const m=String(e||"").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return m?Date.UTC(+m[3],m[2]-1,+m[1],23,59,59)-off()*36e5:0;};
-function monthInfo(ts){if(!ts)return{key:"000000",label:"Không rõ tháng"};const d=new Date(ts+off()*36e5);return{key:d.getUTCFullYear()+String(d.getUTCMonth()+1).padStart(2,"0"),label:`Tháng ${d.getUTCMonth()+1} năm ${d.getUTCFullYear()}`};}
-const fmtFull=(ms,tz)=>new Intl.DateTimeFormat("vi-VN",{timeZone:tz,hour:"2-digit",minute:"2-digit",second:"2-digit",day:"2-digit",month:"2-digit",year:"numeric",hourCycle:"h23"}).format(new Date(ms));
-function tickClocks(){const a=$("clkVN");if(!a)return;a.textContent=fmtFull(Date.now(),"Asia/Ho_Chi_Minh");$("clkCN").textContent=fmtFull(Date.now(),"Asia/Shanghai");$("clkWeb").textContent=fmtFull(nowMs(),TZN());}
+// ---- thời gian: tối ưu bằng Day.js 2KB (giữ 100% tên hàm cho code cũ gọi)
+if (typeof dayjs !== "undefined") {
+  try {
+    dayjs.extend(dayjs_plugin_customParseFormat);
+    dayjs.extend(dayjs_plugin_utc);
+    dayjs.extend(dayjs_plugin_timezone);
+  } catch (e) {}
+}
+const off = () => (cmsDb.settings && cmsDb.settings.tz) === "CN" ? 8 : 7;
+const TZN = () => off() === 8 ? "Asia/Shanghai" : "Asia/Ho_Chi_Minh";
+const nowMs = () => Date.now() + ((cmsDb.settings && cmsDb.settings.simMode) ? Number(cmsDb.settings.simOffset) || 0 : 0);
+
+function parseAny(v) {
+  if (typeof v === "number") return v;
+  const s = String(v || "").trim(); if (!s) return 0;
+  if (typeof dayjs !== "undefined") {
+    const fmts = ["D/M/YYYY HH:mm:ss", "D/M/YYYY HH:mm", "D/M/YYYY", "YYYY-MM-DD HH:mm:ss", "YYYY-MM-DD HH:mm", "YYYY-MM-DDTHH:mm:ss", "YYYY-MM-DDTHH:mm", "HH:mm D/M/YYYY", "HH:mm:ss D/M/YYYY"];
+    const d = dayjs.tz(s, fmts, TZN());
+    if (d.isValid()) return d.valueOf();
+  }
+  let m = s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*-?\s*(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (m) { let y = +m[6]; if (y < 100) y += 2000; return Date.UTC(y, m[5] - 1, +m[4], m[1] - 7, +m[2], +(m[3] || 0)); }
+  const t = Date.parse(s); return isNaN(t) ? 0 : t;
+}
+
+function fmtBank(v) {
+  const t = parseAny(v); if (!t) return v ? String(v) : "—";
+  if (typeof dayjs !== "undefined") return dayjs(t).tz(TZN()).format("DD/MM/YYYY HH:mm");
+  const p = new Intl.DateTimeFormat("en-GB", { timeZone: TZN(), day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(t));
+  const g = k => p.find(x => x.type === k).value; return `${g("day")}/${g("month")}/${g("year")} ${g("hour")}:${g("minute")}`;
+}
+
+const oTs = o => Number(o.createdTs) || parseAny(o.date);
+const dmyOf = ts => typeof dayjs !== "undefined" ? dayjs(ts).tz(TZN()).format("DD/MM/YYYY") : new Intl.DateTimeFormat("en-GB", { timeZone: TZN(), day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(ts));
+const parseDmy = s => {
+  const m = String(s || "").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (!m) return 0;
+  if (typeof dayjs !== "undefined") return dayjs.tz(`${m[3]}-${m[2]}-${m[1]} 00:00:00`, TZN()).valueOf();
+  return Date.UTC(+m[3], m[2] - 1, +m[1]) - off() * 36e5;
+};
+const expEnd = e => {
+  const m = String(e || "").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (!m) return 0;
+  if (typeof dayjs !== "undefined") return dayjs.tz(`${m[3]}-${m[2]}-${m[1]} 23:59:59`, TZN()).valueOf();
+  return Date.UTC(+m[3], m[2] - 1, +m[1], 23, 59, 59) - off() * 36e5;
+};
+
+function monthInfo(ts) {
+  if (!ts) return { key: "000000", label: "Không rõ tháng" };
+  if (typeof dayjs !== "undefined") {
+    const d = dayjs(ts).tz(TZN());
+    return { key: d.format("YYYYMM"), label: `Tháng ${d.format("M")} năm ${d.format("YYYY")}` };
+  }
+  const d = new Date(ts + off() * 36e5);
+  return { key: d.getUTCFullYear() + String(d.getUTCMonth() + 1).padStart(2, "0"), label: `Tháng ${d.getUTCMonth() + 1} năm ${d.getUTCFullYear()}` };
+}
+
+const fmtFull = (ms, tz) => typeof dayjs !== "undefined" ? dayjs(ms).tz(tz).format("HH:mm:ss DD/MM/YYYY") : new Intl.DateTimeFormat("vi-VN", { timeZone: tz, hour: "2-digit", minute: "2-digit", second: "2-digit", day: "2-digit", month: "2-digit", year: "numeric", hourCycle: "h23" }).format(new Date(ms));
+function tickClocks() { const a = $("clkVN"); if (!a) return; a.textContent = fmtFull(Date.now(), "Asia/Ho_Chi_Minh"); $("clkCN").textContent = fmtFull(Date.now(), "Asia/Shanghai"); $("clkWeb").textContent = fmtFull(nowMs(), TZN()); }
 function paintTimeUI(){
  const s=cmsDb.settings,tz=s.tz||"VN",sim=!!s.simMode;
  ["VN","CN"].forEach(k=>{const el=$("tzCard"+k);if(!el)return;const on=tz===k;el.classList.toggle("border-indigo-500",on);el.classList.toggle("bg-indigo-50",on);el.classList.toggle("border-slate-200",!on);});
@@ -1980,6 +2028,7 @@ function renderRevenue(){
  const ms=new Set(ordersDb.map(o=>monthInfo(oTs(o)).key));(cmsDb.costs||[]).forEach(c=>ms.add(monthInfo(c.ts).key));
  $("revMonth").innerHTML=`<option value="all">Tất cả các tháng</option>`+[...ms].sort().reverse().map(k=>`<option value="${k}" ${revMonth===k?"selected":""}>Tháng ${monthLbl(k)}</option>`).join("");
  const R=revList(),b=$("revBody");({over:revOver,pay:revPay,cost:revCost}[revTab])(R,b);}
+let chartRev12 = null, chartPayDonut = null;
 function revOver(R,b){
  const sum=R.reduce((a,x)=>a+x.vnd,0),cost=costSum().total,profit=sum-cost;
  const warn=R.some(x=>x.pay!=="Bank")&&!cnyRate()?`<div class="bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold rounded-xl p-3">Có đơn Alipay/Weixin nhưng chưa nhập tỷ giá CNY → VND nên phần này chưa được cộng vào tổng. Vào tab "Thanh toán" để nhập.</div>`:"";
@@ -1999,10 +2048,86 @@ function revOver(R,b){
     ${kpi("Tổng Chi Phí", fmtVnd(cost)+"đ", "Chi phí mua gói/vận hành", "text-orange-500")}
     ${kpi("Lợi Nhuận Ròng", fmtVnd(profit)+"đ", sum ? Math.round(profit/sum*100)+"% doanh thu" : "", profit>=0?"text-emerald-600":"text-red-600")}
   </div>` +
-  box("Doanh thu 12 tháng gần nhất", vbar(keys.map(k=>({l:monthLbl(k), v:mt[k].vnd})))) +
-  box("Cơ cấu Phương thức thanh toán", hbar([{l:"Ngân hàng VN", v:by.Bank}, {l:"Alipay", v:by.Alipay}, {l:"Weixin", v:by.Weixin}])) +
+  `<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-2">
+      <div class="font-bold text-sm text-slate-800 flex items-center gap-2"><i class="fas fa-chart-column text-indigo-600"></i>Biểu đồ doanh thu 12 tháng gần nhất (VND)</div>
+      <div class="h-64 relative"><canvas id="chartRev12Canvas"></canvas></div>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-2">
+      <div class="font-bold text-sm text-slate-800 flex items-center gap-2"><i class="fas fa-chart-pie text-purple-600"></i>Cơ cấu thanh toán</div>
+      <div class="h-64 relative flex items-center justify-center"><canvas id="chartPayDonutCanvas"></canvas></div>
+    </div>
+  </div>` +
   box("Doanh thu theo Gói cước", hbar(Object.values(g).sort((a,c)=>c.vnd-a.vnd).map(it=>({l:`${it.l} (${it.n} đơn)`, v:it.vnd})))) +
   box("Xếp hạng tháng theo doanh thu", hbar(Object.values(mt).sort((a,c)=>c.vnd-a.vnd).map((m,i)=>({l:`#${i+1} · Tháng ${monthLbl(m.k)} (${m.n} đơn)`, v:m.vnd}))));
+
+ setTimeout(() => {
+  if (typeof Chart !== "undefined") {
+   if (chartRev12) chartRev12.destroy();
+   const ctx1 = document.getElementById("chartRev12Canvas");
+   if (ctx1) {
+    chartRev12 = new Chart(ctx1, {
+     type: 'bar',
+     data: {
+      labels: keys.map(k => monthLbl(k)),
+      datasets: [{
+       label: 'Doanh thu (VND)',
+       data: keys.map(k => mt[k].vnd),
+       backgroundColor: 'rgba(79, 70, 229, 0.85)',
+       hoverBackgroundColor: 'rgba(67, 56, 202, 1)',
+       borderRadius: 8
+      }]
+     },
+     options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+       legend: { display: false },
+       tooltip: {
+        callbacks: {
+         label: (c) => fmtVnd(c.parsed.y) + ' đ'
+        }
+       }
+      },
+      scales: {
+       y: {
+        beginAtZero: true,
+        ticks: { callback: (v) => shortN(v) }
+       }
+      }
+     }
+    });
+   }
+
+   if (chartPayDonut) chartPayDonut.destroy();
+   const ctx2 = document.getElementById("chartPayDonutCanvas");
+   if (ctx2) {
+    chartPayDonut = new Chart(ctx2, {
+     type: 'doughnut',
+     data: {
+      labels: ['Bank VN', 'Alipay', 'Weixin'],
+      datasets: [{
+       data: [by.Bank, by.Alipay, by.Weixin],
+       backgroundColor: ['#4f46e5', '#0284c7', '#10b981'],
+       borderWidth: 2
+      }]
+     },
+     options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+       legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11, weight: 'bold' } } },
+       tooltip: {
+        callbacks: {
+         label: (c) => ` ${c.label}: ${fmtVnd(c.raw)} đ`
+        }
+       }
+      }
+     }
+    });
+   }
+  }
+ }, 50);
 }
 const PAYLBL={Bank:"🏦 Ngân hàng VN",Alipay:"🔵 Alipay",Weixin:"🟢 Weixin"};
 function revPayDetail(b){
@@ -3390,11 +3515,18 @@ function copyArtDeepLink(tabId, slug){
  const link = `${PD.replace(/\/$/,"")}/portal/guide/${encodeURIComponent(tabId)}/${encodeURIComponent(s)}`;
  cp(link);
 }
+let quillInst = null;
+function getEditorHtml() {
+  if (quillInst && quillInst.root) {
+    return typeof DOMPurify !== "undefined" ? DOMPurify.sanitize(quillInst.root.innerHTML) : quillInst.root.innerHTML;
+  }
+  const ed = $("cmsWordEditor");
+  return ed ? (typeof DOMPurify !== "undefined" ? DOMPurify.sanitize(ed.innerHTML) : ed.innerHTML) : curArtHtml;
+}
 function commitCms(){
  if(!curArt)return;
  const a=artsOf(curCms).find(x=>x.slug===curArt||toSlug(x.name)===curArt);if(!a)return;
- const ed=$("cmsWordEditor");
- if(ed)curArtHtml=ed.innerHTML;
+ curArtHtml = getEditorHtml();
  a.html=curArtHtml;
  a.showToc=curArtShowToc;
  a.blocks=curBlocks.map(b=>({...b}));
@@ -3837,30 +3969,46 @@ function renderCmsEditor(){
    </div>
   </div></div></details>`;
  setTimeout(renderArtFaqsUI, 20);
- $("cmsAddBtns").innerHTML=`
-  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('formatBlock','H2')" class="tb-btn" title="Tiêu đề mục lớn (Tự vào Mục lục 1, 2, 3...)"><b class="text-indigo-600">H2</b> Mục lớn</button>
-  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('formatBlock','H3')" class="tb-btn" title="Tiêu đề mục con (Tự vào Mục lục 1.1, 1.2...)"><b class="text-purple-600">H3</b> Mục con</button>
-  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('formatBlock','P')" class="tb-btn" title="Chữ văn bản bình thường">Chữ thường</button>
-  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('bold')" class="tb-btn" title="In đậm (Ctrl+B)"><i class="fas fa-bold"></i></button>
-  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('italic')" class="tb-btn" title="In nghiêng (Ctrl+I)"><i class="fas fa-italic"></i></button>
-  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('underline')" class="tb-btn" title="Gạch chân (Ctrl+U)"><i class="fas fa-underline"></i></button>
-  <label class="tb-btn" title="Đổi màu chữ"><i class="fas fa-palette text-rose-500"></i><input type="color" value="#dc2626" onchange="wCmd('foreColor',this.value)" class="w-4 h-4 border-0 p-0 bg-transparent cursor-pointer"></label>
-  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('insertUnorderedList')" class="tb-btn" title="Danh sách dấu chấm tròn"><i class="fas fa-list-ul"></i></button>
-  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('insertOrderedList')" class="tb-btn" title="Danh sách đánh số 1, 2, 3"><i class="fas fa-list-ol"></i></button>
-  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('justifyLeft')" class="tb-btn" title="Căn lề trái"><i class="fas fa-align-left"></i></button>
-  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('justifyCenter')" class="tb-btn" title="Căn giữa"><i class="fas fa-align-center"></i></button>
-  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('justifyRight')" class="tb-btn" title="Căn lề phải"><i class="fas fa-align-right"></i></button>
-  <button type="button" onmousedown="event.preventDefault()" onclick="openWordInsertModal('link')" class="tb-btn !border-blue-200 !bg-blue-50 !text-blue-700"><i class="fas fa-link"></i>Chèn Link</button>
-  <button type="button" onmousedown="event.preventDefault()" onclick="openWordInsertModal('img')" class="tb-btn !border-pink-200 !bg-pink-50 !text-pink-700"><i class="fas fa-image"></i>Ảnh</button>
-  <button type="button" onmousedown="event.preventDefault()" onclick="openWordInsertModal('video')" class="tb-btn !border-rose-200 !bg-rose-50 !text-rose-700"><i class="fas fa-video"></i>Video</button>
-  <button type="button" onmousedown="event.preventDefault()" onclick="openWordInsertModal('callout')" class="tb-btn !border-amber-200 !bg-amber-50 !text-amber-800"><i class="fas fa-star"></i>Lưu ý / Banner</button>
-  <button type="button" onmousedown="event.preventDefault()" onclick="wCmd('removeFormat')" class="tb-btn text-slate-400" title="Xóa định dạng rác"><i class="fas fa-eraser"></i></button>
-  <button type="button" onmousedown="event.preventDefault()" onclick="saveCms()" class="tb-btn !bg-indigo-600 !text-white !border-indigo-600 hover:!bg-indigo-700 ml-auto shadow-sm" title="Lưu nhanh bài viết (Ctrl+S)"><i class="fas fa-floppy-disk"></i>Lưu nhanh</button>`;
- const ed=$("cmsWordEditor");
- if(ed){
-  ed.innerHTML=curArtHtml;
-  ed.onmouseup=saveWordSelection;
-  ed.onkeyup=saveWordSelection;
+ $("cmsAddBtns").innerHTML = `
+  <div class="flex items-center gap-2">
+   <span class="font-extrabold text-xs text-slate-700"><i class="fas fa-pen-nib text-indigo-600 mr-1.5"></i>Trình soạn thảo chuẩn Word (Quill.js)</span>
+   <span class="text-[10px] text-slate-400 font-medium">Bấm Ctrl+S để lưu nhanh · H2/H3 tự động lên mục lục</span>
+  </div>
+  <button type="button" onclick="saveCms()" class="tb-btn !bg-indigo-600 !text-white !border-indigo-600 hover:!bg-indigo-700 shadow-sm text-xs font-bold px-3"><i class="fas fa-floppy-disk mr-1"></i>Lưu bài viết</button>
+ `;
+
+ if (typeof Quill !== "undefined" && $("quillEditor")) {
+  if (!quillInst) {
+   quillInst = new Quill('#quillEditor', {
+    theme: 'snow',
+    placeholder: 'Bắt đầu soạn thảo hoặc dán bài viết Word vào đây...',
+    modules: {
+     toolbar: [
+      [{ 'header': [2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      [{ 'align': [] }],
+      ['link', 'image', 'video'],
+      ['clean']
+     ]
+    }
+   });
+   quillInst.on('text-change', () => {
+    curArtHtml = getEditorHtml();
+    cmsPrev();
+   });
+   quillInst.root.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+     e.preventDefault();
+     saveCms();
+    }
+   });
+  }
+  const cleanHtml = typeof DOMPurify !== "undefined" ? DOMPurify.sanitize(curArtHtml) : curArtHtml;
+  if (quillInst.root.innerHTML !== cleanHtml) {
+   quillInst.root.innerHTML = cleanHtml;
+  }
  }
  cmsPrev();
 }
