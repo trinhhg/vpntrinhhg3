@@ -284,26 +284,33 @@ html.dark .loader-ring.amber i{color:#E6C078;}
   </div>
 </div>
 
-<!-- MODAL MÃ QR LINK SUB (LAYER z-[99900] - DƯỚI TOAST, KHÓA CUỘN NỀN) -->
-<div id="qrSubModal" class="hidden fixed inset-0 z-[99900] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all" onclick="closeQrModal()">
-  <div class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-6 rounded-3xl text-center max-w-sm w-full shadow-2xl relative" onclick="event.stopPropagation()">
-    <button type="button" onclick="closeQrModal()" title="Đóng" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition">
+<!-- MODAL MÃ QR CHUẨN VIETQR BANK (KHÔNG DÙNG KÍNH MỜ, BỎ NAPAS & MB) -->
+<div id="qrSubModal" class="hidden fixed inset-0 z-[90000] bg-black/75 flex items-center justify-center p-4 transition-all" onclick="closeQrModal()">
+  <div class="bg-[#f0f4fa] dark:bg-[#1a1d24] border border-slate-200 dark:border-white/10 p-6 md:p-7 rounded-[28px] text-center max-w-[340px] w-full shadow-2xl relative" onclick="event.stopPropagation()">
+    <button type="button" onclick="closeQrModal()" title="Đóng" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center shadow-sm transition">
       <i class="fas fa-times text-sm"></i>
     </button>
-    <h3 id="qrSubModalTitle" class="font-extrabold text-lg text-slate-800 dark:text-slate-100 mb-1">Mã QR Link Sub #1</h3>
-    <div class="text-xs font-bold text-slate-600 dark:text-slate-300 space-y-0.5 mb-3">
-      <p>Dùng app VPN đã cài để quét mã</p>
-      <p class="text-indigo-600 dark:text-indigo-400">Mua VPN tại vpntrinhhg.pages.dev</p>
-      <p class="text-emerald-600 dark:text-emerald-400">Zalo: 0917678211</p>
+    
+    <!-- Header chuẩn VietQR thay bằng VPNTrinhHg -->
+    <div class="flex items-center justify-center gap-1 mb-4">
+      <span class="text-rose-600 font-black text-2xl tracking-tight">VPN</span><span class="text-[#1e3a8a] dark:text-indigo-400 font-black text-2xl tracking-tight">TrinhHg</span>
     </div>
-    <div class="bg-white p-3.5 rounded-2xl mb-4 border border-slate-200 shadow-inner flex justify-center items-center mx-auto w-[216px] h-[216px]" id="qrCanvasBox" translate="no"></div>
-    <div class="mb-2">
-      <div class="flex justify-between items-center text-xs font-bold mb-1.5">
-        <span class="text-slate-500 dark:text-slate-400">Mã QR tự hủy sau:</span>
-        <span id="qrCountdownText" class="text-indigo-600 dark:text-indigo-400 font-mono text-sm font-black" translate="no">30s</span>
+
+    <!-- Khung QR trắng sắc nét bo viền chuẩn ngân hàng -->
+    <div class="bg-white p-3 rounded-2xl mb-4 border border-[#1e3a8a]/20 shadow-sm flex justify-center items-center mx-auto w-[220px] h-[220px]" id="qrCanvasBox" translate="no"></div>
+
+    <div class="text-[11px] font-bold text-slate-600 dark:text-slate-300 space-y-0.5 mb-3">
+      <p id="qrSubModalTitle" class="font-extrabold text-slate-800 dark:text-white text-xs">Mã QR Link Sub</p>
+      <p class="text-indigo-600 dark:text-indigo-400">vpntrinhhg.pages.dev · Zalo: 0917678211</p>
+    </div>
+
+    <div>
+      <div class="flex justify-between items-center text-xs font-bold mb-1">
+        <span class="text-slate-500 dark:text-slate-400 text-[10px]">Mã QR tự hủy sau:</span>
+        <span id="qrCountdownText" class="text-indigo-600 dark:text-indigo-400 font-mono text-xs font-black" translate="no">30s</span>
       </div>
-      <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-        <div id="qrProgressBar" class="bg-gradient-to-r from-indigo-500 to-purple-600 h-full w-full transition-all duration-1000 ease-linear" style="width:100%"></div>
+      <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+        <div id="qrProgressBar" class="bg-indigo-600 h-full w-full transition-all duration-1000 ease-linear" style="width:100%"></div>
       </div>
     </div>
   </div>
@@ -1683,14 +1690,28 @@ function genHTML(pkg){
    devText = devNum ? `${devNum} ${tx('Thiết bị')}` : tx(devRaw);
  }
 
- const isDisabled = isUpgradeMode && pkg.vnd <= baseOrderPriceVnd && !pkg.isCustom;
- const priceStr = (p.price || '').replace('VND','<span class="text-sm md:text-base font-bold ml-0.5">VND</span>');
+ const isDisabled = isUpgradeMode && (pkg.vnd <= baseOrderPriceVnd || (oCache && pkg.id === oCache.pkgId)) && !pkg.isCustom;
  const hasSale = !pkg.isCustom && Number(pkg.original_vnd) > Number(pkg.vnd);
- const origPriceStr = hasSale ? `<span class="line-through text-slate-400 dark:text-slate-500 font-bold text-sm md:text-base mr-2">${Number(pkg.original_vnd).toLocaleString('en-US')}VND</span>` : '';
+ const ratio = hasSale && pkg.vnd > 0 ? (Number(pkg.original_vnd) / Number(pkg.vnd)) : 1;
+
+ let realPriceDisplay = '';
+ let origPriceDisplay = '';
+ if (lang === 'zh') {
+   realPriceDisplay = `¥${pkg.cny || 0}`;
+   if (hasSale) origPriceDisplay = `¥${(Math.round(pkg.cny * ratio * 10) / 10).toFixed(1)}`;
+ } else if (lang === 'en') {
+   realPriceDisplay = `$${pkg.usd || 0}`;
+   if (hasSale) origPriceDisplay = `$${(Math.round(pkg.usd * ratio * 10) / 10).toFixed(1)}`;
+ } else {
+   realPriceDisplay = `${Number(pkg.vnd || 0).toLocaleString('en-US')}<span class="text-sm md:text-base font-bold ml-0.5">VND</span>`;
+   if (hasSale) origPriceDisplay = `${Number(pkg.original_vnd).toLocaleString('en-US')}VND`;
+ }
+
+ const origPriceStr = hasSale ? `<span class="line-through text-slate-400 dark:text-slate-500 font-bold text-xs md:text-sm ml-2">${origPriceDisplay}</span>` : '';
  const promoStickerHtml = pkg.promo_sticker ? `<div class="inline-flex items-center gap-1 bg-gradient-to-r from-rose-500 to-pink-500 text-white font-black text-[10px] md:text-[11px] px-2.5 py-0.5 rounded-full shadow-sm mb-2"><i class="fas fa-gift text-[9px]"></i><span>${esc(pkg.promo_sticker)}</span></div>` : '';
  const priceHTML = pkg.isCustom
-   ? `<div class="text-xl font-black text-red-600 dark:text-red-400 dark:drop-shadow-[0_0_8px_rgba(248,113,113,0.8)] mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${priceStr}</div>`
-   : `<div class="mb-4 border-b border-slate-100 dark:border-white/10 pb-3 mt-1.5 flex flex-wrap items-baseline">${origPriceStr}<span class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_10px_rgba(165,180,252,0.8)]">${priceStr}</span></div>`;
+   ? `<div class="text-xl font-black text-red-600 dark:text-red-400 mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${p.price || ''}</div>`
+   : `<div class="mb-4 border-b border-slate-100 dark:border-white/10 pb-3 mt-1.5 flex flex-wrap items-baseline"><span class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-indigo-300">${realPriceDisplay}</span>${origPriceStr}</div>`;
 
  const btn = isDisabled
    ? `<button disabled class="w-full bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 font-bold py-3 rounded-xl text-sm cursor-not-allowed">Không khả dụng</button>`
@@ -1762,7 +1783,9 @@ function renderPackages(filter){
 function startUpgrade(){
  isUpgradeMode=true;isRenewMode=false;upgradeConfirmed=false;
  const cur=pkgs.find(p=>p.id===oCache.pkgId)||pkgs.find(p=>p.vi.name===oCache.pkgName&&p.data===oCache.pkgData);
- baseOrderPriceVnd=cur?cur.vnd:0;baseOrderPriceUsd=cur?cur.usd:0;baseOrderPriceCny=cur?cur.cny:0;
+ baseOrderPriceVnd=cur ? cur.vnd : (Number(oCache.totalVnd) > 0 ? Number(oCache.totalVnd) / Math.max(1, Number(oCache.qty) || 1) : 0);
+ baseOrderPriceUsd=cur ? cur.usd : 0;
+ baseOrderPriceCny=cur ? cur.cny : (Number(oCache.totalCny) > 0 ? Number(oCache.totalCny) / Math.max(1, Number(oCache.qty) || 1) : 0);
  switchPortalTab('p-store',true);renderPackages('all');showToast(i18n[lang].select_higher,'info');}
 
 function startRenew(){disableUpgradeMode();isRenewMode=true;switchPortalTab('p-store',true);showToast(i18n[lang].select_renew_pkg,'info');}
@@ -1940,21 +1963,19 @@ function drawQrCenterLogo(box) {
   const radius = 6; // Bo nhẹ phẳng hiện đại, tuyệt đối không khoét viên thuốc
 
   ctx.save();
-  // Nền trắng phẳng sắc nét
   ctx.fillStyle = '#ffffff';
   ctx.beginPath();
   if (ctx.roundRect) ctx.roundRect(bx, by, bw, bh, radius);
   else ctx.rect(bx, by, bw, bh);
   ctx.fill();
 
-  // Viền tím phẳng sắc nét (không bóng mờ)
-  ctx.strokeStyle = '#4f46e5';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Chữ thương hiệu in đậm rõ ràng
-  ctx.fillStyle = '#312e81';
-  ctx.font = '900 11.5px "Plus Jakarta Sans", Arial, sans-serif';
+  // Logo thương hiệu nhỏ gọn thay chữ V đỏ
+  ctx.fillStyle = '#dc2626';
+  ctx.font = '900 11px "Plus Jakarta Sans", Arial, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText('VPNTrinhHg', w / 2, h / 2 + 0.5);
@@ -2316,18 +2337,18 @@ function switchPortalTab(tabId, fromUpgrade=false, skipPush=false){
   return;
  }
 
- // 3. Tab Hướng dẫn Portal: Xem tự do
+ // 3. Tab Hướng dẫn Portal: Xem tự do (luôn reset về danh mục tổng quan)
  if(tabId==='p-guide'){
+  curGuideSlug = '';
   document.querySelectorAll('.portal-tab-content').forEach(el=>el.classList.remove('active'));
   $('p-guide').classList.add('active');
   highlightNavBtns('p-guide');
   const targetCat = curGuide || (guideTabList()[0]||{}).id || 'android';
   if(!skipPush) {
-    if(curGuideSlug) router.navigate(`${appRoutes.guide}/${encodeURIComponent(targetCat)}/${encodeURIComponent(curGuideSlug)}`);
-    else router.navigate(`${appRoutes.guide}/${encodeURIComponent(targetCat)}`);
+    router.navigate(`${appRoutes.guide}/${encodeURIComponent(targetCat)}`);
   }
   loadConfig().then(() => {
-   if(!curGuideSlug) showGuide(targetCat);
+    showGuide(targetCat);
   });
   showGuide(targetCat);
   return;
