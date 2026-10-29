@@ -22,6 +22,9 @@
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/plugin/utc.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/plugin/timezone.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/apexcharts@3.54.1/dist/apexcharts.css">
+<script src="https://cdn.jsdelivr.net/npm/currency.js@2.0.4/dist/currency.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -615,7 +618,7 @@ textarea.autog{resize:none;overflow:hidden;}
     </div>
     <div class="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden"><div class="p-2 border-b border-slate-200 flex gap-1.5 flex-wrap items-center" id="mcAddBtns"></div><div id="mcList" class="p-2 space-y-2 max-h-[50vh] overflow-y-auto"></div></div>
    </div>
-   <div class="sticky top-16 bg-slate-100 border border-slate-200 rounded-2xl shadow-sm overflow-hidden z-10"><div class="bg-white px-4 py-2 border-b border-slate-200"><span class="text-xs font-bold text-slate-500 uppercase"><i class="fas fa-eye mr-1"></i>Xem trước mail (đúng khung email thật)</span></div><div class="p-3 bg-slate-100 max-h-[75vh] overflow-y-auto"><div id="mcPreview"></div></div></div>
+   <div class="sticky top-16 bg-slate-100 border border-slate-200 rounded-2xl shadow-sm overflow-hidden z-10"><div class="bg-white px-4 py-2 border-b border-slate-200 flex items-center justify-between"><span class="text-xs font-bold text-slate-500 uppercase"><i class="fas fa-eye mr-1"></i>Xem trước mail (Iframe chuẩn font)</span><span class="text-[10px] text-indigo-600 font-bold">Cách ly CSS 100%</span></div><div class="p-2 bg-slate-100 max-h-[75vh] overflow-y-auto"><iframe id="mcPreviewIframe" class="w-full min-h-[560px] border-0 rounded-xl" style="background:#f1f5f9;"></iframe><div id="mcPreview" class="hidden"></div></div></div>
   </div>
   <div id="mcRecipPanel" class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 mt-4">
    <div class="flex flex-wrap items-center gap-2 mb-3"><div class="font-bold text-sm text-slate-800 mr-auto"><i class="fas fa-users text-indigo-500 mr-1"></i>Người nhận (khách còn đơn còn hạn)</div><button onclick="mcScan()" class="bg-slate-100 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs hover:bg-slate-200"><i class="fas fa-search mr-1"></i>Quét danh sách</button></div>
@@ -738,6 +741,225 @@ textarea.autog{resize:none;overflow:hidden;}
      <button onclick="saveFailoverPolicy()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md transition active:scale-95">
       <i class="fas fa-check-circle mr-1.5"></i>LƯU CHÍNH SÁCH DỰ PHÒNG
      </button>
+    </div>
+   </div>
+  </div>
+ </div>
+
+ <!-- ===== QUẢN TRỊ WEB (TRANG CHỦ INDEX.HTML) ===== -->
+ <div id="t-web-admin" class="hidden w-full min-w-0 space-y-4">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+   <div>
+    <h2 class="text-lg md:text-2xl font-bold text-slate-800">Quản trị Web (Trang chủ)</h2>
+    <p class="text-xs text-slate-500 mt-0.5">Tất cả cấu hình hiển thị, tiện ích và điều khoản của trang chủ gom tại đây.</p>
+   </div>
+   <div class="bg-slate-200/80 p-1 rounded-xl inline-flex items-center gap-1 w-fit">
+    <button type="button" class="settings-sub-tab active text-center !px-3 py-1.5 font-bold text-xs" id="wtab-ui" onclick="switchWebAdminTab('ui')"><i class="fas fa-desktop mr-1.5"></i>Giao diện & Tiện ích</button>
+    <button type="button" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-xs" id="wtab-footer" onclick="switchWebAdminTab('footer')"><i class="fas fa-circle-question mr-1.5"></i>FAQ & Footer</button>
+   </div>
+  </div>
+
+  <!-- PANE 1: GIAO DIỆN & TIỆN ÍCH -->
+  <div id="wpane-ui" class="space-y-4">
+   <!-- 1. Thanh thông báo đỉnh web -->
+   <div class="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border-2 border-indigo-200 rounded-2xl p-4 shadow-sm space-y-3">
+    <div class="flex items-center justify-between flex-wrap gap-2">
+     <div class="font-extrabold text-sm text-indigo-900 flex items-center gap-2">
+      <i class="fas fa-bullhorn text-indigo-600"></i>Thanh Thông Báo Đỉnh Web (Header Announcement Drawer)
+     </div>
+     <div class="flex items-center gap-2">
+      <span class="text-xs font-bold text-slate-600">Bật thông báo:</span>
+      <div class="toggle-wrap">
+       <input type="checkbox" id="headerDrawerOn" onchange="toggleHeaderDrawer(this.checked)">
+       <span class="toggle-slider"></span>
+      </div>
+      <button type="button" onclick="saveHeaderDrawer()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm flex items-center gap-1 transition active:scale-95">
+       <i class="fas fa-save mr-1"></i>LƯU THÔNG BÁO
+      </button>
+     </div>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+     <div class="sm:col-span-2">
+      <label class="block font-bold text-slate-600 mb-1">Nội dung thông báo (hỗ trợ Emoji):</label>
+      <input type="text" id="headerDrawerText" placeholder="VD: 🔥 Khuyến mãi mùa du lịch: Tặng ngay +3 ngày sử dụng cho mọi gói!" class="w-full p-2 border border-indigo-200 rounded-xl bg-white font-bold text-slate-800 outline-none focus:border-indigo-500">
+     </div>
+     <div>
+      <label class="block font-bold text-slate-600 mb-1">Link chuyển hướng khi bấm:</label>
+      <input type="text" id="headerDrawerLink" placeholder="#packages hoặc /portal/packages" class="w-full p-2 border border-indigo-200 rounded-xl bg-white font-mono font-bold text-indigo-700 outline-none focus:border-indigo-500">
+     </div>
+    </div>
+   </div>
+
+   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+    <!-- Cột trái: QR Expire Seconds & Blur -->
+    <div class="space-y-4">
+     <div class="bg-white border border-indigo-200 rounded-2xl shadow-sm p-4 md:p-5 space-y-2.5">
+      <div class="font-bold text-sm text-indigo-900 flex items-center justify-between">
+       <span><i class="fas fa-qrcode text-indigo-600 mr-1.5"></i>Thời gian tự hủy mã QR</span>
+       <span class="text-[10px] font-black px-2 py-0.5 rounded bg-indigo-100 text-indigo-700">Đơn vị: Giây</span>
+      </div>
+      <p class="text-[11px] text-slate-500">Số giây mã QR xuất hiện và có hiệu lực quét trước khi tự hủy (mặc định: <b>30</b> giây). Quá thời gian này, mã QR tự biến mất.</p>
+      <div class="flex items-center gap-2">
+       <div class="relative flex-1">
+        <input id="qrExpireSecondsInp" type="number" min="5" max="3600" placeholder="30" class="w-full p-2 pr-14 border border-slate-200 rounded-xl outline-none font-bold text-sm text-indigo-700 bg-slate-50 focus:bg-white focus:border-indigo-500">
+        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">giây</span>
+       </div>
+       <button type="button" onclick="saveQrExpireSeconds()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md shrink-0 transition active:scale-95">
+        <i class="fas fa-save mr-1"></i>LƯU THỜI GIAN QR
+       </button>
+      </div>
+     </div>
+
+     <div class="bg-white border border-purple-200 rounded-2xl shadow-sm p-4 md:p-5 space-y-2">
+      <div class="font-bold text-sm text-purple-800 flex items-center justify-between"><span><i class="fas fa-eye-slash text-purple-500 mr-1.5"></i>Cấu hình Làm mờ (Blur - Web này)</span><span class="text-[10px] font-black px-2 py-0.5 rounded bg-purple-100 text-purple-700">Chỉ web này</span></div>
+      <p class="text-[11px] text-slate-500">Nhập tên ô định tuyến muốn làm mờ và gạt Bật/Tắt. Cài đặt này chỉ áp dụng trên chính web này.</p>
+      <div id="blurRows" class="space-y-2"></div>
+      <button onclick="saveBlur()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md mt-1">LƯU CẤU HÌNH LÀM MỜ</button>
+     </div>
+    </div>
+
+    <!-- Cột phải: Định tuyến gốc -->
+    <div class="space-y-4">
+     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-5 space-y-2">
+      <div class="font-bold text-sm text-slate-800"><i class="fas fa-route text-indigo-500 mr-1.5"></i>Định tuyến Gốc (Gán ô Link 1/2/3)</div>
+      <p class="text-[11px] text-slate-500">Nhập từ khóa domain của từng web (VD: doicucden, onepiece, lucastanora) để Worker gán link sub tương ứng.</p>
+      <div id="routeRows" class="space-y-2"></div>
+      <button onclick="saveRouting()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs shadow-md mt-1">LƯU ĐỊNH TUYẾN GỐC</button>
+     </div>
+    </div>
+   </div>
+
+   <!-- Icon dock trải rộng -->
+   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-5">
+    <div class="flex justify-between items-center mb-1 border-b border-slate-100 pb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-icons text-indigo-500 mr-1.5"></i>Icon Dock Trang chủ</div><button onclick="addDockIcon()" class="text-xs bg-indigo-50 text-indigo-600 font-bold px-2.5 py-1 rounded-lg hover:bg-indigo-100"><i class="fas fa-plus mr-1"></i>Thêm icon</button></div>
+    <p class="text-[10px] text-slate-500 mb-2">Icon tùy chỉnh dùng trực tiếp <b>URL ảnh</b> (xem trước ngay bên cạnh). Khi lưu, Trang chủ nhận đúng URL ảnh đó.</p>
+    <div id="dockRows" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+    <button onclick="saveDock()" class="w-full mt-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md">LƯU ICON DOCK</button>
+   </div>
+  </div>
+
+  <!-- PANE 2: FAQ & FOOTER PHÁP LÝ -->
+  <div id="wpane-footer" class="hidden space-y-4">
+   <div class="inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 w-fit mb-1">
+    <button type="button" onclick="switchFaqSubTab('faq')" id="btn-sub-faq" class="settings-sub-tab active text-center !px-3 py-1.5 font-bold text-xs"><i class="fas fa-circle-question mr-1"></i>FAQ Trang chủ</button>
+    <button type="button" onclick="switchFaqSubTab('footer')" id="btn-sub-footer" class="settings-sub-tab text-center !px-3 py-1.5 font-bold text-xs"><i class="fas fa-shoe-prints mr-1"></i>Tùy Biến Footer & Pháp Lý</button>
+   </div>
+
+   <!-- Sub-pane FAQ -->
+   <div id="pane-faq-list" class="space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+     <div>
+      <h3 class="font-extrabold text-base text-slate-800"><i class="fas fa-circle-question text-indigo-600 mr-1.5"></i>Tùy biến câu hỏi thường gặp (FAQ) bên Index</h3>
+      <p class="text-[11px] text-slate-500 mt-0.5">Sửa nội dung 5 FAQ cố định, thêm câu hỏi mới, đổi thứ tự hiển thị.</p>
+     </div>
+     <div class="flex gap-2 shrink-0">
+      <button type="button" onclick="addNewFaq()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold px-3 py-2 rounded-xl text-xs"><i class="fas fa-plus mr-1"></i>Thêm câu hỏi</button>
+      <button type="button" onclick="saveFaqs()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md"><i class="fas fa-save mr-1.5"></i>LƯU FAQ</button>
+     </div>
+    </div>
+    <div id="faqListContainer" class="space-y-3"></div>
+   </div>
+
+   <!-- Sub-pane Footer -->
+   <div id="pane-footer-cfg" class="hidden space-y-4">
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-5">
+     <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+      <div>
+       <h3 class="font-extrabold text-base text-slate-800"><i class="fas fa-shoe-prints text-indigo-600 mr-1.5"></i>Cấu hình Footer &amp; Liên kết nhanh</h3>
+       <p class="text-[11px] text-slate-500 mt-0.5">Tùy biến đường dẫn hệ thống, cột liên kết, website dự phòng và 3 trang chính sách pháp lý.</p>
+      </div>
+      <button type="button" onclick="saveFooterConfig()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition active:scale-95"><i class="fas fa-save mr-1.5"></i>LƯU TOÀN BỘ CẤU HÌNH FOOTER</button>
+     </div>
+
+     <!-- 1. CẤU HÌNH ĐƯỜNG DẪN HỆ THỐNG (URL ROUTES) -->
+     <div class="bg-indigo-50/60 border-2 border-indigo-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-3">
+      <div class="flex items-center justify-between border-b border-indigo-200 pb-2.5 flex-wrap gap-2">
+       <div>
+        <h4 class="font-extrabold text-sm md:text-base text-indigo-900 flex items-center gap-2">
+         <i class="fas fa-route text-indigo-600"></i>1. Cấu hình Đường Dẫn Hệ Thống (URL Routes)
+        </h4>
+        <p class="text-[11px] text-indigo-700 mt-0.5">Tùy biến đường dẫn website không cần sửa code HTML. Mặc định có fallback, khi sửa sẽ lưu KV và trang khách tự động đổi theo.</p>
+       </div>
+       <button type="button" onclick="saveRoutesConfig()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center gap-1.5 shrink-0">
+        <i class="fas fa-save"></i>LƯU CẤU HÌNH ĐƯỜNG DẪN
+       </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+       <div>
+        <label class="block font-bold text-slate-700 mb-1">Quản lý Đơn hàng</label>
+        <input id="rtOrder" placeholder="/portal/order" class="w-full p-2 border border-indigo-200 rounded-xl bg-white font-mono font-bold text-indigo-700 outline-none focus:border-indigo-500">
+        <span class="text-[10px] text-slate-400 mt-0.5 block">Mặc định: /portal/order</span>
+       </div>
+       <div>
+        <label class="block font-bold text-slate-700 mb-1">Cửa hàng trong Portal</label>
+        <input id="rtPackages" placeholder="/portal/packages" class="w-full p-2 border border-indigo-200 rounded-xl bg-white font-mono font-bold text-indigo-700 outline-none focus:border-indigo-500">
+        <span class="text-[10px] text-slate-400 mt-0.5 block">Mặc định: /portal/packages</span>
+       </div>
+       <div>
+        <label class="block font-bold text-slate-700 mb-1">Chuyên mục Hướng dẫn</label>
+        <input id="rtGuide" placeholder="/portal/guide" class="w-full p-2 border border-indigo-200 rounded-xl bg-white font-mono font-bold text-indigo-700 outline-none focus:border-indigo-500">
+        <span class="text-[10px] text-slate-400 mt-0.5 block">Mặc định: /portal/guide</span>
+       </div>
+       <div>
+        <label class="block font-bold text-slate-700 mb-1">Trang Chính sách pháp lý</label>
+        <input id="rtPolicy" placeholder="/policy" class="w-full p-2 border border-indigo-200 rounded-xl bg-white font-mono font-bold text-indigo-700 outline-none focus:border-indigo-500">
+        <span class="text-[10px] text-slate-400 mt-0.5 block">Mặc định: /policy</span>
+       </div>
+      </div>
+      <div id="routeValidateMsg" class="text-[11px] text-slate-500 italic"></div>
+     </div>
+
+     <!-- 2. DANH SÁCH WEB DỰ PHÒNG -->
+     <div class="space-y-2">
+      <label class="block font-bold text-xs text-slate-700">2. Danh sách Website dự phòng hiển thị ở Footer:</label>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+       <div>
+        <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Web Dự Phòng 1 (Tên | Link)</label>
+        <input id="ftBackupName1" placeholder="Web 1: vpntrinhhg" class="w-full p-2 border rounded-xl text-xs mb-1 bg-slate-50">
+        <input id="ftBackupUrl1" placeholder="https://vpntrinhhg.pages.dev" class="w-full p-2 border rounded-xl text-xs font-mono bg-slate-50">
+       </div>
+       <div>
+        <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Web Dự Phòng 2 (Tên | Link)</label>
+        <input id="ftBackupName2" placeholder="Web 2: vpntrinhhg2" class="w-full p-2 border rounded-xl text-xs mb-1 bg-slate-50">
+        <input id="ftBackupUrl2" placeholder="https://vpntrinhhg2.pages.dev" class="w-full p-2 border rounded-xl text-xs font-mono bg-slate-50">
+       </div>
+       <div>
+        <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Web Dự Phòng 3 (Tên | Link)</label>
+        <input id="ftBackupName3" placeholder="Web 3: vpntrinhhg3" class="w-full p-2 border rounded-xl text-xs mb-1 bg-slate-50">
+        <input id="ftBackupUrl3" placeholder="https://vpntrinhhg3.pages.dev" class="w-full p-2 border rounded-xl text-xs font-mono bg-slate-50">
+       </div>
+      </div>
+     </div>
+
+     <!-- 3. CÁC CỘT LIÊN KẾT FOOTER -->
+     <div class="space-y-3 pt-2 border-t border-slate-100">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+       <label class="font-bold text-xs text-slate-700">3. Các Cột &amp; Liên kết nhanh Footer (Hỗ trợ Kéo - Thả):</label>
+       <div class="flex gap-1.5">
+        <button type="button" onclick="ftLoadTemplate()" class="text-[11px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg">Nạp mẫu gợi ý</button>
+        <button type="button" onclick="ftAddCol()" class="text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-2.5 py-1 rounded-lg"><i class="fas fa-plus mr-1"></i>Thêm cột</button>
+       </div>
+      </div>
+      <div id="ftColsWrap" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+     </div>
+
+     <!-- 4. NỘI DUNG 3 TRANG CHÍNH SÁCH PHÁP LÝ -->
+     <div class="space-y-3 pt-2 border-t border-slate-100">
+      <label class="block font-bold text-xs text-slate-700">4. Nội dung 3 trang Chính sách pháp lý (Trang URL riêng biệt):</label>
+      <div class="space-y-1">
+       <label class="block text-[11px] font-bold text-slate-600">4.1. Chính sách sử dụng (/policy/terms):</label>
+       <textarea id="ftTermsText" rows="3" placeholder="Nhập nội dung quy định, điều khoản sử dụng VPN..." class="w-full p-2.5 border rounded-xl text-xs outline-none bg-slate-50 leading-relaxed"></textarea>
+      </div>
+      <div class="space-y-1">
+       <label class="block text-[11px] font-bold text-slate-600">4.2. Miễn trừ trách nhiệm (/policy/disclaimer):</label>
+       <textarea id="ftDisclaimerText" rows="3" placeholder="Nhập nội dung miễn trừ trách nhiệm..." class="w-full p-2.5 border rounded-xl text-xs outline-none bg-slate-50 leading-relaxed"></textarea>
+      </div>
+      <div class="space-y-1">
+       <label class="block text-[11px] font-bold text-slate-600">4.3. Quy định hoàn tiền (/policy/refund):</label>
+       <textarea id="ftRefundText" rows="3" placeholder="Nhập nội dung quy định hoàn tiền..." class="w-full p-2.5 border rounded-xl text-xs outline-none bg-slate-50 leading-relaxed"></textarea>
+      </div>
+     </div>
     </div>
    </div>
   </div>
@@ -1270,7 +1492,7 @@ const PDS={1:"https://vpntrinhhg.pages.dev",2:"https://vpntrinhhg2.pages.dev",3:
 let PD=/pages\.dev$/.test(location.hostname)?location.origin:PDS[3];
 const GH_REPO="trinhhg/vpntrinhhg3";
 const PKG_LIST=[["t1","Gói 1 tháng - 60,000VND / $2.5 / ¥15.5 (100GB)",30],["t2","Gói 1 tháng - 70,000VND / $3 / ¥18 (500GB)",30],["c1","Gói 1 tháng - 80,000VND / $3.5 / ¥20.5 (1000GB)",30],["c2","Gói Cao Cấp - 200,000VND / $8 / ¥50 (3000GB)",30],["c3","Gói 1 Năm - 799,000VND / $30 / ¥199 (300GB/tháng)",365],["d1","Không Giới Hạn - 200,000VND / $8 / ¥52 (200GB)",0],["d2","Không Giới Hạn - 399,000VND / $16 / ¥102 (1000GB)",0],["d3","Không Giới Hạn - 999,000VND / $40 / ¥256 (5000GB)",0],["o1","[Giá cũ] Gói 1 tháng - 50,000VND / ¥12.5 (100GB)",30],["o2","[Giá cũ] Gói 1 tháng - 60,000VND / ¥15 (500GB)",30],["o3","[Giá cũ] Gói 1 tháng - 70,000VND / ¥17.5 (1000GB)",30]];
-const TABS=[["t-ord","fa-box","Đơn hàng"],["t-check","fa-clipboard-check","Kiểm tra"],["t-data","fa-chart-pie","Dung lượng"],["t-trans","fa-file-invoice-dollar","Giao dịch"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-pkg","fa-boxes-stacked","Gói cước"],["t-mail","fa-envelope","Soạn mail"],["t-cms","fa-book","H.Dẫn"],["t-settings","fa-cog","Cài đặt"]];
+const TABS=[["t-ord","fa-box","Đơn hàng"],["t-check","fa-clipboard-check","Kiểm tra"],["t-data","fa-chart-pie","Dung lượng"],["t-trans","fa-file-invoice-dollar","Giao dịch"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-pkg","fa-boxes-stacked","Gói cước"],["t-mail","fa-envelope","Soạn mail"],["t-cms","fa-book","H.Dẫn"],["t-web-admin","fa-globe","Quản trị Web"],["t-settings","fa-cog","Cài đặt"]];
 // PKG_DB: giá hiện tại + giá cũ (o1/o2/o3) để nhận diện dữ liệu lịch sử — TUYỆT ĐỐI không quy đổi totalVnd của đơn cũ sang giá mới.
 const PKG_DB={t1:{n:"Gói 1 tháng",d:"100GB",vnd:60000,cny:15.5,m:1},t2:{n:"Gói 1 tháng",d:"500GB",vnd:70000,cny:18,m:1},c1:{n:"Gói 1 tháng",d:"1000GB",vnd:80000,cny:20.5,m:1},c2:{n:"Gói Cao Cấp",d:"3000GB",vnd:200000,cny:50,m:1},c3:{n:"Gói 1 Năm",d:"300GB/tháng",vnd:799000,cny:199,m:12},d1:{n:"Không Giới Hạn",d:"200GB",vnd:200000,cny:52,m:0},d2:{n:"Không Giới Hạn",d:"1000GB",vnd:399000,cny:102,m:0},d3:{n:"Không Giới Hạn",d:"5000GB",vnd:999000,cny:256,m:0},o1:{n:"Gói 1 tháng",d:"100GB",vnd:50000,cny:12.5,m:1,old:true},o2:{n:"Gói 1 tháng",d:"500GB",vnd:60000,cny:15,m:1,old:true},o3:{n:"Gói 1 tháng",d:"1000GB",vnd:70000,cny:17.5,m:1,old:true}};
 
@@ -1526,6 +1748,7 @@ function go(id){
   if(id==="t-dead")renderDead();
   if(id==="t-data")renderDataRequests();
   if(id==="t-lnk")renderLinks();
+  if(id==="t-web-admin")loadWebAdminUI();
   if(id==="t-settings"){loadSettingsUI();loadStatus();loadQuota();}
   if(id==="t-trans"){localStorage.setItem(SITE_KEY+"_txSeen",Date.now());$("transBadge").classList.add("hidden");if(curTxTab==="rev")renderRevenue();else renderTransactions();}
   if(id==="t-mail")renderMailComposer();
@@ -2087,7 +2310,7 @@ function renderRevenue(){
 let chartRev12 = null, chartPayDonut = null;
 function revOver(R,b){
  const sum=R.reduce((a,x)=>a+x.vnd,0),cost=costSum().total,profit=sum-cost;
- const warn=R.some(x=>x.pay!=="Bank")&&!cnyRate()?`<div class="bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold rounded-xl p-3">Có đơn Alipay/Weixin nhưng chưa nhập tỷ giá CNY → VND nên phần này chưa được cộng vào tổng. Vào tab "Thanh toán" để nhập.</div>`:"";
+ const warn=R.some(x=>x.pay!=="Bank")&&!cnyRate()?`<div class="bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold rounded-xl p-3">Có đơn Alipay/WeChat nhưng chưa nhập tỷ giá CNY → VND nên phần này chưa được cộng vào tổng. Vào tab "Thanh toán" để nhập.</div>`:"";
  const mt=monthTotals(),keys=Object.keys(mt).sort().slice(-12);
  const by={Bank:0,Alipay:0,Weixin:0};R.forEach(x=>by[x.pay]+=x.vnd);
 
@@ -2106,86 +2329,53 @@ function revOver(R,b){
   </div>` +
   `<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
     <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-2">
-      <div class="font-bold text-sm text-slate-800 flex items-center gap-2"><i class="fas fa-chart-column text-indigo-600"></i>Biểu đồ doanh thu 12 tháng gần nhất (VND)</div>
-      <div class="h-64 relative"><canvas id="chartRev12Canvas"></canvas></div>
+      <div class="font-bold text-sm text-slate-800 flex items-center gap-2"><i class="fas fa-chart-column text-indigo-600"></i>Biểu đồ doanh thu 12 tháng gần nhất (ApexCharts)</div>
+      <div id="chartRev12Box" class="min-h-[260px]"></div>
     </div>
     <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-2">
-      <div class="font-bold text-sm text-slate-800 flex items-center gap-2"><i class="fas fa-chart-pie text-purple-600"></i>Cơ cấu thanh toán</div>
-      <div class="h-64 relative flex items-center justify-center"><canvas id="chartPayDonutCanvas"></canvas></div>
+      <div class="font-bold text-sm text-slate-800 flex items-center gap-2"><i class="fas fa-chart-pie text-purple-600"></i>Cơ cấu thanh toán (3 cổng)</div>
+      <div id="chartPayDonutBox" class="min-h-[260px] flex items-center justify-center"></div>
     </div>
   </div>` +
   box("Doanh thu theo Gói cước", hbar(Object.values(g).sort((a,c)=>c.vnd-a.vnd).map(it=>({l:`${it.l} (${it.n} đơn)`, v:it.vnd})))) +
   box("Xếp hạng tháng theo doanh thu", hbar(Object.values(mt).sort((a,c)=>c.vnd-a.vnd).map((m,i)=>({l:`#${i+1} · Tháng ${monthLbl(m.k)} (${m.n} đơn)`, v:m.vnd}))));
 
  setTimeout(() => {
-  if (typeof Chart !== "undefined") {
-   if (chartRev12) chartRev12.destroy();
-   const ctx1 = document.getElementById("chartRev12Canvas");
-   if (ctx1) {
-    chartRev12 = new Chart(ctx1, {
-     type: 'bar',
-     data: {
-      labels: keys.map(k => monthLbl(k)),
-      datasets: [{
-       label: 'Doanh thu (VND)',
-       data: keys.map(k => mt[k].vnd),
-       backgroundColor: 'rgba(79, 70, 229, 0.85)',
-       hoverBackgroundColor: 'rgba(67, 56, 202, 1)',
-       borderRadius: 8
-      }]
-     },
-     options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-       legend: { display: false },
-       tooltip: {
-        callbacks: {
-         label: (c) => fmtVnd(c.parsed.y) + ' đ'
-        }
-       }
-      },
-      scales: {
-       y: {
-        beginAtZero: true,
-        ticks: { callback: (v) => shortN(v) }
-       }
-      }
-     }
+  if (typeof ApexCharts !== "undefined") {
+   if (chartRev12) { try { chartRev12.destroy(); } catch(e){} }
+   const el1 = document.getElementById("chartRev12Box");
+   if (el1) {
+    chartRev12 = new ApexCharts(el1, {
+     series: [{ name: 'Doanh thu (VND)', data: keys.map(k => mt[k].vnd) }],
+     chart: { type: 'bar', height: 260, toolbar: { show: false } },
+     colors: ['#4f46e5'],
+     plotOptions: { bar: { borderRadius: 6, columnWidth: '55%' } },
+     dataLabels: { enabled: false },
+     xaxis: { categories: keys.map(k => monthLbl(k)), labels: { style: { fontSize: '11px', fontWeight: 600 } } },
+     yaxis: { labels: { formatter: (v) => shortN(v) } },
+     tooltip: { y: { formatter: (v) => typeof currency !== "undefined" ? currency(v, { precision: 0, symbol: '' }).format() + ' đ' : fmtVnd(v) + ' đ' } }
     });
+    chartRev12.render();
    }
 
-   if (chartPayDonut) chartPayDonut.destroy();
-   const ctx2 = document.getElementById("chartPayDonutCanvas");
-   if (ctx2) {
-    chartPayDonut = new Chart(ctx2, {
-     type: 'doughnut',
-     data: {
-      labels: ['Bank VN', 'Alipay', 'Weixin'],
-      datasets: [{
-       data: [by.Bank, by.Alipay, by.Weixin],
-       backgroundColor: ['#4f46e5', '#0284c7', '#10b981'],
-       borderWidth: 2
-      }]
-     },
-     options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-       legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11, weight: 'bold' } } },
-       tooltip: {
-        callbacks: {
-         label: (c) => ` ${c.label}: ${fmtVnd(c.raw)} đ`
-        }
-       }
-      }
-     }
+   if (chartPayDonut) { try { chartPayDonut.destroy(); } catch(e){} }
+   const el2 = document.getElementById("chartPayDonutBox");
+   if (el2) {
+    chartPayDonut = new ApexCharts(el2, {
+     series: [by.Bank, by.Alipay, by.Weixin],
+     labels: ['Ngân hàng VN', 'Alipay', 'WeChat'],
+     chart: { type: 'donut', height: 260 },
+     colors: ['#4f46e5', '#0284c7', '#10b981'],
+     legend: { position: 'bottom', fontSize: '11px', fontWeight: 700 },
+     dataLabels: { enabled: false },
+     tooltip: { y: { formatter: (v) => typeof currency !== "undefined" ? currency(v, { precision: 0, symbol: '' }).format() + ' đ' : fmtVnd(v) + ' đ' } }
     });
+    chartPayDonut.render();
    }
   }
  }, 50);
 }
-const PAYLBL={Bank:"🏦 Ngân hàng VN",Alipay:"🔵 Alipay",Weixin:"🟢 Weixin"};
+const PAYLBL={Bank:"🏦 Ngân hàng VN",Alipay:"🔵 Alipay",Weixin:"🟢 WeChat"};
 function revPayDetail(b){
  const k=revPayView,list=ordersDb.filter(o=>payOf(o)===k&&(revMonth==="all"||monthInfo(oTs(o)).key===revMonth)).sort((a,c)=>oTs(c)-oTs(a)),ok=list.filter(o=>normSt(o.status)==="success").length;
  b.innerHTML=`<div class="flex flex-wrap items-center justify-between gap-2"><button onclick="revPayView=null;renderRevenue()" class="bg-white border border-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs shadow-sm hover:bg-slate-50"><i class="fas fa-arrow-left mr-1"></i>Quay lại</button><div class="text-xs font-bold text-slate-500">${PAYLBL[k]} · ${list.length} đơn (${ok} thành công) · <span class="text-indigo-600">chỉ xem — muốn sửa hãy sang tab Đơn hàng</span></div></div><div class="space-y-3">${list.map(o=>ordCard(o,true)).join("")||'<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 font-bold">Không có đơn nào</div>'}</div>`;}
@@ -2193,10 +2383,10 @@ function revPay(R,b){
  if(revPayView){revPayDetail(b);return;}
  const rate=cnyRate(),m={Bank:{n:0,vnd:0,cny:0},Alipay:{n:0,vnd:0,cny:0},Weixin:{n:0,vnd:0,cny:0}};R.forEach(x=>{const e=m[x.pay];e.n++;e.vnd+=x.vnd;e.cny+=x.cny;});
  const total=m.Bank.vnd+m.Alipay.vnd+m.Weixin.vnd,cn=(t,k,c)=>`<div onclick="revPayView='${k}';renderRevenue()" class="cursor-pointer bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md transition rounded-2xl p-4 shadow-sm"><div class="flex justify-between items-center"><div class="font-bold text-sm ${c}">${t}</div><i class="fas fa-chevron-right text-slate-300 text-xs"></i></div><div class="text-[11px] text-slate-500 mb-1">${m[k].n} đơn · bấm để xem danh sách</div>${k==="Bank"?`<div class="text-xl font-black text-slate-800">${fmtVnd(m[k].vnd)}đ</div>`:`<div class="text-xl font-black text-slate-800">¥${(Math.round(m[k].cny*100)/100).toLocaleString("en-US")}</div><div class="text-[11px] text-slate-500 mt-0.5">${rate?"≈ "+fmtVnd(m[k].vnd)+"đ":"chưa có tỷ giá"}</div>`}</div>`;
- b.innerHTML=box("Tỷ giá quy đổi CNY → VND",`<div class="flex flex-col sm:flex-row gap-2"><div class="flex-1 relative"><input id="rateInput" type="number" step="any" value="${rate||""}" placeholder="VD: 3600 (1 CNY = 3600 VND)" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-slate-50 outline-none pr-14"><span class="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400">VND/¥</span></div><button onclick="saveRate()" class="bg-indigo-600 text-white font-bold px-5 py-2.5 rounded-lg text-sm hover:bg-indigo-700 shadow-md">Xác nhận quy đổi</button><button onclick="resetRate()" class="bg-red-50 text-red-600 border border-red-100 font-bold px-4 py-2.5 rounded-lg text-sm hover:bg-red-100">Reset về 0đ</button></div><p class="text-[11px] text-slate-500 mt-2">Doanh thu Alipay/Weixin lấy theo totalCny thực nhận của đơn (thiếu thì theo giá CNY của gói) rồi nhân tỷ giá bạn nhập.</p>`)+
- `<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">${cn("🏦 Ngân hàng VN","Bank","text-indigo-600")}${cn("🔵 Alipay","Alipay","text-sky-600")}${cn("🟢 Weixin","Weixin","text-emerald-600")}</div>`+
- `<div class="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl p-5 text-white shadow-lg"><div class="text-xs font-bold opacity-80 uppercase">Tổng tất cả phương thức (đã quy đổi VND)</div><div class="text-3xl font-black mt-1">${fmtVnd(total)}đ</div><div class="text-xs opacity-80 mt-1">${R.length} đơn thành công${!rate&&(m.Alipay.n+m.Weixin.n)?" · chưa có tỷ giá nên Alipay/Weixin chưa cộng":""}</div></div>`+
- box("So sánh phương thức",hbar([{l:"Ngân hàng VN",v:m.Bank.vnd},{l:"Alipay",v:m.Alipay.vnd},{l:"Weixin",v:m.Weixin.vnd}]));}
+ b.innerHTML=box("Tỷ giá quy đổi CNY → VND",`<div class="flex flex-col sm:flex-row gap-2"><div class="flex-1 relative"><input id="rateInput" type="number" step="any" value="${rate||""}" placeholder="VD: 3600 (1 CNY = 3600 VND)" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-slate-50 outline-none pr-14"><span class="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400">VND/¥</span></div><button onclick="saveRate()" class="bg-indigo-600 text-white font-bold px-5 py-2.5 rounded-lg text-sm hover:bg-indigo-700 shadow-md">Xác nhận quy đổi</button><button onclick="resetRate()" class="bg-red-50 text-red-600 border border-red-100 font-bold px-4 py-2.5 rounded-lg text-sm hover:bg-red-100">Reset về 0đ</button></div><p class="text-[11px] text-slate-500 mt-2">Doanh thu Alipay/WeChat lấy theo totalCny thực nhận của đơn (thiếu thì theo giá CNY của gói) rồi nhân tỷ giá bạn nhập.</p>`)+
+ `<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">${cn("🏦 Ngân hàng VN","Bank","text-indigo-600")}${cn("🔵 Alipay","Alipay","text-sky-600")}${cn("🟢 WeChat","Weixin","text-emerald-600")}</div>`+
+ `<div class="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl p-5 text-white shadow-lg"><div class="text-xs font-bold opacity-80 uppercase">Tổng tất cả phương thức (đã quy đổi VND)</div><div class="text-3xl font-black mt-1">${fmtVnd(total)}đ</div><div class="text-xs opacity-80 mt-1">${R.length} đơn thành công${!rate&&(m.Alipay.n+m.Weixin.n)?" · chưa có tỷ giá nên Alipay/WeChat chưa cộng":""}</div></div>`+
+ box("So sánh phương thức",hbar([{l:"Ngân hàng VN",v:m.Bank.vnd},{l:"Alipay",v:m.Alipay.vnd},{l:"WeChat",v:m.Weixin.vnd}]));}
 async function saveRate(){const v=Number($("rateInput").value)||0;if(v<=0)return toast("Nhập tỷ giá lớn hơn 0","err");cmsDb.settings.cnyRate=v;try{await saveCmsDb();toast("Đã quy đổi theo tỷ giá "+fmtVnd(v)+" VND / ¥");renderRevenue();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
 async function resetRate(){if(!confirm("Reset tỷ giá CNY→VND về 0đ? Doanh thu Alipay/Weixin sẽ tạm không quy đổi được cho tới khi nhập tỷ giá mới."))return;cmsDb.settings.cnyRate=0;try{await saveCmsDb();toast("Đã reset tỷ giá về 0đ");logEvent("warn","Doanh thu","Reset tỷ giá CNY→VND về 0đ");renderRevenue();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
 
@@ -2278,9 +2468,15 @@ function mcRenderEditor(){
   return `<div onclick="mcSel=${i}" class="bg-white border ${mcSel===i?"border-indigo-400":"border-slate-200"} rounded-lg p-2 space-y-1"><div class="flex items-center gap-1 flex-wrap"><span class="text-[11px] font-black text-slate-500 mr-1">${nm}</span>${ab}${tf}${sz}<div class="ml-auto flex gap-1"><button onclick="mcMove(${i},-1)" class="w-6 h-6 rounded border text-[10px] text-slate-500"><i class="fas fa-arrow-up"></i></button><button onclick="mcMove(${i},1)" class="w-6 h-6 rounded border text-[10px] text-slate-500"><i class="fas fa-arrow-down"></i></button><button onclick="mcDel(${i})" class="w-6 h-6 rounded border text-[10px] text-red-500"><i class="fas fa-xmark"></i></button></div></div>${body}</div>`;}).join("")||'<div class="text-xs text-slate-400 italic p-3 text-center">Chưa có khối nào</div>';
  mcPreview();}
 function mcPreview(){
- const el=$("mcPreview");if(!el)return;
- el.innerHTML=`<div style="font-family:Arial,Helvetica,sans-serif;font-weight:normal;font-size:16px;line-height:normal;color:#000000">${mailRender(mcToTpl(),mcSampleVars(),PD)}</div>`;
- $("mcGradBar").style.background=mailGrad(mc.c1,mc.c2,mc.ang,mc.stop);}
+ const iframe = $("mcPreviewIframe");
+ const rendered = mailRender(mcToTpl(), mcSampleVars(), PD);
+ if (iframe) {
+   iframe.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:12px;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;}</style></head><body>${rendered}</body></html>`;
+ }
+ const el = $("mcPreview");
+ if (el) el.innerHTML = rendered;
+ $("mcGradBar").style.background = mailGrad(mc.c1, mc.c2, mc.ang, mc.stop);
+}
 function mcSet(i,k,v,re){mc.blocks[i][k]=v;if(re)mcRenderEditor();else mcPreview();}
 function mcAdd(t){const nb={t};if(t==="text")nb.x="";if(t==="portal")nb.x="TRUY CẬP CỔNG KHÁCH HÀNG";if(t==="box"){nb.label="TIÊU ĐỀ";nb.x="Nội dung";nb.theme="amber";}if(t==="spacer")nb.h=16;if(t==="img")nb.u="";const at=mcSel>=0?mcSel+1:mc.blocks.length;mc.blocks.splice(at,0,nb);mcSel=at;mcRenderEditor();}
 function mcMove(i,d){const j=i+d;if(j<0||j>=mc.blocks.length)return;[mc.blocks[i],mc.blocks[j]]=[mc.blocks[j],mc.blocks[i]];mcSel=j;mcRenderEditor();}
@@ -4388,6 +4584,24 @@ async function saveQrExpireSeconds(){
    toast("Lỗi lưu thời gian QR: " + e.message, "err");
  }
 }
+function switchWebAdminTab(tab){
+  $("wpane-ui").classList.toggle("hidden", tab !== "ui");
+  $("wpane-footer").classList.toggle("hidden", tab !== "footer");
+  $("wtab-ui").classList.toggle("active", tab === "ui");
+  $("wtab-footer").classList.toggle("active", tab === "footer");
+  if(tab === "footer") loadFooterConfigUI();
+}
+
+function loadWebAdminUI(){
+  loadDrawerSettingsUI();
+  if($("qrExpireSecondsInp")) $("qrExpireSecondsInp").value = Number((cmsDb.settings||{}).qrExpireSeconds) || 30;
+  renderBlurRows();
+  renderRouteRows();
+  renderDockRows();
+  renderFaqAdmin();
+  loadFooterConfigUI();
+}
+
 function loadSettingsUI(){
  const s=cmsDb.settings;renderRouteRows();renderBlurRows();renderDockRows();renderMailProvCards();
  if($("qrExpireSecondsInp")) $("qrExpireSecondsInp").value = Number(s.qrExpireSeconds) || 30;
