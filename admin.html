@@ -23,8 +23,7 @@
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/plugin/timezone.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3.10.0/notyf.min.css">
-<script src="https://cdn.jsdelivr.net/npm/notyf@3.10.0/notyf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <style>
 *{box-sizing:border-box;}
@@ -636,35 +635,6 @@ textarea.autog{resize:none;overflow:hidden;}
 
   <!-- Pane 1: Thẻ Giá Gói Cước & Quản Trị Cửa Hàng Pro -->
   <div id="pane-pkg-cards" class="space-y-4">
-   <!-- KHỐI 1: HEADER ANNOUNCEMENT DRAWER (THÔNG BÁO KHUYẾN MÃI ĐỈNH WEB) -->
-   <div class="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border-2 border-indigo-200 rounded-2xl p-4 shadow-sm space-y-3">
-    <div class="flex items-center justify-between flex-wrap gap-2">
-     <div class="font-extrabold text-sm text-indigo-900 flex items-center gap-2">
-      <i class="fas fa-bullhorn text-indigo-600"></i>Thanh Thông Báo Đỉnh Web (Header Announcement Drawer)
-     </div>
-     <div class="flex items-center gap-2">
-      <span class="text-xs font-bold text-slate-600">Bật thông báo:</span>
-      <div class="toggle-wrap">
-       <input type="checkbox" id="headerDrawerOn" onchange="toggleHeaderDrawer(this.checked)">
-       <span class="toggle-slider"></span>
-      </div>
-      <button type="button" onclick="saveHeaderDrawer()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm flex items-center gap-1 transition active:scale-95">
-       <i class="fas fa-save mr-1"></i>LƯU THÔNG BÁO
-      </button>
-     </div>
-    </div>
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-     <div class="sm:col-span-2">
-      <label class="block font-bold text-slate-600 mb-1">Nội dung thông báo (hỗ trợ Emoji):</label>
-      <input type="text" id="headerDrawerText" placeholder="VD: 🔥 Khuyến mãi mùa du lịch: Tặng ngay +3 ngày sử dụng cho mọi gói!" class="w-full p-2 border border-indigo-200 rounded-xl bg-white font-bold text-slate-800 outline-none focus:border-indigo-500">
-     </div>
-     <div>
-      <label class="block font-bold text-slate-600 mb-1">Link chuyển hướng khi bấm:</label>
-      <input type="text" id="headerDrawerLink" placeholder="#packages hoặc /portal/packages" class="w-full p-2 border border-indigo-200 rounded-xl bg-white font-mono font-bold text-indigo-700 outline-none focus:border-indigo-500">
-     </div>
-    </div>
-   </div>
-
    <!-- KHỐI 2: HEADER TAB GÓI CƯỚC -->
    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
     <div>
@@ -1319,12 +1289,21 @@ const getT=m=>{try{const u=new URL(m);return u.searchParams.get("top")||u.search
 const trimNum=v=>String(Math.round((Number(v)||0)*100)/100);
 const VND_SEP=",";
 const fmtVnd=n=>String(Math.round(Number(n)||0)).replace(/\B(?=(\d{3})+(?!\d))/g,VND_SEP);
-const notyf = typeof Notyf !== "undefined" ? new Notyf({ duration: 3200, position: { x: 'right', y: 'top' }, dismissible: true }) : null;
+const Toast = typeof Swal !== "undefined" ? Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (t) => {
+    t.onmouseenter = Swal.stopTimer;
+    t.onmouseleave = Swal.resumeTimer;
+  }
+}) : null;
 function toast(msg, type = "ok") {
-  if (!notyf) { alert(msg); return; }
-  if (type === "err") notyf.error(msg);
-  else if (type === "warn") notyf.open({ type: 'warning', message: msg, background: '#d97706', icon: { className: 'fas fa-exclamation-triangle', tagName: 'i', color: '#fff' } });
-  else notyf.success(msg);
+  if (!Toast) { alert(msg); return; }
+  const icon = type === "err" ? "error" : type === "warn" ? "warning" : "success";
+  Toast.fire({ icon: icon, title: msg });
 }
 const cp=t=>{if(!t)return;navigator.clipboard.writeText(t).catch(()=>{});toast("Đã copy: "+(t.length>20?t.slice(0,20)+"...":t));};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -1402,7 +1381,7 @@ function pkgOf(o){
 }
 const pkgLabel=o=>{const p=pkgOf(o);return p?`${p.n} - ${fmtVnd(p.vnd)}VND${p.old?" (giá cũ)":""}`:(o.pkgName||"—");};
 // Số tháng: days/30; doanh thu chỉ tính phần nguyên (6.5 tháng => 6). Không làm tròn lên.
-const fmtMonths=d=>{d=Number(d)||0;return d>0?String(Math.round(d/30*100)/100):"";};
+const fmtMonths=d=>{d=Number(d)||0;return d>0?String(Math.floor(d/30)):"";};
 function ordMonths(o){const p=pkgOf(o);if(p&&p.m===0)return 0;const d=Number(o.days);if(d>0)return Math.floor(d/30);return (p?p.m:1)*(Number(o.qty)||1);}
 function webLabel(v,wu){const t=String(v||"")+" "+String(wu||"");if(/vpntrinhhg3|lucastanora/i.test(t))return "Web 3";if(/vpntrinhhg2|onepiece/i.test(t))return "Web 2";if(/vpntrinhhg\.|doicucden/i.test(t))return "Web 1";return v?String(v).replace(/^https?:\/\//,"").replace(/\/$/,""):"—";}
 let myWebIndex = /vpntrinhhg2|onepiece/i.test(location.hostname) ? 2 : /vpntrinhhg\.|doicucden/i.test(location.hostname) ? 1 : 3;
@@ -1411,22 +1390,38 @@ function getMe(){
   return { n, field: "info" + n, PD: PDS[n] || PDS[3] };
 }
 function linkBottom(l){
- if (!l) return "Vĩnh viễn";
+ if (!l) return '<span class="text-purple-600 font-bold">Vĩnh viễn</span>';
+ let exp = "";
  // Chuẩn hóa 3 nhánh 1 gốc: Tra cứu HSD từ Tab Đơn hàng (Single Source of Truth)
  if (l.orderId) {
    const od = ordersDb.find(o => normId(o.id) === normId(l.orderId));
-   if (od && od.expDate) {
-     return isLife(od.expDate) ? "Vĩnh viễn" : esc(od.expDate);
-   }
+   if (od && od.expDate) exp = od.expDate;
  }
- if (l.masked) {
+ if (!exp && l.masked) {
    const od = ordersDb.find(o => o.info1 === l.masked || o.info2 === l.masked || o.info3 === l.masked);
-   if (od && od.expDate) {
-     return isLife(od.expDate) ? "Vĩnh viễn" : esc(od.expDate);
-   }
+   if (od && od.expDate) exp = od.expDate;
  }
- if (!l.expDate || isLife(l.expDate) || isLife(l.date)) return "Vĩnh viễn";
- return esc(l.expDate);
+ if (!exp) exp = l.expDate || l.date || "";
+
+ if (!exp || isLife(exp)) {
+   return '<span class="text-purple-600 font-bold">Vĩnh viễn</span>';
+ }
+
+ try {
+   let d = null;
+   if (typeof dayjs !== "undefined") {
+     if (exp.includes("/")) d = dayjs(exp, "DD/MM/YYYY");
+     else d = dayjs(exp);
+     if (d && d.isValid()) {
+       const daysLeft = d.endOf('day').diff(dayjs(), 'day');
+       if (daysLeft >= 0 && daysLeft <= 3) {
+         return `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-700 border border-amber-300">${esc(exp)}</span>`;
+       }
+     }
+   }
+ } catch(e) {}
+
+ return esc(exp);
 }
 const payOf=o=>/alipay/i.test(o.method||"")?"Alipay":/weixin|wechat/i.test(o.method||"")?"Weixin":"Bank";
 
@@ -3588,8 +3583,10 @@ function artDel(slug){
  renderArtList();renderCmsEditor();
 }
 function renderArtList(){
+ const el = $("cmsArtList");
+ if (!el) return;
  const list=artsOf(curCms);
- $("cmsArtList").innerHTML=`<div class="flex items-center justify-between mb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-newspaper text-indigo-500 mr-1"></i>Bài viết của tab này (${list.length}) <span class="text-[10px] font-normal text-slate-400">— bấm vào bài để soạn · bấm icon Link để lấy link gửi khách</span></div><button onclick="artAdd()" class="bg-indigo-50 text-indigo-600 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-indigo-100"><i class="fas fa-plus mr-1"></i>Bài mới</button></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2">${list.map(a=>{
+ el.innerHTML=`<div class="flex items-center justify-between mb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-newspaper text-indigo-500 mr-1"></i>Bài viết của tab này (${list.length}) <span class="text-[10px] font-normal text-slate-400">— bấm vào bài để soạn · bấm icon Link để lấy link gửi khách</span></div><button onclick="artAdd()" class="bg-indigo-50 text-indigo-600 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-indigo-100"><i class="fas fa-plus mr-1"></i>Bài mới</button></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2">${list.map(a=>{
   const s=a.slug||toSlug(a.name);
   const on=s===curArt;
   return `<div onclick="openArt(${q(s)})" class="cursor-pointer border-2 ${on?"border-indigo-500 bg-indigo-50":"border-slate-200 hover:border-indigo-300 bg-white"} rounded-xl p-2.5 flex items-center justify-between gap-2"><div class="min-w-0"><div class="flex items-center gap-1.5"><span class="font-bold text-sm text-slate-800 truncate">${esc(a.name||"(chưa đặt tên)")}</span></div><div class="text-[10px] text-slate-500 mt-0.5">Cập nhật: ${a.updated?fmtBank(a.updated):"chưa lưu"} · Tác giả: ${esc(a.author||"—")}</div></div><div class="flex gap-1 shrink-0"><button title="Copy Link trực tiếp tới bài viết này" onclick="event.stopPropagation();copyArtDeepLink(${q(curCms)},${q(s)})" class="text-emerald-600 bg-emerald-50 border border-emerald-200 hover:bg-emerald-600 hover:text-white px-2.5 py-1 rounded-lg text-xs font-bold transition"><i class="fas fa-link mr-1"></i>Link</button><button onclick="event.stopPropagation();openArt(${q(s)})" class="text-indigo-600 bg-white border border-indigo-100 px-2 py-1 rounded-lg text-xs"><i class="fas fa-pen"></i></button><button onclick="event.stopPropagation();artDel(${q(s)})" class="text-red-500 bg-white border border-red-100 px-2 py-1 rounded-lg text-xs"><i class="fas fa-trash"></i></button></div></div>`;}).join("")}</div>`;}
