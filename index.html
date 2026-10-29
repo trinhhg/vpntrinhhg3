@@ -1533,10 +1533,11 @@ function renderDynamicFooter(ft){
   if(bc) bc.style.display='none';
 }
 
+let isHeaderDrawerClosed = false;
 function renderHeaderDrawer(drawerCfg) {
   const d = $('headerAnnouncementDrawer');
   if (!d) return;
-  if (sessionStorage.getItem('vpn_announcement_closed') === '1') {
+  if (isHeaderDrawerClosed) {
     d.classList.add('hidden');
     $('mainNav').style.top = '0px';
     return;
@@ -1560,7 +1561,7 @@ function closeHeaderDrawer() {
   const d = $('headerAnnouncementDrawer');
   if (d) d.classList.add('hidden');
   $('mainNav').style.top = '0px';
-  sessionStorage.setItem('vpn_announcement_closed', '1');
+  isHeaderDrawerClosed = true;
 }
 
 const isClientTestMode = new URLSearchParams(location.search).get('test') === '1';
