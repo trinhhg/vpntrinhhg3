@@ -18,8 +18,7 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/navigo@8.11.1/lib/navigo.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3.10.0/notyf.min.css">
-<script src="https://cdn.jsdelivr.net/npm/notyf@3.10.0/notyf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&display=swap" rel="stylesheet">
@@ -207,8 +206,8 @@ html.dark .loader-ring.amber i{color:#E6C078;}
 <!-- HEADER ANNOUNCEMENT DRAWER (THÔNG BÁO KHUYẾN MÃI ĐỈNH WEB) -->
 <div id="headerAnnouncementDrawer" class="hidden fixed top-0 left-0 w-full z-[80] bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white text-xs py-2 px-3 shadow-md transition-all duration-300">
   <div class="max-w-[1400px] mx-auto flex items-center justify-between gap-3">
-    <div class="flex items-center gap-2 truncate font-bold">
-      <span class="w-2 h-2 rounded-full bg-yellow-300 animate-ping shrink-0"></span>
+    <div class="flex items-center gap-2 min-w-0 font-bold">
+      <span class="w-2.5 h-2.5 rounded-full bg-yellow-300 animate-ping shrink-0 ml-0.5"></span>
       <span id="headerDrawerContentText" class="truncate"></span>
     </div>
     <div class="flex items-center gap-2 shrink-0">
@@ -288,33 +287,32 @@ html.dark .loader-ring.amber i{color:#E6C078;}
   </div>
 </div>
 
-<!-- MODAL MÃ QR CHUẨN VIETQR BANK (KHÔNG DÙNG KÍNH MỜ, BỎ NAPAS & MB) -->
+<!-- MODAL MÃ QR LINK SUB CHUẨN VIP THEO GIAO DIỆN APP VPN -->
 <div id="qrSubModal" class="hidden fixed inset-0 z-[90000] bg-black/75 flex items-center justify-center p-4 transition-all" onclick="closeQrModal()">
-  <div class="bg-[#f0f4fa] dark:bg-[#1a1d24] border border-slate-200 dark:border-white/10 p-6 md:p-7 rounded-[28px] text-center max-w-[340px] w-full shadow-2xl relative" onclick="event.stopPropagation()">
-    <button type="button" onclick="closeQrModal()" title="Đóng" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center shadow-sm transition">
+  <div class="bg-white dark:bg-[#1a1d24] border border-slate-100 dark:border-white/10 p-7 md:p-8 rounded-[32px] text-center max-w-[360px] w-full shadow-2xl relative" onclick="event.stopPropagation()">
+    <button type="button" onclick="closeQrModal()" title="Đóng" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center justify-center transition">
       <i class="fas fa-times text-sm"></i>
     </button>
     
-    <!-- Header chuẩn VietQR thay bằng VPNTrinhHg -->
-    <div class="flex items-center justify-center gap-1 mb-4">
-      <span class="text-rose-600 font-black text-2xl tracking-tight">VPN</span><span class="text-[#1e3a8a] dark:text-indigo-400 font-black text-2xl tracking-tight">TrinhHg</span>
+    <!-- Tiêu đề & Thông tin hướng dẫn quét -->
+    <div class="mb-4">
+      <h3 id="qrSubModalTitle" class="text-2xl font-black text-slate-800 dark:text-white tracking-tight mb-1">Mã QR Link Sub #1</h3>
+      <p class="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">Dùng app VPN đã cài để quét mã</p>
+      <p class="text-xs md:text-sm font-bold text-indigo-600 dark:text-indigo-400">Mua VPN tại vpntrinhhg.pages.dev</p>
+      <p class="text-xs md:text-sm font-bold text-emerald-600 dark:text-emerald-400">Zalo: 0917678211</p>
     </div>
 
-    <!-- Khung QR trắng sắc nét bo viền chuẩn ngân hàng -->
-    <div class="bg-white p-3 rounded-2xl mb-4 border border-[#1e3a8a]/20 shadow-sm flex justify-center items-center mx-auto w-[220px] h-[220px]" id="qrCanvasBox" translate="no"></div>
+    <!-- Khung QR trắng sắc nét bo viền nhẹ -->
+    <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm flex justify-center items-center mx-auto w-[220px] h-[220px]" id="qrCanvasBox" translate="no"></div>
 
-    <div class="text-[11px] font-bold text-slate-600 dark:text-slate-300 space-y-0.5 mb-3">
-      <p id="qrSubModalTitle" class="font-extrabold text-slate-800 dark:text-white text-xs">Mã QR Link Sub</p>
-      <p class="text-indigo-600 dark:text-indigo-400">vpntrinhhg.pages.dev · Zalo: 0917678211</p>
-    </div>
-
-    <div>
-      <div class="flex justify-between items-center text-xs font-bold mb-1">
-        <span class="text-slate-500 dark:text-slate-400 text-[10px]">Mã QR tự hủy sau:</span>
-        <span id="qrCountdownText" class="text-indigo-600 dark:text-indigo-400 font-mono text-xs font-black" translate="no">30s</span>
+    <!-- Đếm ngược tự hủy & Thanh tiến trình tím -->
+    <div class="mt-4 space-y-2">
+      <div class="flex justify-between items-center text-xs sm:text-sm font-extrabold px-1">
+        <span class="text-slate-600 dark:text-slate-300">Mã QR tự hủy sau:</span>
+        <span id="qrCountdownText" class="text-indigo-600 dark:text-indigo-400 font-mono text-sm font-black" translate="no">36s</span>
       </div>
-      <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
-        <div id="qrProgressBar" class="bg-indigo-600 h-full w-full transition-all duration-1000 ease-linear" style="width:100%"></div>
+      <div class="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+        <div id="qrProgressBar" class="bg-gradient-to-r from-indigo-500 to-purple-600 h-full w-full transition-all duration-1000 ease-linear rounded-full" style="width:100%"></div>
       </div>
     </div>
   </div>
@@ -1538,6 +1536,11 @@ function renderDynamicFooter(ft){
 function renderHeaderDrawer(drawerCfg) {
   const d = $('headerAnnouncementDrawer');
   if (!d) return;
+  if (sessionStorage.getItem('vpn_announcement_closed') === '1') {
+    d.classList.add('hidden');
+    $('mainNav').style.top = '0px';
+    return;
+  }
   const cfg = drawerCfg || {};
   if (!cfg.enabled || !cfg.text) {
     d.classList.add('hidden');
@@ -1547,14 +1550,17 @@ function renderHeaderDrawer(drawerCfg) {
   $('headerDrawerContentText').textContent = cfg.text;
   if ($('headerDrawerBtnLink')) $('headerDrawerBtnLink').href = cfg.link || '#packages';
   d.classList.remove('hidden');
-  const drawerH = d.offsetHeight || 36;
-  $('mainNav').style.top = drawerH + 'px';
+  setTimeout(() => {
+    const drawerH = d.offsetHeight || 36;
+    $('mainNav').style.top = drawerH + 'px';
+  }, 50);
 }
 
 function closeHeaderDrawer() {
   const d = $('headerAnnouncementDrawer');
   if (d) d.classList.add('hidden');
   $('mainNav').style.top = '0px';
+  sessionStorage.setItem('vpn_announcement_closed', '1');
 }
 
 const isClientTestMode = new URLSearchParams(location.search).get('test') === '1';
@@ -1564,18 +1570,28 @@ async function wpost(path,body){
   const r = await fetch(WORKER_URL + path + (isClientTestMode ? (path.includes('?') ? '&test=1' : '?test=1') : ''), {
     method: 'POST',
     headers,
-    body: JSON.stringify(body || {})
+    body: JSON.stringify(body),
+    cache: 'no-store'
   });
   let d = {}; try { d = await r.json(); } catch {}
   return { ok: r.ok, status: r.status, data: d };
 }async function wpostRetry(path,body,n=3){let last;for(let i=0;i<n;i++){try{last=await wpost(path,body);if(last.ok||last.status<500)return last;}catch(e){last={ok:false,status:0,data:{error:String(e)}};}await new Promise(r=>setTimeout(r,800*(i+1)));}return last;}
 
-const notyf = typeof Notyf !== 'undefined' ? new Notyf({ duration: 3200, position: { x: 'right', y: 'top' }, dismissible: true }) : null;
+const Toast = typeof Swal !== 'undefined' ? Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (t) => {
+    t.onmouseenter = Swal.stopTimer;
+    t.onmouseleave = Swal.resumeTimer;
+  }
+}) : null;
 function showToast(msg, type = 'success') {
-  if (!notyf) { alert(msg); return; }
-  if (type === 'error') notyf.error(msg);
-  else if (type === 'info') notyf.open({ type: 'info', message: msg, background: '#4f46e5', icon: { className: 'fas fa-info-circle', tagName: 'i', color: '#fff' } });
-  else notyf.success(msg);
+  if (!Toast) { alert(msg); return; }
+  const icon = type === 'error' ? 'error' : type === 'info' ? 'info' : 'success';
+  Toast.fire({ icon: icon, title: msg });
 }
 
 let indexScrollTimer = null;
@@ -1964,7 +1980,7 @@ function drawQrCenterLogo(box) {
   const w = canvas.width, h = canvas.height;
   const bw = 82, bh = 24;
   const bx = (w - bw) / 2, by = (h - bh) / 2;
-  const radius = 6; // Bo nhẹ phẳng hiện đại, tuyệt đối không khoét viên thuốc
+  const radius = 6;
 
   ctx.save();
   ctx.fillStyle = '#ffffff';
@@ -1973,12 +1989,11 @@ function drawQrCenterLogo(box) {
   else ctx.rect(bx, by, bw, bh);
   ctx.fill();
 
-  ctx.strokeStyle = '#e2e8f0';
+  ctx.strokeStyle = '#6366f1';
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Logo thương hiệu nhỏ gọn thay chữ V đỏ
-  ctx.fillStyle = '#dc2626';
+  ctx.fillStyle = '#4f46e5';
   ctx.font = '900 11px "Plus Jakarta Sans", Arial, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -2315,7 +2330,7 @@ function showPolicyPage(targetSection, skipPush=false){
 }
 
 function switchPortalTab(tabId, fromUpgrade=false, skipPush=false){
- if(!fromUpgrade)disableUpgradeMode();
+ if(!fromUpgrade && tabId !== 'p-store')disableUpgradeMode();
 
  enablePortalFrame();
 
