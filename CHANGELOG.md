@@ -11,7 +11,18 @@
 
 ---
 
-## [Unreleased] — Giai đoạn 6: Kiểm Tra Cấu Hình Cloudflare Pages Preview & Fallback Routing (2026-10-30)
+## [1.0.0] — Hoàn Thành Tái Cấu Trúc Toàn Diện (Vite, Local NPM, Chart.js, 56 Automated Tests) (2026-10-30)
+
+### Milestone Summary
+- Đã hoàn tất 100% toàn bộ 7 giai đoạn (Giai đoạn 0 đến Giai đoạn 6) theo đúng kế hoạch kỹ thuật.
+- Toàn bộ frontend được chuyển từ HTML inline sang Vite 5 + Tailwind CSS 3.4 nội bộ + Vanilla JS ESM với kiến trúc tối giản (~10–12 file chính).
+- Loại bỏ hoàn toàn 9 CDN ngoài, thay ApexCharts bằng Chart.js (MIT), giữ nguyên 100% giao diện, nghiệp vụ và hợp đồng 49 API endpoints.
+- Đạt 56/56 bài test tự động (Vitest + Playwright) với chi phí $0 trọn đời.
+- Sẵn sàng để hợp nhất (merge) vào nhánh `main`.
+
+---
+
+## [0.9.7] — Giai đoạn 6: Kiểm Tra Cấu Hình Cloudflare Pages Preview & Fallback Routing (2026-10-30)
 
 ### Added
 - **Khởi tạo `.node-version`:** Cố định phiên bản Node.js LTS `20.18.0` cho môi trường Cloudflare Pages Build Runner, đảm bảo tính nhất quán tuyệt đối giữa môi trường phát triển cục bộ và CI/CD trên Cloudflare.
