@@ -11,7 +11,31 @@
 
 ---
 
-## [Unreleased] — Giai đoạn 4: Chuyển Thư Viện Sang Local NPM & Đổi ApexCharts sang Chart.js (2026-10-30)
+## [Unreleased] — Giai đoạn 5: Kiểm Thử Nghiệp Vụ Tự Động (Vitest & Playwright) (2026-10-30)
+
+### Added
+- **Bộ Kiểm thử Đơn vị & Tích hợp (Vitest 47 tests):**
+  - **`tests/shared.test.js` (18 tests):** Kiểm thử định dạng tiền tệ `fmtVnd`, làm sạch mã độc XSS `esc` và `q`, sinh mã đơn hàng `genId`/`genHex`, chuẩn hóa trạng thái `normSt`, nhận diện gói vĩnh viễn `isLife`, phân tích ngày giờ `parseAny` và múi giờ Việt Nam `fmtBank`, cơ chế chuyển đổi và lưu trữ giao diện Dark/Light Mode.
+  - **`tests/api.test.js` (12 tests):** Kiểm thử giao tiếp Worker Backend, tự động chèn header `Authorization` Bearer token và `x-site-key`, cơ chế soft-fail khi mất mạng, xử lý mã 401 Unauthorized, và **xác thực nghiêm ngặt Quy tắc An toàn 41 & 42**: tuyệt đối không retry tạo đơn (`/api/public/order`) hoặc gia hạn (`/api/public/upgrade`) để ngăn ngừa phát sinh giao dịch kép.
+  - **`tests/schema.test.js` (8 tests):** Ứng dụng Zod kiểm định hợp đồng dữ liệu chuẩn hóa cho `OrderSchema`, `LinkPoolItemSchema`, `D1TransactionSchema`, và `PackageConfigSchema`.
+  - **`tests/business.test.js` (9 tests):** Kiểm thử tính toán giá gói cước, mã giảm giá phần trăm/cố định, quy đổi tỷ giá VND-CNY an toàn, tổng hợp doanh thu theo cổng thanh toán, tính toán lợi nhuận ròng, thuật toán cấp phát node Link Pool khả dụng, và làm sạch bài viết CMS với DOMPurify.
+  - **`tests/setup.js`:** Mock storage môi trường Node.js giải quyết triệt để cảnh báo Node 26 experimental localStorage.
+- **Bộ Kiểm thử Trình duyệt Trực tiếp E2E (Playwright 4 tests):**
+  - **`playwright.config.js`:** Cấu hình headless Microsoft Edge, tự động khởi động server preview cục bộ (`127.0.0.1:4173`) với cơ chế fast-timeout an toàn.
+  - **`tests/e2e/pages.spec.js` (4 tests):** Kiểm tra tải thực tế trang Khách hàng (`index.html`) và Quản trị (`admin.html`), xác nhận không có runtime error console, kiểm tra tương tác click chuyển Dark/Light Mode trên DOM, và kiểm tra hiển thị canvas biểu đồ Chart.js.
+
+### Fixed
+- **Khắc phục lỗi treo cổng mạng khi chạy Playwright:** Chuẩn hóa cấu hình `webServer` sang địa chỉ IPv4 tường minh (`127.0.0.1:4173`) kèm cờ `--host`, đồng thời chạy lệnh kiểm thử với quyền truy cập cổng cục bộ để không bị nghẽn socket sandbox trên Windows.
+
+### Verified
+- **Chạy toàn bộ 51 bài kiểm thử tự động (`npm run test:all`):**
+  - 47/47 Unit & Integration tests (Vitest) hoàn thành trong 1.73s (100% Pass).
+  - 4/4 Browser E2E tests (Playwright) hoàn thành trong 4.0s (100% Pass).
+- **Biên dịch Production (`npm run build`):** Hoàn thành trong 3.43s với 0 cảnh báo và 0 lỗi.
+
+---
+
+## [0.9.5] — Giai đoạn 4: Chuyển Thư Viện Sang Local NPM & Đổi ApexCharts sang Chart.js (2026-10-30)
 
 ### Added
 - **Đóng gói Font và Icon nội bộ:**

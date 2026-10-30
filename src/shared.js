@@ -3,6 +3,25 @@
  * Đảm bảo 100% tính tương thích về định dạng tiền tệ, ngày giờ, escape, DOM và Toast.
  */
 
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc.js';
+import timezone from 'dayjs/plugin/timezone.js';
+import customParseFormat from 'dayjs/plugin/customParseFormat.js';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.extend(customParseFormat);
+
+export { dayjs };
+
+const getStorage = () => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) return window.localStorage;
+    if (typeof localStorage !== 'undefined') return localStorage;
+  } catch (e) {}
+  return null;
+};
+
 // Selector Helper
 export const $ = id => (typeof document !== 'undefined' ? document.getElementById(id) : null);
 
@@ -172,7 +191,7 @@ export function toggleTheme() {
   if (typeof document === "undefined") return;
   const dark = document.documentElement.classList.toggle('dark');
   try {
-    localStorage.setItem('vpn_theme', dark ? 'dark' : 'light');
+    getStorage()?.setItem('vpn_theme', dark ? 'dark' : 'light');
   } catch (e) {}
   paintThemeIcon();
 }
@@ -180,7 +199,7 @@ export function toggleTheme() {
 export function initTheme() {
   if (typeof document === "undefined") return;
   try {
-    const t = localStorage.getItem('vpn_theme');
+    const t = getStorage()?.getItem('vpn_theme');
     if (t === 'dark' || (!t && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark');
     }
