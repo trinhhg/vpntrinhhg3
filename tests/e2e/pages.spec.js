@@ -2,9 +2,10 @@ import { test, expect } from '@playwright/test';
 
 test.describe('E2E Test: Trang Khách hàng (index.html)', () => {
   test('tải trang thành công, tiêu đề đúng và nạp đầy đủ CSS/JS', async ({ page }) => {
-    const consoleErrors = [];
+    const pageErrors = [];
+    page.on('pageerror', err => pageErrors.push(err.message));
     page.on('console', msg => {
-      if (msg.type() === 'error') consoleErrors.push(msg.text());
+      if (msg.type() === 'error') pageErrors.push(msg.text());
     });
 
     await page.goto('/');
@@ -12,9 +13,20 @@ test.describe('E2E Test: Trang Khách hàng (index.html)', () => {
     // Kiểm tra tiêu đề trang
     await expect(page).toHaveTitle(/VPN/i);
 
-    // Kiểm tra không có lỗi crash JS nghiêm trọng khi khởi tạo
-    const fatalErrors = consoleErrors.filter(e => !e.includes('favicon') && !e.includes('Failed to load resource'));
-    expect(fatalErrors.length).toBe(0);
+    // Kiểm tra không có bất kỳ ngoại lệ JavaScript nào khi khởi tạo
+    const fatalErrors = pageErrors.filter(e => !e.includes('favicon') && !e.includes('Failed to load resource'));
+    expect(fatalErrors).toEqual([]);
+
+    // Kiểm tra các hàm nghiệp vụ toàn cục đã được nạp thành công lên window
+    const functionsLoaded = await page.evaluate(() => ({
+      renderPackages: typeof window.renderPackages,
+      openWechatModal: typeof window.openWechatModal,
+      QRCode: typeof window.QRCode
+    }));
+
+    expect(functionsLoaded.renderPackages).toBe('function');
+    expect(functionsLoaded.openWechatModal).toBe('function');
+    expect(functionsLoaded.QRCode).toBe('function');
   });
 
   test('nút đổi giao diện Dark/Light Mode hoạt động trên DOM', async ({ page }) => {
@@ -42,9 +54,10 @@ test.describe('E2E Test: Trang Khách hàng (index.html)', () => {
 
 test.describe('E2E Test: Trang Quản trị (admin.html)', () => {
   test('tải trang admin.html thành công và hiển thị khung đăng nhập hoặc dashboard', async ({ page }) => {
-    const consoleErrors = [];
+    const pageErrors = [];
+    page.on('pageerror', err => pageErrors.push(err.message));
     page.on('console', msg => {
-      if (msg.type() === 'error') consoleErrors.push(msg.text());
+      if (msg.type() === 'error') pageErrors.push(msg.text());
     });
 
     await page.goto('/admin.html');
@@ -52,6 +65,9 @@ test.describe('E2E Test: Trang Quản trị (admin.html)', () => {
     // Kiểm tra tiêu đề hoặc nội dung quản trị
     const body = page.locator('body');
     await expect(body).toBeVisible();
+
+    const fatalErrors = pageErrors.filter(e => !e.includes('favicon') && !e.includes('Failed to load resource'));
+    expect(fatalErrors).toEqual([]);
 
     // Kiểm tra các thẻ canvas cho biểu đồ Chart.js tồn tại trong cây DOM
     const canvasCount = await page.locator('canvas').count();

@@ -71,11 +71,7 @@ const getT=m=>{try{const u=new URL(m);return u.searchParams.get("top")||u.search
 // autoGrow from shared.js
 
 // ---- thời gian: thuần Day.js chuẩn xác 100% DD/MM/YYYY HH:mm
-if (typeof dayjs !== "undefined") {
-  dayjs.extend(dayjs_plugin_customParseFormat);
-  dayjs.extend(dayjs_plugin_utc);
-  dayjs.extend(dayjs_plugin_timezone);
-}
+// dayjs already extended
 const off = () => (cmsDb.settings && cmsDb.settings.tz) === "CN" ? 8 : 7;
 const TZN = () => off() === 8 ? "Asia/Shanghai" : "Asia/Ho_Chi_Minh";
 const nowMs = () => Date.now() + ((cmsDb.settings && cmsDb.settings.simMode) ? Number(cmsDb.settings.simOffset) || 0 : 0);

@@ -8,12 +8,37 @@ import { $, esc, cp, toast, showToast, paintThemeIcon, toggleTheme, initTheme } 
 import Navigo from 'navigo';
 import Swal from 'sweetalert2';
 import DOMPurify from 'dompurify';
-import 'qrcodejs/qrcode.js';
+import QRCodeLib from 'qrcode';
+
+// Drop-in compatible QRCode class for new QRCode(box, options)
+class QRCode {
+  constructor(el, opts = {}) {
+    const box = typeof el === 'string' ? document.getElementById(el) : el;
+    if (!box) return;
+    const canvas = document.createElement('canvas');
+    box.appendChild(canvas);
+    const text = opts.text || '';
+    QRCodeLib.toCanvas(canvas, text, {
+      width: opts.width || 188,
+      margin: 1,
+      color: {
+        dark: opts.colorDark || '#0f172a',
+        light: opts.colorLight || '#ffffff'
+      },
+      errorCorrectionLevel: 'H'
+    }).catch(err => {
+      console.error('Lỗi tạo QR:', err);
+    });
+  }
+}
+QRCode.CorrectLevel = { L: 'L', M: 'M', Q: 'Q', H: 'H' };
 
 if (typeof window !== 'undefined') {
   window.Navigo = Navigo;
   window.Swal = Swal;
   window.DOMPurify = DOMPurify;
+  window.QRCode = QRCode;
+  window.QRCodeLib = QRCodeLib;
 }
 
 // ===== CẤU HÌNH: địa chỉ Worker của web này (gọi thẳng, không qua proxy Pages) =====
