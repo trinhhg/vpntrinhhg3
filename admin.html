@@ -26,6 +26,8 @@
 <script src="https://cdn.jsdelivr.net/npm/currency.js@2.0.4/dist/currency.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link href="https://cdn.jsdelivr.net/npm/gridjs/dist/theme/mermaid.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gridjs/dist/gridjs.umd.js"></script>
 
 <style>
 *{box-sizing:border-box;}
@@ -33,7 +35,44 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc;color:#0f172a
 .glass-card{background:#fff;border:1px solid #e2e8f0;box-shadow:0 10px 40px -10px rgba(0,0,0,.05);border-radius:1.25rem;}
 .tab-btn{transition:all .15s;}
 .tab-btn.active{background:#4f46e5;color:#fff;box-shadow:0 4px 12px rgba(79,70,229,.35);border-color:#4f46e5;}
-/* Notyf CDN đã thay thế toàn bộ CSS Toast */
+/* SweetAlert2 Toast chuẩn Master Plan V1 (Ảnh 4) - Co giãn tự nhiên, triệt tiêu viền trắng đáy, nổi trên mọi popup */
+.swal2-container.swal2-top, .swal2-container.swal2-center, .swal2-container {
+  z-index: 999999 !important;
+  pointer-events: none !important;
+}
+.swal2-popup.swal2-toast {
+  pointer-events: auto !important;
+  width: auto !important;
+  max-width: fit-content !important;
+  min-width: 0 !important;
+  padding: 8px 16px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.12), 0 8px 10px -6px rgba(0,0,0,0.08) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin-top: 65px !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+}
+.swal2-popup.swal2-toast .swal2-title {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.4 !important;
+  color: #1e293b !important;
+}
+.swal2-popup.swal2-toast .swal2-icon {
+  margin: 0 !important;
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+}
+.swal2-popup.swal2-toast .swal2-html-container {
+  margin: 0 !important;
+  padding: 0 !important;
+}
 .badge-lx{background:#dcfce7;color:#15803d;font-size:.65rem;font-weight:800;padding:2px 6px;border-radius:4px;}
 .badge-dj{background:#dbeafe;color:#1d4ed8;font-size:.65rem;font-weight:800;padding:2px 6px;border-radius:4px;}
 .badge-kt{background:#fdf2f8;color:#db2777;border:1px solid #fbcfe8;font-size:.65rem;font-weight:800;padding:2px 6px;border-radius:4px;}
@@ -195,7 +234,7 @@ textarea.autog{resize:none;overflow:hidden;}
 
 <header id="hdr" class="hidden bg-white px-4 py-2 border-b border-slate-200 justify-between items-center shadow-sm w-full sticky top-0 z-40">
  <div class="flex items-center gap-2 min-w-0">
-  <h1 class="text-base md:text-xl font-extrabold text-indigo-600 truncate">VPN Trinh Hg</h1>
+  <h1 onclick="resetAndHardReload()" title="Bấm để xóa sạch cache, session và tải lại toàn bộ trang" class="text-base md:text-xl font-extrabold text-indigo-600 truncate cursor-pointer hover:opacity-80 transition select-none">VPN Trinh Hg</h1>
   <span id="hdrTestBadge" class="hidden text-[10px] font-black bg-amber-500 text-slate-950 px-2.5 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap border border-amber-600 shadow-sm"><i class="fas fa-flask mr-1"></i>TEST MODE</span>
  </div>
  <div class="flex gap-2 shrink-0">
@@ -394,7 +433,12 @@ textarea.autog{resize:none;overflow:hidden;}
   <div class="inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 w-fit mb-3"><button onclick="switchTxTab('giamsat')" id="tx-giamsat" class="settings-sub-tab text-center !px-3 active">Đối Soát</button><button onclick="switchTxTab('raw')" id="tx-raw" class="settings-sub-tab text-center !px-3">Giao Dịch Thô</button><button onclick="switchTxTab('rev')" id="tx-rev" class="settings-sub-tab text-center !px-3"><i class="fas fa-chart-line mr-1"></i>Doanh thu</button></div>
   <div id="txTableWrap" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden"><div class="overflow-x-auto"><table class="log-table"><thead id="transHead"></thead><tbody id="transBody"></tbody></table></div></div>
   <div id="revPane" class="hidden">
-   <div class="flex flex-col sm:flex-row gap-2 mb-3 items-stretch sm:items-center justify-between"><div id="revTabs" class="inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 w-fit"></div><select id="revMonth" onchange="revMonth=this.value;renderRevenue()" class="p-2 border border-slate-200 rounded-lg text-xs bg-white font-bold"></select></div>
+   <div class="flex flex-col sm:flex-row gap-2 mb-3 items-stretch sm:items-center justify-between">
+     <div id="revTabs" class="inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 w-fit"></div>
+     <div class="flex items-center gap-2">
+       <select id="revMonth" onchange="revMonth=this.value;renderRevenue()" class="p-2 border border-slate-200 rounded-lg text-xs bg-white font-bold outline-none focus:border-indigo-500"></select>
+     </div>
+   </div>
    <div id="revBody" class="space-y-4"></div>
   </div>
  </div>
@@ -1318,7 +1362,7 @@ const cm=id=>$(id).classList.add("hidden");
 const genId=()=>{const c="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",a=new Uint8Array(10);crypto.getRandomValues(a);return "DH"+[...a].map(x=>c[x%36]).join("");};
 const genHex=n=>{const a=new Uint8Array(Math.ceil(n/2));crypto.getRandomValues(a);return[...a].map(x=>x.toString(16).padStart(2,"0")).join("").slice(0,n);};
 const normId=v=>String(v||"").trim().toUpperCase().replace(/[-_.\s]/g,"");
-const isLife=s=>/vĩnh viễn|lifetime|永久/i.test(String(s||""));
+const isLife=s=>/(v[i\u00EC\u00ED\u0129\u0128]nh\s*vi[e\u00EA\u1EC5\u1EC4]n|vinh\s*vien|lifetime|永久)/i.test(String(s||""));
 const normSt=s=>s==="paid"?"success":s==="rejected"?"failed":(s||"pending");
 const getT=m=>{try{const u=new URL(m);return u.searchParams.get("top")||u.searchParams.get("liki")||u.searchParams.get("lidj")||u.searchParams.get("kidj")||u.searchParams.get("OwO")||u.searchParams.get("token")||u.searchParams.get("oos")||"";}catch{return "";}};
 const trimNum=v=>String(Math.round((Number(v)||0)*100)/100);
@@ -1326,7 +1370,8 @@ const VND_SEP=",";
 const fmtVnd=n=>String(Math.round(Number(n)||0)).replace(/\B(?=(\d{3})+(?!\d))/g,VND_SEP);
 const Toast = typeof Swal !== "undefined" ? Swal.mixin({
   toast: true,
-  position: 'top-end',
+  position: 'top',
+  backdrop: false,
   showConfirmButton: false,
   timer: 3000,
   timerProgressBar: true,
@@ -1441,22 +1486,26 @@ function linkBottom(l){
    return '<span class="text-purple-600 font-bold">Vĩnh viễn</span>';
  }
 
+ // Chuẩn hóa xóa bỏ giờ HH:mm, chỉ lấy ngày DD/MM/YYYY
  const cleanDmy = String(exp).trim().split(/\s+/)[0];
  try {
    if (typeof dayjs !== "undefined") {
      const ms = parseAny(cleanDmy);
      if (ms > 0) {
-       const target = dayjs(ms).tz(TZN()).endOf('day');
+       const target = dayjs(ms).tz(TZN()).startOf('day');
        const now = dayjs(nowMs()).tz(TZN()).startOf('day');
        const daysLeft = target.diff(now, 'day');
        if (daysLeft >= 0 && daysLeft <= 3) {
          return `<span class="text-amber-600 font-bold">${esc(cleanDmy)}</span>`;
        }
+       if (daysLeft < 0) {
+         return `<span class="text-red-600 font-bold">${esc(cleanDmy)}</span>`;
+       }
      }
    }
  } catch(e) {}
 
- return esc(cleanDmy);
+ return `<span class="text-slate-500 font-medium">${esc(cleanDmy)}</span>`;
 }
 const payOf=o=>/alipay/i.test(o.method||"")?"Alipay":/weixin|wechat/i.test(o.method||"")?"Weixin":"Bank";
 
@@ -1478,6 +1527,19 @@ async function doLogin(){
  }catch(e){toast("Không kết nối được Worker: "+e.message,"err");}
  btn.disabled=false;}
 function doLogout(){localStorage.removeItem(SITE_KEY+"_tok");location.reload();}
+function resetAndHardReload(){
+  try {
+    localStorage.clear();
+    sessionStorage.clear();
+    document.cookie.split(";").forEach(c => {
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+    if ('caches' in window) {
+      caches.keys().then(names => { names.forEach(name => caches.delete(name)); });
+    }
+  } catch(e) {}
+  window.location.reload(true);
+}
 
 // ===================== DỮ LIỆU =====================
 let ordersDb=[],linksDb=[],linkPoolDb=[],dataReqDb=[],deadDb=[],devicesDb=[],cmsDb={settings:{},link_origins:{}},guides={},txData=[],txSince="",txPollT=null,txFails=0;
@@ -2116,118 +2178,523 @@ function sendZaloMail(id){if(!isMailMaster())return toast("Đang ở chế độ
  sendMailClient(o.email,subjVars(getTpl("support").subject,orderVars(o)),mailZalo(o));logEvent("ok","Gửi mail","Hỗ trợ cài đặt → "+o.email,o.id);toast("Đã gửi mail nhắc hỗ trợ cài đặt");}
 // ===================== DOANH THU =====================
 let revTab="over",revMonth="all",revPayView=null;
-const REV_TABS=[["over","Tổng quan"],["pay","Thanh toán"],["cost","Chi phí"]];
-const cnyRate=()=>Number(cmsDb.settings.cnyRate)||0;
-const shortN=v=>v>=1e6?(v/1e6).toFixed(v>=1e7?0:1).replace(/\.0$/,"")+"tr":v>=1e3?Math.round(v/1e3)+"k":String(Math.round(v));
-// Doanh thu: Bank = totalVnd thực thu; Alipay/Weixin = totalCny thực nhận (thiếu thì lấy theo giá CNY của gói) × tỷ giá. Số tháng = phần nguyên của days/30.
-function revList(all){const r=cnyRate();return ordersDb.filter(o=>normSt(o.status)==="success").map(o=>{const p=pkgOf(o),pay=payOf(o),qty=Number(o.qty)||1,cny=pay==="Bank"?0:(Number(o.totalCny)||(p?p.cny*qty:0)),vnd=pay==="Bank"?(Number(o.totalVnd)||(p?p.vnd*qty:0)):(cny?cny*r:(Number(o.totalVnd)||0));return{o,p,pay,qty,months:ordMonths(o),cny,vnd,key:monthInfo(oTs(o)).key};}).filter(x=>all||revMonth==="all"||x.key===revMonth);}
-function costSum(all){const r=cnyRate(),a={total:0,by:{}};(cmsDb.costs||[]).filter(c=>all||revMonth==="all"||monthInfo(c.ts).key===revMonth).forEach(c=>{const v=c.cur==="CNY"?c.total*r:c.total,k=c.src||"Khác";a.total+=v;a.by[k]=(a.by[k]||0)+v;});return a;}
-const vbar=items=>{const mx=Math.max(1,...items.map(i=>i.v));return `<div class="flex items-end gap-1.5 h-44 overflow-x-auto pb-1">${items.map(i=>`<div class="flex flex-col items-center justify-end min-w-[40px] flex-1 h-full"><div class="text-[9px] font-bold text-slate-500 mb-0.5">${shortN(i.v)}</div><div class="w-full rounded-t-md bg-gradient-to-t from-indigo-600 to-violet-400" style="height:${Math.max(2,i.v/mx*100)}%"></div><div class="text-[9px] font-bold text-slate-600 mt-1 whitespace-nowrap">${esc(i.l)}</div></div>`).join("")}</div>`;};
-const hbar=(items,color)=>{const mx=Math.max(1,...items.map(i=>i.v));return items.map(i=>`<div class="mb-2"><div class="flex justify-between text-[11px] font-bold text-slate-600 mb-0.5"><span class="truncate pr-2">${esc(i.l)}</span><span class="shrink-0">${i.t||fmtVnd(i.v)+"đ"}</span></div><div class="h-2.5 bg-slate-100 rounded-full overflow-hidden"><div class="h-full rounded-full ${color||"bg-gradient-to-r from-indigo-500 to-violet-500"}" style="width:${Math.max(1.5,i.v/mx*100)}%"></div></div></div>`).join("")||'<div class="text-xs text-slate-400 italic">Chưa có dữ liệu</div>';};
-const kpi=(l,v,sub,c)=>`<div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm"><div class="text-[11px] font-bold text-slate-500 uppercase">${l}</div><div class="text-xl md:text-2xl font-black ${c||"text-indigo-600"} mt-1 break-words">${v}</div>${sub?`<div class="text-[11px] text-slate-400 mt-0.5">${sub}</div>`:""}</div>`;
-const box=(t,inner)=>`<div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm"><div class="font-bold text-sm text-slate-800 mb-3">${t}</div>${inner}</div>`;
-function monthTotals(){const m={};revList(true).forEach(x=>{const k=x.key;(m[k]=m[k]||{k,vnd:0,n:0}).vnd+=x.vnd;m[k].n++;});return m;}
-const monthLbl=k=>k==="000000"?"Không rõ":`${+k.slice(4)}/${k.slice(2,4)}`;
-function renderRevenue(){
- $("revTabs").innerHTML=REV_TABS.map(([k,l])=>`<button onclick="revTab='${k}';revPayView=null;renderRevenue()" class="settings-sub-tab text-center !px-3 font-bold ${revTab===k?"active":""}">${l}</button>`).join("");
- const ms=new Set(ordersDb.map(o=>monthInfo(oTs(o)).key));(cmsDb.costs||[]).forEach(c=>ms.add(monthInfo(c.ts).key));
- $("revMonth").innerHTML=`<option value="all">Tất cả các tháng</option>`+[...ms].sort().reverse().map(k=>`<option value="${k}" ${revMonth===k?"selected":""}>Tháng ${monthLbl(k)}</option>`).join("");
- const R=revList(),b=$("revBody");({over:revOver,pay:revPay,cost:revCost}[revTab])(R,b);}
-let chartRev12 = null, chartPayDonut = null;
-function revOver(R,b){
- const sum=R.reduce((a,x)=>a+x.vnd,0),cost=costSum().total,profit=sum-cost;
- const warn=R.some(x=>x.pay!=="Bank")&&!cnyRate()?`<div class="bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold rounded-xl p-3">Có đơn Alipay/WeChat nhưng chưa nhập tỷ giá CNY → VND nên phần này chưa được cộng vào tổng. Vào tab "Thanh toán" để nhập.</div>`:"";
- const mt=monthTotals(),keys=Object.keys(mt).sort().slice(-12);
- const by={Bank:0,Alipay:0,Weixin:0};R.forEach(x=>by[x.pay]+=x.vnd);
+const REV_TABS=[["over","Tổng quan KPI & Biểu đồ"],["pay","Thanh toán & Tỷ giá"],["cost","Quản lý Chi phí vốn"]];
 
- const g={};
- R.forEach(x=>{
-  const k=x.p?x.p.n+"|"+x.p.vnd+"|"+(x.p.old?"o":"n"):"other|"+(x.o.pkgName||"?");
-  const e=g[k]=g[k]||{l:x.p?`${x.p.n} - ${fmtVnd(x.p.vnd)}VND (${x.p.d})${x.p.old?" (giá cũ)":""}`:(x.o.pkgName||"Gói khác"),n:0,vnd:0};
-  e.n++;e.vnd+=x.vnd;
- });
-
- b.innerHTML = warn +
-  `<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-    ${kpi("Tổng Doanh Thu", fmtVnd(sum)+"đ", `${R.length} đơn thành công`)}
-    ${kpi("Tổng Chi Phí", fmtVnd(cost)+"đ", "Chi phí mua gói/vận hành", "text-orange-500")}
-    ${kpi("Lợi Nhuận Ròng", fmtVnd(profit)+"đ", sum ? Math.round(profit/sum*100)+"% doanh thu" : "", profit>=0?"text-emerald-600":"text-red-600")}
-  </div>` +
-  `<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-    <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-2">
-      <div class="font-bold text-sm text-slate-800 flex items-center gap-2"><i class="fas fa-chart-column text-indigo-600"></i>Biểu đồ doanh thu 12 tháng gần nhất (ApexCharts)</div>
-      <div id="chartRev12Box" class="min-h-[260px]"></div>
-    </div>
-    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-2">
-      <div class="font-bold text-sm text-slate-800 flex items-center gap-2"><i class="fas fa-chart-pie text-purple-600"></i>Cơ cấu thanh toán (3 cổng)</div>
-      <div id="chartPayDonutBox" class="min-h-[260px] flex items-center justify-center"></div>
-    </div>
-  </div>` +
-  box("Doanh thu theo Gói cước", hbar(Object.values(g).sort((a,c)=>c.vnd-a.vnd).map(it=>({l:`${it.l} (${it.n} đơn)`, v:it.vnd})))) +
-  box("Xếp hạng tháng theo doanh thu", hbar(Object.values(mt).sort((a,c)=>c.vnd-a.vnd).map((m,i)=>({l:`#${i+1} · Tháng ${monthLbl(m.k)} (${m.n} đơn)`, v:m.vnd}))));
-
- setTimeout(() => {
-  if (typeof ApexCharts !== "undefined") {
-   if (chartRev12) { try { chartRev12.destroy(); } catch(e){} }
-   const el1 = document.getElementById("chartRev12Box");
-   if (el1) {
-    chartRev12 = new ApexCharts(el1, {
-     series: [{ name: 'Doanh thu (VND)', data: keys.map(k => mt[k].vnd) }],
-     chart: { type: 'bar', height: 260, toolbar: { show: false } },
-     colors: ['#4f46e5'],
-     plotOptions: { bar: { borderRadius: 6, columnWidth: '55%' } },
-     dataLabels: { enabled: false },
-     xaxis: { categories: keys.map(k => monthLbl(k)), labels: { style: { fontSize: '11px', fontWeight: 600 } } },
-     yaxis: { labels: { formatter: (v) => shortN(v) } },
-     tooltip: { y: { formatter: (v) => typeof currency !== "undefined" ? currency(v, { precision: 0, symbol: '' }).format() + ' đ' : fmtVnd(v) + ' đ' } }
-    });
-    chartRev12.render();
-   }
-
-   if (chartPayDonut) { try { chartPayDonut.destroy(); } catch(e){} }
-   const el2 = document.getElementById("chartPayDonutBox");
-   if (el2) {
-    chartPayDonut = new ApexCharts(el2, {
-     series: [by.Bank, by.Alipay, by.Weixin],
-     labels: ['Ngân hàng VN', 'Alipay', 'WeChat'],
-     chart: { type: 'donut', height: 260 },
-     colors: ['#4f46e5', '#0284c7', '#10b981'],
-     legend: { position: 'bottom', fontSize: '11px', fontWeight: 700 },
-     dataLabels: { enabled: false },
-     tooltip: { y: { formatter: (v) => typeof currency !== "undefined" ? currency(v, { precision: 0, symbol: '' }).format() + ' đ' : fmtVnd(v) + ' đ' } }
-    });
-    chartPayDonut.render();
-   }
-  }
- }, 50);
+// Bảng Quy Đổi Tỷ Giá Tập Trung dùng chung toàn hệ thống
+function getCentralRates(){
+  const s = (cmsDb && cmsDb.settings) || {};
+  s.rates = s.rates || {};
+  return {
+    vndCny: Number(s.rates.vndCny || s.cnyRate) || 3600,
+    cnyUsd: Number(s.rates.cnyUsd) || 7.25,
+    vndUsd: Number(s.rates.vndUsd) || 26100
+  };
 }
-const PAYLBL={Bank:"🏦 Ngân hàng VN",Alipay:"🔵 Alipay",Weixin:"🟢 WeChat"};
-function revPayDetail(b){
- const k=revPayView,list=ordersDb.filter(o=>payOf(o)===k&&(revMonth==="all"||monthInfo(oTs(o)).key===revMonth)).sort((a,c)=>oTs(c)-oTs(a)),ok=list.filter(o=>normSt(o.status)==="success").length;
- b.innerHTML=`<div class="flex flex-wrap items-center justify-between gap-2"><button onclick="revPayView=null;renderRevenue()" class="bg-white border border-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs shadow-sm hover:bg-slate-50"><i class="fas fa-arrow-left mr-1"></i>Quay lại</button><div class="text-xs font-bold text-slate-500">${PAYLBL[k]} · ${list.length} đơn (${ok} thành công) · <span class="text-indigo-600">chỉ xem — muốn sửa hãy sang tab Đơn hàng</span></div></div><div class="space-y-3">${list.map(o=>ordCard(o,true)).join("")||'<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 font-bold">Không có đơn nào</div>'}</div>`;}
-function revPay(R,b){
- if(revPayView){revPayDetail(b);return;}
- const rate=cnyRate(),m={Bank:{n:0,vnd:0,cny:0},Alipay:{n:0,vnd:0,cny:0},Weixin:{n:0,vnd:0,cny:0}};R.forEach(x=>{const e=m[x.pay];e.n++;e.vnd+=x.vnd;e.cny+=x.cny;});
- const total=m.Bank.vnd+m.Alipay.vnd+m.Weixin.vnd,cn=(t,k,c)=>`<div onclick="revPayView='${k}';renderRevenue()" class="cursor-pointer bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md transition rounded-2xl p-4 shadow-sm"><div class="flex justify-between items-center"><div class="font-bold text-sm ${c}">${t}</div><i class="fas fa-chevron-right text-slate-300 text-xs"></i></div><div class="text-[11px] text-slate-500 mb-1">${m[k].n} đơn · bấm để xem danh sách</div>${k==="Bank"?`<div class="text-xl font-black text-slate-800">${fmtVnd(m[k].vnd)}đ</div>`:`<div class="text-xl font-black text-slate-800">¥${(Math.round(m[k].cny*100)/100).toLocaleString("en-US")}</div><div class="text-[11px] text-slate-500 mt-0.5">${rate?"≈ "+fmtVnd(m[k].vnd)+"đ":"chưa có tỷ giá"}</div>`}</div>`;
- b.innerHTML=box("Tỷ giá quy đổi CNY → VND",`<div class="flex flex-col sm:flex-row gap-2"><div class="flex-1 relative"><input id="rateInput" type="number" step="any" value="${rate||""}" placeholder="VD: 3600 (1 CNY = 3600 VND)" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-slate-50 outline-none pr-14"><span class="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400">VND/¥</span></div><button onclick="saveRate()" class="bg-indigo-600 text-white font-bold px-5 py-2.5 rounded-lg text-sm hover:bg-indigo-700 shadow-md">Xác nhận quy đổi</button><button onclick="resetRate()" class="bg-red-50 text-red-600 border border-red-100 font-bold px-4 py-2.5 rounded-lg text-sm hover:bg-red-100">Reset về 0đ</button></div><p class="text-[11px] text-slate-500 mt-2">Doanh thu Alipay/WeChat lấy theo totalCny thực nhận của đơn (thiếu thì theo giá CNY của gói) rồi nhân tỷ giá bạn nhập.</p>`)+
- `<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">${cn("🏦 Ngân hàng VN","Bank","text-indigo-600")}${cn("🔵 Alipay","Alipay","text-sky-600")}${cn("🟢 WeChat","Weixin","text-emerald-600")}</div>`+
- `<div class="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl p-5 text-white shadow-lg"><div class="text-xs font-bold opacity-80 uppercase">Tổng tất cả phương thức (đã quy đổi VND)</div><div class="text-3xl font-black mt-1">${fmtVnd(total)}đ</div><div class="text-xs opacity-80 mt-1">${R.length} đơn thành công${!rate&&(m.Alipay.n+m.Weixin.n)?" · chưa có tỷ giá nên Alipay/WeChat chưa cộng":""}</div></div>`+
- box("So sánh phương thức",hbar([{l:"Ngân hàng VN",v:m.Bank.vnd},{l:"Alipay",v:m.Alipay.vnd},{l:"WeChat",v:m.Weixin.vnd}]));}
-async function saveRate(){const v=Number($("rateInput").value)||0;if(v<=0)return toast("Nhập tỷ giá lớn hơn 0","err");cmsDb.settings.cnyRate=v;try{await saveCmsDb();toast("Đã quy đổi theo tỷ giá "+fmtVnd(v)+" VND / ¥");renderRevenue();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
-async function resetRate(){if(!confirm("Reset tỷ giá CNY→VND về 0đ? Doanh thu Alipay/Weixin sẽ tạm không quy đổi được cho tới khi nhập tỷ giá mới."))return;cmsDb.settings.cnyRate=0;try{await saveCmsDb();toast("Đã reset tỷ giá về 0đ");logEvent("warn","Doanh thu","Reset tỷ giá CNY→VND về 0đ");renderRevenue();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
+const cnyRate = () => getCentralRates().vndCny;
+const curVal = (v, prec = 0) => typeof currency !== "undefined" ? currency(v, { precision: prec, symbol: '' }) : { value: Number(v)||0, add: (x)=>({ value: (Number(v)||0)+(Number(x)||0) }), subtract: (x)=>({ value: (Number(v)||0)-(Number(x)||0) }) };
+const shortN = v => v >= 1e6 ? (v/1e6).toFixed(v>=1e7?0:1).replace(/\.0$/,"")+"tr" : v >= 1e3 ? Math.round(v/1e3)+"k" : String(Math.round(v));
+const monthLbl = k => k === "000000" ? "Không rõ" : `${+k.slice(4)}/${k.slice(2,4)}`;
+const kpi = (l, v, sub, c) => `<div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm"><div class="text-[11px] font-bold text-slate-500 uppercase">${l}</div><div class="text-xl md:text-2xl font-black ${c||"text-indigo-600"} mt-1 break-words">${v}</div>${sub?`<div class="text-[11px] text-slate-400 mt-0.5">${sub}</div>`:""}</div>`;
+const box = (t, inner) => `<div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm"><div class="font-bold text-sm text-slate-800 mb-3">${t}</div>${inner}</div>`;
 
-function revCost(R,b){
- const cs=costSum(),sum=R.reduce((a,x)=>a+x.vnd,0),list=[...(cmsDb.costs||[])].filter(c=>revMonth==="all"||monthInfo(c.ts).key===revMonth).sort((a,c)=>c.ts-a.ts);
- b.innerHTML=box("Thêm chi phí vốn (mua gói VPN gốc)",`<div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2"><input id="cSrc" placeholder="Nguồn mua (VD: Liangxin)" class="p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 outline-none"><input id="cItem" placeholder="Gói / mô tả" class="p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 outline-none"><input id="cQty" type="number" placeholder="Số lượng" class="p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 outline-none"><input id="cUnit" type="number" step="any" placeholder="Đơn giá" class="p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 outline-none"><select id="cCur" class="p-2 border border-slate-200 rounded-lg text-xs bg-white"><option value="VND">VND</option><option value="CNY">CNY (¥)</option></select><input id="cDate" placeholder="Ngày mua DD/MM/YYYY" value="${dmyOf(nowMs())}" class="p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 outline-none"><input id="cNote" placeholder="Ghi chú" class="col-span-2 p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 outline-none"></div><button onclick="addCost()" class="w-full bg-slate-800 text-white font-bold py-2.5 rounded-lg text-xs hover:bg-slate-900"><i class="fas fa-plus mr-1"></i>Thêm chi phí</button>`)+
- `<div class="grid grid-cols-2 lg:grid-cols-3 gap-3">${kpi("Tổng chi phí",fmtVnd(cs.total)+"đ","","text-orange-500")}${kpi("Doanh thu",fmtVnd(sum)+"đ","")}${kpi("Lợi nhuận",fmtVnd(sum-cs.total)+"đ",sum?Math.round((sum-cs.total)/sum*100)+"% doanh thu":"",sum-cs.total>=0?"text-emerald-600":"text-red-600")}</div>`+
- box("Chi phí theo nguồn",hbar(Object.entries(cs.by).map(([l,v])=>({l,v})).sort((a,c)=>c.v-a.v),"bg-gradient-to-r from-orange-400 to-rose-500"))+
- box("Danh sách chi phí",`<div class="overflow-x-auto"><table class="log-table"><thead><tr><th>Ngày</th><th>Nguồn</th><th>Gói / mô tả</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th><th></th></tr></thead><tbody>${list.map(c=>`<tr><td class="text-xs whitespace-nowrap">${dmyOf(c.ts)}</td><td class="font-bold text-slate-700">${esc(c.src)}</td><td class="text-xs">${esc(c.item||"")}${c.note?`<div class="text-[10px] text-slate-400">${esc(c.note)}</div>`:""}</td><td>${c.qty}</td><td class="whitespace-nowrap">${c.cur==="CNY"?"¥":""}${Number(c.unit).toLocaleString("en-US")}${c.cur==="CNY"?"":"đ"}</td><td class="font-black text-orange-600 whitespace-nowrap">${c.cur==="CNY"?"¥":""}${Number(c.total).toLocaleString("en-US")}${c.cur==="CNY"?"":"đ"}</td><td><button onclick="delCost(${q(c.id)})" class="text-red-500 bg-red-50 rounded px-2 py-1 text-xs"><i class="fas fa-trash"></i></button></td></tr>`).join("")||'<tr><td colspan="7" class="text-center py-6 text-slate-400 italic">Chưa có chi phí</td></tr>'}</tbody></table></div>`);}
+function revList(all){
+  const r = getCentralRates();
+  return ordersDb.filter(o => normSt(o.status) === "success").map(o => {
+    const p = pkgOf(o), pay = payOf(o), qty = Number(o.qty) || 1;
+    let cny = 0, vnd = 0;
+    if (pay === "Bank") {
+      vnd = Number(o.totalVnd) || (p ? curVal(p.vnd).value * qty : 0);
+    } else {
+      cny = Number(o.totalCny) || (p ? curVal(p.cny, 2).value * qty : 0);
+      vnd = curVal(cny, 2).value * r.vndCny;
+    }
+    return { o, p, pay, qty, months: ordMonths(o), cny, vnd, key: monthInfo(oTs(o)).key };
+  }).filter(x => all || revMonth === "all" || x.key === revMonth);
+}
+
+function costSum(all){
+  const r = getCentralRates();
+  let total = 0; const by = {};
+  (cmsDb.costs || []).filter(c => all || revMonth === "all" || monthInfo(c.ts).key === revMonth).forEach(c => {
+    let v = Number(c.total) || 0;
+    if (c.cur === "CNY") v = v * r.vndCny;
+    else if (c.cur === "USD") v = v * r.vndUsd;
+    total += v;
+    const k = c.src || "Khác";
+    by[k] = (by[k] || 0) + v;
+  });
+  return { total, by };
+}
+
+function monthTotals(){
+  const m = {};
+  revList(true).forEach(x => {
+    const k = x.key;
+    if (!m[k]) m[k] = { k, vnd: 0, n: 0, bank: 0, alipay: 0, weixin: 0 };
+    m[k].vnd += x.vnd;
+    m[k].n++;
+    if (x.pay === "Bank") m[k].bank += x.vnd;
+    else if (x.pay === "Alipay") m[k].alipay += x.vnd;
+    else if (x.pay === "Weixin") m[k].weixin += x.vnd;
+  });
+  return m;
+}
+
+function renderRevenue(){
+  $("revTabs").innerHTML = REV_TABS.map(([k,l]) => `<button onclick="revTab='${k}';revPayView=null;renderRevenue()" class="settings-sub-tab text-center !px-3 font-bold ${revTab===k?'active':''}">${l}</button>`).join("");
+  const ms = new Set(ordersDb.map(o => monthInfo(oTs(o)).key));
+  (cmsDb.costs || []).forEach(c => ms.add(monthInfo(c.ts).key));
+  $("revMonth").innerHTML = `<option value="all">Tất cả các tháng</option>` + [...ms].sort().reverse().map(k => `<option value="${k}" ${revMonth===k?'selected':''}>Tháng ${monthLbl(k)}</option>`).join("");
+  const R = revList(), b = $("revBody");
+  ({ over: revOver, pay: revPay, cost: revCost }[revTab])(R, b);
+}
+
+let chartRevStacked = null, chartPayDonut = null, chartProfitArea = null;
+let gridPkgTable = null, gridRankTable = null, gridPayDetail = null, gridCostTable = null;
+
+// SUB-TAB 1: TỔNG QUAN KPI & 3 BIỂU ĐỒ APEXCHARTS
+function revOver(R, b){
+  const sum = R.reduce((a, x) => a + x.vnd, 0);
+  const cost = costSum().total;
+  const profit = sum - cost;
+  const margin = sum ? Math.round((profit / sum) * 100) : 0;
+  const mt = monthTotals(), keys = Object.keys(mt).sort().slice(-12);
+  const by = { Bank: 0, Alipay: 0, Weixin: 0 };
+  R.forEach(x => by[x.pay] += x.vnd);
+
+  b.innerHTML = `
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      ${kpi("Tổng Doanh Thu", fmtVnd(sum) + "đ", `${R.length} đơn thành công`)}
+      ${kpi("Chi Phí Vốn VPN", fmtVnd(cost) + "đ", "Tiền nhập nguồn Liangxin/DJJC/Kitty", "text-orange-500")}
+      ${kpi("Lợi Nhuận Ròng", fmtVnd(profit) + "đ", `Doanh thu - Chi phí vốn`, profit >= 0 ? "text-emerald-600" : "text-rose-600")}
+      ${kpi("Tỷ Suất Lợi Nhuận", margin + "%", "Lãi ròng / Tổng doanh thu", margin >= 50 ? "text-indigo-600" : "text-amber-600")}
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-2">
+        <div class="font-bold text-sm text-slate-800 flex items-center justify-between">
+          <span class="flex items-center gap-2"><i class="fas fa-chart-column text-indigo-600"></i>Cơ cấu doanh thu 12 tháng (Stacked Column)</span>
+          <span class="text-[10px] font-bold text-slate-400">Đơn vị: VND</span>
+        </div>
+        <div id="chartRevStackedBox" class="min-h-[280px]"></div>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-2">
+        <div class="font-bold text-sm text-slate-800 flex items-center gap-2"><i class="fas fa-chart-pie text-purple-600"></i>Tỷ lệ 3 Cổng thanh toán</div>
+        <div id="chartPayDonutBox" class="min-h-[280px] flex items-center justify-center"></div>
+      </div>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-2">
+      <div class="font-bold text-sm text-slate-800 flex items-center justify-between">
+        <span class="flex items-center gap-2"><i class="fas fa-chart-area text-emerald-600"></i>Doanh thu vs Chi phí vốn → Lợi nhuận ròng 12 tháng (Area Chart)</span>
+        <span class="text-[10px] font-bold text-slate-400">ApexCharts CDN</span>
+      </div>
+      <div id="chartProfitAreaBox" class="min-h-[260px]"></div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+        <div class="font-bold text-sm text-slate-800 mb-3 flex items-center gap-2"><i class="fas fa-table-list text-indigo-600"></i>Bảng Doanh thu theo Gói cước (Grid.js)</div>
+        <div id="gridPkgBox"></div>
+      </div>
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+        <div class="font-bold text-sm text-slate-800 mb-3 flex items-center gap-2"><i class="fas fa-ranking-star text-amber-500"></i>Xếp hạng doanh thu theo Tháng (Grid.js)</div>
+        <div id="gridRankBox"></div>
+      </div>
+    </div>
+  `;
+
+  setTimeout(() => {
+    if (typeof ApexCharts !== "undefined") {
+      // 1. Biểu đồ Cột phân tầng (Stacked Column)
+      if (chartRevStacked) { try { chartRevStacked.destroy(); } catch(e){} }
+      const el1 = document.getElementById("chartRevStackedBox");
+      if (el1) {
+        chartRevStacked = new ApexCharts(el1, {
+          series: [
+            { name: 'Ngân hàng VN', data: keys.map(k => mt[k].bank || 0) },
+            { name: 'Alipay', data: keys.map(k => mt[k].alipay || 0) },
+            { name: 'WeChat', data: keys.map(k => mt[k].weixin || 0) }
+          ],
+          chart: { type: 'bar', height: 280, stacked: true, toolbar: { show: false } },
+          colors: ['#4f46e5', '#0284c7', '#10b981'],
+          plotOptions: { bar: { borderRadius: 4, columnWidth: '50%' } },
+          xaxis: { categories: keys.map(k => monthLbl(k)), labels: { style: { fontSize: '11px', fontWeight: 600 } } },
+          yaxis: { labels: { formatter: (v) => shortN(v) } },
+          legend: { position: 'top', horizontalAlign: 'right', fontSize: '11px', fontWeight: 700 },
+          dataLabels: { enabled: false },
+          tooltip: { y: { formatter: (v) => fmtVnd(v) + ' đ' } }
+        });
+        chartRevStacked.render();
+      }
+
+      // 2. Biểu đồ Donut 3 Cổng thanh toán
+      if (chartPayDonut) { try { chartPayDonut.destroy(); } catch(e){} }
+      const el2 = document.getElementById("chartPayDonutBox");
+      if (el2) {
+        chartPayDonut = new ApexCharts(el2, {
+          series: [by.Bank, by.Alipay, by.Weixin],
+          labels: ['Ngân hàng VN', 'Alipay', 'WeChat'],
+          chart: { type: 'donut', height: 280 },
+          colors: ['#4f46e5', '#0284c7', '#10b981'],
+          legend: { position: 'bottom', fontSize: '11px', fontWeight: 700 },
+          dataLabels: { enabled: false },
+          tooltip: { y: { formatter: (v) => fmtVnd(v) + ' đ' } }
+        });
+        chartPayDonut.render();
+      }
+
+      // 3. Biểu đồ Vùng (Area Chart) Doanh thu vs Chi phí -> Lãi ròng
+      if (chartProfitArea) { try { chartProfitArea.destroy(); } catch(e){} }
+      const el3 = document.getElementById("chartProfitAreaBox");
+      if (el3) {
+        const costPerMonth = keys.map(k => {
+          let cSum = 0;
+          (cmsDb.costs || []).filter(c => monthInfo(c.ts).key === k).forEach(c => {
+            let v = Number(c.total) || 0;
+            if (c.cur === "CNY") v = v * getCentralRates().vndCny;
+            else if (c.cur === "USD") v = v * getCentralRates().vndUsd;
+            cSum += v;
+          });
+          return cSum;
+        });
+        const revPerMonth = keys.map(k => mt[k].vnd || 0);
+        const profitPerMonth = keys.map((k, i) => revPerMonth[i] - costPerMonth[i]);
+
+        chartProfitArea = new ApexCharts(el3, {
+          series: [
+            { name: 'Doanh thu', data: revPerMonth },
+            { name: 'Chi phí vốn', data: costPerMonth },
+            { name: 'Lợi nhuận ròng', data: profitPerMonth }
+          ],
+          chart: { type: 'area', height: 260, toolbar: { show: false } },
+          colors: ['#4f46e5', '#f97316', '#10b981'],
+          stroke: { curve: 'smooth', width: 2 },
+          fill: { type: 'gradient', gradient: { opacityFrom: 0.45, opacityTo: 0.05 } },
+          xaxis: { categories: keys.map(k => monthLbl(k)), labels: { style: { fontSize: '11px', fontWeight: 600 } } },
+          yaxis: { labels: { formatter: (v) => shortN(v) } },
+          legend: { position: 'top', horizontalAlign: 'right', fontSize: '11px', fontWeight: 700 },
+          dataLabels: { enabled: false },
+          tooltip: { y: { formatter: (v) => fmtVnd(v) + ' đ' } }
+        });
+        chartProfitArea.render();
+      }
+    }
+
+    // Grid.js Render Bảng Gói & Bảng Tháng
+    if (typeof gridjs !== "undefined") {
+      const g = {};
+      R.forEach(x => {
+        const k = x.p ? x.p.n + "|" + x.p.vnd : (x.o.pkgName || "Gói khác");
+        const e = g[k] = g[k] || { l: x.p ? `${x.p.n} (${x.p.d || ''})` : (x.o.pkgName || "Gói khác"), n: 0, vnd: 0 };
+        e.n++; e.vnd += x.vnd;
+      });
+      const pkgData = Object.values(g).sort((a,c) => c.vnd - a.vnd).map(it => [it.l, it.n, fmtVnd(it.vnd) + " đ"]);
+      const elPkg = document.getElementById("gridPkgBox");
+      if (elPkg) {
+        elPkg.innerHTML = "";
+        new gridjs.Grid({
+          columns: ["Gói cước", "Đơn", "Doanh thu"],
+          data: pkgData,
+          pagination: { limit: 5 },
+          className: { table: 'w-full text-xs text-left' }
+        }).render(elPkg);
+      }
+
+      const rankData = Object.values(mt).sort((a,c) => c.vnd - a.vnd).map((m, idx) => [`#${idx + 1} - Tháng ${monthLbl(m.k)}`, m.n, fmtVnd(m.vnd) + " đ"]);
+      const elRank = document.getElementById("gridRankBox");
+      if (elRank) {
+        elRank.innerHTML = "";
+        new gridjs.Grid({
+          columns: ["Tháng", "Số đơn", "Doanh thu"],
+          data: rankData,
+          pagination: { limit: 5 },
+          className: { table: 'w-full text-xs text-left' }
+        }).render(elRank);
+      }
+    }
+  }, 60);
+}
+
+// SUB-TAB 2: THANH TOÁN & BẢNG TỶ GIÁ TẬP TRUNG (CENTRALIZED EXCHANGE RATE TABLE)
+const PAYLBL = { Bank: "🏦 Ngân hàng VN", Alipay: "🔵 Alipay", Weixin: "🟢 WeChat" };
+
+function revPay(R, b){
+  if (revPayView) { revPayDetail(b); return; }
+  const r = getCentralRates();
+  const m = { Bank: { n: 0, vnd: 0, cny: 0 }, Alipay: { n: 0, vnd: 0, cny: 0 }, Weixin: { n: 0, vnd: 0, cny: 0 } };
+  R.forEach(x => { const e = m[x.pay]; e.n++; e.vnd += x.vnd; e.cny += x.cny; });
+  const total = m.Bank.vnd + m.Alipay.vnd + m.Weixin.vnd;
+
+  const cardPay = (title, k, colorCls, icon) => `
+    <div onclick="revPayView='${k}';renderRevenue()" class="cursor-pointer bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md transition rounded-2xl p-4 shadow-sm">
+      <div class="flex justify-between items-center mb-1">
+        <div class="font-extrabold text-sm ${colorCls} flex items-center gap-1.5"><i class="${icon}"></i>${title}</div>
+        <i class="fas fa-arrow-right text-slate-300 text-xs"></i>
+      </div>
+      <div class="text-[11px] text-slate-500 mb-2">${m[k].n} đơn thành công · bấm để xem chi tiết</div>
+      ${k === "Bank" ? `<div class="text-xl font-black text-slate-800">${fmtVnd(m[k].vnd)}đ</div>` : `
+        <div class="text-xl font-black text-slate-800">¥${(Math.round(m[k].cny*100)/100).toLocaleString("en-US")}</div>
+        <div class="text-[11px] font-bold text-slate-500 mt-0.5">≈ ${fmtVnd(m[k].vnd)}đ (tỷ giá ${fmtVnd(r.vndCny)})</div>
+      `}
+    </div>
+  `;
+
+  b.innerHTML = `
+    <!-- BẢNG QUY ĐỔI TỶ GIÁ TẬP TRUNG (CENTRALIZED EXCHANGE RATE TABLE) -->
+    <div class="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border-2 border-indigo-200 rounded-2xl p-4 shadow-sm space-y-3">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <div class="font-black text-sm text-indigo-900 flex items-center gap-2">
+          <i class="fas fa-money-bill-transfer text-indigo-600"></i>Bảng Quy Đổi Tỷ Giá Tập Trung (Dùng chung Doanh thu & Cửa hàng)
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="saveCentralRates()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm flex items-center gap-1 transition active:scale-95">
+            <i class="fas fa-save mr-1"></i>LƯU BẢNG TỶ GIÁ
+          </button>
+          <button type="button" onclick="syncRatesToPackages()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm flex items-center gap-1 transition active:scale-95" title="Tự động tính lại giá VND, CNY, USD cho toàn bộ gói cước">
+            <i class="fas fa-rotate mr-1"></i>ĐỒNG BỘ VÀO GÓI CƯỚC
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+        <div class="bg-white p-3 rounded-xl border border-indigo-100 shadow-sm">
+          <label class="block font-bold text-slate-600 mb-1">Tỷ giá VND ⟷ CNY (P2P)</label>
+          <div class="relative">
+            <input type="number" id="rateVndCny" step="10" value="${r.vndCny}" placeholder="VD: 3600" class="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold text-indigo-700 outline-none pr-12">
+            <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">VND/¥</span>
+          </div>
+          <span class="text-[10px] text-slate-400 mt-1 block">1 CNY = ${fmtVnd(r.vndCny)} VND</span>
+        </div>
+
+        <div class="bg-white p-3 rounded-xl border border-indigo-100 shadow-sm">
+          <label class="block font-bold text-slate-600 mb-1">Tỷ giá CNY ⟷ USD (P2P)</label>
+          <div class="relative">
+            <input type="number" id="rateCnyUsd" step="0.01" value="${r.cnyUsd}" placeholder="VD: 7.25" class="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold text-blue-700 outline-none pr-12">
+            <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">¥/$</span>
+          </div>
+          <span class="text-[10px] text-slate-400 mt-1 block">1 USD = ${r.cnyUsd} CNY</span>
+        </div>
+
+        <div class="bg-white p-3 rounded-xl border border-indigo-100 shadow-sm">
+          <label class="block font-bold text-slate-600 mb-1">Tỷ giá VND ⟷ USD (P2P)</label>
+          <div class="relative">
+            <input type="number" id="rateVndUsd" step="100" value="${r.vndUsd}" placeholder="VD: 26100" class="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold text-emerald-700 outline-none pr-12">
+            <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">VND/$</span>
+          </div>
+          <span class="text-[10px] text-slate-400 mt-1 block">1 USD = ${fmtVnd(r.vndUsd)} VND</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 THẺ CỔNG THANH TOÁN -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      ${cardPay("Ngân hàng VN", "Bank", "text-indigo-600", "fas fa-building-columns")}
+      ${cardPay("Alipay", "Alipay", "text-sky-600", "fab fa-alipay")}
+      ${cardPay("WeChat", "Weixin", "text-emerald-600", "fab fa-weixin")}
+    </div>
+
+    <div class="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl p-5 text-white shadow-lg flex items-center justify-between flex-wrap gap-3">
+      <div>
+        <div class="text-xs font-bold opacity-80 uppercase">Tổng Doanh Thu Tất Cả Các Cổng (Đã quy đổi VND)</div>
+        <div class="text-3xl font-black mt-1">${fmtVnd(total)}đ</div>
+      </div>
+      <div class="text-xs font-bold bg-white/20 px-3 py-1.5 rounded-xl backdrop-blur-sm">
+        ${R.length} đơn thành công
+      </div>
+    </div>
+  `;
+}
+
+async function saveCentralRates(){
+  const vndCny = Number($("rateVndCny").value) || 0;
+  const cnyUsd = Number($("rateCnyUsd").value) || 0;
+  const vndUsd = Number($("rateVndUsd").value) || 0;
+  if (vndCny <= 0 || cnyUsd <= 0 || vndUsd <= 0) return toast("Vui lòng nhập đầy đủ 3 tỷ giá lớn hơn 0", "warn");
+  cmsDb.settings = cmsDb.settings || {};
+  cmsDb.settings.rates = { vndCny, cnyUsd, vndUsd };
+  cmsDb.settings.cnyRate = vndCny; // Tương thích ngược
+  try {
+    await saveCmsDb();
+    toast("Đã lưu Bảng Quy Đổi Tỷ Giá Tập Trung thành công!");
+    logEvent("ok", "Tỷ giá trung tâm", `VND/CNY: ${vndCny} · CNY/USD: ${cnyUsd} · VND/USD: ${vndUsd}`);
+    renderRevenue();
+  } catch(e) {
+    toast("Lỗi lưu tỷ giá: " + e.message, "err");
+  }
+}
+
+async function syncRatesToPackages(){
+  const r = getCentralRates();
+  if (!Array.isArray(adminPkgsList) || !adminPkgsList.length) return toast("Chưa tải danh sách gói cước", "warn");
+  adminPkgsList.forEach(p => {
+    if (p.isCustom) return;
+    if (p.vnd > 0) {
+      // Tự động tính giá CNY và USD theo VND thực thu
+      p.cny = Math.round((p.vnd / r.vndCny) * 2) / 2; // làm tròn 0.5
+      p.usd = Math.round((p.vnd / r.vndUsd) * 2) / 2; // làm tròn 0.5
+    }
+  });
+  try {
+    await aj("/api/packages", { method: "POST", body: { packages: adminPkgsList } });
+    toast("Đã tự động quy đổi và đồng bộ giá CNY & USD cho toàn bộ gói cước!");
+    if (!$("t-pkg").classList.contains("hidden")) renderPkgAdmin();
+  } catch(e) {
+    toast("Lỗi đồng bộ gói cước: " + e.message, "err");
+  }
+}
+
+// BẢNG DRILL-DOWN CHI TIẾT CỔNG THANH TOÁN BẰNG GRID.JS
+function revPayDetail(b){
+  const k = revPayView;
+  const list = ordersDb.filter(o => payOf(o) === k && (revMonth === "all" || monthInfo(oTs(o)).key === revMonth)).sort((a,c) => oTs(c) - oTs(a));
+  const ok = list.filter(o => normSt(o.status) === "success").length;
+
+  b.innerHTML = `
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <button onclick="revPayView=null;renderRevenue()" class="bg-white border border-slate-200 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs shadow-sm hover:bg-slate-50 transition flex items-center gap-1.5">
+        <i class="fas fa-arrow-left"></i>Quay lại danh sách cổng
+      </button>
+      <div class="text-xs font-bold text-slate-600">
+        ${PAYLBL[k]} · ${list.length} đơn (${ok} thành công) · <span class="text-indigo-600">Hiển thị dạng Grid.js</span>
+      </div>
+    </div>
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+      <div id="gridPayDetailBox"></div>
+    </div>
+  `;
+
+  setTimeout(() => {
+    if (typeof gridjs !== "undefined") {
+      const dataRows = list.map(o => [
+        o.id,
+        o.email || "-",
+        pkgLabel(o),
+        o.status === "success" ? "Thành công" : (o.status === "pending" ? "Đang chờ" : "Thất bại"),
+        fmtVnd(o.totalVnd || 0) + " đ",
+        dmyOf(oTs(o))
+      ]);
+      const el = document.getElementById("gridPayDetailBox");
+      if (el) {
+        el.innerHTML = "";
+        new gridjs.Grid({
+          columns: ["Mã đơn", "Email khách", "Gói cước", "Trạng thái", "Số tiền (VND)", "Ngày tạo"],
+          data: dataRows,
+          search: true,
+          pagination: { limit: 10 },
+          sort: true,
+          className: { table: 'w-full text-xs text-left' }
+        }).render(el);
+      }
+    }
+  }, 50);
+}
+
+// SUB-TAB 3: QUẢN LÝ CHI PHÍ VỐN (GRID.JS & CURRENCY.JS)
+function revCost(R, b){
+  const cs = costSum();
+  const sum = R.reduce((a, x) => a + x.vnd, 0);
+  const list = [...(cmsDb.costs || [])].filter(c => revMonth === "all" || monthInfo(c.ts).key === revMonth).sort((a,c) => c.ts - a.ts);
+
+  b.innerHTML = `
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+      <div class="font-bold text-sm text-slate-800 flex items-center gap-2">
+        <i class="fas fa-file-invoice text-orange-500"></i>Thêm Khoản Chi Phí Vốn (Mua nguồn VPN / Server)
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+        <input id="cSrc" placeholder="Nguồn mua (VD: Liangxin, DJJC, Kitty)" class="p-2 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:border-indigo-500">
+        <input id="cItem" placeholder="Tên gói / Node VPN gốc" class="p-2 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:border-indigo-500">
+        <input id="cQty" type="number" placeholder="Số lượng" class="p-2 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:border-indigo-500">
+        <input id="cUnit" type="number" step="any" placeholder="Đơn giá" class="p-2 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:border-indigo-500">
+        <select id="cCur" class="p-2 border border-slate-200 rounded-xl bg-white font-bold text-slate-700 outline-none">
+          <option value="VND">VND (đ)</option>
+          <option value="CNY">CNY (¥)</option>
+          <option value="USD">USD ($)</option>
+        </select>
+        <input id="cDate" placeholder="DD/MM/YYYY" value="${dmyOf(nowMs())}" class="p-2 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:border-indigo-500 text-center">
+        <input id="cNote" placeholder="Ghi chú chi phí" class="col-span-2 p-2 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:border-indigo-500">
+      </div>
+      <button onclick="addCost()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5">
+        <i class="fas fa-plus"></i>GHI NHẬN CHI PHÍ VỐN
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      ${kpi("Tổng Chi Phí Vốn", fmtVnd(cs.total) + "đ", "Đã quy đổi VND", "text-orange-500")}
+      ${kpi("Doanh Thu Thuần", fmtVnd(sum) + "đ", `${R.length} đơn thành công`)}
+      ${kpi("Lợi Nhuận Sau Vốn", fmtVnd(sum - cs.total) + "đ", sum ? Math.round((sum - cs.total) / sum * 100) + "% doanh thu" : "", sum - cs.total >= 0 ? "text-emerald-600" : "text-rose-600")}
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+      <div class="font-bold text-sm text-slate-800 mb-3 flex items-center justify-between">
+        <span class="flex items-center gap-2"><i class="fas fa-list-check text-indigo-600"></i>Danh sách Chi phí vốn đã ghi nhận</span>
+        <span class="text-[10px] font-bold text-slate-400">Quản lý bằng Grid.js</span>
+      </div>
+      <div id="gridCostBox"></div>
+    </div>
+  `;
+
+  setTimeout(() => {
+    if (typeof gridjs !== "undefined") {
+      const el = document.getElementById("gridCostBox");
+      if (el) {
+        el.innerHTML = "";
+        const costRows = list.map(c => [
+          dmyOf(c.ts),
+          c.src,
+          c.item || "-",
+          c.qty,
+          (c.cur === "CNY" ? "¥" : (c.cur === "USD" ? "$" : "")) + Number(c.unit).toLocaleString("en-US") + (c.cur === "VND" ? " đ" : ""),
+          (c.cur === "CNY" ? "¥" : (c.cur === "USD" ? "$" : "")) + Number(c.total).toLocaleString("en-US") + (c.cur === "VND" ? " đ" : ""),
+          gridjs.html(`<button onclick="delCost('${c.id}')" class="text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-600 font-bold px-2 py-1 rounded transition text-xs"><i class="fas fa-trash"></i></button>`)
+        ]);
+        new gridjs.Grid({
+          columns: ["Ngày mua", "Nguồn mua", "Mô tả / Gói", "SL", "Đơn giá", "Thành tiền", "Thao tác"],
+          data: costRows,
+          search: true,
+          pagination: { limit: 10 },
+          sort: true,
+          className: { table: 'w-full text-xs text-left' }
+        }).render(el);
+      }
+    }
+  }, 50);
+}
+
 async function addCost(){
- const src=$("cSrc").value.trim(),qty=+$("cQty").value||0,unit=+$("cUnit").value||0;if(!src||qty<=0||unit<=0)return toast("Nhập nguồn, số lượng và đơn giá","err");
- const m=$("cDate").value.trim().match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/),ts=m?Date.UTC(+m[3],m[2]-1,+m[1])-off()*36e5:nowMs();
- cmsDb.costs=arr(cmsDb.costs);cmsDb.costs.push({id:"C-"+Date.now(),ts,src,item:$("cItem").value.trim(),qty,unit,cur:$("cCur").value,total:qty*unit,note:$("cNote").value.trim()});
- try{await saveCmsDb();toast("Đã thêm chi phí");logEvent("ok","Chi phí vốn",`${src} · ${qty} x ${unit}`);renderRevenue();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
-async function delCost(id){if(!confirm("Xóa khoản chi phí này?"))return;cmsDb.costs=arr(cmsDb.costs).filter(c=>c.id!==id);try{await saveCmsDb();renderRevenue();}catch(e){}}
+  const src = $("cSrc").value.trim(), qty = +$("cQty").value || 0, unit = +$("cUnit").value || 0;
+  if (!src || qty <= 0 || unit <= 0) return toast("Vui lòng nhập nguồn mua, số lượng và đơn giá", "warn");
+  const m = $("cDate").value.trim().match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  const ts = m ? Date.UTC(+m[3], m[2]-1, +m[1]) - off()*36e5 : nowMs();
+  cmsDb.costs = arr(cmsDb.costs);
+  cmsDb.costs.push({
+    id: "C-" + Date.now(),
+    ts, src, item: $("cItem").value.trim(),
+    qty, unit, cur: $("cCur").value,
+    total: curVal(qty).multiply(unit).value,
+    note: $("cNote").value.trim()
+  });
+  try {
+    await saveCmsDb();
+    toast("Đã thêm khoản chi phí vốn thành công!");
+    logEvent("ok", "Chi phí vốn", `${src} · ${qty} x ${unit} ${$("cCur").value}`);
+    renderRevenue();
+  } catch(e) {
+    toast("Lỗi lưu chi phí: " + e.message, "err");
+  }
+}
+
+async function delCost(id){
+  if (!confirm("Bạn có chắc muốn xóa khoản chi phí vốn này?")) return;
+  cmsDb.costs = arr(cmsDb.costs).filter(c => c.id !== id);
+  try {
+    await saveCmsDb();
+    toast("Đã xóa khoản chi phí thành công!");
+    renderRevenue();
+  } catch(e) {
+    toast("Lỗi xóa: " + e.message, "err");
+  }
+}
 
 // ===================== SOẠN MAIL (Mẫu hệ thống + Mẫu tự do) =====================
 const MC_COLORS={indigo:["#4f46e5","#8b5cf6"],red:["#ef4444","#b91c1c"],green:["#10b981","#059669"],blue:["#2563eb","#6366f1"],amber:["#f59e0b","#d97706"],purple:["#7e22ce","#a855f7"]};
@@ -2295,9 +2762,9 @@ function mcRenderEditor(){
  mcPreview();}
 function mcPreview(){
  const iframe = $("mcPreviewIframe");
- const rendered = mailRender(mcToTpl(), mcSampleVars(), PD);
+ const rendered = mcToHtml();
  if (iframe) {
-   iframe.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{margin:0;padding:12px;background:#f1f5f9;font-family:Arial,Helvetica,sans-serif;}</style></head><body>${rendered}</body></html>`;
+   iframe.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;padding:12px;background:#f1f5f9;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;}</style></head><body>${rendered}</body></html>`;
  }
  const el = $("mcPreview");
  if (el) el.innerHTML = rendered;
@@ -3099,30 +3566,40 @@ function renderPkgAdmin() {
         </div>
       </div>
 
-      <!-- HÀNG 2: GIÁ & BÁN HÀNG KHUYẾN MÃI (PRO SHOP CONTROLS) -->
+      <!-- HÀNG 2: GIÁ GỐC GẠCH NGANG & GIÁ THỰC BÁN 3 LOẠI TIỀN (Master Plan V1) -->
       <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-xs">
         <div>
-          <label class="block text-[10px] font-bold text-slate-400 mb-0.5">Giá Gốc (Gạch ngang đ)</label>
+          <label class="block text-[10px] font-bold text-slate-400 mb-0.5">Giá Gốc VND (Gạch đ)</label>
           <input type="number" step="1000" value="${p.original_vnd || 0}" oninput="adminPkgsList[${idx}].original_vnd = Number(this.value)||0" placeholder="VD: 80000" class="w-full p-1.5 border rounded-lg bg-white font-mono text-slate-400">
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-emerald-700 mb-0.5">Giá Bán Thực Thu (VND)</label>
+          <label class="block text-[10px] font-bold text-emerald-700 mb-0.5">Giá Bán VND Thực Thu</label>
           <input type="number" step="1000" value="${p.vnd || 0}" ${p.isCustom ? 'disabled' : ''} oninput="adminPkgsList[${idx}].vnd = Number(this.value)||0" class="w-full p-1.5 border rounded-lg font-bold text-emerald-600 bg-white">
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-blue-700 mb-0.5">Giá CNY ¥</label>
+          <label class="block text-[10px] font-bold text-slate-400 mb-0.5">Giá Gốc CNY (Gạch ¥)</label>
+          <input type="number" step="0.5" value="${p.original_cny || 0}" oninput="adminPkgsList[${idx}].original_cny = Number(this.value)||0" placeholder="VD: 25" class="w-full p-1.5 border rounded-lg bg-white font-mono text-slate-400">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-blue-700 mb-0.5">Giá Bán CNY (¥)</label>
           <input type="number" step="0.5" value="${p.cny || 0}" ${p.isCustom ? 'disabled' : ''} oninput="adminPkgsList[${idx}].cny = Number(this.value)||0" class="w-full p-1.5 border rounded-lg font-bold text-blue-600 bg-white">
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Giá USD $</label>
-          <input type="number" step="0.5" value="${p.usd || 0}" ${p.isCustom ? 'disabled' : ''} oninput="adminPkgsList[${idx}].usd = Number(this.value)||0" class="w-full p-1.5 border rounded-lg font-bold text-slate-700 bg-white">
+          <label class="block text-[10px] font-bold text-slate-400 mb-0.5">Giá Gốc USD (Gạch $)</label>
+          <input type="number" step="0.5" value="${p.original_usd || 0}" oninput="adminPkgsList[${idx}].original_usd = Number(this.value)||0" placeholder="VD: 4.5" class="w-full p-1.5 border rounded-lg bg-white font-mono text-slate-400">
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-rose-600 mb-0.5">Tem Quà Tặng (Sticker)</label>
+          <label class="block text-[10px] font-bold text-indigo-700 mb-0.5">Giá Bán USD ($)</label>
+          <input type="number" step="0.5" value="${p.usd || 0}" ${p.isCustom ? 'disabled' : ''} oninput="adminPkgsList[${idx}].usd = Number(this.value)||0" class="w-full p-1.5 border rounded-lg font-bold text-indigo-600 bg-white">
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-slate-50/80 p-2 rounded-xl border border-slate-100">
+        <div>
+          <label class="block text-[10px] font-bold text-rose-600 mb-0.5">Tem Quà Tặng (Sticker góc thẻ)</label>
           <input type="text" value="${esc(p.promo_sticker || '')}" oninput="adminPkgsList[${idx}].promo_sticker = this.value" placeholder="VD: +3 NGÀY" class="w-full p-1.5 border border-rose-200 rounded-lg font-black text-rose-600 bg-rose-50/40">
         </div>
         <div>
-          <label class="block text-[10px] font-bold text-purple-700 mb-0.5">Số ngày tặng (+ngày)</label>
+          <label class="block text-[10px] font-bold text-purple-700 mb-0.5">Số ngày tặng (+ngày vào HSD)</label>
           <input type="number" min="0" max="365" value="${p.bonus_days || 0}" oninput="adminPkgsList[${idx}].bonus_days = Number(this.value)||0" placeholder="VD: 3" class="w-full p-1.5 border border-purple-200 rounded-lg font-bold text-purple-700 bg-purple-50/40 text-center">
         </div>
       </div>
@@ -3724,11 +4201,8 @@ function buildRichArticleView(rawHtml, showToc, gid){
   const hid=`toc-${gid}-${idx}`;
   el.id=hid;
   el.style.scrollMarginTop="90px";
-  let numLabel="";
-  if(tag==="h2"){h2Count++;h3Count=0;numLabel=`${h2Count}. `;}
-  else{h3Count++;numLabel=h2Count>0?`${h2Count}.${h3Count}. `:`• `;}
-  const cleanTxt=txt.replace(/^\d+(\.\d+)*\.?\s*/,"");
-  headings.push({id:hid,tag,label:numLabel+cleanTxt,raw:txt});
+  // Giữ nguyên 100% nguyên văn tiêu đề do admin soạn thảo, không tự ý chèn số hay bullet tròn (Ảnh 3)
+  headings.push({id:hid,tag,label:txt,raw:txt});
  });
  temp.querySelectorAll("img").forEach(img=>{
   const src=img.getAttribute("src")||"";
@@ -3765,11 +4239,11 @@ function buildRichArticleView(rawHtml, showToc, gid){
  if(showToc && headings.length>0){
   const bodyId=`toc-body-${gid}`;
   const icId=`toc-ic-${gid}`;
-  tocHtml=`<div style="background:#f8faff;border:1px solid #e0e7ff;border-radius:14px;padding:14px 18px;margin:0 0 18px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><span style="font-weight:800;font-size:15px;color:#4f46e5;display:flex;align-items:center;gap:6px;"><i class="fas fa-list-ul"></i>Xem nhanh</span><button type="button" onclick="const b=document.getElementById('${bodyId}'),ic=document.getElementById('${icId}');const h=b.classList.toggle('hidden');ic.className=h?'fas fa-chevron-down':'fas fa-chevron-up';" style="background:transparent;border:0;color:#4f46e5;cursor:pointer;"><i id="${icId}" class="fas fa-chevron-up text-xs"></i></button></div><div id="${bodyId}" style="display:flex;flex-direction:column;gap:6px;">${headings.map(h=>{
-   if(h.tag==='h2') return `<a onclick="guideScroll('${h.id}')" style="cursor:pointer;color:#1e1b4b;text-decoration:none;font-weight:700;font-size:14px;display:flex;gap:6px;align-items:flex-start;line-height:1.5;"><span style="color:#818cf8;font-weight:900;">›</span><span>${esc(h.label)}</span></a>`;
-   return `<a onclick="guideScroll('${h.id}')" style="cursor:pointer;color:#475569;text-decoration:none;font-weight:500;font-size:13px;padding-left:16px;display:flex;gap:6px;align-items:flex-start;line-height:1.5;"><span style="color:#c7d2fe;font-weight:900;">›</span><span>${esc(h.label)}</span></a>`;
+  tocHtml=`<div style="background:#f8faff;border:1px solid #e0e7ff;border-radius:14px;padding:14px 18px;margin:0 0 18px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><span style="font-weight:800;font-size:15px;color:#4338ca;display:flex;align-items:center;gap:8px;"><i class="fas fa-list-ul"></i>Xem nhanh</span><button type="button" onclick="const b=document.getElementById('${bodyId}'),ic=document.getElementById('${icId}');const h=b.classList.toggle('hidden');ic.className=h?'fas fa-chevron-down text-indigo-400':'fas fa-chevron-up text-indigo-400';" style="background:transparent;border:0;color:#4338ca;cursor:pointer;"><i id="${icId}" class="fas fa-chevron-up text-xs text-indigo-400"></i></button></div><div id="${bodyId}" style="display:flex;flex-direction:column;gap:8px;">${headings.map(h=>{
+   if(h.tag==='h2') return `<a onclick="guideScroll('${h.id}')" style="cursor:pointer;color:#1e1b4b;text-decoration:none;font-weight:700;font-size:14px;display:flex;gap:8px;align-items:flex-start;line-height:1.5;"><span style="color:#818cf8;font-weight:bold;font-size:14px;">&gt;</span><span>${esc(h.label)}</span></a>`;
+   return `<a onclick="guideScroll('${h.id}')" style="cursor:pointer;color:#334155;text-decoration:none;font-weight:600;font-size:13px;padding-left:20px;display:flex;gap:8px;align-items:flex-start;line-height:1.5;"><span style="color:#818cf8;font-weight:bold;font-size:13px;">&gt;</span><span>${esc(h.label)}</span></a>`;
   }).join("")}</div></div>`;
- }
+}
  return tocHtml + temp.innerHTML;
 }
 function scrollToHeadingText(txt){
@@ -4032,7 +4506,7 @@ function switchCheckSubTab(tab) {
   else if (tab === 'scan') renderScanTab();
 }
 
-// Điều hướng đúng chuẩn 5 Sub-tab trong Cài đặt (Web Admin, Set Web, Nhật ký, Thiết bị, Thời gian)
+// Điều hướng đúng chuẩn 5 Sub-tab trong Cài đặt - Khớp 100% ID HTML, triệt tiêu lỗi TypeError classList of null
 function switchSettingsTab(t){
  const tabs = ["webadmin", "setweb", "log", "dev", "time"];
  tabs.forEach(x => {
@@ -4041,16 +4515,8 @@ function switchSettingsTab(t){
    if (view) view.classList.toggle("hidden", x !== t);
    if (btn) btn.classList.toggle("active", x === t);
  });
- if (t === "webadmin") {
-   loadWebAdminUI();
-   switchWebAdminTab("ui");
- }
- if (t === "setweb") {
-   loadStatus();
-   loadQuota();
-   initAdminNotifyUI();
-   renderMailProvCards();
- }
+ if (t === "webadmin") loadWebAdminUI();
+ if (t === "setweb") loadSettingsUI();
  if (t === "log") loadLogs();
  if (t === "dev") renderDev();
  if (t === "time") paintTimeUI();
@@ -4771,7 +5237,7 @@ function renderLogs(){
    .filter(r => r.ts && (now - r.ts <= sevenDays))
    .sort((a,b)=>b.ts-a.ts);
  const lv=$("logLvl").value,sr=$("logSrc").value,f=rows.filter(r=>(!lv||r.lvl===lv)&&(!sr||r.src===sr));$("logCount").textContent=`(${f.length}/${rows.length} dòng trong 7 ngày)`;
- const col={ok:"bg-green-100 text-green-700",info:"bg-slate-100 text-slate-600",warn:"bg-amber-100 text-amber-700",error:"bg-red-100 text-red-700"},nm={ok:"Thành công",info:"Thông tin",warn:"Cảnh báo",error:"Lỗi"};
+ const col={ok:"bg-emerald-100 text-emerald-800 border border-emerald-200",info:"bg-blue-100 text-blue-800 border border-blue-200",warn:"bg-amber-100 text-amber-800 border border-amber-200",error:"bg-red-100 text-red-800 border border-red-200"},nm={ok:"Thành công",info:"Thông tin",warn:"Cảnh báo",error:"Lỗi"};
  $("logBody").innerHTML=f.length?f.slice(0,300).map(r=>`<tr><td class="text-xs whitespace-nowrap text-slate-500">${fmtBank(r.ts)}</td><td><span class="${col[r.lvl]||col.info} px-2 py-0.5 rounded text-[10px] font-bold">${nm[r.lvl]||"Thông tin"}</span></td><td class="text-xs font-bold text-slate-600">${esc(r.src)}</td><td class="text-xs font-bold text-slate-700">${esc(r.act)}</td><td class="text-xs text-slate-600 break-words min-w-[200px]">${esc(r.msg||"")}${r.ref?` <span class="font-mono text-indigo-500 cp" onclick="cp(${q(r.ref)})">${esc(r.ref)}</span>`:""}</td></tr>`).join(""):`<tr><td colspan="5" class="text-center py-8 text-slate-400 italic">Chưa có nhật ký</td></tr>`;}
 
 // ---- thiết bị
