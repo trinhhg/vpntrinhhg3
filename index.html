@@ -2653,5 +2653,21 @@ async function requestDataCheck(){
  if(r&&r.ok){localStorage.setItem(key,String(Date.now()));showToast(L.req_sent);btn.innerHTML=`<i class="fas fa-check-circle mr-1.5"></i> ${L.req_sent_btn}`;}
  else{showToast(L.req_err,'error');btn.innerHTML=orig;btn.classList.add('btn-heartbeat');btn.disabled=false;}}
 </script>
+<script>
+function resetAndHardReload(e){
+  if(e) e.preventDefault();
+  try {
+    localStorage.clear();
+    sessionStorage.clear();
+    document.cookie.split(";").forEach(c => {
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+    if ('caches' in window) {
+      caches.keys().then(names => { names.forEach(name => caches.delete(name)); });
+    }
+  } catch(err) {}
+  window.location.reload(true);
+}
+</script>
 </body>
 </html>
