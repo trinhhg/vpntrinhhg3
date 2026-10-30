@@ -11,7 +11,29 @@
 
 ---
 
-## [Unreleased] — Giai đoạn 2: Chuyển đổi HTML & CSS sang Module Tĩnh (2026-10-30)
+## [Unreleased] — Giai đoạn 3: Chia Code Tối Thiểu (4 Module JavaScript Chính) (2026-10-30)
+
+### Added
+- **`src/api.js`:** Module giao tiếp Worker Backend tập trung duy nhất (`request`, `wpost`, `wpostRetry`, `api`, `aj`, `getSiteKey`, `getAdminToken`, `setAdminToken`, `clearAdminToken`). Chặn đứng rủi ro retry mù quáng cho API tạo đơn hàng và nâng cấp (`/api/public/order`, `/api/public/upgrade`).
+- **`src/shared.js`:** Module hàm dùng chung giữa Khách hàng và Admin (`$`, `arr`, `esc`, `q`, `cm`, `sm`, `genId`, `genHex`, `normId`, `isLife`, `normSt`, `trimNum`, `VND_SEP`, `fmtVnd`, `sleep`, `cp`, `toast`, `showToast`, `parseAny`, `fmtBank`, `oTs`, `paintThemeIcon`, `toggleTheme`, `initTheme`, `autoGrow`).
+- **`src/customer.js`:** Module nghiệp vụ khách hàng (Cửa hàng, Gói cước, Checkout, Thanh toán QR, Tra cứu portal, Đa ngôn ngữ i18n, Router Navigo, Hướng dẫn sử dụng).
+- **`src/admin.js`:** Module nghiệp vụ quản trị toàn diện (Quản lý đơn, Kiểm tra fulfillment, Giao dịch D1, Link Sub, Link Pool, Gói cước, Mail Composer, CMS Hướng dẫn, Cài đặt hệ thống, Test mode).
+
+### Changed
+- **`index.html`:** Chuyển đổi từ file nguyên khối 2.497 dòng thành khung HTML 545 dòng, nạp script module `<script type="module" src="/src/customer.js"></script>`.
+- **`admin.html`:** Chuyển đổi từ file nguyên khối 5.449 dòng thành khung HTML 1.157 dòng, nạp script module `<script type="module" src="/src/admin.js"></script>`.
+- **Tương thích DOM & HTML Event Handlers:** Toàn bộ 400+ hàm và biến toàn cục cần thiết cho các thuộc tính `onclick`, `onchange`, `oninput` trên HTML được gắn an toàn vào `window` để đảm bảo 100% tương thích ngược.
+
+### Verified
+- **Biên dịch Vite Multi-page:** `npm run build` hoàn thành trong 1.41s, tách tự động shared chunk `dist/assets/shared-*.js` (5.86 kB), `dist/assets/main-*.js` (91.14 kB), `dist/assets/admin-*.js` (238.71 kB).
+- **Dung lượng HTML thu gọn:**
+  - `dist/index.html` giảm từ 201 kB xuống còn 64.05 kB.
+  - `dist/admin.html` giảm từ 410 kB xuống còn 101.00 kB.
+- **Bảo toàn tính toàn vẹn:** Checksum SHA256 của `dist/_worker.js` và `dist/_redirects` khớp 100% với file gốc.
+
+---
+
+## [0.9.3] — Giai đoạn 2: Chuyển đổi HTML & CSS sang Module Tĩnh (2026-10-30)
 
 ### Added
 - **`src/customer.css`:** Tách toàn bộ custom CSS từ thẻ `<style>` của `index.html` (~170 dòng animation, dark mode, card glassmorphism, responsive utilities) kết hợp các chỉ thị `@tailwind base`, `@tailwind components`, `@tailwind utilities`.
