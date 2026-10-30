@@ -21,7 +21,7 @@
     "dompurify": "^3.1.6",
     "gridjs": "^6.2.0",
     "navigo": "^8.11.1",
-    "qrcodejs": "^1.0.0",
+    "qrcode": "^1.5.4",
     "quill": "^2.0.2",
     "sortablejs": "^1.15.2",
     "sweetalert2": "^11.12.2",

@@ -2,22 +2,17 @@ import { describe, it, expect, vi } from 'vitest';
 import worker from '../public/_worker.js';
 
 describe('Cloudflare Pages Proxy & Fallback Routing (_worker.js)', () => {
-  it('chuyển hướng 301 từ /admin sang /admin.html', async () => {
-    const env = { ASSETS: { fetch: vi.fn() } };
-    const req = new Request('https://trinhhg.pages.dev/admin');
-    const res = await worker.fetch(req, env);
+  it('phục vụ tĩnh /admin và /admin/ trực tiếp qua env.ASSETS (để _redirects xử lý)', async () => {
+    const mockAssetFetch = vi.fn().mockResolvedValue(new Response('ADMIN_HTML', { status: 200 }));
+    const env = { ASSETS: { fetch: mockAssetFetch } };
 
-    expect(res.status).toBe(301);
-    expect(res.headers.get('Location')).toBe('https://trinhhg.pages.dev/admin.html');
-  });
+    const req1 = new Request('https://trinhhg.pages.dev/admin');
+    await worker.fetch(req1, env);
+    expect(mockAssetFetch).toHaveBeenCalledWith(req1);
 
-  it('chuyển hướng 301 từ /admin/ sang /admin.html', async () => {
-    const env = { ASSETS: { fetch: vi.fn() } };
-    const req = new Request('https://trinhhg.pages.dev/admin/');
-    const res = await worker.fetch(req, env);
-
-    expect(res.status).toBe(301);
-    expect(res.headers.get('Location')).toBe('https://trinhhg.pages.dev/admin.html');
+    const req2 = new Request('https://trinhhg.pages.dev/admin/');
+    await worker.fetch(req2, env);
+    expect(mockAssetFetch).toHaveBeenCalledWith(req2);
   });
 
   it('proxy ngầm các đường dẫn Link Sub (/v1 - /v6) sang Worker Backend', async () => {

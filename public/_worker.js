@@ -17,15 +17,9 @@ export default {
         return fetch(new Request(workerUrl.toString(), init));
       }
 
-      // Nếu truy cập /admin -> Chuyển hướng sạch sẽ sang /admin.html
-      if (url.pathname === "/admin" || url.pathname === "/admin/") {
-        return Response.redirect(new URL("/admin.html", request.url).toString(), 301);
-      }
-
-      // Nếu khách truy cập bình thường -> Phục vụ file giao diện tĩnh
+      // Phục vụ file giao diện tĩnh trực tiếp qua env.ASSETS (để _redirects tự xử lý)
       return env.ASSETS.fetch(request);
     } catch (err) {
-      // Fallback an toàn tuyệt đối không bao giờ để sập Worker (Error 1101)
       return env.ASSETS.fetch(request);
     }
   }
