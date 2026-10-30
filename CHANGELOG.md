@@ -11,7 +11,35 @@
 
 ---
 
-## [Unreleased] — Giai đoạn 5: Kiểm Thử Nghiệp Vụ Tự Động (Vitest & Playwright) (2026-10-30)
+## [Unreleased] — Giai đoạn 6: Kiểm Tra Cấu Hình Cloudflare Pages Preview & Fallback Routing (2026-10-30)
+
+### Added
+- **Khởi tạo `.node-version`:** Cố định phiên bản Node.js LTS `20.18.0` cho môi trường Cloudflare Pages Build Runner, đảm bảo tính nhất quán tuyệt đối giữa môi trường phát triển cục bộ và CI/CD trên Cloudflare.
+- **Tạo `tests/routing.test.js` (5 routing tests):** Kiểm tra toàn diện cơ chế định tuyến của `_worker.js`:
+  - Kiểm tra điều hướng `/admin` và `/admin/` về `/admin.html`.
+  - Kiểm tra proxy ngầm toàn bộ 6 chuẩn Link Sub (`/v1`-`/v6`) sang `vpntrinhhg3worker.lucastanora.workers.dev`.
+  - Kiểm tra proxy ngầm `/api/*` và `/qr/*`.
+  - Kiểm tra phục vụ tài nguyên tĩnh `env.ASSETS` (`/`, `/index.html`, `/admin.html`, manifest, icon, css, js).
+
+### Changed
+- **Chuẩn hóa `_worker.js` (cả root và `public/`):** Tự động điều hướng `/admin` và `/admin/` sang `/admin.html` cho `env.ASSETS.fetch` mà không bắt buộc người dùng phải gõ thủ công `.html`. Khởi tạo `Request` tương thích cross-realm chuẩn Cloudflare Worker.
+- **Cập nhật `_redirects` (cả root và `public/`):** Khai báo rõ ràng quy tắc phân giải cho Cloudflare Pages:
+  ```text
+  /admin       /admin.html   200
+  /admin/*     /admin.html   200
+  /*           /index.html   200
+  ```
+  Giúp khách hàng truy cập `/portal/*` hoặc bài hướng dẫn không bị lỗi 404, đồng thời quản trị viên vào `/admin` được nạp trực tiếp giao diện quản trị.
+
+### Verified
+- **Chạy toàn bộ 56 bài kiểm thử tự động (`npm run test:all`):**
+  - 52/52 Unit, Integration, Schema, Business & Routing tests (Vitest) hoàn thành trong 1.67s (100% Pass).
+  - 4/4 Browser E2E tests (Playwright) hoàn thành trong 2.9s (100% Pass).
+- **Kiểm tra Root Assets (`dist/`):** Đảm bảo cả 8 file tĩnh cốt lõi sẵn sàng cho Cloudflare Pages (`index.html`, `admin.html`, `_worker.js`, `_redirects`, `manifest.json`, `manifestadmin.json`, `icon-192.png`, `icon-512.png`).
+
+---
+
+## [0.9.6] — Giai đoạn 5: Kiểm Thử Nghiệp Vụ Tự Động (Vitest & Playwright) (2026-10-30)
 
 ### Added
 - **Bộ Kiểm thử Đơn vị & Tích hợp (Vitest 47 tests):**
