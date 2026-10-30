@@ -4,6 +4,35 @@
  */
 
 import { WORKER_URL, getSiteKey, getAdminToken, setAdminToken, clearAdminToken, api, aj } from './api.js';
+import Quill from 'quill';
+import 'quill/dist/quill.snow.css';
+import DOMPurify from 'dompurify';
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat.js';
+import utc from 'dayjs/plugin/utc.js';
+import timezone from 'dayjs/plugin/timezone.js';
+import currency from 'currency.js';
+import Sortable from 'sortablejs';
+import Swal from 'sweetalert2';
+import { Grid, html } from 'gridjs';
+import 'gridjs/dist/theme/mermaid.css';
+import Chart from 'chart.js/auto';
+
+dayjs.extend(customParseFormat);
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+if (typeof window !== 'undefined') {
+  window.Quill = Quill;
+  window.DOMPurify = DOMPurify;
+  window.dayjs = dayjs;
+  window.currency = currency;
+  window.Sortable = Sortable;
+  window.Swal = Swal;
+  window.gridjs = { Grid, html };
+  window.Chart = Chart;
+}
+
 import {
   $, arr, esc, q, cm, genId, genHex, normId, isLife, normSt, trimNum,
   VND_SEP, fmtVnd, toast, cp, sleep, autoGrow, parseAny, fmtBank, oTs
@@ -930,7 +959,7 @@ function revOver(R, b){
     <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-2">
       <div class="font-bold text-sm text-slate-800 flex items-center justify-between">
         <span class="flex items-center gap-2"><i class="fas fa-chart-area text-emerald-600"></i>Doanh thu vs Chi phí vốn → Lợi nhuận ròng 12 tháng (Area Chart)</span>
-        <span class="text-[10px] font-bold text-slate-400">ApexCharts CDN</span>
+        <span class="text-[10px] font-bold text-slate-400">Chart.js (MIT)</span>
       </div>
       <div id="chartProfitAreaBox" class="min-h-[260px]"></div>
     </div>
@@ -948,43 +977,64 @@ function revOver(R, b){
   `;
 
   setTimeout(() => {
-    if (typeof ApexCharts !== "undefined") {
+    if (typeof Chart !== "undefined") {
       // 1. Biểu đồ Cột phân tầng (Stacked Column)
       if (chartRevStacked) { try { chartRevStacked.destroy(); } catch(e){} }
       const el1 = document.getElementById("chartRevStackedBox");
       if (el1) {
-        chartRevStacked = new ApexCharts(el1, {
-          series: [
-            { name: 'Ngân hàng VN', data: keys.map(k => mt[k].bank || 0) },
-            { name: 'Alipay', data: keys.map(k => mt[k].alipay || 0) },
-            { name: 'WeChat', data: keys.map(k => mt[k].weixin || 0) }
-          ],
-          chart: { type: 'bar', height: 280, stacked: true, toolbar: { show: false } },
-          colors: ['#4f46e5', '#0284c7', '#10b981'],
-          plotOptions: { bar: { borderRadius: 4, columnWidth: '50%' } },
-          xaxis: { categories: keys.map(k => monthLbl(k)), labels: { style: { fontSize: '11px', fontWeight: 600 } } },
-          yaxis: { labels: { formatter: (v) => shortN(v) } },
-          legend: { position: 'top', horizontalAlign: 'right', fontSize: '11px', fontWeight: 700 },
-          dataLabels: { enabled: false },
-          tooltip: { y: { formatter: (v) => fmtVnd(v) + ' đ' } }
+        el1.innerHTML = '<canvas id="cvRevStacked" style="max-height:280px; width:100%;"></canvas>';
+        const ctx1 = document.getElementById("cvRevStacked").getContext("2d");
+        chartRevStacked = new Chart(ctx1, {
+          type: 'bar',
+          data: {
+            labels: keys.map(k => monthLbl(k)),
+            datasets: [
+              { label: 'Ngân hàng VN', data: keys.map(k => mt[k].bank || 0), backgroundColor: '#4f46e5', borderRadius: 4 },
+              { label: 'Alipay', data: keys.map(k => mt[k].alipay || 0), backgroundColor: '#0284c7', borderRadius: 4 },
+              { label: 'WeChat', data: keys.map(k => mt[k].weixin || 0), backgroundColor: '#10b981', borderRadius: 4 }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { stacked: true, grid: { display: false }, ticks: { font: { size: 11, weight: '600' } } },
+              y: { stacked: true, ticks: { callback: (v) => shortN(v) } }
+            },
+            plugins: {
+              legend: { position: 'top', align: 'end', labels: { font: { size: 11, weight: 'bold' }, boxWidth: 12 } },
+              tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${fmtVnd(ctx.raw)} đ` } }
+            }
+          }
         });
-        chartRevStacked.render();
       }
 
       // 2. Biểu đồ Donut 3 Cổng thanh toán
       if (chartPayDonut) { try { chartPayDonut.destroy(); } catch(e){} }
       const el2 = document.getElementById("chartPayDonutBox");
       if (el2) {
-        chartPayDonut = new ApexCharts(el2, {
-          series: [by.Bank, by.Alipay, by.Weixin],
-          labels: ['Ngân hàng VN', 'Alipay', 'WeChat'],
-          chart: { type: 'donut', height: 280 },
-          colors: ['#4f46e5', '#0284c7', '#10b981'],
-          legend: { position: 'bottom', fontSize: '11px', fontWeight: 700 },
-          dataLabels: { enabled: false },
-          tooltip: { y: { formatter: (v) => fmtVnd(v) + ' đ' } }
+        el2.innerHTML = '<canvas id="cvPayDonut" style="max-height:280px; width:100%;"></canvas>';
+        const ctx2 = document.getElementById("cvPayDonut").getContext("2d");
+        chartPayDonut = new Chart(ctx2, {
+          type: 'doughnut',
+          data: {
+            labels: ['Ngân hàng VN', 'Alipay', 'WeChat'],
+            datasets: [{
+              data: [by.Bank || 0, by.Alipay || 0, by.Weixin || 0],
+              backgroundColor: ['#4f46e5', '#0284c7', '#10b981'],
+              borderWidth: 2,
+              borderColor: '#ffffff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'bottom', labels: { font: { size: 11, weight: 'bold' }, boxWidth: 12 } },
+              tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${fmtVnd(ctx.raw)} đ` } }
+            }
+          }
         });
-        chartPayDonut.render();
       }
 
       // 3. Biểu đồ Vùng (Area Chart) Doanh thu vs Chi phí -> Lãi ròng
@@ -1004,23 +1054,31 @@ function revOver(R, b){
         const revPerMonth = keys.map(k => mt[k].vnd || 0);
         const profitPerMonth = keys.map((k, i) => revPerMonth[i] - costPerMonth[i]);
 
-        chartProfitArea = new ApexCharts(el3, {
-          series: [
-            { name: 'Doanh thu', data: revPerMonth },
-            { name: 'Chi phí vốn', data: costPerMonth },
-            { name: 'Lợi nhuận ròng', data: profitPerMonth }
-          ],
-          chart: { type: 'area', height: 260, toolbar: { show: false } },
-          colors: ['#4f46e5', '#f97316', '#10b981'],
-          stroke: { curve: 'smooth', width: 2 },
-          fill: { type: 'gradient', gradient: { opacityFrom: 0.45, opacityTo: 0.05 } },
-          xaxis: { categories: keys.map(k => monthLbl(k)), labels: { style: { fontSize: '11px', fontWeight: 600 } } },
-          yaxis: { labels: { formatter: (v) => shortN(v) } },
-          legend: { position: 'top', horizontalAlign: 'right', fontSize: '11px', fontWeight: 700 },
-          dataLabels: { enabled: false },
-          tooltip: { y: { formatter: (v) => fmtVnd(v) + ' đ' } }
+        el3.innerHTML = '<canvas id="cvProfitArea" style="max-height:260px; width:100%;"></canvas>';
+        const ctx3 = document.getElementById("cvProfitArea").getContext("2d");
+        chartProfitArea = new Chart(ctx3, {
+          type: 'line',
+          data: {
+            labels: keys.map(k => monthLbl(k)),
+            datasets: [
+              { label: 'Doanh thu', data: revPerMonth, borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.15)', fill: true, tension: 0.35, borderWidth: 2 },
+              { label: 'Chi phí vốn', data: costPerMonth, borderColor: '#f97316', backgroundColor: 'rgba(249, 115, 22, 0.15)', fill: true, tension: 0.35, borderWidth: 2 },
+              { label: 'Lợi nhuận ròng', data: profitPerMonth, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.15)', fill: true, tension: 0.35, borderWidth: 2 }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { grid: { display: false }, ticks: { font: { size: 11, weight: '600' } } },
+              y: { ticks: { callback: (v) => shortN(v) } }
+            },
+            plugins: {
+              legend: { position: 'top', align: 'end', labels: { font: { size: 11, weight: 'bold' }, boxWidth: 12 } },
+              tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${fmtVnd(ctx.raw)} đ` } }
+            }
+          }
         });
-        chartProfitArea.render();
       }
     }
 

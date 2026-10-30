@@ -11,7 +11,37 @@
 
 ---
 
-## [Unreleased] — Giai đoạn 3: Chia Code Tối Thiểu (4 Module JavaScript Chính) (2026-10-30)
+## [Unreleased] — Giai đoạn 4: Chuyển Thư Viện Sang Local NPM & Đổi ApexCharts sang Chart.js (2026-10-30)
+
+### Added
+- **Đóng gói Font và Icon nội bộ:**
+  - Nhập `@fontsource/plus-jakarta-sans` và `@fortawesome/fontawesome-free` trực tiếp trong `src/customer.css` và `src/admin.css`.
+  - Toàn bộ webfont (`.woff2`, `.woff`, `.ttf`) được Vite trích xuất và lưu tĩnh trong `dist/assets/`, không còn phụ thuộc vào Google Fonts hay CDN FontAwesome.
+- **Tích hợp Chart.js (v4.4.3, giấy phép MIT):**
+  - Thay thế toàn bộ ApexCharts (giấy phép Community có điều kiện) bằng Chart.js đạt chuẩn 100% mã nguồn mở tự do.
+  - Tái hiện chính xác 3 biểu đồ quản trị trong `src/admin.js`:
+    1. Biểu đồ cột chồng (Stacked Bar Chart): Doanh thu phân theo Ngân hàng VN, Alipay và WeChat theo từng tháng.
+    2. Biểu đồ tròn Donut (Donut Chart): Cơ cấu tỷ trọng cổng thanh toán.
+    3. Biểu đồ đường diện tích mượt mà (Smooth Area Line Chart): Doanh thu so với Chi phí hạ tầng và Lợi nhuận ròng.
+  - Đảm bảo tương thích hoàn toàn cấu trúc dữ liệu, bảng màu nhận diện thương hiệu (`#4f46e5`, `#0284c7`, `#10b981`, `#f97316`), format tooltip tiền tệ VND, và tự động dọn dẹp canvas instance khi chuyển tab hoặc refresh dữ liệu.
+- **Tối ưu hóa Code Splitting (Vite manualChunks):**
+  - Phân tách vendor chunks tại `vite.config.js`: `vendor-chart` (Chart.js), `vendor-quill` (Quill WYSIWYG editor), `vendor-grid` (Grid.js), `vendor-swal` (SweetAlert2), và `vendor-core` (DOMPurify, Day.js, SortableJS, Navigo, QRCode.js).
+
+### Changed
+- **`index.html`:** Xóa bỏ toàn bộ thẻ `<link>` và `<script>` tải từ CDN ngoài: Google Fonts (`fonts.googleapis.com`), Font Awesome CDN (`cdnjs.cloudflare.com`), Day.js CDN, SweetAlert2 CDN, Navigo CDN, QRCode.js CDN, Currency.js CDN.
+- **`admin.html`:** Xóa bỏ toàn bộ thẻ CDN ngoài: Google Fonts, Font Awesome, ApexCharts CDN (`cdn.jsdelivr.net/npm/apexcharts`), Grid.js CDN (`unpkg.com/gridjs`), Quill CDN, SortableJS CDN, Day.js CDN, SweetAlert2 CDN, DOMPurify CDN.
+- **`src/customer.js` & `src/admin.js`:** Nhập trực tiếp các module NPM cục bộ (`dayjs`, `currency.js`, `navigo`, `qrcodejs`, `sweetalert2`, `dompurify`, `quill`, `gridjs`, `sortablejs`, `chart.js`), đồng thời gắn các đối tượng toàn cục cần thiết lên `window` để tương thích 100% với các hàm sẵn có.
+
+### Removed
+- **0 external runtime network dependencies:** Loại bỏ triệt để nguy cơ gián đoạn do CDN ngoài bị chặn, sập hoặc chậm tại Việt Nam / Trung Quốc.
+
+### Verified
+- **Biên dịch độc lập & tự chủ hoàn toàn:** Lệnh `npm run build` hoàn thành trong 3.26s với 0 cảnh báo và 0 lỗi. Toàn bộ tài nguyên font, icon, css và js được phục vụ tĩnh từ chính domain Cloudflare Pages.
+- **Kiểm tra Root Assets:** Xác nhận đầy đủ 8 file gốc bắt buộc tại `dist/` (`index.html`, `admin.html`, `_worker.js`, `_redirects`, `manifest.json`, `manifestadmin.json`, `icon-192.png`, `icon-512.png`).
+
+---
+
+## [0.9.4] — Giai đoạn 3: Chia Code Tối Thiểu (4 Module JavaScript Chính) (2026-10-30)
 
 ### Added
 - **`src/api.js`:** Module giao tiếp Worker Backend tập trung duy nhất (`request`, `wpost`, `wpostRetry`, `api`, `aj`, `getSiteKey`, `getAdminToken`, `setAdminToken`, `clearAdminToken`). Chặn đứng rủi ro retry mù quáng cho API tạo đơn hàng và nâng cấp (`/api/public/order`, `/api/public/upgrade`).

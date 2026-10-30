@@ -5,6 +5,16 @@
 
 import { WORKER_URL, wpost, wpostRetry } from './api.js';
 import { $, esc, cp, toast, showToast, paintThemeIcon, toggleTheme, initTheme } from './shared.js';
+import Navigo from 'navigo';
+import Swal from 'sweetalert2';
+import DOMPurify from 'dompurify';
+import 'qrcodejs/qrcode.js';
+
+if (typeof window !== 'undefined') {
+  window.Navigo = Navigo;
+  window.Swal = Swal;
+  window.DOMPurify = DOMPurify;
+}
 
 // ===== CẤU HÌNH: địa chỉ Worker của web này (gọi thẳng, không qua proxy Pages) =====
 // WORKER_URL imported from ./api.js
