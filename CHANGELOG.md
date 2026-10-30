@@ -11,7 +11,24 @@
 
 ---
 
-## [Unreleased] — Giai đoạn 1: Chuẩn bị Môi trường Build & Thiết lập Vite (2026-10-30)
+## [Unreleased] — Giai đoạn 2: Chuyển đổi HTML & CSS sang Module Tĩnh (2026-10-30)
+
+### Added
+- **`src/customer.css`:** Tách toàn bộ custom CSS từ thẻ `<style>` của `index.html` (~170 dòng animation, dark mode, card glassmorphism, responsive utilities) kết hợp các chỉ thị `@tailwind base`, `@tailwind components`, `@tailwind utilities`.
+- **`src/admin.css`:** Tách toàn bộ custom CSS từ thẻ `<style>` của `admin.html` (~185 dòng glass-card, SweetAlert2 toast chuẩn, badge, macro-dot, toggle switch, word-editor) kết hợp Tailwind CSS.
+
+### Changed
+- **`index.html`:** Loại bỏ hoàn toàn script Tailwind Play CDN (`cdn.tailwindcss.com`) và khối `<style>` inline; thay thế bằng `<link rel="stylesheet" href="/src/customer.css">`.
+- **`admin.html`:** Loại bỏ hoàn toàn script Tailwind Play CDN (`cdn.tailwindcss.com`) và khối `<style>` inline; thay thế bằng `<link rel="stylesheet" href="/src/admin.css">`.
+
+### Verified
+- **Biên dịch CSS nội bộ:** Vite và PostCSS tự động quét class, loại trừ CSS thừa và đóng gói thành 2 file CSS tĩnh tại `dist/assets/` (`main-*.css` 90.16 kB và `admin-*.css` 87.66 kB).
+- **Loại bỏ runtime CDN:** Xác nhận `dist/index.html` và `dist/admin.html` không còn bất kỳ liên kết nào tới `cdn.tailwindcss.com`.
+- **Bảo toàn tài nguyên gốc:** Cả 8 file tĩnh ở root `dist/` vẫn đầy đủ và nguyên vẹn.
+
+---
+
+## [0.9.2] — Giai đoạn 1: Chuẩn bị Môi trường Build & Thiết lập Vite (2026-10-30)
 
 ### Added
 - **Khởi tạo `.gitignore`:** Loại trừ `node_modules/`, `dist/`, `.vite/`, logs, và các file tạm của hệ điều hành.
