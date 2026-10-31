@@ -42,14 +42,16 @@ function openImageLightbox(src) {
   document.body.style.overflow = 'hidden';
 }
 function closeImageLightbox() {
-  const m = $('imgLightboxModal');
+  const m = $('imgLightboxModal'), t = $('imgLightboxTarget');
   if (!m || m.classList.contains('hidden')) return;
   m.classList.add('hidden');
+  if (t) t.src = '';
   document.body.style.overflow = '';
 }
 document.addEventListener('click', (e) => {
   const img = e.target.closest('#guideText img, #guideContent img, .guide-content img');
   if (img && img.src) {
+    e.preventDefault();
     openImageLightbox(img.src);
   }
 });
@@ -58,6 +60,9 @@ document.addEventListener('keydown', (e) => {
 });
 
 if (typeof window !== 'undefined') {
+  window.openImageLightbox = openImageLightbox;
+  window.closeImageLightbox = closeImageLightbox;
+  window.openLightbox = openImageLightbox;
   window.Navigo = Navigo;
   window.Swal = Swal;
   window.DOMPurify = DOMPurify;
@@ -610,9 +615,9 @@ async function openGuideArticle(tabId, slug, skipPush) {
     ? renderRichGuideHtml(art.html, art.showToc !== false, `${foundTab}-${curGuideSlug}`)
     : (art.blocks && art.blocks.length ? renderBlocks(art.blocks, `${foundTab}-${curGuideSlug}`) : i18n[lang].guide_empty);
 
-  // 1. Render FAQ riêng của bài viết (nếu có)
+  // 1. Render FAQ riêng của bài viết (chỉ hiện khi BẬT và có câu hỏi)
   let faqBlockHtml = '';
-  if (Array.isArray(art.faqs) && art.faqs.length) {
+  if (art.showFaqs === true && Array.isArray(art.faqs) && art.faqs.length) {
     faqBlockHtml = `
       <div class="mt-8 pt-6 border-t border-slate-200 dark:border-white/10">
         <h3 class="text-base font-extrabold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
@@ -633,9 +638,9 @@ async function openGuideArticle(tabId, slug, skipPush) {
     `;
   }
 
-  // 2. Render Mục bài viết liên quan khác
+  // 2. Render Mục bài viết liên quan khác (chỉ hiện khi BẬT và có bài liên quan)
   let relBlockHtml = '';
-  if (Array.isArray(art.relatedArts) && art.relatedArts.length) {
+  if (art.showRelated === true && Array.isArray(art.relatedArts) && art.relatedArts.length) {
     const tabs = guideTabList();
     const otherList = tabs.flatMap(t => guideArts(t.id)).filter(x => art.relatedArts.includes(x.slug || toSlug(x.name)));
     if (otherList.length) {
@@ -688,12 +693,12 @@ function renderRichGuideHtml(rawHtml, showToc, gid){
  });
  temp.querySelectorAll('img').forEach(img=>{
   const src=img.getAttribute('src')||'';
-  img.setAttribute('onclick',`openLightbox('${esc(src)}')`);
+  img.setAttribute('onclick',`openImageLightbox('${esc(src)}')`);
   img.classList.add('cursor-zoom-in');img.setAttribute('referrerpolicy','no-referrer');img.setAttribute('loading','lazy');
  });
  temp.querySelectorAll('a').forEach(a=>{
   const href=a.getAttribute('href')||'';
-  if(!a.getAttribute('data-cta'))a.classList.add('word-link');
+  if(!a.getAttribute('data-cta') && !a.classList.contains('guide-cta-btn'))a.classList.add('word-link');
   if(href.startsWith('#anchor:')){
    const tgTxt=decodeURIComponent(href.slice(8));
    a.removeAttribute('href');
@@ -1710,10 +1715,11 @@ function switchPortalTab(tabId, fromUpgrade=false, skipPush=false){
   highlightNavBtns('p-guide');
   const targetCat = curGuide || (guideTabList()[0]||{}).id || 'android';
   if(!skipPush) {
-    router.navigate(`${appRoutes.guide}/${encodeURIComponent(targetCat)}`);
+    router.navigate(`${appRoutes.guide}`);
   }
   loadConfig().then(() => {
     showGuide(targetCat);
+   window.scrollTo({ top: 0, behavior: 'smooth' });
   });
   showGuide(targetCat);
   return;
@@ -1868,10 +1874,7 @@ function setupAppRoutes(){
       $('p-guide').classList.add('active');
       highlightNavBtns('p-guide');
       showGuide(curGuide);
-      setTimeout(() => {
-        const catEl = document.getElementById(`guide-cat-${curGuide}`);
-        if (catEl) catEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 60);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
     router.on(`${basePath}/:category/:slug`, async (match) => {
@@ -2017,7 +2020,9 @@ const EXPOSED_FNS = {
   toggleTheme: typeof toggleTheme !== 'undefined' ? toggleTheme : undefined,
   toggleZalo: typeof toggleZalo !== 'undefined' ? toggleZalo : undefined,
   paintThemeIcon: typeof paintThemeIcon !== 'undefined' ? paintThemeIcon : undefined,
-  resetAndHardReload: typeof resetAndHardReload !== 'undefined' ? resetAndHardReload : undefined
+  resetAndHardReload: typeof resetAndHardReload !== 'undefined' ? resetAndHardReload : undefined,
+  openImageLightbox: typeof openImageLightbox !== 'undefined' ? openImageLightbox : undefined,
+  closeImageLightbox: typeof closeImageLightbox !== 'undefined' ? closeImageLightbox : undefined
 };
 
 if (typeof window !== 'undefined') {

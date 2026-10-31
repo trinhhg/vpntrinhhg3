@@ -40,7 +40,7 @@
 </div>
 
 <!-- 4 BONG BÓNG HỖ TRỢ: TRÊN MÁY TÍNH GIỮ NGUYÊN 100%, TRÊN ĐIỆN THOẠI THU GỌN THÀNH 1 NÚT FAB SPEED DIAL -->
-<div id="floatingSocials" class="fixed bottom-6 right-4 md:right-6 z-50 transition-all duration-300">
+<div id="floatingSocials" class="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 transition-all duration-300">
   <!-- Giao diện Máy tính (md trở lên): Giữ nguyên 100% vị trí và kích thước 4 nút -->
   <div class="hidden md:flex flex-col gap-3">
     <button onclick="openWechatModal()" class="w-12 h-12 bg-wechat text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce"><i class="fab fa-weixin"></i></button>
@@ -187,11 +187,11 @@
   </div>
 </nav>
 <div class="h-[120px] md:h-[80px]"></div>
-<div id="mobileNavWrapper" class="hidden fixed bottom-2.5 left-1/2 -translate-x-1/2 z-[60] transition-all duration-300">
-  <div class="md:hidden bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md shadow-lg rounded-full px-3 py-1.5 flex gap-2 border border-slate-200 dark:border-white/10">
-    <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home mobile-tab-btn active flex items-center justify-center text-slate-500 dark:text-slate-400 w-10 h-10 rounded-full transition"><i class="fas fa-tv text-lg"></i></button>
-    <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store mobile-tab-btn flex items-center justify-center text-slate-500 dark:text-slate-400 w-10 h-10 rounded-full transition"><i class="fas fa-shopping-cart text-lg"></i></button>
-    <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide mobile-tab-btn flex items-center justify-center text-slate-500 dark:text-slate-400 w-10 h-10 rounded-full transition"><i class="fas fa-book text-lg"></i></button>
+<div id="mobileNavWrapper" class="hidden fixed bottom-2 left-1/2 -translate-x-1/2 z-[60] transition-all duration-300">
+  <div class="md:hidden bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md shadow-xl rounded-full px-3 py-1 flex items-center gap-1.5 border border-slate-200 dark:border-white/10">
+    <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home mobile-tab-btn active flex flex-col items-center justify-center py-1 px-3 rounded-full transition min-w-[58px] text-slate-500 dark:text-slate-400"><i class="fas fa-house text-sm"></i><span class="text-[9px] font-bold mt-0.5 leading-tight" data-i18n="tab_p_home">Trang chủ</span></button>
+    <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store mobile-tab-btn flex flex-col items-center justify-center py-1 px-3 rounded-full transition min-w-[58px] text-slate-500 dark:text-slate-400"><i class="fas fa-cart-shopping text-sm"></i><span class="text-[9px] font-bold mt-0.5 leading-tight" data-i18n="tab_p_store">Cửa hàng</span></button>
+    <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide mobile-tab-btn flex flex-col items-center justify-center py-1 px-3 rounded-full transition min-w-[58px] text-slate-500 dark:text-slate-400"><i class="fas fa-book-open text-sm"></i><span class="text-[9px] font-bold mt-0.5 leading-tight" data-i18n="tab_p_guide">Hướng dẫn</span></button>
   </div>
 </div>
 <main class="flex-grow z-10 px-2 md:px-4 py-4 md:py-6 max-w-[1400px] mx-auto w-full overflow-x-hidden">
@@ -536,11 +536,11 @@
 <script type="module" src="/src/customer.js"></script>
 
 <!-- MODAL PHÓNG TO ẢNH HƯỚNG DẪN (LIGHTBOX ZOOM) -->
-<div id="imgLightboxModal" class="hidden fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-200" onclick="closeImageLightbox()">
-  <button type="button" onclick="closeImageLightbox()" title="Đóng zoom ảnh (Escape)" class="fixed top-5 right-5 z-[100000] w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center text-xl transition active:scale-95 shadow-lg">
+<div id="imgLightboxModal" class="hidden fixed inset-0 z-[99999] bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-200 cursor-zoom-out" onclick="closeImageLightbox()">
+  <button type="button" onclick="closeImageLightbox()" title="Đóng zoom ảnh (Escape)" class="fixed top-5 right-5 z-[100000] w-10 h-10 rounded-full bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white flex items-center justify-center text-xl transition active:scale-95 shadow-lg border border-slate-300/60 dark:border-white/10">
     <i class="fas fa-times"></i>
   </button>
-  <img id="imgLightboxTarget" src="" class="max-w-[92vw] max-h-[88vh] rounded-2xl shadow-2xl object-contain select-none transition-transform duration-300 scale-95 hover:scale-100" onclick="event.stopPropagation()">
+  <img id="imgLightboxTarget" src="" class="min-w-[280px] sm:min-w-[420px] max-w-[95vw] max-h-[90vh] rounded-2xl shadow-2xl object-contain select-none transition-transform duration-300 scale-95 hover:scale-100 cursor-zoom-out border border-slate-200/50 dark:border-white/10" onclick="closeImageLightbox()">
 </div>
 
 </body>

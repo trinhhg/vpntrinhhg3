@@ -264,4 +264,24 @@ html.dark .swal2-popup.swal2-toast .swal2-title {
   border-radius: 12px !important;
   margin: 14px 0 !important;
   display: block !important;
+  border: 0 !important;
+}
+
+/* Nút CTA Tải App / Kêu gọi hành động trong bài viết */
+.guide-cta-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 14px;
+  text-decoration: none !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+.guide-cta-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3) !important;
 }

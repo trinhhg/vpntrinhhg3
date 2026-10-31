@@ -209,3 +209,90 @@ textarea.autog{resize:none;overflow:hidden;}
 .word-editor a:hover,.g-preview a.word-link:hover{color:#1d4ed8;}
 .tb-btn{height:32px;padding:0 9px;border-radius:7px;border:1px solid #e2e8f0;background:#fff;color:#334155;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:4px;cursor:pointer;transition:.15s;}
 .tb-btn:hover{background:#f1f5f9;border-color:#cbd5e1;color:#4f46e5;}
+
+/* Trình soạn thảo Quill trong Admin - Hiển thị chuẩn WYSIWYG khớp 100% với index */
+.ql-toolbar.ql-snow {
+  border-top-left-radius: 0.75rem !important;
+  border-top-right-radius: 0.75rem !important;
+  border-color: #e2e8f0 !important;
+  background: #f8fafc !important;
+}
+.ql-container.ql-snow {
+  border-bottom-left-radius: 0.75rem !important;
+  border-bottom-right-radius: 0.75rem !important;
+  border-color: #e2e8f0 !important;
+  font-family: inherit !important;
+}
+.ql-editor {
+  min-height: 420px !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  line-height: 1.75 !important;
+  font-size: 15px !important;
+  color: #1e293b !important;
+}
+.ql-editor h2 {
+  font-size: 1.35rem !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  margin: 1.35rem 0 0.6rem !important;
+  line-height: 1.35 !important;
+}
+.ql-editor h3 {
+  font-size: 1.12rem !important;
+  font-weight: 800 !important;
+  color: #1e293b !important;
+  margin: 1.1rem 0 0.5rem !important;
+  line-height: 1.4 !important;
+}
+.ql-editor p {
+  margin: 0 0 0.75rem !important;
+  line-height: 1.75 !important;
+}
+.ql-editor img {
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 12px !important;
+  margin: 14px auto !important;
+  display: block !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
+}
+.ql-editor iframe.ql-video, .ql-editor video {
+  max-width: 100% !important;
+  width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  border-radius: 12px !important;
+  margin: 14px auto !important;
+  display: block !important;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
+  border: 0 !important;
+}
+.ql-editor hr {
+  margin: 24px 0 !important;
+  border: 0 !important;
+  border-top: 1px solid #cbd5e1 !important;
+}
+.ql-editor figcaption {
+  font-size: 12px !important;
+  color: #64748b !important;
+  font-style: italic !important;
+  text-align: center !important;
+  margin-top: 4px !important;
+}
+/* Nút CTA Tải App trong Admin Editor */
+.guide-cta-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 14px;
+  text-decoration: none !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+.guide-cta-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3) !important;
+}

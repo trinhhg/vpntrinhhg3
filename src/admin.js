@@ -2882,7 +2882,19 @@ function renderGuideAll(){
     renderCmsEditor();
   }
 }
-let curArtHtml="", curArtShowToc=true, curArtFaqs=[], curArtRelated=[];
+let curArtHtml="", curArtShowToc=true, curArtShowFaqs=false, curArtShowRelated=false, curArtFaqs=[], curArtRelated=[];
+const CMS_PURIFY_CONFIG = {
+  ADD_TAGS: ['iframe', 'video', 'source', 'figure', 'figcaption', 'hr', 'u', 's', 'span', 'i', 'button', 'a'],
+  ADD_ATTR: [
+    'allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'target', 
+    'rel', 'class', 'style', 'width', 'height', 'controls', 'autoplay', 
+    'loop', 'muted', 'poster', 'type', 'data-cta', 'onclick'
+  ]
+};
+function sanitizeCmsHtml(rawHtml) {
+  if (typeof DOMPurify === "undefined") return rawHtml || "";
+  return DOMPurify.sanitize(rawHtml || "", CMS_PURIFY_CONFIG);
+}
 function copyArtDeepLink(tabId, slug){
  const s=slug||curArtSlug;
  if(!s)return toast("Hãy mở hoặc lưu bài viết trước!","warn");
@@ -2892,22 +2904,22 @@ function copyArtDeepLink(tabId, slug){
 let quillInst = null;
 function getEditorHtml() {
   if (quillInst && quillInst.root) {
-    return typeof DOMPurify !== "undefined" ? DOMPurify.sanitize(quillInst.root.innerHTML) : quillInst.root.innerHTML;
+    return typeof DOMPurify !== "undefined" ? sanitizeCmsHtml(quillInst.root.innerHTML) : quillInst.root.innerHTML;
   }
   const ed = $("cmsWordEditor");
-  return ed ? (typeof DOMPurify !== "undefined" ? DOMPurify.sanitize(ed.innerHTML) : ed.innerHTML) : curArtHtml;
+  return ed ? (typeof DOMPurify !== "undefined" ? sanitizeCmsHtml(ed.innerHTML) : ed.innerHTML) : curArtHtml;
 }
 function commitCms(){
  if(!curArt)return;
  const a=artsOf(curCms).find(x=>(x.slug||toSlug(x.name))===curArt);if(!a)return;
  curArtHtml = getEditorHtml();
  a.html=curArtHtml;
- a.showToc=curArtShowToc;
+ a.showToc=curArtShowToc;a.showFaqs=curArtShowFaqs;a.showRelated=curArtShowRelated;
  a.name=curArtName;
  a.slug=toSlug(curArtSlug||curArtName);
  a.author=curArtAuthor;
  a.watermark=curArtWatermark;
- a.faqs=arr(curArtFaqs).map(f=>({...f}));
+ a.faqs=arr(curArtFaqs).map(f=>({q:(f.q||'').trim(),a:(f.a||'').trim()})).filter(f=>f.q||f.a);
  a.relatedArts=arr(curArtRelated);
  delete a.id;
  delete a.blocks;
@@ -2919,7 +2931,7 @@ function openArt(slug){
  curArt=a.slug||toSlug(a.name);
  curArtSlug=curArt;
  curArtHtml=a.html||"<p>Bắt đầu viết bài...</p>";
- curArtShowToc=a.showToc!==false;
+ curArtShowToc=a.showToc!==false;curArtShowFaqs=a.showFaqs===true;curArtShowRelated=a.showRelated===true;
  curArtName=a.name||"";curArtAuthor=a.author||"";curArtWatermark=a.watermark||"";
  curArtFaqs=arr(a.faqs).map(f=>({...f}));
  curArtRelated=arr(a.relatedArts);
@@ -3142,9 +3154,9 @@ function cmsPrev(){
   const el = $("cmsPreview");
   if (el) {
     let html = buildRichArticleView(curArtHtml, curArtShowToc, `${curCms}-${curArt}`);
-    const faqs = curArtFaqs.filter(f => (f.q || "").trim());
+    const faqs = (curArtShowFaqs ? curArtFaqs : []).filter(f => (f.q || "").trim());
     if (faqs.length) html += `<div style="margin-top:28px;padding-top:18px;border-top:1px solid #e2e8f0"><div style="font-weight:800;font-size:15px;margin-bottom:10px;color:#1e293b">❓ Câu hỏi thường gặp về bài viết này</div>${faqs.map(f => `<details style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px;margin-bottom:8px"><summary style="font-weight:700;font-size:13px;color:#4338ca;cursor:pointer">${esc(f.q)}</summary><p style="margin:8px 0 0;font-size:13px;color:#475569;line-height:1.6">${esc(f.a)}</p></details>`).join("")}</div>`;
-    const rel = guideTabList().flatMap(t => artsOf(t.id)).filter(x => curArtRelated.includes(x.id));
+    const rel = curArtShowRelated ? guideTabList().flatMap(t => artsOf(t.id)).filter(x => curArtRelated.includes(x.slug || toSlug(x.name))) : [];
     if (rel.length) html += `<div style="margin-top:24px;padding-top:18px;border-top:1px solid #e2e8f0"><div style="font-weight:800;font-size:14px;margin-bottom:10px;color:#1e293b">📰 Bài viết khác có thể bạn quan tâm:</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${rel.map(x => `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;font-size:12px;font-weight:700;color:#334155">${esc(x.name || x.id)} →</div>`).join("")}</div></div>`;
     el.innerHTML = html;
   }
@@ -3193,19 +3205,22 @@ function renderCmsEditor(){
    <label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer"><input type="checkbox" ${curArtShowToc?"checked":""} onchange="curArtShowToc=this.checked" class="w-4 h-4 accent-indigo-600">Tự động hiện khung Mục lục (từ H2, H3)</label>
    <div class="flex items-center gap-1.5 w-full min-w-0 justify-start sm:justify-end"><span class="text-[11px] font-bold text-slate-500 shrink-0">Link riêng:</span><code class="text-[11px] bg-slate-100 text-indigo-700 px-2 py-1 rounded border border-slate-200 truncate flex-1 font-mono">${esc(deepLink)}</code><button type="button" onclick="copyArtDeepLink(${q(curCms)},${q(curArtSlug||curArt)})" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold px-2.5 py-1 rounded-lg text-xs transition shrink-0"><i class="fas fa-copy mr-1"></i>Copy Link</button></div>
   </div>
-  <details class="sm:col-span-4 border-t border-slate-100 pt-2"><summary class="cursor-pointer select-none text-xs font-extrabold text-indigo-900 py-1"><i class="fas fa-sliders text-indigo-600 mr-1.5"></i>Nâng cao: FAQ riêng &amp; Bài viết liên quan (bấm để mở)</summary><div class="space-y-3 pt-2">
+  <details class="sm:col-span-4 border-t border-slate-100 pt-2" ${curArtShowFaqs || curArtShowRelated ? "open" : ""}><summary class="cursor-pointer select-none text-xs font-extrabold text-indigo-900 py-1"><i class="fas fa-sliders text-indigo-600 mr-1.5"></i>Nâng cao: FAQ riêng &amp; Bài viết liên quan (bấm để mở)</summary><div class="space-y-3 pt-2">
    <!-- KHỐI FAQ RIÊNG CỦA BÀI VIẾT -->
   <div class="sm:col-span-4 border-t border-slate-100 pt-3 space-y-2">
    <div class="flex items-center justify-between">
-    <label class="font-extrabold text-xs text-indigo-900 flex items-center gap-1.5"><i class="fas fa-circle-question text-indigo-600"></i>Câu hỏi thường gặp riêng của bài viết này (FAQ)</label>
+    <label class="flex items-center gap-2 font-extrabold text-xs text-indigo-900 cursor-pointer"><input type="checkbox" id="chkArtShowFaqs" ${curArtShowFaqs?"checked":""} onchange="curArtShowFaqs=this.checked;$('artFaqsContainerWrap').classList.toggle('hidden',!this.checked);cmsPrev();" class="accent-indigo-600 w-4 h-4"><span><i class="fas fa-circle-question text-indigo-600 mr-1"></i>Bật FAQ riêng cho bài viết này</span></label>
     <button type="button" onclick="addArtFaqRow()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold px-2.5 py-1 rounded-lg text-[11px] transition"><i class="fas fa-plus mr-1"></i>Thêm câu hỏi</button>
    </div>
-   <div id="artFaqsContainer" class="space-y-2"></div>
+   <div id="artFaqsContainerWrap" class="${curArtShowFaqs?'':'hidden'} space-y-2">
+    <div id="artFaqsContainer" class="space-y-2"></div>
+   </div>
   </div>
   <!-- KHỐI CHỌN BÀI VIẾT LIÊN QUAN -->
   <div class="sm:col-span-4 border-t border-slate-100 pt-3 space-y-2">
-   <label class="font-extrabold text-xs text-slate-800 flex items-center gap-1.5"><i class="fas fa-newspaper text-indigo-600"></i>Mục bài viết khác (Khách bấm vào sẽ nhảy sang link bài đó)</label>
-   <div class="max-h-36 overflow-y-auto border border-slate-200 rounded-xl p-2 bg-slate-50 space-y-1.5 scroll-hide">
+   <label class="flex items-center gap-2 font-extrabold text-xs text-slate-800 cursor-pointer"><input type="checkbox" id="chkArtShowRelated" ${curArtShowRelated?"checked":""} onchange="curArtShowRelated=this.checked;$('artRelatedContainerWrap').classList.toggle('hidden',!this.checked);cmsPrev();" class="accent-indigo-600 w-4 h-4"><span><i class="fas fa-newspaper text-indigo-600 mr-1"></i>Bật Mục bài viết khác (Khách bấm vào sẽ nhảy sang link bài đó)</span></label>
+   <div id="artRelatedContainerWrap" class="${curArtShowRelated?'':'hidden'}">
+    <div class="max-h-36 overflow-y-auto border border-slate-200 rounded-xl p-2 bg-slate-50 space-y-1.5 scroll-hide">
     ${guideTabList().flatMap(t=>artsOf(t.id).filter(x=>(x.slug||toSlug(x.name))!==curArt).map(other=>`
       <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white p-1.5 rounded-lg border border-slate-100 cursor-pointer hover:bg-indigo-50/50">
        <input type="checkbox" ${curArtRelated.includes(other.slug||toSlug(other.name))?'checked':''} onchange="toggleRelatedArtPick('${esc(other.slug||toSlug(other.name))}', this.checked)" class="accent-indigo-600 w-4 h-4">
@@ -3213,6 +3228,7 @@ function renderCmsEditor(){
        <span class="truncate flex-1">${esc(other.name||other.slug)}</span>
       </label>
     `)).join('') || '<div class="text-[11px] text-slate-400 italic">Chưa có bài viết khác trên website.</div>'}
+    </div>
    </div>
   </div></div></details>`;
  setTimeout(renderArtFaqsUI, 20);
@@ -3246,8 +3262,11 @@ function renderCmsEditor(){
     if (quillInst.keyboard && quillInst.keyboard.bindings) {
       for (const k of Object.keys(quillInst.keyboard.bindings)) {
         quillInst.keyboard.bindings[k] = (quillInst.keyboard.bindings[k] || []).filter(b => {
+          if (b.format && b.format.list) return false;
           const fnStr = String(b.handler || '');
-          return !(b.format && b.format.list) && !fnStr.includes('list');
+          if (fnStr.includes('list')) return false;
+          if (b.prefix && typeof b.prefix.test === 'function' && (b.prefix.test('1.') || b.prefix.test('*') || b.prefix.test('-'))) return false;
+          return true;
         });
       }
     }
@@ -3259,18 +3278,51 @@ function renderCmsEditor(){
       tbMod.addHandler('video', customCmsVideoHandler);
     }
 
+    // Thêm nút Nút Bấm CTA và Đường kẻ ngang Divider vào thanh công cụ Quill
+    const tbEl = document.querySelector('.ql-toolbar');
+    if (tbEl && !tbEl.querySelector('.ql-btn-cta')) {
+      const customGroup = document.createElement('span');
+      customGroup.className = 'ql-formats';
+      customGroup.innerHTML = `
+        <button type="button" class="ql-btn-cta" title="Chèn Nút Bấm / CTA nổi bật" style="width:auto;padding:0 8px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;color:#4f46e5;"><i class="fas fa-rectangle-ad"></i> Nút CTA</button>
+        <button type="button" class="ql-btn-hr" title="Chèn Đường kẻ ngang phân cách (---)" style="width:auto;padding:0 8px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;color:#475569;"><i class="fas fa-minus"></i> Đường kẻ</button>
+      `;
+      tbEl.appendChild(customGroup);
+      customGroup.querySelector('.ql-btn-cta').onclick = openCmsCtaButtonModal;
+      customGroup.querySelector('.ql-btn-hr').onclick = insertCmsDivider;
+    }
+
     quillInst.on('text-change', () => {
      curArtHtml = getEditorHtml();
      cmsPrev();
     });
     quillInst.root.addEventListener('keydown', (e) => {
+     if (e.key === 'Enter' || e.key === ' ') {
+       const sel = quillInst.getSelection();
+       if (sel) {
+         const [line, offset] = quillInst.getLine(sel.index);
+         if (line) {
+           const lineText = (line.domNode.textContent || '').trim();
+           if (lineText === '---') {
+             e.preventDefault();
+             const lineStart = sel.index - offset;
+             quillInst.deleteText(lineStart, line.length());
+             quillInst.clipboard.dangerouslyPasteHTML(lineStart, '<hr class="my-6 border-t border-slate-300 dark:border-slate-700"><p><br></p>');
+             quillInst.setSelection(lineStart + 2);
+             curArtHtml = getEditorHtml();
+             cmsPrev();
+             return;
+           }
+         }
+       }
+     }
      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
       e.preventDefault();
       saveCms();
      }
     });
    }
-   const cleanHtml = typeof DOMPurify !== "undefined" ? DOMPurify.sanitize(curArtHtml) : curArtHtml;
+   const cleanHtml = typeof DOMPurify !== "undefined" ? sanitizeCmsHtml(curArtHtml) : curArtHtml;
    if (quillInst.root.innerHTML !== cleanHtml) {
     quillInst.root.innerHTML = cleanHtml;
    }
@@ -3328,6 +3380,10 @@ async function customCmsImageHandler() {
             <label class="block font-bold text-slate-700 mb-1">Cách 2: Dán đường link ảnh trực tiếp</label>
             <input type="url" id="swalImgUrl" placeholder="https://domain.com/image.png" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-mono">
           </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Mô tả / Chú thích ảnh bên dưới (tùy chọn)</label>
+            <input type="text" id="swalImgCaption" placeholder="VD: Giao diện ứng dụng Hiddify sau khi kết nối thành công..." class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none">
+          </div>
         </div>
       `,
       showCancelButton: true,
@@ -3337,31 +3393,41 @@ async function customCmsImageHandler() {
       preConfirm: () => {
         const fileInput = document.getElementById('swalImgFile');
         const urlInput = document.getElementById('swalImgUrl');
+        const capInput = document.getElementById('swalImgCaption');
         const file = fileInput && fileInput.files && fileInput.files[0];
         const url = urlInput && urlInput.value ? urlInput.value.trim() : '';
+        const caption = capInput && capInput.value ? capInput.value.trim() : '';
         if (!file && !url) {
           Swal.showValidationMessage('Vui lòng chọn 1 tệp ảnh từ máy hoặc dán link ảnh URL');
           return false;
         }
-        return { file, url };
+        return { file, url, caption };
       }
     });
 
     if (!formValues) return;
+    const insertWithCaption = (srcUrl, cap) => {
+      const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
+      quillInst.insertEmbed(range.index, "image", srcUrl);
+      if (cap) {
+        quillInst.insertText(range.index + 1, cap + "\n", { italic: true, color: "#64748b" });
+        quillInst.formatLine(range.index + 1, 1, { align: "center" });
+        quillInst.setSelection(range.index + 2);
+      } else {
+        quillInst.setSelection(range.index + 1);
+      }
+      curArtHtml = getEditorHtml();
+      cmsPrev();
+    };
+
     if (formValues.file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
-        quillInst.insertEmbed(range.index, "image", e.target.result);
-        quillInst.setSelection(range.index + 1);
-        cmsPrev();
+        insertWithCaption(e.target.result, formValues.caption);
       };
       reader.readAsDataURL(formValues.file);
     } else if (formValues.url) {
-      const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
-      quillInst.insertEmbed(range.index, "image", formValues.url);
-      quillInst.setSelection(range.index + 1);
-      cmsPrev();
+      insertWithCaption(formValues.url, formValues.caption);
     }
   } else {
     const url = prompt("Nhập đường dẫn URL ảnh (https://...):");
@@ -3395,6 +3461,10 @@ async function customCmsVideoHandler() {
             <input type="url" id="swalVideoUrl" placeholder="https://www.youtube.com/watch?v=... hoặc https://..." class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-mono">
             <span class="text-[10px] text-slate-400 mt-1 block">Tự động chuyển link YouTube thành chuẩn nhúng iframe mượt mà.</span>
           </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Mô tả / Chú thích video bên dưới (tùy chọn)</label>
+            <input type="text" id="swalVideoCaption" placeholder="VD: Video hướng dẫn cấu hình từng bước chi tiết..." class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none">
+          </div>
         </div>
       `,
       showCancelButton: true,
@@ -3404,8 +3474,10 @@ async function customCmsVideoHandler() {
       preConfirm: () => {
         const fileInput = document.getElementById('swalVideoFile');
         const urlInput = document.getElementById('swalVideoUrl');
+        const capInput = document.getElementById('swalVideoCaption');
         const file = fileInput && fileInput.files && fileInput.files[0];
         let url = urlInput && urlInput.value ? urlInput.value.trim() : '';
+        const caption = capInput && capInput.value ? capInput.value.trim() : '';
         if (!file && !url) {
           Swal.showValidationMessage('Vui lòng chọn 1 tệp video từ máy hoặc dán link video');
           return false;
@@ -3416,25 +3488,33 @@ async function customCmsVideoHandler() {
             url = "https://www.youtube.com/embed/" + ytMatch[1];
           }
         }
-        return { file, url };
+        return { file, url, caption };
       }
     });
 
     if (!formValues) return;
+    const insertVideoWithCaption = (vSrc, cap) => {
+      const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
+      quillInst.insertEmbed(range.index, "video", vSrc);
+      if (cap) {
+        quillInst.insertText(range.index + 1, cap + "\n", { italic: true, color: "#64748b" });
+        quillInst.formatLine(range.index + 1, 1, { align: "center" });
+        quillInst.setSelection(range.index + 2);
+      } else {
+        quillInst.setSelection(range.index + 1);
+      }
+      curArtHtml = getEditorHtml();
+      cmsPrev();
+    };
+
     if (formValues.file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
-        quillInst.insertEmbed(range.index, "video", e.target.result);
-        quillInst.setSelection(range.index + 1);
-        cmsPrev();
+        insertVideoWithCaption(e.target.result, formValues.caption);
       };
       reader.readAsDataURL(formValues.file);
     } else if (formValues.url) {
-      const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
-      quillInst.insertEmbed(range.index, "video", formValues.url);
-      quillInst.setSelection(range.index + 1);
-      cmsPrev();
+      insertVideoWithCaption(formValues.url, formValues.caption);
     }
   } else {
     let url = prompt("Nhập link video hoặc link YouTube:");
@@ -3445,11 +3525,106 @@ async function customCmsVideoHandler() {
       const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
       quillInst.insertEmbed(range.index, "video", url);
       quillInst.setSelection(range.index + 1);
+      curArtHtml = getEditorHtml();
       cmsPrev();
     }
   }
 }
 window.customCmsVideoHandler = customCmsVideoHandler;
+
+async function openCmsCtaButtonModal() {
+  if (typeof Swal === "undefined") {
+    const text = prompt("Tên nút (VD: Tải App Hiddify):");
+    const url = prompt("Đường link URL:");
+    if (!text || !url) return;
+    const btnHtml = `<p class="ql-align-center" style="margin: 16px 0; text-align: center;"><a href="${esc(url)}" target="_blank" rel="noopener noreferrer" data-cta="1" class="guide-cta-btn" style="background: linear-gradient(135deg, #4f46e5, #06b6d4); color: #ffffff;"><i class="fas fa-download"></i> <span>${esc(text)}</span></a></p><p><br></p>`;
+    const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
+    quillInst.clipboard.dangerouslyPasteHTML(range.index, btnHtml);
+    quillInst.setSelection(range.index + 2);
+    curArtHtml = getEditorHtml();
+    cmsPrev();
+    return;
+  }
+  const { value: v } = await Swal.fire({
+    title: 'Chèn Nút Bấm / CTA Tải App',
+    html: `
+      <div class="space-y-3 text-left text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Tên hiển thị trên nút bấm</label>
+          <input type="text" id="ctaBtnText" placeholder="VD: Tải App Hiddify cho Android" value="Tải App Hiddify" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-bold">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Đường dẫn liên kết (URL)</label>
+          <input type="url" id="ctaBtnUrl" placeholder="https://..." class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-mono">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Màu sắc nút</label>
+            <select id="ctaBtnStyle" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-bold">
+              <option value="indigo">Gradient Xanh tím</option>
+              <option value="rose">Gradient Đỏ cam</option>
+              <option value="emerald">Gradient Xanh lá</option>
+              <option value="dark">Tối sang trọng</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Icon kèm theo</label>
+            <select id="ctaBtnIcon" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-bold">
+              <option value="fas fa-download">Tải xuống (Download)</option>
+              <option value="fab fa-google-play">Google Play</option>
+              <option value="fab fa-apple">Apple App Store</option>
+              <option value="fas fa-bolt">Sấm sét (Nhanh)</option>
+              <option value="fas fa-arrow-up-right-from-square">Mở liên kết</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    `,
+    showCancelButton: true,
+    confirmButtonText: '<i class="fas fa-check mr-1"></i>Chèn nút',
+    cancelButtonText: 'Hủy bỏ',
+    confirmButtonColor: '#4f46e5',
+    preConfirm: () => {
+      const text = (document.getElementById('ctaBtnText')?.value || '').trim();
+      const url = (document.getElementById('ctaBtnUrl')?.value || '').trim();
+      const style = document.getElementById('ctaBtnStyle')?.value || 'indigo';
+      const icon = document.getElementById('ctaBtnIcon')?.value || 'fas fa-download';
+      if (!text) {
+        Swal.showValidationMessage('Vui lòng nhập tên hiển thị trên nút');
+        return false;
+      }
+      if (!url) {
+        Swal.showValidationMessage('Vui lòng nhập đường dẫn URL');
+        return false;
+      }
+      return { text, url, style, icon };
+    }
+  });
+
+  if (!v) return;
+  const styleMap = {
+    indigo: 'background: linear-gradient(135deg, #4f46e5, #06b6d4); color: #ffffff;',
+    rose: 'background: linear-gradient(135deg, #f43f5e, #fb923c); color: #ffffff;',
+    emerald: 'background: linear-gradient(135deg, #10b981, #059669); color: #ffffff;',
+    dark: 'background: #0f172a; color: #ffffff;'
+  };
+  const btnHtml = `<p class="ql-align-center" style="margin: 16px 0; text-align: center;"><a href="${esc(v.url)}" target="_blank" rel="noopener noreferrer" data-cta="1" class="guide-cta-btn" style="${styleMap[v.style] || styleMap.indigo}"><i class="${esc(v.icon)}"></i> <span>${esc(v.text)}</span></a></p><p><br></p>`;
+  const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
+  quillInst.clipboard.dangerouslyPasteHTML(range.index, btnHtml);
+  quillInst.setSelection(range.index + 2);
+  curArtHtml = getEditorHtml();
+  cmsPrev();
+}
+
+function insertCmsDivider() {
+  const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
+  quillInst.clipboard.dangerouslyPasteHTML(range.index, '<hr class="my-6 border-t border-slate-300 dark:border-slate-700"><p><br></p>');
+  quillInst.setSelection(range.index + 2);
+  curArtHtml = getEditorHtml();
+  cmsPrev();
+}
+window.openCmsCtaButtonModal = openCmsCtaButtonModal;
+window.insertCmsDivider = insertCmsDivider;
 
 function openCmsEditorForArt(tabId, slug, fromHistory = false) {
  curCms = tabId;
