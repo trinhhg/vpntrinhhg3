@@ -6,6 +6,49 @@
 import { WORKER_URL, getSiteKey, getAdminToken, setAdminToken, clearAdminToken, api, aj } from './api.js';
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
+
+const BlockEmbed = Quill.import('blots/block/embed');
+
+class HrBlot extends BlockEmbed {
+  static blotName = 'hr';
+  static tagName = 'hr';
+  static className = 'guide-hr';
+}
+Quill.register(HrBlot);
+
+class CtaButtonBlot extends BlockEmbed {
+  static blotName = 'ctaButton';
+  static tagName = 'div';
+  static className = 'ql-cta-wrap';
+
+  static create(val) {
+    const node = super.create();
+    node.setAttribute('contenteditable', 'false');
+    const v = typeof val === 'object' ? val : (typeof val === 'string' && val.startsWith('{') ? JSON.parse(val) : { text: val });
+    const url = v.url || '#';
+    const text = v.text || 'Tải App';
+    const icon = v.icon || 'fas fa-download';
+    const styleClass = v.styleClass || 'cta-indigo';
+    node.setAttribute('data-cta-json', JSON.stringify({ url, text, icon, styleClass }));
+    node.innerHTML = `<a href="${url}" target="_blank" rel="noopener noreferrer" data-cta="1" class="guide-cta-btn ${styleClass}"><i class="${icon} mr-1.5"></i><span>${text}</span></a>`;
+    return node;
+  }
+
+  static value(node) {
+    const jsonStr = node.getAttribute('data-cta-json');
+    if (jsonStr) {
+      try { return JSON.parse(jsonStr); } catch(e){}
+    }
+    const a = node.querySelector('a');
+    return a ? {
+      url: a.getAttribute('href') || '#',
+      text: a.querySelector('span')?.textContent || a.textContent.trim(),
+      styleClass: a.className.replace('guide-cta-btn', '').trim(),
+      icon: a.querySelector('i')?.className.replace('mr-1.5', '').trim()
+    } : {};
+  }
+}
+Quill.register(CtaButtonBlot);
 import DOMPurify from 'dompurify';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat.js';
@@ -836,7 +879,7 @@ const healAllMissing = healAllMissingWithProgress;
 const htmlEscape=esc;
 const sendMailClient=(to,subject,html)=>api("/api/admin/send_mail",{method:"POST",body:{to,subject,html}}).catch(()=>{});
 const mailGrad=(c1,c2,ang,stop)=>`linear-gradient(${Number(ang)||135}deg,${c1} 0%,${c2} ${Math.max(1,Math.min(100,Number(stop)||100))}%)`;
-const mailShell=(c1,c2,title,inner,ang,stop)=>`<div style="font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;width:100%;max-width:480px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden"><div style="background:${c1};background-image:${mailGrad(c1,c2,ang,stop)};padding:22px 16px;text-align:center"><h2 style="color:#ffffff;margin:0;font-size:18px;font-weight:700;line-height:1.4;text-transform:uppercase;letter-spacing:normal;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">${title}</h2></div><div style="padding:20px;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">${inner}</div></div>`;
+const mailShell=(c1,c2,title,inner,ang,stop)=>`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;width:100%;max-width:480px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden"><div style="background:${c1};background-image:${mailGrad(c1,c2,ang,stop)};padding:22px 16px;text-align:center"><h2 style="color:#ffffff;margin:0;font-size:18px;font-weight:700;line-height:1.4;text-transform:uppercase;letter-spacing:normal;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">${title}</h2></div><div style="padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">${inner}</div></div>`;
 const mailIdBox=(label,id,color)=>`<div style="background:#f1f5f9;border-left:4px solid ${color};padding:15px;border-radius:8px;margin:18px 0;text-align:center"><p style="margin:0;font-size:11px;color:#64748b;font-weight:bold;text-transform:uppercase">${label}</p><p style="margin:8px 0 0;font-size:22px;font-weight:900;color:${color};letter-spacing:1px;word-break:break-word">${htmlEscape(id)}</p></div>`;
 const mailPortal=(PDx,label)=>`<div style="text-align:center;margin:24px 0 6px"><a href="${htmlEscape(PDx)}" style="display:block;background:#1e293b;color:#ffffff;padding:13px 15px;border-radius:10px;text-decoration:none;font-weight:900;font-size:14px">${label}</a></div><p style="margin:10px 0 0;font-size:12px;color:#64748b;text-align:center;line-height:1.5">👉 <i>Dùng <b>Mã Đơn Hàng</b> hoặc <b>Email</b> để tra cứu thông tin đơn hàng</i></p>`;
 const mailBtn=(href,bg,label)=>`<td width="50%" style="padding:4px"><a href="${htmlEscape(href)}" style="display:block;background:${bg};color:#ffffff;padding:10px 0;border-radius:8px;text-decoration:none;font-weight:bold;font-size:12px;text-align:center">${label}</a></td>`;
@@ -923,7 +966,7 @@ function revList(all){
 function costSum(all){
   const r = getCentralRates();
   let total = 0; const by = {};
-  (cmsDb.costs || []).filter(c => all || revMonth === "all" || monthInfo(c.ts).key === revMonth).forEach(c => {
+  (cmsDb.costs || []).forEach(c => {
     let v = Number(c.total) || 0;
     if (c.cur === "CNY") v = v * r.vndCny;
     else if (c.cur === "USD") v = v * r.vndUsd;
@@ -933,7 +976,6 @@ function costSum(all){
   });
   return { total, by };
 }
-
 function monthTotals(){
   const m = {};
   revList(true).forEach(x => {
@@ -982,7 +1024,7 @@ function renderRevenue(){
 let chartRevStacked = null, chartPayDonut = null, chartProfitArea = null;
 let gridPkgTable = null, gridRankTable = null, gridPayDetail = null, gridCostTable = null;
 
-// SUB-TAB 1: TỔNG QUAN KPI & 3 BIỂU ĐỒ APEXCHARTS
+// SUB-TAB 1: TỔNG QUAN KPI & 3 BIỂU ĐỒ (ZERO GRID.JS)
 function revOver(R, b){
   const sum = R.reduce((a, x) => a + x.vnd, 0);
   const cost = costSum().total;
@@ -992,10 +1034,46 @@ function revOver(R, b){
   const by = { Bank: 0, Alipay: 0, Weixin: 0 };
   R.forEach(x => by[x.pay] += x.vnd);
 
+  let chartLabels = [];
+  let chartDataBank = [];
+  let chartDataAlipay = [];
+  let chartDataWeChat = [];
+  let chartStackedTitle = "Cơ cấu doanh thu 12 tháng (Stacked Column)";
+
+  if (revMonth !== "all") {
+    chartStackedTitle = `Doanh thu các ngày trong Tháng ${monthLbl(revMonth)} (VND)`;
+    const yr = parseInt(revMonth.slice(0, 4)) || 2026;
+    const mo = parseInt(revMonth.slice(4, 6)) || 1;
+    const daysInMonth = new Date(yr, mo, 0).getDate();
+    const dayTotals = {};
+    for (let d = 1; d <= daysInMonth; d++) {
+      dayTotals[d] = { bank: 0, alipay: 0, weixin: 0 };
+      chartLabels.push(String(d));
+    }
+    R.forEach(x => {
+      const d = new Date(oTs(x.o)).getDate();
+      if (dayTotals[d]) {
+        if (x.pay === "Bank") dayTotals[d].bank += x.vnd;
+        else if (x.pay === "Alipay") dayTotals[d].alipay += x.vnd;
+        else if (x.pay === "Weixin") dayTotals[d].weixin += x.vnd;
+      }
+    });
+    for (let d = 1; d <= daysInMonth; d++) {
+      chartDataBank.push(dayTotals[d].bank);
+      chartDataAlipay.push(dayTotals[d].alipay);
+      chartDataWeChat.push(dayTotals[d].weixin);
+    }
+  } else {
+    chartLabels = keys.map(k => monthLbl(k));
+    chartDataBank = keys.map(k => mt[k].bank || 0);
+    chartDataAlipay = keys.map(k => mt[k].alipay || 0);
+    chartDataWeChat = keys.map(k => mt[k].weixin || 0);
+  }
+
   b.innerHTML = `
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
       ${kpi("Tổng Doanh Thu", fmtVnd(sum) + "đ", `${R.length} đơn thành công`)}
-      ${kpi("Chi Phí Vốn VPN", fmtVnd(cost) + "đ", "Tiền nhập nguồn Liangxin/DJJC/Kitty", "text-orange-500")}
+      ${kpi("Chi Phí Vốn VPN", fmtVnd(cost) + "đ", "Tổng vốn nhập nguồn Liangxin/DJJC/Kitty", "text-orange-500")}
       ${kpi("Lợi Nhuận Ròng", fmtVnd(profit) + "đ", `Doanh thu - Chi phí vốn`, profit >= 0 ? "text-emerald-600" : "text-rose-600")}
       ${kpi("Tỷ Suất Lợi Nhuận", margin + "%", "Lãi ròng / Tổng doanh thu", margin >= 50 ? "text-indigo-600" : "text-amber-600")}
     </div>
@@ -1003,13 +1081,13 @@ function revOver(R, b){
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-2">
         <div class="font-bold text-sm text-slate-800 flex items-center justify-between">
-          <span class="flex items-center gap-2"><i class="fas fa-chart-column text-indigo-600"></i>Cơ cấu doanh thu 12 tháng (Stacked Column)</span>
+          <span class="flex items-center gap-2"><i class="fas fa-chart-column text-indigo-600"></i>${chartStackedTitle}</span>
           <span class="text-[10px] font-bold text-slate-400">Đơn vị: VND</span>
         </div>
         <div id="chartRevStackedBox" class="min-h-[280px]"></div>
       </div>
       <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-2">
-        <div class="font-bold text-sm text-slate-800 flex items-center gap-2"><i class="fas fa-chart-pie text-purple-600"></i>Tỷ lệ 3 Cổng thanh toán</div>
+        <div class="font-bold text-sm text-slate-800 flex items-center gap-2"><i class="fas fa-chart-pie text-purple-600"></i>Tỷ lệ 3 Cổng thanh toán ${revMonth !== "all" ? `(Tháng ${monthLbl(revMonth)})` : ""}</div>
         <div id="chartPayDonutBox" class="min-h-[280px] flex items-center justify-center"></div>
       </div>
     </div>
@@ -1024,11 +1102,11 @@ function revOver(R, b){
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-        <div class="font-bold text-sm text-slate-800 mb-3 flex items-center gap-2"><i class="fas fa-table-list text-indigo-600"></i>Bảng Doanh thu theo Gói cước (Grid.js)</div>
+        <div class="font-bold text-sm text-slate-800 mb-3 flex items-center gap-2"><i class="fas fa-table-list text-indigo-600"></i>Bảng Doanh thu theo Gói cước</div>
         <div id="gridPkgBox"></div>
       </div>
       <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-        <div class="font-bold text-sm text-slate-800 mb-3 flex items-center gap-2"><i class="fas fa-ranking-star text-amber-500"></i>Xếp hạng doanh thu theo Tháng (Grid.js)</div>
+        <div class="font-bold text-sm text-slate-800 mb-3 flex items-center gap-2"><i class="fas fa-ranking-star text-amber-500"></i>Xếp hạng doanh thu theo Tháng</div>
         <div id="gridRankBox"></div>
       </div>
     </div>
@@ -1045,11 +1123,11 @@ function revOver(R, b){
         chartRevStacked = new Chart(ctx1, {
           type: 'bar',
           data: {
-            labels: keys.map(k => monthLbl(k)),
+            labels: chartLabels,
             datasets: [
-              { label: 'Ngân hàng VN', data: keys.map(k => mt[k].bank || 0), backgroundColor: '#4f46e5', borderRadius: 4 },
-              { label: 'Alipay', data: keys.map(k => mt[k].alipay || 0), backgroundColor: '#0284c7', borderRadius: 4 },
-              { label: 'WeChat', data: keys.map(k => mt[k].weixin || 0), backgroundColor: '#10b981', borderRadius: 4 }
+              { label: 'Ngân hàng VN', data: chartDataBank, backgroundColor: '#4f46e5', borderRadius: 4 },
+              { label: 'Alipay', data: chartDataAlipay, backgroundColor: '#0284c7', borderRadius: 4 },
+              { label: 'WeChat', data: chartDataWeChat, backgroundColor: '#10b981', borderRadius: 4 }
             ]
           },
           options: {
@@ -1095,23 +1173,10 @@ function revOver(R, b){
         });
       }
 
-      // 3. Biểu đồ Vùng (Area Chart) Doanh thu vs Chi phí -> Lãi ròng
+      // 3. Biểu đồ Vùng (Area Chart) Doanh thu vs Chi phí -> Lãi ròng 12 tháng
       if (chartProfitArea) { try { chartProfitArea.destroy(); } catch(e){} }
       const el3 = document.getElementById("chartProfitAreaBox");
       if (el3) {
-        const costPerMonth = keys.map(k => {
-          let cSum = 0;
-          (cmsDb.costs || []).filter(c => monthInfo(c.ts).key === k).forEach(c => {
-            let v = Number(c.total) || 0;
-            if (c.cur === "CNY") v = v * getCentralRates().vndCny;
-            else if (c.cur === "USD") v = v * getCentralRates().vndUsd;
-            cSum += v;
-          });
-          return cSum;
-        });
-        const revPerMonth = keys.map(k => mt[k].vnd || 0);
-        const profitPerMonth = keys.map((k, i) => revPerMonth[i] - costPerMonth[i]);
-
         el3.innerHTML = '<canvas id="cvProfitArea" style="max-height:260px; width:100%;"></canvas>';
         const ctx3 = document.getElementById("cvProfitArea").getContext("2d");
         chartProfitArea = new Chart(ctx3, {
@@ -1119,9 +1184,9 @@ function revOver(R, b){
           data: {
             labels: keys.map(k => monthLbl(k)),
             datasets: [
-              { label: 'Doanh thu', data: revPerMonth, borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.15)', fill: true, tension: 0.35, borderWidth: 2 },
-              { label: 'Chi phí vốn', data: costPerMonth, borderColor: '#f97316', backgroundColor: 'rgba(249, 115, 22, 0.15)', fill: true, tension: 0.35, borderWidth: 2 },
-              { label: 'Lợi nhuận ròng', data: profitPerMonth, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.15)', fill: true, tension: 0.35, borderWidth: 2 }
+              { label: 'Doanh thu', data: keys.map(k => mt[k].vnd || 0), borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.1)', fill: true, tension: 0.3 },
+              { label: 'Chi phí vốn', data: keys.map(k => costSum(true).by[k] || 0), borderColor: '#f97316', backgroundColor: 'transparent', borderDash: [4, 4], tension: 0.3 },
+              { label: 'Lợi nhuận ròng', data: keys.map(k => (mt[k].vnd || 0) - (costSum(true).by[k] || 0)), borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.15)', fill: true, tension: 0.3 }
             ]
           },
           options: {
@@ -1205,7 +1270,6 @@ function revOver(R, b){
     }
   }, 60);
 }
-
 // SUB-TAB 2: THANH TOÁN & BẢNG TỶ GIÁ TẬP TRUNG (CENTRALIZED EXCHANGE RATE TABLE)
 const PAYLBL = { Bank: "🏦 Ngân hàng VN", Alipay: "🔵 Alipay", Weixin: "🟢 WeChat" };
 
@@ -2888,7 +2952,7 @@ const CMS_PURIFY_CONFIG = {
   ADD_ATTR: [
     'allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'target', 
     'rel', 'class', 'style', 'width', 'height', 'controls', 'autoplay', 
-    'loop', 'muted', 'poster', 'type', 'data-cta', 'onclick'
+    'loop', 'muted', 'poster', 'type', 'data-cta', 'data-cta-json', 'onclick'
   ]
 };
 function sanitizeCmsHtml(rawHtml) {
@@ -3190,7 +3254,21 @@ function toggleRelatedArtPick(artSlug, checked){
  if(checked) s.add(artSlug); else s.delete(artSlug);
  curArtRelated = [...s];
  cmsPrev();
+ commitCms();
+ saveCms(true);
+ toast(checked ? "Đã liên kết bài viết!" : "Đã hủy liên kết bài viết!");
 }
+
+async function saveArtFaqsOnly() {
+  commitCms();
+  try {
+    await saveCms(true);
+    toast("Đã lưu FAQ riêng của bài viết thành công!");
+  } catch(e) {
+    toast("Lỗi lưu FAQ: " + e.message, "err");
+  }
+}
+window.saveArtFaqsOnly = saveArtFaqsOnly;
 
 function renderCmsEditor(){
  const w=$("cmsEditorWrap");if(!curArt){w.classList.add("hidden");return;}w.classList.remove("hidden");
@@ -3201,16 +3279,20 @@ function renderCmsEditor(){
   <div><label class="block text-[10px] font-bold text-indigo-600 mb-0.5">Slug URL (không dấu, cách nhau dấu -)</label><input id="cmsArtSlugInp" value="${esc(curArtSlug||curArt)}" oninput="this.value=toSlug(this.value);curArtSlug=this.value;" class="w-full p-2 text-xs border border-indigo-200 rounded-lg outline-none font-mono font-bold bg-indigo-50/30"></div>
   <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tác giả</label><input value="${esc(curArtAuthor)}" oninput="curArtAuthor=this.value" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div>
   <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Watermark nền</label><input value="${esc(curArtWatermark)}" oninput="curArtWatermark=this.value" placeholder="VD: VPNTrinhHg" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div>
-  <div class="sm:col-span-4 grid grid-cols-1 sm:grid-cols-2 gap-3 items-center pt-2 border-t border-slate-100 mt-1">
-   <label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer"><input type="checkbox" ${curArtShowToc?"checked":""} onchange="curArtShowToc=this.checked" class="w-4 h-4 accent-indigo-600">Tự động hiện khung Mục lục (từ H2, H3)</label>
-   <div class="flex items-center gap-1.5 w-full min-w-0 justify-start sm:justify-end"><span class="text-[11px] font-bold text-slate-500 shrink-0">Link riêng:</span><code class="text-[11px] bg-slate-100 text-indigo-700 px-2 py-1 rounded border border-slate-200 truncate flex-1 font-mono">${esc(deepLink)}</code><button type="button" onclick="copyArtDeepLink(${q(curCms)},${q(curArtSlug||curArt)})" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold px-2.5 py-1 rounded-lg text-xs transition shrink-0"><i class="fas fa-copy mr-1"></i>Copy Link</button></div>
+  <div class="sm:col-span-4 flex flex-col sm:flex-row sm:items-center gap-2 pt-2 border-t border-slate-100 mt-1 bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+   <span class="text-[11px] font-bold text-slate-600 dark:text-slate-300 shrink-0"><i class="fas fa-link text-indigo-600 mr-1"></i>Link riêng bài viết:</span>
+   <code class="text-[11px] bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-400 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 truncate flex-1 font-mono">${esc(deepLink)}</code>
+   <button type="button" onclick="copyArtDeepLink(${q(curCms)},${q(curArtSlug||curArt)})" class="bg-indigo-600 text-white hover:bg-indigo-700 font-bold px-3 py-1.5 rounded-lg text-xs transition shrink-0 shadow-sm flex items-center justify-center gap-1.5"><i class="fas fa-copy"></i>Copy Link</button>
+  </div>
+  <div class="sm:col-span-4 pt-1">
+   <label class="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer"><input type="checkbox" ${curArtShowToc?"checked":""} onchange="curArtShowToc=this.checked" class="w-4 h-4 accent-indigo-600">Tự động hiện khung Mục lục (từ H2, H3)</label>
   </div>
   <details class="sm:col-span-4 border-t border-slate-100 pt-2" ${curArtShowFaqs || curArtShowRelated ? "open" : ""}><summary class="cursor-pointer select-none text-xs font-extrabold text-indigo-900 py-1"><i class="fas fa-sliders text-indigo-600 mr-1.5"></i>Nâng cao: FAQ riêng &amp; Bài viết liên quan (bấm để mở)</summary><div class="space-y-3 pt-2">
    <!-- KHỐI FAQ RIÊNG CỦA BÀI VIẾT -->
   <div class="sm:col-span-4 border-t border-slate-100 pt-3 space-y-2">
    <div class="flex items-center justify-between">
     <label class="flex items-center gap-2 font-extrabold text-xs text-indigo-900 cursor-pointer"><input type="checkbox" id="chkArtShowFaqs" ${curArtShowFaqs?"checked":""} onchange="curArtShowFaqs=this.checked;$('artFaqsContainerWrap').classList.toggle('hidden',!this.checked);cmsPrev();" class="accent-indigo-600 w-4 h-4"><span><i class="fas fa-circle-question text-indigo-600 mr-1"></i>Bật FAQ riêng cho bài viết này</span></label>
-    <button type="button" onclick="addArtFaqRow()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold px-2.5 py-1 rounded-lg text-[11px] transition"><i class="fas fa-plus mr-1"></i>Thêm câu hỏi</button>
+    <div class="flex items-center gap-1.5"><button type="button" onclick="addArtFaqRow()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold px-2.5 py-1 rounded-lg text-[11px] transition"><i class="fas fa-plus mr-1"></i>Thêm câu hỏi</button><button type="button" onclick="saveArtFaqsOnly()" class="bg-indigo-600 text-white hover:bg-indigo-700 font-bold px-2.5 py-1 rounded-lg text-[11px] transition shadow-sm"><i class="fas fa-save mr-1"></i>Lưu FAQ riêng</button></div>
    </div>
    <div id="artFaqsContainerWrap" class="${curArtShowFaqs?'':'hidden'} space-y-2">
     <div id="artFaqsContainer" class="space-y-2"></div>
@@ -3218,7 +3300,7 @@ function renderCmsEditor(){
   </div>
   <!-- KHỐI CHỌN BÀI VIẾT LIÊN QUAN -->
   <div class="sm:col-span-4 border-t border-slate-100 pt-3 space-y-2">
-   <label class="flex items-center gap-2 font-extrabold text-xs text-slate-800 cursor-pointer"><input type="checkbox" id="chkArtShowRelated" ${curArtShowRelated?"checked":""} onchange="curArtShowRelated=this.checked;$('artRelatedContainerWrap').classList.toggle('hidden',!this.checked);cmsPrev();" class="accent-indigo-600 w-4 h-4"><span><i class="fas fa-newspaper text-indigo-600 mr-1"></i>Bật Mục bài viết khác (Khách bấm vào sẽ nhảy sang link bài đó)</span></label>
+   <label class="flex items-center gap-2 font-extrabold text-xs text-slate-800 cursor-pointer"><input type="checkbox" id="chkArtShowRelated" ${curArtShowRelated?"checked":""} onchange="curArtShowRelated=this.checked;$('artRelatedContainerWrap').classList.toggle('hidden',!this.checked);cmsPrev();commitCms();saveCms(true);" class="accent-indigo-600 w-4 h-4"><span><i class="fas fa-newspaper text-indigo-600 mr-1"></i>Bật Mục bài viết khác (Khách bấm vào sẽ nhảy sang link bài đó)</span></label>
    <div id="artRelatedContainerWrap" class="${curArtShowRelated?'':'hidden'}">
     <div class="max-h-36 overflow-y-auto border border-slate-200 rounded-xl p-2 bg-slate-50 space-y-1.5 scroll-hide">
     ${guideTabList().flatMap(t=>artsOf(t.id).filter(x=>(x.slug||toSlug(x.name))!==curArt).map(other=>`
@@ -3537,9 +3619,9 @@ async function openCmsCtaButtonModal() {
     const text = prompt("Tên nút (VD: Tải App Hiddify):");
     const url = prompt("Đường link URL:");
     if (!text || !url) return;
-    const btnHtml = `<p class="ql-align-center" style="margin: 16px 0; text-align: center;"><a href="${esc(url)}" target="_blank" rel="noopener noreferrer" data-cta="1" class="guide-cta-btn" style="background: linear-gradient(135deg, #4f46e5, #06b6d4); color: #ffffff;"><i class="fas fa-download"></i> <span>${esc(text)}</span></a></p><p><br></p>`;
     const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
-    quillInst.clipboard.dangerouslyPasteHTML(range.index, btnHtml);
+    quillInst.insertEmbed(range.index, 'ctaButton', { url, text, icon: 'fas fa-download', styleClass: 'cta-indigo' });
+    quillInst.insertText(range.index + 1, '\n');
     quillInst.setSelection(range.index + 2);
     curArtHtml = getEditorHtml();
     cmsPrev();
@@ -3564,7 +3646,7 @@ async function openCmsCtaButtonModal() {
               <option value="indigo">Gradient Xanh tím</option>
               <option value="rose">Gradient Đỏ cam</option>
               <option value="emerald">Gradient Xanh lá</option>
-              <option value="dark">Tối sang trọng</option>
+              <option value="amber">Gradient Vàng cam</option>
             </select>
           </div>
           <div>
@@ -3602,15 +3684,20 @@ async function openCmsCtaButtonModal() {
   });
 
   if (!v) return;
-  const styleMap = {
-    indigo: 'background: linear-gradient(135deg, #4f46e5, #06b6d4); color: #ffffff;',
-    rose: 'background: linear-gradient(135deg, #f43f5e, #fb923c); color: #ffffff;',
-    emerald: 'background: linear-gradient(135deg, #10b981, #059669); color: #ffffff;',
-    dark: 'background: #0f172a; color: #ffffff;'
+  const styleClassMap = {
+    indigo: 'cta-indigo',
+    rose: 'cta-rose',
+    emerald: 'cta-green',
+    amber: 'cta-amber'
   };
-  const btnHtml = `<p class="ql-align-center" style="margin: 16px 0; text-align: center;"><a href="${esc(v.url)}" target="_blank" rel="noopener noreferrer" data-cta="1" class="guide-cta-btn" style="${styleMap[v.style] || styleMap.indigo}"><i class="${esc(v.icon)}"></i> <span>${esc(v.text)}</span></a></p><p><br></p>`;
   const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
-  quillInst.clipboard.dangerouslyPasteHTML(range.index, btnHtml);
+  quillInst.insertEmbed(range.index, 'ctaButton', {
+    url: v.url,
+    text: v.text,
+    icon: v.icon,
+    styleClass: styleClassMap[v.style] || 'cta-indigo'
+  });
+  quillInst.insertText(range.index + 1, '\n');
   quillInst.setSelection(range.index + 2);
   curArtHtml = getEditorHtml();
   cmsPrev();
@@ -3618,7 +3705,8 @@ async function openCmsCtaButtonModal() {
 
 function insertCmsDivider() {
   const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
-  quillInst.clipboard.dangerouslyPasteHTML(range.index, '<hr class="my-6 border-t border-slate-300 dark:border-slate-700"><p><br></p>');
+  quillInst.insertEmbed(range.index, 'hr', true);
+  quillInst.insertText(range.index + 1, '\n');
   quillInst.setSelection(range.index + 2);
   curArtHtml = getEditorHtml();
   cmsPrev();
@@ -3963,6 +4051,7 @@ function switchFaqSubTab(tab, fromHistory = false){
   if (bFaq) bFaq.classList.toggle("active", tab === "faq");
   if (bFooter) bFooter.classList.toggle("active", tab === "footer");
   if (tab === "footer") loadFooterConfigUI();
+  if (tab === "faq") renderFaqAdmin();
 }
 
 const DEFAULT_SYS_ROUTES = {
@@ -4176,7 +4265,7 @@ function loadWebAdminUI(){
 }
 
 function loadSettingsUI(){
- const s=cmsDb.settings;renderRouteRows();renderBlurRows();renderDockRows();renderMailProvCards();
+ const s=cmsDb.settings;renderRouteRows();renderBlurRows();renderDockRows();renderMailProvCards();renderFaqAdmin();loadFooterConfigUI();
  if($("qrExpireSecondsInp")) $("qrExpireSecondsInp").value = Number(s.qrExpireSeconds) || 30;
  const rr=document.querySelector(`input[name=emailRoleRad][value=${s.emailRole==="master"?"master":"slave"}]`);if(rr)rr.checked=true;
  if($("toggleAutoMail")) $("toggleAutoMail").checked=!!s.autoMailEnabled;
@@ -5088,6 +5177,7 @@ if (typeof window !== 'undefined') {
     ['renderArtFaqsUI', typeof renderArtFaqsUI !== 'undefined' ? renderArtFaqsUI : undefined],
     ['toggleRelatedArtPick', typeof toggleRelatedArtPick !== 'undefined' ? toggleRelatedArtPick : undefined],
     ['renderCmsEditor', typeof renderCmsEditor !== 'undefined' ? renderCmsEditor : undefined],
+    ['saveArtFaqsOnly', typeof saveArtFaqsOnly !== 'undefined' ? saveArtFaqsOnly : undefined],
     ['saveCms', typeof saveCms !== 'undefined' ? saveCms : undefined],
     ['closeCmsEditor', typeof closeCmsEditor !== 'undefined' ? closeCmsEditor : undefined],
     ['openCmsEditorForArt', typeof openCmsEditorForArt !== 'undefined' ? openCmsEditorForArt : undefined],

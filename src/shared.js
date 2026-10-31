@@ -100,36 +100,67 @@ export function cp(text, customToastMsg) {
   toast(customToastMsg || `Đã copy: ${preview}`);
 }
 
-// SweetAlert2 Toast Helper
-export function getToast() {
-  if (typeof Swal !== "undefined") {
-    return Swal.mixin({
-      toast: true,
-      position: 'top-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true,
-      didOpen: (t) => {
-        t.onmouseenter = Swal.stopTimer;
-        t.onmouseleave = Swal.resumeTimer;
-      }
-    });
+// ==================== STACKED TOAST NOTIFICATIONS (TOP-RIGHT) ====================
+function ensureToastContainer() {
+  let c = document.getElementById('toastStackContainer');
+  if (!c) {
+    c = document.createElement('div');
+    c.id = 'toastStackContainer';
+    c.className = 'fixed top-4 right-4 z-[999999] flex flex-col gap-2 max-w-[340px] w-full pointer-events-none px-3 sm:px-0';
+    document.body.appendChild(c);
   }
-  return null;
+  return c;
 }
 
-export function toast(msg, type = "ok") {
-  const ToastInstance = getToast();
-  if (!ToastInstance) {
-    if (typeof alert !== "undefined") alert(msg);
-    return;
-  }
-  const icon = type === "err" || type === "error" ? "error" : type === "warn" || type === "warning" ? "warning" : "success";
-  ToastInstance.fire({ icon, title: msg });
+export function toast(msg, type = 'ok') {
+  if (typeof document === 'undefined') return;
+  const c = ensureToastContainer();
+  const el = document.createElement('div');
+  
+  const isErr = type === 'err' || type === 'error';
+  const isWarn = type === 'warn' || type === 'warning';
+  const isInfo = type === 'info';
+  
+  const iconClass = isErr ? 'fa-circle-xmark text-red-500' : isWarn ? 'fa-triangle-exclamation text-amber-500' : isInfo ? 'fa-circle-info text-blue-500' : 'fa-circle-check text-green-500';
+  const borderClass = isErr ? 'border-red-200 dark:border-red-900/60' : isWarn ? 'border-amber-200 dark:border-amber-900/60' : isInfo ? 'border-blue-200 dark:border-blue-900/60' : 'border-green-200 dark:border-green-900/60';
+  
+  el.className = 'pointer-events-auto flex items-start gap-2.5 p-3 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-lg border ' + borderClass + ' text-slate-800 dark:text-slate-100 text-xs sm:text-sm font-medium transition-all duration-300 transform translate-x-4 opacity-0';
+  
+  el.innerHTML = '<i class="fas ' + iconClass + ' text-base mt-0.5 shrink-0"></i>' +
+    '<div class="flex-1 leading-snug break-words">' + msg + '</div>' +
+    '<button type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 ml-1 shrink-0 p-0.5" aria-label="Close">' +
+      '<i class="fas fa-times text-xs"></i>' +
+    '</button>';
+  
+  const closeBtn = el.querySelector('button');
+  const dismiss = () => {
+    el.classList.add('opacity-0', 'translate-x-4');
+    setTimeout(() => {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }, 300);
+  };
+  closeBtn.onclick = (e) => {
+    e.stopPropagation();
+    dismiss();
+  };
+  
+  c.appendChild(el);
+  requestAnimationFrame(() => {
+    el.classList.remove('opacity-0', 'translate-x-4');
+    el.classList.add('opacity-100', 'translate-x-0');
+  });
+  
+  let timer = setTimeout(dismiss, 3500);
+  el.onmouseenter = () => clearTimeout(timer);
+  el.onmouseleave = () => { timer = setTimeout(dismiss, 2000); };
 }
 
-export function showToast(msg, type = "success") {
+export function showToast(msg, type = 'success') {
   toast(msg, type);
+}
+
+export function getToast() {
+  return { fire: ({ icon, title }) => toast(title, icon) };
 }
 
 // ==================== XỬ LÝ NGÀY GIỜ & MÚI GIỜ ====================

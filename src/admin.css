@@ -15,7 +15,7 @@ body, input, button, select, textarea {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-body{font-weight:500;background:#f8fafc;color:#0f172a;margin:0;overflow-x:hidden;}
+body{font-weight:600;background:#f8fafc;color:#0f172a;margin:0;overflow-x:hidden;}
 .glass-card{background:#fff;border:1px solid #e2e8f0;box-shadow:0 10px 40px -10px rgba(0,0,0,.05);border-radius:1.25rem;}
 .tab-btn{transition:all .15s;}
 .tab-btn.active{background:#4f46e5;color:#fff;box-shadow:0 4px 12px rgba(79,70,229,.35);border-color:#4f46e5;}
@@ -295,4 +295,20 @@ textarea.autog{resize:none;overflow:hidden;}
 .guide-cta-btn:hover {
   transform: translateY(-2px) scale(1.02);
   box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3) !important;
+}
+
+.ql-align-center { text-align: center !important; }
+.ql-align-right { text-align: right !important; }
+.ql-align-justify { text-align: justify !important; }
+.ql-cta-wrap { text-align: center !important; margin: 18px 0 !important; display: block !important; }
+.guide-cta-btn.cta-indigo { background: linear-gradient(135deg, #4f46e5, #06b6d4) !important; color: #ffffff !important; }
+.guide-cta-btn.cta-green { background: linear-gradient(135deg, #059669, #10b981) !important; color: #ffffff !important; }
+.guide-cta-btn.cta-amber { background: linear-gradient(135deg, #d97706, #f59e0b) !important; color: #ffffff !important; }
+.guide-cta-btn.cta-rose { background: linear-gradient(135deg, #e11d48, #f43f5e) !important; color: #ffffff !important; }
+hr.guide-hr, .ql-editor hr {
+  border: 0 !important;
+  border-top: 2px dashed #cbd5e1 !important;
+  margin: 24px 0 !important;
+  display: block !important;
+  height: 0 !important;
 }

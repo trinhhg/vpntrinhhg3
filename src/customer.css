@@ -15,7 +15,7 @@ body, input, button, select, textarea {
   -moz-osx-font-smoothing: grayscale;
 }
 body {
-  font-weight: 500;
+  font-weight: 600;
   overflow-x: hidden;
 }
 .view-section{display:none;animation:fadeUp .4s ease-out forwards;}
@@ -258,30 +258,61 @@ html.dark .swal2-popup.swal2-toast .swal2-title {
   box-shadow: 0 8px 25px rgba(0,0,0,0.18);
 }
 #guideText video, #guideText iframe, .guide-content video, .guide-content iframe {
-  max-width: 100% !important;
+  max-width: 640px !important;
   width: 100% !important;
   aspect-ratio: 16 / 9 !important;
-  border-radius: 12px !important;
-  margin: 14px 0 !important;
+  border-radius: 14px !important;
+  margin: 16px auto !important;
   display: block !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
   border: 0 !important;
 }
 
+/* Căn lề Quill (giúp căn giữa chú thích, ảnh, nút bấm hoạt động 100% trên index) */
+#guideText .ql-align-center, .guide-content .ql-align-center, .ql-align-center {
+  text-align: center !important;
+}
+#guideText .ql-align-right, .guide-content .ql-align-right, .ql-align-right {
+  text-align: right !important;
+}
+#guideText .ql-align-justify, .guide-content .ql-align-justify, .ql-align-justify {
+  text-align: justify !important;
+}
+
 /* Nút CTA Tải App / Kêu gọi hành động trong bài viết */
+.ql-cta-wrap {
+  text-align: center !important;
+  margin: 18px auto !important;
+  display: block !important;
+}
 .guide-cta-btn {
   display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 24px;
-  border-radius: 14px;
-  font-weight: 800;
-  font-size: 14px;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 12px 26px !important;
+  border-radius: 14px !important;
+  font-weight: 800 !important;
+  font-size: 14px !important;
+  color: #ffffff !important;
   text-decoration: none !important;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.18) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  cursor: pointer !important;
 }
+.guide-cta-btn.cta-indigo { background: linear-gradient(135deg, #4f46e5, #06b6d4) !important; }
+.guide-cta-btn.cta-rose { background: linear-gradient(135deg, #f43f5e, #fb923c) !important; }
+.guide-cta-btn.cta-emerald { background: linear-gradient(135deg, #10b981, #059669) !important; }
+.guide-cta-btn.cta-dark { background: #0f172a !important; color: #ffffff !important; }
 .guide-cta-btn:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3) !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.35) !important;
+}
+hr.guide-hr, #guideText hr, .guide-content hr {
+  margin: 24px 0 !important;
+  border: 0 !important;
+  border-top: 1px solid #cbd5e1 !important;
+}
+html.dark hr.guide-hr, html.dark #guideText hr, html.dark .guide-content hr {
+  border-top-color: rgba(255, 255, 255, 0.15) !important;
 }

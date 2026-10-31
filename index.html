@@ -7,7 +7,7 @@
 <title>VPNTrinhHg – Lướt mượt như gió</title>
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#ffffff">
-<meta name="referrer" content="no-referrer">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="stylesheet" href="/src/customer.css">
 <script>
@@ -187,11 +187,11 @@
   </div>
 </nav>
 <div class="h-[120px] md:h-[80px]"></div>
-<div id="mobileNavWrapper" class="hidden fixed bottom-2 left-1/2 -translate-x-1/2 z-[60] transition-all duration-300">
-  <div class="md:hidden bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md shadow-xl rounded-full px-3 py-1 flex items-center gap-1.5 border border-slate-200 dark:border-white/10">
-    <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home mobile-tab-btn active flex flex-col items-center justify-center py-1 px-3 rounded-full transition min-w-[58px] text-slate-500 dark:text-slate-400"><i class="fas fa-house text-sm"></i><span class="text-[9px] font-bold mt-0.5 leading-tight" data-i18n="tab_p_home">Trang chủ</span></button>
-    <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store mobile-tab-btn flex flex-col items-center justify-center py-1 px-3 rounded-full transition min-w-[58px] text-slate-500 dark:text-slate-400"><i class="fas fa-cart-shopping text-sm"></i><span class="text-[9px] font-bold mt-0.5 leading-tight" data-i18n="tab_p_store">Cửa hàng</span></button>
-    <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide mobile-tab-btn flex flex-col items-center justify-center py-1 px-3 rounded-full transition min-w-[58px] text-slate-500 dark:text-slate-400"><i class="fas fa-book-open text-sm"></i><span class="text-[9px] font-bold mt-0.5 leading-tight" data-i18n="tab_p_guide">Hướng dẫn</span></button>
+<div id="mobileNavWrapper" class="hidden fixed bottom-2 left-1/2 -translate-x-1/2 z-[60] w-[94vw] max-w-[420px] transition-all duration-300">
+  <div class="md:hidden bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md shadow-2xl rounded-2xl px-2 py-1.5 flex items-center justify-between border border-slate-200 dark:border-white/10 w-full">
+    <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home mobile-tab-btn active flex-1 flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition text-slate-500 dark:text-slate-400"><i class="fas fa-house text-base mb-1"></i><span class="text-[10px] font-bold whitespace-nowrap leading-none" data-i18n="tab_p_home">Trang chủ</span></button>
+    <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store mobile-tab-btn flex-1 flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition text-slate-500 dark:text-slate-400"><i class="fas fa-cart-shopping text-base mb-1"></i><span class="text-[10px] font-bold whitespace-nowrap leading-none" data-i18n="tab_p_store">Cửa hàng</span></button>
+    <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide mobile-tab-btn flex-1 flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition text-slate-500 dark:text-slate-400"><i class="fas fa-book-open text-base mb-1"></i><span class="text-[10px] font-bold whitespace-nowrap leading-none" data-i18n="tab_p_guide">Hướng dẫn</span></button>
   </div>
 </div>
 <main class="flex-grow z-10 px-2 md:px-4 py-4 md:py-6 max-w-[1400px] mx-auto w-full overflow-x-hidden">
@@ -352,7 +352,7 @@
         </div>
         <div id="guideDetailView" class="hidden w-full relative">
           <button onclick="closeGuideArticle()" class="mb-4 text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-2 hover:opacity-80 transition text-sm"><i class="fas fa-arrow-left"></i> Quay lại danh sách</button>
-<div id="guideDetailWatermark" class="absolute inset-0 overflow-hidden pointer-events-none z-20"></div>
+<div id="guideDetailWatermark" class="absolute inset-0 overflow-hidden pointer-events-none z-0"></div>
           <div class="relative z-10">
             <h2 id="guideDetailTitle" class="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-slate-200 mb-2"></h2>
             <div id="guideDetailMeta" class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4"></div>
@@ -536,7 +536,7 @@
 <script type="module" src="/src/customer.js"></script>
 
 <!-- MODAL PHÓNG TO ẢNH HƯỚNG DẪN (LIGHTBOX ZOOM) -->
-<div id="imgLightboxModal" class="hidden fixed inset-0 z-[99999] bg-white/90 dark:bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-200 cursor-zoom-out" onclick="closeImageLightbox()">
+<div id="imgLightboxModal" class="hidden fixed inset-0 z-[99999] bg-white/40 dark:bg-slate-900/60 backdrop-blur-xl flex items-center justify-center p-4 transition-all duration-200 cursor-zoom-out" onclick="closeImageLightbox()">
   <button type="button" onclick="closeImageLightbox()" title="Đóng zoom ảnh (Escape)" class="fixed top-5 right-5 z-[100000] w-10 h-10 rounded-full bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white flex items-center justify-center text-xl transition active:scale-95 shadow-lg border border-slate-300/60 dark:border-white/10">
     <i class="fas fa-times"></i>
   </button>
