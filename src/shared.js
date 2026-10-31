@@ -105,7 +105,7 @@ export function getToast() {
   if (typeof Swal !== "undefined") {
     return Swal.mixin({
       toast: true,
-      position: 'top',
+      position: 'top-end',
       backdrop: false,
       showConfirmButton: false,
       timer: 3000,

@@ -167,7 +167,7 @@ function linkBottom(l){
        const now = dayjs(nowMs()).tz(TZN()).startOf('day');
        const daysLeft = target.diff(now, 'day');
        if (daysLeft >= 0 && daysLeft <= 3) {
-         return `<span class="text-amber-600 font-bold">${esc(cleanDmy)}</span>`;
+         return `<span class="text-orange-500 font-bold">${esc(cleanDmy)}</span>`;
        }
        if (daysLeft < 0) {
          return `<span class="text-red-600 font-bold">${esc(cleanDmy)}</span>`;
@@ -908,8 +908,19 @@ function monthTotals(){
   return m;
 }
 
+function setRevTab(k){
+  revTab = k;
+  revPayView = null;
+  renderRevenue();
+}
+
+function setRevPayView(k){
+  revPayView = k;
+  renderRevenue();
+}
+
 function renderRevenue(){
-  $("revTabs").innerHTML = REV_TABS.map(([k,l]) => `<button onclick="revTab='${k}';revPayView=null;renderRevenue()" class="settings-sub-tab text-center !px-3 font-bold ${revTab===k?'active':''}">${l}</button>`).join("");
+  $("revTabs").innerHTML = REV_TABS.map(([k,l]) => `<button onclick="setRevTab('${k}')" class="settings-sub-tab text-center !px-3 font-bold ${revTab===k?'active':''}">${l}</button>`).join("");
   const ms = new Set(ordersDb.map(o => monthInfo(oTs(o)).key));
   (cmsDb.costs || []).forEach(c => ms.add(monthInfo(c.ts).key));
   $("revMonth").innerHTML = `<option value="all">Tất cả các tháng</option>` + [...ms].sort().reverse().map(k => `<option value="${k}" ${revMonth===k?'selected':''}>Tháng ${monthLbl(k)}</option>`).join("");
@@ -1124,7 +1135,7 @@ function revPay(R, b){
   const total = m.Bank.vnd + m.Alipay.vnd + m.Weixin.vnd;
 
   const cardPay = (title, k, colorCls, icon) => `
-    <div onclick="revPayView='${k}';renderRevenue()" class="cursor-pointer bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md transition rounded-2xl p-4 shadow-sm">
+    <div onclick="setRevPayView('${k}')" class="cursor-pointer bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-md transition rounded-2xl p-4 shadow-sm">
       <div class="flex justify-between items-center mb-1">
         <div class="font-extrabold text-sm ${colorCls} flex items-center gap-1.5"><i class="${icon}"></i>${title}</div>
         <i class="fas fa-arrow-right text-slate-300 text-xs"></i>
@@ -1249,7 +1260,7 @@ function revPayDetail(b){
 
   b.innerHTML = `
     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-      <button onclick="revPayView=null;renderRevenue()" class="bg-white border border-slate-200 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs shadow-sm hover:bg-slate-50 transition flex items-center gap-1.5">
+      <button onclick="setRevPayView(null)" class="bg-white border border-slate-200 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs shadow-sm hover:bg-slate-50 transition flex items-center gap-1.5">
         <i class="fas fa-arrow-left"></i>Quay lại danh sách cổng
       </button>
       <div class="text-xs font-bold text-slate-600">
@@ -1785,7 +1796,6 @@ function renderLinks(){
         <div class="flex items-center gap-2 flex-wrap">
           ${networkBadge}
           <span class="text-[10px] font-black bg-white border border-slate-200 text-slate-700 px-2 py-0.5 rounded-full">${g.ch.length} LINK</span>
-          ${expBadgeHtml}
         </div>
         <!-- GÓC PHẢI: Nút Con Mắt (Ẩn/Hiện thông số) + Cây Bút Chì sửa cụm -->
         <div class="flex items-center gap-1.5 shrink-0">
@@ -3396,11 +3406,15 @@ async function saveFaqs() {
 }
 
 function switchFaqSubTab(tab){
-  $("pane-faq-list").classList.toggle("hidden", tab !== "faq");
-  $("pane-footer-cfg").classList.toggle("hidden", tab !== "footer");
-  $("btn-sub-faq").classList.toggle("active", tab === "faq");
-  $("btn-sub-footer").classList.toggle("active", tab === "footer");
-  if(tab === "footer") loadFooterConfigUI();
+  const pFaq = $("subpane-faq") || $("pane-faq-list");
+  const pFooter = $("subpane-footer") || $("pane-footer-cfg");
+  if (pFaq) pFaq.classList.toggle("hidden", tab !== "faq");
+  if (pFooter) pFooter.classList.toggle("hidden", tab !== "footer");
+  const bFaq = $("btn-sub-faq");
+  const bFooter = $("btn-sub-footer");
+  if (bFaq) bFaq.classList.toggle("active", tab === "faq");
+  if (bFooter) bFooter.classList.toggle("active", tab === "footer");
+  if (tab === "footer") loadFooterConfigUI();
 }
 
 const DEFAULT_SYS_ROUTES = {
@@ -3731,7 +3745,7 @@ function mailProvCard(id) {
       </div>`;
     } else if (hSent >= 35) {
       hColorClass = "bg-amber-500";
-      hTextClass = "text-amber-600 font-bold";
+      hTextClass = "text-orange-500 font-bold";
     }
 
     const hourBarHtml = `
@@ -3961,7 +3975,7 @@ async function migratePkg(apply){
    await triggerTelegramBackupNow("Sao lưu trước khi Chuẩn hóa hiển thị gói");
  }
  $("pkgReport").innerHTML="Đang xử lý...";
- try{const j=await aj("/api/admin/migrate_pkg",{method:"POST",body:{apply}});$("pkgReport").innerHTML=(apply?'<div class="font-bold text-emerald-700 mb-1">✔ Đã áp dụng</div>':'<div class="font-bold text-slate-700 mb-1">Kết quả quét thử (chưa ghi gì)</div>')+`<div><b>Đơn hàng:</b> ${j.changed}/${j.total} bản ghi cần đổi${j.oldPrice?` · <span class="text-amber-600 font-bold">${j.oldPrice} đơn giá cũ được giữ nguyên</span>`:""}${j.sample.length?`<div class="font-mono text-[10px] text-slate-500 pl-3">${j.sample.map(esc).join("<br>")}</div>`:""}</div>`;if(apply)fetchAll();}
+ try{const j=await aj("/api/admin/migrate_pkg",{method:"POST",body:{apply}});$("pkgReport").innerHTML=(apply?'<div class="font-bold text-emerald-700 mb-1">✔ Đã áp dụng</div>':'<div class="font-bold text-slate-700 mb-1">Kết quả quét thử (chưa ghi gì)</div>')+`<div><b>Đơn hàng:</b> ${j.changed}/${j.total} bản ghi cần đổi${j.oldPrice?` · <span class="text-orange-500 font-bold">${j.oldPrice} đơn giá cũ được giữ nguyên</span>`:""}${j.sample.length?`<div class="font-mono text-[10px] text-slate-500 pl-3">${j.sample.map(esc).join("<br>")}</div>`:""}</div>`;if(apply)fetchAll();}
  catch(e){$("pkgReport").innerHTML=`<span class="text-red-600">Lỗi: ${esc(e.message)}</span>`;}}
 
 // ===================== LOGIC FULFILLMENT CONFIG & LINK TRỘN =====================
@@ -3990,7 +4004,7 @@ function renderFulfillmentUI() {
     return `
       <tr class="${isHidden ? 'opacity-40 bg-slate-100 cursor-not-allowed select-none' : ''}">
         <td class="font-mono font-bold ${isHidden ? 'text-slate-400' : 'text-indigo-600'}">
-          ${esc(p.id)} ${isHidden ? '<span class="text-[9px] block text-amber-600 font-bold">(Đã ẩn)</span>' : ''}
+          ${esc(p.id)} ${isHidden ? '<span class="text-[9px] block text-orange-500 font-bold">(Đã ẩn)</span>' : ''}
         </td>
         <td>
           <div class="font-bold text-slate-800 text-xs">${esc(p.name || p.id)}</div>
@@ -4672,6 +4686,8 @@ if (typeof window !== 'undefined') {
     ['mailData', typeof mailData !== 'undefined' ? mailData : undefined],
     ['revTab', typeof revTab !== 'undefined' ? revTab : undefined],
     ['REV_TABS', typeof REV_TABS !== 'undefined' ? REV_TABS : undefined],
+    ['setRevTab', typeof setRevTab !== 'undefined' ? setRevTab : undefined],
+    ['setRevPayView', typeof setRevPayView !== 'undefined' ? setRevPayView : undefined],
     ['cnyRate', typeof cnyRate !== 'undefined' ? cnyRate : undefined],
     ['curVal', typeof curVal !== 'undefined' ? curVal : undefined],
     ['shortN', typeof shortN !== 'undefined' ? shortN : undefined],

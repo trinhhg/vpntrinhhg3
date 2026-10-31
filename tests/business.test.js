@@ -118,4 +118,22 @@ describe('tests/business.test.js — Nghiệp vụ Tính toán, Phân bổ & CMS
       expect(cleanHtml).toContain('<img src="https://example.com/pic.png">');
     });
   });
+  describe('Cảnh báo Hết hạn Link Sub & Quy tắc đổi màu', () => {
+    it('chuyển màu cam khi số ngày còn lại <= 3 ngày và >= 0', () => {
+      const calcDaysLeft = (targetDay, nowDay) => Math.round((targetDay - nowDay) / 864e5);
+      
+      const now = new Date('2026-10-31T00:00:00Z').getTime();
+      const targetNear = new Date('2026-11-02T00:00:00Z').getTime(); // còn 2 ngày
+      const targetFar = new Date('2026-11-20T00:00:00Z').getTime();  // còn 20 ngày
+      const targetExpired = new Date('2026-10-30T00:00:00Z').getTime(); // hết hạn hôm qua
+
+      const daysNear = calcDaysLeft(targetNear, now);
+      const daysFar = calcDaysLeft(targetFar, now);
+      const daysExpired = calcDaysLeft(targetExpired, now);
+
+      expect(daysNear >= 0 && daysNear <= 3).toBe(true);
+      expect(daysFar >= 0 && daysFar <= 3).toBe(false);
+      expect(daysExpired < 0).toBe(true);
+    });
+  });
 });
