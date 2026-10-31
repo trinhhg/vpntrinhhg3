@@ -836,7 +836,7 @@ const healAllMissing = healAllMissingWithProgress;
 const htmlEscape=esc;
 const sendMailClient=(to,subject,html)=>api("/api/admin/send_mail",{method:"POST",body:{to,subject,html}}).catch(()=>{});
 const mailGrad=(c1,c2,ang,stop)=>`linear-gradient(${Number(ang)||135}deg,${c1} 0%,${c2} ${Math.max(1,Math.min(100,Number(stop)||100))}%)`;
-const mailShell=(c1,c2,title,inner,ang,stop)=>`<div style="font-family:Arial,Helvetica,sans-serif;width:100%;max-width:480px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden"><div style="background:${c1};background-image:${mailGrad(c1,c2,ang,stop)};padding:22px 16px;text-align:center"><h2 style="color:#ffffff;margin:0;font-size:18px;font-weight:800;line-height:1.4;text-transform:uppercase;letter-spacing:.5px;font-family:Arial,Helvetica,sans-serif">${title}</h2></div><div style="padding:20px;font-family:Arial,Helvetica,sans-serif">${inner}</div></div>`;
+const mailShell=(c1,c2,title,inner,ang,stop)=>`<div style="font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;width:100%;max-width:480px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden"><div style="background:${c1};background-image:${mailGrad(c1,c2,ang,stop)};padding:22px 16px;text-align:center"><h2 style="color:#ffffff;margin:0;font-size:18px;font-weight:700;line-height:1.4;text-transform:uppercase;letter-spacing:normal;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">${title}</h2></div><div style="padding:20px;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">${inner}</div></div>`;
 const mailIdBox=(label,id,color)=>`<div style="background:#f1f5f9;border-left:4px solid ${color};padding:15px;border-radius:8px;margin:18px 0;text-align:center"><p style="margin:0;font-size:11px;color:#64748b;font-weight:bold;text-transform:uppercase">${label}</p><p style="margin:8px 0 0;font-size:22px;font-weight:900;color:${color};letter-spacing:1px;word-break:break-word">${htmlEscape(id)}</p></div>`;
 const mailPortal=(PDx,label)=>`<div style="text-align:center;margin:24px 0 6px"><a href="${htmlEscape(PDx)}" style="display:block;background:#1e293b;color:#ffffff;padding:13px 15px;border-radius:10px;text-decoration:none;font-weight:900;font-size:14px">${label}</a></div><p style="margin:10px 0 0;font-size:12px;color:#64748b;text-align:center;line-height:1.5">👉 <i>Dùng <b>Mã Đơn Hàng</b> hoặc <b>Email</b> để tra cứu thông tin đơn hàng</i></p>`;
 const mailBtn=(href,bg,label)=>`<td width="50%" style="padding:4px"><a href="${htmlEscape(href)}" style="display:block;background:${bg};color:#ffffff;padding:10px 0;border-radius:8px;text-decoration:none;font-weight:bold;font-size:12px;text-align:center">${label}</a></td>`;
@@ -1539,7 +1539,7 @@ function mcPreview(){
   const iframe = $("mcPreviewIframe");
   const rendered = mcToHtml();
   if (iframe) {
-    iframe.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;padding:12px;background:#f1f5f9;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;}</style></head><body>${rendered}</body></html>`;
+    iframe.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet"><style>@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap'); body{margin:0;padding:12px;background:#f1f5f9;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;} h2{font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif !important; font-weight:700 !important; letter-spacing:normal !important; text-rendering:optimizeLegibility !important;} *{box-sizing:border-box;}</style></head><body>${rendered}</body></html>`;
   }
   const el = $("mcPreview");
   if (el) el.innerHTML = rendered;
@@ -1613,23 +1613,108 @@ function dataPriceLabel(r){
  const oi=ordersDb.find(o=>normId(o.id)===normId(r.orderId) && String(o.email||"").toLowerCase()===String(r.email||"").toLowerCase());
  return oi ? pkgLabel(oi) : (r.pkgName||"—");
 }
-function renderDataRequests(){
- const tb=$("dataReqBody");if(!dataReqDb.length){tb.innerHTML=`<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold">Không có yêu cầu nào</div>`;return;}
- const groups={};dataReqDb.forEach((r,i)=>{const mi=monthInfo(Number(r.ts)||parseAny(r.date));(groups[mi.key]=groups[mi.key]||{label:mi.label,items:[]}).items.push({r,i});});
- let html="";
- for(const key of Object.keys(groups).sort((a,b)=>b.localeCompare(a))){
-  const g=groups[key];html+=`<div class="month-header"><i class="far fa-calendar-alt text-indigo-400"></i><span>${g.label}</span><span class="month-count">${g.items.length} yêu cầu</span></div><div class="space-y-3 mb-6">`;
-  html+=g.items.map(({r,i})=>{const ok=r.status==="success";
-   return `<div class="${ok?"bg-slate-50 border-slate-200 opacity-60":"bg-white border-2 border-dashed border-indigo-400"} rounded-xl p-3 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-1">${ok?'<div class="dot-green"></div>':'<div class="dot-yellow"></div>'}<span class="font-mono font-extrabold text-indigo-600 text-sm cp" onclick="cp(${q(r.orderId)})">${esc(r.orderId)}</span></div><div class="font-bold text-slate-800 text-xs cp truncate pl-5" onclick="cp(${q(r.email)})">${esc(r.email)}</div><div class="text-[11px] text-slate-500 mt-1 pl-5"><b>${esc(dataPriceLabel(r))}</b> - ${fmtBank(r.ts||r.date)}</div></div>
-   <div class="flex gap-2 items-center"><div class="relative w-28"><input type="number" step="0.1" id="gb-input-${i}" placeholder="Số GB..." class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none font-bold bg-white text-center pr-8" ${ok?"disabled":""}><span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">GB</span></div>
-   <button onclick="sendDataReport(${i})" class="${ok?"bg-slate-300 text-slate-500 pointer-events-none":"bg-indigo-600 text-white hover:bg-indigo-700 shadow-md"} font-bold px-3 py-2 rounded-lg text-xs flex items-center"><i class="fas fa-paper-plane mr-1.5"></i>${ok?"Đã Gửi":"Gửi Khách"}</button><button onclick="delDataRequest(${i})" class="text-red-500 bg-red-50 border border-red-100 hover:bg-red-500 hover:text-white px-3 py-2 rounded-lg"><i class="fas fa-trash"></i></button></div></div>`;}).join("");
-  html+=`</div>`;}
- tb.innerHTML=html;}
-async function sendDataReport(i){if(!isMailMaster())return toast("Đang ở chế độ SLAVE Email","err");const r=dataReqDb[i],gb=$("gb-input-"+i).value.trim();if(!gb)return toast("Nhập số GB!","err");
- sendMailClient(r.email,subjVars(getTpl("data").subject,dataVars(r,gb)),mailData(r,gb));r.status="success";renderDataRequests();await aj("/api/data_requests",{method:"POST",body:dataReqDb});lastSig.d=JSON.stringify(dataReqDb);logEvent("ok","Gửi mail","Báo cáo dung lượng → "+r.email,r.orderId);toast("Đã báo cáo cho khách");}
-async function delDataRequest(i){dataReqDb.splice(i,1);renderDataRequests();await aj("/api/data_requests",{method:"POST",body:dataReqDb});lastSig.d=JSON.stringify(dataReqDb);}
-async function clearDataRequests(){dataReqDb=[];renderDataRequests();await aj("/api/data_requests",{method:"POST",body:[]});lastSig.d="[]";toast("Đã dọn sạch");}
 
+function renderDataRequests(){
+  const tb = $("dataReqBody");
+  if (!tb) return;
+  if (!dataReqDb.length) {
+    tb.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold">Không có yêu cầu nào</div>`;
+    return;
+  }
+  const groups = {};
+  dataReqDb.forEach((r, i) => {
+    const mi = monthInfo(Number(r.ts) || parseAny(r.date));
+    (groups[mi.key] = groups[mi.key] || { label: mi.label, items: [] }).items.push({ r, i });
+  });
+
+  let html = "";
+  for (const key of Object.keys(groups).sort((a, b) => b.localeCompare(a))) {
+    const g = groups[key];
+    html += `<div class="month-header"><i class="far fa-calendar-alt text-indigo-400"></i><span>${g.label}</span><span class="month-count">${g.items.length} yêu cầu</span></div><div class="space-y-3 mb-6">`;
+    html += g.items.map(({ r, i }) => {
+      const isDone = r.seen || r.status === "success";
+      const hasReplied = r.status === "success";
+      return `
+        <div class="${isDone ? 'bg-slate-50 border-slate-200 opacity-70' : 'bg-white border-2 border-dashed border-indigo-400'} rounded-xl p-3 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 transition">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              ${hasReplied ? '<div class="dot-green" title="Đã gửi kết quả cho khách"></div>' : (r.seen ? '<div class="dot-gray" title="Đã xem yêu cầu"></div>' : '<div class="dot-yellow" title="Yêu cầu mới chưa xử lý"></div>')}
+              <span class="font-mono font-extrabold text-indigo-600 text-sm cp" onclick="cp(${q(r.orderId)})">${esc(r.orderId)}</span>
+              ${r.seen ? '<span class="text-[9px] font-black bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded">ĐÃ XEM</span>' : ''}
+              ${hasReplied ? '<span class="text-[9px] font-black bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">ĐÃ TRẢ LỜI</span>' : ''}
+            </div>
+            <div class="font-bold text-slate-800 text-xs cp truncate pl-5" onclick="cp(${q(r.email)})">${esc(r.email)}</div>
+            <div class="text-[11px] text-slate-500 mt-1 pl-5"><b>${esc(dataPriceLabel(r))}</b> - ${fmtBank(r.ts || r.date)}</div>
+          </div>
+          <div class="flex gap-2 items-center flex-wrap">
+            <div class="relative w-28">
+              <input type="number" step="0.1" id="gb-input-${i}" value="${esc(r.lastGb || '')}" placeholder="Số GB..." class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none font-bold bg-white text-center pr-8 focus:border-indigo-500">
+              <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">GB</span>
+            </div>
+            <button type="button" onclick="sendDataReport(${i})" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-2 rounded-lg text-xs shadow-md transition active:scale-95 flex items-center gap-1.5">
+              <i class="fas ${hasReplied ? 'fa-rotate-right' : 'fa-paper-plane'}"></i>${hasReplied ? 'Gửi Lại' : 'Gửi Khách'}
+            </button>
+            <button type="button" onclick="toggleDataRequestSeen(${i})" class="${r.seen ? 'text-indigo-600 bg-indigo-50 border-indigo-200' : 'text-slate-400 hover:text-slate-600 bg-white border-slate-200'} border px-2.5 py-2 rounded-lg text-xs transition shadow-sm" title="${r.seen ? 'Bỏ đánh dấu đã xem' : 'Đánh dấu đã xem'}">
+              <i class="fas ${r.seen ? 'fa-eye' : 'fa-eye-slash'}"></i>
+            </button>
+            <button type="button" onclick="delDataRequest(${i})" class="text-red-500 bg-red-50 border border-red-100 hover:bg-red-500 hover:text-white px-3 py-2 rounded-lg text-xs transition" title="Xóa yêu cầu">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join("");
+    html += `</div>`;
+  }
+  tb.innerHTML = html;
+}
+
+async function sendDataReport(i){
+  if (!isMailMaster()) return toast("Đang ở chế độ SLAVE Email", "err");
+  const r = dataReqDb[i], gb = $("gb-input-" + i).value.trim();
+  if (!gb) return toast("Nhập số GB!", "err");
+  sendMailClient(r.email, subjVars(getTpl("data").subject, dataVars(r, gb)), mailData(r, gb));
+  r.status = "success";
+  r.seen = true;
+  r.lastGb = gb;
+  renderDataRequests();
+  await aj("/api/data_requests", { method: "POST", body: dataReqDb });
+  lastSig.d = JSON.stringify(dataReqDb);
+  logEvent("ok", "Gửi mail", "Báo cáo dung lượng → " + r.email, r.orderId);
+  toast(`Đã báo cáo ${gb} GB cho khách`);
+}
+
+async function toggleDataRequestSeen(i){
+  dataReqDb[i].seen = !dataReqDb[i].seen;
+  renderDataRequests();
+  await aj("/api/data_requests", { method: "POST", body: dataReqDb });
+  lastSig.d = JSON.stringify(dataReqDb);
+}
+window.toggleDataRequestSeen = toggleDataRequestSeen;
+
+async function markAllDataRequestsSeen(){
+  dataReqDb.forEach(r => r.seen = true);
+  renderDataRequests();
+  await aj("/api/data_requests", { method: "POST", body: dataReqDb });
+  lastSig.d = JSON.stringify(dataReqDb);
+  toast("Đã đánh dấu tất cả yêu cầu là đã đọc (hiện xám)");
+}
+window.markAllDataRequestsSeen = markAllDataRequestsSeen;
+
+async function delDataRequest(i){
+  dataReqDb.splice(i, 1);
+  renderDataRequests();
+  await aj("/api/data_requests", { method: "POST", body: dataReqDb });
+  lastSig.d = JSON.stringify(dataReqDb);
+}
+
+async function clearDataRequests(){
+  dataReqDb = [];
+  renderDataRequests();
+  await aj("/api/data_requests", { method: "POST", body: [] });
+  lastSig.d = "[]";
+  toast("Đã dọn sạch");
+}
 // ===================== GIAO DỊCH D1 (qua Worker) =====================
 function switchTxTab(t){curTxTab=t;document.querySelectorAll("#t-trans .settings-sub-tab").forEach(b=>b.classList.remove("active"));$("tx-"+t).classList.add("active");const rv=t==="rev";$("txTableWrap").classList.toggle("hidden",rv);$("revPane").classList.toggle("hidden",!rv);if(rv)renderRevenue();else renderTransactions();}
 const extractOrder=raw=>{if(!raw)return null;const m=String(raw).replace(/[-_.\s]/g,"").toUpperCase().match(/(DH[A-Z0-9]{10})/);return m?m[1]:null;};
@@ -4750,6 +4835,8 @@ if (typeof window !== 'undefined') {
     ['sendDataReport', typeof sendDataReport !== 'undefined' ? sendDataReport : undefined],
     ['delDataRequest', typeof delDataRequest !== 'undefined' ? delDataRequest : undefined],
     ['clearDataRequests', typeof clearDataRequests !== 'undefined' ? clearDataRequests : undefined],
+    ['toggleDataRequestSeen', typeof toggleDataRequestSeen !== 'undefined' ? toggleDataRequestSeen : undefined],
+    ['markAllDataRequestsSeen', typeof markAllDataRequestsSeen !== 'undefined' ? markAllDataRequestsSeen : undefined],
     ['switchTxTab', typeof switchTxTab !== 'undefined' ? switchTxTab : undefined],
     ['mergeTx', typeof mergeTx !== 'undefined' ? mergeTx : undefined],
     ['loadTx', typeof loadTx !== 'undefined' ? loadTx : undefined],

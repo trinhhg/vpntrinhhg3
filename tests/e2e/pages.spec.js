@@ -83,7 +83,9 @@ test.describe('E2E Test: Trang Quản trị (admin.html)', () => {
       renderHealTab: typeof window.renderHealTab,
       renderScanTab: typeof window.renderScanTab,
       customCmsImageHandler: typeof window.customCmsImageHandler,
-      customCmsVideoHandler: typeof window.customCmsVideoHandler
+      customCmsVideoHandler: typeof window.customCmsVideoHandler,
+      toggleDataRequestSeen: typeof window.toggleDataRequestSeen,
+      markAllDataRequestsSeen: typeof window.markAllDataRequestsSeen
     }));
 
     expect(adminFns.setRevMonth).toBe('function');
@@ -99,6 +101,8 @@ test.describe('E2E Test: Trang Quản trị (admin.html)', () => {
     expect(adminFns.renderScanTab).toBe('function');
     expect(adminFns.customCmsImageHandler).toBe('function');
     expect(adminFns.customCmsVideoHandler).toBe('function');
+    expect(adminFns.toggleDataRequestSeen).toBe('function');
+    expect(adminFns.markAllDataRequestsSeen).toBe('function');
 
     // Kiểm tra header fulfillment mapping đã được làm sạch mô tả sai lệch
     const fulfillPaneText = await page.locator('#pane-pkg-fulfill').textContent();

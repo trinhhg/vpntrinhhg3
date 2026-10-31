@@ -189,10 +189,16 @@ html.dark .loader-ring.amber i{color:#E6C078;}
 
 /* SweetAlert2 Toast chuẩn góc phải, nhỏ gọn */
 .swal2-container.swal2-top-end,
-.swal2-container.swal2-top,
-.swal2-container {
+.swal2-container.swal2-top {
   z-index: 999999 !important;
   pointer-events: none !important;
+}
+.swal2-container:not(.swal2-top-end):not(.swal2-top) {
+  z-index: 999999 !important;
+  pointer-events: auto !important;
+}
+.swal2-popup {
+  pointer-events: auto !important;
 }
 .swal2-popup.swal2-toast {
   pointer-events: auto !important;

@@ -94,7 +94,11 @@
 
  <!-- SUB-TAB 1: DUNG LƯỢNG (YÊU CẦU CHECK TỪ KHÁCH) -->
  <div id="check-pane-data" class="space-y-3">
-  <div class="flex items-center justify-between mb-2 gap-3"><h2 class="text-lg md:text-2xl font-bold text-slate-800">Yêu cầu check dung lượng</h2><button onclick="clearDataRequests()" class="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm"><i class="fas fa-eraser mr-1"></i>Xóa All</button></div>
+  <div class="flex items-center justify-between mb-2 gap-3"><h2 class="text-lg md:text-2xl font-bold text-slate-800">Yêu cầu check dung lượng</h2>
+    <div class="flex items-center gap-2">
+      <button type="button" onclick="markAllDataRequestsSeen()" class="bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm flex items-center gap-1.5 transition active:scale-95"><i class="fas fa-eye"></i>Đã đọc tất cả</button>
+      <button type="button" onclick="clearDataRequests()" class="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm"><i class="fas fa-eraser mr-1"></i>Xóa All</button>
+    </div></div>
   <div id="dataReqBody" class="space-y-3"></div>
  </div>
 
@@ -791,7 +795,7 @@
          <i class="fas fa-plus"></i>Thêm cột
         </button>
        </div>
-       <div id="footerColsWrap" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
+       <div id="footerColsWrap" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
       </div>
 
       <!-- 4. NỘI DUNG 3 TRANG CHÍNH SÁCH PHÁP LÝ -->
