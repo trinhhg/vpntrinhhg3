@@ -225,20 +225,46 @@
  </div>
     
 
- <!-- ===== GIAO DỊCH D1 ===== -->
- <div id="t-trans" class="hidden w-full min-w-0">
-  <div class="flex items-center justify-between gap-2 mb-3"><h2 class="text-base sm:text-lg md:text-2xl font-bold text-slate-800 min-w-0">Đối soát giao dịch D1</h2><button onclick="loadTx(true)" class="shrink-0 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs md:text-sm shadow-sm"><i class="fas fa-sync mr-1"></i>Tải lại</button></div>
-  <div class="inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 w-fit mb-3"><button onclick="switchTxTab('giamsat')" id="tx-giamsat" class="settings-sub-tab text-center !px-3 active">Đối Soát</button><button onclick="switchTxTab('raw')" id="tx-raw" class="settings-sub-tab text-center !px-3">Giao Dịch Thô</button><button onclick="switchTxTab('rev')" id="tx-rev" class="settings-sub-tab text-center !px-3"><i class="fas fa-chart-line mr-1"></i>Doanh thu</button></div>
-  <div id="txTableWrap" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden"><div class="overflow-x-auto"><table class="log-table"><thead id="transHead"></thead><tbody id="transBody"></tbody></table></div></div>
-  <div id="revPane" class="hidden">
-   <div class="flex flex-col sm:flex-row gap-2 mb-3 items-stretch sm:items-center justify-between">
-     <div id="revTabs" class="inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 w-fit"></div>
-     <div class="flex items-center gap-2">
-       <select id="revMonth" onchange="setRevMonth(this.value)" class="p-2 border border-slate-200 rounded-lg text-xs bg-white font-bold outline-none focus:border-indigo-500"></select>
-     </div>
+ <!-- ===== ĐỐI SOÁT GIAO DỊCH MACRODROID & D1 ===== -->
+ <div id="t-trans" class="hidden w-full min-w-0 space-y-3">
+  <div class="flex items-center justify-between gap-2 mb-2">
+   <div>
+    <h2 class="text-base sm:text-lg md:text-2xl font-bold text-slate-800 min-w-0 flex items-center gap-2">
+     <i class="fas fa-file-invoice-dollar text-indigo-600"></i>Đối Soát Giao Dịch MacroDroid &amp; D1
+    </h2>
+    <p class="text-[11px] text-slate-500 mt-0.5">Giám sát SMS/App biến động số dư theo thời gian thực và xử lý thủ công các giao dịch ngoại lệ.</p>
    </div>
-   <div id="revBody" class="space-y-4"></div>
+   <button onclick="loadTx(true)" class="shrink-0 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs md:text-sm shadow-sm flex items-center gap-1 transition active:scale-95">
+    <i class="fas fa-sync mr-1"></i>Tải lại
+   </button>
   </div>
+  <div class="inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 w-fit mb-2">
+   <button onclick="switchTxTab('giamsat')" id="tx-giamsat" class="settings-sub-tab text-center !px-3 active"><i class="fas fa-list-check mr-1.5"></i>Đối Soát D1</button>
+   <button onclick="switchTxTab('exception')" id="tx-exception" class="settings-sub-tab text-center !px-3"><i class="fas fa-triangle-exclamation mr-1.5 text-amber-500"></i>Ngoại Lệ &amp; Ghép Đơn <span id="txExceptionBadge" class="hidden ml-1 px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-600 text-white">0</span></button>
+   <button onclick="switchTxTab('raw')" id="tx-raw" class="settings-sub-tab text-center !px-3"><i class="fas fa-code mr-1.5"></i>Giao Dịch Thô</button>
+  </div>
+  <div id="txTableWrap" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden"><div class="overflow-x-auto"><table class="log-table"><thead id="transHead"></thead><tbody id="transBody"></tbody></table></div></div>
+  <div id="txExceptionWrap" class="hidden space-y-3"></div>
+ </div>
+
+ <!-- ===== DOANH THU & BÁO CÁO TÀI CHÍNH (ĐỘC LẬP) ===== -->
+ <div id="t-rev" class="hidden w-full min-w-0 space-y-3">
+  <div class="flex flex-col sm:flex-row gap-2 mb-2 items-stretch sm:items-center justify-between bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+   <div>
+    <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
+     <i class="fas fa-chart-pie text-indigo-600"></i>Doanh Thu &amp; Báo Cáo Tài Chính
+    </h2>
+    <p class="text-[11px] text-slate-500 mt-0.5">Biểu đồ cơ cấu doanh thu, chi phí vốn VPN, lãi ròng và thống kê đơn hàng theo thời gian.</p>
+   </div>
+   <div class="flex items-center gap-2">
+    <select id="revMonth" onchange="setRevMonth(this.value)" class="p-2 border border-slate-200 rounded-xl text-xs bg-slate-50 font-bold outline-none focus:border-indigo-500 shadow-sm"></select>
+    <button onclick="renderRevenue()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-2 rounded-xl font-bold text-xs shadow-sm flex items-center gap-1 transition active:scale-95">
+     <i class="fas fa-sync-alt"></i><span class="hidden sm:inline">Làm mới</span>
+    </button>
+   </div>
+  </div>
+  <div id="revTabs" class="inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 w-fit mb-1"></div>
+  <div id="revBody" class="space-y-4"></div>
  </div>
 
  <!-- ===== LINK SUB ===== -->
@@ -475,8 +501,10 @@
  <!-- ===== GÓI CƯỚC & FULFILLMENT ===== -->
  <div id="t-pkg" class="hidden w-full min-w-0 space-y-3">
   <!-- Sub-tab Bar -->
-  <div class="bg-slate-200 p-1 rounded-xl flex gap-1 w-fit">
-   <button onclick="switchPkgSubTab('cards')" id="btn-pkg-cards" class="settings-sub-tab active text-center !px-3 font-bold"><i class="fas fa-tags mr-1.5"></i>Sửa gói</button>
+  <div class="bg-slate-200 p-1 rounded-xl flex flex-wrap gap-1 w-fit">
+   <button onclick="switchPkgSubTab('cards')" id="btn-pkg-cards" class="settings-sub-tab active text-center !px-3 font-bold"><i class="fas fa-boxes-stacked mr-1.5"></i>Gói cước &amp; Giá bán</button>
+   <button onclick="switchPkgSubTab('sale')" id="btn-pkg-sale" class="settings-sub-tab text-center !px-3 font-bold"><i class="fas fa-fire mr-1.5 text-rose-500"></i>Flash Sale &amp; Sự kiện</button>
+   <button onclick="switchPkgSubTab('coupon')" id="btn-pkg-coupon" class="settings-sub-tab text-center !px-3 font-bold"><i class="fas fa-ticket mr-1.5 text-purple-600"></i>Mã giảm giá (Coupon)</button>
    <button onclick="switchPkgSubTab('fulfill')" id="btn-pkg-fulfill" class="settings-sub-tab text-center !px-3 font-bold"><i class="fas fa-shuffle mr-1.5"></i>Auto cấp link</button>
   </div>
 
@@ -588,6 +616,99 @@
     </div>
    </div>
   </div>
+   <!-- Pane 3: Flash Sale & Sự kiện -->
+  <div id="pane-pkg-sale" class="hidden space-y-4">
+   <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+     <div>
+      <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
+       <i class="fas fa-fire text-rose-500"></i>Quản lý Chiến dịch Flash Sale &amp; Khuyến Mãi
+      </h2>
+      <p class="text-[11px] text-slate-500 mt-0.5">Tự động áp dụng giá giảm cho gói cước trong khung giờ vàng mà không cần sửa giá gốc.</p>
+     </div>
+     <button onclick="saveFlashSaleConfig()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center gap-1.5 shrink-0">
+      <i class="fas fa-save"></i>LƯU CHIẾN DỊCH FLASH SALE
+     </button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+     <div class="sm:col-span-2">
+      <label class="block font-bold text-slate-700 mb-1">Tên chiến dịch:</label>
+      <input type="text" id="saleCampaignTitle" placeholder="VD: Flash Sale Giờ Vàng Mùa Du Lịch" class="w-full p-2 border border-slate-200 rounded-xl bg-white font-bold text-slate-800 outline-none focus:border-indigo-500">
+     </div>
+     <div>
+      <label class="block font-bold text-slate-700 mb-1">Mức giảm giá (%):</label>
+      <div class="relative">
+       <input type="number" id="saleCampaignPercent" min="1" max="90" placeholder="VD: 15" class="w-full p-2 border border-slate-200 rounded-xl bg-white font-bold text-rose-600 outline-none focus:border-indigo-500 pr-8">
+       <span class="absolute right-3 top-1/2 -translate-y-1/2 font-black text-slate-400">%</span>
+      </div>
+     </div>
+     <div>
+      <label class="block font-bold text-slate-700 mb-1">Trạng thái kích hoạt:</label>
+      <div class="flex items-center gap-2 pt-1.5">
+       <div class="toggle-wrap">
+        <input type="checkbox" id="saleCampaignActive">
+        <span class="toggle-slider"></span>
+       </div>
+       <span class="text-xs font-bold text-slate-600">Bật Flash Sale</span>
+      </div>
+     </div>
+     <div>
+      <label class="block font-bold text-slate-700 mb-1">Bắt đầu từ:</label>
+      <input type="datetime-local" id="saleCampaignStart" class="w-full p-2 border border-slate-200 rounded-xl bg-white text-slate-800 outline-none focus:border-indigo-500 text-xs">
+     </div>
+     <div>
+      <label class="block font-bold text-slate-700 mb-1">Kết thúc vào:</label>
+      <input type="datetime-local" id="saleCampaignEnd" class="w-full p-2 border border-slate-200 rounded-xl bg-white text-slate-800 outline-none focus:border-indigo-500 text-xs">
+     </div>
+     <div class="sm:col-span-2">
+      <label class="block font-bold text-slate-700 mb-1">Áp dụng cho:</label>
+      <select id="saleCampaignScope" class="w-full p-2 border border-slate-200 rounded-xl bg-white font-bold text-slate-800 outline-none focus:border-indigo-500">
+       <option value="all">Tất cả các gói cước đang mở bán</option>
+       <option value="monthly">Chỉ các gói theo tháng (1 tháng, 1 năm)</option>
+       <option value="data">Chỉ các gói Dung lượng không giới hạn ngày</option>
+      </select>
+     </div>
+    </div>
+   </div>
+  </div>
+
+  <!-- Pane 4: Mã giảm giá (Coupon / Voucher) -->
+  <div id="pane-pkg-coupon" class="hidden space-y-4">
+   <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+     <div>
+      <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
+       <i class="fas fa-ticket text-purple-600"></i>Quản lý Mã Giảm Giá (Coupon / Voucher)
+      </h2>
+      <p class="text-[11px] text-slate-500 mt-0.5">Tạo mã ưu đãi cho khách hàng nhập tại bước thanh toán. Máy chủ kiểm tra điều kiện trước khi trừ tiền.</p>
+     </div>
+     <button onclick="openAddCouponModal()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center gap-1.5 shrink-0">
+      <i class="fas fa-plus"></i>TẠO MÃ COUPON MỚI
+     </button>
+    </div>
+
+    <!-- Danh sách Coupon hiện có -->
+    <div class="overflow-x-auto rounded-xl border border-slate-200">
+     <table class="w-full text-xs text-left">
+      <thead class="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] border-b border-slate-200">
+       <tr>
+        <th class="px-3 py-2.5">Mã Coupon</th>
+        <th class="px-3 py-2.5">Mức giảm</th>
+        <th class="px-3 py-2.5 text-center">Đơn tối thiểu</th>
+        <th class="px-3 py-2.5 text-center">Lượt dùng</th>
+        <th class="px-3 py-2.5 text-center">Hạn dùng</th>
+        <th class="px-3 py-2.5 text-center">Trạng thái</th>
+        <th class="px-3 py-2.5 text-right">Thao tác</th>
+       </tr>
+      </thead>
+      <tbody id="couponListTbody" class="divide-y divide-slate-100">
+       <tr><td colspan="7" class="text-center py-4 text-slate-400 italic">Đang tải danh sách coupon...</td></tr>
+      </tbody>
+     </table>
+    </div>
+   </div>
+  </div>
  </div>
 
  <!-- ===== CÀI ĐẶT (CHUẨN 5 SUB-TAB) ===== -->
@@ -620,11 +741,11 @@
 
    <!-- PANE 1: GIAO DIỆN & TIỆN ÍCH -->
    <div id="wpane-ui" class="space-y-4">
-    <!-- 1. Thanh thông báo đỉnh web -->
-    <div class="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border-2 border-indigo-200 rounded-2xl p-4 shadow-sm space-y-3">
-     <div class="flex items-center justify-between flex-wrap gap-2">
-      <div class="font-extrabold text-sm text-indigo-900 flex items-center gap-2">
-       <i class="fas fa-bullhorn text-indigo-600"></i>Thanh Thông Báo Đỉnh Web (Header Announcement Drawer)
+    <!-- 1. Thanh thông báo đỉnh web Pro -->
+    <div class="bg-gradient-to-r from-indigo-50/80 via-purple-50/80 to-pink-50/80 border-2 border-indigo-200/80 rounded-2xl p-4 md:p-5 shadow-sm space-y-4">
+     <div class="flex items-center justify-between flex-wrap gap-2 border-b border-indigo-100 pb-3">
+      <div class="font-extrabold text-sm md:text-base text-indigo-900 flex items-center gap-2">
+       <i class="fas fa-bullhorn text-indigo-600"></i>Thanh Thông Báo Đỉnh Web (Header Announcement)
       </div>
       <div class="flex items-center gap-2">
        <span class="text-xs font-bold text-slate-600">Bật thông báo:</span>
@@ -632,20 +753,58 @@
         <input type="checkbox" id="headerDrawerOn" onchange="toggleHeaderDrawer(this.checked)">
         <span class="toggle-slider"></span>
        </div>
-       <button type="button" onclick="saveHeaderDrawer()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm flex items-center gap-1 transition active:scale-95">
-        <i class="fas fa-save mr-1"></i>LƯU THÔNG BÁO
+       <button type="button" onclick="saveHeaderDrawer()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3.5 py-1.5 rounded-xl text-xs shadow-sm flex items-center gap-1.5 transition active:scale-95">
+        <i class="fas fa-save"></i>LƯU THÔNG BÁO
        </button>
       </div>
      </div>
-     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-      <div class="sm:col-span-2">
-       <label class="block font-bold text-slate-600 mb-1">Nội dung thông báo (hỗ trợ Emoji):</label>
-       <input type="text" id="headerDrawerText" placeholder="VD: 🔥 Khuyến mãi mùa du lịch: Tặng ngay +3 ngày sử dụng cho mọi gói!" class="w-full p-2 border border-indigo-200 rounded-xl bg-white font-bold text-slate-800 outline-none focus:border-indigo-500">
+
+     <!-- Cấu hình chi tiết -->
+     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+      <div>
+       <label class="block font-bold text-slate-700 mb-1">Loại thông báo:</label>
+       <select id="headerDrawerType" onchange="updateHeaderDrawerPreview()" class="w-full p-2 border border-slate-200 rounded-xl bg-white font-bold text-slate-800 outline-none focus:border-indigo-500">
+        <option value="promo">🔥 Khuyến mãi (Đỏ hồng)</option>
+        <option value="info">ℹ️ Thông tin (Xanh tím)</option>
+        <option value="warning">⚠️ Cảnh báo / Bảo trì (Vàng cam)</option>
+       </select>
       </div>
       <div>
-       <label class="block font-bold text-slate-600 mb-1">Link chuyển hướng khi bấm:</label>
-       <input type="text" id="headerDrawerLink" placeholder="#packages hoặc /portal/packages" class="w-full p-2 border border-indigo-200 rounded-xl bg-white font-mono font-bold text-indigo-700 outline-none focus:border-indigo-500">
+       <label class="block font-bold text-slate-700 mb-1">Tiêu đề ngắn (tùy chọn):</label>
+       <input type="text" id="headerDrawerTitle" oninput="updateHeaderDrawerPreview()" placeholder="VD: FLASH SALE HÈ" class="w-full p-2 border border-slate-200 rounded-xl bg-white font-bold text-slate-800 outline-none focus:border-indigo-500">
       </div>
+      <div>
+       <label class="block font-bold text-slate-700 mb-1">Chữ trên nút CTA:</label>
+       <input type="text" id="headerDrawerBtnText" oninput="updateHeaderDrawerPreview()" placeholder="Xem ngay" class="w-full p-2 border border-slate-200 rounded-xl bg-white font-bold text-slate-800 outline-none focus:border-indigo-500">
+      </div>
+      <div>
+       <label class="block font-bold text-slate-700 mb-1">Link chuyển hướng khi bấm:</label>
+       <input type="text" id="headerDrawerLink" oninput="updateHeaderDrawerPreview()" placeholder="#packages hoặc /portal/..." class="w-full p-2 border border-slate-200 rounded-xl bg-white font-mono font-bold text-indigo-700 outline-none focus:border-indigo-500">
+      </div>
+      <div class="sm:col-span-2 lg:col-span-3">
+       <label class="block font-bold text-slate-700 mb-1">Nội dung thông báo (hỗ trợ Emoji):</label>
+       <input type="text" id="headerDrawerText" oninput="updateHeaderDrawerPreview()" placeholder="VD: Tặng ngay +3 ngày sử dụng cho mọi gói đăng ký mới trong tuần này!" class="w-full p-2 border border-slate-200 rounded-xl bg-white font-medium text-slate-800 outline-none focus:border-indigo-500">
+      </div>
+      <div>
+       <label class="block font-bold text-slate-700 mb-1">Tự động ẩn sau (Hết hạn):</label>
+       <input type="datetime-local" id="headerDrawerEndTime" onchange="updateHeaderDrawerPreview()" class="w-full p-2 border border-slate-200 rounded-xl bg-white font-medium text-slate-800 outline-none focus:border-indigo-500 text-xs">
+      </div>
+     </div>
+
+     <div class="flex items-center gap-2 pt-1">
+      <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700">
+       <input type="checkbox" id="headerDrawerCloseable" onchange="updateHeaderDrawerPreview()" checked class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+       <span>Cho phép khách hàng bấm nút đóng [ × ] để ẩn thông báo</span>
+      </label>
+     </div>
+
+     <!-- KHUNG XEM TRƯỚC TRỰC TIẾP (LIVE PREVIEW) -->
+     <div class="pt-2">
+      <div class="flex items-center justify-between mb-1.5">
+       <span class="text-[11px] font-black uppercase text-indigo-900 flex items-center gap-1.5"><i class="fas fa-eye text-indigo-600"></i>Xem trước trực tiếp (Live Preview)</span>
+       <span class="text-[10px] text-slate-400">Hiển thị chuẩn như trên trang chủ index.html</span>
+      </div>
+      <div id="headerDrawerPreviewBox" class="border border-slate-200 rounded-xl overflow-hidden shadow-inner p-2 bg-slate-50 dark:bg-slate-900 transition-all"></div>
      </div>
     </div>
 

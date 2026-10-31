@@ -96,7 +96,7 @@ const PDS={1:"https://vpntrinhhg.pages.dev",2:"https://vpntrinhhg2.pages.dev",3:
 let PD=/pages\.dev$/.test(location.hostname)?location.origin:PDS[3];
 const GH_REPO="trinhhg/vpntrinhhg3";
 const PKG_LIST=[["t1","Gói 1 tháng - 60,000VND / $2.5 / ¥15.5 (100GB)",30],["t2","Gói 1 tháng - 70,000VND / $3 / ¥18 (500GB)",30],["c1","Gói 1 tháng - 80,000VND / $3.5 / ¥20.5 (1000GB)",30],["c2","Gói Cao Cấp - 200,000VND / $8 / ¥50 (3000GB)",30],["c3","Gói 1 Năm - 799,000VND / $30 / ¥199 (300GB/tháng)",365],["d1","Không Giới Hạn - 200,000VND / $8 / ¥52 (200GB)",0],["d2","Không Giới Hạn - 399,000VND / $16 / ¥102 (1000GB)",0],["d3","Không Giới Hạn - 999,000VND / $40 / ¥256 (5000GB)",0],["o1","[Giá cũ] Gói 1 tháng - 50,000VND / ¥12.5 (100GB)",30],["o2","[Giá cũ] Gói 1 tháng - 60,000VND / ¥15 (500GB)",30],["o3","[Giá cũ] Gói 1 tháng - 70,000VND / ¥17.5 (1000GB)",30]];
-const TABS=[["t-ord","fa-box","Đơn hàng"],["t-check","fa-clipboard-check","Kiểm tra"],["t-trans","fa-file-invoice-dollar","Giao dịch"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-pkg","fa-boxes-stacked","Gói cước"],["t-mail","fa-envelope","Soạn mail"],["t-cms","fa-book","H.Dẫn"],["t-settings","fa-cog","Cài đặt"]];
+const TABS=[["t-ord","fa-box","Đơn hàng"],["t-pkg","fa-tags","Bán hàng & Gói"],["t-rev","fa-chart-pie","Doanh thu"],["t-trans","fa-file-invoice-dollar","Đối soát MacroDroid"],["t-check","fa-clipboard-check","Kiểm tra"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-mail","fa-envelope","Soạn mail"],["t-cms","fa-book","H.Dẫn"],["t-settings","fa-cog","Cài đặt"]];
 // PKG_DB: giá hiện tại + giá cũ (o1/o2/o3) để nhận diện dữ liệu lịch sử — TUYỆT ĐỐI không quy đổi totalVnd của đơn cũ sang giá mới.
 const PKG_DB={t1:{n:"Gói 1 tháng",d:"100GB",vnd:60000,cny:15.5,m:1},t2:{n:"Gói 1 tháng",d:"500GB",vnd:70000,cny:18,m:1},c1:{n:"Gói 1 tháng",d:"1000GB",vnd:80000,cny:20.5,m:1},c2:{n:"Gói Cao Cấp",d:"3000GB",vnd:200000,cny:50,m:1},c3:{n:"Gói 1 Năm",d:"300GB/tháng",vnd:799000,cny:199,m:12},d1:{n:"Không Giới Hạn",d:"200GB",vnd:200000,cny:52,m:0},d2:{n:"Không Giới Hạn",d:"1000GB",vnd:399000,cny:102,m:0},d3:{n:"Không Giới Hạn",d:"5000GB",vnd:999000,cny:256,m:0},o1:{n:"Gói 1 tháng",d:"100GB",vnd:50000,cny:12.5,m:1,old:true},o2:{n:"Gói 1 tháng",d:"500GB",vnd:60000,cny:15,m:1,old:true},o3:{n:"Gói 1 tháng",d:"1000GB",vnd:70000,cny:17.5,m:1,old:true}};
 
@@ -307,10 +307,20 @@ async function pollMain(){
 // ===================== TAB NAVIGATION =====================
 function switchPkgSubTab(tab){
   $("pane-pkg-cards").classList.toggle("hidden", tab !== "cards");
+  if ($("pane-pkg-sale")) $("pane-pkg-sale").classList.toggle("hidden", tab !== "sale");
+  if ($("pane-pkg-coupon")) $("pane-pkg-coupon").classList.toggle("hidden", tab !== "coupon");
   $("pane-pkg-fulfill").classList.toggle("hidden", tab !== "fulfill");
+
   $("btn-pkg-cards").classList.toggle("active", tab === "cards");
+  if ($("btn-pkg-sale")) $("btn-pkg-sale").classList.toggle("active", tab === "sale");
+  if ($("btn-pkg-coupon")) $("btn-pkg-coupon").classList.toggle("active", tab === "coupon");
   $("btn-pkg-fulfill").classList.toggle("active", tab === "fulfill");
+
+  if (tab === "sale") renderFlashSaleAdmin();
+  if (tab === "coupon") renderCouponAdmin();
+  if (tab === "fulfill") loadFulfillmentConfig();
 }
+window.switchPkgSubTab = switchPkgSubTab;
 
 function buildTabs(){
   $("tabBar").innerHTML=TABS.map(([id,ic,lb])=>`
@@ -324,6 +334,7 @@ function buildTabs(){
 }
 
 function go(id, fromHistory){
+ if(id==="t-sales") id = "t-pkg";
  if(!TABS.some(t=>t[0]===id))id="t-ord";
  TABS.forEach(([t])=>{
    $(t).classList.add("hidden");
@@ -348,7 +359,8 @@ function go(id, fromHistory){
   if(id==="t-dead")renderDead();
   if(id==="t-lnk")renderLinks();
   if(id==="t-settings"){loadSettingsUI();loadStatus();loadQuota();}
-  if(id==="t-trans"){localStorage.setItem(SITE_KEY+"_txSeen",Date.now());$("transBadge").classList.add("hidden");if(curTxTab==="rev")renderRevenue();else renderTransactions();}
+  if(id==="t-rev")renderRevenue();
+  if(id==="t-trans"){localStorage.setItem(SITE_KEY+"_txSeen",Date.now());$("transBadge").classList.add("hidden");if(curTxTab==="exception")renderExceptionsTab();else renderTransactions();}
   if(id==="t-mail")renderMailComposer();
   if(id==="t-cms"&&curArtsReady)renderGuideAll();
  }catch(e){console.error("go("+id+") lỗi:",e);toast("Lỗi mở tab: "+e.message,"err");}
@@ -1787,7 +1799,18 @@ async function clearDataRequests(){
   toast("Đã dọn sạch");
 }
 // ===================== GIAO DỊCH D1 (qua Worker) =====================
-function switchTxTab(t){curTxTab=t;document.querySelectorAll("#t-trans .settings-sub-tab").forEach(b=>b.classList.remove("active"));$("tx-"+t).classList.add("active");const rv=t==="rev";$("txTableWrap").classList.toggle("hidden",rv);$("revPane").classList.toggle("hidden",!rv);if(rv)renderRevenue();else renderTransactions();}
+function switchTxTab(t){
+  if(t==="rev"){go("t-rev");return;}
+  curTxTab=t;
+  document.querySelectorAll("#t-trans .settings-sub-tab").forEach(b=>b.classList.remove("active"));
+  const btn=$("tx-"+t);if(btn)btn.classList.add("active");
+  const isExc=(t==="exception");
+  $("txTableWrap").classList.toggle("hidden",isExc);
+  if($("txExceptionWrap"))$("txExceptionWrap").classList.toggle("hidden",!isExc);
+  if(isExc)renderExceptionsTab();
+  else renderTransactions();
+}
+window.switchTxTab = switchTxTab;
 const extractOrder=raw=>{if(!raw)return null;const m=String(raw).replace(/[-_.\s]/g,"").toUpperCase().match(/(DH[A-Z0-9]{10})/);return m?m[1]:null;};
 function mergeTx(list){const map=new Map(txData.map(t=>[t.id,t]));list.forEach(t=>{map.set(t.id,t);if(t.updated_at&&t.updated_at>txSince)txSince=t.updated_at;});txData=[...map.values()].sort((a,b)=>b.id-a.id).slice(0,300);}
 async function loadTx(force){
@@ -2411,30 +2434,101 @@ function getDefaultAdminPkgs() {
   ];
 }
 
+function updateHeaderDrawerPreview() {
+  const box = $("headerDrawerPreviewBox");
+  if (!box) return;
+  const on = $("headerDrawerOn") ? $("headerDrawerOn").checked : true;
+  const type = $("headerDrawerType") ? $("headerDrawerType").value : "promo";
+  const title = $("headerDrawerTitle") ? $("headerDrawerTitle").value.trim() : "";
+  const text = $("headerDrawerText") ? $("headerDrawerText").value.trim() : "";
+  const btnText = $("headerDrawerBtnText") ? $("headerDrawerBtnText").value.trim() || "Xem ngay" : "Xem ngay";
+  const link = $("headerDrawerLink") ? $("headerDrawerLink").value.trim() || "#packages" : "#packages";
+  const closeable = $("headerDrawerCloseable") ? $("headerDrawerCloseable").checked : true;
+
+  if (!text) {
+    box.innerHTML = `<div class="text-center py-3 text-xs text-slate-400 italic">Nhập nội dung thông báo ở trên để xem trước tại đây...</div>`;
+    return;
+  }
+
+  let badgeCls = "bg-rose-50 text-rose-600 border border-rose-200/60";
+  let badgeIcon = "fas fa-fire";
+  let badgeLabel = "Khuyến mãi";
+  if (type === "warning") {
+    badgeCls = "bg-amber-50 text-amber-700 border border-amber-200/60";
+    badgeIcon = "fas fa-triangle-exclamation";
+    badgeLabel = "Cảnh báo";
+  } else if (type === "info") {
+    badgeCls = "bg-indigo-50 text-indigo-600 border border-indigo-200/60";
+    badgeIcon = "fas fa-circle-info";
+    badgeLabel = "Thông tin";
+  }
+
+  box.innerHTML = `
+    <div class="w-full bg-white text-slate-800 text-xs py-2 px-3 rounded-lg shadow-sm border border-slate-200 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shrink-0 uppercase tracking-wider ${badgeCls}">
+          <i class="${badgeIcon}"></i>
+          <span>${badgeLabel}</span>
+        </span>
+        ${title ? `<span class="font-extrabold text-slate-900 shrink-0 hidden sm:inline">${esc(title)}</span><span class="text-slate-300 hidden sm:inline">•</span>` : ''}
+        <span class="truncate font-medium text-slate-700">${esc(text)}</span>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <a href="${esc(link)}" target="_blank" onclick="event.preventDefault()" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm whitespace-nowrap flex items-center gap-1 cursor-pointer">
+          <span>${esc(btnText)}</span>
+          <i class="fas fa-arrow-right text-[9px]"></i>
+        </a>
+        ${closeable ? `<button type="button" class="text-slate-400 hover:text-slate-700 px-1 py-0.5"><i class="fas fa-times text-xs"></i></button>` : ''}
+      </div>
+    </div>
+    ${!on ? '<div class="mt-1 text-[11px] text-amber-600 font-bold flex items-center gap-1"><i class="fas fa-eye-slash"></i>Lưu ý: Thanh thông báo hiện đang TẮT. Bật công tắc ở trên để hiển thị ra trang chủ.</div>' : ''}
+  `;
+}
+window.updateHeaderDrawerPreview = updateHeaderDrawerPreview;
+
+function getHeaderDrawerFromForm() {
+  const cur = (cmsDb && cmsDb.settings && cmsDb.settings.headerDrawer) || {};
+  if (!$("headerDrawerText")) return cur;
+  return {
+    enabled: $("headerDrawerOn") ? $("headerDrawerOn").checked : false,
+    type: $("headerDrawerType") ? $("headerDrawerType").value : (cur.type || "promo"),
+    title: $("headerDrawerTitle") ? $("headerDrawerTitle").value.trim() : (cur.title || ""),
+    text: $("headerDrawerText") ? $("headerDrawerText").value.trim() : (cur.text || ""),
+    btnText: $("headerDrawerBtnText") ? $("headerDrawerBtnText").value.trim() : (cur.btnText || ""),
+    link: $("headerDrawerLink") ? $("headerDrawerLink").value.trim() : (cur.link || ""),
+    endTime: $("headerDrawerEndTime") ? $("headerDrawerEndTime").value : (cur.endTime || ""),
+    closeable: $("headerDrawerCloseable") ? $("headerDrawerCloseable").checked : (cur.closeable !== false)
+  };
+}
+
 function loadDrawerSettingsUI() {
   const d = (cmsDb && cmsDb.settings && cmsDb.settings.headerDrawer) || {};
   if ($("headerDrawerOn")) $("headerDrawerOn").checked = !!d.enabled;
+  if ($("headerDrawerType")) $("headerDrawerType").value = d.type || "promo";
+  if ($("headerDrawerTitle")) $("headerDrawerTitle").value = d.title || "";
   if ($("headerDrawerText")) $("headerDrawerText").value = d.text || "";
+  if ($("headerDrawerBtnText")) $("headerDrawerBtnText").value = d.btnText || "";
   if ($("headerDrawerLink")) $("headerDrawerLink").value = d.link || "";
+  if ($("headerDrawerEndTime")) $("headerDrawerEndTime").value = d.endTime || "";
+  if ($("headerDrawerCloseable")) $("headerDrawerCloseable").checked = d.closeable !== false;
+  updateHeaderDrawerPreview();
 }
 
 function toggleHeaderDrawer(checked) {
   cmsDb.settings = cmsDb.settings || {};
   cmsDb.settings.headerDrawer = cmsDb.settings.headerDrawer || {};
   cmsDb.settings.headerDrawer.enabled = checked;
+  updateHeaderDrawerPreview();
 }
 
 async function saveHeaderDrawer() {
   cmsDb.settings = cmsDb.settings || {};
-  cmsDb.settings.headerDrawer = {
-    enabled: $("headerDrawerOn") ? $("headerDrawerOn").checked : false,
-    text: $("headerDrawerText") ? $("headerDrawerText").value.trim() : "",
-    link: $("headerDrawerLink") ? $("headerDrawerLink").value.trim() : ""
-  };
+  cmsDb.settings.headerDrawer = getHeaderDrawerFromForm();
   try {
     await saveCmsDb();
-    toast("Đã lưu trạng thái thanh thông báo đỉnh web thành công!");
-    logEvent("ok", "admin", "Lưu thông báo đỉnh web");
+    toast("Đã lưu cấu hình thanh thông báo đỉnh web thành công!");
+    logEvent("ok", "admin", "Lưu thông báo đỉnh web Pro");
+    updateHeaderDrawerPreview();
   } catch(e) {
     toast("Lỗi lưu thông báo: " + e.message, "err");
   }
@@ -2453,6 +2547,8 @@ async function loadAdminPkgs() {
     adminPkgsList = getDefaultAdminPkgs();
   }
   renderPkgAdmin();
+  renderFlashSaleAdmin();
+  renderCouponAdmin();
 }
 
 async function toggleHidePkg(idx){
@@ -2651,11 +2747,7 @@ async function saveAllPkgs() {
 
   // Lưu cấu hình Banner Header Drawer vào cmsDb
   cmsDb.settings = cmsDb.settings || {};
-  cmsDb.settings.headerDrawer = {
-    enabled: $("headerDrawerOn") ? $("headerDrawerOn").checked : false,
-    text: $("headerDrawerText") ? $("headerDrawerText").value.trim() : "",
-    link: $("headerDrawerLink") ? $("headerDrawerLink").value.trim() : ""
-  };
+  cmsDb.settings.headerDrawer = getHeaderDrawerFromForm();
 
   try {
     await Promise.all([
@@ -5037,9 +5129,297 @@ setTimeout(checkTestModeStatus, 1500);
 
 window.onload=()=>{if(TOKEN)startApp(false);else{buildTabs();$("loginWrap").classList.remove("hidden");}};
 
+
+// ===================== FLASH SALE & CHIẾN DỊCH BÁN HÀNG =====================
+function renderFlashSaleAdmin() {
+  const s = (cmsDb && cmsDb.sales && cmsDb.sales.campaign) || (cmsDb && cmsDb.settings && cmsDb.settings.flashSale) || {};
+  if ($("saleCampaignTitle")) $("saleCampaignTitle").value = s.title || "";
+  if ($("saleCampaignPercent")) $("saleCampaignPercent").value = s.discountPercent || "";
+  if ($("saleCampaignActive")) $("saleCampaignActive").checked = !!s.enabled;
+  if ($("saleCampaignStart")) $("saleCampaignStart").value = s.startDate || "";
+  if ($("saleCampaignEnd")) $("saleCampaignEnd").value = s.endDate || "";
+  if ($("saleCampaignScope")) $("saleCampaignScope").value = s.scope || "all";
+}
+window.renderFlashSaleAdmin = renderFlashSaleAdmin;
+
+async function saveFlashSaleConfig() {
+  cmsDb.sales = cmsDb.sales || {};
+  const c = {
+    title: $("saleCampaignTitle") ? $("saleCampaignTitle").value.trim() : "",
+    discountPercent: Number($("saleCampaignPercent") ? $("saleCampaignPercent").value : 0) || 0,
+    enabled: $("saleCampaignActive") ? $("saleCampaignActive").checked : false,
+    startDate: $("saleCampaignStart") ? $("saleCampaignStart").value : "",
+    endDate: $("saleCampaignEnd") ? $("saleCampaignEnd").value : "",
+    scope: $("saleCampaignScope") ? $("saleCampaignScope").value : "all"
+  };
+  cmsDb.sales.campaign = c;
+  cmsDb.settings = cmsDb.settings || {};
+  cmsDb.settings.flashSale = c;
+
+  try {
+    await saveCmsDb();
+    toast("Đã lưu chiến dịch Flash Sale thành công!");
+    logEvent("ok", "admin", "Lưu Flash Sale: " + (c.title || "Chiến dịch mới"));
+  } catch(e) {
+    toast("Lỗi lưu Flash Sale: " + e.message, "err");
+  }
+}
+window.saveFlashSaleConfig = saveFlashSaleConfig;
+
+// ===================== MÃ GIẢM GIÁ (COUPON / VOUCHER) =====================
+function renderCouponAdmin() {
+  const tbody = $("couponListTbody");
+  if (!tbody) return;
+  const list = arr(cmsDb && cmsDb.coupons);
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400 font-bold italic">Chưa có mã giảm giá nào. Bấm "TẠO MÃ COUPON MỚI" ở trên để bắt đầu!</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map((c, idx) => {
+    const isPct = c.type === "percent";
+    const valText = isPct ? `${c.value}%` : `${fmtVnd(c.value)} đ`;
+    const minText = c.minOrder ? `${fmtVnd(c.minOrder)} đ` : "Không có";
+    const usageText = `${c.usedCount || 0}/${c.usageLimit || "∞"}`;
+    const expText = c.endDate ? dmy(new Date(c.endDate).getTime()) : "Vĩnh viễn";
+    const active = c.enabled !== false;
+
+    return `
+      <tr class="hover:bg-slate-50 transition">
+        <td class="px-3 py-2.5 font-mono font-black text-indigo-700">${esc(c.code)}</td>
+        <td class="px-3 py-2.5 font-bold text-rose-600">${valText}</td>
+        <td class="px-3 py-2.5 text-center font-medium text-slate-600">${minText}</td>
+        <td class="px-3 py-2.5 text-center font-bold text-slate-700">${usageText}</td>
+        <td class="px-3 py-2.5 text-center text-slate-500">${expText}</td>
+        <td class="px-3 py-2.5 text-center">
+          <button onclick="toggleCouponStatus(${idx})" class="text-[10px] font-black px-2 py-0.5 rounded-full ${active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}">
+            ${active ? 'HOẠT ĐỘNG' : 'ĐÃ TẮT'}
+          </button>
+        </td>
+        <td class="px-3 py-2.5 text-right">
+          <button onclick="deleteCouponItem(${idx})" class="text-red-500 hover:text-red-700 p-1 font-bold text-xs" title="Xóa mã"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+window.renderCouponAdmin = renderCouponAdmin;
+
+async function toggleCouponStatus(idx) {
+  cmsDb.coupons = arr(cmsDb.coupons);
+  if (!cmsDb.coupons[idx]) return;
+  cmsDb.coupons[idx].enabled = cmsDb.coupons[idx].enabled === false ? true : false;
+  try {
+    await saveCmsDb();
+    renderCouponAdmin();
+    toast("Đã cập nhật trạng thái mã coupon");
+  } catch(e) { toast("Lỗi: " + e.message, "err"); }
+}
+window.toggleCouponStatus = toggleCouponStatus;
+
+async function deleteCouponItem(idx) {
+  cmsDb.coupons = arr(cmsDb.coupons);
+  const code = cmsDb.coupons[idx] ? cmsDb.coupons[idx].code : "";
+  if (!confirm(`Xác nhận xóa mã coupon ${code}?`)) return;
+  cmsDb.coupons.splice(idx, 1);
+  try {
+    await saveCmsDb();
+    renderCouponAdmin();
+    toast("Đã xóa mã coupon: " + code);
+  } catch(e) { toast("Lỗi: " + e.message, "err"); }
+}
+window.deleteCouponItem = deleteCouponItem;
+
+function openAddCouponModal() {
+  const code = prompt("Nhập mã Coupon mới (VD: SALE2026):");
+  if (!code || !code.trim()) return;
+  const cleanCode = code.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+  if (!cleanCode) return toast("Mã coupon không hợp lệ", "warn");
+  const val = prompt("Nhập giá trị giảm (VD: 10 cho 10%, hoặc 20000 cho 20,000 VND):");
+  if (!val || isNaN(Number(val)) || Number(val) <= 0) return toast("Giá trị giảm không hợp lệ", "warn");
+  const numVal = Number(val);
+  const isPct = numVal <= 100;
+  
+  cmsDb.coupons = arr(cmsDb.coupons);
+  if (cmsDb.coupons.some(c => c.code === cleanCode)) return toast("Mã coupon này đã tồn tại!", "warn");
+
+  cmsDb.coupons.push({
+    code: cleanCode,
+    type: isPct ? "percent" : "fixed",
+    value: numVal,
+    minOrder: isPct ? 0 : numVal,
+    usageLimit: 100,
+    usedCount: 0,
+    enabled: true
+  });
+
+  saveCmsDb().then(() => {
+    renderCouponAdmin();
+    toast(`Đã tạo thành công coupon: ${cleanCode} (-${isPct ? numVal + '%' : fmtVnd(numVal) + 'đ'})`);
+  }).catch(e => toast("Lỗi: " + e.message, "err"));
+}
+window.openAddCouponModal = openAddCouponModal;
+
+// ===================== ĐỐI SOÁT NGOẠI LỆ MACRODROID =====================
+function renderExceptionsTab() {
+  const wrap = $("txExceptionWrap");
+  if (!wrap) return;
+
+  const exceptions = txData.filter(t => /unmatched|review|mismatch|duplicate/.test(t.status));
+  const badge = $("txExceptionBadge");
+  if (badge) {
+    if (exceptions.length) {
+      badge.textContent = exceptions.length;
+      badge.classList.remove("hidden");
+    } else {
+      badge.classList.add("hidden");
+    }
+  }
+
+  if (!exceptions.length) {
+    wrap.innerHTML = `
+      <div class="bg-white border border-slate-200 rounded-2xl p-8 text-center shadow-sm">
+        <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-xl mx-auto mb-3">
+          <i class="fas fa-check-double"></i>
+        </div>
+        <h3 class="font-extrabold text-base text-slate-800">Không có giao dịch ngoại lệ nào!</h3>
+        <p class="text-xs text-slate-500 mt-1">Toàn bộ biến động số dư MacroDroid gửi về đã được tự động khớp thành công với đơn hàng.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const pendingOrders = ordersDb.filter(o => normSt(o.status) === "pending");
+
+  wrap.innerHTML = `
+    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between flex-wrap gap-2">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-triangle-exclamation text-amber-600 text-lg"></i>
+        <div>
+          <div class="font-extrabold text-xs md:text-sm text-amber-900">Có ${exceptions.length} giao dịch MacroDroid chưa khớp hoặc sai lệch</div>
+          <div class="text-[11px] text-amber-700">Khách có thể đã chuyển sai số tiền hoặc ghi sai mã đơn trong SMS ngân hàng. Bạn có thể chọn đơn chờ và ghép ngay tại đây.</div>
+        </div>
+      </div>
+      <button onclick="loadTx(true)" class="bg-white text-amber-800 border border-amber-300 font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm hover:bg-amber-100 transition">
+        <i class="fas fa-sync-alt mr-1"></i>Quét lại
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 gap-3">
+      ${exceptions.map(tx => {
+        const amt = Number(tx.amount);
+        const time = tx.created_at ? fmtBank(parseAny(tx.created_at)) : "—";
+        let statusBadge = '<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded text-[10px] font-black uppercase">CHƯA KHỚP</span>';
+        if (tx.status === "amount_mismatch") statusBadge = '<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-[10px] font-black uppercase">SAI SỐ TIỀN</span>';
+        if (tx.status === "review_required") statusBadge = '<span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-[10px] font-black uppercase">CẦN DUYỆT</span>';
+        if (tx.status === "duplicate_payment") statusBadge = '<span class="bg-slate-200 text-slate-700 px-2 py-0.5 rounded text-[10px] font-black uppercase">TRÙNG THÔNG BÁO</span>';
+
+        return `
+          <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+            <div class="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 pb-2">
+              <div class="flex items-center gap-2">
+                <span class="font-black text-xs text-slate-500">#${tx.id}</span>
+                <span class="font-bold text-xs text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg">${esc(tx.payment_method || "Ngân hàng")}</span>
+                ${statusBadge}
+              </div>
+              <div class="text-[11px] text-slate-400 font-medium"><i class="far fa-clock mr-1"></i>${time}</div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+              <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                <div class="text-[10px] font-bold text-slate-400 uppercase">Số tiền nhận được</div>
+                <div class="text-lg font-black text-emerald-600 mt-0.5">${fmtVnd(amt)} đ</div>
+                ${tx.review_note ? `<div class="text-[10px] text-rose-500 font-bold mt-1">${esc(tx.review_note)}</div>` : ''}
+              </div>
+
+              <div class="md:col-span-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                <div class="text-[10px] font-bold text-slate-400 uppercase">Nội dung SMS / Biến động số dư</div>
+                <div class="font-mono text-slate-800 text-[11px] mt-0.5 break-all font-medium">${esc(tx.content || tx.notification || "Không có nội dung")}</div>
+              </div>
+            </div>
+
+            <!-- Khối ghép đơn 1-click -->
+            <div class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+              <div class="flex-1 flex items-center gap-2 min-w-0">
+                <span class="text-xs font-bold text-indigo-900 shrink-0">Ghép vào:</span>
+                <select id="selExcOrder_${tx.id}" class="w-full p-2 border border-indigo-200 rounded-lg text-xs bg-white font-bold outline-none focus:border-indigo-500">
+                  <option value="">-- Chọn đơn hàng đang chờ (${pendingOrders.length} đơn) --</option>
+                  ${pendingOrders.map(o => `
+                    <option value="${esc(o.id)}" ${tx.order_id && normId(tx.order_id) === normId(o.id) ? 'selected' : ''}>
+                      ${esc(o.id)} · ${esc(o.email)} · ${fmtVnd(o.totalVnd || 0)}đ · ${esc(o.pkgName || '')}
+                    </option>
+                  `).join("")}
+                </select>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button type="button" onclick="manualMatchTx(${tx.id})" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-2 rounded-xl text-xs shadow-sm flex items-center gap-1.5 transition active:scale-95">
+                  <i class="fas fa-link"></i>GHÉP &amp; KÍCH HOẠT
+                </button>
+                <button type="button" onclick="rejectTxItem(${tx.id})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold px-2.5 py-2 rounded-xl text-xs transition active:scale-95" title="Từ chối">
+                  <i class="fas fa-ban"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+window.renderExceptionsTab = renderExceptionsTab;
+
+async function manualMatchTx(txId) {
+  const sel = $("selExcOrder_" + txId);
+  const orderId = sel ? sel.value.trim() : "";
+  if (!orderId) return toast("Vui lòng chọn hoặc nhập mã đơn hàng hợp lệ (DH...)", "warn");
+
+  if (!confirm(`Xác nhận ghép giao dịch #${txId} vào đơn hàng ${orderId} và kích hoạt tự động cấp link?`)) return;
+
+  try {
+    const res = await aj("/api/admin/tx/" + txId + "/approve", {
+      method: "POST",
+      body: { orderId, note: "Ghép thủ công qua Admin" }
+    });
+    if (res && res.ok === false) throw new Error(res.error || "Không thể ghép giao dịch");
+    toast(`Đã ghép thành công giao dịch #${txId} vào đơn ${orderId}!`);
+    logEvent("ok", "admin", "Ghép giao dịch ngoại lệ", `#${txId} → ${orderId}`);
+    await Promise.all([loadTx(true), fetchAll(true)]);
+    renderExceptionsTab();
+  } catch(e) {
+    toast("Lỗi ghép giao dịch: " + e.message, "err");
+  }
+}
+window.manualMatchTx = manualMatchTx;
+
+async function rejectTxItem(txId) {
+  if (!confirm(`Từ chối giao dịch #${txId}?`)) return;
+  try {
+    const res = await aj("/api/admin/tx/" + txId + "/reject", {
+      method: "POST",
+      body: { note: "Từ chối bởi Admin" }
+    });
+    if (res && res.ok === false) throw new Error(res.error || "Không thể từ chối");
+    toast(`Đã từ chối giao dịch #${txId}`);
+    logEvent("warn", "admin", "Từ chối giao dịch D1", `#${txId}`);
+    await loadTx(true);
+    renderExceptionsTab();
+  } catch(e) {
+    toast("Lỗi: " + e.message, "err");
+  }
+}
+window.rejectTxItem = rejectTxItem;
+
 // Expose all admin functions and state to window for HTML inline event handlers
 if (typeof window !== 'undefined') {
   const _exposed = [
+    ['renderFlashSaleAdmin', typeof renderFlashSaleAdmin !== 'undefined' ? renderFlashSaleAdmin : undefined],
+    ['saveFlashSaleConfig', typeof saveFlashSaleConfig !== 'undefined' ? saveFlashSaleConfig : undefined],
+    ['renderCouponAdmin', typeof renderCouponAdmin !== 'undefined' ? renderCouponAdmin : undefined],
+    ['toggleCouponStatus', typeof toggleCouponStatus !== 'undefined' ? toggleCouponStatus : undefined],
+    ['deleteCouponItem', typeof deleteCouponItem !== 'undefined' ? deleteCouponItem : undefined],
+    ['openAddCouponModal', typeof openAddCouponModal !== 'undefined' ? openAddCouponModal : undefined],
+    ['renderExceptionsTab', typeof renderExceptionsTab !== 'undefined' ? renderExceptionsTab : undefined],
+    ['manualMatchTx', typeof manualMatchTx !== 'undefined' ? manualMatchTx : undefined],
+    ['rejectTxItem', typeof rejectTxItem !== 'undefined' ? rejectTxItem : undefined],
     ['toast', typeof toast !== 'undefined' ? toast : undefined],
     ['autoGrow', typeof autoGrow !== 'undefined' ? autoGrow : undefined],
     ['parseAny', typeof parseAny !== 'undefined' ? parseAny : undefined],
@@ -5164,6 +5544,7 @@ if (typeof window !== 'undefined') {
     ['rebuildAllMAP', typeof rebuildAllMAP !== 'undefined' ? rebuildAllMAP : undefined],
     ['getDefaultAdminPkgs', typeof getDefaultAdminPkgs !== 'undefined' ? getDefaultAdminPkgs : undefined],
     ['loadDrawerSettingsUI', typeof loadDrawerSettingsUI !== 'undefined' ? loadDrawerSettingsUI : undefined],
+    ['updateHeaderDrawerPreview', typeof updateHeaderDrawerPreview !== 'undefined' ? updateHeaderDrawerPreview : undefined],
     ['toggleHeaderDrawer', typeof toggleHeaderDrawer !== 'undefined' ? toggleHeaderDrawer : undefined],
     ['saveHeaderDrawer', typeof saveHeaderDrawer !== 'undefined' ? saveHeaderDrawer : undefined],
     ['loadAdminPkgs', typeof loadAdminPkgs !== 'undefined' ? loadAdminPkgs : undefined],

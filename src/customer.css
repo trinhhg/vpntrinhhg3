@@ -334,3 +334,12 @@ hr.guide-hr, #guideText hr, .guide-content hr {
 html.dark hr.guide-hr, html.dark #guideText hr, html.dark .guide-content hr {
   border-top-color: rgba(255, 255, 255, 0.15) !important;
 }
+
+/* Header Announcement Banner Animation & Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  #headerAnnouncementDrawer, #headerAnnouncementDrawer * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+

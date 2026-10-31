@@ -22,20 +22,30 @@
 </head>
 <body class="min-h-screen flex flex-col w-full overflow-x-hidden bg-slate-50 dark:bg-black text-slate-800 dark:text-slate-200 transition-colors duration-300">
 <!-- HEADER ANNOUNCEMENT DRAWER (THÔNG BÁO KHUYẾN MÃI ĐỈNH WEB) -->
-<div id="headerAnnouncementDrawer" class="hidden fixed top-0 left-0 w-full z-[80] bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white text-xs py-2 px-3 shadow-md transition-all duration-300">
+<div id="headerAnnouncementDrawer" class="hidden fixed top-0 left-0 w-full z-[80] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-indigo-100/80 dark:border-white/10 text-slate-800 dark:text-slate-100 text-xs py-2 px-3 shadow-sm transition-all duration-300">
   <div class="max-w-[1400px] mx-auto flex flex-col gap-1.5">
     <div class="flex items-center justify-between gap-3">
-      <div class="flex items-center gap-2 min-w-0 font-bold">
-        <span class="w-2.5 h-2.5 rounded-full bg-yellow-300 animate-ping shrink-0 ml-0.5"></span>
-        <span id="headerDrawerContentText" class="truncate"></span>
-        <button type="button" id="headerDrawerChevronBtn" onclick="toggleHeaderDrawerDetail()" class="hidden text-white/80 hover:text-white px-1 py-0.5 transition"><i id="headerDrawerChevronIcon" class="fas fa-chevron-down text-xs transition-transform duration-200"></i></button>
+      <div class="flex items-center gap-2 min-w-0">
+        <!-- Badge Type -->
+        <span id="headerDrawerBadge" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shrink-0 uppercase tracking-wider bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/50">
+          <i id="headerDrawerBadgeIcon" class="fas fa-fire"></i>
+          <span id="headerDrawerBadgeText">Khuyến mãi</span>
+        </span>
+        <!-- Title & Content -->
+        <span id="headerDrawerTitleText" class="font-extrabold text-slate-900 dark:text-white shrink-0 hidden sm:inline"></span>
+        <span id="headerDrawerSeparator" class="text-slate-300 dark:text-slate-600 hidden sm:inline">•</span>
+        <span id="headerDrawerContentText" class="truncate font-medium text-slate-700 dark:text-slate-200"></span>
+        <button type="button" id="headerDrawerChevronBtn" onclick="toggleHeaderDrawerDetail()" class="hidden text-slate-400 hover:text-slate-700 dark:hover:text-white px-1 py-0.5 transition"><i id="headerDrawerChevronIcon" class="fas fa-chevron-down text-xs transition-transform duration-200"></i></button>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <a id="headerDrawerBtnLink" href="#packages" class="bg-white/20 hover:bg-white/30 text-white font-black px-3 py-1 rounded-full text-[10px] md:text-xs transition uppercase whitespace-nowrap">Xem ngay</a>
-        <button type="button" onclick="closeHeaderDrawer()" class="text-white/80 hover:text-white px-1.5 py-0.5"><i class="fas fa-times text-xs"></i></button>
+        <a id="headerDrawerBtnLink" href="#packages" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm transition active:scale-95 whitespace-nowrap flex items-center gap-1">
+          <span id="headerDrawerBtnText">Xem ngay</span>
+          <i class="fas fa-arrow-right text-[9px]"></i>
+        </a>
+        <button type="button" id="headerDrawerCloseBtn" onclick="closeHeaderDrawer()" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 px-1.5 py-0.5 transition" title="Đóng thông báo"><i class="fas fa-times text-xs"></i></button>
       </div>
     </div>
-    <div id="headerDrawerDetail" class="hidden pt-1.5 border-t border-white/20 text-[11px] leading-relaxed text-indigo-100 font-medium whitespace-pre-wrap"></div>
+    <div id="headerDrawerDetail" class="hidden pt-1.5 border-t border-slate-200/60 dark:border-white/10 text-[11px] leading-relaxed text-slate-600 dark:text-slate-300 font-medium whitespace-pre-wrap"></div>
   </div>
 </div>
 
@@ -425,6 +435,19 @@
               </div>
               <div id="customDurWrap" class="hidden mt-3"><div class="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 p-2 rounded-lg border border-indigo-100 dark:border-indigo-500/30"><label class="text-xs font-bold text-indigo-800 dark:text-indigo-300 whitespace-nowrap pl-1" data-i18n="input_months">Nhập số tháng:</label><input type="number" id="customDurInput" min="1" max="120" value="2" oninput="calculateTotal()" class="w-full p-2 text-sm border border-slate-300 dark:border-white/20 rounded outline-none focus:border-indigo-500 font-bold bg-white dark:bg-black text-center text-slate-800 dark:text-white"></div></div>
               <div id="priceCalculation" class="mt-3 text-sm font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-500/30 p-2.5 rounded-lg text-center"></div>
+            </div>
+            <!-- KHỐI NHẬP MÃ GIẢM GIÁ (COUPON / VOUCHER) -->
+            <div class="mb-4">
+              <label class="block font-bold text-xs text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
+                <i class="fas fa-ticket text-purple-600"></i>Mã giảm giá (Coupon):
+              </label>
+              <div class="flex gap-2">
+                <input type="text" id="couponInput" placeholder="Nhập mã coupon (nếu có)..." class="flex-1 border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-800 dark:text-white bg-slate-50 dark:bg-black uppercase outline-none focus:border-purple-500">
+                <button type="button" onclick="applyCouponCode()" id="btnApplyCoupon" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-3.5 py-2 rounded-xl text-xs transition active:scale-95 whitespace-nowrap shadow-sm">
+                  Áp dụng
+                </button>
+              </div>
+              <div id="couponAppliedMsg" class="hidden mt-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1"></div>
             </div>
             <!-- Dòng Note Hoàn tiền (nền đỏ nhạt, viền đỏ, tĩnh không hiệu ứng) -->
             <div class="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 p-3.5 rounded-2xl mb-4 text-left">

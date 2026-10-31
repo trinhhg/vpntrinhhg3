@@ -935,8 +935,72 @@ function renderHeaderDrawer(drawerCfg) {
     updateDrawerOffsets();
     return;
   }
-  $('headerDrawerContentText').textContent = cfg.text;
-  if ($('headerDrawerBtnLink')) $('headerDrawerBtnLink').href = cfg.link || '#packages';
+
+  // Tự động ẩn nếu thông báo đã hết hạn
+  if (cfg.endTime) {
+    const endT = new Date(cfg.endTime).getTime();
+    if (!isNaN(endT) && Date.now() > endT) {
+      d.classList.add('hidden');
+      updateDrawerOffsets();
+      return;
+    }
+  }
+
+  // Badge phân loại (Khuyến mãi / Thông tin / Cảnh báo)
+  const type = cfg.type || 'promo';
+  const badgeEl = $('headerDrawerBadge');
+  const badgeIcon = $('headerDrawerBadgeIcon');
+  const badgeText = $('headerDrawerBadgeText');
+  if (badgeEl && badgeIcon && badgeText) {
+    if (type === 'warning') {
+      badgeEl.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shrink-0 uppercase tracking-wider bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/50';
+      badgeIcon.className = 'fas fa-triangle-exclamation';
+      badgeText.textContent = 'Cảnh báo';
+    } else if (type === 'info') {
+      badgeEl.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shrink-0 uppercase tracking-wider bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/50';
+      badgeIcon.className = 'fas fa-circle-info';
+      badgeText.textContent = 'Thông tin';
+    } else {
+      badgeEl.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shrink-0 uppercase tracking-wider bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/50';
+      badgeIcon.className = 'fas fa-fire';
+      badgeText.textContent = 'Khuyến mãi';
+    }
+  }
+
+  // Tiêu đề ngắn
+  const titleEl = $('headerDrawerTitleText');
+  const sepEl = $('headerDrawerSeparator');
+  if (titleEl) {
+    if (cfg.title && cfg.title.trim()) {
+      titleEl.textContent = cfg.title.trim();
+      titleEl.classList.remove('hidden');
+      if (sepEl) sepEl.classList.remove('hidden');
+    } else {
+      titleEl.classList.add('hidden');
+      if (sepEl) sepEl.classList.add('hidden');
+    }
+  }
+
+  // Nội dung thông báo
+  if ($('headerDrawerContentText')) $('headerDrawerContentText').textContent = cfg.text;
+
+  // Nút CTA & Đường dẫn
+  const btnLinkEl = $('headerDrawerBtnLink');
+  const btnTextEl = $('headerDrawerBtnText');
+  if (btnLinkEl) {
+    btnLinkEl.href = cfg.link || '#packages';
+    if (btnTextEl) btnTextEl.textContent = cfg.btnText || 'Xem ngay';
+  }
+
+  // Tùy chọn cho phép khách đóng thông báo
+  const closeBtn = $('headerDrawerCloseBtn');
+  if (closeBtn) {
+    if (cfg.closeable === false) {
+      closeBtn.classList.add('hidden');
+    } else {
+      closeBtn.classList.remove('hidden');
+    }
+  }
   
   const detEl = $('headerDrawerDetail');
   const btnChev = $('headerDrawerChevronBtn');
@@ -1186,7 +1250,7 @@ if ($('view-portal').classList.contains('active')) $('p-store').appendChild(co);
  const hideEmail=isUpgradeMode||isRenewMode;$('emailBlock').classList.toggle('hidden',hideEmail);$('cusEmail').required=!hideEmail;
  $('checkoutTitle').innerText=isUpgradeMode?i18n[lang].upgrade_confirm_title:i18n[lang].checkout_title;
  $('upgradePriceNote').classList.toggle('hidden',!isUpgradeMode);
- currentOrderId='';upgradeConfirmed=false;renderDurationSelector(currentPackage);selectDuration(1);
+ currentOrderId='';upgradeConfirmed=false;currentAppliedCoupon=null;if($('couponInput'))$('couponInput').value='';if($('couponAppliedMsg'))$('couponAppliedMsg').classList.add('hidden');renderDurationSelector(currentPackage);selectDuration(1);
  const z=$('cusZalo');z.classList.toggle('hidden',!$('needSupport').checked);z.required=$('needSupport').checked&&!hideEmail;
  document.body.classList.add('checkout-active');renderPaymentBox();}
 
@@ -1285,6 +1349,46 @@ function selectPayMethod(method){
  ab.classList.add('active','border-indigo-500','bg-indigo-50','text-indigo-700');
  calculateTotal();}
 
+let currentAppliedCoupon = null;
+
+function applyCouponCode() {
+  const inp = $('couponInput');
+  const msg = $('couponAppliedMsg');
+  if (!inp) return;
+  const code = inp.value.trim().toUpperCase();
+  if (!code) {
+    currentAppliedCoupon = null;
+    if (msg) msg.classList.add('hidden');
+    calculateTotal();
+    return;
+  }
+  const coupons = (cfgCache && (cfgCache.coupons || (cfgCache.cms && cfgCache.cms.coupons))) || [];
+  const c = coupons.find(x => x && String(x.code).toUpperCase() === code && x.enabled !== false);
+  if (!c) {
+    currentAppliedCoupon = null;
+    if (msg) {
+      msg.textContent = 'Mã giảm giá không hợp lệ hoặc đã hết hạn!';
+      msg.className = 'mt-1.5 text-[11px] font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1';
+      msg.classList.remove('hidden');
+    }
+    showToast('Mã giảm giá không tồn tại!', 'error');
+    calculateTotal();
+    return;
+  }
+
+  currentAppliedCoupon = c;
+  calculateTotal();
+  if (msg) {
+    const isPct = c.type === 'percent';
+    const valText = isPct ? `${c.value}%` : `${c.value.toLocaleString('en-US')}đ`;
+    msg.innerHTML = `<i class="fas fa-check-circle"></i>Đã áp dụng mã <b>${c.code}</b>: Giảm ${valText}!`;
+    msg.className = 'mt-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1';
+    msg.classList.remove('hidden');
+  }
+  showToast(`Áp dụng mã ${c.code} thành công!`);
+}
+window.applyCouponCode = applyCouponCode;
+
 function calculateTotal(){
  if(!currentPackage)return;
  currentMultiplier=currentDurationMode==='custom'?Math.max(1,Math.min(120,parseInt($('customDurInput')?.value)||1)):currentDurationMode;
@@ -1313,6 +1417,14 @@ function calculateTotal(){
   else { calcStr=isOneTime ? `$${currentTotalUsd}` : `$${currentPackage.usd} × ${currentMultiplier} = $${currentTotalUsd}`; }
   if(pCalc) pCalc.innerText=calcStr;
  }
+  if (currentAppliedCoupon) {
+    const isPct = currentAppliedCoupon.type === 'percent';
+    let disc = isPct ? Math.round((currentTotalVnd * currentAppliedCoupon.value) / 100) : currentAppliedCoupon.value;
+    if (currentAppliedCoupon.maxDiscount && disc > currentAppliedCoupon.maxDiscount) disc = currentAppliedCoupon.maxDiscount;
+    if (disc >= currentTotalVnd) disc = Math.max(0, currentTotalVnd - 1000);
+    currentTotalVnd = Math.max(1000, currentTotalVnd - disc);
+    if (pCalc && m === 'bank') pCalc.innerText += ` (Đã giảm -${disc.toLocaleString('en-US')}đ mã ${currentAppliedCoupon.code})`;
+  }
  // Luôn tự động cập nhật ngay mã QR bên phải cho mọi gói cước nếu đơn đã được tạo
  if(currentOrderId||(isUpgradeMode&&upgradeConfirmed))renderPaymentBox();}
 
@@ -1494,7 +1606,7 @@ async function confirmPaid(){
  const mn=$('payMethod').value,mname=mn==='bank'?'Ngân hàng VN':mn==='alipay'?'Alipay':'Weixin';
  let res;
  if(isUpgradeMode)res=await wpostRetry('/api/public/upgrade',{orderId:oCache.id,pkgId:currentPackage.id,qty:currentMultiplier,method:mname});
- else res=await wpostRetry('/api/public/order',{id:currentOrderId,email:$('cusEmail').value.trim(),zalo:$('cusZalo').value.trim(),pkgId:currentPackage.id,qty:currentMultiplier,method:mname,needSupport:$('needSupport').checked,sourceWeb:currentTargetWeb,renewOf:isRenewMode&&oCache?oCache.id:undefined});
+ else res=await wpostRetry('/api/public/order',{id:currentOrderId,email:$('cusEmail').value.trim(),zalo:$('cusZalo').value.trim(),pkgId:currentPackage.id,qty:currentMultiplier,method:mname,needSupport:$('needSupport').checked,sourceWeb:currentTargetWeb,renewOf:isRenewMode&&oCache?oCache.id:undefined,couponCode:currentAppliedCoupon?currentAppliedCoupon.code:undefined});
  if(!res||!res.ok){showToast((res&&res.data&&res.data.error)||l.req_err,'error');btn.innerHTML=orig;btn.disabled=false;return;}
  const o=res.data.order;
  showToast(lang==='vi'?'Thành công!':'Success!');
@@ -2006,6 +2118,7 @@ const EXPOSED_FNS = {
   closeGuideAuthModal: typeof closeGuideAuthModal !== 'undefined' ? closeGuideAuthModal : undefined,
   closeHeaderDrawer: typeof closeHeaderDrawer !== 'undefined' ? closeHeaderDrawer : undefined,
   closePolicyModal: typeof closePolicyModal !== 'undefined' ? closePolicyModal : undefined,
+  applyCouponCode: typeof applyCouponCode !== 'undefined' ? applyCouponCode : undefined,
   closeQrModal: typeof closeQrModal !== 'undefined' ? closeQrModal : undefined,
   closeWechatModal: typeof closeWechatModal !== 'undefined' ? closeWechatModal : undefined,
   confirmPaid: typeof confirmPaid !== 'undefined' ? confirmPaid : undefined,
