@@ -69,8 +69,40 @@ test.describe('E2E Test: Trang Quản trị (admin.html)', () => {
     const fatalErrors = pageErrors.filter(e => !e.includes('favicon') && !e.includes('Failed to load resource'));
     expect(fatalErrors).toEqual([]);
 
-    // Kiểm tra các thẻ canvas cho biểu đồ Chart.js tồn tại trong cây DOM
-    const canvasCount = await page.locator('canvas').count();
-    expect(canvasCount).toBeGreaterThanOrEqual(0);
+    // Kiểm tra các hàm cốt lõi đã được gắn đầy đủ vào window, không bị ReferenceError
+    const adminFns = await page.evaluate(() => ({
+      setRevMonth: typeof window.setRevMonth,
+      setRevTab: typeof window.setRevTab,
+      setRevPayView: typeof window.setRevPayView,
+      mcToHtml: typeof window.mcToHtml,
+      addFaqRow: typeof window.addFaqRow,
+      saveFaqAdmin: typeof window.saveFaqAdmin,
+      addFooterColumn: typeof window.addFooterColumn,
+      saveFooterConfig: typeof window.saveFooterConfig,
+      recordAdminNav: typeof window.recordAdminNav,
+      renderHealTab: typeof window.renderHealTab,
+      renderScanTab: typeof window.renderScanTab,
+      customCmsImageHandler: typeof window.customCmsImageHandler,
+      customCmsVideoHandler: typeof window.customCmsVideoHandler
+    }));
+
+    expect(adminFns.setRevMonth).toBe('function');
+    expect(adminFns.setRevTab).toBe('function');
+    expect(adminFns.setRevPayView).toBe('function');
+    expect(adminFns.mcToHtml).toBe('function');
+    expect(adminFns.addFaqRow).toBe('function');
+    expect(adminFns.saveFaqAdmin).toBe('function');
+    expect(adminFns.addFooterColumn).toBe('function');
+    expect(adminFns.saveFooterConfig).toBe('function');
+    expect(adminFns.recordAdminNav).toBe('function');
+    expect(adminFns.renderHealTab).toBe('function');
+    expect(adminFns.renderScanTab).toBe('function');
+    expect(adminFns.customCmsImageHandler).toBe('function');
+    expect(adminFns.customCmsVideoHandler).toBe('function');
+
+    // Kiểm tra header fulfillment mapping đã được làm sạch mô tả sai lệch
+    const fulfillPaneText = await page.locator('#pane-pkg-fulfill').textContent();
+    expect(fulfillPaneText).toContain('Cấu Hình Tự Động Cấp Link');
+    expect(fulfillPaneText).not.toContain('Chứa các đơn thành công còn hạn bị thiếu ô link');
   });
 });

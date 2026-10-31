@@ -395,31 +395,33 @@
    <!-- Cấu hình thông tin danh mục cha & metadata bài viết -->
    <div id="cmsArtMeta" class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm grid grid-cols-1 sm:grid-cols-4 gap-3"></div>
 
-   <!-- Trình soạn thảo Word Quill & Khung Live Preview đồng bộ trực tiếp -->
-   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-    <!-- Cột trái: Trình soạn thảo Quill + FAQ + Bài viết liên quan -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-     <div class="bg-slate-50 p-2.5 border-b border-slate-200 flex justify-between items-center" id="cmsAddBtns"></div>
-     <div class="bg-white min-h-[360px] p-1">
-      <div id="quillEditor" class="text-sm text-slate-800 leading-relaxed min-h-[320px]"></div>
-     </div>
-     <div class="p-4 bg-slate-50 border-t border-slate-200 space-y-4">
-      <div id="cmsEditorExtraFields"></div>
-      <button type="button" onclick="saveCms()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md text-sm transition active:scale-[0.99] flex items-center justify-center gap-2">
-       <i class="fas fa-save text-base"></i>LƯU BÀI VIẾT
-      </button>
-     </div>
+   <!-- Trình soạn thảo Word Quill full-width kết hợp xem trước trực tiếp -->
+   <div class="space-y-4">
+    <!-- Live TOC Xem Nhanh tự động cập nhật ngay trong luồng soạn thảo -->
+    <div id="cmsLiveTocBox" class="bg-indigo-50/60 border border-indigo-200 rounded-2xl p-4 shadow-sm space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="font-extrabold text-sm text-indigo-900 flex items-center gap-2">
+          <i class="fas fa-list-ul text-indigo-600"></i>Xem nhanh (Mục lục tự động bài viết)
+        </span>
+        <span id="cmsTocCountBadge" class="text-[10px] font-bold text-indigo-600 bg-white px-2 py-0.5 rounded-full border border-indigo-200">0 mục</span>
+      </div>
+      <div id="cmsLiveTocList" class="space-y-1.5 pt-1">
+        <div class="text-xs text-slate-400 italic">Thêm các tiêu đề H2 hoặc H3 trong bài viết để tự động tạo cây mục lục...</div>
+      </div>
     </div>
 
-    <!-- Cột phải: Live Preview trực tiếp y hệt bên index.html (Xem nhanh TOC, Nội dung, FAQ, Bài liên quan) -->
-    <div class="sticky top-16 bg-white border border-indigo-200 rounded-2xl shadow-sm overflow-hidden">
-     <div class="bg-indigo-50/70 px-4 py-2.5 border-b border-indigo-100 flex items-center justify-between">
-      <span class="text-xs font-black text-indigo-900 uppercase flex items-center gap-1.5">
-       <i class="fas fa-eye text-indigo-600"></i>Xem trước trực tiếp (Live Preview)
-      </span>
-      <span class="text-[10px] text-indigo-600 font-bold">Hiển thị chuẩn như bên Index</span>
-     </div>
-     <div class="p-4 max-h-[78vh] overflow-y-auto" id="cmsPreview"></div>
+    <!-- Khung soạn thảo Word Quill toàn màn hình -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+      <div class="bg-slate-50 p-2.5 border-b border-slate-200 flex justify-between items-center" id="cmsAddBtns"></div>
+      <div class="bg-white min-h-[460px] p-2">
+        <div id="quillEditor" class="text-sm text-slate-800 leading-relaxed min-h-[420px]"></div>
+      </div>
+      <div class="p-4 bg-slate-50 border-t border-slate-200 space-y-4">
+        <div id="cmsEditorExtraFields"></div>
+        <button type="button" onclick="saveCms()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-md text-sm transition active:scale-[0.99] flex items-center justify-center gap-2">
+          <i class="fas fa-save text-base"></i>LƯU BÀI VIẾT
+        </button>
+      </div>
     </div>
    </div>
   </div>
@@ -501,11 +503,10 @@
    <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-4">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
      <div>
-      <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2" id="checkHeaderTitle">
-       <i class="fas fa-clipboard-check text-purple-600"></i>Kiểm tra bù link
-       <span id="checkBadgeCount" class="bg-purple-100 text-purple-700 text-xs font-black px-2 py-0.5 rounded-full">0</span>
+      <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
+       <i class="fas fa-wand-magic-sparkles text-indigo-600"></i>Cấu Hình Tự Động Cấp Link (Fulfillment Mapping)
       </h2>
-      <p class="text-[11px] text-slate-500 mt-0.5" id="checkHeaderDesc">Chứa các đơn thành công còn hạn bị thiếu ô link của web này. Bấm nút để cấp bù cục bộ từ kho nguồn.</p>
+      <p class="text-[11px] text-slate-500 mt-0.5">Tự động chọn kho nguồn tương ứng khi khách thanh toán gói cước thành công.</p>
      </div>
      <button id="btnSaveFulfillMapping" onclick="saveFulfillmentMapping()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5 shrink-0">
       <i class="fas fa-save"></i>LƯU MAPPING FULFILLMENT

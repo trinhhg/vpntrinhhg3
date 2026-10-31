@@ -305,11 +305,51 @@ function go(id, fromHistory){
  restoreAdminScroll(id);
 }
 
-window.addEventListener('popstate', (e) => {
-  const hash = location.hash.replace('#', '');
-  const tabId = hash ? 't-' + hash : 't-ord';
-  if (TABS.some(t => t[0] === tabId)) {
-    go(tabId, true);
+let isNavigatingFromHistory = false;
+function recordAdminNav(state) {
+  if (isNavigatingFromHistory || typeof window === 'undefined') return;
+  try {
+    const cur = history.state || {};
+    if (JSON.stringify(cur) === JSON.stringify(state)) return;
+    history.pushState(state, '', location.href);
+  } catch(e) {}
+}
+window.recordAdminNav = recordAdminNav;
+
+window.addEventListener('popstate', (event) => {
+  if (!event.state) {
+    const hash = location.hash.replace('#', '');
+    const tabId = hash ? 't-' + hash : 't-ord';
+    if (TABS.some(t => t[0] === tabId)) {
+      go(tabId, true);
+    }
+    return;
+  }
+  isNavigatingFromHistory = true;
+  try {
+    const s = event.state;
+    if (s.tab) {
+      go(s.tab, true);
+      if (s.tab === 't-check' && s.checkSub) switchCheckSubTab(s.checkSub, true);
+      if (s.tab === 't-trans') {
+        if (s.txSub) switchTxTab(s.txSub, true);
+        if (s.revTab) setRevTab(s.revTab, true);
+        if (s.revMonth) { revMonth = s.revMonth; renderRevenue(); }
+        if (s.revPayView !== undefined) { revPayView = s.revPayView; renderRevenue(); }
+      }
+      if (s.tab === 't-pkg' && s.pkgSub) switchPkgSubTab(s.pkgSub, true);
+      if (s.tab === 't-mail' && s.mailSub) mcSwitchTab(s.mailSub, true);
+      if (s.tab === 't-settings') {
+        if (s.settingsSub) switchSettingsTab(s.settingsSub, true);
+        if (s.webSub) switchWebAdminTab(s.webSub, true);
+        if (s.faqSub) switchFaqSubTab(s.faqSub, true);
+      }
+      if (s.tab === 't-guide') {
+        if (!s.guideArt) closeCmsEditor(true);
+      }
+    }
+  } finally {
+    isNavigatingFromHistory = false;
   }
 });
 
@@ -908,16 +948,27 @@ function monthTotals(){
   return m;
 }
 
-function setRevTab(k){
+function setRevMonth(val) {
+  revMonth = val;
+  renderRevenue();
+  if (typeof recordAdminNav === "function") recordAdminNav({ tab: "t-trans", txSub: "rev", revTab, revMonth, revPayView });
+}
+window.setRevMonth = setRevMonth;
+
+function setRevTab(k, fromHistory = false){
   revTab = k;
   revPayView = null;
   renderRevenue();
+  if (!fromHistory && typeof recordAdminNav === "function") recordAdminNav({ tab: "t-trans", txSub: "rev", revTab, revMonth, revPayView: null });
 }
+window.setRevTab = setRevTab;
 
-function setRevPayView(k){
+function setRevPayView(k, fromHistory = false){
   revPayView = k;
   renderRevenue();
+  if (!fromHistory && typeof recordAdminNav === "function") recordAdminNav({ tab: "t-trans", txSub: "rev", revTab, revMonth, revPayView: k });
 }
+window.setRevPayView = setRevPayView;
 
 function renderRevenue(){
   $("revTabs").innerHTML = REV_TABS.map(([k,l]) => `<button onclick="setRevTab('${k}')" class="settings-sub-tab text-center !px-3 font-bold ${revTab===k?'active':''}">${l}</button>`).join("");
@@ -1089,37 +1140,68 @@ function revOver(R, b){
       }
     }
 
-    // Grid.js Render Bảng Gói & Bảng Tháng
-    if (typeof gridjs !== "undefined") {
-      const g = {};
-      R.forEach(x => {
-        const k = x.p ? x.p.n + "|" + x.p.vnd : (x.o.pkgName || "Gói khác");
-        const e = g[k] = g[k] || { l: x.p ? `${x.p.n} (${x.p.d || ''})` : (x.o.pkgName || "Gói khác"), n: 0, vnd: 0 };
-        e.n++; e.vnd += x.vnd;
-      });
-      const pkgData = Object.values(g).sort((a,c) => c.vnd - a.vnd).map(it => [it.l, it.n, fmtVnd(it.vnd) + " đ"]);
-      const elPkg = document.getElementById("gridPkgBox");
-      if (elPkg) {
-        elPkg.innerHTML = "";
-        new gridjs.Grid({
-          columns: ["Gói cước", "Đơn", "Doanh thu"],
-          data: pkgData,
-          pagination: { limit: 5 },
-          className: { table: 'w-full text-xs text-left' }
-        }).render(elPkg);
-      }
+    // Native Tailwind UI Render Bảng Gói & Xếp hạng Tháng (Zero Grid.js)
+    const g = {};
+    R.forEach(x => {
+      const k = x.p ? x.p.n + "|" + x.p.vnd : (x.o.pkgName || "Gói khác");
+      const e = g[k] = g[k] || { l: x.p ? `${x.p.n} (${x.p.d || ''})` : (x.o.pkgName || "Gói khác"), n: 0, vnd: 0 };
+      e.n++; e.vnd += x.vnd;
+    });
+    const pkgList = Object.values(g).sort((a,c) => c.vnd - a.vnd);
+    const elPkg = document.getElementById("gridPkgBox");
+    if (elPkg) {
+      elPkg.innerHTML = `
+        <div class="overflow-x-auto rounded-xl border border-slate-100">
+          <table class="w-full text-xs text-left">
+            <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200">
+              <tr>
+                <th class="px-3 py-2.5">Gói cước</th>
+                <th class="px-3 py-2.5 text-center">Số đơn</th>
+                <th class="px-3 py-2.5 text-right">Doanh thu</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              ${pkgList.length ? pkgList.map(it => `
+                <tr class="hover:bg-slate-50/80 transition">
+                  <td class="px-3 py-2 font-bold text-slate-800">${esc(it.l)}</td>
+                  <td class="px-3 py-2 text-center font-bold text-indigo-600 bg-indigo-50/30 rounded">${it.n}</td>
+                  <td class="px-3 py-2 text-right font-black text-slate-900">${fmtVnd(it.vnd)} đ</td>
+                </tr>
+              `).join("") : '<tr><td colspan="3" class="text-center py-4 text-slate-400 italic">Chưa có đơn hàng trong tháng này</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
 
-      const rankData = Object.values(mt).sort((a,c) => c.vnd - a.vnd).map((m, idx) => [`#${idx + 1} - Tháng ${monthLbl(m.k)}`, m.n, fmtVnd(m.vnd) + " đ"]);
-      const elRank = document.getElementById("gridRankBox");
-      if (elRank) {
-        elRank.innerHTML = "";
-        new gridjs.Grid({
-          columns: ["Tháng", "Số đơn", "Doanh thu"],
-          data: rankData,
-          pagination: { limit: 5 },
-          className: { table: 'w-full text-xs text-left' }
-        }).render(elRank);
-      }
+    const monthRankList = Object.values(mt).sort((a,c) => c.vnd - a.vnd);
+    const elRank = document.getElementById("gridRankBox");
+    if (elRank) {
+      elRank.innerHTML = `
+        <div class="overflow-x-auto rounded-xl border border-slate-100">
+          <table class="w-full text-xs text-left">
+            <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[10px] border-b border-slate-200">
+              <tr>
+                <th class="px-3 py-2.5">Xếp hạng</th>
+                <th class="px-3 py-2.5 text-center">Số đơn</th>
+                <th class="px-3 py-2.5 text-right">Doanh thu</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              ${monthRankList.length ? monthRankList.map((it, idx) => `
+                <tr class="hover:bg-slate-50/80 transition">
+                  <td class="px-3 py-2 font-bold text-slate-800 flex items-center gap-1.5">
+                    <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${idx === 0 ? 'bg-amber-100 text-amber-700' : idx === 1 ? 'bg-slate-200 text-slate-700' : idx === 2 ? 'bg-amber-50 text-amber-900' : 'text-slate-400'}">#${idx+1}</span>
+                    <span>Tháng ${monthLbl(it.k)}</span>
+                  </td>
+                  <td class="px-3 py-2 text-center font-bold text-indigo-600">${it.n}</td>
+                  <td class="px-3 py-2 text-right font-black text-slate-900">${fmtVnd(it.vnd)} đ</td>
+                </tr>
+              `).join("") : '<tr><td colspan="3" class="text-center py-4 text-slate-400 italic">Chưa có dữ liệu</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      `;
     }
   }, 60);
 }
@@ -1252,11 +1334,11 @@ async function syncRatesToPackages(){
   }
 }
 
-// BẢNG DRILL-DOWN CHI TIẾT CỔNG THANH TOÁN BẰNG GRID.JS
+// BẢNG DRILL-DOWN CHI TIẾT CỔNG THANH TOÁN (CARD VIEW ĐƠN HÀNG THÀNH CÔNG)
 function revPayDetail(b){
   const k = revPayView;
-  const list = ordersDb.filter(o => payOf(o) === k && (revMonth === "all" || monthInfo(oTs(o)).key === revMonth)).sort((a,c) => oTs(c) - oTs(a));
-  const ok = list.filter(o => normSt(o.status) === "success").length;
+  // Chỉ lấy đơn thành công, loại bỏ đơn thất bại
+  const list = ordersDb.filter(o => payOf(o) === k && normSt(o.status) === "success" && (revMonth === "all" || monthInfo(oTs(o)).key === revMonth)).sort((a,c) => oTs(c) - oTs(a));
 
   b.innerHTML = `
     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
@@ -1264,38 +1346,13 @@ function revPayDetail(b){
         <i class="fas fa-arrow-left"></i>Quay lại danh sách cổng
       </button>
       <div class="text-xs font-bold text-slate-600">
-        ${PAYLBL[k]} · ${list.length} đơn (${ok} thành công) · <span class="text-indigo-600">Hiển thị dạng Grid.js</span>
+        ${PAYLBL[k] || k} · ${list.length} đơn thành công · <span class="text-indigo-600 font-bold">Chế độ xem thẻ (chỉ đọc)</span>
       </div>
     </div>
-    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-      <div id="gridPayDetailBox"></div>
+    <div class="space-y-3">
+      ${list.length ? list.map(o => ordCard(o, true)).join("") : '<div class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-slate-200 shadow-sm font-bold">Không có đơn hàng thành công nào cho cổng này trong tháng đã chọn.</div>'}
     </div>
   `;
-
-  setTimeout(() => {
-    if (typeof gridjs !== "undefined") {
-      const dataRows = list.map(o => [
-        o.id,
-        o.email || "-",
-        pkgLabel(o),
-        o.status === "success" ? "Thành công" : (o.status === "pending" ? "Đang chờ" : "Thất bại"),
-        fmtVnd(o.totalVnd || 0) + " đ",
-        dmyOf(oTs(o))
-      ]);
-      const el = document.getElementById("gridPayDetailBox");
-      if (el) {
-        el.innerHTML = "";
-        new gridjs.Grid({
-          columns: ["Mã đơn", "Email khách", "Gói cước", "Trạng thái", "Số tiền (VND)", "Ngày tạo"],
-          data: dataRows,
-          search: true,
-          pagination: { limit: 10 },
-          sort: true,
-          className: { table: 'w-full text-xs text-left' }
-        }).render(el);
-      }
-    }
-  }, 50);
 }
 
 // SUB-TAB 3: QUẢN LÝ CHI PHÍ VỐN (GRID.JS & CURRENCY.JS)
@@ -1468,15 +1525,25 @@ function mcRenderEditor(){
   else body=`<div class="text-[10px] text-slate-400">${b.t==="info"?"Bảng Email / Mã đơn / Gói / HSD — tự điền theo từng đơn":b.t==="support"?"Khối hỗ trợ Zalo / Messenger / Telegram / WeChat":"—"}</div>`;
   return `<div onclick="mcSel=${i}" class="bg-white border ${mcSel===i?"border-indigo-400":"border-slate-200"} rounded-lg p-2 space-y-1"><div class="flex items-center gap-1 flex-wrap"><span class="text-[11px] font-black text-slate-500 mr-1">${nm}</span>${ab}${tf}${sz}<div class="ml-auto flex gap-1"><button onclick="mcMove(${i},-1)" class="w-6 h-6 rounded border text-[10px] text-slate-500"><i class="fas fa-arrow-up"></i></button><button onclick="mcMove(${i},1)" class="w-6 h-6 rounded border text-[10px] text-slate-500"><i class="fas fa-arrow-down"></i></button><button onclick="mcDel(${i})" class="w-6 h-6 rounded border text-[10px] text-red-500"><i class="fas fa-xmark"></i></button></div></div>${body}</div>`;}).join("")||'<div class="text-xs text-slate-400 italic p-3 text-center">Chưa có khối nào</div>';
  mcPreview();}
+function mcToHtml(){
+  try {
+    return mailRender(mcToTpl(), mcSampleVars(), PD);
+  } catch(e) {
+    console.error("Lỗi mcToHtml:", e);
+    return "<div style='color:red;padding:12px;'>Lỗi render mail preview: " + htmlEscape(e.message) + "</div>";
+  }
+}
+window.mcToHtml = mcToHtml;
+
 function mcPreview(){
- const iframe = $("mcPreviewIframe");
- const rendered = mcToHtml();
- if (iframe) {
-   iframe.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;padding:12px;background:#f1f5f9;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;}</style></head><body>${rendered}</body></html>`;
- }
- const el = $("mcPreview");
- if (el) el.innerHTML = rendered;
- $("mcGradBar").style.background = mailGrad(mc.c1, mc.c2, mc.ang, mc.stop);
+  const iframe = $("mcPreviewIframe");
+  const rendered = mcToHtml();
+  if (iframe) {
+    iframe.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;padding:12px;background:#f1f5f9;font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;}</style></head><body>${rendered}</body></html>`;
+  }
+  const el = $("mcPreview");
+  if (el) el.innerHTML = rendered;
+  if ($("mcGradBar")) $("mcGradBar").style.background = mailGrad(mc.c1, mc.c2, mc.ang, mc.stop);
 }
 function mcSet(i,k,v,re){mc.blocks[i][k]=v;if(re)mcRenderEditor();else mcPreview();}
 function mcAdd(t){const nb={t};if(t==="text")nb.x="";if(t==="portal")nb.x="TRUY CẬP CỔNG KHÁCH HÀNG";if(t==="box"){nb.label="TIÊU ĐỀ";nb.x="Nội dung";nb.theme="amber";}if(t==="spacer")nb.h=16;if(t==="img")nb.u="";const at=mcSel>=0?mcSel+1:mc.blocks.length;mc.blocks.splice(at,0,nb);mcSel=at;mcRenderEditor();}
@@ -2960,16 +3027,42 @@ function scrollToHeadingText(txt){
  }
 }
 function cmsPrev(){
-  const el=$("cmsPreview");if(!el)return;
-  let html=buildRichArticleView(curArtHtml, curArtShowToc, `${curCms}-${curArt}`);
-  const faqs=curArtFaqs.filter(f=>(f.q||"").trim());
-  if(faqs.length) html+=`<div style="margin-top:28px;padding-top:18px;border-top:1px solid #e2e8f0"><div style="font-weight:800;font-size:15px;margin-bottom:10px;color:#1e293b">❓ Câu hỏi thường gặp về bài viết này</div>${faqs.map(f=>`<details style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px;margin-bottom:8px"><summary style="font-weight:700;font-size:13px;color:#4338ca;cursor:pointer">${esc(f.q)}</summary><p style="margin:8px 0 0;font-size:13px;color:#475569;line-height:1.6">${esc(f.a)}</p></details>`).join("")}</div>`;
-  const rel=guideTabList().flatMap(t=>artsOf(t.id)).filter(x=>curArtRelated.includes(x.id));
-  if(rel.length) html+=`<div style="margin-top:24px;padding-top:18px;border-top:1px solid #e2e8f0"><div style="font-weight:800;font-size:14px;margin-bottom:10px;color:#1e293b">📰 Bài viết khác có thể bạn quan tâm:</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${rel.map(x=>`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;font-size:12px;font-weight:700;color:#334155">${esc(x.name||x.id)} →</div>`).join("")}</div></div>`;
-  el.innerHTML=html;
-  const wm=(curArtWatermark||"").trim();
-  if(wm){const w=Math.max(240,wm.length*15+90);const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='170'><text x='${w/2}' y='85' text-anchor='middle' dominant-baseline='middle' transform='rotate(-30 ${w/2} 85)' font-family='Arial,sans-serif' font-size='24' font-weight='800' fill='#64748b' fill-opacity='0.13'>${esc(wm)}</text></svg>`;el.style.backgroundImage=`url("data:image/svg+xml,${encodeURIComponent(svg)}")`;el.style.backgroundRepeat="repeat";}
-  else el.style.backgroundImage="none";
+  const temp = document.createElement("div");
+  temp.innerHTML = curArtHtml || "";
+  const headings = [];
+  temp.querySelectorAll("h2, h3").forEach((el, idx) => {
+    const txt = (el.textContent || "").trim();
+    if (!txt) return;
+    const tag = el.tagName.toLowerCase();
+    headings.push({ tag, label: txt });
+  });
+
+  const tocList = $("cmsLiveTocList");
+  const countBadge = $("cmsTocCountBadge");
+  if (countBadge) countBadge.textContent = headings.length + " mục";
+  if (tocList) {
+    if (headings.length) {
+      tocList.innerHTML = headings.map(h => {
+        if (h.tag === 'h2') {
+          return `<div class="font-bold text-xs text-indigo-950 flex items-center gap-1.5"><span class="text-indigo-600 font-bold">❯</span><span>${esc(h.label)}</span></div>`;
+        }
+        return `<div class="font-semibold text-xs text-slate-600 pl-4 flex items-center gap-1.5"><span class="text-indigo-400 text-[10px]">❯</span><span>${esc(h.label)}</span></div>`;
+      }).join("");
+    } else {
+      tocList.innerHTML = '<div class="text-xs text-slate-400 italic">Thêm các tiêu đề H2 hoặc H3 trong bài viết để tự động tạo cây mục lục...</div>';
+    }
+  }
+
+  // Fallback for legacy preview container if still in DOM
+  const el = $("cmsPreview");
+  if (el) {
+    let html = buildRichArticleView(curArtHtml, curArtShowToc, `${curCms}-${curArt}`);
+    const faqs = curArtFaqs.filter(f => (f.q || "").trim());
+    if (faqs.length) html += `<div style="margin-top:28px;padding-top:18px;border-top:1px solid #e2e8f0"><div style="font-weight:800;font-size:15px;margin-bottom:10px;color:#1e293b">❓ Câu hỏi thường gặp về bài viết này</div>${faqs.map(f => `<details style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px;margin-bottom:8px"><summary style="font-weight:700;font-size:13px;color:#4338ca;cursor:pointer">${esc(f.q)}</summary><p style="margin:8px 0 0;font-size:13px;color:#475569;line-height:1.6">${esc(f.a)}</p></details>`).join("")}</div>`;
+    const rel = guideTabList().flatMap(t => artsOf(t.id)).filter(x => curArtRelated.includes(x.id));
+    if (rel.length) html += `<div style="margin-top:24px;padding-top:18px;border-top:1px solid #e2e8f0"><div style="font-weight:800;font-size:14px;margin-bottom:10px;color:#1e293b">📰 Bài viết khác có thể bạn quan tâm:</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${rel.map(x => `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;font-size:12px;font-weight:700;color:#334155">${esc(x.name || x.id)} →</div>`).join("")}</div></div>`;
+    el.innerHTML = html;
+  }
 }
 // Đã loại bỏ 100% modal chèn thủ công, thanh công cụ Quill.js xử lý trực tiếp
 function addArtFaqRow(){
@@ -3047,37 +3140,55 @@ function renderCmsEditor(){
  `;
 
  if (typeof Quill !== "undefined" && $("quillEditor")) {
-  if (!quillInst) {
-   quillInst = new Quill('#quillEditor', {
-    theme: 'snow',
-    placeholder: 'Bắt đầu soạn thảo hoặc dán bài viết Word vào đây...',
-    modules: {
-     toolbar: [
-      [{ 'header': [2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'color': [] }, { 'background': [] }],
-      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-      [{ 'align': [] }],
-      ['link', 'image', 'video'],
-      ['clean']
-     ]
+   if (!quillInst) {
+    quillInst = new Quill('#quillEditor', {
+     theme: 'snow',
+     placeholder: 'Bắt đầu soạn thảo hoặc dán bài viết Word vào đây...',
+     modules: {
+      toolbar: [
+       [{ 'header': [2, 3, false] }],
+       ['bold', 'italic', 'underline', 'strike'],
+       [{ 'color': [] }, { 'background': [] }],
+       [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+       [{ 'align': [] }],
+       ['link', 'image', 'video'],
+       ['clean']
+      ]
+     }
+    });
+
+    // Vô hiệu hóa tính năng tự động đánh số thứ tự khi gõ "1. " (chỉ đánh số khi bấm nút trên toolbar)
+    if (quillInst.keyboard && quillInst.keyboard.bindings) {
+      for (const k of Object.keys(quillInst.keyboard.bindings)) {
+        quillInst.keyboard.bindings[k] = (quillInst.keyboard.bindings[k] || []).filter(b => {
+          const fnStr = String(b.handler || '');
+          return !(b.format && b.format.list) && !fnStr.includes('list');
+        });
+      }
     }
-   });
-   quillInst.on('text-change', () => {
-    curArtHtml = getEditorHtml();
-    cmsPrev();
-   });
-   quillInst.root.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-     e.preventDefault();
-     saveCms();
+
+    // Đăng ký custom handler xịn sò cho ảnh và video
+    const tbMod = quillInst.getModule('toolbar');
+    if (tbMod) {
+      tbMod.addHandler('image', customCmsImageHandler);
+      tbMod.addHandler('video', customCmsVideoHandler);
     }
-   });
-  }
-  const cleanHtml = typeof DOMPurify !== "undefined" ? DOMPurify.sanitize(curArtHtml) : curArtHtml;
-  if (quillInst.root.innerHTML !== cleanHtml) {
-   quillInst.root.innerHTML = cleanHtml;
-  }
+
+    quillInst.on('text-change', () => {
+     curArtHtml = getEditorHtml();
+     cmsPrev();
+    });
+    quillInst.root.addEventListener('keydown', (e) => {
+     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      saveCms();
+     }
+    });
+   }
+   const cleanHtml = typeof DOMPurify !== "undefined" ? DOMPurify.sanitize(curArtHtml) : curArtHtml;
+   if (quillInst.root.innerHTML !== cleanHtml) {
+    quillInst.root.innerHTML = cleanHtml;
+   }
  }
  cmsPrev();
 }
@@ -3113,75 +3224,147 @@ function closeCmsEditor() {
  renderGuideCategoriesTree();
 }
 
-function customCmsImageHandler() {
-  const choice = prompt("Chọn cách chèn ảnh:\n1. Tải ảnh từ máy tính (nhập 1)\n2. Chèn bằng link URL trực tiếp (nhập 2)", "1");
-  if (!choice) return;
-  if (choice === "1") {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.onchange = () => {
-      const file = input.files[0];
-      if (!file) return;
-      if (file.size > 2 * 1024 * 1024) {
-        toast("Ảnh lớn hơn 2MB, vui lòng chọn ảnh nhẹ hơn để tránh làm chậm web", "warn");
+async function customCmsImageHandler() {
+  if (typeof Swal !== "undefined") {
+    const { value: formValues } = await Swal.fire({
+      title: 'Chèn hình ảnh',
+      html: `
+        <div class="space-y-3 text-left text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Cách 1: Tải ảnh từ máy tính (PNG, JPG, WebP, GIF)</label>
+            <input type="file" id="swalImgFile" accept="image/*" class="w-full text-xs p-1.5 border border-slate-200 rounded-lg bg-white">
+          </div>
+          <div class="relative flex py-1 items-center">
+            <div class="flex-grow border-t border-slate-200"></div>
+            <span class="flex-shrink mx-2 text-slate-400 text-[10px] uppercase font-bold">Hoặc</span>
+            <div class="flex-grow border-t border-slate-200"></div>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Cách 2: Dán đường link ảnh trực tiếp</label>
+            <input type="url" id="swalImgUrl" placeholder="https://domain.com/image.png" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-mono">
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: '<i class="fas fa-check mr-1"></i>Chèn ảnh',
+      cancelButtonText: 'Hủy bỏ',
+      confirmButtonColor: '#4f46e5',
+      preConfirm: () => {
+        const fileInput = document.getElementById('swalImgFile');
+        const urlInput = document.getElementById('swalImgUrl');
+        const file = fileInput && fileInput.files && fileInput.files[0];
+        const url = urlInput && urlInput.value ? urlInput.value.trim() : '';
+        if (!file && !url) {
+          Swal.showValidationMessage('Vui lòng chọn 1 tệp ảnh từ máy hoặc dán link ảnh URL');
+          return false;
+        }
+        return { file, url };
       }
+    });
+
+    if (!formValues) return;
+    if (formValues.file) {
       const reader = new FileReader();
       reader.onload = (e) => {
         const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
         quillInst.insertEmbed(range.index, "image", e.target.result);
         quillInst.setSelection(range.index + 1);
+        cmsPrev();
       };
-      reader.readAsDataURL(file);
-    };
-    input.click();
-  } else if (choice === "2") {
-    const url = prompt("Nhập link ảnh (https://...):");
+      reader.readAsDataURL(formValues.file);
+    } else if (formValues.url) {
+      const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
+      quillInst.insertEmbed(range.index, "image", formValues.url);
+      quillInst.setSelection(range.index + 1);
+      cmsPrev();
+    }
+  } else {
+    const url = prompt("Nhập đường dẫn URL ảnh (https://...):");
     if (url && /^https?:\/\//i.test(url.trim())) {
       const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
       quillInst.insertEmbed(range.index, "image", url.trim());
       quillInst.setSelection(range.index + 1);
-    } else if (url) {
-      toast("Link ảnh không hợp lệ (phải bắt đầu bằng http:// hoặc https://)", "err");
+      cmsPrev();
     }
   }
 }
+window.customCmsImageHandler = customCmsImageHandler;
 
-function customCmsVideoHandler() {
-  const choice = prompt("Chọn cách chèn video:\n1. Tải video từ máy tính (nhập 1)\n2. Chèn link YouTube / MP4 (nhập 2)", "2");
-  if (!choice) return;
-  if (choice === "1") {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "video/mp4,video/webm,video/ogg";
-    input.onchange = () => {
-      const file = input.files[0];
-      if (!file) return;
-      if (file.size > 15 * 1024 * 1024) {
-        return toast("Video từ máy tính tối đa 15MB. Khuyên dùng chèn link YouTube để tải nhanh hơn!", "warn");
+async function customCmsVideoHandler() {
+  if (typeof Swal !== "undefined") {
+    const { value: formValues } = await Swal.fire({
+      title: 'Chèn video',
+      html: `
+        <div class="space-y-3 text-left text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Cách 1: Tải video từ máy tính (MP4, WebM)</label>
+            <input type="file" id="swalVideoFile" accept="video/mp4,video/webm" class="w-full text-xs p-1.5 border border-slate-200 rounded-lg bg-white">
+          </div>
+          <div class="relative flex py-1 items-center">
+            <div class="flex-grow border-t border-slate-200"></div>
+            <span class="flex-shrink mx-2 text-slate-400 text-[10px] uppercase font-bold">Hoặc</span>
+            <div class="flex-grow border-t border-slate-200"></div>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Cách 2: Dán link YouTube / Video URL trực tiếp</label>
+            <input type="url" id="swalVideoUrl" placeholder="https://www.youtube.com/watch?v=... hoặc https://..." class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-mono">
+            <span class="text-[10px] text-slate-400 mt-1 block">Tự động chuyển link YouTube thành chuẩn nhúng iframe mượt mà.</span>
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: '<i class="fas fa-check mr-1"></i>Chèn video',
+      cancelButtonText: 'Hủy bỏ',
+      confirmButtonColor: '#4f46e5',
+      preConfirm: () => {
+        const fileInput = document.getElementById('swalVideoFile');
+        const urlInput = document.getElementById('swalVideoUrl');
+        const file = fileInput && fileInput.files && fileInput.files[0];
+        let url = urlInput && urlInput.value ? urlInput.value.trim() : '';
+        if (!file && !url) {
+          Swal.showValidationMessage('Vui lòng chọn 1 tệp video từ máy hoặc dán link video');
+          return false;
+        }
+        if (url) {
+          const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/i);
+          if (ytMatch && ytMatch[1]) {
+            url = "https://www.youtube.com/embed/" + ytMatch[1];
+          }
+        }
+        return { file, url };
       }
+    });
+
+    if (!formValues) return;
+    if (formValues.file) {
       const reader = new FileReader();
       reader.onload = (e) => {
         const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
         quillInst.insertEmbed(range.index, "video", e.target.result);
         quillInst.setSelection(range.index + 1);
+        cmsPrev();
       };
-      reader.readAsDataURL(file);
-    };
-    input.click();
-  } else if (choice === "2") {
-    let url = prompt("Nhập link video (YouTube hoặc link MP4):");
-    if (!url) return;
-    url = url.trim();
-    const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/i);
-    if (ytMatch) {
-      url = "https://www.youtube.com/embed/" + ytMatch[1];
+      reader.readAsDataURL(formValues.file);
+    } else if (formValues.url) {
+      const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
+      quillInst.insertEmbed(range.index, "video", formValues.url);
+      quillInst.setSelection(range.index + 1);
+      cmsPrev();
     }
-    const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
-    quillInst.insertEmbed(range.index, "video", url);
-    quillInst.setSelection(range.index + 1);
+  } else {
+    let url = prompt("Nhập link video hoặc link YouTube:");
+    if (url && url.trim()) {
+      url = url.trim();
+      const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/i);
+      if (ytMatch && ytMatch[1]) url = "https://www.youtube.com/embed/" + ytMatch[1];
+      const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
+      quillInst.insertEmbed(range.index, "video", url);
+      quillInst.setSelection(range.index + 1);
+      cmsPrev();
+    }
   }
 }
+window.customCmsVideoHandler = customCmsVideoHandler;
 
 function openCmsEditorForArt(tabId, slug, fromHistory = false) {
  curCms = tabId;
@@ -3270,7 +3453,18 @@ function renderGuideCategoriesTree() {
 const saveCmsDb = () => aj("/api/cms", { method: "POST", body: cmsDb });
 // Điều hướng 2 sub-tab bên trong Tab Kiểm tra (Kiểm tra bù link vs Rà quét & Map lại)
 let curCheckSubTab = 'data';
-function switchCheckSubTab(tab) {
+function renderHealTab() {
+  renderCheckTab();
+}
+window.renderHealTab = renderHealTab;
+
+function renderScanTab() {
+  const me = getMe();
+  if ($("scanRoutingFieldTxt")) $("scanRoutingFieldTxt").textContent = me.field.toUpperCase();
+}
+window.renderScanTab = renderScanTab;
+
+function switchCheckSubTab(tab, fromHistory = false) {
   curCheckSubTab = tab;
   ['data', 'heal', 'scan'].forEach(t => {
     const btn = $('btn-chk-' + t);
@@ -3281,7 +3475,9 @@ function switchCheckSubTab(tab) {
   if (tab === 'data') renderDataRequests();
   else if (tab === 'heal') renderHealTab();
   else if (tab === 'scan') renderScanTab();
+  if (!fromHistory && typeof recordAdminNav === "function") recordAdminNav({ tab: "t-check", checkSub: tab });
 }
+window.switchCheckSubTab = switchCheckSubTab;
 
 // Điều hướng đúng chuẩn 5 Sub-tab trong Cài đặt - Khớp 100% ID HTML, triệt tiêu lỗi TypeError classList of null
 function switchSettingsTab(t){
@@ -3414,13 +3610,14 @@ function loadAdminFaqs() {
 }
 
 function renderFaqAdmin() {
-  if (!adminFaqsList.length) loadAdminFaqs();
+  if (!Array.isArray(adminFaqsList) || !adminFaqsList.length) loadAdminFaqs();
   const c = $("faqAdminRows") || $("faqListContainer");
   if (!c) return;
   c.innerHTML = adminFaqsList.map((item, idx) => `
-    <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm space-y-2">
+    <div data-faq-idx="${idx}" class="faq-admin-item bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm space-y-2 hover:border-indigo-300 transition">
       <div class="flex items-center justify-between border-b border-slate-100 pb-2">
         <div class="flex items-center gap-2">
+          <span class="grip-faq cursor-grab text-slate-400 hover:text-indigo-600 px-1" title="Kéo để đổi vị trí"><i class="fas fa-grip-vertical"></i></span>
           <span class="text-xs font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded">#${idx + 1}</span>
           <span class="font-bold text-xs text-indigo-700 font-mono">${esc(item.id || 'faq')}</span>
         </div>
@@ -3439,7 +3636,19 @@ function renderFaqAdmin() {
         <textarea rows="2" oninput="adminFaqsList[${idx}].a = this.value" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white outline-none focus:border-indigo-500 leading-relaxed">${esc(item.a || '')}</textarea>
       </div>
     </div>
-  `).join("");
+  `).join("") || '<div class="text-xs text-slate-400 italic p-4 text-center">Chưa có câu hỏi FAQ nào. Bấm "+ Thêm câu hỏi" để thêm mới.</div>';
+
+  if (typeof Sortable !== "undefined") {
+    new Sortable(c, {
+      handle: ".grip-faq",
+      animation: 150,
+      onEnd: (evt) => {
+        const [moved] = adminFaqsList.splice(evt.oldIndex, 1);
+        adminFaqsList.splice(evt.newIndex, 0, moved);
+        renderFaqAdmin();
+      }
+    });
+  }
 }
 
 function addNewFaq() {
@@ -3477,6 +3686,12 @@ async function saveFaqs() {
 
 const addFaqRow = addNewFaq;
 const saveFaqAdmin = saveFaqs;
+window.addFaqRow = addFaqRow;
+window.saveFaqAdmin = saveFaqAdmin;
+window.addNewFaq = addNewFaq;
+window.saveFaqs = saveFaqs;
+window.delFaq = delFaq;
+window.moveFaq = moveFaq;
 
 function switchFaqSubTab(tab, fromHistory = false){
   const pFaq = $("subpane-faq") || $("pane-faq-list");
@@ -3606,6 +3821,13 @@ function renderFtCols() {
   }
 }
 const addFooterColumn = () => ftAddCol();
+window.addFooterColumn = addFooterColumn;
+window.ftAddCol = ftAddCol;
+window.ftDelCol = ftDelCol;
+window.ftMoveCol = ftMoveCol;
+window.ftAddLink = ftAddLink;
+window.ftDelLink = ftDelLink;
+window.saveFooterConfig = saveFooterConfig;
 function ftAddCol() { ftCols.push({ title: "Cột mới", links: [] }); renderFtCols(); }
 function ftDelCol(ci) { if (!confirm("Xóa cả cột này và mọi link trong cột?")) return; ftCols.splice(ci, 1); renderFtCols(); }
 function ftMoveCol(ci, d) { const j = ci + d; if (j < 0 || j >= ftCols.length) return; const [x] = ftCols.splice(ci, 1); ftCols.splice(j, 0, x); renderFtCols(); }
@@ -3668,14 +3890,20 @@ async function saveQrExpireSeconds(){
    toast("Lỗi lưu thời gian QR: " + e.message, "err");
  }
 }
-function switchWebAdminTab(tab){
+function switchWebAdminTab(tab, fromHistory = false){
   $("wpane-ui").classList.toggle("hidden", tab !== "ui");
   $("wpane-footer").classList.toggle("hidden", tab !== "footer");
   $("wtab-ui").classList.toggle("active", tab === "ui");
   $("wtab-footer").classList.toggle("active", tab === "footer");
-  if(tab === "footer") { loadFooterConfigUI(); } else { renderFaqAdmin(); }
-  if(!fromHistory) { recordAdminNav({ tab: 't-settings', webSub: 'footer', faqSub: tab }); }
+  if(tab === "footer") {
+    renderFaqAdmin();
+    loadFooterConfigUI();
+  }
+  if(!fromHistory && typeof recordAdminNav === "function") {
+    recordAdminNav({ tab: 't-settings', settingsSub: 'webadmin', webSub: tab });
+  }
 }
+window.switchWebAdminTab = switchWebAdminTab;
 
 function loadWebAdminUI(){
   loadDrawerSettingsUI();
