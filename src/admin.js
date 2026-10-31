@@ -29,7 +29,10 @@ class CtaButtonBlot extends BlockEmbed {
     const text = v.text || 'Tải App';
     const icon = v.icon || 'fas fa-download';
     const styleClass = v.styleClass || 'cta-indigo';
-    node.setAttribute('data-cta-json', JSON.stringify({ url, text, icon, styleClass }));
+    const align = v.align || 'left';
+    node.setAttribute('data-cta-json', JSON.stringify({ url, text, icon, styleClass, align }));
+    node.style.textAlign = align;
+    node.className = 'ql-cta-wrap ql-cta-' + align;
     node.innerHTML = `<a href="${url}" target="_blank" rel="noopener noreferrer" data-cta="1" class="guide-cta-btn ${styleClass}"><i class="${icon} mr-1.5"></i><span>${text}</span></a>`;
     return node;
   }
@@ -40,11 +43,15 @@ class CtaButtonBlot extends BlockEmbed {
       try { return JSON.parse(jsonStr); } catch(e){}
     }
     const a = node.querySelector('a');
+    let align = 'left';
+    if (node.classList.contains('ql-cta-center') || node.style.textAlign === 'center') align = 'center';
+    else if (node.classList.contains('ql-cta-right') || node.style.textAlign === 'right') align = 'right';
     return a ? {
       url: a.getAttribute('href') || '#',
       text: a.querySelector('span')?.textContent || a.textContent.trim(),
       styleClass: a.className.replace('guide-cta-btn', '').trim(),
-      icon: a.querySelector('i')?.className.replace('mr-1.5', '').trim()
+      icon: a.querySelector('i')?.className.replace('mr-1.5', '').trim(),
+      align
     } : {};
   }
 }
@@ -2946,7 +2953,7 @@ function renderGuideAll(){
     renderCmsEditor();
   }
 }
-let curArtHtml="", curArtShowToc=true, curArtShowFaqs=false, curArtShowRelated=false, curArtFaqs=[], curArtRelated=[];
+let curArtHtml="", curArtShowToc=true, curArtShowFaqs=false, curArtShowRelated=false, curArtWmOpacity=12, curArtFaqs=[], curArtRelated=[];
 const CMS_PURIFY_CONFIG = {
   ADD_TAGS: ['iframe', 'video', 'source', 'figure', 'figcaption', 'hr', 'u', 's', 'span', 'i', 'button', 'a'],
   ADD_ATTR: [
@@ -2983,6 +2990,9 @@ function commitCms(){
  a.slug=toSlug(curArtSlug||curArtName);
  a.author=curArtAuthor;
  a.watermark=curArtWatermark;
+ a.wmOpacity=curArtWmOpacity||12;
+ a.showFaqs=curArtShowFaqs||(Array.isArray(curArtFaqs)&&curArtFaqs.length>0);
+ a.showRelated=curArtShowRelated||(Array.isArray(curArtRelated)&&curArtRelated.length>0);
  a.faqs=arr(curArtFaqs).map(f=>({q:(f.q||'').trim(),a:(f.a||'').trim()})).filter(f=>f.q||f.a);
  a.relatedArts=arr(curArtRelated);
  delete a.id;
@@ -2995,7 +3005,7 @@ function openArt(slug){
  curArt=a.slug||toSlug(a.name);
  curArtSlug=curArt;
  curArtHtml=a.html||"<p>Bắt đầu viết bài...</p>";
- curArtShowToc=a.showToc!==false;curArtShowFaqs=a.showFaqs===true;curArtShowRelated=a.showRelated===true;
+ curArtShowToc=a.showToc!==false;curArtShowFaqs=a.showFaqs!==false&&((Array.isArray(a.faqs)&&a.faqs.length>0)||a.showFaqs===true);curArtShowRelated=a.showRelated!==false&&((Array.isArray(a.relatedArts)&&a.relatedArts.length>0)||a.showRelated===true);curArtWmOpacity=Number(a.wmOpacity)||12;
  curArtName=a.name||"";curArtAuthor=a.author||"";curArtWatermark=a.watermark||"";
  curArtFaqs=arr(a.faqs).map(f=>({...f}));
  curArtRelated=arr(a.relatedArts);
@@ -3004,7 +3014,7 @@ function openArt(slug){
 function artAdd(){
  commitCms();
  const baseSlug="bai-viet-moi-"+Date.now().toString(36);
- const a={slug:baseSlug,name:"Bài mới",author:"Admin",updated:0,html:"<h2>1. Tiêu đề mục đầu tiên</h2><p>Nhập nội dung hướng dẫn tại đây...</p>",showToc:true,watermark:""};
+ const a={slug:baseSlug,name:"Bài mới",author:"Admin",updated:0,html:"<h2>1. Tiêu đề mục đầu tiên</h2><p>Nhập nội dung hướng dẫn tại đây...</p>",showToc:true,watermark:"",wmOpacity:12};
  guides._articles[curCms].push(a);
  openArt(a.slug);
 }
@@ -3227,6 +3237,9 @@ function cmsPrev(){
 }
 // Đã loại bỏ 100% modal chèn thủ công, thanh công cụ Quill.js xử lý trực tiếp
 function addArtFaqRow(){
+ curArtShowFaqs=true;
+ if($("chkArtShowFaqs"))$("chkArtShowFaqs").checked=true;
+ if($("artFaqsContainerWrap"))$("artFaqsContainerWrap").classList.remove("hidden");
  curArtFaqs.push({q:"",a:""});
  renderArtFaqsUI();
 }
@@ -3253,14 +3266,19 @@ function toggleRelatedArtPick(artSlug, checked){
  let s = new Set(curArtRelated);
  if(checked) s.add(artSlug); else s.delete(artSlug);
  curArtRelated = [...s];
- cmsPrev();
+ curArtShowRelated=true;
+ if($("chkArtShowRelated"))$("chkArtShowRelated").checked=true;
+ if($("artRelatedContainerWrap"))$("artRelatedContainerWrap").classList.remove("hidden");
  commitCms();
  saveCms(true);
+ cmsPrev();
  toast(checked ? "Đã liên kết bài viết!" : "Đã hủy liên kết bài viết!");
 }
 
-async function saveArtFaqsOnly() {
-  commitCms();
+async function saveArtFaqsOnly(){
+ curArtShowFaqs=true;
+ if($("chkArtShowFaqs"))$("chkArtShowFaqs").checked=true;
+ commitCms();
   try {
     await saveCms(true);
     toast("Đã lưu FAQ riêng của bài viết thành công!");
@@ -3278,7 +3296,19 @@ function renderCmsEditor(){
   <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tên bài viết</label><input value="${esc(curArtName)}" oninput="curArtName=this.value;if(!curArtSlug||curArtSlug.startsWith('bai-viet-moi-')){$('cmsArtSlugInp').value=toSlug(this.value);curArtSlug=toSlug(this.value);}" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-bold"></div>
   <div><label class="block text-[10px] font-bold text-indigo-600 mb-0.5">Slug URL (không dấu, cách nhau dấu -)</label><input id="cmsArtSlugInp" value="${esc(curArtSlug||curArt)}" oninput="this.value=toSlug(this.value);curArtSlug=this.value;" class="w-full p-2 text-xs border border-indigo-200 rounded-lg outline-none font-mono font-bold bg-indigo-50/30"></div>
   <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tác giả</label><input value="${esc(curArtAuthor)}" oninput="curArtAuthor=this.value" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div>
-  <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Watermark nền</label><input value="${esc(curArtWatermark)}" oninput="curArtWatermark=this.value" placeholder="VD: VPNTrinhHg" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div>
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:col-span-2">
+    <div class="sm:col-span-2">
+      <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Watermark nền</label>
+      <input value="${esc(curArtWatermark)}" oninput="curArtWatermark=this.value;cmsPrev();" placeholder="VD: VPNTrinhHg" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none">
+    </div>
+    <div>
+      <label class="block text-[10px] font-bold text-slate-500 mb-0.5 flex justify-between">
+        <span>Độ mờ Watermark</span>
+        <span id="wmOpacityVal" class="text-indigo-600 font-bold">${curArtWmOpacity || 12}%</span>
+      </label>
+      <input type="range" id="cmsArtWmOpacityInp" min="5" max="60" step="1" value="${curArtWmOpacity || 12}" oninput="curArtWmOpacity=Number(this.value);$('wmOpacityVal').innerText=this.value+'%';cmsPrev();" class="w-full accent-indigo-600 h-8 cursor-pointer">
+    </div>
+  </div>
   <div class="sm:col-span-4 flex flex-col sm:flex-row sm:items-center gap-2 pt-2 border-t border-slate-100 mt-1 bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
    <span class="text-[11px] font-bold text-slate-600 dark:text-slate-300 shrink-0"><i class="fas fa-link text-indigo-600 mr-1"></i>Link riêng bài viết:</span>
    <code class="text-[11px] bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-400 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 truncate flex-1 font-mono">${esc(deepLink)}</code>
@@ -3291,7 +3321,7 @@ function renderCmsEditor(){
    <!-- KHỐI FAQ RIÊNG CỦA BÀI VIẾT -->
   <div class="sm:col-span-4 border-t border-slate-100 pt-3 space-y-2">
    <div class="flex items-center justify-between">
-    <label class="flex items-center gap-2 font-extrabold text-xs text-indigo-900 cursor-pointer"><input type="checkbox" id="chkArtShowFaqs" ${curArtShowFaqs?"checked":""} onchange="curArtShowFaqs=this.checked;$('artFaqsContainerWrap').classList.toggle('hidden',!this.checked);cmsPrev();" class="accent-indigo-600 w-4 h-4"><span><i class="fas fa-circle-question text-indigo-600 mr-1"></i>Bật FAQ riêng cho bài viết này</span></label>
+    <label class="flex items-center gap-2 font-extrabold text-xs text-indigo-900 cursor-pointer"><input type="checkbox" id="chkArtShowFaqs" ${curArtShowFaqs?"checked":""} onchange="curArtShowFaqs=this.checked;$('artFaqsContainerWrap').classList.toggle('hidden',!this.checked);commitCms();saveCms(true);cmsPrev();" class="accent-indigo-600 w-4 h-4"><span><i class="fas fa-circle-question text-indigo-600 mr-1"></i>Bật FAQ riêng cho bài viết này</span></label>
     <div class="flex items-center gap-1.5"><button type="button" onclick="addArtFaqRow()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold px-2.5 py-1 rounded-lg text-[11px] transition"><i class="fas fa-plus mr-1"></i>Thêm câu hỏi</button><button type="button" onclick="saveArtFaqsOnly()" class="bg-indigo-600 text-white hover:bg-indigo-700 font-bold px-2.5 py-1 rounded-lg text-[11px] transition shadow-sm"><i class="fas fa-save mr-1"></i>Lưu FAQ riêng</button></div>
    </div>
    <div id="artFaqsContainerWrap" class="${curArtShowFaqs?'':'hidden'} space-y-2">
@@ -3411,7 +3441,7 @@ function renderCmsEditor(){
  }
  cmsPrev();
 }
-async function saveCms(){
+async function saveCms(silent = false){
  if(!curArt)return toast("Chưa mở bài nào để lưu!","err");
  cmsEnsureTabs();
  ensureArts();
@@ -3424,7 +3454,7 @@ async function saveCms(){
  }
  try{
    await aj("/api/guides",{method:"POST",body:guides});
-   toast("Đã lưu bài viết thành công!");
+   if(!silent) toast("Đã lưu bài viết thành công!");
    logEvent("ok","admin","Lưu bài viết hướng dẫn",`${curCms} / ${curArtName||curArtSlug}`);
    if(a) { curArt=a.slug; curArtSlug=a.slug; }
    renderGuideCategoriesTree();
@@ -3639,7 +3669,7 @@ async function openCmsCtaButtonModal() {
           <label class="block font-bold text-slate-700 mb-1">Đường dẫn liên kết (URL)</label>
           <input type="url" id="ctaBtnUrl" placeholder="https://..." class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-mono">
         </div>
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <div>
             <label class="block font-bold text-slate-700 mb-1">Màu sắc nút</label>
             <select id="ctaBtnStyle" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-bold">
@@ -3659,6 +3689,14 @@ async function openCmsCtaButtonModal() {
               <option value="fas fa-arrow-up-right-from-square">Mở liên kết</option>
             </select>
           </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Căn lề hiển thị</label>
+            <select id="ctaBtnAlign" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-bold">
+              <option value="left" selected>Căn lề trái (Mặc định)</option>
+              <option value="center">Căn giữa</option>
+              <option value="right">Căn lề phải</option>
+            </select>
+          </div>
         </div>
       </div>
     `,
@@ -3671,6 +3709,7 @@ async function openCmsCtaButtonModal() {
       const url = (document.getElementById('ctaBtnUrl')?.value || '').trim();
       const style = document.getElementById('ctaBtnStyle')?.value || 'indigo';
       const icon = document.getElementById('ctaBtnIcon')?.value || 'fas fa-download';
+      const align = document.getElementById('ctaBtnAlign')?.value || 'left';
       if (!text) {
         Swal.showValidationMessage('Vui lòng nhập tên hiển thị trên nút');
         return false;
@@ -3679,7 +3718,7 @@ async function openCmsCtaButtonModal() {
         Swal.showValidationMessage('Vui lòng nhập đường dẫn URL');
         return false;
       }
-      return { text, url, style, icon };
+      return { text, url, style, icon, align };
     }
   });
 
@@ -3695,7 +3734,8 @@ async function openCmsCtaButtonModal() {
     url: v.url,
     text: v.text,
     icon: v.icon,
-    styleClass: styleClassMap[v.style] || 'cta-indigo'
+    styleClass: styleClassMap[v.style] || 'cta-indigo',
+    align: v.align || 'left'
   });
   quillInst.insertText(range.index + 1, '\n');
   quillInst.setSelection(range.index + 2);

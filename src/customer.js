@@ -599,14 +599,15 @@ async function openGuideArticle(tabId, slug, skipPush) {
   $('guideDetailMeta').innerText = `Được viết bởi: ${art.author || "Admin"} · Cập nhật lần cuối: ${timeStr}`;
 
   if (art.watermark && art.watermark.trim()) {
-   const wmEl = $('guideDetailWatermark');
-   wmEl.classList.remove('hidden');
-   const wmRaw = art.watermark.trim(), wmW = Math.max(240, wmRaw.length * 15 + 90);
-   const wmSvg = `<svg xmlns='http://www.w3.org/2000/svg' width='${wmW}' height='170'><text x='${wmW/2}' y='85' text-anchor='middle' dominant-baseline='middle' transform='rotate(-30 ${wmW/2} 85)' font-family='Arial,sans-serif' font-size='24' font-weight='800' fill='#64748b' fill-opacity='0.13'>${esc(wmRaw)}</text></svg>`;
-   wmEl.innerHTML = '';
-   wmEl.style.backgroundImage = `url("data:image/svg+xml,${encodeURIComponent(wmSvg)}")`;
-   wmEl.style.backgroundRepeat = 'repeat';
- } else {
+    const wmEl = $('guideDetailWatermark');
+    wmEl.classList.remove('hidden');
+    const wmOpacityVal = (Number(art.wmOpacity) || 12) / 100;
+    const wmRaw = art.watermark.trim(), wmW = Math.max(240, wmRaw.length * 15 + 90);
+    const wmSvg = `<svg xmlns='http://www.w3.org/2000/svg' width='${wmW}' height='170'><text x='${wmW/2}' y='85' text-anchor='middle' dominant-baseline='middle' transform='rotate(-30 ${wmW/2} 85)' font-family='Arial,sans-serif' font-size='24' font-weight='800' fill='#64748b' fill-opacity='${wmOpacityVal}'>${esc(wmRaw)}</text></svg>`;
+    wmEl.innerHTML = '';
+    wmEl.style.backgroundImage = `url("data:image/svg+xml,${encodeURIComponent(wmSvg)}")`;
+    wmEl.style.backgroundRepeat = 'repeat';
+  } else {
    $('guideDetailWatermark').classList.add('hidden');$('guideDetailWatermark').innerHTML = '';
    $('guideDetailWatermark').style.backgroundImage = 'none';
  }
@@ -615,16 +616,18 @@ async function openGuideArticle(tabId, slug, skipPush) {
     ? renderRichGuideHtml(art.html, art.showToc !== false, `${foundTab}-${curGuideSlug}`)
     : (art.blocks && art.blocks.length ? renderBlocks(art.blocks, `${foundTab}-${curGuideSlug}`) : i18n[lang].guide_empty);
 
-  // 1. Render FAQ riêng của bài viết (chỉ hiện khi BẬT và có câu hỏi)
+  // 1. Render FAQ riêng của bài viết (hiển thị khi có câu hỏi và showFaqs không bị tắt)
   let faqBlockHtml = '';
-  if (art.showFaqs === true && Array.isArray(art.faqs) && art.faqs.length) {
+  const hasFaqs = Array.isArray(art.faqs) && art.faqs.some(f => (f.q && f.q.trim()) || (f.a && f.a.trim()));
+  if (hasFaqs && art.showFaqs !== false) {
+    const validFaqs = art.faqs.filter(f => (f.q && f.q.trim()) || (f.a && f.a.trim()));
     faqBlockHtml = `
       <div class="mt-8 pt-6 border-t border-slate-200 dark:border-white/10">
         <h3 class="text-base font-extrabold text-slate-800 dark:text-white mb-3 flex items-center gap-2">
           <i class="fas fa-circle-question text-indigo-500"></i>Câu hỏi thường gặp về bài viết này
         </h3>
         <div class="space-y-2">
-          ${art.faqs.map(f => `
+          ${validFaqs.map(f => `
             <details class="bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl p-3.5 group cursor-pointer" onclick="event.preventDefault();this.open=!this.open;">
               <summary class="font-bold text-xs md:text-sm text-indigo-700 dark:text-indigo-300 flex justify-between items-center select-none">
                 <span>${esc(f.q)}</span>
@@ -638,9 +641,10 @@ async function openGuideArticle(tabId, slug, skipPush) {
     `;
   }
 
-  // 2. Render Mục bài viết liên quan khác (chỉ hiện khi BẬT và có bài liên quan)
+  // 2. Render Mục bài viết liên quan khác (hiển thị khi có bài liên kết và showRelated không bị tắt)
   let relBlockHtml = '';
-  if (art.showRelated === true && Array.isArray(art.relatedArts) && art.relatedArts.length) {
+  const hasRelated = Array.isArray(art.relatedArts) && art.relatedArts.length > 0;
+  if (hasRelated && art.showRelated !== false) {
     const tabs = guideTabList();
     const otherList = tabs.flatMap(t => guideArts(t.id)).filter(x => art.relatedArts.includes(x.slug || toSlug(x.name)));
     if (otherList.length) {
@@ -1731,7 +1735,6 @@ function switchPortalTab(tabId, fromUpgrade=false, skipPush=false){
   }
   loadConfig().then(() => {
     showGuide(targetCat);
-   window.scrollTo({ top: 0, behavior: 'smooth' });
   });
   showGuide(targetCat);
   return;

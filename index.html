@@ -187,11 +187,11 @@
   </div>
 </nav>
 <div class="h-[120px] md:h-[80px]"></div>
-<div id="mobileNavWrapper" class="hidden fixed bottom-2 left-1/2 -translate-x-1/2 z-[60] w-[94vw] max-w-[420px] transition-all duration-300">
-  <div class="md:hidden bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md shadow-2xl rounded-2xl px-2 py-1.5 flex items-center justify-between border border-slate-200 dark:border-white/10 w-full">
-    <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home mobile-tab-btn active flex-1 flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition text-slate-500 dark:text-slate-400"><i class="fas fa-house text-base mb-1"></i><span class="text-[10px] font-bold whitespace-nowrap leading-none" data-i18n="tab_p_home">Trang chủ</span></button>
-    <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store mobile-tab-btn flex-1 flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition text-slate-500 dark:text-slate-400"><i class="fas fa-cart-shopping text-base mb-1"></i><span class="text-[10px] font-bold whitespace-nowrap leading-none" data-i18n="tab_p_store">Cửa hàng</span></button>
-    <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide mobile-tab-btn flex-1 flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition text-slate-500 dark:text-slate-400"><i class="fas fa-book-open text-base mb-1"></i><span class="text-[10px] font-bold whitespace-nowrap leading-none" data-i18n="tab_p_guide">Hướng dẫn</span></button>
+<div id="mobileNavWrapper" class="hidden fixed bottom-2 left-1/2 -translate-x-1/2 z-[60] w-auto max-w-[95vw] transition-all duration-300">
+  <div class="md:hidden bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md shadow-2xl rounded-full px-2.5 py-1 flex items-center justify-center gap-1 border border-slate-200 dark:border-white/10">
+    <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home mobile-tab-btn active flex flex-col items-center justify-center py-1 px-3 rounded-full transition text-slate-500 dark:text-slate-400 min-w-[70px]"><i class="fas fa-house text-xs mb-0.5"></i><span class="text-[9.5px] font-bold whitespace-nowrap leading-none" data-i18n="tab_p_home">Trang chủ</span></button>
+    <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store mobile-tab-btn flex flex-col items-center justify-center py-1 px-3 rounded-full transition text-slate-500 dark:text-slate-400 min-w-[70px]"><i class="fas fa-cart-shopping text-xs mb-0.5"></i><span class="text-[9.5px] font-bold whitespace-nowrap leading-none" data-i18n="tab_p_store">Cửa hàng</span></button>
+    <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide mobile-tab-btn flex flex-col items-center justify-center py-1 px-3 rounded-full transition text-slate-500 dark:text-slate-400 min-w-[70px]"><i class="fas fa-book-open text-xs mb-0.5"></i><span class="text-[9.5px] font-bold whitespace-nowrap leading-none" data-i18n="tab_p_guide">Hướng dẫn</span></button>
   </div>
 </div>
 <main class="flex-grow z-10 px-2 md:px-4 py-4 md:py-6 max-w-[1400px] mx-auto w-full overflow-x-hidden">

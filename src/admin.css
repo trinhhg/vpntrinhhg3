@@ -279,18 +279,41 @@ textarea.autog{resize:none;overflow:hidden;}
   margin-top: 4px !important;
 }
 /* Nút CTA Tải App trong Admin Editor */
+.ql-cta-wrap {
+  text-align: left !important;
+  margin: 18px 0 !important;
+  display: block !important;
+}
+.ql-cta-wrap.ql-cta-left { text-align: left !important; }
+.ql-cta-wrap.ql-cta-center { text-align: center !important; }
+.ql-cta-wrap.ql-cta-right { text-align: right !important; }
+
 .guide-cta-btn {
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 24px;
+  padding: 10px 22px;
   border-radius: 14px;
   font-weight: 800;
-  font-size: 14px;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: #ffffff !important;
   text-decoration: none !important;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   cursor: pointer;
+  max-width: 100% !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  text-align: inherit !important;
+}
+.guide-cta-btn span {
+  display: -webkit-box !important;
+  -webkit-line-clamp: 3 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  line-height: 1.4 !important;
+  word-break: break-word !important;
 }
 .guide-cta-btn:hover {
   transform: translateY(-2px) scale(1.02);
@@ -300,11 +323,12 @@ textarea.autog{resize:none;overflow:hidden;}
 .ql-align-center { text-align: center !important; }
 .ql-align-right { text-align: right !important; }
 .ql-align-justify { text-align: justify !important; }
-.ql-cta-wrap { text-align: center !important; margin: 18px 0 !important; display: block !important; }
+
 .guide-cta-btn.cta-indigo { background: linear-gradient(135deg, #4f46e5, #06b6d4) !important; color: #ffffff !important; }
-.guide-cta-btn.cta-green { background: linear-gradient(135deg, #059669, #10b981) !important; color: #ffffff !important; }
+.guide-cta-btn.cta-green, .guide-cta-btn.cta-emerald { background: linear-gradient(135deg, #059669, #10b981) !important; color: #ffffff !important; }
 .guide-cta-btn.cta-amber { background: linear-gradient(135deg, #d97706, #f59e0b) !important; color: #ffffff !important; }
 .guide-cta-btn.cta-rose { background: linear-gradient(135deg, #e11d48, #f43f5e) !important; color: #ffffff !important; }
+.guide-cta-btn.cta-dark { background: #0f172a !important; color: #ffffff !important; }
 hr.guide-hr, .ql-editor hr {
   border: 0 !important;
   border-top: 2px dashed #cbd5e1 !important;

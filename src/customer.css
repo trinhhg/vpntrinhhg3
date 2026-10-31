@@ -281,28 +281,46 @@ html.dark .swal2-popup.swal2-toast .swal2-title {
 
 /* Nút CTA Tải App / Kêu gọi hành động trong bài viết */
 .ql-cta-wrap {
-  text-align: center !important;
-  margin: 18px auto !important;
+  text-align: left !important;
+  margin: 18px 0 !important;
   display: block !important;
 }
+.ql-cta-wrap.ql-cta-left { text-align: left !important; }
+.ql-cta-wrap.ql-cta-center { text-align: center !important; }
+.ql-cta-wrap.ql-cta-right { text-align: right !important; }
+
 .guide-cta-btn {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 8px !important;
-  padding: 12px 26px !important;
+  padding: 10px 22px !important;
   border-radius: 14px !important;
   font-weight: 800 !important;
-  font-size: 14px !important;
+  font-size: 13.5px !important;
+  line-height: 1.4 !important;
   color: #ffffff !important;
   text-decoration: none !important;
   box-shadow: 0 4px 15px rgba(0,0,0,0.18) !important;
   transition: transform 0.2s ease, box-shadow 0.2s ease !important;
   cursor: pointer !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  text-align: inherit !important;
 }
-.guide-cta-btn.cta-indigo { background: linear-gradient(135deg, #4f46e5, #06b6d4) !important; }
-.guide-cta-btn.cta-rose { background: linear-gradient(135deg, #f43f5e, #fb923c) !important; }
-.guide-cta-btn.cta-emerald { background: linear-gradient(135deg, #10b981, #059669) !important; }
+.guide-cta-btn span {
+  display: -webkit-box !important;
+  -webkit-line-clamp: 3 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  line-height: 1.4 !important;
+  word-break: break-word !important;
+}
+.guide-cta-btn.cta-indigo { background: linear-gradient(135deg, #4f46e5, #06b6d4) !important; color: #ffffff !important; }
+.guide-cta-btn.cta-rose { background: linear-gradient(135deg, #f43f5e, #fb923c) !important; color: #ffffff !important; }
+.guide-cta-btn.cta-emerald, .guide-cta-btn.cta-green { background: linear-gradient(135deg, #10b981, #059669) !important; color: #ffffff !important; }
+.guide-cta-btn.cta-amber { background: linear-gradient(135deg, #d97706, #f59e0b) !important; color: #ffffff !important; }
 .guide-cta-btn.cta-dark { background: #0f172a !important; color: #ffffff !important; }
 .guide-cta-btn:hover {
   transform: translateY(-2px) scale(1.02) !important;
