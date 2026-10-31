@@ -236,3 +236,26 @@ html.dark .swal2-popup.swal2-toast {
 html.dark .swal2-popup.swal2-toast .swal2-title {
   color: #f1f5f9 !important;
 }
+
+/* Hướng dẫn: căn chỉnh kích thước ảnh & video, hiệu ứng zoom ảnh */
+#guideText img, .guide-content img {
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 12px !important;
+  margin: 14px auto !important;
+  display: block !important;
+  cursor: zoom-in !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+#guideText img:hover, .guide-content img:hover {
+  transform: scale(1.015);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.18);
+}
+#guideText video, #guideText iframe, .guide-content video, .guide-content iframe {
+  max-width: 100% !important;
+  width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  border-radius: 12px !important;
+  margin: 14px 0 !important;
+  display: block !important;
+}

@@ -230,7 +230,7 @@
    <div class="flex flex-col sm:flex-row gap-2 mb-3 items-stretch sm:items-center justify-between">
      <div id="revTabs" class="inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 w-fit"></div>
      <div class="flex items-center gap-2">
-       <select id="revMonth" onchange="revMonth=this.value;renderRevenue()" class="p-2 border border-slate-200 rounded-lg text-xs bg-white font-bold outline-none focus:border-indigo-500"></select>
+       <select id="revMonth" onchange="setRevMonth(this.value)" class="p-2 border border-slate-200 rounded-lg text-xs bg-white font-bold outline-none focus:border-indigo-500"></select>
      </div>
    </div>
    <div id="revBody" class="space-y-4"></div>

@@ -33,6 +33,30 @@ class QRCode {
 }
 QRCode.CorrectLevel = { L: 'L', M: 'M', Q: 'Q', H: 'H' };
 
+
+function openImageLightbox(src) {
+  const m = $('imgLightboxModal'), t = $('imgLightboxTarget');
+  if (!m || !t || !src) return;
+  t.src = src;
+  m.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+function closeImageLightbox() {
+  const m = $('imgLightboxModal');
+  if (!m || m.classList.contains('hidden')) return;
+  m.classList.add('hidden');
+  document.body.style.overflow = '';
+}
+document.addEventListener('click', (e) => {
+  const img = e.target.closest('#guideText img, #guideContent img, .guide-content img');
+  if (img && img.src) {
+    openImageLightbox(img.src);
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeImageLightbox();
+});
+
 if (typeof window !== 'undefined') {
   window.Navigo = Navigo;
   window.Swal = Swal;

@@ -846,7 +846,7 @@ function sendZaloMail(id){if(!isMailMaster())return toast("Đang ở chế độ
  sendMailClient(o.email,subjVars(getTpl("support").subject,orderVars(o)),mailZalo(o));logEvent("ok","Gửi mail","Hỗ trợ cài đặt → "+o.email,o.id);toast("Đã gửi mail nhắc hỗ trợ cài đặt");}
 // ===================== DOANH THU =====================
 let revTab="over",revMonth="all",revPayView=null;
-const REV_TABS=[["over","Tổng quan KPI & Biểu đồ"],["pay","Thanh toán & Tỷ giá"],["cost","Quản lý Chi phí vốn"]];
+const REV_TABS=[["over","Tổng quan"],["pay","Thanh toán & Tỷ giá"],["cost","Vốn"]];
 
 // Bảng Quy Đổi Tỷ Giá Tập Trung dùng chung toàn hệ thống
 function getCentralRates(){
@@ -3113,7 +3113,77 @@ function closeCmsEditor() {
  renderGuideCategoriesTree();
 }
 
-function openCmsEditorForArt(tabId, slug) {
+function customCmsImageHandler() {
+  const choice = prompt("Chọn cách chèn ảnh:\n1. Tải ảnh từ máy tính (nhập 1)\n2. Chèn bằng link URL trực tiếp (nhập 2)", "1");
+  if (!choice) return;
+  if (choice === "1") {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = () => {
+      const file = input.files[0];
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) {
+        toast("Ảnh lớn hơn 2MB, vui lòng chọn ảnh nhẹ hơn để tránh làm chậm web", "warn");
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
+        quillInst.insertEmbed(range.index, "image", e.target.result);
+        quillInst.setSelection(range.index + 1);
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  } else if (choice === "2") {
+    const url = prompt("Nhập link ảnh (https://...):");
+    if (url && /^https?:\/\//i.test(url.trim())) {
+      const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
+      quillInst.insertEmbed(range.index, "image", url.trim());
+      quillInst.setSelection(range.index + 1);
+    } else if (url) {
+      toast("Link ảnh không hợp lệ (phải bắt đầu bằng http:// hoặc https://)", "err");
+    }
+  }
+}
+
+function customCmsVideoHandler() {
+  const choice = prompt("Chọn cách chèn video:\n1. Tải video từ máy tính (nhập 1)\n2. Chèn link YouTube / MP4 (nhập 2)", "2");
+  if (!choice) return;
+  if (choice === "1") {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "video/mp4,video/webm,video/ogg";
+    input.onchange = () => {
+      const file = input.files[0];
+      if (!file) return;
+      if (file.size > 15 * 1024 * 1024) {
+        return toast("Video từ máy tính tối đa 15MB. Khuyên dùng chèn link YouTube để tải nhanh hơn!", "warn");
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
+        quillInst.insertEmbed(range.index, "video", e.target.result);
+        quillInst.setSelection(range.index + 1);
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  } else if (choice === "2") {
+    let url = prompt("Nhập link video (YouTube hoặc link MP4):");
+    if (!url) return;
+    url = url.trim();
+    const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/i);
+    if (ytMatch) {
+      url = "https://www.youtube.com/embed/" + ytMatch[1];
+    }
+    const range = quillInst.getSelection(true) || { index: quillInst.getLength() };
+    quillInst.insertEmbed(range.index, "video", url);
+    quillInst.setSelection(range.index + 1);
+  }
+}
+
+function openCmsEditorForArt(tabId, slug, fromHistory = false) {
  curCms = tabId;
  openArt(slug);
  $("cmsCategoriesView").classList.add("hidden");
@@ -3345,7 +3415,7 @@ function loadAdminFaqs() {
 
 function renderFaqAdmin() {
   if (!adminFaqsList.length) loadAdminFaqs();
-  const c = $("faqListContainer");
+  const c = $("faqAdminRows") || $("faqListContainer");
   if (!c) return;
   c.innerHTML = adminFaqsList.map((item, idx) => `
     <div class="bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm space-y-2">
@@ -3405,7 +3475,10 @@ async function saveFaqs() {
   }
 }
 
-function switchFaqSubTab(tab){
+const addFaqRow = addNewFaq;
+const saveFaqAdmin = saveFaqs;
+
+function switchFaqSubTab(tab, fromHistory = false){
   const pFaq = $("subpane-faq") || $("pane-faq-list");
   const pFooter = $("subpane-footer") || $("pane-footer-cfg");
   if (pFaq) pFaq.classList.toggle("hidden", tab !== "faq");
@@ -3477,12 +3550,14 @@ const FT_TEMPLATE = [
 ];
 const ftClone = (x) => JSON.parse(JSON.stringify(x));
 function ftColsFromDb(ft) {
-  if (Array.isArray(ft.columns)) return ftClone(ft.columns);
-  return [["Dịch vụ", ft.services], ["Hướng dẫn", ft.guides], ["Pháp lý", ft.legal]].filter(x => Array.isArray(x[1]) && x[1].length).map(x => ({ title: x[0], links: ftClone(x[1]) }));
+  if (Array.isArray(ft.columns) && ft.columns.length) return ftClone(ft.columns);
+  const legacy = [["Dịch vụ", ft.services], ["Hướng dẫn", ft.guides], ["Pháp lý", ft.legal]].filter(x => Array.isArray(x[1]) && x[1].length).map(x => ({ title: x[0], links: ftClone(x[1]) }));
+  if (legacy.length) return legacy;
+  return ftClone(FT_TEMPLATE);
 }
 
 function renderFtCols() {
-  const w = $("ftColsWrap"); if (!w) return;
+  const w = $("footerColsWrap") || $("ftColsWrap"); if (!w) return;
   w.innerHTML = ftCols.map((c, ci) => `
    <div data-col-idx="${ci}" class="ft-col-item border-2 border-slate-200 rounded-2xl p-3.5 bg-slate-50/70 space-y-3 transition hover:border-indigo-300">
     <div class="flex items-center gap-1.5 pb-2 border-b border-slate-200">
@@ -3530,6 +3605,7 @@ function renderFtCols() {
     });
   }
 }
+const addFooterColumn = () => ftAddCol();
 function ftAddCol() { ftCols.push({ title: "Cột mới", links: [] }); renderFtCols(); }
 function ftDelCol(ci) { if (!confirm("Xóa cả cột này và mọi link trong cột?")) return; ftCols.splice(ci, 1); renderFtCols(); }
 function ftMoveCol(ci, d) { const j = ci + d; if (j < 0 || j >= ftCols.length) return; const [x] = ftCols.splice(ci, 1); ftCols.splice(j, 0, x); renderFtCols(); }
@@ -3597,7 +3673,8 @@ function switchWebAdminTab(tab){
   $("wpane-footer").classList.toggle("hidden", tab !== "footer");
   $("wtab-ui").classList.toggle("active", tab === "ui");
   $("wtab-footer").classList.toggle("active", tab === "footer");
-  if(tab === "footer") loadFooterConfigUI();
+  if(tab === "footer") { loadFooterConfigUI(); } else { renderFaqAdmin(); }
+  if(!fromHistory) { recordAdminNav({ tab: 't-settings', webSub: 'footer', faqSub: tab }); }
 }
 
 function loadWebAdminUI(){
@@ -4688,6 +4765,22 @@ if (typeof window !== 'undefined') {
     ['REV_TABS', typeof REV_TABS !== 'undefined' ? REV_TABS : undefined],
     ['setRevTab', typeof setRevTab !== 'undefined' ? setRevTab : undefined],
     ['setRevPayView', typeof setRevPayView !== 'undefined' ? setRevPayView : undefined],
+    ['setRevMonth', typeof setRevMonth !== 'undefined' ? setRevMonth : undefined],
+    ['mcToHtml', typeof mcToHtml !== 'undefined' ? mcToHtml : undefined],
+    ['addFaqRow', typeof addFaqRow !== 'undefined' ? addFaqRow : undefined],
+    ['saveFaqAdmin', typeof saveFaqAdmin !== 'undefined' ? saveFaqAdmin : undefined],
+    ['addFooterColumn', typeof addFooterColumn !== 'undefined' ? addFooterColumn : undefined],
+    ['ftAddCol', typeof ftAddCol !== 'undefined' ? ftAddCol : undefined],
+    ['ftDelCol', typeof ftDelCol !== 'undefined' ? ftDelCol : undefined],
+    ['ftMoveCol', typeof ftMoveCol !== 'undefined' ? ftMoveCol : undefined],
+    ['ftAddLink', typeof ftAddLink !== 'undefined' ? ftAddLink : undefined],
+    ['ftDelLink', typeof ftDelLink !== 'undefined' ? ftDelLink : undefined],
+    ['ftLoadTemplate', typeof ftLoadTemplate !== 'undefined' ? ftLoadTemplate : undefined],
+    ['customCmsImageHandler', typeof customCmsImageHandler !== 'undefined' ? customCmsImageHandler : undefined],
+    ['customCmsVideoHandler', typeof customCmsVideoHandler !== 'undefined' ? customCmsVideoHandler : undefined],
+    ['recordAdminNav', typeof recordAdminNav !== 'undefined' ? recordAdminNav : undefined],
+    ['closeCmsEditor', typeof closeCmsEditor !== 'undefined' ? closeCmsEditor : undefined],
+
     ['cnyRate', typeof cnyRate !== 'undefined' ? cnyRate : undefined],
     ['curVal', typeof curVal !== 'undefined' ? curVal : undefined],
     ['shortN', typeof shortN !== 'undefined' ? shortN : undefined],

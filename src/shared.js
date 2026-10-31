@@ -106,7 +106,6 @@ export function getToast() {
     return Swal.mixin({
       toast: true,
       position: 'top-end',
-      backdrop: false,
       showConfirmButton: false,
       timer: 3000,
       timerProgressBar: true,
