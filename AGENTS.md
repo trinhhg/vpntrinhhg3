@@ -1,13 +1,13 @@
-# AGENTS.md — BỘ 80 QUY TẮC AN TOÀN BẢO VỆ DỰ ÁN VPNTRINHHG3
+# AGENTS.md — BỘ 94 QUY TẮC AN TOÀN BẢO VỆ DỰ ÁN VPNTRINHHG3
 
 > **Dành cho tất cả AI Coding Agents tham gia bảo trì, phát triển và tái cấu trúc repository `vpntrinhhg3`.**  
-> **Nguyên tắc tối cao:** Giữ nguyên chức năng đang chạy, sửa ít nhất có thể, kiểm tra đầy đủ và không đánh đổi độ ổn định để lấy sự tiện lợi khi viết code.
+> **Nguyên tắc tối cao:** Giữ nguyên chức năng đang chạy, sửa ít nhất có thể, kiểm tra đầy đủ, chỉ xử lý đúng nội dung trong từng "Lần XX" được giao và không đánh đổi độ ổn định để lấy sự tiện lợi khi viết code.
 
 ---
 
 ## 1. QUY TẮC CHỈNH SỬA MÃ NGUỒN (Quy tắc 1 – 25)
 
-1. **Đọc AGENTS.md trước khi sửa bất kỳ file nào:** Mọi AI agent phải đọc hiểu toàn bộ quy tắc an toàn và tra cứu `PROJECT_MAP.md` trước khi thao tác mã nguồn.
+1. **Đọc AGENTS.md trước khi sửa bất kỳ file nào:** Mọi AI agent phải đọc hiểu toàn bộ quy tắc an toàn và tra cứu `PROJECT_MAP.md` trước khi thao tác mã nguồn. Tuân thủ nghiêm ngặt nguyên tắc chỉ xử lý đúng nội dung của "Lần XX" hiện tại.
 2. **Tìm đúng module chứa chức năng cần sửa:** Chỉ can thiệp vào đúng module phụ trách chức năng đó (`api.js`, `shared.js`, `customer.js`, hoặc `admin.js`).
 3. **Không sửa file không liên quan:** Tuyệt đối không chạm vào các file hoặc chức năng ngoài phạm vi yêu cầu (ví dụ: sửa đơn hàng không chạm vào CMS hay giao diện khách hàng).
 4. **Không viết lại toàn bộ file chỉ vì một lỗi nhỏ:** Sử dụng chỉnh sửa có mục tiêu (targeted edit), giữ nguyên 99% phần mã nguồn đang vận hành tốt.
@@ -85,7 +85,7 @@
 
 ## 5. QUY TẮC GITHUB VÀ TRIỂN KHAI (Quy tắc 59 – 70)
 
-59. **Không commit trực tiếp lên main:** Nhánh `main` là nhánh Production của website. Tuyệt đối không sửa hoặc commit trực tiếp lên `main`.
+59. **Không commit trực tiếp lên main:** Nhánh `main` là nhánh Production của website. Tuyệt đối không sửa hoặc commit trực tiếp lên `main` trừ khi có chỉ đạo trực tiếp từ chủ dự án.
 60. **Mọi thay đổi phải thực hiện trên nhánh riêng:** Sử dụng nhánh `refactor/vite-migration` cho đợt tái cấu trúc, và các nhánh `ai/<tên-tính-năng>` cho các tác vụ bảo trì sau này.
 61. **Mỗi task nên có commit riêng, tên commit phải mô tả đúng nội dung:** Sử dụng Conventional Commits rõ ràng (ví dụ: `feat: ...`, `fix: ...`, `chore: ...`).
 62. **Không tự ý Merge Pull Request:** Quyền duyệt và bấm Merge Pull Request vào `main` thuộc về chủ dự án sau khi đã xem xét bản Preview.
@@ -165,8 +165,8 @@ Dự án quản lý 2 Cloudflare Workers:
   ```
 
 ### 8.3. Cam kết chung khi deploy:
-- Bất cứ khi nào Agent chỉnh sửa `worker.js` hoặc `payment-webhook/worker.js`, Agent **BẮT BUỘC** phải tự động chạy lệnh deploy tương ứng.
-- Cả 2 script deploy đều tự động bảo toàn 100% Secrets, D1 Database, KV Storage và biến môi trường trên Cloudflare.
+- Chỉ thực hiện deploy khi người dùng có yêu cầu trong task hoặc yêu cầu deploy. Tuyệt đối không tự ý deploy production nếu người dùng chưa yêu cầu (tuân thủ Quy tắc 92).
+- Khi có yêu cầu deploy Worker, cả 2 script deploy đều tự động bảo toàn 100% Secrets, D1 Database, KV Storage và biến môi trường trên Cloudflare.
 - Agent báo rõ số Version và Version ID cho người dùng sau khi deploy thành công.
 
 ---
@@ -177,3 +177,18 @@ Dự án quản lý 2 Cloudflare Workers:
 82. **Cho phép thêm biến mới:** Khi phát triển tính năng mới, Agent được phép bổ sung biến môi trường, secret hoặc binding mới nếu cần, nhưng phải giữ nguyên 100% các biến và binding hiện hành.
 83. **Không clone cơ sở dữ liệu để test:** Không tự ý tạo các bảng giả lập, namespace giả lập (như ALL_ORDERS_TEST) hoặc dựng clone riêng; kiểm tra trực tiếp trên hệ thống hiện tại bằng các thao tác đọc/kiểm thử không phá hủy (non-destructive test).
 84. **Xác minh bindings trước và sau deploy:** Khi deploy Worker, script deploy phải kiểm tra và kế thừa đầy đủ toàn bộ danh sách bindings từ phiên bản trước (bao gồm KV, D1, plain_text, secret_text) để đảm bảo không bị thiếu hụt sau khi kích hoạt 100% traffic.
+
+---
+
+## 10. QUY TẮC XỬ LÝ THEO TỪNG LẦN GIAO VIỆC ("LẦN XX") & PHẠM VI TỐI THIỂU (Quy tắc 85 – 94)
+
+85. **Chỉ thực hiện yêu cầu trong lần hiện tại:** Khi người dùng giao một yêu cầu có ghi chú **"Lần XX"** (ví dụ: "Lần 1", "Lần 2", "Lần 03"...), Agent chỉ được phép xử lý đúng và duy nhất các nội dung được nêu rõ trong lần hiện tại đó.
+86. **Không tự động kéo dài hay mở rộng lần trước:** Tuyệt đối không tự động tiếp tục, sửa lại, làm tiếp hoặc mở rộng các yêu cầu từ những lần giao việc trước, trừ khi người dùng nhắc lại cụ thể trong nội dung của lần hiện tại.
+87. **Chỉ tìm, đọc, phân tích và sửa file liên quan trực tiếp:** Chỉ tìm kiếm, đọc, phân tích và sửa đúng những file có liên quan trực tiếp đến vấn đề đang xử lý.
+88. **Không tự đọc hoặc rà soát toàn bộ repo:** Tuyệt đối không tự ý đọc hoặc rà soát toàn bộ repo, toàn bộ code website, Worker Cloudflare hay hệ thống production để xử lý một yêu cầu nhỏ.
+89. **Chỉ mở rộng phạm vi đọc code khi thật sự cần và phải nêu lý do:** Chỉ mở rộng phạm vi đọc code khi thật sự cần thiết để hiểu hoặc sửa đúng vấn đề. Khi bắt buộc phải mở rộng phạm vi đọc, Agent phải nêu ngắn gọn lý do cho người dùng.
+90. **Không refactor, tối ưu hoặc đổi cấu trúc ngoài phạm vi:** Tuyệt đối không tự ý refactor, tối ưu hóa, dọn dẹp, thay đổi cấu trúc hoặc sửa lỗi nằm ngoài phạm vi yêu cầu của lần hiện tại.
+91. **Không tự ý thay đổi hạ tầng, schema và dữ liệu:** Không tự ý thay đổi API, routes, schema dữ liệu (KV, D1, Supabase), Cloudflare bindings, environment variables, secrets, cấu hình Cloudflare hoặc dữ liệu production.
+92. **Không deploy hoặc thay đổi production nếu chưa yêu cầu:** Tuyệt đối không deploy lên Cloudflare Workers, Pages hoặc thay đổi hệ thống production nếu người dùng chưa yêu cầu rõ ràng trong lần hiện tại.
+93. **Phát hiện lỗi ngoài phạm vi chỉ ghi chú, không tự sửa:** Nếu phát hiện lỗi khác ngoài phạm vi của lần hiện tại, chỉ được phép ghi chú vào báo cáo để thông báo cho người dùng; tuyệt đối không tự ý sửa code.
+94. **Chủ động hỏi khi chưa rõ hoặc có rủi ro:** Nếu yêu cầu của người dùng chưa đủ rõ ràng hoặc có nguy cơ ảnh hưởng đến dữ liệu/hệ thống, Agent phải dừng lại và hỏi người dùng trước khi thực hiện.
