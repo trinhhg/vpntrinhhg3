@@ -1359,7 +1359,7 @@ async function syncRatesToPackages() {
   });
   try {
     await aj("/api/packages", { method: "POST", body: { packages: adminPkgsList } });
-    await syncPublicPackagesPayload();
+    await syncPublicPackagesPayload(); try{ if(Array.isArray(cmsDb.coupons)) localStorage.setItem('vpn_coupons_cache', JSON.stringify(cmsDb.coupons)); }catch(e){}
     toast("Đã tự động quy đổi và đồng bộ giá CNY & USD cho toàn bộ gói cước!");
     if (!$("t-pkg").classList.contains("hidden")) renderPkgAdmin();
   } catch(e) { toast("Lỗi đồng bộ gói cước: " + e.message, "err"); }
@@ -1368,7 +1368,8 @@ window.syncRatesToPackages = syncRatesToPackages;
 
 function revPay(R, b){
   if (revPayView) { revPayDetail(b); return; }
-  const r = getCentralRates();
+  const revR = getRevRates();
+  const pkgR = getPkgRates();
   const m = { Bank: { n: 0, vnd: 0, cny: 0 }, Alipay: { n: 0, vnd: 0, cny: 0 }, Weixin: { n: 0, vnd: 0, cny: 0 } };
   R.forEach(x => { const e = m[x.pay]; e.n++; e.vnd += x.vnd; e.cny += x.cny; });
   const total = m.Bank.vnd + m.Alipay.vnd + m.Weixin.vnd;
@@ -1382,23 +1383,61 @@ function revPay(R, b){
       <div class="text-[11px] text-slate-500 mb-2">${m[k].n} đơn thành công · bấm để xem chi tiết</div>
       ${k === "Bank" ? `<div class="text-xl font-black text-slate-800">${fmtVnd(m[k].vnd)}đ</div>` : `
         <div class="text-xl font-black text-slate-800">¥${(Math.round(m[k].cny*100)/100).toLocaleString("en-US")}</div>
-        <div class="text-[11px] font-bold text-slate-500 mt-0.5">≈ ${fmtVnd(m[k].vnd)}đ (tỷ giá ${fmtVnd(r.vndCny)})</div>
+        <div class="text-[11px] font-bold text-slate-500 mt-0.5">≈ ${fmtVnd(m[k].vnd)}đ (tỷ giá ${fmtVnd(revR.vndCny)})</div>
       `}
     </div>
   `;
 
   b.innerHTML = `
-    <!-- BẢNG QUY ĐỔI TỶ GIÁ TẬP TRUNG (CENTRALIZED EXCHANGE RATE TABLE) -->
-    <div class="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border-2 border-indigo-200 rounded-2xl p-4 shadow-sm space-y-3">
-      <div class="flex items-center justify-between flex-wrap gap-2">
-        <div class="font-black text-sm text-indigo-900 flex items-center gap-2">
-          <i class="fas fa-money-bill-transfer text-indigo-600"></i>Bảng Quy Đổi Tỷ Giá Tập Trung (Dùng chung Doanh thu & Cửa hàng)
+    <!-- BLOCK 1: BẢNG TỶ GIÁ BÁO CÁO DOANH THU (KẾ TOÁN & THỰC THU) -->
+    <div class="bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 border-2 border-emerald-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-3">
+      <div class="flex items-center justify-between flex-wrap gap-2 border-b border-emerald-100 pb-2.5">
+        <div>
+          <div class="font-black text-sm md:text-base text-emerald-950 flex items-center gap-2">
+            <i class="fas fa-file-invoice-dollar text-emerald-600 text-base"></i>1. Bảng Tỷ Giá Báo Cáo Doanh Thu (Áp Quy Đổi Tính Tiền Doanh Thu)
+          </div>
+          <p class="text-[11px] text-slate-500 mt-0.5">Dùng để quy đổi các đơn Alipay, WeChat, USD sang VND thực thu trong báo cáo và biểu đồ doanh thu.</p>
+        </div>
+        <button type="button" onclick="saveRevRates()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-2 rounded-xl text-xs shadow-sm flex items-center gap-1.5 transition active:scale-95 whitespace-nowrap">
+          <i class="fas fa-save"></i>LƯU TỶ GIÁ DOANH THU
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <div class="bg-white p-3.5 rounded-xl border border-emerald-100 shadow-sm">
+          <label class="block font-bold text-slate-700 mb-1">Tỷ giá Thực thu CNY ⟷ VND (Alipay / WeChat):</label>
+          <div class="relative">
+            <input type="number" id="revRateVndCny" step="10" value="${revR.vndCny}" placeholder="VD: 3600" class="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold text-emerald-700 outline-none pr-14 text-sm">
+            <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">VND/¥</span>
+          </div>
+          <span class="text-[10px] text-slate-400 mt-1 block">1 CNY nhận = ${fmtVnd(revR.vndCny)} VND doanh thu</span>
+        </div>
+
+        <div class="bg-white p-3.5 rounded-xl border border-emerald-100 shadow-sm">
+          <label class="block font-bold text-slate-700 mb-1">Tỷ giá Thực thu USD ⟷ VND (Cổng USD):</label>
+          <div class="relative">
+            <input type="number" id="revRateVndUsd" step="100" value="${revR.vndUsd}" placeholder="VD: 26100" class="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold text-emerald-700 outline-none pr-14 text-sm">
+            <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">VND/$</span>
+          </div>
+          <span class="text-[10px] text-slate-400 mt-1 block">1 USD nhận = ${fmtVnd(revR.vndUsd)} VND doanh thu</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCK 2: BẢNG TỶ GIÁ ĐỊNH GIÁ GÓI CƯỚC (BÁN HÀNG & CỬA HÀNG) -->
+    <div class="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border-2 border-indigo-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-3">
+      <div class="flex items-center justify-between flex-wrap gap-2 border-b border-indigo-100 pb-2.5">
+        <div>
+          <div class="font-black text-sm md:text-base text-indigo-950 flex items-center gap-2">
+            <i class="fas fa-tags text-indigo-600 text-base"></i>2. Bảng Tỷ Giá Định Giá Gói Cước (Tự Quy Đổi VND, CNY, USD Cho Gói)
+          </div>
+          <p class="text-[11px] text-slate-500 mt-0.5">Dùng để tự động tính toán giá niêm yết CNY và USD từ giá VND gốc của toàn bộ gói cước.</p>
         </div>
         <div class="flex items-center gap-2">
-          <button type="button" onclick="saveCentralRates()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm flex items-center gap-1 transition active:scale-95">
-            <i class="fas fa-save mr-1"></i>LƯU BẢNG TỶ GIÁ
+          <button type="button" onclick="savePkgRates()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm flex items-center gap-1 transition active:scale-95 whitespace-nowrap">
+            <i class="fas fa-save mr-1"></i>LƯU TỶ GIÁ GÓI
           </button>
-          <button type="button" onclick="syncRatesToPackages()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm flex items-center gap-1 transition active:scale-95" title="Tự động tính lại giá VND, CNY, USD cho toàn bộ gói cước">
+          <button type="button" onclick="syncRatesToPackages()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm flex items-center gap-1 transition active:scale-95 whitespace-nowrap" title="Tự động tính lại giá VND, CNY, USD cho toàn bộ gói cước">
             <i class="fas fa-rotate mr-1"></i>ĐỒNG BỘ VÀO GÓI CƯỚC
           </button>
         </div>
@@ -1406,30 +1445,30 @@ function revPay(R, b){
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
         <div class="bg-white p-3 rounded-xl border border-indigo-100 shadow-sm">
-          <label class="block font-bold text-slate-600 mb-1">Tỷ giá VND ⟷ CNY (P2P)</label>
+          <label class="block font-bold text-slate-700 mb-1">Tỷ giá VND ⟷ CNY (Giá bán):</label>
           <div class="relative">
-            <input type="number" id="rateVndCny" step="10" value="${r.vndCny}" placeholder="VD: 3600" class="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold text-indigo-700 outline-none pr-12">
+            <input type="number" id="pkgRateVndCny" step="10" value="${pkgR.vndCny}" placeholder="VD: 3500" class="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold text-indigo-700 outline-none pr-12 text-sm">
             <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">VND/¥</span>
           </div>
-          <span class="text-[10px] text-slate-400 mt-1 block">1 CNY = ${fmtVnd(r.vndCny)} VND</span>
+          <span class="text-[10px] text-slate-400 mt-1 block">1 CNY = ${fmtVnd(pkgR.vndCny)} VND</span>
         </div>
 
         <div class="bg-white p-3 rounded-xl border border-indigo-100 shadow-sm">
-          <label class="block font-bold text-slate-600 mb-1">Tỷ giá CNY ⟷ USD (P2P)</label>
+          <label class="block font-bold text-slate-700 mb-1">Tỷ giá CNY ⟷ USD (Tỷ lệ):</label>
           <div class="relative">
-            <input type="number" id="rateCnyUsd" step="0.01" value="${r.cnyUsd}" placeholder="VD: 7.25" class="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold text-blue-700 outline-none pr-12">
+            <input type="number" id="pkgRateCnyUsd" step="0.01" value="${pkgR.cnyUsd}" placeholder="VD: 7.25" class="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold text-purple-700 outline-none pr-12 text-sm">
             <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">¥/$</span>
           </div>
-          <span class="text-[10px] text-slate-400 mt-1 block">1 USD = ${r.cnyUsd} CNY</span>
+          <span class="text-[10px] text-slate-400 mt-1 block">1 USD = ${pkgR.cnyUsd} CNY</span>
         </div>
 
         <div class="bg-white p-3 rounded-xl border border-indigo-100 shadow-sm">
-          <label class="block font-bold text-slate-600 mb-1">Tỷ giá VND ⟷ USD (P2P)</label>
+          <label class="block font-bold text-slate-700 mb-1">Tỷ giá VND ⟷ USD (Giá bán):</label>
           <div class="relative">
-            <input type="number" id="rateVndUsd" step="100" value="${r.vndUsd}" placeholder="VD: 26100" class="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold text-emerald-700 outline-none pr-12">
+            <input type="number" id="pkgRateVndUsd" step="100" value="${pkgR.vndUsd}" placeholder="VD: 25500" class="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold text-pink-700 outline-none pr-12 text-sm">
             <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">VND/$</span>
           </div>
-          <span class="text-[10px] text-slate-400 mt-1 block">1 USD = ${fmtVnd(r.vndUsd)} VND</span>
+          <span class="text-[10px] text-slate-400 mt-1 block">1 USD = ${fmtVnd(pkgR.vndUsd)} VND</span>
         </div>
       </div>
     </div>
@@ -1443,7 +1482,7 @@ function revPay(R, b){
 
     <div class="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl p-5 text-white shadow-lg flex items-center justify-between flex-wrap gap-3">
       <div>
-        <div class="text-xs font-bold opacity-80 uppercase">Tổng Doanh Thu Tất Cả Các Cổng (Đã quy đổi VND)</div>
+        <div class="text-xs font-bold opacity-80 uppercase tracking-wide">Tổng Doanh Thu Tất Cả Các Cổng (Đã quy đổi VND)</div>
         <div class="text-3xl font-black mt-1">${fmtVnd(total)}đ</div>
       </div>
       <div class="text-xs font-bold bg-white/20 px-3 py-1.5 rounded-xl backdrop-blur-sm">
@@ -1451,24 +1490,6 @@ function revPay(R, b){
       </div>
     </div>
   `;
-}
-
-async function saveCentralRates(){
-  const vndCny = Number($("rateVndCny").value) || 0;
-  const cnyUsd = Number($("rateCnyUsd").value) || 0;
-  const vndUsd = Number($("rateVndUsd").value) || 0;
-  if (vndCny <= 0 || cnyUsd <= 0 || vndUsd <= 0) return toast("Vui lòng nhập đầy đủ 3 tỷ giá lớn hơn 0", "warn");
-  cmsDb.settings = cmsDb.settings || {};
-  cmsDb.settings.rates = { vndCny, cnyUsd, vndUsd };
-  cmsDb.settings.cnyRate = vndCny; // Tương thích ngược
-  try {
-    await saveCmsDb();
-    toast("Đã lưu Bảng Quy Đổi Tỷ Giá Tập Trung thành công!");
-    logEvent("ok", "Tỷ giá trung tâm", `VND/CNY: ${vndCny} · CNY/USD: ${cnyUsd} · VND/USD: ${vndUsd}`);
-    renderRevenue();
-  } catch(e) {
-    toast("Lỗi lưu tỷ giá: " + e.message, "err");
-  }
 }
 
 // [duplicate syncRatesToPackages removed]
@@ -4909,22 +4930,31 @@ function updateFailoverPolicyUI(pref) {
   const dotLx = $("radioDotLx"), dotDj = $("radioDotDj"), dotKt = $("radioDotKt");
   const inLx = $("radioInnerLx"), inDj = $("radioInnerDj"), inKt = $("radioInnerKt");
 
-  const setBtn = (btn, dot, inDot, active, color) => {
+  const resetBtn = (btn, dot, inDot) => {
     if (!btn) return;
-    if (active) {
-      btn.className = `p-3.5 rounded-2xl border-2 font-bold text-left transition flex items-center justify-between border-${color}-500 bg-${color}-50/60 shadow-sm ring-1 ring-${color}-400`;
-      if (dot) dot.className = `w-5 h-5 rounded-full border-2 flex items-center justify-center border-${color}-600 bg-white`;
-      if (inDot) inDot.className = `w-2.5 h-2.5 rounded-full bg-${color}-600`;
-    } else {
-      btn.className = "p-3.5 rounded-2xl border-2 font-bold text-left transition flex items-center justify-between border-slate-200 bg-slate-50 text-slate-700 hover:border-indigo-300 opacity-70";
-      if (dot) dot.className = "w-5 h-5 rounded-full border-2 flex items-center justify-center border-slate-400 bg-white";
-      if (inDot) inDot.className = "w-2.5 h-2.5 rounded-full bg-transparent";
-    }
+    btn.className = "p-3.5 rounded-2xl border-2 font-bold text-left transition flex items-center justify-between border-slate-200 bg-slate-50 text-slate-700 hover:border-indigo-300 opacity-70";
+    if (dot) dot.className = "w-5 h-5 rounded-full border-2 flex items-center justify-center border-slate-400 bg-white";
+    if (inDot) inDot.className = "w-2.5 h-2.5 rounded-full bg-transparent";
   };
 
-  setBtn(btnLx, dotLx, inLx, pref === "lx", "emerald");
-  setBtn(btnDj, dotDj, inDj, pref === "dj", "blue");
-  setBtn(btnKt, dotKt, inKt, pref === "kt", "pink");
+  resetBtn(btnLx, dotLx, inLx);
+  resetBtn(btnDj, dotDj, inDj);
+  resetBtn(btnKt, dotKt, inKt);
+
+  if (pref === "lx" && btnLx) {
+    btnLx.className = "p-3.5 rounded-2xl border-2 font-bold text-left transition flex items-center justify-between border-emerald-500 bg-emerald-50/80 shadow-sm ring-2 ring-emerald-400 text-emerald-950";
+    if (dotLx) dotLx.className = "w-5 h-5 rounded-full border-2 flex items-center justify-center border-emerald-600 bg-white";
+    if (inLx) inLx.className = "w-2.5 h-2.5 rounded-full bg-emerald-600";
+  } else if (pref === "dj" && btnDj) {
+    btnDj.className = "p-3.5 rounded-2xl border-2 font-bold text-left transition flex items-center justify-between border-blue-500 bg-blue-50/80 shadow-sm ring-2 ring-blue-400 text-blue-950";
+    if (dotDj) dotDj.className = "w-5 h-5 rounded-full border-2 flex items-center justify-center border-blue-600 bg-white";
+    if (inDj) inDj.className = "w-2.5 h-2.5 rounded-full bg-blue-600";
+  } else if (pref === "kt" && btnKt) {
+    // Sửa nút Kitty Failover sang màu đỏ tường minh, dễ nhìn
+    btnKt.className = "p-3.5 rounded-2xl border-2 font-black text-left transition flex items-center justify-between border-red-500 bg-red-50/90 shadow-md ring-2 ring-red-400 text-red-950";
+    if (dotKt) dotKt.className = "w-5 h-5 rounded-full border-2 flex items-center justify-center border-red-600 bg-white";
+    if (inKt) inKt.className = "w-2.5 h-2.5 rounded-full bg-red-600";
+  }
 }
 
 async function saveFulfillmentMapping() {
@@ -5261,11 +5291,11 @@ async function saveFlashSaleConfig() {
   };
   cmsDb.sales.campaign = c;
   cmsDb.settings = cmsDb.settings || {};
-  cmsDb.settings.flashSale = c;
+  cmsDb.settings.flashSale = c; try{ localStorage.setItem('vpn_flash_sale_cache', JSON.stringify(c)); }catch(e){}
 
   try {
     await saveCmsDb();
-    await syncPublicPackagesPayload();
+    await syncPublicPackagesPayload(); try{ if(Array.isArray(cmsDb.coupons)) localStorage.setItem('vpn_coupons_cache', JSON.stringify(cmsDb.coupons)); }catch(e){}
     toast("Đã lưu chiến dịch Flash Sale thành công!");
     logEvent("ok", "admin", "Lưu Flash Sale: " + (c.title || "Chiến dịch mới"));
   } catch(e) {
@@ -5278,10 +5308,10 @@ window.saveFlashSaleConfig = saveFlashSaleConfig;
 
 async function toggleCouponCheckoutInput(checked) {
   cmsDb.settings = cmsDb.settings || {};
-  cmsDb.settings.couponEnabled = checked;
+  cmsDb.settings.couponEnabled = checked; try{ localStorage.setItem('vpn_coupon_enabled_cache', String(checked)); }catch(e){}
   try {
     await saveCmsDb();
-    await syncPublicPackagesPayload();
+    await syncPublicPackagesPayload(); try{ if(Array.isArray(cmsDb.coupons)) localStorage.setItem('vpn_coupons_cache', JSON.stringify(cmsDb.coupons)); }catch(e){}
     toast(checked ? "Đã BẬT ô nhập mã giảm giá tại trang thanh toán" : "Đã TẮT ô nhập mã giảm giá tại trang thanh toán");
   } catch(e) {
     toast("Lỗi lưu cài đặt coupon: " + e.message, "err");
@@ -5333,7 +5363,7 @@ async function toggleCouponStatus(idx) {
   cmsDb.coupons[idx].enabled = cmsDb.coupons[idx].enabled === false ? true : false;
   try {
     await saveCmsDb();
-    await syncPublicPackagesPayload();
+    await syncPublicPackagesPayload(); try{ if(Array.isArray(cmsDb.coupons)) localStorage.setItem('vpn_coupons_cache', JSON.stringify(cmsDb.coupons)); }catch(e){}
     renderCouponAdmin();
     toast("Đã cập nhật trạng thái mã coupon");
   } catch(e) { toast("Lỗi: " + e.message, "err"); }
@@ -5347,7 +5377,7 @@ async function deleteCouponItem(idx) {
   cmsDb.coupons.splice(idx, 1);
   try {
     await saveCmsDb();
-    await syncPublicPackagesPayload();
+    await syncPublicPackagesPayload(); try{ if(Array.isArray(cmsDb.coupons)) localStorage.setItem('vpn_coupons_cache', JSON.stringify(cmsDb.coupons)); }catch(e){}
     renderCouponAdmin();
     toast("Đã xóa mã coupon: " + code);
   } catch(e) { toast("Lỗi: " + e.message, "err"); }
@@ -5378,7 +5408,7 @@ function openAddCouponModal() {
   });
 
   saveCmsDb().then(async () => {
-    await syncPublicPackagesPayload();
+    await syncPublicPackagesPayload(); try{ if(Array.isArray(cmsDb.coupons)) localStorage.setItem('vpn_coupons_cache', JSON.stringify(cmsDb.coupons)); }catch(e){}
     renderCouponAdmin();
     toast(`Đã tạo thành công coupon: ${cleanCode} (-${isPct ? numVal + '%' : fmtVnd(numVal) + 'đ'})`);
   }).catch(e => toast("Lỗi: " + e.message, "err"));

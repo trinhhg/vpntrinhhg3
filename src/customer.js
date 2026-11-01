@@ -810,6 +810,16 @@ async function loadConfig(){
           }
         }catch(e){}
       }
+      // Fallback từ localStorage nếu backend worker chưa deploy bản cập nhật
+      if(!cfgCache.flashSale){
+        try{ const f=JSON.parse(localStorage.getItem('vpn_flash_sale_cache')||'null'); if(f) cfgCache.flashSale=f; }catch(e){}
+      }
+      if(!Array.isArray(cfgCache.coupons) || !cfgCache.coupons.length){
+        try{ const c=JSON.parse(localStorage.getItem('vpn_coupons_cache')||'null'); if(Array.isArray(c)) cfgCache.coupons=c; }catch(e){}
+      }
+      if(cfgCache.couponEnabled === undefined){
+        try{ const ce=localStorage.getItem('vpn_coupon_enabled_cache'); if(ce!==null) cfgCache.couponEnabled = (ce === 'true'); }catch(e){}
+      }
       renderDock();
       // Nếu có danh sách gói động do Admin cấu hình từ tab Giá gói, thay thế mảng pkgs tĩnh
       if(Array.isArray(cfgCache.packages) && cfgCache.packages.length){
@@ -972,14 +982,14 @@ function renderHeaderDrawer(drawerCfg) {
     if (badgeIcon) badgeIcon.className = 'fas fa-triangle-exclamation';
     if (badgeText) badgeText.textContent = 'Cảnh báo';
     if (btnLinkEl) btnLinkEl.className = 'bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm transition active:scale-95 whitespace-nowrap flex items-center gap-1 shrink-0';
-    if (detailEl) detailEl.className = 'hidden pt-2 border-t border-amber-200/80 dark:border-amber-900/60 text-[11px] sm:text-xs leading-relaxed text-amber-900 dark:text-amber-200 font-medium whitespace-pre-wrap';
+    if (detailEl) detailEl.className = 'hidden mt-1 text-[11.5px] sm:text-xs leading-relaxed text-amber-950 dark:text-amber-200 font-medium whitespace-pre-wrap opacity-95';
   } else if (type === 'info') {
     d.className = 'fixed top-0 left-0 w-full z-[80] text-xs py-2 px-3 shadow-md border-b transition-all duration-300 bg-indigo-50 dark:bg-indigo-950/90 border-indigo-200 dark:border-indigo-900/60 text-indigo-950 dark:text-indigo-100';
     if (badgeEl) badgeEl.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shrink-0 uppercase tracking-wider bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700';
     if (badgeIcon) badgeIcon.className = 'fas fa-circle-info';
     if (badgeText) badgeText.textContent = 'Thông tin';
     if (btnLinkEl) btnLinkEl.className = 'bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm transition active:scale-95 whitespace-nowrap flex items-center gap-1 shrink-0';
-    if (detailEl) detailEl.className = 'hidden pt-2 border-t border-indigo-200/80 dark:border-indigo-900/60 text-[11px] sm:text-xs leading-relaxed text-indigo-900 dark:text-indigo-200 font-medium whitespace-pre-wrap';
+    if (detailEl) detailEl.className = 'hidden mt-1 text-[11.5px] sm:text-xs leading-relaxed text-indigo-950 dark:text-indigo-200 font-medium whitespace-pre-wrap opacity-95';
   } else {
     // Promo / Khuyến mãi
     d.className = 'fixed top-0 left-0 w-full z-[80] text-xs py-2 px-3 shadow-md border-b transition-all duration-300 bg-rose-50 dark:bg-rose-950/90 border-rose-200 dark:border-rose-900/60 text-rose-950 dark:text-rose-100';
@@ -987,7 +997,7 @@ function renderHeaderDrawer(drawerCfg) {
     if (badgeIcon) badgeIcon.className = 'fas fa-fire';
     if (badgeText) badgeText.textContent = 'Khuyến mãi';
     if (btnLinkEl) btnLinkEl.className = 'bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm transition active:scale-95 whitespace-nowrap flex items-center gap-1 shrink-0';
-    if (detailEl) detailEl.className = 'hidden pt-2 border-t border-rose-200/80 dark:border-rose-900/60 text-[11px] sm:text-xs leading-relaxed text-rose-900 dark:text-rose-200 font-medium whitespace-pre-wrap';
+    if (detailEl) detailEl.className = 'hidden mt-1 text-[11.5px] sm:text-xs leading-relaxed text-rose-950 dark:text-rose-200 font-medium whitespace-pre-wrap opacity-95';
   }
 
   // Tiêu đề ngắn
