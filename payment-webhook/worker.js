@@ -1,4 +1,4 @@
-﻿// v3.2 - Payment webhook D1 (xÃ³a giao dá»ch tháº­t sá»±, nÃ¢ng gÃ³i khÃ¡c phÆ°Æ¡ng thá»©c ÄÆ¡n gá»c, nháº­n ÄÆ¡n tá»« KV ÄÃºng tráº¡ng thÃ¡i)
+// v3.2 - Payment webhook D1 (xÃ³a giao dá»ch tháº­t sá»±, nÃ¢ng gÃ³i khÃ¡c phÆ°Æ¡ng thá»©c ÄÆ¡n gá»c, nháº­n ÄÆ¡n tá»« KV ÄÃºng tráº¡ng thÃ¡i)
 // Secret CHá» Äá»c tá»« env (Settings > Variables > Secret): WEB_API_SECRET, WEB_API_SECRET2, MB_WEBHOOK_SECRET, ADMIN_DELETE_SECRET
 // Biáº¿n thÆ°á»ng: WEBSITE_WORKER_URL (worker máº·c Äá»nh), WORKER_URLS (danh sÃ¡ch worker 3 web, cÃ¡ch nhau dáº¥u pháº©y - dÃ¹ng Äá» tÃ¬m ÄÆ¡n khi D1 chÆ°a cÃ³)
 // Cron Trigger: thÃªm "*/2 * * * *" cho worker nÃ y (quÃ©t khá»p láº¡i giao dá»ch + thá»­ láº¡i cáº¥p link)
@@ -16,10 +16,11 @@ const isValidOrderId = (v) => /^DH[A-Z0-9]{10}$/.test(normalizeOrderId(v));
 const NOW = "datetime('now', '+7 hours')";
 
 function getConfig(env) {
+  const sec = env.WEB_API_SECRET || env.WEB_API_SECRET2 || env.D1_SECRET || "";
   return {
     WEBSITE_WORKER_URL: String(env.WEBSITE_WORKER_URL || "").replace(/\/$/, ""),
     WORKER_URLS: String(env.WORKER_URLS || env.WEBSITE_WORKER_URL || "").split(",").map((s) => s.trim().replace(/\/$/, "")).filter(Boolean),
-    WEB_API_SECRET: env.WEB_API_SECRET || "", WEB_API_SECRET2: env.WEB_API_SECRET2 || "", D1_SECRET: env.D1_SECRET || "",
+    WEB_API_SECRET: env.WEB_API_SECRET || sec, WEB_API_SECRET2: env.WEB_API_SECRET2 || sec, D1_SECRET: env.D1_SECRET || sec,
     MB_WEBHOOK_SECRET: env.MB_WEBHOOK_SECRET || "", ADMIN_DELETE_SECRET: env.ADMIN_DELETE_SECRET || "",
     SUPABASE_URL: env.SUPABASE_URL || "", SUPABASE_KEY: env.SUPABASE_KEY || ""
   };
@@ -211,6 +212,7 @@ async function adoptOrderFromSource(env, ko, orderId, amount) {
 
 export default {
   async fetch(request, env, ctx) {
+    env.DB = env.DB || env["payment-db"] || env.payment_db;
     const url = new URL(request.url), CONFIG = getConfig(env), m = request.method, p = url.pathname;
     if (m === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
     if (m === "GET" && p === "/") return new Response("PAYMENT WEBHOOK ONLINE - HANOI UTC+7", { status: 200, headers: { "Content-Type": "text/plain; charset=UTF-8", "Cache-Control": "no-store", ...CORS } });
@@ -517,6 +519,7 @@ export default {
 
   // Cron má»i 2 phÃºt: khá»p láº¡i giao dá»ch unmatched + thá»­ láº¡i cáº¥p link (Tá»i Æ°u CPU cá»±c tháº¥p)
   async scheduled(event, env, ctx) {
+    env.DB = env.DB || env["payment-db"] || env.payment_db;
     const CONFIG = getConfig(env);
     if (!env.DB || !CONFIG.WEB_API_SECRET2) return;
     let matched = 0, retried = 0;
