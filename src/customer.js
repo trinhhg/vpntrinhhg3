@@ -628,7 +628,7 @@ async function openGuideArticle(tabId, slug, skipPush) {
         </h3>
         <div class="space-y-2">
           ${validFaqs.map(f => `
-            <details class="bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl p-3.5 group cursor-pointer" onclick="event.preventDefault();this.open=!this.open;">
+            <details class="bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 rounded-xl p-3.5 group cursor-pointer">
               <summary class="font-bold text-xs md:text-sm text-indigo-700 dark:text-indigo-300 flex justify-between items-center select-none">
                 <span>${esc(f.q)}</span>
                 <i class="fas fa-chevron-down text-slate-400 group-open:rotate-180 transition-transform"></i>
@@ -646,7 +646,10 @@ async function openGuideArticle(tabId, slug, skipPush) {
   const hasRelated = Array.isArray(art.relatedArts) && art.relatedArts.length > 0;
   if (hasRelated && art.showRelated !== false) {
     const tabs = guideTabList();
-    const otherList = tabs.flatMap(t => guideArts(t.id)).filter(x => art.relatedArts.includes(x.slug || toSlug(x.name)));
+    const otherList = tabs.flatMap(t => guideArts(t.id)).filter(x => {
+        const curSlug = String(x.slug || toSlug(x.name)).toLowerCase();
+        return art.relatedArts.some(r => String(toSlug(r)).toLowerCase() === curSlug);
+      });
     if (otherList.length) {
       relBlockHtml = `
         <div class="mt-8 pt-6 border-t border-slate-200 dark:border-white/10">
@@ -790,9 +793,23 @@ function pubGotoArt(tab,name){
 
 async function loadConfig(){
   try{
-    const r=await fetch(WORKER_URL+'/api/public/config?_t='+Date.now(),{cache:'no-store'});
+    const [r, pkgRes] = await Promise.all([
+      fetch(WORKER_URL+'/api/public/config?_t='+Date.now(),{cache:'no-store'}),
+      fetch(WORKER_URL+'/api/packages?_t='+Date.now(),{cache:'no-store'}).catch(()=>null)
+    ]);
     if(r.ok){
       cfgCache=await r.json();
+      if(pkgRes && pkgRes.ok){
+        try{
+          const extra=await pkgRes.json();
+          if(extra.flashSale) cfgCache.flashSale=extra.flashSale;
+          if(Array.isArray(extra.coupons)) cfgCache.coupons=extra.coupons;
+          if(extra.couponEnabled !== undefined) cfgCache.couponEnabled=extra.couponEnabled;
+          if(Array.isArray(extra.packages) && extra.packages.length && (!cfgCache.packages || !cfgCache.packages.length)){
+            cfgCache.packages=extra.packages;
+          }
+        }catch(e){}
+      }
       renderDock();
       // Nếu có danh sách gói động do Admin cấu hình từ tab Giá gói, thay thế mảng pkgs tĩnh
       if(Array.isArray(cfgCache.packages) && cfgCache.packages.length){
@@ -924,13 +941,8 @@ function toggleHeaderDrawerDetail() {
 function renderHeaderDrawer(drawerCfg) {
   const d = $('headerAnnouncementDrawer');
   if (!d) return;
-  if (isHeaderDrawerClosed) {
-    d.classList.add('hidden');
-    updateDrawerOffsets();
-    return;
-  }
-  const cfg = drawerCfg || {};
-  if (!cfg.enabled || !cfg.text) {
+  const cfg = drawerCfg || (cfgCache && (cfgCache.headerDrawer || (cfgCache.settings && cfgCache.settings.headerDrawer))) || {};
+  if (!cfg || !cfg.enabled) {
     d.classList.add('hidden');
     updateDrawerOffsets();
     return;
@@ -946,80 +958,83 @@ function renderHeaderDrawer(drawerCfg) {
     }
   }
 
-  // Badge phân loại (Khuyến mãi / Thông tin / Cảnh báo)
   const type = cfg.type || 'promo';
   const badgeEl = $('headerDrawerBadge');
   const badgeIcon = $('headerDrawerBadgeIcon');
   const badgeText = $('headerDrawerBadgeText');
-  if (badgeEl && badgeIcon && badgeText) {
-    if (type === 'warning') {
-      badgeEl.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shrink-0 uppercase tracking-wider bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/50';
-      badgeIcon.className = 'fas fa-triangle-exclamation';
-      badgeText.textContent = 'Cảnh báo';
-    } else if (type === 'info') {
-      badgeEl.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shrink-0 uppercase tracking-wider bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/50';
-      badgeIcon.className = 'fas fa-circle-info';
-      badgeText.textContent = 'Thông tin';
-    } else {
-      badgeEl.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shrink-0 uppercase tracking-wider bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/50';
-      badgeIcon.className = 'fas fa-fire';
-      badgeText.textContent = 'Khuyến mãi';
-    }
+  const btnLinkEl = $('headerDrawerBtnLink');
+  const detailEl = $('headerDrawerDetail');
+
+  // Đổi màu background thông báo theo từng loại (Khuyến mãi / Cảnh báo / Thông tin)
+  if (type === 'warning') {
+    d.className = 'fixed top-0 left-0 w-full z-[80] text-xs py-2 px-3 shadow-md border-b transition-all duration-300 bg-amber-50 dark:bg-amber-950/90 border-amber-200 dark:border-amber-900/60 text-amber-950 dark:text-amber-100';
+    if (badgeEl) badgeEl.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shrink-0 uppercase tracking-wider bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700';
+    if (badgeIcon) badgeIcon.className = 'fas fa-triangle-exclamation';
+    if (badgeText) badgeText.textContent = 'Cảnh báo';
+    if (btnLinkEl) btnLinkEl.className = 'bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm transition active:scale-95 whitespace-nowrap flex items-center gap-1 shrink-0';
+    if (detailEl) detailEl.className = 'hidden pt-2 border-t border-amber-200/80 dark:border-amber-900/60 text-[11px] sm:text-xs leading-relaxed text-amber-900 dark:text-amber-200 font-medium whitespace-pre-wrap';
+  } else if (type === 'info') {
+    d.className = 'fixed top-0 left-0 w-full z-[80] text-xs py-2 px-3 shadow-md border-b transition-all duration-300 bg-indigo-50 dark:bg-indigo-950/90 border-indigo-200 dark:border-indigo-900/60 text-indigo-950 dark:text-indigo-100';
+    if (badgeEl) badgeEl.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shrink-0 uppercase tracking-wider bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700';
+    if (badgeIcon) badgeIcon.className = 'fas fa-circle-info';
+    if (badgeText) badgeText.textContent = 'Thông tin';
+    if (btnLinkEl) btnLinkEl.className = 'bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm transition active:scale-95 whitespace-nowrap flex items-center gap-1 shrink-0';
+    if (detailEl) detailEl.className = 'hidden pt-2 border-t border-indigo-200/80 dark:border-indigo-900/60 text-[11px] sm:text-xs leading-relaxed text-indigo-900 dark:text-indigo-200 font-medium whitespace-pre-wrap';
+  } else {
+    // Promo / Khuyến mãi
+    d.className = 'fixed top-0 left-0 w-full z-[80] text-xs py-2 px-3 shadow-md border-b transition-all duration-300 bg-rose-50 dark:bg-rose-950/90 border-rose-200 dark:border-rose-900/60 text-rose-950 dark:text-rose-100';
+    if (badgeEl) badgeEl.className = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shrink-0 uppercase tracking-wider bg-rose-100 dark:bg-rose-900/60 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-700';
+    if (badgeIcon) badgeIcon.className = 'fas fa-fire';
+    if (badgeText) badgeText.textContent = 'Khuyến mãi';
+    if (btnLinkEl) btnLinkEl.className = 'bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm transition active:scale-95 whitespace-nowrap flex items-center gap-1 shrink-0';
+    if (detailEl) detailEl.className = 'hidden pt-2 border-t border-rose-200/80 dark:border-rose-900/60 text-[11px] sm:text-xs leading-relaxed text-rose-900 dark:text-rose-200 font-medium whitespace-pre-wrap';
   }
 
   // Tiêu đề ngắn
   const titleEl = $('headerDrawerTitleText');
-  const sepEl = $('headerDrawerSeparator');
   if (titleEl) {
-    if (cfg.title && cfg.title.trim()) {
-      titleEl.textContent = cfg.title.trim();
-      titleEl.classList.remove('hidden');
-      if (sepEl) sepEl.classList.remove('hidden');
+    titleEl.textContent = (cfg.title || 'Thông báo từ hệ thống').trim();
+  }
+
+  // Nội dung chi tiết trong dropdown xổ ra
+  if (detailEl) {
+    detailEl.textContent = (cfg.text || cfg.title || '').trim();
+  }
+
+  // Nút CTA: Tùy chọn hiển thị (chỉ hiện khi showCta !== false && btnText có giá trị)
+  const btnTextEl = $('headerDrawerBtnText');
+  const hasCta = cfg.showCta !== false && String(cfg.btnText || '').trim() !== '';
+  if (btnLinkEl) {
+    if (hasCta) {
+      btnLinkEl.classList.remove('hidden');
+      if (btnTextEl) btnTextEl.textContent = cfg.btnText.trim();
+      const rawLink = (cfg.link || '#packages').trim();
+      btnLinkEl.onclick = (e) => {
+        if (rawLink.startsWith('#')) {
+          e.preventDefault();
+          const target = $(rawLink.slice(1));
+          if (target) target.scrollIntoView({ behavior: 'smooth' });
+        } else if (rawLink.startsWith('/')) {
+          e.preventDefault();
+          if (typeof router !== 'undefined') router.navigate(rawLink);
+          else location.pathname = rawLink;
+        } else {
+          // http / https link
+          btnLinkEl.href = rawLink;
+          btnLinkEl.target = '_blank';
+        }
+      };
     } else {
-      titleEl.classList.add('hidden');
-      if (sepEl) sepEl.classList.add('hidden');
+      btnLinkEl.classList.add('hidden');
     }
   }
 
-  // Nội dung thông báo
-  if ($('headerDrawerContentText')) $('headerDrawerContentText').textContent = cfg.text;
-
-  // Nút CTA & Đường dẫn
-  const btnLinkEl = $('headerDrawerBtnLink');
-  const btnTextEl = $('headerDrawerBtnText');
-  if (btnLinkEl) {
-    btnLinkEl.href = cfg.link || '#packages';
-    if (btnTextEl) btnTextEl.textContent = cfg.btnText || 'Xem ngay';
-  }
-
-  // Tùy chọn cho phép khách đóng thông báo
   const closeBtn = $('headerDrawerCloseBtn');
   if (closeBtn) {
-    if (cfg.closeable === false) {
-      closeBtn.classList.add('hidden');
-    } else {
-      closeBtn.classList.remove('hidden');
-    }
-  }
-  
-  const detEl = $('headerDrawerDetail');
-  const btnChev = $('headerDrawerChevronBtn');
-  if (cfg.detail && cfg.detail.trim()) {
-    if (detEl) detEl.textContent = cfg.detail.trim();
-    if (btnChev) btnChev.classList.remove('hidden');
-  } else {
-    if (btnChev) btnChev.classList.add('hidden');
-    if (detEl) detEl.classList.add('hidden');
+    closeBtn.classList.toggle('hidden', cfg.closeable === false);
   }
 
   d.classList.remove('hidden');
-  setTimeout(updateDrawerOffsets, 50);
-}
-
-function closeHeaderDrawer() {
-  const d = $('headerAnnouncementDrawer');
-  if (d) d.classList.add('hidden');
-  isHeaderDrawerClosed = true;
   updateDrawerOffsets();
 }
 window.addEventListener('resize', updateDrawerOffsets);
@@ -1123,7 +1138,63 @@ function renderDynamicFaqs(list) {
 renderDynamicFaqs(DEFAULT_FAQS_STATIC);
 
 function disableUpgradeMode(){isUpgradeMode=false;isRenewMode=false;upgradeConfirmed=false;baseOrderPriceVnd=baseOrderPriceUsd=baseOrderPriceCny=0;renderPackages('all');}
-function genHTML(pkg){
+
+function getActiveFlashSale() {
+  const s = (cfgCache && (cfgCache.flashSale || (cfgCache.sales && cfgCache.sales.campaign))) || null;
+  if (!s || !s.enabled) return null;
+  const pct = Number(s.discountPercent) || 0;
+  if (pct <= 0) return null;
+  const now = Date.now();
+  if (s.startDate) {
+    const startT = new Date(s.startDate).getTime();
+    if (!isNaN(startT) && now < startT) return null;
+  }
+  if (s.endDate) {
+    const endT = new Date(s.endDate).getTime();
+    if (!isNaN(endT) && now > endT) return null;
+  }
+  return {
+    title: s.title || "Flash Sale Giờ Vàng",
+    percent: pct,
+    scope: s.scope || "all"
+  };
+}
+
+function doesFlashSaleApply(pkg, sale) {
+  if (!sale || !pkg || pkg.isCustom) return false;
+  if (sale.scope === "cycle") {
+    return pkg.time !== "lifetime" && (!pkg.category || !pkg.category.includes("usage"));
+  }
+  if (sale.scope === "data") {
+    return pkg.time === "lifetime" || (pkg.category && pkg.category.includes("usage"));
+  }
+  return true; // 'all'
+}
+
+function getEffectivePkg(pkg) {
+  if (!pkg) return pkg;
+  const sale = getActiveFlashSale();
+  if (!doesFlashSaleApply(pkg, sale)) return pkg;
+  const pct = sale.percent;
+  const factor = (100 - pct) / 100;
+  const origVnd = Number(pkg.original_vnd) > Number(pkg.vnd) ? Number(pkg.original_vnd) : Number(pkg.vnd || 0);
+  const discountedVnd = Math.max(1000, Math.round((Number(pkg.vnd || 0) * factor) / 1000) * 1000);
+  const discountedCny = Math.round((Number(pkg.cny || 0) * factor) * 10) / 10;
+  const discountedUsd = Math.round((Number(pkg.usd || 0) * factor) * 10) / 10;
+  return {
+    ...pkg,
+    isFlashSale: true,
+    flashSaleTitle: sale.title,
+    flashSalePercent: pct,
+    original_vnd: origVnd,
+    vnd: discountedVnd,
+    cny: discountedCny,
+    usd: discountedUsd
+  };
+}
+
+function genHTML(rawPkg){
+ const pkg = getEffectivePkg(rawPkg);
  const l = i18n[lang], p = pkg[lang] || pkg.vi;
  const pkgRawName = String(pkg.vi?.name || pkg.name || 'Gói VPN').trim();
  const pkgDisplayName = tx(pkgRawName);
@@ -1143,7 +1214,7 @@ function genHTML(pkg){
  }
 
  const isDisabled = isUpgradeMode && (pkg.vnd <= baseOrderPriceVnd || (oCache && pkg.id === oCache.pkgId)) && !pkg.isCustom;
- const hasSale = !pkg.isCustom && Number(pkg.original_vnd) > Number(pkg.vnd);
+ const hasSale = !pkg.isCustom && (Number(pkg.original_vnd) > Number(pkg.vnd) || !!pkg.isFlashSale);
  const ratio = hasSale && pkg.vnd > 0 ? (Number(pkg.original_vnd) / Number(pkg.vnd)) : 1;
 
  let realPriceDisplay = '';
@@ -1160,7 +1231,9 @@ function genHTML(pkg){
  }
 
  const origPriceStr = hasSale ? `<span class="line-through text-slate-400 dark:text-slate-500 font-bold text-xs md:text-sm ml-2">${origPriceDisplay}</span>` : '';
- const promoStickerHtml = pkg.promo_sticker ? `<div class="inline-flex items-center gap-1 bg-gradient-to-r from-rose-500 to-pink-500 text-white font-black text-[10px] md:text-[11px] px-2.5 py-0.5 rounded-full shadow-sm mb-2"><i class="fas fa-gift text-[9px]"></i><span>${esc(pkg.promo_sticker)}</span></div>` : '';
+ const promoStickerHtml = pkg.isFlashSale
+    ? `<div class="inline-flex items-center gap-1 bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-black text-[10px] md:text-[11px] px-2.5 py-0.5 rounded-full shadow-md mb-2 animate-pulse"><i class="fas fa-bolt text-[9px] text-yellow-300"></i><span>${esc(pkg.flashSaleTitle || 'Flash Sale')} -${pkg.flashSalePercent}%</span></div>`
+    : (pkg.promo_sticker ? `<div class="inline-flex items-center gap-1 bg-gradient-to-r from-rose-500 to-pink-500 text-white font-black text-[10px] md:text-[11px] px-2.5 py-0.5 rounded-full shadow-sm mb-2"><i class="fas fa-gift text-[9px]"></i><span>${esc(pkg.promo_sticker)}</span></div>` : '');
  const priceHTML = pkg.isCustom
    ? `<div class="text-xl font-black text-red-600 dark:text-red-400 mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${p.price || ''}</div>`
    : `<div class="mb-4 border-b border-slate-100 dark:border-white/10 pb-3 mt-1.5 flex flex-wrap items-baseline"><span class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-indigo-300">${realPriceDisplay}</span>${origPriceStr}</div>`;

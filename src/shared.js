@@ -106,7 +106,7 @@ function ensureToastContainer() {
   if (!c) {
     c = document.createElement('div');
     c.id = 'toastStackContainer';
-    c.className = 'fixed top-4 right-4 z-[999999] flex flex-col gap-2 max-w-[340px] w-full pointer-events-none px-3 sm:px-0';
+    c.className = 'fixed top-4 right-4 z-[999999] flex flex-col gap-2 pointer-events-none px-3 sm:px-0 items-end max-w-full';
     document.body.appendChild(c);
   }
   return c;
@@ -124,11 +124,11 @@ export function toast(msg, type = 'ok') {
   const iconClass = isErr ? 'fa-circle-xmark text-red-500' : isWarn ? 'fa-triangle-exclamation text-amber-500' : isInfo ? 'fa-circle-info text-blue-500' : 'fa-circle-check text-green-500';
   const borderClass = isErr ? 'border-red-200 dark:border-red-900/60' : isWarn ? 'border-amber-200 dark:border-amber-900/60' : isInfo ? 'border-blue-200 dark:border-blue-900/60' : 'border-green-200 dark:border-green-900/60';
   
-  el.className = 'pointer-events-auto flex items-start gap-2.5 p-3 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-lg border ' + borderClass + ' text-slate-800 dark:text-slate-100 text-xs sm:text-sm font-medium transition-all duration-300 transform translate-x-4 opacity-0';
+  el.className = 'pointer-events-auto flex items-center gap-2.5 py-2.5 px-4 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-lg border ' + borderClass + ' text-slate-800 dark:text-slate-100 text-xs sm:text-sm font-semibold transition-all duration-300 transform translate-x-4 opacity-0 w-fit max-w-[calc(100vw-2rem)] sm:max-w-md ml-auto';
   
-  el.innerHTML = '<i class="fas ' + iconClass + ' text-base mt-0.5 shrink-0"></i>' +
-    '<div class="flex-1 leading-snug break-words">' + msg + '</div>' +
-    '<button type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 ml-1 shrink-0 p-0.5" aria-label="Close">' +
+  el.innerHTML = '<i class="fas ' + iconClass + ' text-base shrink-0"></i>' +
+    '<div class="leading-snug break-words whitespace-normal">' + msg + '</div>' +
+    '<button type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 ml-2 shrink-0 p-0.5" aria-label="Close">' +
       '<i class="fas fa-times text-xs"></i>' +
     '</button>';
   

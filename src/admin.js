@@ -96,7 +96,7 @@ const PDS={1:"https://vpntrinhhg.pages.dev",2:"https://vpntrinhhg2.pages.dev",3:
 let PD=/pages\.dev$/.test(location.hostname)?location.origin:PDS[3];
 const GH_REPO="trinhhg/vpntrinhhg3";
 const PKG_LIST=[["t1","Gói 1 tháng - 60,000VND / $2.5 / ¥15.5 (100GB)",30],["t2","Gói 1 tháng - 70,000VND / $3 / ¥18 (500GB)",30],["c1","Gói 1 tháng - 80,000VND / $3.5 / ¥20.5 (1000GB)",30],["c2","Gói Cao Cấp - 200,000VND / $8 / ¥50 (3000GB)",30],["c3","Gói 1 Năm - 799,000VND / $30 / ¥199 (300GB/tháng)",365],["d1","Không Giới Hạn - 200,000VND / $8 / ¥52 (200GB)",0],["d2","Không Giới Hạn - 399,000VND / $16 / ¥102 (1000GB)",0],["d3","Không Giới Hạn - 999,000VND / $40 / ¥256 (5000GB)",0],["o1","[Giá cũ] Gói 1 tháng - 50,000VND / ¥12.5 (100GB)",30],["o2","[Giá cũ] Gói 1 tháng - 60,000VND / ¥15 (500GB)",30],["o3","[Giá cũ] Gói 1 tháng - 70,000VND / ¥17.5 (1000GB)",30]];
-const TABS=[["t-ord","fa-box","Đơn hàng"],["t-pkg","fa-tags","Bán hàng & Gói"],["t-rev","fa-chart-pie","Doanh thu"],["t-trans","fa-file-invoice-dollar","Đối soát MacroDroid"],["t-check","fa-clipboard-check","Kiểm tra"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-mail","fa-envelope","Soạn mail"],["t-cms","fa-book","H.Dẫn"],["t-settings","fa-cog","Cài đặt"]];
+const TABS=[["t-ord","fa-box","Đơn hàng"],["t-pkg","fa-tags","Bán hàng"],["t-rev","fa-chart-pie","Doanh thu"],["t-trans","fa-file-invoice-dollar","Đối soát"],["t-check","fa-clipboard-check","Kiểm tra"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-mail","fa-envelope","Soạn mail"],["t-cms","fa-book","H.Dẫn"],["t-settings","fa-cog","Cài đặt"]];
 // PKG_DB: giá hiện tại + giá cũ (o1/o2/o3) để nhận diện dữ liệu lịch sử — TUYỆT ĐỐI không quy đổi totalVnd của đơn cũ sang giá mới.
 const PKG_DB={t1:{n:"Gói 1 tháng",d:"100GB",vnd:60000,cny:15.5,m:1},t2:{n:"Gói 1 tháng",d:"500GB",vnd:70000,cny:18,m:1},c1:{n:"Gói 1 tháng",d:"1000GB",vnd:80000,cny:20.5,m:1},c2:{n:"Gói Cao Cấp",d:"3000GB",vnd:200000,cny:50,m:1},c3:{n:"Gói 1 Năm",d:"300GB/tháng",vnd:799000,cny:199,m:12},d1:{n:"Không Giới Hạn",d:"200GB",vnd:200000,cny:52,m:0},d2:{n:"Không Giới Hạn",d:"1000GB",vnd:399000,cny:102,m:0},d3:{n:"Không Giới Hạn",d:"5000GB",vnd:999000,cny:256,m:0},o1:{n:"Gói 1 tháng",d:"100GB",vnd:50000,cny:12.5,m:1,old:true},o2:{n:"Gói 1 tháng",d:"500GB",vnd:60000,cny:15,m:1,old:true},o3:{n:"Gói 1 tháng",d:"1000GB",vnd:70000,cny:17.5,m:1,old:true}};
 
@@ -968,7 +968,9 @@ const kpi = (l, v, sub, c) => `<div class="bg-white border border-slate-200 roun
 const box = (t, inner) => `<div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm"><div class="font-bold text-sm text-slate-800 mb-3">${t}</div>${inner}</div>`;
 
 function revList(all){
-  const r = getCentralRates();
+  const revR = getRevRates();
+  const pkgR = getPkgRates();
+  const r = revR;
   return ordersDb.filter(o => normSt(o.status) === "success").map(o => {
     const p = pkgOf(o), pay = payOf(o), qty = Number(o.qty) || 1;
     let cny = 0, vnd = 0;
@@ -983,7 +985,9 @@ function revList(all){
 }
 
 function costSum(all){
-  const r = getCentralRates();
+  const revR = getRevRates();
+  const pkgR = getPkgRates();
+  const r = revR;
   let total = 0; const by = {};
   (cmsDb.costs || []).forEach(c => {
     let v = Number(c.total) || 0;
@@ -1292,6 +1296,76 @@ function revOver(R, b){
 // SUB-TAB 2: THANH TOÁN & BẢNG TỶ GIÁ TẬP TRUNG (CENTRALIZED EXCHANGE RATE TABLE)
 const PAYLBL = { Bank: "🏦 Ngân hàng VN", Alipay: "🔵 Alipay", Weixin: "🟢 WeChat" };
 
+
+function getRevRates() {
+  const s = (cmsDb && cmsDb.settings) || {};
+  const r = s.revRates || s.rates || {};
+  return {
+    vndCny: Number(r.vndCny) || Number(s.cnyRate) || 3600,
+    vndUsd: Number(r.vndUsd) || 26100
+  };
+}
+
+function getPkgRates() {
+  const s = (cmsDb && cmsDb.settings) || {};
+  const r = s.pkgRates || s.rates || {};
+  return {
+    vndCny: Number(r.vndCny) || Number(s.cnyRate) || 3500,
+    cnyUsd: Number(r.cnyUsd) || 7.25,
+    vndUsd: Number(r.vndUsd) || 25500
+  };
+}
+
+async function saveRevRates() {
+  const vndCny = Number($("revRateVndCny") ? $("revRateVndCny").value : 0) || 0;
+  const vndUsd = Number($("revRateVndUsd") ? $("revRateVndUsd").value : 0) || 0;
+  if (vndCny <= 0 || vndUsd <= 0) return toast("Vui lòng nhập tỷ giá doanh thu lớn hơn 0", "warn");
+  cmsDb.settings = cmsDb.settings || {};
+  cmsDb.settings.revRates = { vndCny, vndUsd };
+  cmsDb.settings.cnyRate = vndCny; // fallback
+  try {
+    await saveCmsDb();
+    toast("Đã lưu Bảng Tỷ Giá Quy Đổi Doanh Thu thành công!");
+    logEvent("ok", "Tỷ giá doanh thu", `VND/CNY: ${vndCny} · VND/USD: ${vndUsd}`);
+    renderRevenue();
+  } catch(e) { toast("Lỗi: " + e.message, "err"); }
+}
+window.saveRevRates = saveRevRates;
+
+async function savePkgRates() {
+  const vndCny = Number($("pkgRateVndCny") ? $("pkgRateVndCny").value : 0) || 0;
+  const cnyUsd = Number($("pkgRateCnyUsd") ? $("pkgRateCnyUsd").value : 0) || 0;
+  const vndUsd = Number($("pkgRateVndUsd") ? $("pkgRateVndUsd").value : 0) || 0;
+  if (vndCny <= 0 || cnyUsd <= 0 || vndUsd <= 0) return toast("Vui lòng nhập đủ 3 tỷ giá định giá gói lớn hơn 0", "warn");
+  cmsDb.settings = cmsDb.settings || {};
+  cmsDb.settings.pkgRates = { vndCny, cnyUsd, vndUsd };
+  try {
+    await saveCmsDb();
+    toast("Đã lưu Bảng Tỷ Giá Định Giá Gói Cước thành công!");
+    logEvent("ok", "Tỷ giá gói cước", `VND/CNY: ${vndCny} · CNY/USD: ${cnyUsd} · VND/USD: ${vndUsd}`);
+  } catch(e) { toast("Lỗi: " + e.message, "err"); }
+}
+window.savePkgRates = savePkgRates;
+
+async function syncRatesToPackages() {
+  const r = getPkgRates();
+  if (!Array.isArray(adminPkgsList) || !adminPkgsList.length) return toast("Chưa tải danh sách gói cước", "warn");
+  adminPkgsList.forEach(p => {
+    if (p.isCustom) return;
+    if (p.vnd > 0) {
+      p.cny = Math.round((p.vnd / r.vndCny) * 2) / 2;
+      p.usd = Math.round((p.vnd / r.vndUsd) * 2) / 2;
+    }
+  });
+  try {
+    await aj("/api/packages", { method: "POST", body: { packages: adminPkgsList } });
+    await syncPublicPackagesPayload();
+    toast("Đã tự động quy đổi và đồng bộ giá CNY & USD cho toàn bộ gói cước!");
+    if (!$("t-pkg").classList.contains("hidden")) renderPkgAdmin();
+  } catch(e) { toast("Lỗi đồng bộ gói cước: " + e.message, "err"); }
+}
+window.syncRatesToPackages = syncRatesToPackages;
+
 function revPay(R, b){
   if (revPayView) { revPayDetail(b); return; }
   const r = getCentralRates();
@@ -1397,25 +1471,7 @@ async function saveCentralRates(){
   }
 }
 
-async function syncRatesToPackages(){
-  const r = getCentralRates();
-  if (!Array.isArray(adminPkgsList) || !adminPkgsList.length) return toast("Chưa tải danh sách gói cước", "warn");
-  adminPkgsList.forEach(p => {
-    if (p.isCustom) return;
-    if (p.vnd > 0) {
-      // Tự động tính giá CNY và USD theo VND thực thu
-      p.cny = Math.round((p.vnd / r.vndCny) * 2) / 2; // làm tròn 0.5
-      p.usd = Math.round((p.vnd / r.vndUsd) * 2) / 2; // làm tròn 0.5
-    }
-  });
-  try {
-    await aj("/api/packages", { method: "POST", body: { packages: adminPkgsList } });
-    toast("Đã tự động quy đổi và đồng bộ giá CNY & USD cho toàn bộ gói cước!");
-    if (!$("t-pkg").classList.contains("hidden")) renderPkgAdmin();
-  } catch(e) {
-    toast("Lỗi đồng bộ gói cước: " + e.message, "err");
-  }
-}
+// [duplicate syncRatesToPackages removed]
 
 // BẢNG DRILL-DOWN CHI TIẾT CỔNG THANH TOÁN (CARD VIEW ĐƠN HÀNG THÀNH CÔNG)
 function revPayDetail(b){
@@ -2493,6 +2549,7 @@ function getHeaderDrawerFromForm() {
     enabled: $("headerDrawerOn") ? $("headerDrawerOn").checked : false,
     type: $("headerDrawerType") ? $("headerDrawerType").value : (cur.type || "promo"),
     title: $("headerDrawerTitle") ? $("headerDrawerTitle").value.trim() : (cur.title || ""),
+    showCta: $("headerDrawerShowCta") ? $("headerDrawerShowCta").checked : (cur.showCta !== false),
     text: $("headerDrawerText") ? $("headerDrawerText").value.trim() : (cur.text || ""),
     btnText: $("headerDrawerBtnText") ? $("headerDrawerBtnText").value.trim() : (cur.btnText || ""),
     link: $("headerDrawerLink") ? $("headerDrawerLink").value.trim() : (cur.link || ""),
@@ -2511,6 +2568,7 @@ function loadDrawerSettingsUI() {
   if ($("headerDrawerLink")) $("headerDrawerLink").value = d.link || "";
   if ($("headerDrawerEndTime")) $("headerDrawerEndTime").value = d.endTime || "";
   if ($("headerDrawerCloseable")) $("headerDrawerCloseable").checked = d.closeable !== false;
+  if ($("headerDrawerShowCta")) $("headerDrawerShowCta").checked = d.showCta !== false;
   updateHeaderDrawerPreview();
 }
 
@@ -3074,10 +3132,37 @@ function getEditorHtml() {
 }
 function commitCms(){
  if(!curArt)return;
- const a=artsOf(curCms).find(x=>(x.slug||toSlug(x.name))===curArt);if(!a)return;
+ const a=artsOf(curCms).find(x=>(x.slug||toSlug(x.name))===curArt) || artsOf(curCms).find(x=>x.slug===curArtSlug);
+ if(!a)return;
+
+ // Quét trực tiếp toàn bộ DOM thực tế của form soạn thảo
+ if($("cmsArtNameInp")) curArtName = $("cmsArtNameInp").value.trim();
+ if($("cmsArtSlugInp")) curArtSlug = $("cmsArtSlugInp").value.trim();
+ if($("cmsArtAuthorInp")) curArtAuthor = $("cmsArtAuthorInp").value.trim();
+ if($("cmsArtWatermarkInp")) curArtWatermark = $("cmsArtWatermarkInp").value.trim();
+ if($("cmsArtWmOpacityInp")) curArtWmOpacity = Number($("cmsArtWmOpacityInp").value) || 12;
+ if($("chkArtShowToc")) curArtShowToc = $("chkArtShowToc").checked;
+ if($("chkArtShowFaqs")) curArtShowFaqs = $("chkArtShowFaqs").checked;
+ if($("chkArtShowRelated")) curArtShowRelated = $("chkArtShowRelated").checked;
+
+ // Quét toàn bộ dòng FAQ riêng trực tiếp từ DOM
+ const faqRows = document.querySelectorAll("#artFaqsContainer > div");
+ if(faqRows.length){
+   curArtFaqs = Array.from(faqRows).map(row => ({
+     q: (row.querySelector("input")?.value || "").trim(),
+     a: (row.querySelector("textarea")?.value || "").trim()
+   })).filter(f => f.q || f.a);
+ }
+
+ // Quét toàn bộ bài viết liên quan đã được tick chọn
+ const checkedRelated = document.querySelectorAll("#artRelatedContainerWrap input[type='checkbox']:checked");
+ if(checkedRelated.length){
+   curArtRelated = Array.from(checkedRelated).map(cb => cb.dataset.slug || cb.value).filter(Boolean);
+ }
+
  curArtHtml = getEditorHtml();
  a.html=curArtHtml;
- a.showToc=curArtShowToc;a.showFaqs=curArtShowFaqs;a.showRelated=curArtShowRelated;
+ a.showToc=curArtShowToc;
  a.name=curArtName;
  a.slug=toSlug(curArtSlug||curArtName);
  a.author=curArtAuthor;
@@ -3085,8 +3170,8 @@ function commitCms(){
  a.wmOpacity=curArtWmOpacity||12;
  a.showFaqs=curArtShowFaqs||(Array.isArray(curArtFaqs)&&curArtFaqs.length>0);
  a.showRelated=curArtShowRelated||(Array.isArray(curArtRelated)&&curArtRelated.length>0);
- a.faqs=arr(curArtFaqs).map(f=>({q:(f.q||'').trim(),a:(f.a||'').trim()})).filter(f=>f.q||f.a);
- a.relatedArts=arr(curArtRelated);
+ a.faqs=curArtFaqs;
+ a.relatedArts=curArtRelated;
  delete a.id;
  delete a.blocks;
 }
@@ -3385,13 +3470,13 @@ function renderCmsEditor(){
  const a=artsOf(curCms).find(x=>(x.slug||toSlug(x.name))===curArt);
  const deepLink = `${PD.replace(/\/$/,"")}/portal/guide/${encodeURIComponent(curCms)}/${encodeURIComponent(curArtSlug||curArt)}`;
  $("cmsArtMeta").innerHTML=`
-  <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tên bài viết</label><input value="${esc(curArtName)}" oninput="curArtName=this.value;if(!curArtSlug||curArtSlug.startsWith('bai-viet-moi-')){$('cmsArtSlugInp').value=toSlug(this.value);curArtSlug=toSlug(this.value);}" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-bold"></div>
+  <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tên bài viết</label><input id="cmsArtNameInp" value="${esc(curArtName)}" oninput="curArtName=this.value;if(!curArtSlug||curArtSlug.startsWith('bai-viet-moi-')){$('cmsArtSlugInp').value=toSlug(this.value);curArtSlug=toSlug(this.value);}" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-bold"></div>
   <div><label class="block text-[10px] font-bold text-indigo-600 mb-0.5">Slug URL (không dấu, cách nhau dấu -)</label><input id="cmsArtSlugInp" value="${esc(curArtSlug||curArt)}" oninput="this.value=toSlug(this.value);curArtSlug=this.value;" class="w-full p-2 text-xs border border-indigo-200 rounded-lg outline-none font-mono font-bold bg-indigo-50/30"></div>
-  <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tác giả</label><input value="${esc(curArtAuthor)}" oninput="curArtAuthor=this.value" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div>
+  <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tác giả</label><input id="cmsArtAuthorInp" value="${esc(curArtAuthor)}" oninput="curArtAuthor=this.value" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div>
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:col-span-2">
     <div class="sm:col-span-2">
       <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Watermark nền</label>
-      <input value="${esc(curArtWatermark)}" oninput="curArtWatermark=this.value;cmsPrev();" placeholder="VD: VPNTrinhHg" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none">
+      <input id="cmsArtWatermarkInp" value="${esc(curArtWatermark)}" oninput="curArtWatermark=this.value;cmsPrev();" placeholder="VD: VPNTrinhHg" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none">
     </div>
     <div>
       <label class="block text-[10px] font-bold text-slate-500 mb-0.5 flex justify-between">
@@ -3407,7 +3492,7 @@ function renderCmsEditor(){
    <button type="button" onclick="copyArtDeepLink(${q(curCms)},${q(curArtSlug||curArt)})" class="bg-indigo-600 text-white hover:bg-indigo-700 font-bold px-3 py-1.5 rounded-lg text-xs transition shrink-0 shadow-sm flex items-center justify-center gap-1.5"><i class="fas fa-copy"></i>Copy Link</button>
   </div>
   <div class="sm:col-span-4 pt-1">
-   <label class="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer"><input type="checkbox" ${curArtShowToc?"checked":""} onchange="curArtShowToc=this.checked" class="w-4 h-4 accent-indigo-600">Tự động hiện khung Mục lục (từ H2, H3)</label>
+   <label class="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer"><input type="checkbox" id="chkArtShowToc" ${curArtShowToc?"checked":""} onchange="curArtShowToc=this.checked" class="w-4 h-4 accent-indigo-600">Tự động hiện khung Mục lục (từ H2, H3)</label>
   </div>
   <details class="sm:col-span-4 border-t border-slate-100 pt-2" ${curArtShowFaqs || curArtShowRelated ? "open" : ""}><summary class="cursor-pointer select-none text-xs font-extrabold text-indigo-900 py-1"><i class="fas fa-sliders text-indigo-600 mr-1.5"></i>Nâng cao: FAQ riêng &amp; Bài viết liên quan (bấm để mở)</summary><div class="space-y-3 pt-2">
    <!-- KHỐI FAQ RIÊNG CỦA BÀI VIẾT -->
@@ -3427,7 +3512,7 @@ function renderCmsEditor(){
     <div class="max-h-36 overflow-y-auto border border-slate-200 rounded-xl p-2 bg-slate-50 space-y-1.5 scroll-hide">
     ${guideTabList().flatMap(t=>artsOf(t.id).filter(x=>(x.slug||toSlug(x.name))!==curArt).map(other=>`
       <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white p-1.5 rounded-lg border border-slate-100 cursor-pointer hover:bg-indigo-50/50">
-       <input type="checkbox" ${curArtRelated.includes(other.slug||toSlug(other.name))?'checked':''} onchange="toggleRelatedArtPick('${esc(other.slug||toSlug(other.name))}', this.checked)" class="accent-indigo-600 w-4 h-4">
+       <input type="checkbox" data-slug="${esc(other.slug||toSlug(other.name))}" value="${esc(other.slug||toSlug(other.name))}" ${curArtRelated.includes(other.slug||toSlug(other.name))?'checked':''} onchange="toggleRelatedArtPick('${esc(other.slug||toSlug(other.name))}', this.checked)" class="accent-indigo-600 w-4 h-4">
        <span class="text-[10px] font-bold text-slate-400">[${esc(t.name)}]</span>
        <span class="truncate flex-1">${esc(other.name||other.slug)}</span>
       </label>
@@ -3881,7 +3966,7 @@ function renderGuideCategoriesTree() {
        </div>
        <div class="flex items-center gap-2">
          <input type="text" value="${esc(tab.img||'')}" oninput="tab.img=this.value;cmsEnsureTabs();guides._tabs[${tIdx}].img=this.value;" placeholder="URL icon (để trống = mặc định)" class="w-48 p-1.5 text-xs border border-slate-200 rounded-lg outline-none font-mono bg-slate-50">
-         <button type="button" onclick="addArticleToCategory('${esc(tab.id)}')" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1 shadow-sm">
+         <button type="button" onclick="addArticleToCategory('${esc(tab.id)}')" class="whitespace-nowrap shrink-0 bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1 shadow-sm">
            <i class="fas fa-plus"></i>Thêm bài mới
          </button>
          ${DEF_TABS.some(d=>d.id===tab.id) ? '' : `
@@ -3896,15 +3981,15 @@ function renderGuideCategoriesTree() {
          const sl = a.slug || toSlug(a.name);
          const timeStr = a.updated ? fmtBank(a.updated) : "Mới";
          return `
-         <div onclick="openCmsEditorForArt('${esc(tab.id)}', '${esc(sl)}')" class="cursor-pointer bg-slate-50/70 hover:bg-indigo-50/40 border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-3 transition">
+         <div onclick="openCmsEditorForArt('${esc(tab.id)}', '${esc(sl)}')" class="cursor-pointer bg-slate-50/70 hover:bg-indigo-50/40 border border-slate-200 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition">
            <div class="min-w-0">
-             <div class="font-bold text-xs md:text-sm text-slate-800 truncate">${esc(a.name || "(Chưa đặt tên)")}</div>
+             <div class="font-bold text-xs md:text-sm text-slate-800 break-words leading-snug">${esc(a.name || "(Chưa đặt tên)")}</div>
              <div class="text-[10px] text-slate-500 mt-0.5">Được viết bởi: <b>${esc(a.author || "Admin")}</b> · Cập nhật lần cuối: ${timeStr}</div>
            </div>
-           <div class="flex items-center gap-1.5 shrink-0" onclick="event.stopPropagation()">
-             <button type="button" onclick="copyArtDeepLink('${esc(tab.id)}', '${esc(sl)}')" class="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg text-xs font-bold hover:bg-emerald-600 hover:text-white transition"><i class="fas fa-link mr-1"></i>Link</button>
-             <button type="button" onclick="openCmsEditorForArt('${esc(tab.id)}', '${esc(sl)}')" class="text-indigo-600 bg-white border border-indigo-200 px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-indigo-600 hover:text-white transition"><i class="fas fa-pen mr-1"></i>Sửa bài</button>
-             <button type="button" onclick="curCms='${esc(tab.id)}';artDel('${esc(sl)}')" class="text-red-500 bg-white border border-red-200 px-2 py-1 rounded-lg text-xs hover:bg-red-500 hover:text-white transition"><i class="fas fa-trash"></i></button>
+           <div class="flex items-center justify-end sm:justify-start gap-1.5 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200/60" onclick="event.stopPropagation()">
+             <button type="button" onclick="copyArtDeepLink('${esc(tab.id)}', '${esc(sl)}')" class="whitespace-nowrap shrink-0 text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-emerald-600 hover:text-white transition"><i class="fas fa-link mr-1"></i>Link</button>
+             <button type="button" onclick="openCmsEditorForArt('${esc(tab.id)}', '${esc(sl)}')" class="whitespace-nowrap shrink-0 text-indigo-600 bg-white border border-indigo-200 px-3 py-1 rounded-lg text-xs font-bold hover:bg-indigo-600 hover:text-white transition"><i class="fas fa-pen mr-1"></i>Sửa bài</button>
+             <button type="button" onclick="curCms='${esc(tab.id)}';artDel('${esc(sl)}')" class="whitespace-nowrap shrink-0 text-red-500 bg-white border border-red-200 px-2 py-1 rounded-lg text-xs hover:bg-red-500 hover:text-white transition"><i class="fas fa-trash"></i></button>
            </div>
          </div>
          `;
@@ -5130,6 +5215,28 @@ setTimeout(checkTestModeStatus, 1500);
 window.onload=()=>{if(TOKEN)startApp(false);else{buildTabs();$("loginWrap").classList.remove("hidden");}};
 
 
+
+async function syncPublicPackagesPayload() {
+  const pkgs = adminPkgsList && adminPkgsList.length ? adminPkgsList : (cmsDb && cmsDb.packages) || [];
+  const flashSale = (cmsDb && cmsDb.sales && cmsDb.sales.campaign) || (cmsDb && cmsDb.settings && cmsDb.settings.flashSale) || null;
+  const coupons = (cmsDb && Array.isArray(cmsDb.coupons)) ? cmsDb.coupons : [];
+  const couponEnabled = (cmsDb && cmsDb.settings && cmsDb.settings.couponEnabled !== false);
+  try {
+    await aj("/api/packages", {
+      method: "POST",
+      body: {
+        packages: pkgs,
+        flashSale,
+        coupons,
+        couponEnabled
+      }
+    });
+  } catch(e) {
+    console.warn("Lỗi syncPublicPackagesPayload:", e.message);
+  }
+}
+window.syncPublicPackagesPayload = syncPublicPackagesPayload;
+
 // ===================== FLASH SALE & CHIẾN DỊCH BÁN HÀNG =====================
 function renderFlashSaleAdmin() {
   const s = (cmsDb && cmsDb.sales && cmsDb.sales.campaign) || (cmsDb && cmsDb.settings && cmsDb.settings.flashSale) || {};
@@ -5158,6 +5265,7 @@ async function saveFlashSaleConfig() {
 
   try {
     await saveCmsDb();
+    await syncPublicPackagesPayload();
     toast("Đã lưu chiến dịch Flash Sale thành công!");
     logEvent("ok", "admin", "Lưu Flash Sale: " + (c.title || "Chiến dịch mới"));
   } catch(e) {
@@ -5167,7 +5275,22 @@ async function saveFlashSaleConfig() {
 window.saveFlashSaleConfig = saveFlashSaleConfig;
 
 // ===================== MÃ GIẢM GIÁ (COUPON / VOUCHER) =====================
+
+async function toggleCouponCheckoutInput(checked) {
+  cmsDb.settings = cmsDb.settings || {};
+  cmsDb.settings.couponEnabled = checked;
+  try {
+    await saveCmsDb();
+    await syncPublicPackagesPayload();
+    toast(checked ? "Đã BẬT ô nhập mã giảm giá tại trang thanh toán" : "Đã TẮT ô nhập mã giảm giá tại trang thanh toán");
+  } catch(e) {
+    toast("Lỗi lưu cài đặt coupon: " + e.message, "err");
+  }
+}
+window.toggleCouponCheckoutInput = toggleCouponCheckoutInput;
+
 function renderCouponAdmin() {
+  if ($("couponCheckoutEnabledToggle")) $("couponCheckoutEnabledToggle").checked = (cmsDb && cmsDb.settings && cmsDb.settings.couponEnabled !== false);
   const tbody = $("couponListTbody");
   if (!tbody) return;
   const list = arr(cmsDb && cmsDb.coupons);
@@ -5210,6 +5333,7 @@ async function toggleCouponStatus(idx) {
   cmsDb.coupons[idx].enabled = cmsDb.coupons[idx].enabled === false ? true : false;
   try {
     await saveCmsDb();
+    await syncPublicPackagesPayload();
     renderCouponAdmin();
     toast("Đã cập nhật trạng thái mã coupon");
   } catch(e) { toast("Lỗi: " + e.message, "err"); }
@@ -5223,6 +5347,7 @@ async function deleteCouponItem(idx) {
   cmsDb.coupons.splice(idx, 1);
   try {
     await saveCmsDb();
+    await syncPublicPackagesPayload();
     renderCouponAdmin();
     toast("Đã xóa mã coupon: " + code);
   } catch(e) { toast("Lỗi: " + e.message, "err"); }
@@ -5252,7 +5377,8 @@ function openAddCouponModal() {
     enabled: true
   });
 
-  saveCmsDb().then(() => {
+  saveCmsDb().then(async () => {
+    await syncPublicPackagesPayload();
     renderCouponAdmin();
     toast(`Đã tạo thành công coupon: ${cleanCode} (-${isPct ? numVal + '%' : fmtVnd(numVal) + 'đ'})`);
   }).catch(e => toast("Lỗi: " + e.message, "err"));
@@ -5417,6 +5543,11 @@ if (typeof window !== 'undefined') {
     ['toggleCouponStatus', typeof toggleCouponStatus !== 'undefined' ? toggleCouponStatus : undefined],
     ['deleteCouponItem', typeof deleteCouponItem !== 'undefined' ? deleteCouponItem : undefined],
     ['openAddCouponModal', typeof openAddCouponModal !== 'undefined' ? openAddCouponModal : undefined],
+    ['saveRevRates', typeof saveRevRates !== 'undefined' ? saveRevRates : undefined],
+    ['savePkgRates', typeof savePkgRates !== 'undefined' ? savePkgRates : undefined],
+    ['syncRatesToPackages', typeof syncRatesToPackages !== 'undefined' ? syncRatesToPackages : undefined],
+    ['syncPublicPackagesPayload', typeof syncPublicPackagesPayload !== 'undefined' ? syncPublicPackagesPayload : undefined],
+    ['toggleCouponCheckoutInput', typeof toggleCouponCheckoutInput !== 'undefined' ? toggleCouponCheckoutInput : undefined],
     ['renderExceptionsTab', typeof renderExceptionsTab !== 'undefined' ? renderExceptionsTab : undefined],
     ['manualMatchTx', typeof manualMatchTx !== 'undefined' ? manualMatchTx : undefined],
     ['rejectTxItem', typeof rejectTxItem !== 'undefined' ? rejectTxItem : undefined],
@@ -5487,7 +5618,6 @@ if (typeof window !== 'undefined') {
     ['revOver', typeof revOver !== 'undefined' ? revOver : undefined],
     ['revPay', typeof revPay !== 'undefined' ? revPay : undefined],
     ['saveCentralRates', typeof saveCentralRates !== 'undefined' ? saveCentralRates : undefined],
-    ['syncRatesToPackages', typeof syncRatesToPackages !== 'undefined' ? syncRatesToPackages : undefined],
     ['revPayDetail', typeof revPayDetail !== 'undefined' ? revPayDetail : undefined],
     ['revCost', typeof revCost !== 'undefined' ? revCost : undefined],
     ['addCost', typeof addCost !== 'undefined' ? addCost : undefined],

@@ -136,4 +136,94 @@ describe('tests/business.test.js — Nghiệp vụ Tính toán, Phân bổ & CMS
       expect(daysExpired < 0).toBe(true);
     });
   });
+
+  describe('Chiến dịch Flash Sale & Giảm giá Gói Cước', () => {
+    const isSaleActive = (sale, testNow) => {
+      if (!sale || !sale.enabled) return false;
+      const now = testNow || new Date();
+      if (sale.start && new Date(sale.start) > now) return false;
+      if (sale.end && new Date(sale.end) < now) return false;
+      return Number(sale.discount) > 0;
+    };
+
+    const doesSaleApply = (pkg, sale) => {
+      if (!sale) return false;
+      const scope = sale.scope || 'all';
+      if (scope === 'all') return true;
+      const isCycle = !pkg.isCustom && (pkg.durationMonths || pkg.name?.toLowerCase().includes('tháng') || pkg.name?.toLowerCase().includes('năm'));
+      if (scope === 'cycle') return !!isCycle;
+      if (scope === 'data') return !isCycle;
+      return true;
+    };
+
+    it('kiểm tra trạng thái kích hoạt và khung giờ vàng của Flash Sale', () => {
+      const activeSale = {
+        enabled: true,
+        discount: 20,
+        start: '2026-11-01T00:00:00',
+        end: '2026-11-02T23:59:59',
+        scope: 'all'
+      };
+      const pastSale = {
+        enabled: true,
+        discount: 20,
+        start: '2026-10-01T00:00:00',
+        end: '2026-10-10T23:59:59',
+        scope: 'all'
+      };
+
+      const testDate = new Date('2026-11-01T12:00:00');
+      expect(isSaleActive(activeSale, testDate)).toBe(true);
+      expect(isSaleActive(pastSale, testDate)).toBe(false);
+    });
+
+    it('áp dụng đúng phạm vi gói cước theo chu kỳ (cycle) hoặc dung lượng (data)', () => {
+      const cycleSale = { enabled: true, discount: 15, scope: 'cycle' };
+      const dataSale = { enabled: true, discount: 15, scope: 'data' };
+
+      const pkg1Month = { id: 'p1', name: 'Gói 1 Tháng', durationMonths: 1, vnd: 70000 };
+      const pkgDataOnly = { id: 'p2', name: 'Gói 100GB Data Không Hạn', durationMonths: 0, isCustom: false, vnd: 120000 };
+
+      expect(doesSaleApply(pkg1Month, cycleSale)).toBe(true);
+      expect(doesSaleApply(pkgDataOnly, cycleSale)).toBe(false);
+
+      expect(doesSaleApply(pkg1Month, dataSale)).toBe(false);
+      expect(doesSaleApply(pkgDataOnly, dataSale)).toBe(true);
+    });
+
+    it('tính toán giá giảm flash sale và làm tròn số đẹp', () => {
+      const originalVnd = 70000;
+      const discount = 20; // 20%
+      const discountedVnd = Math.max(1000, Math.round(originalVnd * (1 - discount / 100) / 1000) * 1000);
+      expect(discountedVnd).toBe(56000);
+    });
+  });
+
+  describe('Tách Biệt Bảng Tỷ Giá: Doanh Thu vs Gói Cước', () => {
+    it('quy đổi doanh thu thực thu theo tỷ giá Báo cáo Doanh thu', () => {
+      const revRates = { alipayCny: 3500, wechatCny: 3500, usd: 25400 };
+      const orders = [
+        { pay: 'Alipay', cny: 10 },
+        { pay: 'Weixin', cny: 20 }
+      ];
+
+      const totalVndConverted = orders.reduce((sum, o) => {
+        const rate = o.pay === 'Alipay' ? revRates.alipayCny : revRates.wechatCny;
+        return sum + (o.cny * rate);
+      }, 0);
+
+      expect(totalVndConverted).toBe(105000); // 10*3500 + 20*3500 = 105.000 đ
+    });
+
+    it('tính toán giá niêm yết CNY và USD cho gói cước theo tỷ giá Bán hàng', () => {
+      const pkgRates = { vndCny: 3400, vndUsd: 25400 };
+      const pkgVnd = 70000;
+
+      const cnyPrice = Math.round((pkgVnd / pkgRates.vndCny) * 2) / 2; // làm tròn 0.5
+      const usdPrice = Math.round((pkgVnd / pkgRates.vndUsd) * 2) / 2;
+
+      expect(cnyPrice).toBe(20.5); // 70000 / 3400 = 20.588 -> 20.5
+      expect(usdPrice).toBe(3);    // 70000 / 25400 = 2.75 -> 3.0
+    });
+  });
 });
