@@ -2589,7 +2589,18 @@ window.updateHeaderDrawerPreview = updateHeaderDrawerPreview;
 
 function getHeaderDrawerFromForm() {
   const cur = (cmsDb && cmsDb.settings && cmsDb.settings.headerDrawer) || {};
-  if (!$("headerDrawerText")) return cur;
+  const fs = (cmsDb && cmsDb.settings && cmsDb.settings.flashSale) || (cmsDb && cmsDb.sales && cmsDb.sales.campaign) || cur.flashSale || null;
+  const cp = (cmsDb && Array.isArray(cmsDb.coupons)) ? cmsDb.coupons : (cur.coupons || []);
+  const ce = (cmsDb && cmsDb.settings && cmsDb.settings.couponEnabled !== undefined) ? cmsDb.settings.couponEnabled : (cur.couponEnabled !== false);
+
+  if (!$("headerDrawerText")) {
+    return {
+      ...cur,
+      flashSale: fs,
+      coupons: cp,
+      couponEnabled: ce
+    };
+  }
   return {
     enabled: $("headerDrawerOn") ? $("headerDrawerOn").checked : false,
     type: $("headerDrawerType") ? $("headerDrawerType").value : (cur.type || "promo"),
@@ -2599,7 +2610,10 @@ function getHeaderDrawerFromForm() {
     btnText: $("headerDrawerBtnText") ? $("headerDrawerBtnText").value.trim() : (cur.btnText || ""),
     link: $("headerDrawerLink") ? $("headerDrawerLink").value.trim() : (cur.link || ""),
     endTime: $("headerDrawerEndTime") ? $("headerDrawerEndTime").value : (cur.endTime || ""),
-    closeable: $("headerDrawerCloseable") ? $("headerDrawerCloseable").checked : (cur.closeable !== false)
+    closeable: $("headerDrawerCloseable") ? $("headerDrawerCloseable").checked : (cur.closeable !== false),
+    flashSale: fs,
+    coupons: cp,
+    couponEnabled: ce
   };
 }
 
@@ -4148,7 +4162,18 @@ function renderGuideCategoriesTree() {
  }
 }
 // ===================== CÀI ĐẶT =====================
-const saveCmsDb = () => aj("/api/cms", { method: "POST", body: cmsDb });
+function prepareCmsDbSync() {
+  if (!cmsDb || typeof cmsDb !== 'object') return;
+  cmsDb.settings = cmsDb.settings || {};
+  cmsDb.settings.headerDrawer = getHeaderDrawerFromForm();
+  if (Array.isArray(adminPkgsList) && adminPkgsList.length) {
+    cmsDb.packages = adminPkgsList;
+  }
+}
+const saveCmsDb = () => {
+  prepareCmsDbSync();
+  return aj("/api/cms", { method: "POST", body: cmsDb });
+};
 // Điều hướng 2 sub-tab bên trong Tab Kiểm tra (Kiểm tra bù link vs Rà quét & Map lại)
 let curCheckSubTab = 'data';
 function renderHealTab() {

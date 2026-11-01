@@ -810,6 +810,11 @@ async function loadConfig(){
           }
         }catch(e){}
       }
+      if (cfgCache.headerDrawer) {
+        if (cfgCache.headerDrawer.flashSale && !cfgCache.flashSale) cfgCache.flashSale = cfgCache.headerDrawer.flashSale;
+        if (Array.isArray(cfgCache.headerDrawer.coupons) && (!cfgCache.coupons || !cfgCache.coupons.length)) cfgCache.coupons = cfgCache.headerDrawer.coupons;
+        if (cfgCache.headerDrawer.couponEnabled !== undefined && cfgCache.couponEnabled === undefined) cfgCache.couponEnabled = cfgCache.headerDrawer.couponEnabled;
+      }
       // Single Source of Truth từ Server (không khôi phục mã đã xóa từ localStorage)
       if (!Array.isArray(cfgCache.coupons)) cfgCache.coupons = [];
       if (cfgCache.couponEnabled === undefined) cfgCache.couponEnabled = true;
@@ -1783,7 +1788,7 @@ async function confirmPaid(){
  const mn=$('payMethod').value,mname=mn==='bank'?'Ngân hàng VN':mn==='alipay'?'Alipay':'Weixin';
  let res;
  if(isUpgradeMode)res=await wpostRetry('/api/public/upgrade',{orderId:oCache.id,pkgId:currentPackage.id,qty:currentMultiplier,method:mname});
- else res=await wpostRetry('/api/public/order',{id:currentOrderId,email:$('cusEmail').value.trim(),zalo:$('cusZalo').value.trim(),pkgId:currentPackage.id,qty:currentMultiplier,method:mname,needSupport:$('needSupport').checked,sourceWeb:currentTargetWeb,renewOf:isRenewMode&&oCache?oCache.id:undefined,couponCode:currentAppliedCoupon?currentAppliedCoupon.code:undefined});
+ else res=await wpostRetry('/api/public/order',{id:currentOrderId,email:$('cusEmail').value.trim(),zalo:$('cusZalo').value.trim(),pkgId:currentPackage.id,qty:currentMultiplier,method:mname,needSupport:$('needSupport').checked,sourceWeb:currentTargetWeb,renewOf:isRenewMode&&oCache?oCache.id:undefined,coupon:currentAppliedCoupon?currentAppliedCoupon.code:undefined,couponCode:currentAppliedCoupon?currentAppliedCoupon.code:undefined});
  if(!res||!res.ok){showToast((res&&res.data&&res.data.error)||l.req_err,'error');btn.innerHTML=orig;btn.disabled=false;return;}
  const o=res.data.order;
  showToast(lang==='vi'?'Thành công!':'Success!');
