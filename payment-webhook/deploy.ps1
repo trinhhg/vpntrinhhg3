@@ -1,13 +1,15 @@
 param(
-  [string]$message = "Deployed by Antigravity"
+  [string]$message = "Deployed by Antigravity",
+  [string]$token = ""
 )
 $accountId = $env:CF_ACCOUNT_ID_ACC2
 if (-not $accountId) { $accountId = "b00e100d60e5b0d729628129fc44e772" }
 $scriptName = "payment-webhook"
-$token = $env:CF_API_TOKEN_ACC2
+if (-not $token) { $token = $env:CF_API_TOKEN_ACC2 }
+if (-not $token) { $token = $env:D1_CF_API_TOKEN }
 if (-not $token) { $token = $env:CF_API_TOKEN }
 if (-not $token) {
-  Write-Error "Vui lòng thiết lập biến môi trường CF_API_TOKEN hoặc CF_API_TOKEN_ACC2 trước khi deploy."
+  Write-Error "Vui lòng truyền -token <API_TOKEN> hoặc thiết lập biến môi trường CF_API_TOKEN_ACC2 / D1_CF_API_TOKEN trước khi deploy."
   exit 1
 }
 $workerFile = "$PSScriptRoot\worker.js"
