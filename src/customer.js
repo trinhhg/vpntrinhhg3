@@ -555,7 +555,7 @@ function renderGuideCategories() {
           return `
           <div onclick="openGuideArticle('${esc(tab.id)}', '${esc(sl)}')" class="cursor-pointer bg-white dark:bg-[#0a0a0a] border-2 border-slate-200 dark:border-white/10 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-2xl p-4 flex items-center justify-between gap-3 transition-transform duration-300 hover:-translate-y-1 shadow-sm">
             <div class="min-w-0">
-              <div class="font-extrabold text-sm md:text-base text-slate-800 dark:text-white truncate">${esc(a.name || 'Bài viết')}</div>
+              <div class="font-extrabold text-sm md:text-base text-slate-800 dark:text-white break-words leading-snug">${esc(a.name || 'Bài viết')}</div>
               <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Được viết bởi: ${esc(a.author || "Admin")} · Cập nhật lần cuối: ${timeStr}</div>
             </div>
             <i class="fas fa-chevron-right text-slate-400 dark:text-slate-500 shrink-0"></i>
@@ -810,16 +810,9 @@ async function loadConfig(){
           }
         }catch(e){}
       }
-      // Fallback từ localStorage nếu backend worker chưa deploy bản cập nhật
-      if(!cfgCache.flashSale){
-        try{ const f=JSON.parse(localStorage.getItem('vpn_flash_sale_cache')||'null'); if(f) cfgCache.flashSale=f; }catch(e){}
-      }
-      if(!Array.isArray(cfgCache.coupons) || !cfgCache.coupons.length){
-        try{ const c=JSON.parse(localStorage.getItem('vpn_coupons_cache')||'null'); if(Array.isArray(c)) cfgCache.coupons=c; }catch(e){}
-      }
-      if(cfgCache.couponEnabled === undefined){
-        try{ const ce=localStorage.getItem('vpn_coupon_enabled_cache'); if(ce!==null) cfgCache.couponEnabled = (ce === 'true'); }catch(e){}
-      }
+      // Single Source of Truth từ Server (không khôi phục mã đã xóa từ localStorage)
+      if (!Array.isArray(cfgCache.coupons)) cfgCache.coupons = [];
+      if (cfgCache.couponEnabled === undefined) cfgCache.couponEnabled = true;
       renderDock();
       // Nếu có danh sách gói động do Admin cấu hình từ tab Giá gói, thay thế mảng pkgs tĩnh
       if(Array.isArray(cfgCache.packages) && cfgCache.packages.length){
@@ -837,6 +830,7 @@ async function loadConfig(){
             original_vnd: Number(p.original_vnd) || 0,
             promo_sticker: p.promo_sticker || '',
             bonus_days: Number(p.bonus_days) || 0,
+            bonus_text: p.bonus_text || '',
             data: p.data || '',
             dev: p.dev || 'unlimited',
             time: p.time !== undefined ? p.time : (p.m === 0 ? 'lifetime' : (p.m || 1)),
@@ -1241,9 +1235,21 @@ function genHTML(rawPkg){
  }
 
  const origPriceStr = hasSale ? `<span class="line-through text-slate-400 dark:text-slate-500 font-bold text-xs md:text-sm ml-2">${origPriceDisplay}</span>` : '';
- const promoStickerHtml = pkg.isFlashSale
-    ? `<div class="inline-flex items-center gap-1 bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-black text-[10px] md:text-[11px] px-2.5 py-0.5 rounded-full shadow-md mb-2 animate-pulse"><i class="fas fa-bolt text-[9px] text-yellow-300"></i><span>${esc(pkg.flashSaleTitle || 'Flash Sale')} -${pkg.flashSalePercent}%</span></div>`
-    : (pkg.promo_sticker ? `<div class="inline-flex items-center gap-1 bg-gradient-to-r from-rose-500 to-pink-500 text-white font-black text-[10px] md:text-[11px] px-2.5 py-0.5 rounded-full shadow-sm mb-2"><i class="fas fa-gift text-[9px]"></i><span>${esc(pkg.promo_sticker)}</span></div>` : '');
+ 
+ // Badge Flash Sale: Hiệu ứng heartbeat xung quanh, không nhấp nháy mờ rõ
+ const flashSaleBadge = pkg.isFlashSale
+   ? `<div class="inline-flex items-center gap-1 bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-black text-[10px] md:text-[11px] px-2.5 py-0.5 rounded-full shadow-md btn-heartbeat shrink-0"><i class="fas fa-bolt text-[9px] text-yellow-300"></i><span>${esc(pkg.flashSaleTitle || 'Flash Sale')} -${pkg.flashSalePercent}%</span></div>`
+   : '';
+
+ // Tem sticker quà tặng (VD: +3 NGÀY)
+ const promoStickerBadge = pkg.promo_sticker
+   ? `<div class="inline-flex items-center gap-1 bg-gradient-to-r from-rose-500 to-pink-500 text-white font-black text-[10px] md:text-[11px] px-2.5 py-0.5 rounded-full shadow-sm shrink-0"><i class="fas fa-gift text-[9px]"></i><span>${esc(pkg.promo_sticker)}</span></div>`
+   : '';
+
+ const inlineBadges = (flashSaleBadge || promoStickerBadge)
+   ? `<div class="flex items-center gap-1.5 flex-wrap justify-end mb-1">${flashSaleBadge}${promoStickerBadge}</div>`
+   : '';
+
  const priceHTML = pkg.isCustom
    ? `<div class="text-xl font-black text-red-600 dark:text-red-400 mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${p.price || ''}</div>`
    : `<div class="mb-4 border-b border-slate-100 dark:border-white/10 pb-3 mt-1.5 flex flex-wrap items-baseline"><span class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-indigo-300">${realPriceDisplay}</span>${origPriceStr}</div>`;
@@ -1254,12 +1260,26 @@ function genHTML(rawPkg){
      ? `<a href="#footerArea" class="w-full block text-center bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-bold py-3 rounded-xl text-sm hover:bg-red-600 hover:text-white transition">Liên hệ Admin</a>`
      : `<button onclick="openCheckout('${pkg.id}')" class="w-full bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-bold py-3 rounded-xl text-sm hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white dark:hover:shadow-[0_0_15px_rgba(99,102,241,0.5)] transition">Đăng ký Gói Này</button>`;
 
- // Render 4 loại Tag dạng badge mở
- let tagBadges = '';
- if (pkg.tag) tagBadges += `<span class="absolute -top-3 right-4 bg-red-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10 shadow-sm">${esc(pkg.tag[lang] || pkg.tag.vi || pkg.tag)}</span>`;
- if (pkg.tag2) tagBadges += `<span class="absolute -top-3 left-4 bg-blue-500 text-white text-[10px] px-3 py-1 rounded-full font-black z-10 shadow-sm">${esc(pkg.tag2[lang] || pkg.tag2.vi || pkg.tag2)}</span>`;
- if (pkg.tag3) tagBadges += `<span class="absolute -top-3 right-4 bg-red-500 text-white font-black px-3 py-1 rounded-full shadow-sm text-[10px] z-10">${esc(pkg.tag3[lang] || pkg.tag3.vi || pkg.tag3)}</span>`;
- if (pkg.tag4) tagBadges += `<span class="absolute -top-3 left-4 bg-purple-600 text-white text-[10px] px-3 py-1 rounded-full font-black z-10 shadow-sm">${esc(pkg.tag4[lang] || pkg.tag4.vi || pkg.tag4)}</span>`;
+ // Bố cục các Tag góc thẻ: Góc Trái và Góc Phải độc lập, không bị chồng đè
+ const leftBadges = [
+   pkg.tag2 ? `<span class="bg-blue-500 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag2[lang] || pkg.tag2.vi || pkg.tag2)}</span>` : '',
+   pkg.tag4 ? `<span class="bg-purple-600 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag4[lang] || pkg.tag4.vi || pkg.tag4)}</span>` : ''
+ ].filter(Boolean).join('');
+
+ const rightBadges = [
+   pkg.tag1 ? `<span class="bg-red-500 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag1[lang] || pkg.tag1.vi || pkg.tag1)}</span>` : '',
+   pkg.tag3 ? `<span class="bg-amber-500 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag3[lang] || pkg.tag3.vi || pkg.tag3)}</span>` : ''
+ ].filter(Boolean).join('');
+
+ const hasCornerBadges = leftBadges || rightBadges;
+
+ // Chữ hiển thị cạnh thời hạn: Dùng bonus_text của admin, không hardcode "+3 ngày tặng"
+ let bonusLabel = '';
+ if (pkg.bonus_text) {
+   bonusLabel = ` <span class="text-rose-500 font-extrabold text-xs">(${esc(pkg.bonus_text)})</span>`;
+ } else if (Number(pkg.bonus_days) > 0 && !pkg.promo_sticker) {
+   bonusLabel = ` <span class="text-rose-500 font-extrabold text-xs">(+${pkg.bonus_days} ngày)</span>`;
+ }
 
  const extraFeats = Array.isArray(pkg.features) && pkg.features.length ? pkg.features : ['Băng thông lên đến 3Gbps'];
  const featsHtml = extraFeats.map(f => `
@@ -1271,13 +1291,14 @@ function genHTML(rawPkg){
 
  return `
  <div class="bg-white dark:bg-[#0a0a0a] p-5 md:p-6 rounded-3xl border border-slate-100 dark:border-indigo-500/50 shadow-sm relative flex flex-col justify-between transition-all duration-300 transform hover:-translate-y-2 hover:scale-[1.02] neon-animated-card mt-4 md:mt-0 ${isDisabled ? 'pkg-disabled' : ''}">
-   ${tagBadges}
-   <div class="${tagBadges ? 'pt-2' : ''}">
+   ${leftBadges ? `<div class="absolute -top-3 left-4 flex items-center gap-1.5 z-10">${leftBadges}</div>` : ''}
+   ${rightBadges ? `<div class="absolute -top-3 right-4 flex items-center gap-1.5 z-10">${rightBadges}</div>` : ''}
+   <div class="${hasCornerBadges ? 'pt-2' : ''}">
      <div class="flex items-center justify-between gap-1 flex-wrap">
        <h3 class="font-extrabold text-lg md:text-xl dark:text-white mb-0.5">${esc(pkgDisplayName)}</h3>
-       ${promoStickerHtml}
+       ${inlineBadges}
      </div>
-     <p class="text-xs font-bold text-slate-500 dark:text-slate-300 mb-2">${esc(displayTime)}${pkg.bonus_days ? ` <span class="text-rose-500 font-extrabold">(+${pkg.bonus_days} ngày tặng)</span>` : ''}</p>
+     <p class="text-xs font-bold text-slate-500 dark:text-slate-300 mb-2">${displayTime}${bonusLabel}</p>
      ${priceHTML}
      <ul class="text-xs md:text-sm space-y-2.5 mb-6 font-medium text-slate-600 dark:text-white">
        <!-- TÁCH RỜI NHÃN VÀ GIÁ TRỊ THÀNH 2 THẺ ĐỘC LẬP ĐỂ KHÔNG BỊ LỖI BĂM THẺ [[1]] -->
@@ -1326,16 +1347,37 @@ function startUpgrade(){
 function startRenew(){disableUpgradeMode();isRenewMode=true;switchPortalTab('p-store',true);showToast(i18n[lang].select_renew_pkg,'info');}
 
 function openCheckout(id){
- currentPackage=pkgs.find(p=>p.id===id);const co=$('checkoutSection');
-if ($('view-portal').classList.contains('active')) $('p-store').appendChild(co); else $('view-store').appendChild(co);
+ const raw = pkgs.find(p=>p.id===id);
+ currentPackage = getEffectivePkg(raw) || raw;
+ const co=$('checkoutSection');
+ if ($('view-portal').classList.contains('active')) $('p-store').appendChild(co); else $('view-store').appendChild(co);
  co.classList.remove('hidden');co.scrollIntoView({behavior:'smooth'});
- $('selectedPackageName').innerText=currentPackage[lang].name;$('selectedPackageData').innerText=currentPackage.data;$('selectedPackagePrice').innerText=currentPackage[lang].price;
+ $('selectedPackageName').innerText=currentPackage[lang]?.name || currentPackage.name || 'Gói VPN';
+ $('selectedPackageData').innerText=currentPackage.data || '';
+
+ const hasSale = currentPackage.isFlashSale || (currentPackage.original_vnd && currentPackage.original_vnd > currentPackage.vnd);
+ if (hasSale) {
+   const currVnd = (currentPackage.vnd || 0).toLocaleString('en-US');
+   const origVnd = (raw?.vnd || currentPackage.original_vnd || 0).toLocaleString('en-US');
+   $('selectedPackagePrice').innerHTML = `<span class="text-indigo-600 dark:text-indigo-400 font-black">${currVnd}VND</span> <span class="text-xs line-through text-slate-400 font-normal ml-1.5">${origVnd}VND</span>`;
+ } else {
+   $('selectedPackagePrice').innerText=currentPackage[lang]?.price || `${(currentPackage.vnd||0).toLocaleString('en-US')}VND`;
+ }
+
  const hideEmail=isUpgradeMode||isRenewMode;$('emailBlock').classList.toggle('hidden',hideEmail);$('cusEmail').required=!hideEmail;
  $('checkoutTitle').innerText=isUpgradeMode?i18n[lang].upgrade_confirm_title:i18n[lang].checkout_title;
  $('upgradePriceNote').classList.toggle('hidden',!isUpgradeMode);
- currentOrderId='';upgradeConfirmed=false;currentAppliedCoupon=null;if($('couponInput'))$('couponInput').value='';if($('couponAppliedMsg'))$('couponAppliedMsg').classList.add('hidden');renderDurationSelector(currentPackage);selectDuration(1);
+ currentOrderId='';upgradeConfirmed=false;currentAppliedCoupon=null;if($('couponInput'))$('couponInput').value='';if($('couponAppliedMsg'))$('couponAppliedMsg').classList.add('hidden');
+ 
+ // Bật/Tắt ô nhập mã giảm giá theo cài đặt từ admin
+ const couponEnabled = (cfgCache && (cfgCache.couponEnabled !== undefined ? cfgCache.couponEnabled : (cfgCache.cms && cfgCache.cms.settings && cfgCache.cms.settings.couponEnabled))) !== false;
+ const cWrap = $('couponBlockWrap');
+ if (cWrap) cWrap.classList.toggle('hidden', !couponEnabled);
+
+ renderDurationSelector(currentPackage);selectDuration(1);
  const z=$('cusZalo');z.classList.toggle('hidden',!$('needSupport').checked);z.required=$('needSupport').checked&&!hideEmail;
- document.body.classList.add('checkout-active');renderPaymentBox();}
+ document.body.classList.add('checkout-active');renderPaymentBox();
+}
 
 function renderDurationSelector(pkg) {
  const block = $('durationBlock');
@@ -1446,15 +1488,54 @@ function applyCouponCode() {
     return;
   }
   const coupons = (cfgCache && (cfgCache.coupons || (cfgCache.cms && cfgCache.cms.coupons))) || [];
-  const c = coupons.find(x => x && String(x.code).toUpperCase() === code && x.enabled !== false);
-  if (!c) {
+  const c = coupons.find(x => x && String(x.code).toUpperCase() === code);
+  if (!c || c.enabled === false) {
     currentAppliedCoupon = null;
     if (msg) {
-      msg.textContent = 'Mã giảm giá không hợp lệ hoặc đã hết hạn!';
+      msg.textContent = 'Mã giảm giá không tồn tại hoặc đã bị tắt!';
       msg.className = 'mt-1.5 text-[11px] font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1';
       msg.classList.remove('hidden');
     }
     showToast('Mã giảm giá không tồn tại!', 'error');
+    calculateTotal();
+    return;
+  }
+
+  const now = Date.now();
+  if (c.startDate) {
+    const sTs = new Date(c.startDate).getTime();
+    if (sTs && now < sTs) {
+      currentAppliedCoupon = null;
+      if (msg) { msg.textContent = 'Mã giảm giá chưa đến thời gian áp dụng!'; msg.className = 'mt-1.5 text-[11px] font-bold text-amber-600 flex items-center gap-1'; msg.classList.remove('hidden'); }
+      showToast('Mã giảm giá chưa đến thời gian áp dụng!', 'warn');
+      calculateTotal();
+      return;
+    }
+  }
+  const expStr = c.expiry || c.endDate;
+  if (expStr) {
+    const eTs = new Date(expStr).getTime();
+    if (eTs && now > eTs) {
+      currentAppliedCoupon = null;
+      if (msg) { msg.textContent = 'Mã giảm giá đã hết hạn sử dụng!'; msg.className = 'mt-1.5 text-[11px] font-bold text-rose-600 flex items-center gap-1'; msg.classList.remove('hidden'); }
+      showToast('Mã giảm giá đã hết hạn sử dụng!', 'warn');
+      calculateTotal();
+      return;
+    }
+  }
+  const limit = Number(c.maxUsage || c.usageLimit) || 0;
+  if (limit > 0 && Number(c.usedCount || 0) >= limit) {
+    currentAppliedCoupon = null;
+    if (msg) { msg.textContent = 'Mã giảm giá đã hết lượt sử dụng!'; msg.className = 'mt-1.5 text-[11px] font-bold text-rose-600 flex items-center gap-1'; msg.classList.remove('hidden'); }
+    showToast('Mã giảm giá đã hết lượt sử dụng!', 'warn');
+    calculateTotal();
+    return;
+  }
+  const minSpend = Number(c.minSpend || c.minOrder) || 0;
+  if (minSpend > 0 && (currentTotalVnd || 0) < minSpend) {
+    currentAppliedCoupon = null;
+    if (msg) { msg.textContent = `Đơn hàng tối thiểu phải từ ${minSpend.toLocaleString('en-US')}đ!`; msg.className = 'mt-1.5 text-[11px] font-bold text-amber-600 flex items-center gap-1'; msg.classList.remove('hidden'); }
+    showToast(`Đơn hàng tối thiểu phải từ ${minSpend.toLocaleString('en-US')}đ!`, 'warn');
     calculateTotal();
     return;
   }
@@ -1464,7 +1545,7 @@ function applyCouponCode() {
   if (msg) {
     const isPct = c.type === 'percent';
     const valText = isPct ? `${c.value}%` : `${c.value.toLocaleString('en-US')}đ`;
-    msg.innerHTML = `<i class="fas fa-check-circle"></i>Đã áp dụng mã <b>${c.code}</b>: Giảm ${valText}!`;
+    msg.innerHTML = `<i class="fas fa-check-circle"></i>Đã áp dụng mã <b>${esc(c.code)}</b>: Giảm ${valText}!`;
     msg.className = 'mt-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1';
     msg.classList.remove('hidden');
   }
@@ -1485,7 +1566,7 @@ function calculateTotal(){
   let noteStr='', calcStr='';
   if(m==='bank'){ noteStr=`${dpVnd.toLocaleString('en-US')}VND`; calcStr=`${currentTotalVnd.toLocaleString('en-US')}VND`; }
   else if(m==='alipay'||m==='wechat'||m==='weixin'){ noteStr=`¥${dpCny}`; calcStr=`¥${currentTotalCny}`; }
-  else { noteStr=`$${dpUsd}`; calcStr=`$${currentTotalUsd}`; }
+  else { noteStr=`${dpUsd}`; calcStr=`${currentTotalUsd}`; }
   const upNote = $('upgradePriceNote');
   if(upNote) upNote.innerHTML=`Đơn giá nâng cấp: <b>${noteStr} / Tháng</b>`;
   if(pCalc) pCalc.innerText=`Thanh toán chênh lệch (${currentMultiplier} tháng): ${calcStr}`;
@@ -1495,21 +1576,34 @@ function calculateTotal(){
   currentTotalUsd=parseFloat((currentPackage.usd*currentMultiplier).toFixed(2));
   let calcStr='';
   const isOneTime = currentPackage.time === 12 || currentPackage.time === 'lifetime';
-  if(m==='bank'){ calcStr=isOneTime ? `${currentTotalVnd.toLocaleString('en-US')}VND` : `${currentPackage.vnd.toLocaleString('en-US')}VND × ${currentMultiplier} = ${currentTotalVnd.toLocaleString('en-US')}VND`; }
+  if(m==='bank'){
+    calcStr=isOneTime ? `${currentTotalVnd.toLocaleString('en-US')}VND` : `${currentPackage.vnd.toLocaleString('en-US')}VND × ${currentMultiplier} = ${currentTotalVnd.toLocaleString('en-US')}VND`;
+    if (currentPackage.isFlashSale) {
+      calcStr += ` <span class="text-[11px] font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-800 ml-1.5 inline-flex items-center gap-1"><i class="fas fa-bolt text-[9px]"></i>-${currentPackage.flashSalePercent}%</span>`;
+    }
+  }
   else if(m==='alipay'||m==='wechat'||m==='weixin'){ calcStr=isOneTime ? `¥${currentTotalCny}` : `¥${currentPackage.cny} × ${currentMultiplier} = ¥${currentTotalCny}`; }
-  else { calcStr=isOneTime ? `$${currentTotalUsd}` : `$${currentPackage.usd} × ${currentMultiplier} = $${currentTotalUsd}`; }
-  if(pCalc) pCalc.innerText=calcStr;
- }
+  else { calcStr=isOneTime ? `${currentTotalUsd}` : `${currentPackage.usd} × ${currentMultiplier} = ${currentTotalUsd}`; }
+  
   if (currentAppliedCoupon) {
     const isPct = currentAppliedCoupon.type === 'percent';
     let disc = isPct ? Math.round((currentTotalVnd * currentAppliedCoupon.value) / 100) : currentAppliedCoupon.value;
     if (currentAppliedCoupon.maxDiscount && disc > currentAppliedCoupon.maxDiscount) disc = currentAppliedCoupon.maxDiscount;
     if (disc >= currentTotalVnd) disc = Math.max(0, currentTotalVnd - 1000);
     currentTotalVnd = Math.max(1000, currentTotalVnd - disc);
-    if (pCalc && m === 'bank') pCalc.innerText += ` (Đã giảm -${disc.toLocaleString('en-US')}đ mã ${currentAppliedCoupon.code})`;
+    if (pCalc) {
+      if (m === 'bank') {
+        pCalc.innerHTML = `${calcStr}<br><span class="text-emerald-600 dark:text-emerald-400 font-black text-xs md:text-sm mt-1.5 block">Đã áp dụng mã ${esc(currentAppliedCoupon.code)} (-${disc.toLocaleString('en-US')}đ) → Thực thu: <b>${currentTotalVnd.toLocaleString('en-US')}VND</b></span>`;
+      } else {
+        pCalc.innerHTML = `${calcStr} <span class="text-emerald-600 font-bold">(Mã ${esc(currentAppliedCoupon.code)})</span>`;
+      }
+    }
+  } else {
+    if(pCalc) pCalc.innerHTML=calcStr;
   }
- // Luôn tự động cập nhật ngay mã QR bên phải cho mọi gói cước nếu đơn đã được tạo
- if(currentOrderId||(isUpgradeMode&&upgradeConfirmed))renderPaymentBox();}
+ }
+ if(currentOrderId||(isUpgradeMode&&upgradeConfirmed))renderPaymentBox();
+}
 
 function toggleZalo(){const z=$('cusZalo');z.classList.toggle('hidden');z.required=!z.classList.contains('hidden')&&!(isUpgradeMode||isRenewMode);}
 

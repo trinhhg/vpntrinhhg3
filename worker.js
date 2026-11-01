@@ -423,6 +423,9 @@ export default {
     const pub = (o, st) => publicOrder(o, st.cms, st.links, getMe(url, env, st.cms).field);
 
     // ================================================================ PUBLIC (khách)
+    if (p === "/api/packages" && m === "GET") {
+      return RAW((await KV.get("PACKAGES")) || "[]");
+    }
     if (p === "/api/public/config" && m === "GET") {
       const cms = safeJson(await KV.get("ALL_CMS"), {}), s = cms.settings || {};
       let g = safeJson(await KV.get("GUIDES"), null);
@@ -445,7 +448,19 @@ export default {
         footer: s.footer || null,
         headerDrawer: s.headerDrawer || null,
         flashSale: s.flashSale || (cms.sales && cms.sales.campaign) || null,
-        coupons: Array.isArray(cms.coupons) ? cms.coupons.filter(c => c && c.enabled !== false).map(c => ({ code: String(c.code).toUpperCase(), type: c.type || 'percent', value: Number(c.value) || 0, minSpend: Number(c.minSpend) || 0, maxDiscount: Number(c.maxDiscount) || 0, maxUsage: Number(c.maxUsage) || 0, usedCount: Number(c.usedCount) || 0, expiry: c.expiry || '' })) : [],
+        coupons: Array.isArray(cms.coupons) ? cms.coupons.filter(c => c && c.enabled !== false).map(c => ({
+          code: String(c.code).toUpperCase(),
+          type: c.type || 'percent',
+          value: Number(c.value) || 0,
+          minSpend: Number(c.minSpend || c.minOrder) || 0,
+          maxDiscount: Number(c.maxDiscount) || 0,
+          maxUsage: Number(c.maxUsage || c.usageLimit) || 0,
+          usedCount: Number(c.usedCount) || 0,
+          startDate: c.startDate || '',
+          endDate: c.endDate || c.expiry || '',
+          expiry: c.endDate || c.expiry || '',
+          enabled: c.enabled !== false
+        })) : [],
         couponEnabled: s.couponEnabled !== false
       });
     }
@@ -484,20 +499,30 @@ export default {
       }
       let subVnd = unitVnd * qty, subCny = Math.round(unitCny * qty * 100) / 100;
       let couponCode = "", couponDiscVnd = 0;
-      const inCoupon = String(b.coupon || "").trim().toUpperCase();
+      const inCoupon = String(b.coupon || b.couponCode || "").trim().toUpperCase();
       if (inCoupon && st.cms?.settings?.couponEnabled !== false && Array.isArray(st.cms?.coupons)) {
         const fc = st.cms.coupons.find(x => x && String(x.code).toUpperCase() === inCoupon && x.enabled !== false);
-        if (fc && subVnd >= (Number(fc.minSpend) || 0)) {
-          couponCode = fc.code;
-          if (fc.type === "fixed") {
-            couponDiscVnd = Math.min(subVnd - 1000, Number(fc.value) || 0);
-          } else {
-            couponDiscVnd = Math.round((subVnd * (Number(fc.value) || 0)) / 100);
-            if (fc.maxDiscount && couponDiscVnd > fc.maxDiscount) couponDiscVnd = fc.maxDiscount;
+        if (fc) {
+          const sStart = fc.startDate ? new Date(fc.startDate).getTime() : 0;
+          const sEnd = (fc.endDate || fc.expiry) ? new Date(fc.endDate || fc.expiry).getTime() : Infinity;
+          const limit = Number(fc.maxUsage || fc.usageLimit) || 0;
+          const minSpend = Number(fc.minSpend || fc.minOrder) || 0;
+          const isValidTime = (!sStart || now >= sStart) && (!sEnd || now <= sEnd);
+          const isValidUsage = limit <= 0 || (Number(fc.usedCount) || 0) < limit;
+          const isValidSpend = subVnd >= minSpend;
+
+          if (isValidTime && isValidUsage && isValidSpend) {
+            couponCode = fc.code;
+            if (fc.type === "fixed") {
+              couponDiscVnd = Math.min(subVnd - 1000, Number(fc.value) || 0);
+            } else {
+              couponDiscVnd = Math.round((subVnd * (Number(fc.value) || 0)) / 100);
+              if (fc.maxDiscount && couponDiscVnd > fc.maxDiscount) couponDiscVnd = fc.maxDiscount;
+            }
+            if (couponDiscVnd >= subVnd) couponDiscVnd = Math.max(0, subVnd - 1000);
+            fc.usedCount = (fc.usedCount || 0) + 1;
+            ctx.waitUntil(KV.put("ALL_CMS", JSON.stringify(st.cms)));
           }
-          if (couponDiscVnd >= subVnd) couponDiscVnd = Math.max(0, subVnd - 1000);
-          fc.usedCount = (fc.usedCount || 0) + 1;
-          ctx.waitUntil(KV.put("ALL_CMS", JSON.stringify(st.cms)));
         }
       }
       const finalVnd = Math.max(1000, subVnd - couponDiscVnd);
@@ -680,7 +705,7 @@ export default {
     }
 
     // ================================================================ ADMIN
-    if (p.startsWith("/api/admin/") || ["/api/orders", "/api/deadlinks", "/api/cms", "/api/devices", "/api/data_requests", "/api/link_pool", "/api/guides", "/api/gc", "/api/trigger_github"].includes(p)) {
+    if (p.startsWith("/api/admin/") || ["/api/orders", "/api/deadlinks", "/api/cms", "/api/devices", "/api/data_requests", "/api/link_pool", "/api/guides", "/api/gc", "/api/trigger_github", "/api/packages"].includes(p)) {
       const bad = need(admin); if (bad) return bad;
       const st0 = () => loadAll(KV);
 
@@ -929,7 +954,7 @@ export default {
         await saveTombs(KV, tb); await KV.delete("DEAD_LINKS"); return OK();
       }
 
-      const MAP = { "/api/orders": ["ALL_ORDERS", "[]"], "/api/deadlinks": ["DEAD_LINKS", "[]"], "/api/cms": ["ALL_CMS", "{}"], "/api/devices": ["ADMIN_DEVICES", "[]"], "/api/data_requests": ["ALL_DATA_REQUESTS", "[]"], "/api/link_pool": ["LINK_POOL", "[]"], "/api/guides": ["GUIDES", "{}"] };
+      const MAP = { "/api/orders": ["ALL_ORDERS", "[]"], "/api/deadlinks": ["DEAD_LINKS", "[]"], "/api/cms": ["ALL_CMS", "{}"], "/api/devices": ["ADMIN_DEVICES", "[]"], "/api/data_requests": ["ALL_DATA_REQUESTS", "[]"], "/api/link_pool": ["LINK_POOL", "[]"], "/api/guides": ["GUIDES", "{}"], "/api/packages": ["PACKAGES", "[]"] };
       if (MAP[p]) {
         const [key, def] = MAP[p];
         if (m === "GET") return RAW((await KV.get(key)) || def);

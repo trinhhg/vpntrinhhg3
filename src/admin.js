@@ -307,17 +307,21 @@ async function pollMain(){
 // ===================== TAB NAVIGATION =====================
 function switchPkgSubTab(tab){
   $("pane-pkg-cards").classList.toggle("hidden", tab !== "cards");
-  if ($("pane-pkg-sale")) $("pane-pkg-sale").classList.toggle("hidden", tab !== "sale");
-  if ($("pane-pkg-coupon")) $("pane-pkg-coupon").classList.toggle("hidden", tab !== "coupon");
+  if ($("pane-pkg-salecoupon")) $("pane-pkg-salecoupon").classList.toggle("hidden", tab !== "salecoupon" && tab !== "sale" && tab !== "coupon");
+  if ($("pane-pkg-sale")) $("pane-pkg-sale").classList.toggle("hidden", tab !== "salecoupon" && tab !== "sale");
+  if ($("pane-pkg-coupon")) $("pane-pkg-coupon").classList.toggle("hidden", tab !== "salecoupon" && tab !== "coupon");
   $("pane-pkg-fulfill").classList.toggle("hidden", tab !== "fulfill");
 
   $("btn-pkg-cards").classList.toggle("active", tab === "cards");
+  if ($("btn-pkg-salecoupon")) $("btn-pkg-salecoupon").classList.toggle("active", tab === "salecoupon" || tab === "sale" || tab === "coupon");
   if ($("btn-pkg-sale")) $("btn-pkg-sale").classList.toggle("active", tab === "sale");
   if ($("btn-pkg-coupon")) $("btn-pkg-coupon").classList.toggle("active", tab === "coupon");
   $("btn-pkg-fulfill").classList.toggle("active", tab === "fulfill");
 
-  if (tab === "sale") renderFlashSaleAdmin();
-  if (tab === "coupon") renderCouponAdmin();
+  if (tab === "salecoupon" || tab === "sale" || tab === "coupon") {
+    renderFlashSaleAdmin();
+    renderCouponAdmin();
+  }
   if (tab === "fulfill") loadFulfillmentConfig();
 }
 window.switchPkgSubTab = switchPkgSubTab;
@@ -2518,47 +2522,67 @@ function updateHeaderDrawerPreview() {
   const type = $("headerDrawerType") ? $("headerDrawerType").value : "promo";
   const title = $("headerDrawerTitle") ? $("headerDrawerTitle").value.trim() : "";
   const text = $("headerDrawerText") ? $("headerDrawerText").value.trim() : "";
-  const btnText = $("headerDrawerBtnText") ? $("headerDrawerBtnText").value.trim() || "Xem ngay" : "Xem ngay";
+  const btnText = $("headerDrawerBtnText") ? $("headerDrawerBtnText").value.trim() : "";
   const link = $("headerDrawerLink") ? $("headerDrawerLink").value.trim() || "#packages" : "#packages";
   const closeable = $("headerDrawerCloseable") ? $("headerDrawerCloseable").checked : true;
+  const showCta = $("headerDrawerShowCta") ? $("headerDrawerShowCta").checked : true;
+  const hasCta = showCta && btnText !== "";
 
-  if (!text) {
+  if (!text && !title) {
     box.innerHTML = `<div class="text-center py-3 text-xs text-slate-400 italic">Nhập nội dung thông báo ở trên để xem trước tại đây...</div>`;
     return;
   }
 
-  let badgeCls = "bg-rose-50 text-rose-600 border border-rose-200/60";
+  let containerBg = "bg-rose-50 border-rose-200 text-rose-950";
+  let badgeCls = "bg-rose-100 text-rose-800 border border-rose-300";
+  let btnCls = "bg-rose-600 hover:bg-rose-700 text-white";
   let badgeIcon = "fas fa-fire";
   let badgeLabel = "Khuyến mãi";
+
   if (type === "warning") {
-    badgeCls = "bg-amber-50 text-amber-700 border border-amber-200/60";
+    containerBg = "bg-amber-50 border-amber-200 text-amber-950";
+    badgeCls = "bg-amber-100 text-amber-800 border border-amber-300";
+    btnCls = "bg-amber-600 hover:bg-amber-700 text-white";
     badgeIcon = "fas fa-triangle-exclamation";
     badgeLabel = "Cảnh báo";
   } else if (type === "info") {
-    badgeCls = "bg-indigo-50 text-indigo-600 border border-indigo-200/60";
+    containerBg = "bg-indigo-50 border-indigo-200 text-indigo-950";
+    badgeCls = "bg-indigo-100 text-indigo-800 border border-indigo-300";
+    btnCls = "bg-indigo-600 hover:bg-indigo-700 text-white";
     badgeIcon = "fas fa-circle-info";
     badgeLabel = "Thông tin";
   }
 
   box.innerHTML = `
-    <div class="w-full bg-white text-slate-800 text-xs py-2 px-3 rounded-lg shadow-sm border border-slate-200 flex items-center justify-between gap-3">
-      <div class="flex items-center gap-2 min-w-0">
-        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shrink-0 uppercase tracking-wider ${badgeCls}">
-          <i class="${badgeIcon}"></i>
-          <span>${badgeLabel}</span>
-        </span>
-        ${title ? `<span class="font-extrabold text-slate-900 shrink-0 hidden sm:inline">${esc(title)}</span><span class="text-slate-300 hidden sm:inline">•</span>` : ''}
-        <span class="truncate font-medium text-slate-700">${esc(text)}</span>
-      </div>
-      <div class="flex items-center gap-2 shrink-0">
-        <a href="${esc(link)}" target="_blank" onclick="event.preventDefault()" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm whitespace-nowrap flex items-center gap-1 cursor-pointer">
-          <span>${esc(btnText)}</span>
-          <i class="fas fa-arrow-right text-[9px]"></i>
-        </a>
-        ${closeable ? `<button type="button" class="text-slate-400 hover:text-slate-700 px-1 py-0.5"><i class="fas fa-times text-xs"></i></button>` : ''}
+    <div class="w-full ${containerBg} text-xs py-2.5 px-3 rounded-xl shadow-sm border transition-all">
+      <div class="flex items-start justify-between gap-2.5">
+        <!-- CỘT TRÁI: BADGE + TIÊU ĐỀ & NỘI DUNG (THẲNG HÀNG 100%) -->
+        <div class="flex items-start gap-2.5 min-w-0 flex-1">
+          <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shrink-0 uppercase tracking-wider ${badgeCls} mt-0.5 shadow-xs">
+            <i class="${badgeIcon}"></i>
+            <span>${badgeLabel}</span>
+          </span>
+          <div class="flex flex-col min-w-0 flex-1">
+            <div class="flex items-center gap-1.5 cursor-pointer select-none" onclick="document.getElementById('adminHeaderPreviewDetail')?.classList.toggle('hidden')">
+              <span class="font-extrabold text-xs sm:text-sm text-slate-900">${esc(title || 'Thông báo từ hệ thống')}</span>
+              <button type="button" class="text-current opacity-70 p-0.5" title="Bấm để xổ/thu nội dung"><i class="fas fa-chevron-down text-[10px]"></i></button>
+            </div>
+            <div id="adminHeaderPreviewDetail" class="mt-1 text-[11.5px] leading-relaxed font-medium whitespace-pre-wrap opacity-90">${esc(text || title)}</div>
+          </div>
+        </div>
+        <!-- CỘT PHẢI: NÚT CTA (TÙY CHỌN BẬT/TẮT) + NÚT ĐÓNG -->
+        <div class="flex items-center gap-2 shrink-0 pt-0.5">
+          ${hasCta ? `
+            <a href="${esc(link)}" target="_blank" onclick="event.preventDefault()" class="${btnCls} font-bold px-3 py-1 rounded-full text-[11px] shadow-sm whitespace-nowrap flex items-center gap-1 cursor-pointer transition active:scale-95">
+              <span>${esc(btnText)}</span>
+              <i class="fas fa-arrow-right text-[9px]"></i>
+            </a>
+          ` : ''}
+          ${closeable ? `<button type="button" class="opacity-60 hover:opacity-100 p-1"><i class="fas fa-times text-xs"></i></button>` : ''}
+        </div>
       </div>
     </div>
-    ${!on ? '<div class="mt-1 text-[11px] text-amber-600 font-bold flex items-center gap-1"><i class="fas fa-eye-slash"></i>Lưu ý: Thanh thông báo hiện đang TẮT. Bật công tắc ở trên để hiển thị ra trang chủ.</div>' : ''}
+    ${!on ? '<div class="mt-1.5 text-[11px] text-amber-600 font-bold flex items-center gap-1"><i class="fas fa-eye-slash"></i>Lưu ý: Thanh thông báo hiện đang TẮT. Bật công tắc ở trên để hiển thị ra trang chủ.</div>' : ''}
   `;
 }
 window.updateHeaderDrawerPreview = updateHeaderDrawerPreview;
@@ -2590,6 +2614,7 @@ function loadDrawerSettingsUI() {
   if ($("headerDrawerEndTime")) $("headerDrawerEndTime").value = d.endTime || "";
   if ($("headerDrawerCloseable")) $("headerDrawerCloseable").checked = d.closeable !== false;
   if ($("headerDrawerShowCta")) $("headerDrawerShowCta").checked = d.showCta !== false;
+  if ($("headerDrawerShowCta")) $("headerDrawerShowCta").checked = d.showCta !== false;
   updateHeaderDrawerPreview();
 }
 
@@ -2614,13 +2639,18 @@ async function saveHeaderDrawer() {
 }
 
 async function loadAdminPkgs() {
-  loadDrawerSettingsUI();
   try {
-    const j = await aj("/api/packages");
-    if (Array.isArray(j?.packages) && j.packages.length) {
-      adminPkgsList = j.packages;
+    if (Array.isArray(cmsDb?.packages) && cmsDb.packages.length) {
+      adminPkgsList = cmsDb.packages;
     } else {
-      adminPkgsList = getDefaultAdminPkgs();
+      const j = await aj("/api/packages").catch(() => null);
+      if (Array.isArray(j?.packages) && j.packages.length) {
+        adminPkgsList = j.packages;
+      } else if (Array.isArray(j) && j.length) {
+        adminPkgsList = j;
+      } else {
+        adminPkgsList = getDefaultAdminPkgs();
+      }
     }
   } catch {
     adminPkgsList = getDefaultAdminPkgs();
@@ -2671,45 +2701,65 @@ function renderPkgAdmin() {
         </div>
       </div>
 
-      <!-- HÀNG 2: GIÁ GỐC GẠCH NGANG & GIÁ THỰC BÁN 3 LOẠI TIỀN (Master Plan V1) -->
-      <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-xs">
-        <div>
-          <label class="block text-[10px] font-bold text-slate-400 mb-0.5">Giá Gốc VND (Gạch đ)</label>
-          <input type="number" step="1000" value="${p.original_vnd || 0}" oninput="adminPkgsList[${idx}].original_vnd = Number(this.value)||0" placeholder="VD: 80000" class="w-full p-1.5 border rounded-lg bg-white font-mono text-slate-400">
+      <!-- HÀNG 2: SO SÁNH GIÁ GỐC VÀ GIÁ THỰC THU (2 CỘT TƯỜNG MINH) -->
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2 text-xs">
+        <div class="font-extrabold text-[11px] text-slate-700 flex items-center justify-between border-b border-slate-200/60 pb-1.5">
+          <span><i class="fas fa-scale-balanced text-indigo-600 mr-1.5"></i>Bảng Giá Bán (So Sánh Giá Gốc &amp; Thực Thu):</span>
+          <span class="text-[10px] text-slate-400 font-normal">Nhập Giá Gốc = 0 nếu không áp dụng giảm giá</span>
         </div>
-        <div>
-          <label class="block text-[10px] font-bold text-emerald-700 mb-0.5">Giá Bán VND Thực Thu</label>
-          <input type="number" step="1000" value="${p.vnd || 0}" ${p.isCustom ? 'disabled' : ''} oninput="adminPkgsList[${idx}].vnd = Number(this.value)||0" class="w-full p-1.5 border rounded-lg font-bold text-emerald-600 bg-white">
-        </div>
-        <div>
-          <label class="block text-[10px] font-bold text-slate-400 mb-0.5">Giá Gốc CNY (Gạch ¥)</label>
-          <input type="number" step="0.5" value="${p.original_cny || 0}" oninput="adminPkgsList[${idx}].original_cny = Number(this.value)||0" placeholder="VD: 25" class="w-full p-1.5 border rounded-lg bg-white font-mono text-slate-400">
-        </div>
-        <div>
-          <label class="block text-[10px] font-bold text-blue-700 mb-0.5">Giá Bán CNY (¥)</label>
-          <input type="number" step="0.5" value="${p.cny || 0}" ${p.isCustom ? 'disabled' : ''} oninput="adminPkgsList[${idx}].cny = Number(this.value)||0" class="w-full p-1.5 border rounded-lg font-bold text-blue-600 bg-white">
-        </div>
-        <div>
-          <label class="block text-[10px] font-bold text-slate-400 mb-0.5">Giá Gốc USD (Gạch $)</label>
-          <input type="number" step="0.5" value="${p.original_usd || 0}" oninput="adminPkgsList[${idx}].original_usd = Number(this.value)||0" placeholder="VD: 4.5" class="w-full p-1.5 border rounded-lg bg-white font-mono text-slate-400">
-        </div>
-        <div>
-          <label class="block text-[10px] font-bold text-indigo-700 mb-0.5">Giá Bán USD ($)</label>
-          <input type="number" step="0.5" value="${p.usd || 0}" ${p.isCustom ? 'disabled' : ''} oninput="adminPkgsList[${idx}].usd = Number(this.value)||0" class="w-full p-1.5 border rounded-lg font-bold text-indigo-600 bg-white">
-        </div>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-slate-50/80 p-2 rounded-xl border border-slate-100">
-        <div>
-          <label class="block text-[10px] font-bold text-rose-600 mb-0.5">Tem Quà Tặng (Sticker góc thẻ)</label>
-          <input type="text" value="${esc(p.promo_sticker || '')}" oninput="adminPkgsList[${idx}].promo_sticker = this.value" placeholder="VD: +3 NGÀY" class="w-full p-1.5 border border-rose-200 rounded-lg font-black text-rose-600 bg-rose-50/40">
-        </div>
-        <div>
-          <label class="block text-[10px] font-bold text-purple-700 mb-0.5">Số ngày tặng (+ngày vào HSD)</label>
-          <input type="number" min="0" max="365" value="${p.bonus_days || 0}" oninput="adminPkgsList[${idx}].bonus_days = Number(this.value)||0" placeholder="VD: 3" class="w-full p-1.5 border border-purple-200 rounded-lg font-bold text-purple-700 bg-purple-50/40 text-center">
+        <div class="grid grid-cols-2 gap-2.5">
+          <!-- CỘT 1: GIÁ GỐC GẠCH NGANG -->
+          <div class="space-y-2 bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs">
+            <span class="block text-[10px] font-black text-slate-400 uppercase tracking-wider">1. Giá Gốc (Gạch ngang):</span>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">VND (Gạch đ)</label>
+              <input type="number" step="1000" value="${p.original_vnd !== undefined ? p.original_vnd : 0}" class="inp-orig-vnd w-full p-1.5 border rounded-lg bg-slate-50 font-mono text-slate-400 text-xs" oninput="adminPkgsList[${idx}].original_vnd = Number(this.value)||0" placeholder="0">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">CNY (Gạch ¥)</label>
+              <input type="number" step="0.5" value="${p.original_cny !== undefined ? p.original_cny : 0}" class="inp-orig-cny w-full p-1.5 border rounded-lg bg-slate-50 font-mono text-slate-400 text-xs" oninput="adminPkgsList[${idx}].original_cny = Number(this.value)||0" placeholder="0">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">USD (Gạch $)</label>
+              <input type="number" step="0.5" value="${p.original_usd !== undefined ? p.original_usd : 0}" class="inp-orig-usd w-full p-1.5 border rounded-lg bg-slate-50 font-mono text-slate-400 text-xs" oninput="adminPkgsList[${idx}].original_usd = Number(this.value)||0" placeholder="0">
+            </div>
+          </div>
+          <!-- CỘT 2: GIÁ BÁN THỰC THU -->
+          <div class="space-y-2 bg-white p-2.5 rounded-xl border border-emerald-300 shadow-xs">
+            <span class="block text-[10px] font-black text-emerald-700 uppercase tracking-wider">2. Giá Bán Thực Thu:</span>
+            <div>
+              <label class="block text-[10px] font-bold text-emerald-700 mb-0.5">VND Thực Thu</label>
+              <input type="number" step="1000" value="${p.vnd || 0}" ${p.isCustom ? 'disabled' : ''} class="inp-vnd w-full p-1.5 border border-emerald-300 rounded-lg font-black text-emerald-700 bg-emerald-50/40 text-xs" oninput="adminPkgsList[${idx}].vnd = Number(this.value)||0">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-blue-700 mb-0.5">CNY (¥)</label>
+              <input type="number" step="0.5" value="${p.cny || 0}" ${p.isCustom ? 'disabled' : ''} class="inp-cny w-full p-1.5 border border-blue-300 rounded-lg font-black text-blue-700 bg-blue-50/40 text-xs" oninput="adminPkgsList[${idx}].cny = Number(this.value)||0">
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-indigo-700 mb-0.5">USD ($)</label>
+              <input type="number" step="0.5" value="${p.usd || 0}" ${p.isCustom ? 'disabled' : ''} class="inp-usd w-full p-1.5 border border-indigo-300 rounded-lg font-black text-indigo-700 bg-indigo-50/40 text-xs" oninput="adminPkgsList[${idx}].usd = Number(this.value)||0">
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- HÀNG 3: THÔNG SỐ GÓI -->
+      <!-- HÀNG 3: TEM STICKER & SỐ NGÀY TẶNG -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+        <div>
+          <label class="block text-[10px] font-bold text-rose-600 mb-0.5">Tem Quà Tặng (Sticker góc thẻ)</label>
+          <input type="text" value="${esc(p.promo_sticker || '')}" class="inp-promo-sticker w-full p-1.5 border border-rose-200 rounded-lg font-black text-rose-600 bg-rose-50/40" oninput="adminPkgsList[${idx}].promo_sticker = this.value" placeholder="VD: +3 NGÀY">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-purple-700 mb-0.5">Số ngày tặng (+vào HSD)</label>
+          <input type="number" min="0" max="365" value="${p.bonus_days || 0}" class="inp-bonus-days w-full p-1.5 border border-purple-200 rounded-lg font-bold text-purple-700 bg-purple-50/40 text-center" oninput="adminPkgsList[${idx}].bonus_days = Number(this.value)||0" placeholder="VD: 3">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-indigo-700 mb-0.5">Chữ cạnh thời hạn (Tùy chọn)</label>
+          <input type="text" value="${esc(p.bonus_text || '')}" class="inp-bonus-text w-full p-1.5 border border-indigo-200 rounded-lg font-bold text-indigo-700 bg-indigo-50/40" oninput="adminPkgsList[${idx}].bonus_text = this.value" placeholder="VD: +3 ngày">
+        </div>
+      </div>
+
+      <!-- HÀNG 4: THÔNG SỐ GÓI -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
         <div>
           <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Dung lượng hiển thị</label>
@@ -2730,9 +2780,9 @@ function renderPkgAdmin() {
         </div>
       </div>
 
-      <!-- HÀNG 4: 4 BADGE TAG GÓC THẺ & BỘ LỌC CATEGORY -->
+      <!-- HÀNG 5: 4 BADGE TAG GÓC THẺ & BỘ LỌC CATEGORY -->
       <div class="bg-slate-50 border border-slate-100 rounded-xl p-2.5 space-y-2">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between flex-wrap gap-2">
           <span class="text-[10px] font-bold text-slate-500 uppercase">4 Badge Tag góc thẻ bên Index:</span>
           <div class="flex items-center gap-3">
             <span class="text-[10px] font-bold text-slate-400 uppercase">Bộ lọc:</span>
@@ -2742,96 +2792,146 @@ function renderPkgAdmin() {
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag1On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag1On = this.checked" class="w-4 h-4 accent-red-600 shrink-0"><input type="text" value="${esc(p.tag1 || '🔥 BÁN CHẠY')}" oninput="adminPkgsList[${idx}].tag1 = this.value" placeholder="Tag 1 (Đỏ)" class="w-full text-xs font-bold text-red-600 outline-none"></div>
-          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag2On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag2On = this.checked" class="w-4 h-4 accent-blue-600 shrink-0"><input type="text" value="${esc(p.tag2 || '✈️ Du lịch')}" oninput="adminPkgsList[${idx}].tag2 = this.value" placeholder="Tag 2 (Xanh)" class="w-full text-xs font-bold text-blue-600 outline-none"></div>
-          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag3On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag3On = this.checked" class="w-4 h-4 accent-amber-600 shrink-0"><input type="text" value="${esc(p.tag3 || 'Khuyên dùng')}" oninput="adminPkgsList[${idx}].tag3 = this.value" placeholder="Tag 3 (Vàng)" class="w-full text-xs font-bold text-amber-600 outline-none"></div>
-          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag4On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag4On = this.checked" class="w-4 h-4 accent-purple-600 shrink-0"><input type="text" value="${esc(p.tag4 || '')}" oninput="adminPkgsList[${idx}].tag4 = this.value" placeholder="Tag 4 (Tím)" class="w-full text-xs font-bold text-purple-600 outline-none"></div>
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag1On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag1On = this.checked" class="w-4 h-4 accent-red-600 shrink-0"><input type="text" value="${esc(p.tag1 || '🔥 BÁN CHẠY')}" oninput="adminPkgsList[${idx}].tag1 = this.value" placeholder="Tag 1 (Đỏ phải)" class="w-full text-xs font-bold text-red-600 outline-none"></div>
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag2On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag2On = this.checked" class="w-4 h-4 accent-blue-600 shrink-0"><input type="text" value="${esc(p.tag2 || '✈️ Du lịch')}" oninput="adminPkgsList[${idx}].tag2 = this.value" placeholder="Tag 2 (Xanh trái)" class="w-full text-xs font-bold text-blue-600 outline-none"></div>
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag3On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag3On = this.checked" class="w-4 h-4 accent-amber-600 shrink-0"><input type="text" value="${esc(p.tag3 || 'Khuyên dùng')}" oninput="adminPkgsList[${idx}].tag3 = this.value" placeholder="Tag 3 (Vàng phải)" class="w-full text-xs font-bold text-amber-600 outline-none"></div>
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag4On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag4On = this.checked" class="w-4 h-4 accent-purple-600 shrink-0"><input type="text" value="${esc(p.tag4 || '')}" oninput="adminPkgsList[${idx}].tag4 = this.value" placeholder="Tag 4 (Tím trái)" class="w-full text-xs font-bold text-purple-600 outline-none"></div>
         </div>
       </div>
-    </div>`;
+    </div>
+    `;
   }).join("");
 
-  // Khởi tạo SortableJS kéo thả mượt mà trên cả PC & Mobile
-  if (typeof Sortable !== "undefined") {
-    if (sortablePkgsInstance) sortablePkgsInstance.destroy();
-    sortablePkgsInstance = new Sortable(container, {
-      handle: ".grip-pkg",
-      animation: 150,
-      ghostClass: "bg-indigo-50",
-      onEnd: (evt) => {
-        const [movedItem] = adminPkgsList.splice(evt.oldIndex, 1);
-        adminPkgsList.splice(evt.newIndex, 0, movedItem);
-        renderPkgAdmin();
-        toast(`Đã đổi vị trí "${movedItem.name || movedItem.id}" sang #${evt.newIndex + 1}`);
-      }
-    });
+  setupSortablePkgs();
+}
+window.renderPkgAdmin = renderPkgAdmin;
+
+function setupSortablePkgs() {
+  const container = $("pkgCardsList");
+  if (!container || typeof Sortable === "undefined") return;
+  if (sortablePkgsInstance) sortablePkgsInstance.destroy();
+  sortablePkgsInstance = new Sortable(container, {
+    handle: ".grip-pkg",
+    animation: 150,
+    onEnd: () => {
+      const items = [...container.querySelectorAll(".pkg-sort-item")];
+      const newOrderedList = [];
+      items.forEach(el => {
+        const id = el.dataset.pkgId;
+        const found = adminPkgsList.find(p => p.id === id);
+        if (found) newOrderedList.push(found);
+      });
+      adminPkgsList = newOrderedList;
+      renderPkgAdmin();
+    }
+  });
+}
+
+function toggleLifetimePkg(idx, isLifetime) {
+  if (isLifetime) {
+    adminPkgsList[idx].time = "lifetime";
+    if (!adminPkgsList[idx].category.includes("usage")) adminPkgsList[idx].category.push("usage");
+  } else {
+    adminPkgsList[idx].time = 1;
+    adminPkgsList[idx].category = adminPkgsList[idx].category.filter(c => c !== "usage");
+  }
+  renderPkgAdmin();
+}
+window.toggleLifetimePkg = toggleLifetimePkg;
+
+function togglePkgCat(idx, cat, checked) {
+  adminPkgsList[idx].category = adminPkgsList[idx].category || [];
+  if (checked) {
+    if (!adminPkgsList[idx].category.includes(cat)) adminPkgsList[idx].category.push(cat);
+  } else {
+    adminPkgsList[idx].category = adminPkgsList[idx].category.filter(c => c !== cat);
   }
 }
+window.togglePkgCat = togglePkgCat;
 
-function toggleLifetimePkg(idx, checked) {
-  adminPkgsList[idx].time = checked ? "lifetime" : 1;
-  const inp = $("pkg_time_val_" + idx);
-  if (inp) { inp.disabled = checked; inp.value = checked ? "" : "1"; }
-}
 
-function togglePkgCat(pkgIdx, cat, checked) {
-  let cats = new Set(adminPkgsList[pkgIdx].category || []);
-  if (checked) cats.add(cat); else cats.delete(cat);
-  adminPkgsList[pkgIdx].category = [...cats];
-}
-
-function addNewCustomPkg() {
-  const nextNum = adminPkgsList.filter(p => !FIXED_PKG_IDS.has(p.id)).length + 4;
-  const newId = "c" + nextNum;
-  adminPkgsList.unshift({
-    id: newId,
-    name: "Gói mới tùy chỉnh",
-    time: 1,
-    original_vnd: 0,
-    vnd: 90000,
-    cny: 23.0,
-    usd: 4.0,
-    promo_sticker: "",
-    bonus_days: 0,
-    data: "2000GB",
-    dev: "Không giới hạn thiết bị",
-    tag1: "MỚI",
-    tag2: "",
-    tag3: "",
-    tag4: "",
-    tag1On: true,
-    tag2On: false,
-    tag3On: false,
-    tag4On: false,
-    category: ["cycle"],
-    features: ["Băng thông lên đến 3Gbps", "Hỗ trợ 24/7"]
-  });
-  renderPkgAdmin();
-  toast("Đã thêm gói mới: " + newId);
-}
 
 function delPkg(idx) {
   const p = adminPkgsList[idx];
-  if (!confirm(`Xóa hoàn toàn gói "${p.name || p.id}" (mã: ${p.id})?`)) return;
+  if (!p) return;
+  if (FIXED_PKG_IDS.has(p.id)) {
+    return toast(`Gói cước ${p.name} (${p.id}) là gói mặc định của hệ thống. Bạn có thể bấm "Ẩn gói" nếu không muốn hiển thị ra trang chủ.`, "warn");
+  }
+  if (!confirm(`Xác nhận xóa gói cước "${p.name}" khỏi hệ thống?`)) return;
   adminPkgsList.splice(idx, 1);
   renderPkgAdmin();
-  toast(`Đã xóa gói ${p.id}`);
+  toast("Đã xóa gói cước!");
 }
-const delCustomPkg = delPkg;
+window.delPkg = delPkg;
+
+function addCustomPkg() {
+  const newId = "pkg_" + Date.now().toString(36);
+  adminPkgsList.push({
+    id: newId,
+    name: "Gói Mới",
+    time: 1,
+    original_vnd: 0,
+    original_cny: 0,
+    original_usd: 0,
+    vnd: 50000,
+    cny: 15,
+    usd: 2,
+    promo_sticker: "",
+    bonus_days: 0,
+    bonus_text: "",
+    data: "200GB",
+    dev: "1 Thiết bị",
+    tag1: "", tag2: "", tag3: "", tag4: "",
+    tag1On: false, tag2On: false, tag3On: false, tag4On: false,
+    category: ["cycle"],
+    features: ["Băng thông lên đến 3Gbps"]
+  });
+  renderPkgAdmin();
+  toast("Đã thêm gói mới! Hãy điều chỉnh thông số và bấm Lưu Toàn Bộ Cửa Hàng.");
+}
+window.addCustomPkg = addCustomPkg;
 
 async function saveAllPkgs() {
   const btn = $("btnSaveAllPkgs");
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i>ĐANG LƯU...';
 
+  // Quét trực tiếp các trường input trên DOM để đảm bảo giá trị chuẩn xác 100%
+  const pkgCards = document.querySelectorAll(".pkg-sort-item");
+  pkgCards.forEach((card, idx) => {
+    if (!adminPkgsList[idx]) return;
+    const nameInp = card.querySelector("input[placeholder='Tên gói cước...']");
+    if (nameInp) adminPkgsList[idx].name = nameInp.value.trim();
+    const origVndInp = card.querySelector(".inp-orig-vnd");
+    if (origVndInp) adminPkgsList[idx].original_vnd = Number(origVndInp.value) || 0;
+    const vndInp = card.querySelector(".inp-vnd");
+    if (vndInp) adminPkgsList[idx].vnd = Number(vndInp.value) || 0;
+    const origCnyInp = card.querySelector(".inp-orig-cny");
+    if (origCnyInp) adminPkgsList[idx].original_cny = Number(origCnyInp.value) || 0;
+    const cnyInp = card.querySelector(".inp-cny");
+    if (cnyInp) adminPkgsList[idx].cny = Number(cnyInp.value) || 0;
+    const origUsdInp = card.querySelector(".inp-orig-usd");
+    if (origUsdInp) adminPkgsList[idx].original_usd = Number(origUsdInp.value) || 0;
+    const usdInp = card.querySelector(".inp-usd");
+    if (usdInp) adminPkgsList[idx].usd = Number(usdInp.value) || 0;
+    const stickerInp = card.querySelector(".inp-promo-sticker");
+    if (stickerInp) adminPkgsList[idx].promo_sticker = stickerInp.value.trim();
+    const bonusDaysInp = card.querySelector(".inp-bonus-days");
+    if (bonusDaysInp) adminPkgsList[idx].bonus_days = Number(bonusDaysInp.value) || 0;
+    const bonusTextInp = card.querySelector(".inp-bonus-text");
+    if (bonusTextInp) adminPkgsList[idx].bonus_text = bonusTextInp.value.trim();
+  });
+
   // Lưu cấu hình Banner Header Drawer vào cmsDb
   cmsDb.settings = cmsDb.settings || {};
   cmsDb.settings.headerDrawer = getHeaderDrawerFromForm();
+  // Lưu danh sách gói cước vào cả cmsDb.packages để bảo đảm đồng bộ 100%
+  cmsDb.packages = adminPkgsList;
 
   try {
     await Promise.all([
-      aj("/api/packages", { method: "POST", body: { packages: adminPkgsList } }),
-      saveCmsDb()
+      saveCmsDb(),
+      aj("/api/packages", { method: "POST", body: { packages: adminPkgsList } }).catch(() => null)
     ]);
     toast(`Đã lưu toàn bộ cấu hình Cửa hàng & ${adminPkgsList.length} gói cước thành công!`);
     renderPkgAdmin();
@@ -2842,7 +2942,8 @@ async function saveAllPkgs() {
     btn.innerHTML = '<i class="fas fa-save mr-1.5"></i>LƯU TOÀN BỘ CỬA HÀNG';
   }
 }
-    
+window.saveAllPkgs = saveAllPkgs;
+
 // ===================== RÀ QUÉT & MAP LẠI (2 bảng, chỉ chạy khi bấm) =====================
 let rsItems=[],rmItems=[],rsLastBody=null,rmLastBody=null;
 const rlPicks=cls=>[...document.querySelectorAll("."+cls+":checked")].map(el=>({id:el.dataset.id,field:el.dataset.field}));
@@ -3167,19 +3268,22 @@ function commitCms(){
  if($("chkArtShowRelated")) curArtShowRelated = $("chkArtShowRelated").checked;
 
  // Quét toàn bộ dòng FAQ riêng trực tiếp từ DOM
- const faqRows = document.querySelectorAll("#artFaqsContainer > div");
- if(faqRows.length){
-   curArtFaqs = Array.from(faqRows).map(row => ({
-     q: (row.querySelector("input")?.value || "").trim(),
-     a: (row.querySelector("textarea")?.value || "").trim()
-   })).filter(f => f.q || f.a);
- }
+  if ($("artFaqsContainer")) {
+    const faqRows = document.querySelectorAll("#artFaqsContainer > div");
+    const parsedFaqs = Array.from(faqRows).map(row => ({
+      q: (row.querySelector("input")?.value || "").trim(),
+      a: (row.querySelector("textarea")?.value || "").trim()
+    })).filter(f => f.q || f.a);
+    if (parsedFaqs.length > 0 || faqRows.length > 0) {
+      curArtFaqs = parsedFaqs;
+    }
+  }
 
- // Quét toàn bộ bài viết liên quan đã được tick chọn
- const checkedRelated = document.querySelectorAll("#artRelatedContainerWrap input[type='checkbox']:checked");
- if(checkedRelated.length){
-   curArtRelated = Array.from(checkedRelated).map(cb => cb.dataset.slug || cb.value).filter(Boolean);
- }
+  // Quét toàn bộ bài viết liên quan đã được tick chọn
+  if ($("artRelatedContainerWrap")) {
+    const checkedRelated = document.querySelectorAll("#artRelatedContainerWrap input[type='checkbox']:checked");
+    curArtRelated = Array.from(checkedRelated).map(cb => cb.dataset.slug || cb.value).filter(Boolean);
+  }
 
  curArtHtml = getEditorHtml();
  a.html=curArtHtml;
@@ -3651,8 +3755,16 @@ async function saveCms(silent = false){
    delete a.blocks;
  }
  try{
-   await aj("/api/guides",{method:"POST",body:guides});
-   if(!silent) toast("Đã lưu bài viết thành công!");
+   await Promise.all([
+      aj("/api/guides", { method: "POST", body: guides }),
+      (async () => {
+        if (typeof cmsDb === "object" && cmsDb) {
+          cmsDb.guides = guides;
+          await saveCmsDb().catch(() => null);
+        }
+      })()
+    ]);
+    if(!silent) toast("Đã lưu toàn bộ bài viết, FAQ riêng và cài đặt thành công!");
    logEvent("ok","admin","Lưu bài viết hướng dẫn",`${curCms} / ${curArtName||curArtSlug}`);
    if(a) { curArt=a.slug; curArtSlug=a.slug; }
    renderGuideCategoriesTree();
@@ -4950,10 +5062,12 @@ function updateFailoverPolicyUI(pref) {
     if (dotDj) dotDj.className = "w-5 h-5 rounded-full border-2 flex items-center justify-center border-blue-600 bg-white";
     if (inDj) inDj.className = "w-2.5 h-2.5 rounded-full bg-blue-600";
   } else if (pref === "kt" && btnKt) {
-    // Sửa nút Kitty Failover sang màu đỏ tường minh, dễ nhìn
-    btnKt.className = "p-3.5 rounded-2xl border-2 font-black text-left transition flex items-center justify-between border-red-500 bg-red-50/90 shadow-md ring-2 ring-red-400 text-red-950";
-    if (dotKt) dotKt.className = "w-5 h-5 rounded-full border-2 flex items-center justify-center border-red-600 bg-white";
-    if (inKt) inKt.className = "w-2.5 h-2.5 rounded-full bg-red-600";
+    // Nút Kitty Failover: màu đỏ tường minh, nổi bật hoàn toàn so với nền trắng
+    btnKt.className = "p-3.5 rounded-2xl border-2 font-black text-left transition flex items-center justify-between border-rose-500 bg-rose-50 shadow-md ring-2 ring-rose-400 text-rose-950";
+    if (dotKt) dotKt.className = "w-5 h-5 rounded-full border-2 flex items-center justify-center border-rose-600 bg-white";
+    if (inKt) inKt.className = "w-2.5 h-2.5 rounded-full bg-rose-600";
+    const badgeKt = btnKt.querySelector(".badge-kt");
+    if (badgeKt) badgeKt.className = "badge-kt !bg-rose-600 !text-white !border-rose-600";
   }
 }
 
@@ -4986,7 +5100,7 @@ async function saveFailoverPolicy() {
   try {
     await aj("/api/admin/fulfillment_config", { method: "POST", body: { config: currentFulfillmentConfig } });
     toast("Đã lưu Chính sách dự phòng (Failover Policy) vào KV!");
-    logEvent("ok", "admin", "Lưu Failover Policy", `Ưu tiên: ${currentFulfillmentConfig.failover_pref === "lx" ? "Liangxin" : "DJJC"}`);
+    logEvent("ok", "admin", "Lưu Failover Policy", `Ưu tiên: ${currentFulfillmentConfig.failover_pref === "lx" ? "Liangxin" : currentFulfillmentConfig.failover_pref === "kt" ? "Kitty" : "DJJC"}`);
   } catch (e) {
     toast("Lỗi lưu chính sách: " + e.message, "err");
   }
@@ -5306,21 +5420,9 @@ window.saveFlashSaleConfig = saveFlashSaleConfig;
 
 // ===================== MÃ GIẢM GIÁ (COUPON / VOUCHER) =====================
 
-async function toggleCouponCheckoutInput(checked) {
-  cmsDb.settings = cmsDb.settings || {};
-  cmsDb.settings.couponEnabled = checked; try{ localStorage.setItem('vpn_coupon_enabled_cache', String(checked)); }catch(e){}
-  try {
-    await saveCmsDb();
-    await syncPublicPackagesPayload(); try{ if(Array.isArray(cmsDb.coupons)) localStorage.setItem('vpn_coupons_cache', JSON.stringify(cmsDb.coupons)); }catch(e){}
-    toast(checked ? "Đã BẬT ô nhập mã giảm giá tại trang thanh toán" : "Đã TẮT ô nhập mã giảm giá tại trang thanh toán");
-  } catch(e) {
-    toast("Lỗi lưu cài đặt coupon: " + e.message, "err");
-  }
-}
-window.toggleCouponCheckoutInput = toggleCouponCheckoutInput;
-
 function renderCouponAdmin() {
   if ($("couponCheckoutEnabledToggle")) $("couponCheckoutEnabledToggle").checked = (cmsDb && cmsDb.settings && cmsDb.settings.couponEnabled !== false);
+  if ($("couponCheckoutStatusLabel")) $("couponCheckoutStatusLabel").textContent = (cmsDb && cmsDb.settings && cmsDb.settings.couponEnabled !== false) ? "BẬT" : "TẮT";
   const tbody = $("couponListTbody");
   if (!tbody) return;
   const list = arr(cmsDb && cmsDb.coupons);
@@ -5331,9 +5433,12 @@ function renderCouponAdmin() {
   tbody.innerHTML = list.map((c, idx) => {
     const isPct = c.type === "percent";
     const valText = isPct ? `${c.value}%` : `${fmtVnd(c.value)} đ`;
-    const minText = c.minOrder ? `${fmtVnd(c.minOrder)} đ` : "Không có";
-    const usageText = `${c.usedCount || 0}/${c.usageLimit || "∞"}`;
-    const expText = c.endDate ? dmy(new Date(c.endDate).getTime()) : "Vĩnh viễn";
+    const minSpend = Number(c.minSpend || c.minOrder) || 0;
+    const minText = minSpend > 0 ? `${fmtVnd(minSpend)} đ` : "Không có";
+    const maxUsage = Number(c.maxUsage || c.usageLimit) || 0;
+    const usageText = maxUsage > 0 ? `${c.usedCount || 0}/${maxUsage}` : `${c.usedCount || 0}/∞`;
+    const expStr = c.endDate || c.expiry;
+    const expText = expStr ? dmy(new Date(expStr).getTime()) : "Vĩnh viễn";
     const active = c.enabled !== false;
 
     return `
@@ -5344,12 +5449,12 @@ function renderCouponAdmin() {
         <td class="px-3 py-2.5 text-center font-bold text-slate-700">${usageText}</td>
         <td class="px-3 py-2.5 text-center text-slate-500">${expText}</td>
         <td class="px-3 py-2.5 text-center">
-          <button onclick="toggleCouponStatus(${idx})" class="text-[10px] font-black px-2 py-0.5 rounded-full ${active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}">
+          <button type="button" onclick="toggleCouponStatus(${idx})" class="text-[10px] font-black px-2 py-0.5 rounded-full ${active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}">
             ${active ? 'HOẠT ĐỘNG' : 'ĐÃ TẮT'}
           </button>
         </td>
         <td class="px-3 py-2.5 text-right">
-          <button onclick="deleteCouponItem(${idx})" class="text-red-500 hover:text-red-700 p-1 font-bold text-xs" title="Xóa mã"><i class="fas fa-trash"></i></button>
+          <button type="button" onclick="deleteCouponItem(${idx})" class="text-red-500 hover:text-red-700 p-1 font-bold text-xs" title="Xóa mã"><i class="fas fa-trash"></i></button>
         </td>
       </tr>
     `;
@@ -5357,13 +5462,86 @@ function renderCouponAdmin() {
 }
 window.renderCouponAdmin = renderCouponAdmin;
 
+function openAddCouponModal() {
+  const m = $("mCouponModal");
+  if (!m) return;
+  if ($("couponModalCode")) $("couponModalCode").value = "";
+  if ($("couponModalType")) $("couponModalType").value = "percent";
+  if ($("couponModalValue")) $("couponModalValue").value = "";
+  if ($("couponModalMinSpend")) $("couponModalMinSpend").value = "";
+  if ($("couponModalMaxUsage")) $("couponModalMaxUsage").value = "";
+  if ($("couponModalStart")) $("couponModalStart").value = "";
+  if ($("couponModalEnd")) $("couponModalEnd").value = "";
+  if ($("couponModalEnabled")) $("couponModalEnabled").checked = true;
+  m.classList.remove("hidden");
+}
+window.openAddCouponModal = openAddCouponModal;
+
+function closeCouponModal() {
+  const m = $("mCouponModal");
+  if (m) m.classList.add("hidden");
+}
+window.closeCouponModal = closeCouponModal;
+
+async function saveCouponModal() {
+  const codeInp = $("couponModalCode");
+  const valInp = $("couponModalValue");
+  if (!codeInp || !valInp) return;
+  const cleanCode = codeInp.value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+  if (!cleanCode) return toast("Vui lòng nhập mã coupon hợp lệ", "warn");
+  const numVal = Number(valInp.value);
+  if (!numVal || numVal <= 0) return toast("Vui lòng nhập mức giảm lớn hơn 0", "warn");
+
+  const type = $("couponModalType") ? $("couponModalType").value : "percent";
+  const minSpend = Number($("couponModalMinSpend")?.value) || 0;
+  const maxUsage = Number($("couponModalMaxUsage")?.value) || 0;
+  const startDate = $("couponModalStart")?.value || "";
+  const endDate = $("couponModalEnd")?.value || "";
+  const enabled = $("couponModalEnabled") ? $("couponModalEnabled").checked : true;
+
+  cmsDb.coupons = arr(cmsDb.coupons);
+  const existIdx = cmsDb.coupons.findIndex(c => String(c.code).toUpperCase() === cleanCode);
+  const couponObj = {
+    code: cleanCode,
+    type,
+    value: numVal,
+    minSpend,
+    minOrder: minSpend,
+    maxUsage,
+    usageLimit: maxUsage,
+    usedCount: existIdx >= 0 ? (cmsDb.coupons[existIdx].usedCount || 0) : 0,
+    startDate,
+    endDate,
+    expiry: endDate,
+    enabled
+  };
+
+  if (existIdx >= 0) {
+    cmsDb.coupons[existIdx] = couponObj;
+  } else {
+    cmsDb.coupons.push(couponObj);
+  }
+
+  try {
+    await saveCmsDb();
+    await syncPublicPackagesPayload();
+    closeCouponModal();
+    renderCouponAdmin();
+    toast(`Đã lưu thành công coupon: ${cleanCode} (-${type === 'percent' ? numVal + '%' : fmtVnd(numVal) + 'đ'})`);
+    logEvent("ok", "admin", "Tạo/Sửa coupon", cleanCode);
+  } catch(e) {
+    toast("Lỗi lưu coupon: " + e.message, "err");
+  }
+}
+window.saveCouponModal = saveCouponModal;
+
 async function toggleCouponStatus(idx) {
   cmsDb.coupons = arr(cmsDb.coupons);
   if (!cmsDb.coupons[idx]) return;
   cmsDb.coupons[idx].enabled = cmsDb.coupons[idx].enabled === false ? true : false;
   try {
     await saveCmsDb();
-    await syncPublicPackagesPayload(); try{ if(Array.isArray(cmsDb.coupons)) localStorage.setItem('vpn_coupons_cache', JSON.stringify(cmsDb.coupons)); }catch(e){}
+    await syncPublicPackagesPayload();
     renderCouponAdmin();
     toast("Đã cập nhật trạng thái mã coupon");
   } catch(e) { toast("Lỗi: " + e.message, "err"); }
@@ -5377,43 +5555,27 @@ async function deleteCouponItem(idx) {
   cmsDb.coupons.splice(idx, 1);
   try {
     await saveCmsDb();
-    await syncPublicPackagesPayload(); try{ if(Array.isArray(cmsDb.coupons)) localStorage.setItem('vpn_coupons_cache', JSON.stringify(cmsDb.coupons)); }catch(e){}
+    await syncPublicPackagesPayload();
     renderCouponAdmin();
     toast("Đã xóa mã coupon: " + code);
   } catch(e) { toast("Lỗi: " + e.message, "err"); }
 }
 window.deleteCouponItem = deleteCouponItem;
 
-function openAddCouponModal() {
-  const code = prompt("Nhập mã Coupon mới (VD: SALE2026):");
-  if (!code || !code.trim()) return;
-  const cleanCode = code.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "");
-  if (!cleanCode) return toast("Mã coupon không hợp lệ", "warn");
-  const val = prompt("Nhập giá trị giảm (VD: 10 cho 10%, hoặc 20000 cho 20,000 VND):");
-  if (!val || isNaN(Number(val)) || Number(val) <= 0) return toast("Giá trị giảm không hợp lệ", "warn");
-  const numVal = Number(val);
-  const isPct = numVal <= 100;
-  
-  cmsDb.coupons = arr(cmsDb.coupons);
-  if (cmsDb.coupons.some(c => c.code === cleanCode)) return toast("Mã coupon này đã tồn tại!", "warn");
-
-  cmsDb.coupons.push({
-    code: cleanCode,
-    type: isPct ? "percent" : "fixed",
-    value: numVal,
-    minOrder: isPct ? 0 : numVal,
-    usageLimit: 100,
-    usedCount: 0,
-    enabled: true
-  });
-
-  saveCmsDb().then(async () => {
-    await syncPublicPackagesPayload(); try{ if(Array.isArray(cmsDb.coupons)) localStorage.setItem('vpn_coupons_cache', JSON.stringify(cmsDb.coupons)); }catch(e){}
-    renderCouponAdmin();
-    toast(`Đã tạo thành công coupon: ${cleanCode} (-${isPct ? numVal + '%' : fmtVnd(numVal) + 'đ'})`);
-  }).catch(e => toast("Lỗi: " + e.message, "err"));
+async function toggleCouponCheckout(checked) {
+  cmsDb.settings = cmsDb.settings || {};
+  cmsDb.settings.couponEnabled = checked;
+  if ($("couponCheckoutStatusLabel")) $("couponCheckoutStatusLabel").textContent = checked ? "BẬT" : "TẮT";
+  try {
+    await saveCmsDb();
+    await syncPublicPackagesPayload();
+    toast(checked ? "Đã BẬT ô nhập mã giảm giá tại trang thanh toán" : "Đã TẮT ô nhập mã giảm giá tại trang thanh toán");
+  } catch(e) {
+    toast("Lỗi lưu cài đặt: " + e.message, "err");
+  }
 }
-window.openAddCouponModal = openAddCouponModal;
+window.toggleCouponCheckout = toggleCouponCheckout;
+window.toggleCouponCheckoutInput = toggleCouponCheckout;
 
 // ===================== ĐỐI SOÁT NGOẠI LỆ MACRODROID =====================
 function renderExceptionsTab() {

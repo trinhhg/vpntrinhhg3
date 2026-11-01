@@ -135,3 +135,36 @@ Sau mỗi lần sửa mã nguồn hoặc hoàn thành một giai đoạn, AI ph�
 
 ---
 *Bản quy tắc này có hiệu lực vĩnh viễn trong suốt vòng đời dự án `vpntrinhhg3`.*
+
+
+---
+
+## 8. QUY TẮC TỰ ĐỘNG DEPLOY CLOUDFLARE WORKERS
+
+> **LƯU Ý PHÂN BIỆT RÕ 3 FILE WORKER TRONG PROJECT:**
+> 1. `worker.js` (Thư mục gốc) = Backend API chính `vpntrinhhg3worker` (Acc 1).
+> 2. `payment-webhook/worker.js` (Thư mục con) = Webhook thanh toán D1 `payment-webhook` (Acc 2).
+> 3. `public/_worker.js` (Thư mục public) = Routing Cloudflare Pages (chuyển hướng link vệ tinh v1 $\rightarrow$ v6), **KHÔNG** đụng chạm khi deploy Worker backend.
+
+Dự án quản lý 2 Cloudflare Workers:
+
+### 8.1. Worker chính (`vpntrinhhg3worker` - Tài khoản 1)
+- **File mã nguồn:** `worker.js` (tại thư mục gốc dự án)
+- **Script deploy:** `deploy.ps1`
+- **Lệnh tự động deploy:**
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File deploy.ps1 -message "<Mô tả thay đổi>"
+  ```
+
+### 8.2. Worker thanh toán (`payment-webhook` - Tài khoản 2)
+- **File mã nguồn:** `payment-webhook/worker.js`
+- **Script deploy:** `payment-webhook/deploy.ps1`
+- **Lệnh tự động deploy:**
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File payment-webhook/deploy.ps1 -message "<Mô tả thay đổi>"
+  ```
+
+### 8.3. Cam kết chung khi deploy:
+- Bất cứ khi nào Agent chỉnh sửa `worker.js` hoặc `payment-webhook/worker.js`, Agent **BẮT BUỘC** phải tự động chạy lệnh deploy tương ứng.
+- Cả 2 script deploy đều tự động bảo toàn 100% Secrets, D1 Database, KV Storage và biến môi trường trên Cloudflare.
+- Agent báo rõ số Version và Version ID cho người dùng sau khi deploy thành công.
