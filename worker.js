@@ -43,6 +43,421 @@ function detectPkg(o) {
 const isExpiredOrder = (o, now) => { if (!o.expDate || isLifetime(o.expDate)) return false; const t = parseDmy(o.expDate); return !!t && t + 864e5 <= now; };
 const FAILS = new Map(); // chống dò mật khẩu (theo IP, trong bộ nhớ)
 
+
+// ====================================================================
+// SUPABASE CLIENT (PROD & TEST)
+// ====================================================================
+function getSupabase(env, isTest = false) {
+  const url = env.SUPABASE_URL;
+  const key = env.SUPABASE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  const table = isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS";
+  return {
+    async getAll() {
+      const res = await fetch(`${url}/rest/v1/${table}?select=*&order=createdTs.desc&limit=5000`, {
+        headers: { apikey: key, Authorization: "Bearer " + key }
+      });
+      return res.ok ? await res.json() : [];
+    },
+    async upsert(order) {
+      const res = await fetch(`${url}/rest/v1/${table}`, {
+        method: "POST",
+        headers: {
+          apikey: key,
+          Authorization: "Bearer " + key,
+          "Content-Type": "application/json",
+          Prefer: "resolution=merge-duplicates,return=representation"
+        },
+        body: JSON.stringify(order)
+      });
+      return res.ok ? (await res.json())[0] : null;
+    },
+    async delete(id, rawId) {
+      const q = (rawId && rawId !== id) ? `or=(id.eq.${encodeURIComponent(rawId)},id.eq.${encodeURIComponent(id)})` : `id=eq.${encodeURIComponent(id)}`;
+      await fetch(`${url}/rest/v1/${table}?${q}`, {
+        method: "DELETE",
+        headers: { apikey: key, Authorization: "Bearer " + key }
+      });
+    },
+    async ping() {
+      const t0 = Date.now();
+      try {
+        const res = await fetch(`${url}/rest/v1/${table}?select=id&limit=1`, {
+          headers: { apikey: key, Authorization: "Bearer " + key }
+        });
+        if (!res.ok) {
+          const errText = await res.text().catch(() => "");
+          return { ok: false, status: res.status, error: `HTTP ${res.status}: ${errText.slice(0, 150) || "Không phản hồi"}` };
+        }
+        const countRes = await fetch(`${url}/rest/v1/${table}?select=count`, {
+          headers: { apikey: key, Authorization: "Bearer " + key, Prefer: "count=exact" }
+        });
+        const total = countRes.headers.get("content-range")?.split("/")[1] || 0;
+        return { ok: true, ms: Date.now() - t0, count: Number(total) };
+      } catch (e) {
+        return { ok: false, status: 0, error: e.message || String(e) };
+      }
+    },
+    async getRpcQuota() {
+      const res = await fetch(`${url}/rest/v1/rpc/get_db_quota`, {
+        method: "POST",
+        headers: { apikey: key, Authorization: "Bearer " + key, "Content-Type": "application/json" }
+      });
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        throw new Error(`HTTP ${res.status}: ${errText.slice(0, 150) || "RPC thất bại"}`);
+      }
+      return await res.json();
+    },
+    async cloneProdToTest() {
+      // Lưu ý: Không xóa trắng trước khi clone, clone thật sang test là ghi đè/thêm vào
+      const prodRes = await fetch(`${url}/rest/v1/ALL_ORDERS?select=*`, {
+        headers: { apikey: key, Authorization: "Bearer " + key }
+      });
+      const prod = await prodRes.json();
+      if (!Array.isArray(prod) || !prod.length) return 0;
+      for (let i = 0; i < prod.length; i += 100) {
+        await fetch(`${url}/rest/v1/ALL_ORDERS_TEST`, {
+          method: "POST",
+          headers: { apikey: key, Authorization: "Bearer " + key, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates" },
+          body: JSON.stringify(prod.slice(i, i + 100))
+        });
+      }
+      return prod.length;
+    },
+    async clearTest() {
+      const res = await fetch(`${url}/rest/v1/ALL_ORDERS_TEST?id=neq.NULL`, {
+        method: "DELETE",
+        headers: { apikey: key, Authorization: "Bearer " + key }
+      });
+      return res.ok;
+    }
+  };
+}
+
+// ====================================================================
+// TELEGRAM BOT BACKUP & TEST MODULE
+// ====================================================================
+async function sendTelegramMessage(env, text) {
+  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return { ok: false, error: "Chưa cấu hình TELEGRAM_BOT_TOKEN hoặc TELEGRAM_CHAT_ID" };
+  const res = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: env.TELEGRAM_CHAT_ID, text, parse_mode: "HTML" })
+  });
+  return res.json().catch(() => ({ ok: false }));
+}
+
+async function sendTelegramMediaGroup(env, filesWithCaption) {
+  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return { ok: false, error: "Chưa cấu hình TELEGRAM_BOT_TOKEN hoặc TELEGRAM_CHAT_ID" };
+  const formData = new FormData();
+  formData.append("chat_id", env.TELEGRAM_CHAT_ID);
+
+  const mediaList = filesWithCaption.map((f, i) => {
+    const attachName = `file_${i}`;
+    const blob = new Blob([f.content], { type: f.mimeType || "application/octet-stream" });
+    formData.append(attachName, blob, f.filename);
+    const item = { type: "document", media: `attach://${attachName}` };
+    if (f.caption) {
+      item.caption = f.caption;
+      item.parse_mode = "HTML";
+    }
+    return item;
+  });
+
+  formData.append("media", JSON.stringify(mediaList));
+  const res = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMediaGroup`, {
+    method: "POST",
+    body: formData
+  });
+  return res.json().catch(() => ({ ok: false }));
+}
+
+async function runTelegramBackup(env, actionReason = "Admin gửi thủ công", detailDiff = "") {
+  const KV = env.VPN_KV_TEST || env.VPN_KV;
+  const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
+  const sb = getSupabase(env, isTest);
+  let orders = [];
+  if (sb) {
+    try { orders = await sb.getAll(); } catch {}
+  }
+  if (!orders.length && KV) {
+    orders = safeJson(await KV.get("ALL_ORDERS"), []);
+  }
+  
+  const now = new Date(Date.now() + 7 * 36e5);
+  const y = now.getUTCFullYear();
+  const m = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(now.getUTCDate()).padStart(2, "0");
+  const dateStr = `${y}_${m}_${d}`;
+  const dayKey = `${d}_${m}_${y}`;
+  
+  let stt = 1;
+  let prevCount = null;
+  const prefix = isTest ? "TG_BACKUP_TEST" : "TG_BACKUP_PROD";
+  if (KV) {
+    const lastDate = await KV.get(`${prefix}_LAST_DATE`);
+    const lastStt = Number(await KV.get(`${prefix}_LAST_STT`)) || 0;
+    const lastCount = Number(await KV.get(`${prefix}_LAST_COUNT`));
+    if (!isNaN(lastCount)) prevCount = lastCount;
+    if (lastDate === dayKey) {
+      stt = lastStt + 1;
+    }
+    await KV.put(`${prefix}_LAST_DATE`, dayKey);
+    await KV.put(`${prefix}_LAST_STT`, String(stt));
+    await KV.put(`${prefix}_LAST_COUNT`, String(orders.length));
+    await KV.put(`LAST_ORDER_BACKUP_TS`, String(Date.now()));
+  }
+  const sttStr = String(stt).padStart(2, "0");
+  const envTag = isTest ? "TEST" : "PROD";
+  const keyTitle = `#ALL_ORDERS_${envTag}_${dayKey}_${sttStr}`;
+
+  let diffNote = detailDiff;
+  if (!diffNote) {
+    if (prevCount === null) {
+      diffNote = `Khởi tạo mốc theo dõi (${orders.length} đơn).`;
+    } else {
+      const diff = orders.length - prevCount;
+      if (diff > 0) diffNote = `Tăng ${diff} đơn so với bản backup trước (${prevCount} → ${orders.length}).`;
+      else if (diff < 0) diffNote = `Giảm ${Math.abs(diff)} đơn so với bản backup trước (${prevCount} → ${orders.length}).`;
+      else diffNote = `Số lượng đơn không đổi (${orders.length} đơn), dữ liệu được cập nhật mới nhất.`;
+    }
+  }
+
+  const caption = [
+    `<b>${keyTitle}</b> ${isTest ? '🧪 [KHO TEST]' : '✅ [KHO THẬT]'}`,
+    `📌 <b>Hành động:</b> ${actionReason}`,
+    `📊 <b>Số lượng:</b> ${orders.length} đơn hàng`,
+    `📝 <b>Chi tiết/Điểm mới:</b> ${diffNote}`,
+    `⏰ <b>Thời gian:</b> ${fmtBank(Date.now())} (UTC+7)`
+  ].join("\n");
+
+  const jsonContent = JSON.stringify(orders, null, 2);
+
+  const headers = ["id", "email", "nickname", "zalo", "method", "pkgId", "qty", "pkgName", "totalVnd", "totalCny", "days", "expDate", "status", "createdTs", "date"];
+  const csvRows = [headers.join(",")];
+  for (const o of orders) {
+    csvRows.push(headers.map(h => {
+      let val = o[h] ?? "";
+      val = String(val).replace(/"/g, '""');
+      return `"${val}"`;
+    }).join(","));
+  }
+  const csvContent = "\uFEFF" + csvRows.join("\r\n");
+
+  const resGroup = await sendTelegramMediaGroup(env, [
+    { filename: `Backup_Orders_${envTag}_${dateStr}.json`, content: jsonContent, mimeType: "application/json" },
+    { filename: `Backup_Orders_${envTag}_${dateStr}.csv`, content: csvContent, mimeType: "text/csv", caption: caption }
+  ]);
+  
+  const ok = !!(resGroup && resGroup.ok);
+  return { ok, count: orders.length, dateStr, keyTitle };
+}
+
+async function runTelegramKvBackup(env) {
+  const KV = env.VPN_KV_TEST || env.VPN_KV;
+  if (!KV) return { ok: false, error: "Không có KV" };
+  const now = new Date(Date.now() + 7 * 36e5);
+  const y = now.getUTCFullYear();
+  const m = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(now.getUTCDate()).padStart(2, "0");
+  const dateStr = `${y}_${m}_${d}`;
+  const dayKey = `${d}_${m}_${y}`;
+  const keyTitle = `#KV_BACKUP_${dayKey}`;
+
+  const keyNames = ["ALL_LINKS", "LINK_POOL", "ALL_CMS", "DEAD_LINKS", "GLOBAL_ROUTER", "ADMIN_DEVICES", "ALL_PACKAGES", "FULFILLMENT_CONFIG"];
+  const mediaFiles = [];
+  for (const kn of keyNames) {
+    const val = await KV.get(kn);
+    if (val !== null) {
+      let pretty = val;
+      try { pretty = JSON.stringify(JSON.parse(val), null, 2); } catch {}
+      mediaFiles.push({
+        filename: `${kn}_${dateStr}.json`,
+        content: pretty,
+        mimeType: "application/json"
+      });
+    }
+  }
+
+  const caption = [
+    `<b>${keyTitle}</b>`,
+    `📦 <b>Loại:</b> Sao lưu từng Key riêng biệt của KV Space`,
+    `📊 <b>Gồm các file:</b> ${keyNames.join(", ")}`,
+    `⏰ <b>Thời gian:</b> ${fmtBank(Date.now())} (UTC+7)`
+  ].join("\n");
+
+  if (mediaFiles.length > 0) {
+    mediaFiles[0].caption = caption;
+  }
+
+  const res = await sendTelegramMediaGroup(env, mediaFiles);
+  return { ok: !!(res && res.ok), keysCount: mediaFiles.length, dateStr, keyTitle };
+}
+
+async function notifyNewOrderTelegram(env, order, linkVpn = "") {
+  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return;
+  try {
+    const text = [
+      `🎉 <b>ĐƠN HÀNG MỚI</b>`,
+      `━━━━━━━━━━━━━━━━━`,
+      `🆔 <b>Mã ĐH:</b> <code>${order.id || "N/A"}</code>`,
+      `📧 <b>Email:</b> ${order.email || "N/A"}`,
+      `📦 <b>Gói cước:</b> ${order.pkgName || order.pkg || "N/A"}${order.totalVnd ? ` (${VND(order.totalVnd)} VND)` : ""}`,
+      `🔗 <b>Link VPN:</b> <code>${linkVpn || order.info1 || order.info2 || order.info3 || "Đang cấp phát"}</code>`,
+      `⏰ <b>Thời gian:</b> ${fmtBank(Date.now())} (UTC+7)`
+    ].join("\n");
+    await sendTelegramMessage(env, text);
+  } catch (e) {
+    console.error("Telegram order notify error:", e);
+  }
+}
+
+// ====================================================================
+// NODE CLEANING & FORMATTING HELPERS
+// ====================================================================
+const INFO_SKIP = [
+  "剩余流量", "已用流量", "套餐总量", "距离下次重置", "套餐到期", "认准官网", "官网地址", "官网", "kitty.fo",
+  "SKYLUMO", "如果现在只能看到", "立即更新教程", "群", "频道", "公告"
+];
+const ISP_DROP_KEYWORDS = new Set(["CUCM", "CMCU", "CTCUCM", "CTCU"]);
+
+function cleanLiangxinNode(rawName) {
+  if (!rawName) return "Liangxin - VPNTrinhHg";
+  try {
+    let s = String(rawName).replace(/\s*-\s*VPNTrinhHg$/g, "").trim();
+    s = s.replace(/🇨🇳台湾/g, "🇹🇼台湾");
+    let parts = s.split("|").map(p => p.trim());
+    let cleanParts = parts.filter(p => !ISP_DROP_KEYWORDS.has(p.toUpperCase()));
+    s = cleanParts.length ? cleanParts.join("|") : s;
+    return `${s} - VPNTrinhHg`;
+  } catch (e) {
+    const fallback = String(rawName).trim();
+    return fallback.includes("VPNTrinhHg") ? fallback : `${fallback} - VPNTrinhHg`;
+  }
+}
+
+function cleanDjjcNode(rawName) {
+  if (!rawName) return "DJJC - VPNTrinhHg";
+  try {
+    let s = String(rawName).replace(/\s*-\s*VPNTrinhHg$/g, "").trim();
+    s = s.replace(/(\d+(?:\.\d+)?)\s*倍率?/g, "$1x");
+    s = s.replace(/(?<![\d.xX])(\d{1,2})(?:\s*号)?(?![\d.xX])/g, (_, num) => {
+      return num.length === 2 ? num.padStart(3, "0") : num.padStart(2, "0");
+    });
+    return `${s} - VPNTrinhHg`;
+  } catch (e) {
+    const fallback = String(rawName).trim();
+    return fallback.includes("VPNTrinhHg") ? fallback : `${fallback} - VPNTrinhHg`;
+  }
+}
+
+const KITTY_COUNTRY_MAP = [
+  ["United States", "美国", "🇺🇸"],
+  ["Malaysia", "马来西亚", "🇲🇾"],
+  ["Singapore", "新加坡", "🇸🇬"],
+  ["Japan", "日本", "🇯🇵"],
+  ["Korea", "韩国", "🇰🇷"],
+  ["Netherlands", "荷兰", "🇳🇱"],
+  ["United Kingdom", "英国", "🇬🇧"],
+  ["Hong Kong", "香港", "🇭🇰"],
+  ["Hongkong", "香港", "🇭🇰"],
+  ["Taiwan", "台湾", "🇹🇼"],
+  ["Germany", "德国", "🇩🇪"]
+];
+
+function cleanKittyNode(rawName) {
+  if (!rawName) return "Kitty - VPNTrinhHg";
+  try {
+    let s = String(rawName).replace(/\s*-\s*VPNTrinhHg$/g, "").trim();
+    for (const [eng, cn, defaultFlag] of KITTY_COUNTRY_MAP) {
+      const re = new RegExp("(" + eng + ")\\s*(\\d+)", "i");
+      const m = s.match(re);
+      if (m) {
+        const num = m[2];
+        const flagMatch = s.match(/[\uD83C][\uDDE6-\uDDFF][\uD83C][\uDDE6-\uDDFF]/);
+        const flag = flagMatch ? flagMatch[0] : defaultFlag;
+        return `${flag} VIP ${cn} ${num} - VPNTrinhHg`;
+      }
+    }
+    const fallback = String(rawName).trim();
+    return fallback.includes("VPNTrinhHg") ? fallback : `${fallback} - VPNTrinhHg`;
+  } catch (e) {
+    const fallback = String(rawName).trim();
+    return fallback.includes("VPNTrinhHg") ? fallback : `${fallback} - VPNTrinhHg`;
+  }
+}
+
+function cleanUniversalNode(rawName) {
+  if (!rawName) return "VPN - VPNTrinhHg";
+  let s = String(rawName).replace(/\s*-\s*VPNTrinhHg$/g, "").trim();
+  return `${s} - VPNTrinhHg`;
+}
+
+function formatNodeName(rawName, prov = "liangxin") {
+  const p = String(prov).toLowerCase();
+  if (p.includes("kitty") || p.includes("tohno-1.top") || p.includes("oosaka")) return cleanKittyNode(rawName);
+  if (p === "true" || p.includes("liangxin")) return cleanLiangxinNode(rawName);
+  if (p.includes("djjc")) return cleanDjjcNode(rawName);
+  return cleanUniversalNode(rawName);
+}
+
+const isKtUrl = u => {
+  const s = String(u || "").toLowerCase();
+  return s.includes("tohno-1.top") || s.includes("oosaka") || s.includes("kitty");
+};
+
+function outboundToURI(ob) {
+  if (!ob || !ob.type) return null;
+  const tag = ob.tag || "Node";
+  const pType = ob.type;
+  if (pType === "vless") {
+    const tlsObj = ob.tls || {};
+    const trObj = ob.transport || {};
+    const roObj = tlsObj.reality || {};
+    const params = [];
+    if (trObj.type === "ws") {
+      params.push("type=ws", `path=${encodeURIComponent(trObj.path || "/")}`);
+      if (trObj.headers && trObj.headers.Host) params.push(`host=${encodeURIComponent(trObj.headers.Host)}`);
+    } else if (trObj.type === "grpc") {
+      params.push("type=grpc", `serviceName=${encodeURIComponent(trObj.service_name || "")}`);
+    } else {
+      params.push("type=tcp");
+    }
+    let secType = "none";
+    if (tlsObj.enabled) {
+      if (roObj.enabled || roObj.public_key) {
+        secType = "reality";
+      } else {
+        secType = "tls";
+      }
+    }
+    params.push(`security=${secType}`);
+    if (secType === "reality") {
+      if (roObj.public_key) params.push(`pbk=${roObj.public_key}`);
+      if (roObj.short_id) params.push(`sid=${roObj.short_id}`);
+      if (tlsObj.server_name) params.push(`sni=${tlsObj.server_name}`);
+      if (tlsObj.utls && tlsObj.utls.fingerprint) params.push(`fp=${tlsObj.utls.fingerprint}`);
+    } else if (secType === "tls") {
+      if (tlsObj.server_name) params.push(`sni=${tlsObj.server_name}`);
+      if (tlsObj.utls && tlsObj.utls.fingerprint) params.push(`fp=${tlsObj.utls.fingerprint}`);
+      if (tlsObj.insecure) params.push("insecure=1");
+    }
+    if (ob.flow) params.push(`flow=${ob.flow}`);
+    return `vless://${ob.uuid}@${ob.server}:${ob.server_port || 443}?${params.join("&")}#${encodeURIComponent(tag)}`;
+  }
+  if (pType === "hysteria2" || pType === "hy2") {
+    const sni = (ob.tls && ob.tls.server_name) ? `&sni=${ob.tls.server_name}` : "";
+    const mport = (ob.mport || ob.ports) ? `&mport=${ob.mport || ob.ports}` : "";
+    return `hysteria2://${ob.password || ""}@${ob.server}:${ob.server_port || 443}?insecure=1${sni}${mport}#${encodeURIComponent(tag)}`;
+  }
+  if (pType === "trojan") {
+    const sni = (ob.tls && ob.tls.server_name) ? `&sni=${ob.tls.server_name}` : "";
+    return `trojan://${ob.password || ""}@${ob.server}:${ob.server_port || 443}?security=tls${sni}#${encodeURIComponent(tag)}`;
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------- helpers
 
 // ---- Đồng hồ hệ thống: chạy theo giờ thật, hoặc giờ Admin đặt ở Cài đặt > Thời gian (chế độ "Tùy chỉnh")
@@ -168,11 +583,13 @@ async function flushLog(KV, log) {
 
 // ---------------------------------------------------------------- D1 (gọi phía server, secret nằm trong env)
 async function d1(env, path, opt = {}) {
-  if (!env.D1_URL || !env.D1_SECRET) return { ok: false, status: 0, data: { error: "Chưa cấu hình D1_URL / D1_SECRET" } };
+  const d1Secret = env.D1_SECRET || env.WEB_API_SECRET2 || env.WEB_API_SECRET;
+  const d1Url = env.D1_URL;
+  if (!d1Url || !d1Secret) return { ok: false, status: 0, data: { error: "Chưa cấu hình D1_URL / D1_SECRET" } };
   try {
-    const r = await fetch(env.D1_URL.replace(/\/$/, "") + path, {
+    const r = await fetch(d1Url.replace(/\/$/, "") + path, {
       method: opt.method || "GET",
-      headers: { Authorization: "Bearer " + env.D1_SECRET, "Content-Type": "application/json" },
+      headers: { Authorization: "Bearer " + d1Secret, "Content-Type": "application/json" },
       body: opt.body ? JSON.stringify(opt.body) : undefined
     });
     let data = null; try { data = await r.json(); } catch {}
@@ -359,57 +776,63 @@ export default {
 
     // ================================================================ SUBSCRIPTION /v1 - /v6
     if (p.match(/^\/v[1-6]/)) {
-      let reqToken = getP(url, "OwO", "token", "top", "liki", "lidj", "kidj");
+      let reqToken = getP(url, "top", "liki", "lidj", "kidj", "OwO", "token", "oos");
       if (!reqToken) {
-        const mTok = p.match(/^\/v[1-6]\/([a-zA-Z0-9]{16,64})$/);
+        const mTok = url.pathname.match(/^\/v[1-6]\/([a-zA-Z0-9_\-]+)$/);
         if (mTok) reqToken = mTok[1];
       }
       const ua = request.headers.get("User-Agent") || "";
       const isSingbox = /hiddify|sing-box|singbox|nekobox|nekoray|singbox-legacy/i.test(ua);
       const isClash = !isSingbox && /clash|meta|stash|surfboard|flclash|mihomo|clashmeta/i.test(ua);
       const rh = new Headers({ ...CORS });
-      rh.set("profile-title", "VPNTrinhHg"); rh.set("profile-update-interval", "2");
+      rh.set("profile-title", "VPNTrinhHg");
+      rh.set("profile-update-interval", "1");
+      rh.set("Profile-Update-Interval", "1");
+      rh.set("X-Profile-Update-Interval", "3600");
       rh.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
-      rh.set("Access-Control-Expose-Headers", "profile-title,profile-update-interval,subscription-userinfo,Subscription-Userinfo,Content-Disposition");
-      const INFO_NAMES = ["🇻🇳 Truy cập web bên dưới", "🇻🇳 Để xem thêm gói khác", "🌐 Website: vpntrinhhg.pages.dev", "📞 Zalo: 0917678211"];
+      rh.set("Access-Control-Expose-Headers", "profile-title,profile-update-interval,Profile-Update-Interval,X-Profile-Update-Interval,subscription-userinfo,Subscription-Userinfo,Content-Disposition");
       const VP = "vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1?type=tcp#";
-      const LOCKED_B64 = b64e([VP + encodeURIComponent("⛔ Tài khoản bị KHÓA"), VP + encodeURIComponent("📞 Zalo: 0917678211")].join("\n"));
-      const LOCKED_YAML = makeSimpleYaml(["⛔ Tai khoan bi KHOA", "📞 Zalo: 0917678211"]);
-      const LOCKED_SB = makeSimpleSingbox(["⛔ Tai khoan bi KHOA", "📞 Zalo: 0917678211"]);
-      const DEAD_B64 = b64e(VP + encodeURIComponent("❌ Link không tồn tại - Zalo: 0917678211"));
-      const DEAD_YAML = makeSimpleYaml(["❌ Link khong ton tai - Zalo: 0917678211"]);
-      const DEAD_SB = makeSimpleSingbox(["❌ Link khong ton tai - Zalo: 0917678211"]);
 
-      const buildUserinfo = (expDate, rawInfo) => {
-        let expireSec = 0;
-        if (expDate) {
-          if (isLifetime(expDate)) expireSec = 0;
-          else {
-            const ms = parseDmy(expDate);
-            if (ms) expireSec = Math.floor((ms + 86399000) / 1000);
-          }
-        }
-        if (expireSec > 0 || (expDate && isLifetime(expDate))) {
-          if (rawInfo && /expire=\d+/.test(rawInfo)) return rawInfo.replace(/expire=\d+/, `expire=${expireSec}`);
-          if (rawInfo) return `${rawInfo}; expire=${expireSec}`;
-          return `upload=0; download=0; total=1073741824000; expire=${expireSec}`;
-        }
-        return rawInfo || "";
-      };
+      const LOCKED_NODES = [
+        "⛔ Gói cước đã hết hạn hoặc bị KHÓA",
+        "🌐 Gia hạn tại: vpntrinhhg.pages.dev",
+        "📞 Zalo hỗ trợ: 0917678211"
+      ];
+      const LOCKED_B64 = b64e(LOCKED_NODES.map(n => VP + encodeURIComponent(n)).join("\n"));
+      const LOCKED_YAML = makeSimpleYaml(LOCKED_NODES);
+      const LOCKED_SB = makeSimpleSingbox(LOCKED_NODES);
 
-      const respond = (b, fmt, info = "") => {
-        if (info) {
-          rh.set("subscription-userinfo", info);
-          rh.set("Subscription-Userinfo", info);
+      const DEAD_NODES = [
+        "❌ Gói cước không tồn tại",
+        "🌐 Mua hàng tại: vpntrinhhg.pages.dev",
+        "📞 Zalo hỗ trợ: 0917678211"
+      ];
+      const DEAD_B64 = b64e(DEAD_NODES.map(n => VP + encodeURIComponent(n)).join("\n"));
+      const DEAD_YAML = makeSimpleYaml(DEAD_NODES);
+      const DEAD_SB = makeSimpleSingbox(DEAD_NODES);
+
+      // Gắn DUY NHẤT tham số expire (Tuyệt đối KHÔNG có upload, download, total)
+      const respond = (b, fmt, expireSec = null) => {
+        if (expireSec !== null && expireSec !== undefined && expireSec > 0) {
+          rh.set("subscription-userinfo", `expire=${expireSec}`);
+          rh.set("Subscription-Userinfo", `expire=${expireSec}`);
         }
-        if (fmt === "yaml") { rh.set("Content-Disposition", 'attachment; filename="VPNTrinhHg.yaml"'); rh.set("Content-Type", "text/yaml; charset=utf-8"); }
-        else if (fmt === "singbox") { rh.set("Content-Disposition", 'attachment; filename="VPNTrinhHg.json"'); rh.set("Content-Type", "application/json; charset=utf-8"); }
-        else rh.set("Content-Type", "text/plain; charset=utf-8");
+        if (fmt === "yaml") {
+          rh.set("Content-Disposition", 'attachment; filename="VPNTrinhHg.yaml"');
+          rh.set("Content-Type", "text/yaml; charset=utf-8");
+        } else if (fmt === "singbox") {
+          rh.set("Content-Disposition", 'attachment; filename="VPNTrinhHg.json"');
+          rh.set("Content-Type", "application/json; charset=utf-8");
+        } else {
+          rh.set("Content-Disposition", 'attachment; filename="VPNTrinhHg"');
+          rh.set("Content-Type", "text/plain; charset=utf-8");
+        }
         return new Response(b, { status: 200, headers: rh });
       };
       const getFmt = () => (isSingbox ? "singbox" : isClash ? "yaml" : "b64");
-      const getDead = () => { const f = getFmt(); return respond(f === "singbox" ? DEAD_SB : f === "yaml" ? DEAD_YAML : DEAD_B64, f); };
-      const getLocked = () => { const f = getFmt(); return respond(f === "singbox" ? LOCKED_SB : f === "yaml" ? LOCKED_YAML : LOCKED_B64, f); };
+      const getDead = () => { const f = getFmt(); return respond(f === "singbox" ? DEAD_SB : f === "yaml" ? DEAD_YAML : DEAD_B64, f, 0); };
+      const getLocked = (expSec = 0) => { const f = getFmt(); return respond(f === "singbox" ? LOCKED_SB : f === "yaml" ? LOCKED_YAML : LOCKED_B64, f, expSec); };
+
       if (!reqToken) return getDead();
       try {
         let routerObj = safeJson(await KV.get("GLOBAL_ROUTER"), {});
@@ -421,14 +844,18 @@ export default {
             if (!l || !l.masked) return false;
             try {
               const u = new URL(l.masked);
-              return getParam(u, "OwO", "token", "top", "liki", "lidj", "kidj") === reqToken || u.pathname.includes(reqToken);
+              return getParam(u, "top", "liki", "lidj", "kidj", "OwO", "token", "oos") === reqToken || u.pathname.includes(reqToken);
             } catch { return false; }
           });
           if (found) {
+            const ot1 = found.orig && found.orig !== LOCK_ORIG ? getOrigToken(found.orig) : "";
+            const ot2 = found.orig2 && found.orig2 !== LOCK_ORIG ? getOrigToken(found.orig2) : "";
             mapping = {
-              origTok: getOrigToken(found.orig),
+              origTok: ot1,
               origUrl: found.orig,
               origUrl2: found.orig2 || "",
+              tokens: found.isCombo ? [ot1, ot2].filter(Boolean) : [ot1].filter(Boolean),
+              origUrls: found.isCombo ? [found.orig, found.orig2].filter(Boolean) : [found.orig].filter(Boolean),
               isCombo: !!found.isCombo,
               isLocked: !!found.isLocked,
               expDate: found.expDate || "",
@@ -437,34 +864,186 @@ export default {
           }
         }
         if (!mapping) return getDead();
-        if (mapping.isLocked) return getLocked();
-        const originToken = mapping.origTok, origUrl = mapping.origUrl;
+
+        const isLife = !!mapping.isLife || isLifetime(mapping.expDate);
+        const dayStart = parseDmy(mapping.expDate);
+        let expireSec = 0;
+        if (isLife) {
+          expireSec = 4102444800; // year 2100
+        } else if (dayStart) {
+          expireSec = Math.floor((dayStart + 86399000) / 1000);
+        } else {
+          expireSec = 0;
+        }
+
+        const now = NOW();
+        const lockTs = isLife ? 4102444800000 : (mapping.lockTs || (dayStart ? dayStart + 864e5 : 0));
+        const isExpired = (!isLife && lockTs > 0 && now >= lockTs);
+        if (mapping.isLocked || isExpired) return getLocked(expireSec);
+
+        // Danh sách 3 Node thông tin chuẩn:
+        // Node 1: HSD chuẩn: "♾️ HSD: Vĩnh viễn" / "⏰ HSD: DD/MM/YYYY" / "⏰ HSD: Chưa xác định"
+        const hsdNodeTitle = isLife ? "♾️ HSD: Vĩnh viễn" : (mapping.expDate ? `⏰ HSD: ${mapping.expDate}` : "⏰ HSD: Chưa xác định");
+        const ACTIVE_INFO_NAMES = [
+          hsdNodeTitle,
+          "🌐 Website: vpntrinhhg.pages.dev",
+          "📞 Zalo hỗ trợ: 0917678211"
+        ];
+
         let subsObj = safeJson(await KV.get("GLOBAL_SUBS"), {});
         if (!subsObj || typeof subsObj !== "object") subsObj = {};
-        const cd = subsObj[originToken];
-        const effUserinfo = buildUserinfo(mapping.expDate, (cd && cd.info) || "");
-        if (cd) {
-          if (isSingbox && cd.body_singbox && cd.body_singbox.length > 500) return respond(cd.body_singbox, "singbox", effUserinfo);
-          if (isClash && cd.body_yaml && cd.body_yaml.length > 200) return respond(cd.body_yaml, "yaml", effUserinfo);
-          if (cd.body_b64 && cd.body_b64.length > 100) return respond(cd.body_b64.replace(/\s+/g, ""), "b64", effUserinfo);
+
+        const extractNodes = (cd) => {
+          if (!cd) return [];
+          if (cd.body_b64) {
+            const dec = decB64(cd.body_b64);
+            if (dec) {
+              if (dec.trim().startsWith("{") && dec.includes('"outbounds"')) {
+                try {
+                  const sb = JSON.parse(dec);
+                  const lines = [];
+                  for (const ob of (sb.outbounds || [])) {
+                    if (!ob.tag || INFO_SKIP.some(k => ob.tag.includes(k))) continue;
+                    if (ob.server === "127.0.0.1" || ob.server === "1.1.1.1") continue;
+                    const uri = outboundToURI(ob);
+                    if (uri) lines.push(uri);
+                  }
+                  if (lines.length) return lines;
+                } catch {}
+              }
+              const lines = dec.split(/\r?\n/).map(l => l.trim()).filter(l => l.includes("://") && !l.includes("127.0.0.1"));
+              if (lines.length) return lines;
+            }
+          }
+          if (cd.body_singbox) {
+            try {
+              const sb = JSON.parse(cd.body_singbox);
+              const lines = [];
+              for (const ob of (sb.outbounds || [])) {
+                if (!ob.tag || INFO_SKIP.some(k => ob.tag.includes(k))) continue;
+                if (ob.server === "127.0.0.1" || ob.server === "1.1.1.1") continue;
+                const uri = outboundToURI(ob);
+                if (uri) lines.push(uri);
+              }
+              if (lines.length) return lines;
+            } catch {}
+          }
+          return [];
+        };
+
+        const fetchAndCacheSub = async (u) => {
+          if (!u || u === LOCK_ORIG) return null;
+          try {
+            const r = await fetch(u, { headers: { "User-Agent": "v2rayN/6.23" }, cf: { cacheTtl: 0, cacheEverything: false } });
+            if (!r.ok) return null;
+            const rawB64 = (await r.text()).replace(/\s+/g, "");
+            if (!rawB64 || rawB64.length < 20) return null;
+            const prov = isKtUrl(u) ? "kitty" : (String(u).includes("liangxin") ? "liangxin" : "djjc");
+            const processed = processB64(rawB64, ACTIVE_INFO_NAMES, VP, prov === "liangxin", prov);
+            const tok = getOrigToken(u);
+            if (tok) {
+              subsObj[tok] = { body_b64: processed.newB64, body_yaml: processed.yamlStr, body_singbox: processed.singboxStr };
+              ctx.waitUntil(KV.put("GLOBAL_SUBS", JSON.stringify(subsObj)));
+            }
+            return subsObj[tok] || { body_b64: processed.newB64, body_yaml: processed.yamlStr, body_singbox: processed.singboxStr };
+          } catch { return null; }
+        };
+
+        // ==============================================================
+        // XỬ LÝ LINK TRỘN COMBO (v4, v5, v6)
+        // ==============================================================
+        if (mapping.isCombo && ((mapping.tokens && mapping.tokens.length) || (mapping.origUrls && mapping.origUrls.length))) {
+          const tok1 = mapping.tokens?.[0] || getOrigToken(mapping.origUrls?.[0] || mapping.origUrl);
+          const tok2 = mapping.tokens?.[1] || getOrigToken(mapping.origUrls?.[1] || mapping.origUrl2);
+          const url1 = mapping.origUrls?.[0] || mapping.origUrl;
+          const url2 = mapping.origUrls?.[1] || mapping.origUrl2;
+
+          let cd1 = subsObj[tok1];
+          if (!cd1 && url1) cd1 = await fetchAndCacheSub(url1);
+          let cd2 = subsObj[tok2];
+          if (!cd2 && url2) cd2 = await fetchAndCacheSub(url2);
+
+          let rawNodes1 = extractNodes(cd1);
+          let rawNodes2 = extractNodes(cd2);
+
+          const combinedNodeLines = [...rawNodes1, ...rawNodes2];
+          if (!combinedNodeLines.length) return getDead();
+
+          const infoLines = ACTIVE_INFO_NAMES.map(n => VP + encodeURIComponent(n));
+          const allLines = [...infoLines, ...combinedNodeLines];
+          const comboB64 = b64e(allLines.join("\n"));
+
+          const proxies = [];
+          for (const line of combinedNodeLines) {
+            const p = parseURI(line);
+            if (p && p.server && p.name) proxies.push(p);
+          }
+
+          const uJoined = [url1, url2].join(" ").toLowerCase();
+          const hasLx = uJoined.includes("liangxin"), hasDj = uJoined.includes("djjc"), hasKt = isKtUrl(uJoined);
+          let comboMode = "combo_lidj";
+          if (hasLx && hasKt) comboMode = "combo_liki";
+          else if (hasKt && hasDj) comboMode = "combo_kidj";
+
+          if (isSingbox) {
+            const sbStr = buildSingboxFull(proxies, ACTIVE_INFO_NAMES, false, comboMode);
+            return respond(sbStr, "singbox", expireSec);
+          }
+          if (isClash) {
+            const yStr = buildYaml(proxies, ACTIVE_INFO_NAMES, false, comboMode);
+            return respond(yStr, "yaml", expireSec);
+          }
+          return respond(comboB64, "b64", expireSec);
         }
-        if (!origUrl) return getDead();
-        const uLow = String(origUrl).toLowerCase();
-        const mode = (uLow.includes("tohno") || uLow.includes("oosaka") || uLow.includes("kitty")) ? "kitty" : (uLow.includes("liangxin") ? "liangxin" : "djjc");
-        const isLiangxin = mode === "liangxin";
-        const r = await fetch(origUrl, { headers: { "User-Agent": "v2rayN/6.23" }, cf: { cacheTtl: 0, cacheEverything: false } });
-        if (!r.ok) return getDead();
-        const rawB64 = (await r.text()).replace(/\s+/g, "");
-        const ui = buildUserinfo(mapping.expDate, r.headers.get("subscription-userinfo") || "");
-        if (!rawB64 || rawB64.length < 20) return getDead();
-        const { newB64, yamlStr, singboxStr } = processB64(rawB64, INFO_NAMES, VP, isLiangxin, mode);
-        if (!newB64 || newB64.length < 20) return getDead();
-        subsObj[originToken] = { body_b64: newB64, body_yaml: yamlStr, body_singbox: singboxStr, info: ui };
-        ctx.waitUntil(KV.put("GLOBAL_SUBS", JSON.stringify(subsObj)));
-        if (isSingbox) return singboxStr && singboxStr.length > 500 ? respond(singboxStr, "singbox", ui) : getDead();
-        if (isClash) return yamlStr && yamlStr.length > 200 ? respond(yamlStr, "yaml", ui) : getDead();
-        return respond(newB64, "b64", ui);
-      } catch (e) { console.error("Sub error:", e && e.message || e); return getDead(); }
+
+        // ==============================================================
+        // XỬ LÝ LINK ĐƠN (LIANGXIN, DJJC HOẶC KITTY)
+        // ==============================================================
+        const originToken = mapping.origTok || (mapping.tokens && mapping.tokens[0]) || getOrigToken(mapping.origUrl);
+        const origUrl = mapping.origUrl || (mapping.origUrls && mapping.origUrls[0]);
+        let cd = subsObj[originToken];
+        if (!cd && origUrl) cd = await fetchAndCacheSub(origUrl);
+
+        let rawNodes = extractNodes(cd);
+        if (!rawNodes.length && origUrl) {
+          cd = await fetchAndCacheSub(origUrl);
+          rawNodes = extractNodes(cd);
+        }
+
+        if (rawNodes.length) {
+          const infoLines = ACTIVE_INFO_NAMES.map(n => VP + encodeURIComponent(n));
+          const allLines = [...infoLines, ...rawNodes];
+          const singleB64 = b64e(allLines.join("\n"));
+
+          if (!isSingbox && !isClash) {
+            return respond(singleB64, "b64", expireSec);
+          }
+
+          const proxies = [];
+          for (const line of rawNodes) {
+            const p = parseURI(line);
+            if (p && p.server && p.name) proxies.push(p);
+          }
+          const isKt = isKtUrl(origUrl);
+          const isLiangxin = String(origUrl || "").includes("liangxin");
+          const singleMode = isKt ? "kitty" : (isLiangxin ? "liangxin" : "djjc");
+
+          if (isSingbox) {
+            const sbStr = buildSingboxFull(proxies, ACTIVE_INFO_NAMES, isLiangxin, singleMode);
+            return respond(sbStr, "singbox", expireSec);
+          }
+          if (isClash) {
+            const yStr = buildYaml(proxies, ACTIVE_INFO_NAMES, isLiangxin, singleMode);
+            return respond(yStr, "yaml", expireSec);
+          }
+          return respond(singleB64, "b64", expireSec);
+        }
+
+        return getDead();
+      } catch (e) {
+        console.error("Sub error:", e && e.message || e);
+        return getDead();
+      }
     }
 
     await syncClock(KV);
@@ -592,6 +1171,9 @@ export default {
         l2("info", "order", isRenew ? "Đơn gia hạn mới" : "Đơn mới", `${o.id} ${o.email} ${bank ? o.totalVnd : "¥" + o.totalCny}`, o.id);
         await flushLog(KV, l2);
         await sendMail(env.ADMIN_EMAIL || "lucastanora@gmail.com", isRenew ? `[GIA HẠN] ${o.id} - ${o.email}` : `[ĐƠN MỚI] ${o.id} - ${o.email}`, buildAdminMail(isRenew ? "renew" : "new", o), env, st.cms);
+        if (st.cms?.settings?.tgOrderAlert !== false) {
+          await notifyNewOrderTelegram(env, o, o.info1 || o.info2 || o.info3 || "");
+        }
       })());
       return J({ ok: true, order: pub(o, st) });
     }
@@ -759,8 +1341,102 @@ export default {
       const bad = need(admin); if (bad) return bad;
       const st0 = () => loadAll(KV);
 
+            // ==================== TEST MODE API ====================
+      if (p === "/api/admin/test/toggle" && m === "POST") {
+        const b = await body();
+        await KV.put("TEST_MODE_ACTIVE", b.active ? "1" : "0");
+        return J({ ok: true, active: !!b.active });
+      }
       if (p === "/api/admin/test/status" && m === "GET") {
-        return J({ ok: true, active: false });
+        const active = (await KV.get("TEST_MODE_ACTIVE")) === "1";
+        const sbProd = getSupabase(env, false);
+        const sbTest = getSupabase(env, true);
+        const [ping_prod, ping_test] = await Promise.all([
+          sbProd ? sbProd.ping() : Promise.resolve({ ok: false, error: "Chưa cấu hình SUPABASE_URL / SUPABASE_KEY" }),
+          sbTest ? sbTest.ping() : Promise.resolve({ ok: false, error: "Chưa cấu hình SUPABASE_URL / SUPABASE_KEY" })
+        ]);
+        return J({ ok: true, active, ping: ping_test, ping_prod, ping_test });
+      }
+      if (p === "/api/admin/test/fake_order" && m === "POST") {
+        const sb = getSupabase(env, true);
+        if (!sb) return J({ ok: false, error: "Chưa cấu hình Supabase" }, 500);
+        const now = NOW();
+        const fakeId = "DH_TEST_" + Math.floor(1000 + Math.random() * 9000);
+        const fakeOrder = {
+          id: fakeId,
+          email: "khach_test@gmail.com",
+          nickname: "Khách Ảo Test",
+          zalo: "0917678211",
+          method: "Ngân hàng VN",
+          pkgId: "t1",
+          qty: 1,
+          pkgName: "Gói 1 tháng",
+          pkgData: "100GB",
+          pkg: "Gói 1 tháng - 60,000VND",
+          totalVnd: 60000,
+          days: 30,
+          expDate: addMonthsDmy(day0(now), 1),
+          status: "success",
+          createdTs: now,
+          date: fmtBank(now),
+          dateCreated: dmy(now),
+          info1: "https://vpntrinhhg.pages.dev/v1/VPNTrinhHg?OwO=test1",
+          info2: "",
+          info3: ""
+        };
+        await sb.upsert(fakeOrder);
+        return J({ ok: true, order: fakeOrder });
+      }
+      if (p === "/api/admin/test/clone" && m === "POST") {
+        const sb = getSupabase(env, true);
+        const count = sb ? await sb.cloneProdToTest() : 0;
+        return J({ ok: true, count });
+      }
+      if (p === "/api/admin/test/clear" && m === "POST") {
+        const sb = getSupabase(env, true);
+        if (sb) await sb.clearTest();
+        return J({ ok: true });
+      }
+
+      // ==================== TELEGRAM BOT API ====================
+      if (p === "/api/admin/telegram/test" && m === "POST") {
+        const res = await sendTelegramMessage(env, `🔔 <b>VPN Trinh Hg</b>: Kiểm tra kết nối Telegram Bot thành công!\n⏰ Thời gian: ${fmtBank(NOW())}`);
+        return J(res);
+      }
+      if (p === "/api/admin/telegram/backup_now" && m === "POST") {
+        const b = await body();
+        const actionReason = b.reason || "Admin gửi thủ công";
+        const detailDiff = b.detail || "";
+        const res = await runTelegramBackup(env, actionReason, detailDiff);
+        log(res.ok ? "ok" : "warn", "admin", "Bắn Backup Telegram", `${actionReason} · ${res.keyTitle}`);
+        await flushLog(KV, log);
+        return J(res);
+      }
+      if (p === "/api/admin/telegram/backup_kv_now" && m === "POST") {
+        const res = await runTelegramKvBackup(env);
+        log(res.ok ? "ok" : "warn", "admin", "Bắn Backup KV Telegram", `${res.keysCount} keys`);
+        await flushLog(KV, log);
+        return J(res);
+      }
+      if (p === "/api/admin/telegram/reset_stt" && m === "POST") {
+        await Promise.all([
+          KV.delete("TG_BACKUP_PROD_LAST_STT"),
+          KV.delete("TG_BACKUP_TEST_LAST_STT")
+        ]);
+        log("warn", "admin", "Reset STT Telegram Backup về 01");
+        await flushLog(KV, log);
+        return J({ ok: true });
+      }
+      if (p === "/api/admin/telegram/test_order_alert" && m === "POST") {
+        const sampleOrder = {
+          id: "DH" + Math.random().toString(36).slice(2, 10).toUpperCase(),
+          email: "khachhang@gmail.com",
+          pkgName: "Gói 1 tháng (500GB)",
+          totalVnd: 70000,
+          info1: "https://vpntrinhhg3.pages.dev/v1/VPNTrinhHg?OwO=demo123"
+        };
+        await notifyNewOrderTelegram(env, sampleOrder, sampleOrder.info1);
+        return J({ ok: true, message: "Đã gửi thông báo đơn hàng mẫu sang Telegram" });
       }
       if (p === "/api/admin/save_links_and_pool" && m === "POST") {
         const b = await body();
@@ -786,7 +1462,19 @@ export default {
       }
       if (p === "/api/admin/status") {
         const cron = safeJson(await KV.get("CRON_LAST_RUN"), null), r = await d1(env, "/api/admin/logs?limit=1");
-        return J({ ok: true, cron, d1: r.ok, d1Error: r.ok ? "" : (r.data && r.data.error) || "HTTP " + r.status, web: getMe(url, env, {}).n, hasPassword: !!env.ADMIN_PASSWORD, hasSecret2: !!env.WEB_API_SECRET2, cronEveryMin: 15 });
+        const d1Secret = env.D1_SECRET || env.WEB_API_SECRET2 || env.WEB_API_SECRET;
+        return J({
+          ok: true,
+          cron,
+          d1: r.ok,
+          d1Error: r.ok ? "" : ((r.data && r.data.error) || (!env.D1_URL ? "Chưa cấu hình D1_URL" : (!d1Secret ? "Chưa cấu hình D1_SECRET" : "HTTP " + r.status))),
+          web: getMe(url, env, {}).n,
+          hasPassword: !!env.ADMIN_PASSWORD,
+          hasSecret2: !!env.WEB_API_SECRET2,
+          hasD1Url: !!env.D1_URL,
+          hasD1Secret: !!d1Secret,
+          cronEveryMin: 15
+        });
       }
       if (p === "/api/admin/log" && m === "POST") { const b = await body(); log(["ok", "warn", "error"].includes(b.lvl) ? b.lvl : "info", /^Gửi mail/.test(String(b.act || "")) ? "mail" : "admin", String(b.act || "").slice(0, 80), b.msg, b.ref); await flushLog(KV, log); return OK(); }
       if (p === "/api/admin/logs") {
@@ -868,7 +1556,14 @@ export default {
       }
 
       // Giao dịch D1 (worker giữ secret, trình duyệt không cần biết)
-      if (p === "/api/admin/tx" && m === "GET") { const r = await d1(env, "/api/admin/transactions" + url.search); return J(r.ok ? (r.data || { ok: true, transactions: [] }) : { ok: true, transactions: [], error: (r.data && r.data.error) || "D1 offline" }, 200); }
+      if (p === "/api/admin/tx" && m === "GET") {
+        try {
+          const r = await d1(env, "/api/admin/transactions" + url.search);
+          return J(r.ok ? (r.data || { ok: true, transactions: [] }) : { ok: true, transactions: [], error: (r.data && r.data.error) || "D1 offline" }, 200);
+        } catch (e) {
+          return J({ ok: true, transactions: [], error: String(e && e.message || e) }, 200);
+        }
+      }
       const tm = p.match(/^\/api\/admin\/tx\/(\d+)\/(approve|reject)$/);
       if (tm && m === "POST") {
         const b = await body(), r = await d1(env, `/api/admin/reviews/${tm[1]}/${tm[2]}`, { method: "POST", body: b });
@@ -1146,15 +1841,38 @@ function buildGlobalRouter(links) {
     try {
       if (!l || !l.masked) continue;
       const mUrl = new URL(l.masked);
-      let mt = getParam(mUrl, "OwO", "token", "top", "liki", "lidj", "kidj");
+      let mt = getParam(mUrl, "top", "liki", "lidj", "kidj", "OwO", "token", "oos");
       if (!mt) {
-        const m = mUrl.pathname.match(/^\/v[1-6]\/([a-zA-Z0-9]{16,64})$/);
+        const m = mUrl.pathname.match(/^\/v[1-6]\/([a-zA-Z0-9_\-]+)$/);
         if (m) mt = m[1];
       }
       if (!mt) continue;
 
+      const isLife = isLifetime(l.expDate);
+      const dayStart = parseDmy(l.expDate);
+      const lockTs = isLife ? 4102444800000 : (dayStart ? dayStart + 864e5 : 0);
+
+      if (l.isCombo) {
+        const ot1 = l.orig && l.orig !== LOCK_ORIG ? getOrigToken(l.orig) : "";
+        const ot2 = l.orig2 && l.orig2 !== LOCK_ORIG ? getOrigToken(l.orig2) : "";
+        r[mt] = {
+          isCombo: true,
+          tokens: [ot1, ot2].filter(Boolean),
+          origUrls: [l.orig, l.orig2].filter(Boolean),
+          origUrl: l.orig || "",
+          origUrl2: l.orig2 || "",
+          isLocked: !!l.isLocked,
+          expDate: l.expDate || "",
+          lockTs,
+          isLife,
+          orderId: l.orderId || "",
+          createdTs: l.createdTs || 0
+        };
+        continue;
+      }
+
       if (l.isLocked && (!l.orig || l.orig === LOCK_ORIG)) {
-        r[mt] = { origTok: "", origUrl: "", isLocked: true, expDate: l.expDate || "", orderId: l.orderId || "" };
+        r[mt] = { origTok: "", origUrl: "", isLocked: true, expDate: l.expDate || "", lockTs, isLife, orderId: l.orderId || "" };
         continue;
       }
       if (!l.orig) continue;
@@ -1164,9 +1882,11 @@ function buildGlobalRouter(links) {
         origTok: ot,
         origUrl: l.orig,
         origUrl2: l.orig2 || "",
-        isCombo: !!l.isCombo,
+        isCombo: false,
         isLocked: !!l.isLocked,
         expDate: l.expDate || "",
+        lockTs,
+        isLife,
         orderId: l.orderId || "",
         createdTs: l.createdTs || 0
       };
@@ -1666,30 +2386,59 @@ function encB64(str) {
 // SUB PROCESS
 // ====================================================================
 
-const INFO_SKIP = ["剩余流量", "距离下次重置", "套餐到期", "官网", "kitty.fo", "到期", "过期", "流量", "重置"];
-
 function processB64(rawB64, infoNames, vp, isLiangxin, mode = "") {
   const decoded = decB64(rawB64);
   if (!decoded) return { newB64: rawB64, yamlStr: "", singboxStr: "" };
   
-  const lines = decoded.split(/\r?\n/).map(l => l.trim()).filter(l => l.includes("://"));
   const newB64Lines = infoNames.map(n => vp + encodeURIComponent(n));
   const proxies = [];
+  const seenNames = {};
 
-  for (const line of lines) {
-    if (line.includes("127.0.0.1")) continue;
-    const hi = line.lastIndexOf("#");
-    let name = hi >= 0 ? safeDecode(line.slice(hi + 1)) : "";
-    if (!name) name = "VPN Node";
-    if (INFO_SKIP.some(k => name.includes(k))) continue;
+  if (decoded.trim().startsWith("{") && decoded.includes('"outbounds"')) {
+    try {
+      const sbData = JSON.parse(decoded);
+      for (const ob of (sbData.outbounds || [])) {
+        const oldName = ob.tag || "";
+        if (!oldName || INFO_SKIP.some(k => oldName.includes(k))) continue;
+        if (ob.server === "127.0.0.1" || ob.server === "1.1.1.1") continue;
+        let newName = formatNodeName(oldName, mode || "kitty");
+        if (seenNames[newName]) {
+          seenNames[newName]++;
+          newName = `${newName} (${seenNames[newName]})`;
+        } else {
+          seenNames[newName] = 1;
+        }
+        ob.tag = newName;
+        const uri = outboundToURI(ob);
+        if (uri) {
+          newB64Lines.push(uri);
+          const px = parseURI(uri);
+          if (px && px.server && px.name) proxies.push(px);
+        }
+      }
+    } catch {}
+  } else {
+    const lines = decoded.split(/\r?\n/).map(l => l.trim()).filter(l => l.includes("://"));
+    for (const line of lines) {
+      if (line.includes("127.0.0.1")) continue;
+      const hi = line.lastIndexOf("#");
+      let name = hi >= 0 ? safeDecode(line.slice(hi + 1)) : "";
+      if (!name) name = "VPN Node";
+      if (INFO_SKIP.some(k => name.includes(k))) continue;
 
-    const base = hi >= 0 ? line.slice(0, hi) : line;
-    const newName = name.includes("VPNTrinhHg") ? name : `${name} - VPNTrinhHg`;
-    const newLine = base + "#" + encodeURIComponent(newName);
-
-    newB64Lines.push(newLine);
-    const proxy = parseURI(newLine);
-    if (proxy && proxy.server && proxy.name) proxies.push(proxy);
+      const base = hi >= 0 ? line.slice(0, hi) : line;
+      let newName = formatNodeName(name, mode || (isLiangxin ? "liangxin" : "djjc"));
+      if (seenNames[newName]) {
+        seenNames[newName]++;
+        newName = `${newName} (${seenNames[newName]})`;
+      } else {
+        seenNames[newName] = 1;
+      }
+      const newLine = base + "#" + encodeURIComponent(newName);
+      newB64Lines.push(newLine);
+      const proxy = parseURI(newLine);
+      if (proxy && proxy.server && proxy.name) proxies.push(proxy);
+    }
   }
   
   const newB64 = encB64(newB64Lines.join("\n"));

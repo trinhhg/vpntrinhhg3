@@ -201,9 +201,12 @@ function linkBottom(l){
    const od = ordersDb.find(o => o.info1 === l.masked || o.info2 === l.masked || o.info3 === l.masked);
    if (od && od.expDate) exp = od.expDate;
  }
- if (!exp) exp = l.expDate || l.date || "";
+ if (!exp) exp = l.expDate || "";
 
- if (!exp || isLife(exp)) {
+ if (!exp) {
+   return '<span class="text-slate-400 font-medium">Chưa xác định</span>';
+ }
+ if (isLife(exp)) {
    return '<span class="text-purple-600 font-bold">Vĩnh viễn</span>';
  }
 
@@ -2683,6 +2686,15 @@ async function toggleHidePkg(idx){
   toast(isHidden ? `Đã ẩn gói ${adminPkgsList[idx].name || adminPkgsList[idx].id} bên Index` : `Đã hiện lại gói bên Index`);
 }
 
+window.updatePkgField = function(idx, field, val) {
+  if (Array.isArray(adminPkgsList) && adminPkgsList[idx]) {
+    adminPkgsList[idx][field] = val;
+  }
+  if (window.adminPkgsList && window.adminPkgsList[idx]) {
+    window.adminPkgsList[idx][field] = val;
+  }
+};
+
 function renderPkgAdmin() {
   const container = $("pkgCardsList");
   if (!container) return;
@@ -2704,7 +2716,7 @@ function renderPkgAdmin() {
           <span class="bg-indigo-100 text-indigo-700 font-mono font-black text-xs px-2.5 py-0.5 rounded-lg border border-indigo-200">
             ${esc(p.id)} ${isFixed ? '(Cố định)' : '(Tùy chỉnh)'}
           </span>
-          <input type="text" value="${esc(p.name || '')}" oninput="adminPkgsList[${idx}].name = this.value" placeholder="Tên gói cước..." class="p-1 text-xs font-extrabold text-slate-800 border border-slate-200 rounded-lg outline-none focus:border-indigo-500 bg-white">
+          <input type="text" value="${esc(p.name || '')}" oninput="updatePkgField(${idx}, 'name', this.value)" placeholder="Tên gói cước..." class="p-1 text-xs font-extrabold text-slate-800 border border-slate-200 rounded-lg outline-none focus:border-indigo-500 bg-white">
           ${isHidden ? '<span class="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-black px-2 py-0.5 rounded uppercase">ĐÃ ẨN INDEX</span>' : ''}
         </div>
         <div class="flex items-center gap-2">
@@ -2763,15 +2775,15 @@ function renderPkgAdmin() {
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
         <div>
           <label class="block text-[10px] font-bold text-rose-600 mb-0.5">Tem Quà Tặng (Sticker góc thẻ)</label>
-          <input type="text" value="${esc(p.promo_sticker || '')}" class="inp-promo-sticker w-full p-1.5 border border-rose-200 rounded-lg font-black text-rose-600 bg-rose-50/40" oninput="if(window.adminPkgsList&&window.adminPkgsList[${idx}])window.adminPkgsList[${idx}].promo_sticker = this.value" placeholder="VD: +3 NGÀY">
+          <input type="text" value="${esc(p.promo_sticker || '')}" class="inp-promo-sticker w-full p-1.5 border border-rose-200 rounded-lg font-black text-rose-600 bg-rose-50/40" oninput="updatePkgField(${idx}, 'promo_sticker', this.value)" placeholder="VD: +3 NGÀY">
         </div>
         <div>
           <label class="block text-[10px] font-bold text-purple-700 mb-0.5">Số ngày tặng (+vào HSD)</label>
-          <input type="number" min="0" max="365" value="${p.bonus_days || 0}" class="inp-bonus-days w-full p-1.5 border border-purple-200 rounded-lg font-bold text-purple-700 bg-purple-50/40 text-center" oninput="adminPkgsList[${idx}].bonus_days = Number(this.value)||0" placeholder="VD: 3">
+          <input type="number" min="0" max="365" value="${p.bonus_days || 0}" class="inp-bonus-days w-full p-1.5 border border-purple-200 rounded-lg font-bold text-purple-700 bg-purple-50/40 text-center" oninput="updatePkgField(${idx}, 'bonus_days', Number(this.value)||0)" placeholder="VD: 3">
         </div>
         <div>
           <label class="block text-[10px] font-bold text-indigo-700 mb-0.5">Chữ cạnh thời hạn (Tùy chọn)</label>
-          <input type="text" value="${esc(p.bonus_text || '')}" class="inp-bonus-text w-full p-1.5 border border-indigo-200 rounded-lg font-bold text-indigo-700 bg-indigo-50/40" oninput="adminPkgsList[${idx}].bonus_text = this.value" placeholder="VD: +3 ngày">
+          <input type="text" value="${esc(p.bonus_text || '')}" class="inp-bonus-text w-full p-1.5 border border-indigo-200 rounded-lg font-bold text-indigo-700 bg-indigo-50/40" oninput="updatePkgField(${idx}, 'bonus_text', this.value)" placeholder="VD: +3 ngày">
         </div>
       </div>
 
@@ -2779,16 +2791,16 @@ function renderPkgAdmin() {
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
         <div>
           <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Dung lượng hiển thị</label>
-          <input type="text" value="${esc(p.data || '')}" oninput="adminPkgsList[${idx}].data = this.value" placeholder="VD: 100GB, 300GB/tháng..." class="w-full p-1.5 border rounded-lg font-bold bg-white outline-none">
+          <input type="text" value="${esc(p.data || '')}" oninput="updatePkgField(${idx}, 'data', this.value)" placeholder="VD: 100GB, 300GB/tháng..." class="w-full p-1.5 border rounded-lg font-bold bg-white outline-none">
         </div>
         <div>
           <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Giới hạn thiết bị</label>
-          <input type="text" value="${esc(p.dev || '')}" oninput="adminPkgsList[${idx}].dev = this.value" placeholder="VD: 1 Thiết bị, Không giới hạn..." class="w-full p-1.5 border rounded-lg font-bold bg-white outline-none">
+          <input type="text" value="${esc(p.dev || '')}" oninput="updatePkgField(${idx}, 'dev', this.value)" placeholder="VD: 1 Thiết bị, Không giới hạn..." class="w-full p-1.5 border rounded-lg font-bold bg-white outline-none">
         </div>
         <div>
           <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Thời hạn gói (Tháng / Vĩnh viễn)</label>
           <div class="flex items-center gap-2">
-            <input type="number" min="1" max="120" value="${p.time === 'lifetime' ? '' : (p.time || 1)}" ${p.time === 'lifetime' ? 'disabled' : ''} id="pkg_time_val_${idx}" oninput="adminPkgsList[${idx}].time = Number(this.value)||1" class="w-20 p-1.5 border rounded-lg text-center font-bold bg-white">
+            <input type="number" min="1" max="120" value="${p.time === 'lifetime' ? '' : (p.time || 1)}" ${p.time === 'lifetime' ? 'disabled' : ''} id="pkg_time_val_${idx}" oninput="updatePkgField(${idx}, 'time', Number(this.value)||1)" class="w-20 p-1.5 border rounded-lg text-center font-bold bg-white">
             <label class="flex items-center gap-1 font-bold text-slate-700 cursor-pointer text-xs">
               <input type="checkbox" ${p.time === 'lifetime' ? 'checked' : ''} onchange="toggleLifetimePkg(${idx}, this.checked)" class="accent-indigo-600"> Vĩnh viễn
             </label>
@@ -2808,10 +2820,10 @@ function renderPkgAdmin() {
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag1On ? 'checked' : ''} onchange="if(window.adminPkgsList&&window.adminPkgsList[${idx}])window.adminPkgsList[${idx}].tag1On = this.checked" class="pkg-tag1-on w-4 h-4 accent-red-600 shrink-0"><input type="text" value="${esc(p.tag1 || '🔥 BÁN CHẠY')}" oninput="adminPkgsList[${idx}].tag1 = this.value" placeholder="Tag 1 (Đỏ phải)" class="pkg-tag1-val w-full text-xs font-bold text-red-600 outline-none"></div>
-          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag2On ? 'checked' : ''} onchange="if(window.adminPkgsList&&window.adminPkgsList[${idx}])window.adminPkgsList[${idx}].tag2On = this.checked" class="pkg-tag2-on w-4 h-4 accent-blue-600 shrink-0"><input type="text" value="${esc(p.tag2 || '✈️ Du lịch')}" oninput="adminPkgsList[${idx}].tag2 = this.value" placeholder="Tag 2 (Xanh trái)" class="pkg-tag2-val w-full text-xs font-bold text-blue-600 outline-none"></div>
-          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag3On ? 'checked' : ''} onchange="if(window.adminPkgsList&&window.adminPkgsList[${idx}])window.adminPkgsList[${idx}].tag3On = this.checked" class="pkg-tag3-on w-4 h-4 accent-amber-600 shrink-0"><input type="text" value="${esc(p.tag3 || 'Khuyên dùng')}" oninput="adminPkgsList[${idx}].tag3 = this.value" placeholder="Tag 3 (Vàng phải)" class="pkg-tag3-val w-full text-xs font-bold text-amber-600 outline-none"></div>
-          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag4On ? 'checked' : ''} onchange="if(window.adminPkgsList&&window.adminPkgsList[${idx}])window.adminPkgsList[${idx}].tag4On = this.checked" class="pkg-tag4-on w-4 h-4 accent-purple-600 shrink-0"><input type="text" value="${esc(p.tag4 || '')}" oninput="adminPkgsList[${idx}].tag4 = this.value" placeholder="Tag 4 (Tím trái)" class="pkg-tag4-val w-full text-xs font-bold text-purple-600 outline-none"></div>
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag1On ? 'checked' : ''} onchange="updatePkgField(${idx}, 'tag1On', this.checked)" class="pkg-tag1-on w-4 h-4 accent-red-600 shrink-0"><input type="text" value="${esc(p.tag1 || '🔥 BÁN CHẠY')}" oninput="updatePkgField(${idx}, 'tag1', this.value)" placeholder="Tag 1 (Đỏ phải)" class="pkg-tag1-val w-full text-xs font-bold text-red-600 outline-none"></div>
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag2On ? 'checked' : ''} onchange="updatePkgField(${idx}, 'tag2On', this.checked)" class="pkg-tag2-on w-4 h-4 accent-blue-600 shrink-0"><input type="text" value="${esc(p.tag2 || '✈️ Du lịch')}" oninput="updatePkgField(${idx}, 'tag2', this.value)" placeholder="Tag 2 (Xanh trái)" class="pkg-tag2-val w-full text-xs font-bold text-blue-600 outline-none"></div>
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag3On ? 'checked' : ''} onchange="updatePkgField(${idx}, 'tag3On', this.checked)" class="pkg-tag3-on w-4 h-4 accent-amber-600 shrink-0"><input type="text" value="${esc(p.tag3 || 'Khuyên dùng')}" oninput="updatePkgField(${idx}, 'tag3', this.value)" placeholder="Tag 3 (Vàng phải)" class="pkg-tag3-val w-full text-xs font-bold text-amber-600 outline-none"></div>
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag4On ? 'checked' : ''} onchange="updatePkgField(${idx}, 'tag4On', this.checked)" class="pkg-tag4-on w-4 h-4 accent-purple-600 shrink-0"><input type="text" value="${esc(p.tag4 || '')}" oninput="updatePkgField(${idx}, 'tag4', this.value)" placeholder="Tag 4 (Tím trái)" class="pkg-tag4-val w-full text-xs font-bold text-purple-600 outline-none"></div>
         </div>
       </div>
     </div>
@@ -5188,33 +5200,7 @@ function restoreAdminScroll(tabId){
   }
 }
 
-// ====================================================================
-// KIỂM TRA KẾT NỐI HỆ THỐNG TRONG TAB CÀI ĐẶT > SET WEB
-// ====================================================================
-async function testPingProd() {
-  const logEl = $("prodActionLog");
-  const btn = $("btnPingProd");
-  if (btn) btn.disabled = true;
-  if (logEl) logEl.innerHTML = '<span class="text-emerald-700"><i class="fas fa-spinner fa-spin mr-1"></i>Đang kiểm tra kết nối hệ thống...</span>';
-  const start = performance.now();
-  try {
-    const res = await aj("/api/admin/status");
-    const ms = Math.round(performance.now() - start);
-    if (res && res.ok) {
-      if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Kết nối hệ thống thành công (${ms}ms) — Worker: ${esc(res.web || "online")}, D1: ${res.d1 ? "Hoạt động" : "Offline (" + esc(res.d1Error || "") + ")"}</span>`;
-      toast(`Hệ thống phản hồi tốt: ${ms}ms`);
-    } else {
-      const errMsg = (res && res.error) || "Không phản hồi";
-      if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Kết nối thất bại: ${esc(errMsg)}</span>`;
-      toast("Kết nối thất bại: " + errMsg, "err");
-    }
-  } catch (e) {
-    if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Lỗi: ${esc(e.message)}</span>`;
-    toast("Lỗi ping: " + e.message, "err");
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
+
 
 // LOGIC THAO TÁC TELEGRAM TRÊN ADMIN PANEL
 // ====================================================================
@@ -5299,6 +5285,170 @@ async function triggerTelegramBackupNow(reason = "Admin bấm Bắn Backup ngay"
 }
 
 
+
+
+// ==================== CHẾ ĐỘ THỬ NGHIỆM (TEST MODE / ALL_ORDERS_TEST) ====================
+let isTestModeActive = false;
+
+async function checkTestModeStatus() {
+  try {
+    const res = await aj("/api/admin/test/status");
+    isTestModeActive = !!res.active;
+    if ($("toggleTestMode")) $("toggleTestMode").checked = isTestModeActive;
+    updateTestModeUI();
+  } catch {}
+}
+
+function updateTestModeUI() {
+  const b = $("hdrTestBadge");
+  const lbl = $("testStatusLabel");
+  if (b) b.classList.toggle("hidden", !isTestModeActive);
+  if (lbl) {
+    lbl.className = isTestModeActive 
+      ? "text-xs font-black px-2.5 py-1 rounded-full bg-amber-500 text-slate-900" 
+      : "text-xs font-black px-2.5 py-1 rounded-full bg-slate-200 text-slate-600";
+    lbl.textContent = isTestModeActive ? "ĐANG BẬT (KHO TEST)" : "TẮT (KHO THẬT)";
+  }
+}
+
+async function toggleTestMode(checked) {
+  isTestModeActive = checked;
+  updateTestModeUI();
+  try {
+    await aj("/api/admin/test/toggle", { method: "POST", body: { active: checked } });
+    toast(checked ? "Đã BẬT Chế độ Test (ALL_ORDERS_TEST)" : "Đã chuyển về Kho Thật (ALL_ORDERS)");
+    fetchAll(true);
+  } catch(e) {
+    toast("Lỗi chuyển chế độ: " + e.message, "err");
+  }
+}
+
+async function testPingProd() {
+  const logEl = $("prodActionLog");
+  const btn = $("btnPingProd");
+  if (btn) btn.disabled = true;
+  if (logEl) logEl.innerHTML = '<span class="text-emerald-700"><i class="fas fa-spinner fa-spin mr-1"></i>Đang kiểm tra kết nối Kho Thật...</span>';
+  try {
+    const res = await aj("/api/admin/test/status");
+    const p = res.ping_prod || {};
+    if (p.ok) {
+      if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Kết nối Kho Thật thành công (${p.ms}ms) — Hiện có <b>${p.count}</b> đơn hàng trong ALL_ORDERS.</span>`;
+      toast(`Kho Thật phản hồi tốt: ${p.ms}ms (${p.count} đơn)`);
+    } else {
+      const errMsg = p.error || (p.status ? `Mã lỗi HTTP ${p.status}` : "Không kết nối được");
+      if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Kết nối Kho Thật thất bại: ${esc(errMsg)}</span>`;
+      toast("Kho Thật thất bại: " + errMsg, "err");
+    }
+  } catch (e) {
+    if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Lỗi: ${esc(e.message)}</span>`;
+    toast("Lỗi ping: " + e.message, "err");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function testPingTest() {
+  const logEl = $("testActionLog");
+  const btn = $("btnPingTest");
+  if (btn) btn.disabled = true;
+  if (logEl) logEl.innerHTML = '<span class="text-amber-800"><i class="fas fa-spinner fa-spin mr-1"></i>Đang kiểm tra kết nối Kho Test...</span>';
+  try {
+    const res = await aj("/api/admin/test/status");
+    const p = res.ping_test || res.ping || {};
+    if (p.ok) {
+      if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Kết nối Kho Test thành công (${p.ms}ms) — Hiện có <b>${p.count}</b> đơn trong ALL_ORDERS_TEST.</span>`;
+      toast(`Kho Test phản hồi tốt: ${p.ms}ms (${p.count} đơn)`);
+    } else {
+      const errMsg = p.error || (p.status ? `Mã lỗi HTTP ${p.status}` : "Không kết nối được");
+      if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Kết nối Kho Test thất bại: ${esc(errMsg)}</span>`;
+      toast("Kho Test thất bại: " + errMsg, "err");
+    }
+  } catch (e) {
+    if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Lỗi: ${esc(e.message)}</span>`;
+    toast("Lỗi ping: " + e.message, "err");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function createFakeTestOrder() {
+  const logEl = $("testActionLog");
+  if (logEl) logEl.textContent = "Đang tạo đơn giả lập vào Kho Test...";
+  try {
+    const res = await aj("/api/admin/test/fake_order", { method: "POST" });
+    if (res.ok && res.order) {
+      if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Đã tạo đơn giả lập ${res.order.id} vào ALL_ORDERS_TEST thành công!</span>`;
+      toast(`Đã tạo đơn test ${res.order.id}!`);
+      if (isTestModeActive) fetchAll();
+    }
+  } catch(e) {
+    if (logEl) logEl.textContent = "Lỗi tạo đơn giả: " + e.message;
+  }
+}
+
+async function cloneProdOrdersToTest() {
+  if (!confirm("Sao chép đơn hàng thật sang Kho Test? Các đơn hàng mới sẽ được cập nhật/thêm vào kho test mà không xóa trắng.")) return;
+  const logEl = $("testActionLog");
+  if (logEl) logEl.textContent = "Đang nhân bản đơn thật sang Kho Test...";
+  try {
+    const res = await aj("/api/admin/test/clone", { method: "POST" });
+    if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Đã clone ${res.count} đơn từ kho thật sang ALL_ORDERS_TEST!</span>`;
+    toast(`Đã sao chép ${res.count} đơn vào kho test!`);
+    if (isTestModeActive) fetchAll();
+  } catch(e) {
+    if (logEl) logEl.textContent = "Lỗi sao chép: " + e.message;
+  }
+}
+
+async function clearTestOrders() {
+  if (!confirm("Xóa sạch toàn bộ đơn hàng trong Kho Test về 0?")) return;
+  const logEl = $("testActionLog");
+  if (logEl) logEl.textContent = "Đang dọn sạch Kho Test...";
+  try {
+    await aj("/api/admin/test/clear", { method: "POST" });
+    if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Đã xóa trắng ALL_ORDERS_TEST thành công!</span>`;
+    toast("Đã dọn sạch kho test");
+    if (isTestModeActive) fetchAll();
+  } catch(e) {
+    if (logEl) logEl.textContent = "Lỗi xóa kho test: " + e.message;
+  }
+}
+
+// ==================== THÔNG BÁO ĐƠN HÀNG MỚI TELEGRAM ====================
+async function saveTgOrderAlertSetting() {
+  const chk = $("toggleTgOrderAlert");
+  if (!chk) return;
+  cmsDb.settings = cmsDb.settings || {};
+  cmsDb.settings.tgOrderAlert = chk.checked;
+  try {
+    await saveCmsDb();
+    toast(chk.checked ? "Đã BẬT thông báo đơn hàng mới qua Telegram!" : "Đã TẮT thông báo đơn hàng mới qua Telegram!");
+  } catch(e) {
+    toast("Lỗi lưu cài đặt: " + e.message, "err");
+  }
+}
+
+async function testTelegramOrderAlert() {
+  const btn = $("btnTgOrderTest");
+  const st = $("tgOrderAlertStatus");
+  if (btn) btn.disabled = true;
+  if (st) st.innerHTML = '<span class="text-emerald-600"><i class="fas fa-spinner fa-spin mr-1"></i>Đang gửi test...</span>';
+  try {
+    const res = await aj("/api/admin/telegram/test_order_alert", { method: "POST" });
+    if (res && res.ok) {
+      if (st) st.innerHTML = '<span class="text-emerald-700 font-bold">✔ Đã bắn tin nhắn test đơn hàng!</span>';
+      toast("Đã bắn tin nhắn đơn hàng mẫu sang Telegram!");
+    } else {
+      if (st) st.innerHTML = `<span class="text-red-600 font-bold">✘ Gửi thất bại: ${res.description || res.error || "Lỗi"}</span>`;
+      toast("Lỗi gửi thông báo: " + (res.description || res.error), "err");
+    }
+  } catch(e) {
+    if (st) st.innerHTML = `<span class="text-red-600 font-bold">✘ Lỗi: ${e.message}</span>`;
+    toast("Lỗi: " + e.message, "err");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
 
 window.onload=()=>{if(TOKEN)startApp(false);else{buildTabs();$("loginWrap").classList.remove("hidden");}};
 
