@@ -840,11 +840,11 @@ async function loadConfig(){
             dev: p.dev || 'unlimited',
             time: p.time !== undefined ? p.time : (p.m === 0 ? 'lifetime' : (p.m || 1)),
             isCustom: !!p.isCustom,
-            tag1: p.tag1On && p.tag1 ? { vi: p.tag1, en: p.tag1, zh: p.tag1 } : (p.tag1 ? { vi: p.tag1, en: p.tag1, zh: p.tag1 } : null),
-            tag: p.tag1On && p.tag1 ? { vi: p.tag1, en: p.tag1, zh: p.tag1 } : null,
-            tag2: p.tag2On && p.tag2 ? { vi: p.tag2, en: p.tag2, zh: p.tag2 } : null,
-            tag3: p.tag3On && p.tag3 ? { vi: p.tag3, en: p.tag3, zh: p.tag3 } : null,
-            tag4: p.tag4On && p.tag4 ? { vi: p.tag4, en: p.tag4, zh: p.tag4 } : null,
+            tag1: (p.tag1On !== undefined ? (p.tag1On && p.tag1) : p.tag1) ? { vi: p.tag1, en: p.tag1, zh: p.tag1 } : null,
+            tag: (p.tag1On !== undefined ? (p.tag1On && p.tag1) : p.tag1) ? { vi: p.tag1, en: p.tag1, zh: p.tag1 } : null,
+            tag2: (p.tag2On !== undefined ? (p.tag2On && p.tag2) : p.tag2) ? { vi: p.tag2, en: p.tag2, zh: p.tag2 } : null,
+            tag3: (p.tag3On !== undefined ? (p.tag3On && p.tag3) : p.tag3) ? { vi: p.tag3, en: p.tag3, zh: p.tag3 } : null,
+            tag4: (p.tag4On !== undefined ? (p.tag4On && p.tag4) : p.tag4) ? { vi: p.tag4, en: p.tag4, zh: p.tag4 } : null,
             features: p.features || ['Băng thông lên đến 3Gbps']
           };
         });
@@ -1302,11 +1302,15 @@ function genHTML(rawPkg){
    <div class="${hasCornerBadges ? 'pt-2' : ''}">
     <div class="flex items-center justify-between gap-2 mb-1">
       <h3 class="font-extrabold text-lg md:text-xl dark:text-white truncate leading-snug flex-1">${esc(pkgDisplayName)}</h3>
-      ${flashSaleBadge ? `<div class="shrink-0 flex items-center justify-end">${flashSaleBadge}</div>` : ''}
+      <div class="shrink-0 flex items-center justify-end min-h-[22px]">
+        ${flashSaleBadge || ''}
+      </div>
     </div>
-    <div class="flex items-center flex-wrap gap-2 text-xs font-bold text-slate-500 dark:text-slate-300 leading-tight mb-2">
-      <span>${displayTime}${bonusLabel}</span>
-      ${promoStickerBadge || ''}
+    <div class="flex items-center justify-between gap-2 text-xs font-bold text-slate-500 dark:text-slate-300 leading-tight mb-2">
+      <span class="truncate">${displayTime}${bonusLabel}</span>
+      <div class="shrink-0 flex items-center justify-end min-h-[22px]">
+        ${promoStickerBadge || ''}
+      </div>
     </div>
     ${priceHTML}
      <ul class="text-xs md:text-sm space-y-2.5 mb-6 font-medium text-slate-600 dark:text-white">

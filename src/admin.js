@@ -2499,6 +2499,7 @@ async function rebuildAllMAP(){
 // ===================== LOGIC TAB GÓI CƯỚC & CỬA HÀNG PRO (SORTABLEJS) =====================
 const FIXED_PKG_IDS = new Set(["t1", "t2", "c1", "c2", "c3", "d1", "d2", "d3", "custom"]);
 let adminPkgsList = [];
+window.adminPkgsList = adminPkgsList;
 let sortablePkgsInstance = null;
 
 function getDefaultAdminPkgs() {
@@ -2655,15 +2656,15 @@ async function saveHeaderDrawer() {
 async function loadAdminPkgs() {
   try {
     if (Array.isArray(cmsDb?.packages) && cmsDb.packages.length) {
-      adminPkgsList = cmsDb.packages;
+      adminPkgsList = cmsDb.packages; window.adminPkgsList = adminPkgsList;
     } else {
       const j = await aj("/api/packages").catch(() => null);
       if (Array.isArray(j?.packages) && j.packages.length) {
-        adminPkgsList = j.packages;
+        adminPkgsList = j.packages; window.adminPkgsList = adminPkgsList;
       } else if (Array.isArray(j) && j.length) {
-        adminPkgsList = j;
+        adminPkgsList = j; window.adminPkgsList = adminPkgsList;
       } else {
-        adminPkgsList = getDefaultAdminPkgs();
+        adminPkgsList = getDefaultAdminPkgs(); window.adminPkgsList = adminPkgsList;
       }
     }
   } catch {
@@ -2686,6 +2687,7 @@ function renderPkgAdmin() {
   const container = $("pkgCardsList");
   if (!container) return;
   if (!adminPkgsList.length) adminPkgsList = getDefaultAdminPkgs();
+  window.adminPkgsList = adminPkgsList;
 
   container.innerHTML = adminPkgsList.map((p, idx) => {
     const isFixed = FIXED_PKG_IDS.has(p.id);
@@ -2761,7 +2763,7 @@ function renderPkgAdmin() {
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
         <div>
           <label class="block text-[10px] font-bold text-rose-600 mb-0.5">Tem Quà Tặng (Sticker góc thẻ)</label>
-          <input type="text" value="${esc(p.promo_sticker || '')}" class="inp-promo-sticker w-full p-1.5 border border-rose-200 rounded-lg font-black text-rose-600 bg-rose-50/40" oninput="adminPkgsList[${idx}].promo_sticker = this.value" placeholder="VD: +3 NGÀY">
+          <input type="text" value="${esc(p.promo_sticker || '')}" class="inp-promo-sticker w-full p-1.5 border border-rose-200 rounded-lg font-black text-rose-600 bg-rose-50/40" oninput="if(window.adminPkgsList&&window.adminPkgsList[${idx}])window.adminPkgsList[${idx}].promo_sticker = this.value" placeholder="VD: +3 NGÀY">
         </div>
         <div>
           <label class="block text-[10px] font-bold text-purple-700 mb-0.5">Số ngày tặng (+vào HSD)</label>
@@ -2806,10 +2808,10 @@ function renderPkgAdmin() {
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag1On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag1On = this.checked" class="pkg-tag1-on w-4 h-4 accent-red-600 shrink-0"><input type="text" value="${esc(p.tag1 || '🔥 BÁN CHẠY')}" oninput="adminPkgsList[${idx}].tag1 = this.value" placeholder="Tag 1 (Đỏ phải)" class="pkg-tag1-val w-full text-xs font-bold text-red-600 outline-none"></div>
-          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag2On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag2On = this.checked" class="pkg-tag2-on w-4 h-4 accent-blue-600 shrink-0"><input type="text" value="${esc(p.tag2 || '✈️ Du lịch')}" oninput="adminPkgsList[${idx}].tag2 = this.value" placeholder="Tag 2 (Xanh trái)" class="pkg-tag2-val w-full text-xs font-bold text-blue-600 outline-none"></div>
-          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag3On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag3On = this.checked" class="pkg-tag3-on w-4 h-4 accent-amber-600 shrink-0"><input type="text" value="${esc(p.tag3 || 'Khuyên dùng')}" oninput="adminPkgsList[${idx}].tag3 = this.value" placeholder="Tag 3 (Vàng phải)" class="pkg-tag3-val w-full text-xs font-bold text-amber-600 outline-none"></div>
-          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag4On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag4On = this.checked" class="pkg-tag4-on w-4 h-4 accent-purple-600 shrink-0"><input type="text" value="${esc(p.tag4 || '')}" oninput="adminPkgsList[${idx}].tag4 = this.value" placeholder="Tag 4 (Tím trái)" class="pkg-tag4-val w-full text-xs font-bold text-purple-600 outline-none"></div>
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag1On ? 'checked' : ''} onchange="if(window.adminPkgsList&&window.adminPkgsList[${idx}])window.adminPkgsList[${idx}].tag1On = this.checked" class="pkg-tag1-on w-4 h-4 accent-red-600 shrink-0"><input type="text" value="${esc(p.tag1 || '🔥 BÁN CHẠY')}" oninput="adminPkgsList[${idx}].tag1 = this.value" placeholder="Tag 1 (Đỏ phải)" class="pkg-tag1-val w-full text-xs font-bold text-red-600 outline-none"></div>
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag2On ? 'checked' : ''} onchange="if(window.adminPkgsList&&window.adminPkgsList[${idx}])window.adminPkgsList[${idx}].tag2On = this.checked" class="pkg-tag2-on w-4 h-4 accent-blue-600 shrink-0"><input type="text" value="${esc(p.tag2 || '✈️ Du lịch')}" oninput="adminPkgsList[${idx}].tag2 = this.value" placeholder="Tag 2 (Xanh trái)" class="pkg-tag2-val w-full text-xs font-bold text-blue-600 outline-none"></div>
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag3On ? 'checked' : ''} onchange="if(window.adminPkgsList&&window.adminPkgsList[${idx}])window.adminPkgsList[${idx}].tag3On = this.checked" class="pkg-tag3-on w-4 h-4 accent-amber-600 shrink-0"><input type="text" value="${esc(p.tag3 || 'Khuyên dùng')}" oninput="adminPkgsList[${idx}].tag3 = this.value" placeholder="Tag 3 (Vàng phải)" class="pkg-tag3-val w-full text-xs font-bold text-amber-600 outline-none"></div>
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag4On ? 'checked' : ''} onchange="if(window.adminPkgsList&&window.adminPkgsList[${idx}])window.adminPkgsList[${idx}].tag4On = this.checked" class="pkg-tag4-on w-4 h-4 accent-purple-600 shrink-0"><input type="text" value="${esc(p.tag4 || '')}" oninput="adminPkgsList[${idx}].tag4 = this.value" placeholder="Tag 4 (Tím trái)" class="pkg-tag4-val w-full text-xs font-bold text-purple-600 outline-none"></div>
         </div>
       </div>
     </div>
@@ -2913,27 +2915,29 @@ async function saveAllPkgs() {
   // Quét trực tiếp các trường input trên DOM để đảm bảo giá trị chuẩn xác 100%
   const pkgCards = document.querySelectorAll(".pkg-sort-item");
   pkgCards.forEach((card, idx) => {
-    if (!adminPkgsList[idx]) return;
+    const pkgId = card.dataset.pkgId;
+    const targetPkg = adminPkgsList.find(p => p && p.id === pkgId) || adminPkgsList[idx];
+    if (!targetPkg) return;
     const nameInp = card.querySelector("input[placeholder='Tên gói cước...']");
-    if (nameInp) adminPkgsList[idx].name = nameInp.value.trim();
+    if (nameInp) targetPkg.name = nameInp.value.trim();
     const origVndInp = card.querySelector(".inp-orig-vnd");
-    if (origVndInp) adminPkgsList[idx].original_vnd = Number(origVndInp.value) || 0;
+    if (origVndInp) targetPkg.original_vnd = Number(origVndInp.value) || 0;
     const vndInp = card.querySelector(".inp-vnd");
-    if (vndInp) adminPkgsList[idx].vnd = Number(vndInp.value) || 0;
+    if (vndInp) targetPkg.vnd = Number(vndInp.value) || 0;
     const origCnyInp = card.querySelector(".inp-orig-cny");
-    if (origCnyInp) adminPkgsList[idx].original_cny = Number(origCnyInp.value) || 0;
+    if (origCnyInp) targetPkg.original_cny = Number(origCnyInp.value) || 0;
     const cnyInp = card.querySelector(".inp-cny");
-    if (cnyInp) adminPkgsList[idx].cny = Number(cnyInp.value) || 0;
+    if (cnyInp) targetPkg.cny = Number(cnyInp.value) || 0;
     const origUsdInp = card.querySelector(".inp-orig-usd");
-    if (origUsdInp) adminPkgsList[idx].original_usd = Number(origUsdInp.value) || 0;
+    if (origUsdInp) targetPkg.original_usd = Number(origUsdInp.value) || 0;
     const usdInp = card.querySelector(".inp-usd");
-    if (usdInp) adminPkgsList[idx].usd = Number(usdInp.value) || 0;
+    if (usdInp) targetPkg.usd = Number(usdInp.value) || 0;
     const stickerInp = card.querySelector(".inp-promo-sticker");
-    if (stickerInp) adminPkgsList[idx].promo_sticker = stickerInp.value.trim();
+    if (stickerInp) targetPkg.promo_sticker = stickerInp.value.trim();
     const bonusDaysInp = card.querySelector(".inp-bonus-days");
-    if (bonusDaysInp) adminPkgsList[idx].bonus_days = Number(bonusDaysInp.value) || 0;
+    if (bonusDaysInp) targetPkg.bonus_days = Number(bonusDaysInp.value) || 0;
     const bonusTextInp = card.querySelector(".inp-bonus-text");
-    if (bonusTextInp) adminPkgsList[idx].bonus_text = bonusTextInp.value.trim();
+    if (bonusTextInp) targetPkg.bonus_text = bonusTextInp.value.trim();
 
     // Quét trực tiếp các checkbox Category (Bộ lọc)
     const catTravel = card.querySelector(".pkg-cat-travel");
@@ -2943,14 +2947,14 @@ async function saveAllPkgs() {
     if (catTravel && catTravel.checked) cats.push("travel");
     if (catCycle && catCycle.checked) cats.push("cycle");
     if (catUsage && catUsage.checked) cats.push("usage");
-    adminPkgsList[idx].category = cats;
+    targetPkg.category = cats;
 
     // Quét trực tiếp 4 Tag góc thẻ
     for (let t = 1; t <= 4; t++) {
       const tOn = card.querySelector(`.pkg-tag${t}-on`);
-      if (tOn) adminPkgsList[idx][`tag${t}On`] = tOn.checked;
+      if (tOn) targetPkg[`tag${t}On`] = tOn.checked;
       const tVal = card.querySelector(`.pkg-tag${t}-val`);
-      if (tVal) adminPkgsList[idx][`tag${t}`] = tVal.value.trim();
+      if (tVal) targetPkg[`tag${t}`] = tVal.value.trim();
     }
   });
 

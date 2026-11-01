@@ -357,16 +357,20 @@ export default {
     const getP = (u, ...keys) => { for (const k of keys) { const v = u.searchParams.get(k); if (v) return v; } return null; };
     const b64e = (str) => { const bytes = new TextEncoder().encode(str); let bin = ""; for (const b of bytes) bin += String.fromCharCode(b); return btoa(bin); };
 
-    // ================================================================ SUBSCRIPTION /v1 /v2
-    if (p.startsWith("/v1") || p.startsWith("/v2")) {
-      const reqToken = getP(url, "OwO", "token");
+    // ================================================================ SUBSCRIPTION /v1 - /v6
+    if (p.match(/^\/v[1-6]/)) {
+      let reqToken = getP(url, "OwO", "token", "top", "liki", "lidj", "kidj");
+      if (!reqToken) {
+        const mTok = p.match(/^\/v[1-6]\/([a-zA-Z0-9]{16,64})$/);
+        if (mTok) reqToken = mTok[1];
+      }
       const ua = request.headers.get("User-Agent") || "";
       const isSingbox = /hiddify|sing-box|singbox|nekobox|nekoray|singbox-legacy/i.test(ua);
       const isClash = !isSingbox && /clash|meta|stash|surfboard|flclash|mihomo|clashmeta/i.test(ua);
       const rh = new Headers({ ...CORS });
       rh.set("profile-title", "VPNTrinhHg"); rh.set("profile-update-interval", "2");
       rh.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
-      rh.set("Access-Control-Expose-Headers", "profile-title,profile-update-interval,subscription-userinfo,Content-Disposition");
+      rh.set("Access-Control-Expose-Headers", "profile-title,profile-update-interval,subscription-userinfo,Subscription-Userinfo,Content-Disposition");
       const INFO_NAMES = ["🇻🇳 Truy cập web bên dưới", "🇻🇳 Để xem thêm gói khác", "🌐 Website: vpntrinhhg.pages.dev", "📞 Zalo: 0917678211"];
       const VP = "vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1?type=tcp#";
       const LOCKED_B64 = b64e([VP + encodeURIComponent("⛔ Tài khoản bị KHÓA"), VP + encodeURIComponent("📞 Zalo: 0917678211")].join("\n"));
@@ -375,8 +379,29 @@ export default {
       const DEAD_B64 = b64e(VP + encodeURIComponent("❌ Link không tồn tại - Zalo: 0917678211"));
       const DEAD_YAML = makeSimpleYaml(["❌ Link khong ton tai - Zalo: 0917678211"]);
       const DEAD_SB = makeSimpleSingbox(["❌ Link khong ton tai - Zalo: 0917678211"]);
+
+      const buildUserinfo = (expDate, rawInfo) => {
+        let expireSec = 0;
+        if (expDate) {
+          if (isLifetime(expDate)) expireSec = 0;
+          else {
+            const ms = parseDmy(expDate);
+            if (ms) expireSec = Math.floor((ms + 86399000) / 1000);
+          }
+        }
+        if (expireSec > 0 || (expDate && isLifetime(expDate))) {
+          if (rawInfo && /expire=\d+/.test(rawInfo)) return rawInfo.replace(/expire=\d+/, `expire=${expireSec}`);
+          if (rawInfo) return `${rawInfo}; expire=${expireSec}`;
+          return `upload=0; download=0; total=1073741824000; expire=${expireSec}`;
+        }
+        return rawInfo || "";
+      };
+
       const respond = (b, fmt, info = "") => {
-        if (info) rh.set("subscription-userinfo", info);
+        if (info) {
+          rh.set("subscription-userinfo", info);
+          rh.set("Subscription-Userinfo", info);
+        }
         if (fmt === "yaml") { rh.set("Content-Disposition", 'attachment; filename="VPNTrinhHg.yaml"'); rh.set("Content-Type", "text/yaml; charset=utf-8"); }
         else if (fmt === "singbox") { rh.set("Content-Disposition", 'attachment; filename="VPNTrinhHg.json"'); rh.set("Content-Type", "application/json; charset=utf-8"); }
         else rh.set("Content-Type", "text/plain; charset=utf-8");
@@ -389,25 +414,50 @@ export default {
       try {
         let routerObj = safeJson(await KV.get("GLOBAL_ROUTER"), {});
         if (!routerObj || typeof routerObj !== "object") routerObj = {};
-        const mapping = routerObj[reqToken];
+        let mapping = routerObj[reqToken];
+        if (!mapping) {
+          const links = safeJson(await KV.get("ALL_LINKS"), []);
+          const found = (Array.isArray(links) ? links : []).find(l => {
+            if (!l || !l.masked) return false;
+            try {
+              const u = new URL(l.masked);
+              return getParam(u, "OwO", "token", "top", "liki", "lidj", "kidj") === reqToken || u.pathname.includes(reqToken);
+            } catch { return false; }
+          });
+          if (found) {
+            mapping = {
+              origTok: getOrigToken(found.orig),
+              origUrl: found.orig,
+              origUrl2: found.orig2 || "",
+              isCombo: !!found.isCombo,
+              isLocked: !!found.isLocked,
+              expDate: found.expDate || "",
+              orderId: found.orderId || ""
+            };
+          }
+        }
         if (!mapping) return getDead();
         if (mapping.isLocked) return getLocked();
         const originToken = mapping.origTok, origUrl = mapping.origUrl;
         let subsObj = safeJson(await KV.get("GLOBAL_SUBS"), {});
         if (!subsObj || typeof subsObj !== "object") subsObj = {};
         const cd = subsObj[originToken];
+        const effUserinfo = buildUserinfo(mapping.expDate, (cd && cd.info) || "");
         if (cd) {
-          if (isSingbox && cd.body_singbox && cd.body_singbox.length > 500) return respond(cd.body_singbox, "singbox", cd.info || "");
-          if (isClash && cd.body_yaml && cd.body_yaml.length > 200) return respond(cd.body_yaml, "yaml", cd.info || "");
-          if (cd.body_b64 && cd.body_b64.length > 100) return respond(cd.body_b64.replace(/\s+/g, ""), "b64", cd.info || "");
+          if (isSingbox && cd.body_singbox && cd.body_singbox.length > 500) return respond(cd.body_singbox, "singbox", effUserinfo);
+          if (isClash && cd.body_yaml && cd.body_yaml.length > 200) return respond(cd.body_yaml, "yaml", effUserinfo);
+          if (cd.body_b64 && cd.body_b64.length > 100) return respond(cd.body_b64.replace(/\s+/g, ""), "b64", effUserinfo);
         }
         if (!origUrl) return getDead();
-        const isLiangxin = String(origUrl).includes("liangxin");
+        const uLow = String(origUrl).toLowerCase();
+        const mode = (uLow.includes("tohno") || uLow.includes("oosaka") || uLow.includes("kitty")) ? "kitty" : (uLow.includes("liangxin") ? "liangxin" : "djjc");
+        const isLiangxin = mode === "liangxin";
         const r = await fetch(origUrl, { headers: { "User-Agent": "v2rayN/6.23" }, cf: { cacheTtl: 0, cacheEverything: false } });
         if (!r.ok) return getDead();
-        const rawB64 = (await r.text()).replace(/\s+/g, ""), ui = r.headers.get("subscription-userinfo") || "";
+        const rawB64 = (await r.text()).replace(/\s+/g, "");
+        const ui = buildUserinfo(mapping.expDate, r.headers.get("subscription-userinfo") || "");
         if (!rawB64 || rawB64.length < 20) return getDead();
-        const { newB64, yamlStr, singboxStr } = processB64(rawB64, INFO_NAMES, VP, isLiangxin);
+        const { newB64, yamlStr, singboxStr } = processB64(rawB64, INFO_NAMES, VP, isLiangxin, mode);
         if (!newB64 || newB64.length < 20) return getDead();
         subsObj[originToken] = { body_b64: newB64, body_yaml: yamlStr, body_singbox: singboxStr, info: ui };
         ctx.waitUntil(KV.put("GLOBAL_SUBS", JSON.stringify(subsObj)));
@@ -708,6 +758,27 @@ export default {
     if (p.startsWith("/api/admin/") || ["/api/orders", "/api/deadlinks", "/api/cms", "/api/devices", "/api/data_requests", "/api/link_pool", "/api/guides", "/api/gc", "/api/trigger_github", "/api/packages"].includes(p)) {
       const bad = need(admin); if (bad) return bad;
       const st0 = () => loadAll(KV);
+
+      if (p === "/api/admin/test/status" && m === "GET") {
+        return J({ ok: true, active: false });
+      }
+      if (p === "/api/admin/save_links_and_pool" && m === "POST") {
+        const b = await body();
+        if (Array.isArray(b.links)) await KV.put("ALL_LINKS", JSON.stringify(b.links));
+        if (Array.isArray(b.pool)) await KV.put("LINK_POOL", JSON.stringify(b.pool));
+        if (Array.isArray(b.links)) await KV.put("GLOBAL_ROUTER", JSON.stringify(buildGlobalRouter(b.links)));
+        return J({ ok: true });
+      }
+      if (p === "/api/admin/fulfillment_config" && m === "GET") {
+        const cfg = safeJson(await KV.get("FULFILLMENT_CONFIG"), { mapping: {}, failover_pref: "lx" });
+        return J({ ok: true, config: cfg });
+      }
+      if (p === "/api/admin/fulfillment_config" && m === "POST") {
+        const b = await body();
+        const cfg = b.config || { mapping: {}, failover_pref: "lx" };
+        await KV.put("FULFILLMENT_CONFIG", JSON.stringify(cfg));
+        return J({ ok: true, config: cfg });
+      }
 
       if (p === "/api/admin/poll") {
         const [o, l, pl, dr] = await Promise.all(["ALL_ORDERS", "ALL_LINKS", "LINK_POOL", "ALL_DATA_REQUESTS"].map((k) => KV.get(k)));
@@ -1054,17 +1125,51 @@ async function runCron(env, ctx, opt) {
   return sum;
 }
 
+function getOrigToken(origUrl) {
+  if (!origUrl) return "";
+  try {
+    const u = new URL(origUrl);
+    const mKt = u.pathname.match(/\/oosaka\/([a-zA-Z0-9]+)/i);
+    if (mKt) return mKt[1];
+    return getParam(u, "OwO", "token", "top", "liki", "lidj", "kidj") || origUrl;
+  } catch {
+    const mKt = String(origUrl).match(/\/oosaka\/([a-zA-Z0-9]+)/i);
+    if (mKt) return mKt[1];
+    return origUrl;
+  }
+}
+
 function buildGlobalRouter(links) {
   const r = {};
   if (!Array.isArray(links)) return r;
   for (const l of links) {
     try {
       if (!l || !l.masked) continue;
-      const mt = getParam(new URL(l.masked), "OwO", "token");
-      if (l.isLocked && mt && (!l.orig || l.orig === LOCK_ORIG)) { r[mt] = { origTok: "", origUrl: "", isLocked: true }; continue; }
+      const mUrl = new URL(l.masked);
+      let mt = getParam(mUrl, "OwO", "token", "top", "liki", "lidj", "kidj");
+      if (!mt) {
+        const m = mUrl.pathname.match(/^\/v[1-6]\/([a-zA-Z0-9]{16,64})$/);
+        if (m) mt = m[1];
+      }
+      if (!mt) continue;
+
+      if (l.isLocked && (!l.orig || l.orig === LOCK_ORIG)) {
+        r[mt] = { origTok: "", origUrl: "", isLocked: true, expDate: l.expDate || "", orderId: l.orderId || "" };
+        continue;
+      }
       if (!l.orig) continue;
-      const ot = getParam(new URL(l.orig), "OwO", "token");
-      if (mt && ot) r[mt] = { origTok: ot, origUrl: l.orig, isLocked: !!l.isLocked };
+
+      const ot = getOrigToken(l.orig);
+      r[mt] = {
+        origTok: ot,
+        origUrl: l.orig,
+        origUrl2: l.orig2 || "",
+        isCombo: !!l.isCombo,
+        isLocked: !!l.isLocked,
+        expDate: l.expDate || "",
+        orderId: l.orderId || "",
+        createdTs: l.createdTs || 0
+      };
     } catch { /* bỏ qua link lỗi */ }
   }
   return r;
@@ -1561,9 +1666,9 @@ function encB64(str) {
 // SUB PROCESS
 // ====================================================================
 
-const INFO_SKIP = ["剩余流量", "距离下次重置", "套餐到期"];
+const INFO_SKIP = ["剩余流量", "距离下次重置", "套餐到期", "官网", "kitty.fo", "到期", "过期", "流量", "重置"];
 
-function processB64(rawB64, infoNames, vp, isLiangxin) {
+function processB64(rawB64, infoNames, vp, isLiangxin, mode = "") {
   const decoded = decB64(rawB64);
   if (!decoded) return { newB64: rawB64, yamlStr: "", singboxStr: "" };
   
@@ -1588,8 +1693,8 @@ function processB64(rawB64, infoNames, vp, isLiangxin) {
   }
   
   const newB64 = encB64(newB64Lines.join("\n"));
-  const yamlStr = proxies.length ? buildYaml(proxies, infoNames, isLiangxin) : "";
-  const singboxStr = proxies.length ? buildSingboxFull(proxies, infoNames, isLiangxin) : "";
+  const yamlStr = proxies.length ? buildYaml(proxies, infoNames, isLiangxin, mode) : "";
+  const singboxStr = proxies.length ? buildSingboxFull(proxies, infoNames, isLiangxin, mode) : "";
   
   return { newB64, yamlStr, singboxStr };
 }
@@ -1661,6 +1766,83 @@ function parseURI(line) {
 // ====================================================================
 // CLASH DNS & RULES
 // ====================================================================
+
+const KITTY_DNS_STR = `dns:
+  enable: true
+  prefer-h3: false
+  ipv6: false
+  use-hosts: true
+  use-system-hosts: false
+  respect-rules: true
+  default-nameserver: [223.5.5.5, 119.29.29.29]
+  proxy-server-nameserver: [https://dns.alidns.com/dns-query, https://doh.pub/dns-query, 223.5.5.5, 119.29.29.29]
+  direct-nameserver: [https://doh.pub/dns-query, https://dns.alidns.com/dns-query, 223.5.5.5, 119.29.29.29]
+  nameserver: [https://dns.cloudflare.com/dns-query, https://dns.google/dns-query, 1.1.1.1, 8.8.8.8]
+  fallback: [1.1.1.1, 8.8.8.8]
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    ipcidr: [240.0.0.0/4]
+    domain: [+.google.com, +.facebook.com, +.youtube.com]
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter: ["*.lan", "*.local", "*.direct", "*.localhost", "time.*.com", "ntp.*.com", "time.*.apple.com", "time.windows.com", "+.pool.ntp.org", "*.msftconnecttest.com", "*.msftncsi.com", "connectivitycheck.gstatic.com"]
+  fake-ip-filter-mode: blacklist
+  fake-ip-ttl: 1`;
+
+const KITTY_RULES = [
+  "DOMAIN,m1.tohno-1.top,DIRECT",
+  "DOMAIN-SUFFIX,tohno-1.top,DIRECT",
+  "DOMAIN-SUFFIX,oh-node.com,DIRECT",
+  "DOMAIN-SUFFIX,hoyoverse.com,DIRECT",
+  "DOMAIN-SUFFIX,setel.com,DIRECT",
+  "DOMAIN-SUFFIX,capcom.co.jp,DIRECT",
+  "DOMAIN-SUFFIX,bandainamcoent.co.jp,DIRECT",
+  "DOMAIN-SUFFIX,coway.com,DIRECT",
+  "DOMAIN-SUFFIX,philips.com,DIRECT",
+  "DOMAIN-SUFFIX,bp.com,DIRECT",
+  "DOMAIN-SUFFIX,siemens.com,DIRECT",
+  "DOMAIN-SUFFIX,asus.com,DIRECT",
+  "DOMAIN-SUFFIX,hsbc.com.hk,DIRECT",
+  "DOMAIN-SUFFIX,susercontent.com,DIRECT",
+  "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve",
+  "IP-CIDR,10.0.0.0/8,DIRECT,no-resolve",
+  "IP-CIDR,172.16.0.0/12,DIRECT,no-resolve",
+  "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve",
+  "IP-CIDR,100.64.0.0/10,DIRECT,no-resolve",
+  "IP-CIDR,169.254.0.0/16,DIRECT,no-resolve",
+  "DOMAIN-SUFFIX,openai.com,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,chatgpt.com,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,oaistatic.com,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,oaiusercontent.com,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,anthropic.com,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,claude.ai,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,ai.google.dev,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,generativelanguage.googleapis.com,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,midjourney.com,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,poe.com,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,cursor.sh,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,cursor.com,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,perplexity.ai,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,sora.com,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,deepseek.com,VPN Trinh Hg",
+  "DOMAIN-KEYWORD,google,VPN Trinh Hg",
+  "DOMAIN-KEYWORD,youtube,VPN Trinh Hg",
+  "DOMAIN-KEYWORD,facebook,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,fb.me,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,fbcdn.net,VPN Trinh Hg",
+  "DOMAIN-KEYWORD,twitter,VPN Trinh Hg",
+  "DOMAIN-KEYWORD,instagram,VPN Trinh Hg",
+  "DOMAIN-KEYWORD,whatsapp,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,telegram.org,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,t.me,VPN Trinh Hg",
+  "DOMAIN-KEYWORD,tiktok,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,byteoversea.com,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,ibytedtos.com,VPN Trinh Hg",
+  "DOMAIN-SUFFIX,muscdn.com,VPN Trinh Hg",
+  "GEOIP,CN,DIRECT",
+  "MATCH,VPN Trinh Hg"
+];
 
 const LIANGXIN_DNS_STR = `
 dns:
@@ -1793,7 +1975,7 @@ function proxyToInline(p) {
   return `    - ${JSON.stringify(out)}`;
 }
 
-function buildYaml(proxies, infoNames, isLiangxin) {
+function buildYaml(proxies, infoNames, isLiangxin, mode = "") {
   const allProxies = [];
   for (const n of infoNames) {
     allProxies.push(`    - ${JSON.stringify({ name: n, type: "vless", server: "127.0.0.1", port: 1, uuid: "00000000-0000-0000-0000-000000000000", udp: false })}`);
@@ -1806,19 +1988,19 @@ function buildYaml(proxies, infoNames, isLiangxin) {
   const lines = [
     "mixed-port: 7890", "allow-lan: false", "bind-address: '*'", "mode: rule", "log-level: info",
     "external-controller: '127.0.0.1:9090'", "unified-delay: true", "tcp-concurrent: true",
-    isLiangxin ? LIANGXIN_DNS_STR : DJJC_DNS_STR,
+    (mode === "kitty" || mode === "combo_liki" || mode === "combo_kidj") ? KITTY_DNS_STR : (mode === "liangxin" || isLiangxin ? LIANGXIN_DNS_STR : DJJC_DNS_STR),
     "proxies:", ...allProxies, "proxy-groups:",
     `    - { name: "VPN Trinh Hg", type: select, proxies: ["Auto Select", "Fallback", ${allNames}] }`,
     `    - { name: "Auto Select", type: url-test, proxies: [${realNames}], url: "http://www.gstatic.com/generate_204", interval: 86400, tolerance: 50 }`,
     `    - { name: "Fallback", type: fallback, proxies: [${realNames}], url: "http://www.gstatic.com/generate_204", interval: 7200 }`,
     "rules:"
   ];
-  const rules = isLiangxin ? LIANGXIN_RULES : DJJC_RULES;
+  const rules = (mode === "kitty" || mode === "combo_liki" || mode === "combo_kidj") ? KITTY_RULES : ((mode === "liangxin" || isLiangxin) ? LIANGXIN_RULES : DJJC_RULES);
   for (const r of rules) lines.push(`    - ${JSON.stringify(r)}`);
   return lines.join("\n");
 }
 
-function buildSingboxFull(proxies, infoNames, isLiangxin) {
+function buildSingboxFull(proxies, infoNames, isLiangxin, mode = "") {
   const outbounds = [];
   for (const p of proxies) {
     const ob = proxyToSingbox(p);
