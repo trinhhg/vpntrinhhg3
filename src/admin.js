@@ -2800,16 +2800,16 @@ function renderPkgAdmin() {
           <span class="text-[10px] font-bold text-slate-500 uppercase">4 Badge Tag góc thẻ bên Index:</span>
           <div class="flex items-center gap-3">
             <span class="text-[10px] font-bold text-slate-400 uppercase">Bộ lọc:</span>
-            <label class="text-xs font-bold text-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" ${(p.category || []).includes('travel') ? 'checked' : ''} onchange="togglePkgCat(${idx}, 'travel', this.checked)" class="accent-indigo-600"> Du lịch</label>
-            <label class="text-xs font-bold text-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" ${(p.category || []).includes('cycle') ? 'checked' : ''} onchange="togglePkgCat(${idx}, 'cycle', this.checked)" class="accent-indigo-600"> Chu kỳ</label>
-            <label class="text-xs font-bold text-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" ${(p.category || []).includes('usage') ? 'checked' : ''} onchange="togglePkgCat(${idx}, 'usage', this.checked)" class="accent-indigo-600"> Dung lượng</label>
+            <label class="text-xs font-bold text-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" ${(p.category || []).includes('travel') ? 'checked' : ''} onchange="togglePkgCat(${idx}, 'travel', this.checked)" class="pkg-cat-travel accent-indigo-600"> Du lịch</label>
+            <label class="text-xs font-bold text-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" ${(p.category || []).includes('cycle') ? 'checked' : ''} onchange="togglePkgCat(${idx}, 'cycle', this.checked)" class="pkg-cat-cycle accent-indigo-600"> Chu kỳ</label>
+            <label class="text-xs font-bold text-slate-700 flex items-center gap-1 cursor-pointer"><input type="checkbox" ${(p.category || []).includes('usage') ? 'checked' : ''} onchange="togglePkgCat(${idx}, 'usage', this.checked)" class="pkg-cat-usage accent-indigo-600"> Dung lượng</label>
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag1On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag1On = this.checked" class="w-4 h-4 accent-red-600 shrink-0"><input type="text" value="${esc(p.tag1 || '🔥 BÁN CHẠY')}" oninput="adminPkgsList[${idx}].tag1 = this.value" placeholder="Tag 1 (Đỏ phải)" class="w-full text-xs font-bold text-red-600 outline-none"></div>
-          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag2On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag2On = this.checked" class="w-4 h-4 accent-blue-600 shrink-0"><input type="text" value="${esc(p.tag2 || '✈️ Du lịch')}" oninput="adminPkgsList[${idx}].tag2 = this.value" placeholder="Tag 2 (Xanh trái)" class="w-full text-xs font-bold text-blue-600 outline-none"></div>
-          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag3On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag3On = this.checked" class="w-4 h-4 accent-amber-600 shrink-0"><input type="text" value="${esc(p.tag3 || 'Khuyên dùng')}" oninput="adminPkgsList[${idx}].tag3 = this.value" placeholder="Tag 3 (Vàng phải)" class="w-full text-xs font-bold text-amber-600 outline-none"></div>
-          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag4On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag4On = this.checked" class="w-4 h-4 accent-purple-600 shrink-0"><input type="text" value="${esc(p.tag4 || '')}" oninput="adminPkgsList[${idx}].tag4 = this.value" placeholder="Tag 4 (Tím trái)" class="w-full text-xs font-bold text-purple-600 outline-none"></div>
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag1On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag1On = this.checked" class="pkg-tag1-on w-4 h-4 accent-red-600 shrink-0"><input type="text" value="${esc(p.tag1 || '🔥 BÁN CHẠY')}" oninput="adminPkgsList[${idx}].tag1 = this.value" placeholder="Tag 1 (Đỏ phải)" class="pkg-tag1-val w-full text-xs font-bold text-red-600 outline-none"></div>
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag2On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag2On = this.checked" class="pkg-tag2-on w-4 h-4 accent-blue-600 shrink-0"><input type="text" value="${esc(p.tag2 || '✈️ Du lịch')}" oninput="adminPkgsList[${idx}].tag2 = this.value" placeholder="Tag 2 (Xanh trái)" class="pkg-tag2-val w-full text-xs font-bold text-blue-600 outline-none"></div>
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag3On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag3On = this.checked" class="pkg-tag3-on w-4 h-4 accent-amber-600 shrink-0"><input type="text" value="${esc(p.tag3 || 'Khuyên dùng')}" oninput="adminPkgsList[${idx}].tag3 = this.value" placeholder="Tag 3 (Vàng phải)" class="pkg-tag3-val w-full text-xs font-bold text-amber-600 outline-none"></div>
+          <div class="flex items-center gap-1.5 bg-white p-1.5 rounded-lg border"><input type="checkbox" ${p.tag4On ? 'checked' : ''} onchange="adminPkgsList[${idx}].tag4On = this.checked" class="pkg-tag4-on w-4 h-4 accent-purple-600 shrink-0"><input type="text" value="${esc(p.tag4 || '')}" oninput="adminPkgsList[${idx}].tag4 = this.value" placeholder="Tag 4 (Tím trái)" class="pkg-tag4-val w-full text-xs font-bold text-purple-600 outline-none"></div>
         </div>
       </div>
     </div>
@@ -2934,6 +2934,24 @@ async function saveAllPkgs() {
     if (bonusDaysInp) adminPkgsList[idx].bonus_days = Number(bonusDaysInp.value) || 0;
     const bonusTextInp = card.querySelector(".inp-bonus-text");
     if (bonusTextInp) adminPkgsList[idx].bonus_text = bonusTextInp.value.trim();
+
+    // Quét trực tiếp các checkbox Category (Bộ lọc)
+    const catTravel = card.querySelector(".pkg-cat-travel");
+    const catCycle = card.querySelector(".pkg-cat-cycle");
+    const catUsage = card.querySelector(".pkg-cat-usage");
+    const cats = [];
+    if (catTravel && catTravel.checked) cats.push("travel");
+    if (catCycle && catCycle.checked) cats.push("cycle");
+    if (catUsage && catUsage.checked) cats.push("usage");
+    adminPkgsList[idx].category = cats;
+
+    // Quét trực tiếp 4 Tag góc thẻ
+    for (let t = 1; t <= 4; t++) {
+      const tOn = card.querySelector(`.pkg-tag${t}-on`);
+      if (tOn) adminPkgsList[idx][`tag${t}On`] = tOn.checked;
+      const tVal = card.querySelector(`.pkg-tag${t}-val`);
+      if (tVal) adminPkgsList[idx][`tag${t}`] = tVal.value.trim();
+    }
   });
 
   // Lưu cấu hình Banner Header Drawer vào cmsDb
@@ -4101,6 +4119,7 @@ function renderGuideCategoriesTree() {
 
  container.innerHTML = tabs.map((tab, tIdx) => {
    const arts = artsOf(tab.id);
+   const isProtectedTab = DEF_TABS.some(d => d.id === tab.id) || /lưu ý chung|tiktok/i.test(tab.name || '') || ['tmuamybok', 'tmubcksib', 't_general', 't_tiktok'].includes(tab.id);
    return `
    <div data-tabid="${esc(tab.id)}" class="cms-cat-box bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
      <!-- Header Mục / Danh mục lớn -->
@@ -4116,7 +4135,7 @@ function renderGuideCategoriesTree() {
          <button type="button" onclick="addArticleToCategory('${esc(tab.id)}')" class="whitespace-nowrap shrink-0 bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1 shadow-sm">
            <i class="fas fa-plus"></i>Thêm bài mới
          </button>
-         ${DEF_TABS.some(d=>d.id===tab.id) ? '' : `
+         ${isProtectedTab ? '' : `
          <button type="button" onclick="curCms='${esc(tab.id)}';cmsDelTab()" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded-lg text-xs" title="Xóa danh mục"><i class="fas fa-trash"></i></button>
          `}
        </div>
@@ -4136,7 +4155,7 @@ function renderGuideCategoriesTree() {
            <div class="flex items-center justify-end sm:justify-start gap-1.5 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200/60" onclick="event.stopPropagation()">
              <button type="button" onclick="copyArtDeepLink('${esc(tab.id)}', '${esc(sl)}')" class="whitespace-nowrap shrink-0 text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-emerald-600 hover:text-white transition"><i class="fas fa-link mr-1"></i>Link</button>
              <button type="button" onclick="openCmsEditorForArt('${esc(tab.id)}', '${esc(sl)}')" class="whitespace-nowrap shrink-0 text-indigo-600 bg-white border border-indigo-200 px-3 py-1 rounded-lg text-xs font-bold hover:bg-indigo-600 hover:text-white transition"><i class="fas fa-pen mr-1"></i>Sửa bài</button>
-             <button type="button" onclick="curCms='${esc(tab.id)}';artDel('${esc(sl)}')" class="whitespace-nowrap shrink-0 text-red-500 bg-white border border-red-200 px-2 py-1 rounded-lg text-xs hover:bg-red-500 hover:text-white transition"><i class="fas fa-trash"></i></button>
+             ${(isProtectedTab || /lưu ý chung|tiktok/i.test(a.name || '') || /luu-y-chung|tiktok/i.test(sl)) ? '' : `<button type="button" onclick="curCms='${esc(tab.id)}';artDel('${esc(sl)}')" class="whitespace-nowrap shrink-0 text-red-500 bg-white border border-red-200 px-2 py-1 rounded-lg text-xs hover:bg-red-500 hover:text-white transition" title="Xóa bài viết"><i class="fas fa-trash"></i></button>`}
            </div>
          </div>
          `;
@@ -5088,11 +5107,11 @@ function updateFailoverPolicyUI(pref) {
     if (inDj) inDj.className = "w-2.5 h-2.5 rounded-full bg-blue-600";
   } else if (pref === "kt" && btnKt) {
     // Nút Kitty Failover: màu đỏ tường minh, nổi bật hoàn toàn so với nền trắng
-    btnKt.className = "p-3.5 rounded-2xl border-2 font-black text-left transition flex items-center justify-between border-rose-500 bg-rose-50 shadow-md ring-2 ring-rose-400 text-rose-950";
-    if (dotKt) dotKt.className = "w-5 h-5 rounded-full border-2 flex items-center justify-center border-rose-600 bg-white";
-    if (inKt) inKt.className = "w-2.5 h-2.5 rounded-full bg-rose-600";
+    btnKt.className = "p-3.5 rounded-2xl border-2 font-black text-left transition flex items-center justify-between border-red-500 bg-red-50 shadow-md ring-2 ring-red-500 text-red-950";
+    if (dotKt) dotKt.className = "w-5 h-5 rounded-full border-2 flex items-center justify-center border-red-600 bg-white";
+    if (inKt) inKt.className = "w-2.5 h-2.5 rounded-full bg-red-600";
     const badgeKt = btnKt.querySelector(".badge-kt");
-    if (badgeKt) badgeKt.className = "badge-kt !bg-rose-600 !text-white !border-rose-600";
+    if (badgeKt) badgeKt.className = "badge-kt !bg-red-600 !text-white !border-red-600";
   }
 }
 
@@ -5760,6 +5779,8 @@ if (typeof window !== 'undefined') {
     ['toggleCouponStatus', typeof toggleCouponStatus !== 'undefined' ? toggleCouponStatus : undefined],
     ['deleteCouponItem', typeof deleteCouponItem !== 'undefined' ? deleteCouponItem : undefined],
     ['openAddCouponModal', typeof openAddCouponModal !== 'undefined' ? openAddCouponModal : undefined],
+    ['closeCouponModal', typeof closeCouponModal !== 'undefined' ? closeCouponModal : undefined],
+    ['saveCouponModal', typeof saveCouponModal !== 'undefined' ? saveCouponModal : undefined],
     ['saveRevRates', typeof saveRevRates !== 'undefined' ? saveRevRates : undefined],
     ['savePkgRates', typeof savePkgRates !== 'undefined' ? savePkgRates : undefined],
     ['syncRatesToPackages', typeof syncRatesToPackages !== 'undefined' ? syncRatesToPackages : undefined],

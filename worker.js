@@ -320,7 +320,7 @@ function mailFor(ctx, env, st, o, kind, me) {
 const syncTargets = (cms, url) => arr(cms.settings && cms.settings.syncWorkers).filter((w) => w && w.active && w.url).map((w) => String(w.url).replace(/\/$/, "")).filter((u) => !url || !u.includes(url.hostname));
 const internalPost = (env, u, path, payload) => fetch(u + path, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + env.WEB_API_SECRET2 }, body: JSON.stringify(payload) });
 async function crossSync(env, url, ids) {
-  const KV = env.VPN_KV_TEST || env.VPN_KV, log = mkLog();
+  const KV = env.VPN_KV3 || env.VPN_KV_TEST || env.VPN_KV, log = mkLog();
   let st = await loadAll(KV); const t = syncTargets(st.cms, url);
   if (!t.length || !env.WEB_API_SECRET2) return;
   const post = (orders, final) => Promise.all(t.map((u) => internalPost(env, u, "/api/internal/cross_sync_order", { orders, final }).then((r) => r.json()).catch((e) => ({ ok: false, error: String(e) }))));
@@ -348,7 +348,7 @@ export default {
     const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET,HEAD,POST,OPTIONS,DELETE", "Access-Control-Allow-Headers": "Content-Type,Authorization" };
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
     const url = new URL(request.url), p = url.pathname, m = request.method;
-    const KV = env.VPN_KV_TEST || env.VPN_KV;
+    const KV = env.VPN_KV3 || env.VPN_KV_TEST || env.VPN_KV;
     if (!KV) return new Response("LỖI: Chưa kết nối kho KV", { status: 500, headers: CORS });
     const J = (d, s = 200) => new Response(JSON.stringify(d), { status: s, headers: { ...CORS, "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" } });
     const OK = () => new Response("OK", { status: 200, headers: CORS });
@@ -989,7 +989,7 @@ export default {
 // persist() đã tự lọc tombstone nên link vừa bị admin xóa không thể bị cron ghi sống lại, kể cả khi state được load trước lúc admin xóa.
 // ====================================================================
 async function runCron(env, ctx, opt) {
-  const KV = env.VPN_KV_TEST || env.VPN_KV, log = mkLog();
+  const KV = env.VPN_KV3 || env.VPN_KV_TEST || env.VPN_KV, log = mkLog();
   if (opt.sim !== undefined) { SIM_OFF = opt.sim ? Number(opt.simOffset) || 0 : 0; SIM_T = Date.now(); } else { SIM_T = 0; await syncClock(KV); }
   const now = NOW();
   const st = await loadAll(KV), s = st.cms.settings || {}, me = getMe(null, env, st.cms);

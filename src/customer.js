@@ -840,6 +840,7 @@ async function loadConfig(){
             dev: p.dev || 'unlimited',
             time: p.time !== undefined ? p.time : (p.m === 0 ? 'lifetime' : (p.m || 1)),
             isCustom: !!p.isCustom,
+            tag1: p.tag1On && p.tag1 ? { vi: p.tag1, en: p.tag1, zh: p.tag1 } : (p.tag1 ? { vi: p.tag1, en: p.tag1, zh: p.tag1 } : null),
             tag: p.tag1On && p.tag1 ? { vi: p.tag1, en: p.tag1, zh: p.tag1 } : null,
             tag2: p.tag2On && p.tag2 ? { vi: p.tag2, en: p.tag2, zh: p.tag2 } : null,
             tag3: p.tag3On && p.tag3 ? { vi: p.tag3, en: p.tag3, zh: p.tag3 } : null,
@@ -1299,11 +1300,19 @@ function genHTML(rawPkg){
    ${leftBadges ? `<div class="absolute -top-3 left-4 flex items-center gap-1.5 z-10">${leftBadges}</div>` : ''}
    ${rightBadges ? `<div class="absolute -top-3 right-4 flex items-center gap-1.5 z-10">${rightBadges}</div>` : ''}
    <div class="${hasCornerBadges ? 'pt-2' : ''}">
-     <div class="flex items-center justify-between gap-1 flex-wrap">
-       <h3 class="font-extrabold text-lg md:text-xl dark:text-white mb-0.5">${esc(pkgDisplayName)}</h3>
-       ${inlineBadges}
+     <div class="flex items-start justify-between gap-2 mb-2">
+       <div class="min-w-0 flex-1">
+         <h3 class="font-extrabold text-lg md:text-xl dark:text-white truncate mb-0.5 leading-snug">${esc(pkgDisplayName)}</h3>
+         <p class="text-xs font-bold text-slate-500 dark:text-slate-300 leading-tight">${displayTime}${bonusLabel}</p>
+       </div>
+       ${(flashSaleBadge || promoStickerBadge) ? `
+       <div class="flex flex-col items-end shrink-0 gap-1 min-h-[46px] justify-start">
+         <div class="h-5 flex items-center justify-end">${flashSaleBadge || ''}</div>
+         <div class="h-5 flex items-center justify-end">${promoStickerBadge || ''}</div>
+       </div>` : `
+       <div class="min-h-[46px]"></div>
+       `}
      </div>
-     <p class="text-xs font-bold text-slate-500 dark:text-slate-300 mb-2">${displayTime}${bonusLabel}</p>
      ${priceHTML}
      <ul class="text-xs md:text-sm space-y-2.5 mb-6 font-medium text-slate-600 dark:text-white">
        <!-- TÁCH RỜI NHÃN VÀ GIÁ TRỊ THÀNH 2 THẺ ĐỘC LẬP ĐỂ KHÔNG BỊ LỖI BĂM THẺ [[1]] -->
@@ -1357,16 +1366,47 @@ function openCheckout(id){
  const co=$('checkoutSection');
  if ($('view-portal').classList.contains('active')) $('p-store').appendChild(co); else $('view-store').appendChild(co);
  co.classList.remove('hidden');co.scrollIntoView({behavior:'smooth'});
- $('selectedPackageName').innerText=currentPackage[lang]?.name || currentPackage.name || 'Gói VPN';
- $('selectedPackageData').innerText=currentPackage.data || '';
+ const pkgName = currentPackage[lang]?.name || currentPackage.name || 'Gói VPN';
+ const pkgData = currentPackage.data || '';
+ const hasSale = !!currentPackage.isFlashSale || (Number(currentPackage.original_vnd) > Number(currentPackage.vnd));
+ const currVnd = `${Number(currentPackage.vnd || 0).toLocaleString('en-US')}VND`;
+ const origVnd = `${Number(raw?.vnd || currentPackage.original_vnd || 0).toLocaleString('en-US')}VND`;
 
- const hasSale = currentPackage.isFlashSale || (currentPackage.original_vnd && currentPackage.original_vnd > currentPackage.vnd);
- if (hasSale) {
-   const currVnd = (currentPackage.vnd || 0).toLocaleString('en-US');
-   const origVnd = (raw?.vnd || currentPackage.original_vnd || 0).toLocaleString('en-US');
-   $('selectedPackagePrice').innerHTML = `<span class="text-indigo-600 dark:text-indigo-400 font-black">${currVnd}VND</span> <span class="text-xs line-through text-slate-400 font-normal ml-1.5">${origVnd}VND</span>`;
+ const summaryEl = $('checkoutPackageCardSummary');
+ if (summaryEl) {
+   if (hasSale) {
+     summaryEl.innerHTML = `
+       <div class="flex flex-col gap-1.5 w-full">
+         <div class="flex items-center justify-between gap-2">
+           <span id="selectedPackageName" class="text-sm md:text-base font-black text-slate-800 dark:text-white uppercase truncate">${esc(pkgName)}</span>
+           <span id="selectedPackagePrice" class="text-base md:text-lg font-black text-indigo-600 dark:text-indigo-300 shrink-0 whitespace-nowrap">${currVnd}</span>
+         </div>
+         <div class="flex items-center justify-between gap-2">
+           <span id="selectedPackageData" class="text-xs font-bold text-slate-500 dark:text-slate-300 truncate">${esc(pkgData)}</span>
+           <span class="text-xs md:text-sm font-semibold line-through text-slate-400 dark:text-slate-500 shrink-0 whitespace-nowrap">${origVnd}</span>
+         </div>
+       </div>
+     `;
+   } else {
+     const normalPrice = currentPackage[lang]?.price || currVnd;
+     summaryEl.innerHTML = `
+       <div class="flex justify-between items-center w-full">
+         <div class="min-w-0 pr-2">
+           <p id="selectedPackageName" class="text-sm md:text-base font-black text-slate-800 dark:text-white uppercase truncate">${esc(pkgName)}</p>
+           <p id="selectedPackageData" class="text-xs font-bold text-slate-500 dark:text-slate-200 mt-0.5">${esc(pkgData)}</p>
+         </div>
+         <p id="selectedPackagePrice" class="text-lg md:text-xl font-black text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.8)] shrink-0 whitespace-nowrap">${normalPrice}</p>
+       </div>
+     `;
+   }
  } else {
-   $('selectedPackagePrice').innerText=currentPackage[lang]?.price || `${(currentPackage.vnd||0).toLocaleString('en-US')}VND`;
+   if ($('selectedPackageName')) $('selectedPackageName').innerText = pkgName;
+   if ($('selectedPackageData')) $('selectedPackageData').innerText = pkgData;
+   if ($('selectedPackagePrice')) {
+     $('selectedPackagePrice').innerHTML = hasSale
+       ? `<span class="text-indigo-600 dark:text-indigo-400 font-black">${currVnd}</span> <span class="text-xs line-through text-slate-400 font-normal ml-1.5">${origVnd}</span>`
+       : (currentPackage[lang]?.price || currVnd);
+   }
  }
 
  const hideEmail=isUpgradeMode||isRenewMode;$('emailBlock').classList.toggle('hidden',hideEmail);$('cusEmail').required=!hideEmail;
