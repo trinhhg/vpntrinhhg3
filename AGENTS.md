@@ -168,3 +168,12 @@ Dự án quản lý 2 Cloudflare Workers:
 - Bất cứ khi nào Agent chỉnh sửa `worker.js` hoặc `payment-webhook/worker.js`, Agent **BẮT BUỘC** phải tự động chạy lệnh deploy tương ứng.
 - Cả 2 script deploy đều tự động bảo toàn 100% Secrets, D1 Database, KV Storage và biến môi trường trên Cloudflare.
 - Agent báo rõ số Version và Version ID cho người dùng sau khi deploy thành công.
+
+---
+
+## 9. QUY TẮC BẢO TOÀN BINDINGS & KHÔNG XÓA DỮ LIỆU (QUY TẮC BẮT BUỘC)
+
+81. **Tuyệt đối cấm xóa:** Không được tự ý xóa, reset hoặc detach bất kỳ Cloudflare binding, biến môi trường, secret, KV namespace, D1 database, bảng SQL hoặc dữ liệu sản xuất nào.
+82. **Cho phép thêm biến mới:** Khi phát triển tính năng mới, Agent được phép bổ sung biến môi trường, secret hoặc binding mới nếu cần, nhưng phải giữ nguyên 100% các biến và binding hiện hành.
+83. **Không clone cơ sở dữ liệu để test:** Không tự ý tạo các bảng giả lập, namespace giả lập (như ALL_ORDERS_TEST) hoặc dựng clone riêng; kiểm tra trực tiếp trên hệ thống hiện tại bằng các thao tác đọc/kiểm thử không phá hủy (non-destructive test).
+84. **Xác minh bindings trước và sau deploy:** Khi deploy Worker, script deploy phải kiểm tra và kế thừa đầy đủ toàn bộ danh sách bindings từ phiên bản trước (bao gồm KV, D1, plain_text, secret_text) để đảm bảo không bị thiếu hụt sau khi kích hoạt 100% traffic.

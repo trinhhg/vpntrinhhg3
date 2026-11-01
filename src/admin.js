@@ -5185,59 +5185,24 @@ function restoreAdminScroll(tabId){
 }
 
 // ====================================================================
-// LOGIC TEST MODE TRONG TAB CÀI ĐẶT > SET WEB
+// KIỂM TRA KẾT NỐI HỆ THỐNG TRONG TAB CÀI ĐẶT > SET WEB
 // ====================================================================
-let isTestModeActive = false;
-
-async function checkTestModeStatus() {
-  try {
-    const res = await aj("/api/admin/test/status");
-    isTestModeActive = !!res.active;
-    if ($("toggleTestMode")) $("toggleTestMode").checked = isTestModeActive;
-    updateTestModeUI();
-  } catch {}
-}
-
-function updateTestModeUI() {
-  const b = $("hdrTestBadge");
-  const lbl = $("testStatusLabel");
-  if (b) b.classList.toggle("hidden", !isTestModeActive);
-  if (lbl) {
-    lbl.className = isTestModeActive 
-      ? "text-xs font-black px-2.5 py-1 rounded-full bg-amber-500 text-slate-900" 
-      : "text-xs font-black px-2.5 py-1 rounded-full bg-slate-200 text-slate-600";
-    lbl.textContent = isTestModeActive ? "ĐANG BẬT (KHO TEST)" : "TẮT (KHO THẬT)";
-  }
-}
-
-async function toggleTestMode(checked) {
-  isTestModeActive = checked;
-  updateTestModeUI();
-  try {
-    await aj("/api/admin/test/toggle", { method: "POST", body: { active: checked } });
-    toast(checked ? "Đã BẬT Chế độ Test (ALL_ORDERS_TEST)" : "Đã chuyển về Kho Thật (ALL_ORDERS)");
-    fetchAll(true);
-  } catch(e) {
-    toast("Lỗi chuyển chế độ: " + e.message, "err");
-  }
-}
-
-// Kiểm tra kết nối Kho Thật (ALL_ORDERS)
 async function testPingProd() {
   const logEl = $("prodActionLog");
   const btn = $("btnPingProd");
   if (btn) btn.disabled = true;
-  if (logEl) logEl.innerHTML = '<span class="text-emerald-700"><i class="fas fa-spinner fa-spin mr-1"></i>Đang kiểm tra kết nối Kho Thật...</span>';
+  if (logEl) logEl.innerHTML = '<span class="text-emerald-700"><i class="fas fa-spinner fa-spin mr-1"></i>Đang kiểm tra kết nối hệ thống...</span>';
+  const start = performance.now();
   try {
-    const res = await aj("/api/admin/test/status");
-    const p = res.ping_prod || {};
-    if (p.ok) {
-      if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Kết nối Kho Thật thành công (${p.ms}ms) — Hiện có <b>${p.count}</b> đơn hàng trong ALL_ORDERS.</span>`;
-      toast(`Kho Thật phản hồi tốt: ${p.ms}ms (${p.count} đơn)`);
+    const res = await aj("/api/admin/status");
+    const ms = Math.round(performance.now() - start);
+    if (res && res.ok) {
+      if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Kết nối hệ thống thành công (${ms}ms) — Worker: ${esc(res.web || "online")}, D1: ${res.d1 ? "Hoạt động" : "Offline (" + esc(res.d1Error || "") + ")"}</span>`;
+      toast(`Hệ thống phản hồi tốt: ${ms}ms`);
     } else {
-      const errMsg = p.error || (p.status ? `Mã lỗi HTTP ${p.status}` : "Không kết nối được");
-      if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Kết nối Kho Thật thất bại: ${esc(errMsg)}</span>`;
-      toast("Kho Thật thất bại: " + errMsg, "err");
+      const errMsg = (res && res.error) || "Không phản hồi";
+      if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Kết nối thất bại: ${esc(errMsg)}</span>`;
+      toast("Kết nối thất bại: " + errMsg, "err");
     }
   } catch (e) {
     if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Lỗi: ${esc(e.message)}</span>`;
@@ -5247,75 +5212,6 @@ async function testPingProd() {
   }
 }
 
-// Kiểm tra kết nối Kho Test (ALL_ORDERS_TEST)
-async function testPingTest() {
-  const logEl = $("testActionLog");
-  const btn = $("btnPingTest");
-  if (btn) btn.disabled = true;
-  if (logEl) logEl.innerHTML = '<span class="text-amber-800"><i class="fas fa-spinner fa-spin mr-1"></i>Đang kiểm tra kết nối Kho Test...</span>';
-  try {
-    const res = await aj("/api/admin/test/status");
-    const p = res.ping_test || res.ping || {};
-    if (p.ok) {
-      if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Kết nối Kho Test thành công (${p.ms}ms) — Hiện có <b>${p.count}</b> đơn trong ALL_ORDERS_TEST.</span>`;
-      toast(`Kho Test phản hồi tốt: ${p.ms}ms (${p.count} đơn)`);
-    } else {
-      const errMsg = p.error || (p.status ? `Mã lỗi HTTP ${p.status}` : "Không kết nối được");
-      if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Kết nối Kho Test thất bại: ${esc(errMsg)}</span>`;
-      toast("Kho Test thất bại: " + errMsg, "err");
-    }
-  } catch (e) {
-    if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Lỗi: ${esc(e.message)}</span>`;
-    toast("Lỗi ping: " + e.message, "err");
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
-const testPingConnection = testPingTest;
-async function createFakeTestOrder() {
-  const logEl = $("testActionLog");
-  if (logEl) logEl.textContent = "Đang tạo đơn giả lập vào Kho Test...";
-  try {
-    const res = await aj("/api/admin/test/fake_order", { method: "POST" });
-    if (res.ok && res.order) {
-      if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Đã tạo đơn giả lập ${res.order.id} vào ALL_ORDERS_TEST thành công!</span>`;
-      toast(`Đã tạo đơn test ${res.order.id}!`);
-      if (isTestModeActive) fetchAll();
-    }
-  } catch(e) {
-    if (logEl) logEl.textContent = "Lỗi tạo đơn giả: " + e.message;
-  }
-}
-
-async function cloneProdOrdersToTest() {
-  if (!confirm("Sao chép toàn bộ đơn hàng thật sang Kho Test? Kho test cũ sẽ bị xóa trắng.")) return;
-  const logEl = $("testActionLog");
-  if (logEl) logEl.textContent = "Đang nhân bản toàn bộ đơn thật sang Kho Test...";
-  try {
-    const res = await aj("/api/admin/test/clone", { method: "POST" });
-    if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Đã clone ${res.count} đơn từ kho thật sang ALL_ORDERS_TEST!</span>`;
-    toast(`Đã sao chép ${res.count} đơn vào kho test!`);
-    if (isTestModeActive) fetchAll();
-  } catch(e) {
-    if (logEl) logEl.textContent = "Lỗi sao chép: " + e.message;
-  }
-}
-
-async function clearTestOrders() {
-  if (!confirm("Xóa sạch toàn bộ đơn hàng trong Kho Test về 0?")) return;
-  const logEl = $("testActionLog");
-  if (logEl) logEl.textContent = "Đang dọn sạch Kho Test...";
-  try {
-    await aj("/api/admin/test/clear", { method: "POST" });
-    if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Đã xóa trắng ALL_ORDERS_TEST thành công!</span>`;
-    toast("Đã dọn sạch kho test");
-    if (isTestModeActive) fetchAll();
-  } catch(e) {
-    if (logEl) logEl.textContent = "Lỗi xóa kho test: " + e.message;
-  }
-}
-
-// ====================================================================
 // LOGIC THAO TÁC TELEGRAM TRÊN ADMIN PANEL
 // ====================================================================
 async function testTelegramBot() {
@@ -5398,7 +5294,7 @@ async function triggerTelegramBackupNow(reason = "Admin bấm Bắn Backup ngay"
   }
 }
 
-setTimeout(checkTestModeStatus, 1500);
+
 
 window.onload=()=>{if(TOKEN)startApp(false);else{buildTabs();$("loginWrap").classList.remove("hidden");}};
 
@@ -6038,14 +5934,8 @@ if (typeof window !== 'undefined') {
     ['saveFailoverPolicy', typeof saveFailoverPolicy !== 'undefined' ? saveFailoverPolicy : undefined],
     ['startApp', typeof startApp !== 'undefined' ? startApp : undefined],
     ['restoreAdminScroll', typeof restoreAdminScroll !== 'undefined' ? restoreAdminScroll : undefined],
-    ['checkTestModeStatus', typeof checkTestModeStatus !== 'undefined' ? checkTestModeStatus : undefined],
     ['updateTestModeUI', typeof updateTestModeUI !== 'undefined' ? updateTestModeUI : undefined],
-    ['toggleTestMode', typeof toggleTestMode !== 'undefined' ? toggleTestMode : undefined],
     ['testPingProd', typeof testPingProd !== 'undefined' ? testPingProd : undefined],
-    ['testPingTest', typeof testPingTest !== 'undefined' ? testPingTest : undefined],
-    ['createFakeTestOrder', typeof createFakeTestOrder !== 'undefined' ? createFakeTestOrder : undefined],
-    ['cloneProdOrdersToTest', typeof cloneProdOrdersToTest !== 'undefined' ? cloneProdOrdersToTest : undefined],
-    ['clearTestOrders', typeof clearTestOrders !== 'undefined' ? clearTestOrders : undefined],
     ['testTelegramBot', typeof testTelegramBot !== 'undefined' ? testTelegramBot : undefined],
     ['triggerTelegramKvBackupNow', typeof triggerTelegramKvBackupNow !== 'undefined' ? triggerTelegramKvBackupNow : undefined],
     ['resetTelegramStt', typeof resetTelegramStt !== 'undefined' ? resetTelegramStt : undefined],
@@ -6216,7 +6106,6 @@ if (typeof window !== 'undefined') {
     ['started', typeof started !== 'undefined' ? started : undefined],
     ['adminScrollTimer', typeof adminScrollTimer !== 'undefined' ? adminScrollTimer : undefined],
     ['isTestModeActive', typeof isTestModeActive !== 'undefined' ? isTestModeActive : undefined],
-    ['testPingConnection', typeof testPingConnection !== 'undefined' ? testPingConnection : undefined],
   ];
   _exposed.forEach(([k, v]) => {
     if (v !== undefined) window[k] = v;

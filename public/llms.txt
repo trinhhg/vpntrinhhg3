@@ -1,0 +1,24 @@
+# VPN Trinh Hg (VPNTrinhHg3)
+
+> Dịch vụ VPN tốc độ cao, hỗ trợ đa nền tảng tối ưu TikTok, Facebook, Game và giải trí trực tuyến.
+
+## Thông tin hệ thống
+- Website: https://vpntrinhhg3.pages.dev/
+- Hướng dẫn cài đặt & bài viết: https://vpntrinhhg3.pages.dev/
+- Sơ đồ website: https://vpntrinhhg3.pages.dev/sitemap.xml
+- Khả năng tương thích: iOS (Shadowrocket), Android (v2rayNG, Sing-box), Windows (v2rayN, Clash Verge), macOS (Clash Verge, Sing-box).
+- Giao thức hỗ trợ: Vless, Trojan, Shadowsocks, VMess.
+
+## Bảng giá & Gói cước
+- Gói 1 tháng (100GB / 1 thiết bị): 54,000 VND
+- Gói 1 tháng (500GB / 3 thiết bị): 63,000 VND
+- Gói 1 tháng (1000GB / Không giới hạn thiết bị): 72,000 VND
+- Gói Cao Cấp (3000GB / Không giới hạn thiết bị): 144,000 VND
+- Gói 1 Năm (1000GB/tháng): 756,000 VND
+- Gói Dung Lượng Vĩnh Viễn: từ 359,000 VND
+
+## Kênh liên hệ hỗ trợ
+- Zalo: https://zalo.me/0917678211
+- Telegram: https://t.me/hoaian57
+- Facebook Messenger: https://www.facebook.com/trinh.hg.57
+- WeChat: Quét mã QR trực tiếp tại trang chủ

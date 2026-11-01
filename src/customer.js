@@ -1300,20 +1300,15 @@ function genHTML(rawPkg){
    ${leftBadges ? `<div class="absolute -top-3 left-4 flex items-center gap-1.5 z-10">${leftBadges}</div>` : ''}
    ${rightBadges ? `<div class="absolute -top-3 right-4 flex items-center gap-1.5 z-10">${rightBadges}</div>` : ''}
    <div class="${hasCornerBadges ? 'pt-2' : ''}">
-     <div class="flex items-start justify-between gap-2 mb-2">
-       <div class="min-w-0 flex-1">
-         <h3 class="font-extrabold text-lg md:text-xl dark:text-white truncate mb-0.5 leading-snug">${esc(pkgDisplayName)}</h3>
-         <p class="text-xs font-bold text-slate-500 dark:text-slate-300 leading-tight">${displayTime}${bonusLabel}</p>
-       </div>
-       ${(flashSaleBadge || promoStickerBadge) ? `
-       <div class="flex flex-col items-end shrink-0 gap-1 min-h-[46px] justify-start">
-         <div class="h-5 flex items-center justify-end">${flashSaleBadge || ''}</div>
-         <div class="h-5 flex items-center justify-end">${promoStickerBadge || ''}</div>
-       </div>` : `
-       <div class="min-h-[46px]"></div>
-       `}
-     </div>
-     ${priceHTML}
+    <div class="flex items-center justify-between gap-2 mb-1">
+      <h3 class="font-extrabold text-lg md:text-xl dark:text-white truncate leading-snug flex-1">${esc(pkgDisplayName)}</h3>
+      ${flashSaleBadge ? `<div class="shrink-0 flex items-center justify-end">${flashSaleBadge}</div>` : ''}
+    </div>
+    <div class="flex items-center flex-wrap gap-2 text-xs font-bold text-slate-500 dark:text-slate-300 leading-tight mb-2">
+      <span>${displayTime}${bonusLabel}</span>
+      ${promoStickerBadge || ''}
+    </div>
+    ${priceHTML}
      <ul class="text-xs md:text-sm space-y-2.5 mb-6 font-medium text-slate-600 dark:text-white">
        <!-- TÁCH RỜI NHÃN VÀ GIÁ TRỊ THÀNH 2 THẺ ĐỘC LẬP ĐỂ KHÔNG BỊ LỖI BĂM THẺ [[1]] -->
        <li class="flex items-center gap-2">

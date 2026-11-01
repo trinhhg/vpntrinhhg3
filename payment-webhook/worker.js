@@ -19,7 +19,7 @@ function getConfig(env) {
   return {
     WEBSITE_WORKER_URL: String(env.WEBSITE_WORKER_URL || "").replace(/\/$/, ""),
     WORKER_URLS: String(env.WORKER_URLS || env.WEBSITE_WORKER_URL || "").split(",").map((s) => s.trim().replace(/\/$/, "")).filter(Boolean),
-    WEB_API_SECRET: env.WEB_API_SECRET || "", WEB_API_SECRET2: env.WEB_API_SECRET2 || "",
+    WEB_API_SECRET: env.WEB_API_SECRET || "", WEB_API_SECRET2: env.WEB_API_SECRET2 || "", D1_SECRET: env.D1_SECRET || "",
     MB_WEBHOOK_SECRET: env.MB_WEBHOOK_SECRET || "", ADMIN_DELETE_SECRET: env.ADMIN_DELETE_SECRET || "",
     SUPABASE_URL: env.SUPABASE_URL || "", SUPABASE_KEY: env.SUPABASE_KEY || ""
   };
@@ -215,10 +215,10 @@ export default {
     if (m === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
     if (m === "GET" && p === "/") return new Response("PAYMENT WEBHOOK ONLINE - HANOI UTC+7", { status: 200, headers: { "Content-Type": "text/plain; charset=UTF-8", "Cache-Control": "no-store", ...CORS } });
     if (!env.DB) return json({ ok: false, error: "D1 binding DB is missing" }, 500);
-    if (!CONFIG.WEB_API_SECRET || !CONFIG.WEB_API_SECRET2 || !CONFIG.MB_WEBHOOK_SECRET) return json({ ok: false, error: "Thiáº¿u biáº¿n mÃ´i trÆ°á»ng WEB_API_SECRET / WEB_API_SECRET2 / MB_WEBHOOK_SECRET" }, 500);
+    if (!CONFIG.WEB_API_SECRET && !CONFIG.WEB_API_SECRET2 && !CONFIG.D1_SECRET) return json({ ok: false, error: "Thiếu biến môi trường API secret (WEB_API_SECRET / WEB_API_SECRET2 / D1_SECRET)" }, 500);
     try { await ensureSchema(env); } catch (e) { return json({ ok: false, error: "Schema init failed", details: String(e && e.message || e) }, 500); }
 
-    const A = () => authed(request, CONFIG.WEB_API_SECRET);
+    const A = () => authed(request, CONFIG.WEB_API_SECRET) || authed(request, CONFIG.WEB_API_SECRET2) || (CONFIG.D1_SECRET && authed(request, CONFIG.D1_SECRET));
     const A2 = () => authed(request, CONFIG.WEB_API_SECRET2) || A();
     const body = async () => { try { return await request.json(); } catch { return null; } };
 
@@ -383,6 +383,7 @@ export default {
 
     // ---- POST /api/mbbank (MacroDroid)
     if (m === "POST" && p === "/api/mbbank") {
+      if (!CONFIG.MB_WEBHOOK_SECRET) return json({ ok: false, error: "Thiếu biến môi trường MB_WEBHOOK_SECRET" }, 500);
       if (!authed(request, CONFIG.MB_WEBHOOK_SECRET)) return json({ ok: false, error: "Unauthorized" }, 401);
       const b = await body(); if (!b) return json({ ok: false, error: "Invalid JSON" }, 400);
       const notification = String(b.notification || "").trim();

@@ -797,7 +797,7 @@ export default {
       }
 
       // Giao dịch D1 (worker giữ secret, trình duyệt không cần biết)
-      if (p === "/api/admin/tx" && m === "GET") { const r = await d1(env, "/api/admin/transactions" + url.search); return J(r.data || { ok: false }, r.ok ? 200 : r.status || 502); }
+      if (p === "/api/admin/tx" && m === "GET") { const r = await d1(env, "/api/admin/transactions" + url.search); return J(r.ok ? (r.data || { ok: true, transactions: [] }) : { ok: true, transactions: [], error: (r.data && r.data.error) || "D1 offline" }, 200); }
       const tm = p.match(/^\/api\/admin\/tx\/(\d+)\/(approve|reject)$/);
       if (tm && m === "POST") {
         const b = await body(), r = await d1(env, `/api/admin/reviews/${tm[1]}/${tm[2]}`, { method: "POST", body: b });
