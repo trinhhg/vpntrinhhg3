@@ -46,32 +46,32 @@
  <div id="t-ord" class="w-full min-w-0">
   <div class="flex items-center justify-between mb-3 px-1">
    <h2 class="text-lg md:text-2xl font-black text-slate-800 tracking-tight">Quản lý Đơn hàng</h2>
-   <button onclick="openOrdModal(null)" class="min-h-[44px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3.5 py-2 md:px-4 md:py-2.5 rounded-xl text-xs md:text-sm shadow-sm active:scale-95 transition flex items-center gap-1.5">
-    <i class="fas fa-plus"></i><span>Tạo thủ công</span>
+   <button onclick="openOrdModal(null)" class="h-8.5 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs md:text-sm shadow-sm transition flex items-center gap-1.5 shrink-0">
+    <i class="fas fa-plus text-xs"></i><span>Tạo thủ công</span>
    </button>
   </div>
 
   <div class="grid grid-cols-3 gap-1.5 sm:gap-2 mb-3">
    <!-- 1. Khóa fulfill -->
-   <button type="button" id="btnToggleLockFulfill" onclick="toggleLockFulfillBtn()" class="flex items-center justify-between gap-1 border rounded-xl px-2 py-1.5 sm:px-2.5 sm:py-2 transition text-left bg-white text-slate-700 border-slate-200/80 min-h-[40px] shadow-xs">
-    <div class="font-bold text-[11px] sm:text-xs truncate flex items-center gap-1.5 min-w-0">
-     <i class="fas fa-lock text-amber-500 shrink-0 text-xs"></i><span class="truncate">Khóa auto</span>
+   <button type="button" id="btnToggleLockFulfill" onclick="toggleLockFulfillBtn()" class="flex items-center justify-between gap-1 border rounded-xl px-2 h-9 transition text-left bg-white text-slate-700 border-slate-200/80 shadow-xs">
+    <div class="font-bold text-[10.5px] sm:text-xs truncate flex items-center gap-1 min-w-0">
+     <i class="fas fa-lock text-amber-500 shrink-0 text-[11px]"></i><span class="truncate">Khóa auto</span>
     </div>
-    <span id="badgeLockFulfill" class="text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 shrink-0 uppercase">TẮT</span>
+    <span id="badgeLockFulfill" class="text-[9px] font-black px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 shrink-0 uppercase">TẮT</span>
    </button>
    <!-- 2. Gửi mail -->
-   <button type="button" id="btnToggleMailOnSave" onclick="toggleMailOnSaveBtn()" class="flex items-center justify-between gap-1 border rounded-xl px-2 py-1.5 sm:px-2.5 sm:py-2 transition text-left bg-white text-slate-700 border-slate-200/80 min-h-[40px] shadow-xs">
-    <div class="font-bold text-[11px] sm:text-xs truncate flex items-center gap-1.5 min-w-0">
-     <i class="fas fa-envelope text-indigo-500 shrink-0 text-xs"></i><span class="truncate">Gửi mail</span>
+   <button type="button" id="btnToggleMailOnSave" onclick="toggleMailOnSaveBtn()" class="flex items-center justify-between gap-1 border rounded-xl px-2 h-9 transition text-left bg-white text-slate-700 border-slate-200/80 shadow-xs">
+    <div class="font-bold text-[10.5px] sm:text-xs truncate flex items-center gap-1 min-w-0">
+     <i class="fas fa-envelope text-indigo-500 shrink-0 text-[11px]"></i><span class="truncate">Gửi mail</span>
     </div>
-    <span id="badgeMailOnSave" class="text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 shrink-0 uppercase">TẮT</span>
+    <span id="badgeMailOnSave" class="text-[9px] font-black px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 shrink-0 uppercase">TẮT</span>
    </button>
    <!-- 3. Sửa tay -->
-   <button type="button" id="btnToggleManualEdit" onclick="toggleManualEditBtn()" class="flex items-center justify-between gap-1 border rounded-xl px-2 py-1.5 sm:px-2.5 sm:py-2 transition text-left bg-white text-slate-700 border-slate-200/80 min-h-[40px] shadow-xs">
-    <div class="font-bold text-[11px] sm:text-xs truncate flex items-center gap-1.5 min-w-0">
-     <i class="fas fa-pen-to-square text-purple-600 shrink-0 text-xs"></i><span class="truncate">Sửa tay</span>
+   <button type="button" id="btnToggleManualEdit" onclick="toggleManualEditBtn()" class="flex items-center justify-between gap-1 border rounded-xl px-2 h-9 transition text-left bg-white text-slate-700 border-slate-200/80 shadow-xs">
+    <div class="font-bold text-[10.5px] sm:text-xs truncate flex items-center gap-1 min-w-0">
+     <i class="fas fa-pen-to-square text-purple-600 shrink-0 text-[11px]"></i><span class="truncate">Sửa tay</span>
     </div>
-    <span id="badgeManualEdit" class="text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 shrink-0 uppercase">TẮT</span>
+    <span id="badgeManualEdit" class="text-[9px] font-black px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 shrink-0 uppercase">TẮT</span>
    </button>
   </div>
 
