@@ -1,16 +1,16 @@
 # AGENTS.md — BỘ 94 QUY TẮC AN TOÀN BẢO VỆ DỰ ÁN VPNTRINHHG3
 
 > **Dành cho tất cả AI Coding Agents tham gia bảo trì, phát triển và tái cấu trúc repository `vpntrinhhg3`.**  
-> **Nguyên tắc tối cao:** Giữ nguyên chức năng đang chạy, sửa ít nhất có thể, kiểm tra đầy đủ, chỉ xử lý đúng nội dung trong từng "Lần XX" được giao và không đánh đổi độ ổn định để lấy sự tiện lợi khi viết code.
+> **NGUYÊN TẮC TỐI THƯỢNG — READ-ONLY / ADMIN TỰ DÁN CODE:** AI được phép git clone/pull hoặc truy cập GitHub để đọc mã nguồn mới nhất và phân tích lỗi. AI tuyệt đối không được sửa trực tiếp file trong repo/working tree, tạo hoặc ghi file sửa, commit, push, mở PR, merge, hay deploy. Kết quả sửa chỉ được trình bày thành các block code cũ/mới để Admin tự Ctrl+F và replace thủ công. Cấm tự deploy trong mọi trường hợp; yêu cầu sửa code không đồng nghĩa yêu cầu deploy. Chỉ được phân tích đúng phạm vi task và các file phụ thuộc trực tiếp cần thiết; không âm thầm quét/đọc/phân tích hàng loạt file không liên quan.
 
 ---
 
 ## 1. QUY TẮC CHỈNH SỬA MÃ NGUỒN (Quy tắc 1 – 25)
 
-1. **Đọc AGENTS.md trước khi sửa bất kỳ file nào:** Mọi AI agent phải đọc hiểu toàn bộ quy tắc an toàn và tra cứu `PROJECT_MAP.md` trước khi thao tác mã nguồn. Tuân thủ nghiêm ngặt nguyên tắc chỉ xử lý đúng nội dung của "Lần XX" hiện tại.
+1. **Đọc hướng dẫn trước khi phân tích:** Đọc `AGENTS.md` và chỉ tra cứu phần liên quan trong `PROJECT_MAP.md` khi cần định vị chức năng. Việc đọc hướng dẫn không cho phép quét toàn repo; tuân thủ phạm vi task hiện tại.
 2. **Tìm đúng module chứa chức năng cần sửa:** Chỉ can thiệp vào đúng module phụ trách chức năng đó (`api.js`, `shared.js`, `customer.js`, hoặc `admin.js`).
 3. **Không sửa file không liên quan:** Tuyệt đối không chạm vào các file hoặc chức năng ngoài phạm vi yêu cầu (ví dụ: sửa đơn hàng không chạm vào CMS hay giao diện khách hàng).
-4. **Không viết lại toàn bộ file chỉ vì một lỗi nhỏ:** Sử dụng chỉnh sửa có mục tiêu (targeted edit), giữ nguyên 99% phần mã nguồn đang vận hành tốt.
+4. **Không tự áp dụng sửa đổi:** AI chỉ đề xuất targeted edit dưới dạng block code cũ/mới. Admin là người duy nhất tự dán và lưu thay đổi. Không ghi file trực tiếp, kể cả trong clone/local workspace.
 5. **Không tạo module mới nếu module hiện tại vẫn phù hợp:** Tránh phân mảnh cấu trúc thành hàng chục file nhỏ không cần thiết.
 6. **Không tạo abstraction không cần thiết:** Không thêm các lớp wrapper, design patterns phức tạp, class kế thừa vô ích khi Vanilla JavaScript đơn giản đã đủ giải quyết vấn đề.
 7. **Không đổi API contract:** Không thay đổi URL endpoint, HTTP method, tên trường request payload hoặc response format mà backend đang mong đợi.
@@ -70,7 +70,7 @@
 
 ## 4. QUY TẮC KIỂM THỬ (Quy tắc 49 – 58)
 
-49. **Sau mỗi thay đổi phải kiểm tra cú pháp và build:** Chạy lệnh build kiểm tra (`npm run build`) để đảm bảo không có lỗi cú pháp hoặc hỏng import/export.
+49. **Đề xuất cách kiểm tra, không tự sửa để chạy test:** Vì AI không được ghi code, hãy nêu lệnh kiểm tra phù hợp để Admin tự chạy sau khi dán. Chỉ chạy các kiểm tra read-only/an toàn nếu chúng không sửa file, không tạo artifact và không tác động hệ thống; phải báo đúng kết quả thực tế.
 50. **Không được bỏ qua lỗi build hoặc lỗi import:** Bất kỳ cảnh báo nghiêm trọng hoặc lỗi build nào xuất hiện đều phải được giải quyết triệt để trước khi tạo commit.
 51. **Kiểm tra cả trang khách hàng và trang quản trị nếu thay đổi module dùng chung:** Khi sửa đổi trong `api.js` hoặc `shared.js`, phải kiểm thử cả `index.html` và `admin.html`.
 52. **Kiểm tra các chức năng liên quan trực tiếp đến thay đổi:** Lập danh sách các tính năng phụ thuộc và rà soát kỹ lưỡng sau khi sửa code.
@@ -85,11 +85,11 @@
 
 ## 5. QUY TẮC GITHUB VÀ TRIỂN KHAI (Quy tắc 59 – 70)
 
-59. **Không commit trực tiếp lên main:** Nhánh `main` là nhánh Production của website. Tuyệt đối không sửa hoặc commit trực tiếp lên `main` trừ khi có chỉ đạo trực tiếp từ chủ dự án.
-60. **Mọi thay đổi phải thực hiện trên nhánh riêng:** Sử dụng nhánh `refactor/vite-migration` cho đợt tái cấu trúc, và các nhánh `ai/<tên-tính-năng>` cho các tác vụ bảo trì sau này.
-61. **Mỗi task nên có commit riêng, tên commit phải mô tả đúng nội dung:** Sử dụng Conventional Commits rõ ràng (ví dụ: `feat: ...`, `fix: ...`, `chore: ...`).
-62. **Không tự ý Merge Pull Request:** Quyền duyệt và bấm Merge Pull Request vào `main` thuộc về chủ dự án sau khi đã xem xét bản Preview.
-63. **Không tự ý triển khai production:** Không kích hoạt release production khi chưa có sự xác nhận của người sở hữu.
+59. **Không ghi thay đổi lên Git:** AI chỉ được đọc GitHub hoặc clone/pull để lấy code mới nhất. Không chỉnh working tree, commit, push, tạo PR, merge hay ghi thay đổi lên bất kỳ branch nào.
+60. **Không tạo branch để áp dụng code:** Việc sửa code được cung cấp dưới dạng hướng dẫn block replacement; Admin tự thao tác trên repo của họ.
+61. **Không tự tạo commit:** Nếu hữu ích, AI có thể gợi ý nội dung commit để Admin tự dùng; không được tạo commit hoặc thay đổi lịch sử Git.
+62. **Không tạo hoặc merge Pull Request:** Chỉ Admin tự quản lý PR/merge nếu họ chọn quy trình đó.
+63. **CẤM TUYỆT ĐỐI TỰ DEPLOY:** AI không được chạy deploy hoặc kích hoạt bất kỳ release nào lên production/preview, Pages/Workers hay môi trường khác. Không có ngoại lệ tự động; chỉ đưa hướng dẫn khi Admin yêu cầu cụ thể, nhưng vẫn không tự thực thi.
 64. **Không xóa nhánh hoặc commit cũ nếu chưa được cho phép:** Không thực hiện `git push --force` hoặc ghi đè lịch sử git làm mất dấu vết kiểm toán.
 65. **Không thay đổi cấu hình Cloudflare Pages hoặc Workers nếu task không yêu cầu:** Giữ nguyên các thiết lập định tuyến, custom domain và biến môi trường hiện hành.
 66. **Không xóa hoặc sửa `.github/workflows/update.yml` và `update_sub.py`:** Workflow đồng bộ VPN hàng ngày lúc 00:00 UTC là huyết mạch vận hành của dịch vụ; phải giữ nguyên vẹn vị trí và nội dung.
@@ -139,79 +139,83 @@ Sau mỗi lần sửa mã nguồn hoặc hoàn thành một giai đoạn, AI ph�
 
 ---
 
-## 8. QUY TRÌNH HỖ TRỢ SỬA CODE THỦ CÔNG — KHÔNG TỰ SỬA / KHÔNG TỰ DEPLOY
+## 8. QUY TRÌNH READ-ONLY — CHẨN ĐOÁN VÀ BLOCK REPLACEMENT, ADMIN TỰ DÁN
 
-> **Chế độ mặc định: chẩn đoán và hướng dẫn chủ dự án tự thay code.** AI không được tự ghi file, tự commit, tự push, tự merge, tự chạy lệnh có tác dụng thay đổi hoặc tự deploy. Chỉ chuyển sang chế độ thực hiện thay đổi khi chủ dự án yêu cầu rõ ràng trong chính lượt hiện tại.
+### 8.1. Quyền được phép
+- Được truy cập GitHub, git clone hoặc git pull để đọc phiên bản mã nguồn mới nhất. Clone phải dùng để đọc/phân tích; không ghi sửa lên repo hoặc working tree.
+- Được đọc đúng file liên quan và các file phụ thuộc trực tiếp cần thiết để lần theo luồng gọi, contract hoặc nguyên nhân.
+- Được dùng tìm kiếm có mục tiêu trong phạm vi liên quan. Nếu cần mở rộng sang file khác, phải giải thích ngắn gọn vì sao file đó có liên quan.
+- Được trả lời bằng phân tích, block code đề xuất, và lệnh kiểm tra để Admin tự chạy.
 
-### 8.1. Công việc mặc định khi nhận báo lỗi
-1. Xác định đúng lỗi, triệu chứng và phạm vi yêu cầu; không tự mở rộng sang lỗi khác.
-2. Đọc các hướng dẫn liên quan trước, sau đó chỉ đọc các file cần thiết để tìm nguyên nhân. Nếu phải mở rộng phạm vi, nói ngắn gọn lý do.
-3. Đối chiếu luồng gọi giữa các file có liên quan; không kết luận lỗi thuộc một file nếu bằng chứng cho thấy cần kiểm tra file phụ thuộc.
-4. Trả lời bằng phân tích và hướng dẫn thay code để chủ dự án tự thao tác. **Không tự áp dụng bản sửa vào repository.**
-5. Nếu chưa đủ dữ liệu để kết luận, nêu rõ phần chưa xác minh và yêu cầu đúng log/file/đoạn code còn thiếu; không đoán.
+### 8.2. Các hành vi bị cấm — không được tự thực hiện
+- Cấm sửa, tạo, xóa, format hoặc ghi bất kỳ file nào trong repo/clone/workspace; cấm áp dụng patch/diff tự động.
+- Cấm commit, push, tạo branch để ghi sửa, tạo PR, merge hoặc thay đổi lịch sử Git.
+- **Cấm tuyệt đối tự deploy** Cloudflare Pages, Workers, preview hay production; cấm chạy script deploy, Wrangler deploy, workflow release hoặc bất kỳ thao tác tương đương.
+- Cấm tự chạy migration, thao tác ghi/xóa dữ liệu, sửa binding/secret/env, hoặc kiểm thử có thể tạo đơn, thanh toán, fulfillment hay ảnh hưởng dịch vụ.
+- Cấm im lặng chạy tiến trình dài, quét toàn bộ repo hoặc phân tích hàng loạt file không liên quan. Nếu phát sinh nhu cầu mở rộng, phải nêu lý do và xin Admin xác nhận trước.
+- Không được hiểu yêu cầu “đọc repo”, “tìm lỗi”, “sửa code”, “build” hay “kiểm tra” là cho phép ghi sửa hoặc deploy.
 
-### 8.2. Format bắt buộc khi đưa bản sửa
-Với mỗi thay đổi, ghi rõ:
-- **File:** đường dẫn tương đối chính xác trong repository.
-- **Vị trí:** tên hàm/đối tượng hoặc mốc code dễ tìm.
-- **Nguyên nhân:** vì sao block hiện tại gây lỗi.
-- **Sửa theo mẫu:** dùng đúng một trong các mẫu bên dưới; block cũ phải được trích nguyên văn, đủ dài để Ctrl+F tìm duy nhất. Không dùng dấu ba chấm `...` để thay thế code bị lược.
+### 8.3. Quy trình xử lý task
+1. Xác định triệu chứng, expected behavior, actual behavior và phạm vi task.
+2. Đọc phiên bản mới nhất của các file trực tiếp liên quan; ghi rõ file/commit/branch hoặc thời điểm truy cập nếu xác định được.
+3. Lần theo nguyên nhân bằng bằng chứng trong code. Phân biệt rõ **đã xác minh**, **giả thuyết**, và **chưa đủ dữ liệu**.
+4. Đưa phương án tối thiểu. Không tự mở rộng refactor hoặc sửa lỗi ngoài phạm vi; lỗi ngoài phạm vi chỉ ghi chú.
+5. Trả block replacement để Admin tự dán. Nói rõ AI chưa áp dụng thay đổi, chưa commit/push và chưa deploy.
+6. Nếu không thể đọc chính xác block hiện hữu hoặc phiên bản code khác nhau, yêu cầu Admin gửi file/đoạn code phù hợp; không bịa block cũ.
+
+### 8.4. Format bắt buộc cho code replacement
+Mỗi thay đổi phải ghi **File**, **vị trí**, **nguyên nhân**, rồi trình bày một trong các mẫu sau. Block cũ phải là code nguyên văn, đủ cụ thể để Ctrl+F tìm đúng; tuyệt đối không dùng `...` để lược code.
 
 **Chèn thêm (giữ dòng mốc):**  
 Tìm:
 ```js
-[trích nguyên văn đoạn mốc hiện có]
+[block mốc nguyên văn]
 ```
 Thay:
 ```js
-[đoạn mới hoàn chỉnh, có giữ lại dòng mốc]
+[block mới đầy đủ, giữ dòng mốc]
 ```
 
 **Xóa code (giữ dòng mốc xung quanh):**  
 Tìm:
 ```js
-[trích nguyên văn block cần xóa và các dòng mốc xung quanh]
+[block nguyên văn gồm code cần xóa và các dòng mốc]
 ```
 Thay:
 ```js
-[đoạn sau khi xóa, vẫn giữ nguyên các dòng mốc]
+[block sau khi xóa, giữ nguyên dòng mốc xung quanh]
 ```
 
 **Sửa code:**  
 Tìm:
 ```js
-[trích nguyên văn block cũ đầy đủ]
+[block code cũ nguyên văn, đầy đủ]
 ```
 Thay:
 ```js
 [block code mới hoàn chỉnh]
 ```
 
-Nếu không thể trích nguyên văn vì chưa đọc được toàn bộ block hoặc phiên bản file không khớp, **không tự dựng block cũ**. Hãy xin người dùng cung cấp đúng file/đoạn code hoặc hướng dẫn họ xác định phiên bản trước.
+Không thay block cũ bằng mô tả, không dùng placeholder hoặc dấu ba chấm trong code cũ. Nếu sửa nhiều file, tách từng file và từng patch riêng; giữ nguyên các phần không liên quan.
 
-### 8.3. Quy tắc khi sửa file chính
-Khi đề xuất thay đổi cho file nguồn chính (ví dụ `worker.js`, `payment-webhook/worker.js`, `src/admin.js`, `src/customer.js`, `src/api.js`, `src/shared.js`):
-- Đưa một dòng ghi chú phiên bản ở đầu file theo format phù hợp với ngôn ngữ, ví dụ:
-  - JavaScript: `// vN — YYYY-MM-DD HH:mm (UTC+7) — mô tả ngắn thay đổi`
-  - HTML: `<!-- vN — YYYY-MM-DD HH:mm (UTC+7) — mô tả ngắn thay đổi -->`
-  - CSS: `/* vN — YYYY-MM-DD HH:mm (UTC+7) — mô tả ngắn thay đổi */`
-- Số version bắt đầu từ 1 cho chuỗi phiên bản được ghi trong file; không tự khẳng định đây là version deploy Cloudflare.
-- Mô tả phải nêu thay đổi thực tế, không ghi tính năng chưa triển khai/chưa kiểm chứng.
-- Nếu thêm dòng đầu file không an toàn với shebang, directive, encoding marker hoặc cấu trúc file, giữ mốc bắt buộc đó trước và giải thích.
-- Ghi hướng dẫn dán rõ ràng: thay block nào, giữ nguyên phần trước/sau nào. Chỉ hướng dẫn thay toàn bộ file khi người dùng yêu cầu hoặc khi block-level patch không khả thi; khi đó phải nêu rõ mốc giữ lại/xóa.
+### 8.5. Version note khi đề xuất sửa file chính
+Với file chính như `worker.js`, `payment-webhook/worker.js`, `src/admin.js`, `src/customer.js`, `src/api.js`, `src/shared.js`, hãy đề xuất thêm comment version ở đầu file hoặc trong block đầu phù hợp:
+- JavaScript: `// vN — YYYY-MM-DD HH:mm (UTC+7) — mô tả thay đổi`
+- HTML: `<!-- vN — YYYY-MM-DD HH:mm (UTC+7) — mô tả thay đổi -->`
+- CSS: `/* vN — YYYY-MM-DD HH:mm (UTC+7) — mô tả thay đổi */`
+Tăng version theo lịch sử version note đang có; nếu không xác định được thì ghi rõ đề xuất bắt đầu từ v1, không tự nhận đó là Cloudflare deployment version. Bảo toàn shebang/directive/encoding marker nếu có. Ghi hướng dẫn cụ thể vị trí Admin cần dán.
 
-### 8.4. Kiểm tra và triển khai
-- Chỉ đề xuất các bước test phù hợp; không nói đã chạy test nếu chưa thực sự chạy.
-- Không tự thực thi các lệnh ghi dữ liệu, migrate, thay đổi binding/secret, commit/push/merge hoặc deploy.
-- Không tự deploy Cloudflare Pages/Workers, kể cả khi có sẵn `deploy.ps1`. Lệnh deploy chỉ được cung cấp như hướng dẫn khi người dùng yêu cầu rõ; **không được tự chạy**.
-- Khi người dùng yêu cầu deploy, vẫn phải xác nhận rõ môi trường/Worker mục tiêu nếu chưa đủ rõ; không coi yêu cầu sửa code là yêu cầu deploy.
-- Báo rõ code đề xuất chưa được áp dụng và chưa được deploy, trừ khi người dùng đã tự xác nhận kết quả.
+### 8.6. Kiểm tra và deploy
+- Nêu các lệnh build/test phù hợp để Admin tự chạy. Không báo “đã test/build thành công” nếu AI không có kết quả thực tế.
+- Không tự chạy command nào có thể ghi file, tạo artifact, thay đổi cấu hình, dữ liệu hoặc trạng thái dịch vụ. Nếu tác động của lệnh không rõ, không chạy; giải thích và đề xuất Admin tự thực hiện.
+- Nếu Admin hỏi cách deploy, có thể hướng dẫn theo đúng Worker/site đích đã xác nhận; không được tự chạy deploy.
+- Không được deploy trong cùng task chỉ vì đã đưa code replacement hoặc vì build/test được yêu cầu.
 
-### 8.5. Không nhầm ba file Worker
-1. `worker.js` (thư mục gốc): Worker API chính.
+### 8.7. Phân biệt các Worker
+1. `worker.js` ở thư mục gốc: Worker API chính.
 2. `payment-webhook/worker.js`: Worker webhook thanh toán.
-3. `public/_worker.js`: Cloudflare Pages routing; không phải backend Worker deploy script.
-Trước khi hướng dẫn sửa/deploy, xác định đúng file và mục tiêu bằng chứng từ repo/task hiện tại.
+3. `public/_worker.js`: Cloudflare Pages routing.
+Không suy đoán mục tiêu deploy từ tên file; mặc định không deploy.
 
 ---
 
