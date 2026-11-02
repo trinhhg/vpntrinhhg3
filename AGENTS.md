@@ -165,6 +165,8 @@ Dự án quản lý 2 Cloudflare Workers:
   ```
 
 ### 8.3. Cam kết chung khi deploy:
+- **Cơ chế mạng:** Script deploy kết nối trực tiếp đến Cloudflare REST API. Khi chạy lệnh `deploy.ps1`, Agent **PHẢI** bật quyền truy cập mạng ngoài Sandbox (`BypassSandbox: true`), nếu không lệnh sẽ bị chặn và báo lỗi mất kết nối `api.cloudflare.com`.
+- **Không phụ thuộc vào MCP Tools từ xa:** Antigravity không hỗ trợ truyền Authorization header cho Remote Streamable HTTP MCP, do đó không gọi các MCP Cloudflare giả định mà dùng trực tiếp script `deploy.ps1` có sẵn.
 - Chỉ thực hiện deploy khi người dùng có yêu cầu trong task hoặc yêu cầu deploy. Tuyệt đối không tự ý deploy production nếu người dùng chưa yêu cầu (tuân thủ Quy tắc 92).
 - Khi có yêu cầu deploy Worker, cả 2 script deploy đều tự động bảo toàn 100% Secrets, D1 Database, KV Storage và biến môi trường trên Cloudflare.
 - Agent báo rõ số Version và Version ID cho người dùng sau khi deploy thành công.
