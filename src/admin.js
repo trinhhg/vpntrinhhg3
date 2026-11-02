@@ -96,7 +96,7 @@ const PDS={1:"https://vpntrinhhg.pages.dev",2:"https://vpntrinhhg2.pages.dev",3:
 let PD=/pages\.dev$/.test(location.hostname)?location.origin:PDS[3];
 const GH_REPO="trinhhg/vpntrinhhg3";
 const PKG_LIST=[["t1","Gói 1 tháng - 60,000VND / $2.5 / ¥15.5 (100GB)",30],["t2","Gói 1 tháng - 70,000VND / $3 / ¥18 (500GB)",30],["c1","Gói 1 tháng - 80,000VND / $3.5 / ¥20.5 (1000GB)",30],["c2","Gói Cao Cấp - 200,000VND / $8 / ¥50 (3000GB)",30],["c3","Gói 1 Năm - 799,000VND / $30 / ¥199 (300GB/tháng)",365],["d1","Không Giới Hạn - 200,000VND / $8 / ¥52 (200GB)",0],["d2","Không Giới Hạn - 399,000VND / $16 / ¥102 (1000GB)",0],["d3","Không Giới Hạn - 999,000VND / $40 / ¥256 (5000GB)",0],["o1","[Giá cũ] Gói 1 tháng - 50,000VND / ¥12.5 (100GB)",30],["o2","[Giá cũ] Gói 1 tháng - 60,000VND / ¥15 (500GB)",30],["o3","[Giá cũ] Gói 1 tháng - 70,000VND / ¥17.5 (1000GB)",30]];
-const TABS=[["t-ord","fa-box","Đơn hàng"],["t-pkg","fa-tags","Bán hàng"],["t-rev","fa-chart-pie","Doanh thu"],["t-trans","fa-file-invoice-dollar","Đối soát"],["t-check","fa-clipboard-check","Kiểm tra"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-mail","fa-envelope","Soạn mail"],["t-cms","fa-book","H.Dẫn"],["t-settings","fa-cog","Cài đặt"]];
+const TABS=[["t-ord","fa-box","Đơn hàng"],["t-pkg","fa-tags","Bán hàng"],["t-rev","fa-chart-pie","Doanh thu"],["t-trans","fa-file-invoice-dollar","Đối soát"],["t-check","fa-clipboard-check","Kiểm tra"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-mail","fa-envelope","Soạn mail"],["t-cms","fa-book","H.Dẫn"],["t-settings","fa-cog","Cài đặt"],["t-more","fa-ellipsis-h","Thêm"]];
 // PKG_DB: giá hiện tại + giá cũ (o1/o2/o3) để nhận diện dữ liệu lịch sử — TUYỆT ĐỐI không quy đổi totalVnd của đơn cũ sang giá mới.
 const PKG_DB={t1:{n:"Gói 1 tháng",d:"100GB",vnd:60000,cny:15.5,m:1},t2:{n:"Gói 1 tháng",d:"500GB",vnd:70000,cny:18,m:1},c1:{n:"Gói 1 tháng",d:"1000GB",vnd:80000,cny:20.5,m:1},c2:{n:"Gói Cao Cấp",d:"3000GB",vnd:200000,cny:50,m:1},c3:{n:"Gói 1 Năm",d:"300GB/tháng",vnd:799000,cny:199,m:12},d1:{n:"Không Giới Hạn",d:"200GB",vnd:200000,cny:52,m:0},d2:{n:"Không Giới Hạn",d:"1000GB",vnd:399000,cny:102,m:0},d3:{n:"Không Giới Hạn",d:"5000GB",vnd:999000,cny:256,m:0},o1:{n:"Gói 1 tháng",d:"100GB",vnd:50000,cny:12.5,m:1,old:true},o2:{n:"Gói 1 tháng",d:"500GB",vnd:60000,cny:15,m:1,old:true},o3:{n:"Gói 1 tháng",d:"1000GB",vnd:70000,cny:17.5,m:1,old:true}};
 
@@ -329,7 +329,7 @@ function switchPkgSubTab(tab){
 window.switchPkgSubTab = switchPkgSubTab;
 
 function buildTabs(){
-  $("tabBar").innerHTML=TABS.map(([id,ic,lb])=>`
+  $("tabBar").innerHTML=TABS.filter(([id])=>id!=="t-more").map(([id,ic,lb])=>`
     <button onclick="go('${id}')" id="btn-${id}" class="col-span-1 tab-btn flex flex-col md:flex-row items-center px-1 py-2 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm justify-center gap-1 relative">
       <i class="fas ${ic} md:mr-1"></i>
       <span>${lb}</span>
@@ -343,13 +343,32 @@ function go(id, fromHistory){
  if(id==="t-sales") id = "t-pkg";
  if(!TABS.some(t=>t[0]===id))id="t-ord";
  TABS.forEach(([t])=>{
-   $(t).classList.add("hidden");
+   const el=$(t);
+   if(el) el.classList.add("hidden");
    const b=$("btn-"+t);
    if(b){b.classList.remove("active");b.classList.add("bg-white","text-slate-600");}
  });
- $(id).classList.remove("hidden");
+ const target=$(id);
+ if(target) target.classList.remove("hidden");
  const a=$("btn-"+id);
  if(a){a.classList.add("active");a.classList.remove("bg-white","text-slate-600");}
+
+ // Đồng bộ thanh điều hướng đáy Mobile (4 tab chính + 1 tab Thêm)
+ const navItems = ['t-ord', 't-lnk', 't-pkg', 't-trans', 't-more'];
+ const moreSubTabs = ['t-rev', 't-check', 't-dead', 't-mail', 't-cms', 't-settings', 't-more'];
+ const activeSlot = moreSubTabs.includes(id) ? 't-more' : id;
+ navItems.forEach(k => {
+   const btn = $('bnav-' + k);
+   if (!btn) return;
+   if (k === activeSlot) {
+     btn.classList.add('text-indigo-600');
+     btn.classList.remove('text-slate-400');
+   } else {
+     btn.classList.remove('text-indigo-600');
+     btn.classList.add('text-slate-400');
+   }
+ });
+
  localStorage.setItem(SITE_KEY+"_lastTab",id);
 
  if (!fromHistory) {
@@ -366,7 +385,7 @@ function go(id, fromHistory){
   if(id==="t-lnk")renderLinks();
   if(id==="t-settings"){loadSettingsUI();loadStatus();loadQuota();}
   if(id==="t-rev")renderRevenue();
-  if(id==="t-trans"){localStorage.setItem(SITE_KEY+"_txSeen",Date.now());$("transBadge").classList.add("hidden");if(!txData.length)loadTx(true);if(curTxTab==="exception")renderExceptionsTab();else renderTransactions();}
+  if(id==="t-trans"){localStorage.setItem(SITE_KEY+"_txSeen",Date.now());const tb=$("transBadge");if(tb)tb.classList.add("hidden");const tbm=$("transBadgeMobile");if(tbm)tbm.classList.add("hidden");if(!txData.length)loadTx(true);if(curTxTab==="exception")renderExceptionsTab();else renderTransactions();}
   if(id==="t-mail")renderMailComposer();
   if(id==="t-cms"&&curArtsReady)renderGuideAll();
  }catch(e){console.error("go("+id+") lỗi:",e);toast("Lỗi mở tab: "+e.message,"err");}
@@ -385,6 +404,13 @@ function recordAdminNav(state) {
 window.recordAdminNav = recordAdminNav;
 
 window.addEventListener('popstate', (event) => {
+  // Khi vuốt quay lại hoặc bấm back: Ưu tiên đóng Modal đang mở trước
+  const openModal = document.querySelector('#mOrd:not(.hidden), #mRootEdit:not(.hidden), #mLnk:not(.hidden), #mCouponModal:not(.hidden)');
+  if (openModal) {
+    openModal.classList.add('hidden');
+    return;
+  }
+
   if (!event.state) {
     const hash = location.hash.replace('#', '');
     const tabId = hash ? 't-' + hash : 't-ord';
@@ -486,13 +512,12 @@ function updateOrderTogglesUI(){
     const btn = $(btnId), b = $(badgeId);
     if (!btn || !b) return;
     if (active) {
-      // Chuẩn Ảnh 1: Viền dày 2px #4f46e5, nền #e0e7ff, chữ #4338ca
-      btn.className = "flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2 border-2 rounded-xl p-2 sm:p-2.5 shadow-sm transition text-left bg-indigo-100 text-indigo-700 border-indigo-600 font-extrabold";
-      b.className = "text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-200 text-indigo-800 shrink-0 border border-indigo-300";
+      btn.className = "flex items-center justify-between gap-1 border rounded-xl px-2 py-1.5 sm:px-2.5 sm:py-2 transition text-left bg-indigo-50/90 text-indigo-700 border-indigo-400 font-bold min-h-[40px] shadow-xs";
+      b.className = "text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-md bg-indigo-600 text-white shrink-0 uppercase";
       b.textContent = "BẬT";
     } else {
-      btn.className = "flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2 border rounded-xl p-2 sm:p-2.5 shadow-sm transition text-left bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200";
-      b.className = "text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 shrink-0";
+      btn.className = "flex items-center justify-between gap-1 border rounded-xl px-2 py-1.5 sm:px-2.5 sm:py-2 transition text-left bg-white text-slate-600 border-slate-200 hover:bg-slate-50 min-h-[40px] shadow-xs";
+      b.className = "text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 shrink-0 uppercase";
       b.textContent = "TẮT";
     }
   };
