@@ -18,13 +18,12 @@ body, input, button, select, textarea {
 body{font-weight:600;background:#f8fafc;color:#0f172a;margin:0;overflow-x:hidden;}
 .glass-card{background:#fff;border:1px solid #e2e8f0;box-shadow:0 10px 40px -10px rgba(0,0,0,.05);border-radius:1.25rem;}
 
-/* Konsta UI iOS Segmented Control */
+/* Konsta UI iOS Segmented Control - Bỏ hiệu ứng nảy */
 .tab-btn{
-  transition:all .2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:background-color .15s ease, color .15s ease, box-shadow .15s ease;
   min-height:38px;
   touch-action:manipulation;
 }
-.tab-btn:active{transform:scale(0.97);}
 .tab-btn.active{
   background:#ffffff !important;
   color:#4f46e5 !important;
@@ -32,14 +31,13 @@ body{font-weight:600;background:#f8fafc;color:#0f172a;margin:0;overflow-x:hidden
   border-color:transparent !important;
 }
 
-/* Konsta UI iOS Inset Grouped Cards cho Order Container */
+/* Konsta UI iOS Inset Grouped Cards cho Order Container - Bỏ hiệu ứng nảy */
 #ordBody > div{
   border-radius:1rem !important;
   border-color:rgba(226, 232, 240, 0.8) !important;
   box-shadow:0 2px 8px -2px rgba(0,0,0,.04), 0 1px 4px -1px rgba(0,0,0,.02) !important;
-  transition:transform 0.15s ease, box-shadow 0.15s ease;
+  transition:box-shadow 0.15s ease, border-color 0.15s ease;
 }
-#ordBody > div:active{transform:scale(0.995);}
 
 /* Vaul Gesture Handle Affordance */
 .cursor-grab{touch-action:none;}
@@ -340,8 +338,17 @@ textarea.autog{resize:none;overflow:hidden;}
   word-break: break-word !important;
 }
 .guide-cta-btn:hover {
-  transform: translateY(-2px) scale(1.02);
   box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3) !important;
+  opacity: 0.95;
+}
+
+/* Konsta UI iOS Bottom Navigation Bar & Single-line Icon Standard */
+#adminBottomNav button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+#adminBottomNav button:active {
+  opacity: 0.7;
 }
 
 .ql-align-center { text-align: center !important; }
