@@ -139,37 +139,79 @@ Sau mỗi lần sửa mã nguồn hoặc hoàn thành một giai đoạn, AI ph�
 
 ---
 
-## 8. QUY TẮC TỰ ĐỘNG DEPLOY CLOUDFLARE WORKERS
+## 8. QUY TRÌNH HỖ TRỢ SỬA CODE THỦ CÔNG — KHÔNG TỰ SỬA / KHÔNG TỰ DEPLOY
 
-> **LƯU Ý PHÂN BIỆT RÕ 3 FILE WORKER TRONG PROJECT:**
-> 1. `worker.js` (Thư mục gốc) = Backend API chính `vpntrinhhg3worker` (Acc 1).
-> 2. `payment-webhook/worker.js` (Thư mục con) = Webhook thanh toán D1 `payment-webhook` (Acc 2).
-> 3. `public/_worker.js` (Thư mục public) = Routing Cloudflare Pages (chuyển hướng link vệ tinh v1 $\rightarrow$ v6), **KHÔNG** đụng chạm khi deploy Worker backend.
+> **Chế độ mặc định: chẩn đoán và hướng dẫn chủ dự án tự thay code.** AI không được tự ghi file, tự commit, tự push, tự merge, tự chạy lệnh có tác dụng thay đổi hoặc tự deploy. Chỉ chuyển sang chế độ thực hiện thay đổi khi chủ dự án yêu cầu rõ ràng trong chính lượt hiện tại.
 
-Dự án quản lý 2 Cloudflare Workers:
+### 8.1. Công việc mặc định khi nhận báo lỗi
+1. Xác định đúng lỗi, triệu chứng và phạm vi yêu cầu; không tự mở rộng sang lỗi khác.
+2. Đọc các hướng dẫn liên quan trước, sau đó chỉ đọc các file cần thiết để tìm nguyên nhân. Nếu phải mở rộng phạm vi, nói ngắn gọn lý do.
+3. Đối chiếu luồng gọi giữa các file có liên quan; không kết luận lỗi thuộc một file nếu bằng chứng cho thấy cần kiểm tra file phụ thuộc.
+4. Trả lời bằng phân tích và hướng dẫn thay code để chủ dự án tự thao tác. **Không tự áp dụng bản sửa vào repository.**
+5. Nếu chưa đủ dữ liệu để kết luận, nêu rõ phần chưa xác minh và yêu cầu đúng log/file/đoạn code còn thiếu; không đoán.
 
-### 8.1. Worker chính (`vpntrinhhg3worker` - Tài khoản 1)
-- **File mã nguồn:** `worker.js` (tại thư mục gốc dự án)
-- **Script deploy:** `deploy.ps1`
-- **Lệnh tự động deploy:**
-  ```powershell
-  powershell -ExecutionPolicy Bypass -File deploy.ps1 -message "<Mô tả thay đổi>"
-  ```
+### 8.2. Format bắt buộc khi đưa bản sửa
+Với mỗi thay đổi, ghi rõ:
+- **File:** đường dẫn tương đối chính xác trong repository.
+- **Vị trí:** tên hàm/đối tượng hoặc mốc code dễ tìm.
+- **Nguyên nhân:** vì sao block hiện tại gây lỗi.
+- **Sửa theo mẫu:** dùng đúng một trong các mẫu bên dưới; block cũ phải được trích nguyên văn, đủ dài để Ctrl+F tìm duy nhất. Không dùng dấu ba chấm `...` để thay thế code bị lược.
 
-### 8.2. Worker thanh toán (`payment-webhook` - Tài khoản 2)
-- **File mã nguồn:** `payment-webhook/worker.js`
-- **Script deploy:** `payment-webhook/deploy.ps1`
-- **Lệnh tự động deploy:**
-  ```powershell
-  powershell -ExecutionPolicy Bypass -File payment-webhook/deploy.ps1 -message "<Mô tả thay đổi>"
-  ```
+**Chèn thêm (giữ dòng mốc):**  
+Tìm:
+```js
+[trích nguyên văn đoạn mốc hiện có]
+```
+Thay:
+```js
+[đoạn mới hoàn chỉnh, có giữ lại dòng mốc]
+```
 
-### 8.3. Cam kết chung khi deploy:
-- **Cơ chế mạng:** Script deploy kết nối trực tiếp đến Cloudflare REST API. Khi chạy lệnh `deploy.ps1`, Agent **PHẢI** bật quyền truy cập mạng ngoài Sandbox (`BypassSandbox: true`), nếu không lệnh sẽ bị chặn và báo lỗi mất kết nối `api.cloudflare.com`.
-- **Không phụ thuộc vào MCP Tools từ xa:** Antigravity không hỗ trợ truyền Authorization header cho Remote Streamable HTTP MCP, do đó không gọi các MCP Cloudflare giả định mà dùng trực tiếp script `deploy.ps1` có sẵn.
-- Chỉ thực hiện deploy khi người dùng có yêu cầu trong task hoặc yêu cầu deploy. Tuyệt đối không tự ý deploy production nếu người dùng chưa yêu cầu (tuân thủ Quy tắc 92).
-- Khi có yêu cầu deploy Worker, cả 2 script deploy đều tự động bảo toàn 100% Secrets, D1 Database, KV Storage và biến môi trường trên Cloudflare.
-- Agent báo rõ số Version và Version ID cho người dùng sau khi deploy thành công.
+**Xóa code (giữ dòng mốc xung quanh):**  
+Tìm:
+```js
+[trích nguyên văn block cần xóa và các dòng mốc xung quanh]
+```
+Thay:
+```js
+[đoạn sau khi xóa, vẫn giữ nguyên các dòng mốc]
+```
+
+**Sửa code:**  
+Tìm:
+```js
+[trích nguyên văn block cũ đầy đủ]
+```
+Thay:
+```js
+[block code mới hoàn chỉnh]
+```
+
+Nếu không thể trích nguyên văn vì chưa đọc được toàn bộ block hoặc phiên bản file không khớp, **không tự dựng block cũ**. Hãy xin người dùng cung cấp đúng file/đoạn code hoặc hướng dẫn họ xác định phiên bản trước.
+
+### 8.3. Quy tắc khi sửa file chính
+Khi đề xuất thay đổi cho file nguồn chính (ví dụ `worker.js`, `payment-webhook/worker.js`, `src/admin.js`, `src/customer.js`, `src/api.js`, `src/shared.js`):
+- Đưa một dòng ghi chú phiên bản ở đầu file theo format phù hợp với ngôn ngữ, ví dụ:
+  - JavaScript: `// vN — YYYY-MM-DD HH:mm (UTC+7) — mô tả ngắn thay đổi`
+  - HTML: `<!-- vN — YYYY-MM-DD HH:mm (UTC+7) — mô tả ngắn thay đổi -->`
+  - CSS: `/* vN — YYYY-MM-DD HH:mm (UTC+7) — mô tả ngắn thay đổi */`
+- Số version bắt đầu từ 1 cho chuỗi phiên bản được ghi trong file; không tự khẳng định đây là version deploy Cloudflare.
+- Mô tả phải nêu thay đổi thực tế, không ghi tính năng chưa triển khai/chưa kiểm chứng.
+- Nếu thêm dòng đầu file không an toàn với shebang, directive, encoding marker hoặc cấu trúc file, giữ mốc bắt buộc đó trước và giải thích.
+- Ghi hướng dẫn dán rõ ràng: thay block nào, giữ nguyên phần trước/sau nào. Chỉ hướng dẫn thay toàn bộ file khi người dùng yêu cầu hoặc khi block-level patch không khả thi; khi đó phải nêu rõ mốc giữ lại/xóa.
+
+### 8.4. Kiểm tra và triển khai
+- Chỉ đề xuất các bước test phù hợp; không nói đã chạy test nếu chưa thực sự chạy.
+- Không tự thực thi các lệnh ghi dữ liệu, migrate, thay đổi binding/secret, commit/push/merge hoặc deploy.
+- Không tự deploy Cloudflare Pages/Workers, kể cả khi có sẵn `deploy.ps1`. Lệnh deploy chỉ được cung cấp như hướng dẫn khi người dùng yêu cầu rõ; **không được tự chạy**.
+- Khi người dùng yêu cầu deploy, vẫn phải xác nhận rõ môi trường/Worker mục tiêu nếu chưa đủ rõ; không coi yêu cầu sửa code là yêu cầu deploy.
+- Báo rõ code đề xuất chưa được áp dụng và chưa được deploy, trừ khi người dùng đã tự xác nhận kết quả.
+
+### 8.5. Không nhầm ba file Worker
+1. `worker.js` (thư mục gốc): Worker API chính.
+2. `payment-webhook/worker.js`: Worker webhook thanh toán.
+3. `public/_worker.js`: Cloudflare Pages routing; không phải backend Worker deploy script.
+Trước khi hướng dẫn sửa/deploy, xác định đúng file và mục tiêu bằng chứng từ repo/task hiện tại.
 
 ---
 
