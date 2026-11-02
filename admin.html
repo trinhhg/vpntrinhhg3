@@ -26,21 +26,21 @@
  </div>
 </div>
 
-<!-- Konsta UI iOS Sticky Top Navigation Bar -->
-<header id="hdr" class="hidden bg-white/85 backdrop-blur-md px-4 py-2 border-b border-slate-200/60 justify-between items-center shadow-xs w-full sticky top-0 z-40 pt-[calc(env(safe-area-inset-top,0px)+0.4rem)] transition-all">
+<!-- Konsta UI iOS Sticky Top Navigation Bar (Ép dẹt chuẩn tỉ lệ VPNTrinhHg) -->
+<header id="hdr" class="hidden bg-white/90 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 border-b border-slate-200/60 justify-between items-center shadow-xs w-full sticky top-0 z-40 pt-[calc(env(safe-area-inset-top,0px)+0.3rem)] transition-all">
  <div class="flex items-center gap-2 min-w-0">
-  <h1 onclick="resetAndHardReload()" title="Bấm để xóa sạch cache, session và tải lại toàn bộ trang" class="text-base md:text-xl font-black text-indigo-600 truncate cursor-pointer hover:opacity-80 transition select-none tracking-tight">VPN Trinh Hg</h1>
+  <h1 onclick="resetAndHardReload()" title="Bấm để xóa sạch cache, session và tải lại toàn bộ trang" class="text-sm md:text-xl font-black text-indigo-600 truncate cursor-pointer hover:opacity-80 transition select-none tracking-tight">VPN Trinh Hg</h1>
   <span id="hdrTestBadge" class="hidden text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500 text-slate-900 border border-amber-600 uppercase tracking-wider animate-pulse">TEST MODE</span>
  </div>
- <div class="flex gap-2 shrink-0">
-  <button onclick="fetchAll(true)" class="min-h-[44px] min-w-[44px] bg-indigo-50/80 hover:bg-indigo-100 text-indigo-600 px-3.5 py-2 rounded-xl font-bold text-xs md:text-sm flex items-center justify-center transition active:scale-95 shadow-xs"><i class="fas fa-sync-alt"></i><span class="hidden sm:inline ml-1.5">Làm mới</span></button>
-  <button onclick="doLogout()" class="min-h-[44px] min-w-[44px] bg-red-50/80 hover:bg-red-100 text-red-600 px-3.5 py-2 rounded-xl font-bold text-xs md:text-sm flex items-center justify-center transition active:scale-95 shadow-xs"><i class="fas fa-sign-out-alt"></i><span class="hidden sm:inline ml-1.5">Thoát</span></button>
+ <div class="flex items-center gap-1.5 shrink-0">
+  <button onclick="fetchAll(true)" class="h-8 px-2.5 rounded-full bg-indigo-50/90 hover:bg-indigo-100 text-indigo-600 font-bold text-xs inline-flex items-center gap-1 border border-indigo-200/60 transition"><i class="fas fa-sync-alt text-[11px]"></i><span class="whitespace-nowrap">Làm mới</span></button>
+  <button onclick="doLogout()" class="h-8 px-2.5 rounded-full bg-rose-50/90 hover:bg-rose-100 text-rose-600 font-bold text-xs inline-flex items-center gap-1 border border-rose-200/60 transition"><i class="fas fa-sign-out-alt text-[11px]"></i><span class="whitespace-nowrap">Thoát</span></button>
  </div>
 </header>
 
 <main id="main" class="hidden max-w-7xl mx-auto p-2 md:p-4 w-full min-w-0">
- <!-- Konsta UI Segmented Tab Bar -->
- <div id="tabBar" class="grid grid-cols-4 md:flex md:flex-wrap gap-1.5 md:gap-2 mb-4 p-1.5 bg-slate-200/70 rounded-2xl backdrop-blur-sm"></div>
+ <!-- Konsta UI Segmented Tab Bar (Ẩn hoàn toàn trên Mobile, chỉ hiện từ Tablet md:flex) -->
+ <div id="tabBar" class="hidden md:flex md:flex-wrap gap-2 mb-4 p-1.5 bg-slate-200/70 rounded-2xl backdrop-blur-sm"></div>
     
  <!-- ===== ĐƠN HÀNG (KONSTA INSET GROUPED STYLE) ===== -->
  <div id="t-ord" class="w-full min-w-0">
@@ -51,36 +51,27 @@
    </button>
   </div>
 
-  <div class="grid grid-cols-3 gap-2 mb-3">
-   <!-- 1. Khóa fulfillment -->
-   <button type="button" id="btnToggleLockFulfill" onclick="toggleLockFulfillBtn()" class="flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2 border rounded-2xl p-2.5 sm:p-3 shadow-xs transition active:scale-97 text-left bg-white text-slate-700 border-slate-200/80 min-h-[48px]">
-    <div class="min-w-0 w-full sm:w-auto text-center sm:text-left">
-     <div class="font-bold text-[11px] sm:text-xs truncate flex items-center justify-center sm:justify-start gap-1">
-      <i class="fas fa-lock text-amber-500"></i><span>Khóa fulfillment</span>
-     </div>
-     <div class="hidden sm:block text-[10px] text-slate-400 leading-snug mt-0.5">Sửa đơn không chạy automation</div>
+  <div class="grid grid-cols-3 gap-1.5 sm:gap-2 mb-3">
+   <!-- 1. Khóa fulfill -->
+   <button type="button" id="btnToggleLockFulfill" onclick="toggleLockFulfillBtn()" class="flex items-center justify-between gap-1 border rounded-xl px-2 py-1.5 sm:px-2.5 sm:py-2 transition text-left bg-white text-slate-700 border-slate-200/80 min-h-[40px] shadow-xs">
+    <div class="font-bold text-[11px] sm:text-xs truncate flex items-center gap-1.5 min-w-0">
+     <i class="fas fa-lock text-amber-500 shrink-0 text-xs"></i><span class="truncate">Khóa auto</span>
     </div>
-    <span id="badgeLockFulfill" class="text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 shrink-0">TẮT</span>
+    <span id="badgeLockFulfill" class="text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 shrink-0 uppercase">TẮT</span>
    </button>
-   <!-- 2. Gửi mail báo khách -->
-   <button type="button" id="btnToggleMailOnSave" onclick="toggleMailOnSaveBtn()" class="flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2 border rounded-2xl p-2.5 sm:p-3 shadow-xs transition active:scale-97 text-left bg-white text-slate-700 border-slate-200/80 min-h-[48px]">
-    <div class="min-w-0 w-full sm:w-auto text-center sm:text-left">
-     <div class="font-bold text-[11px] sm:text-xs truncate flex items-center justify-center sm:justify-start gap-1">
-      <i class="fas fa-envelope text-indigo-500"></i><span>Gửi mail khách</span>
-     </div>
-     <div class="hidden sm:block text-[10px] text-slate-400 leading-snug mt-0.5">Áp dụng khi lưu đơn (Master)</div>
+   <!-- 2. Gửi mail -->
+   <button type="button" id="btnToggleMailOnSave" onclick="toggleMailOnSaveBtn()" class="flex items-center justify-between gap-1 border rounded-xl px-2 py-1.5 sm:px-2.5 sm:py-2 transition text-left bg-white text-slate-700 border-slate-200/80 min-h-[40px] shadow-xs">
+    <div class="font-bold text-[11px] sm:text-xs truncate flex items-center gap-1.5 min-w-0">
+     <i class="fas fa-envelope text-indigo-500 shrink-0 text-xs"></i><span class="truncate">Gửi mail</span>
     </div>
-    <span id="badgeMailOnSave" class="text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 shrink-0">TẮT</span>
+    <span id="badgeMailOnSave" class="text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 shrink-0 uppercase">TẮT</span>
    </button>
    <!-- 3. Sửa tay -->
-   <button type="button" id="btnToggleManualEdit" onclick="toggleManualEditBtn()" class="flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2 border rounded-2xl p-2.5 sm:p-3 shadow-xs transition active:scale-97 text-left bg-white text-slate-700 border-slate-200/80 min-h-[48px]">
-    <div class="min-w-0 w-full sm:w-auto text-center sm:text-left">
-     <div class="font-bold text-[11px] sm:text-xs truncate flex items-center justify-center sm:justify-start gap-1">
-      <i class="fas fa-pen-to-square text-purple-600"></i><span>Sửa tay</span>
-     </div>
-     <div class="hidden sm:block text-[10px] text-slate-400 leading-snug mt-0.5">Sửa 3 ô link định tuyến</div>
+   <button type="button" id="btnToggleManualEdit" onclick="toggleManualEditBtn()" class="flex items-center justify-between gap-1 border rounded-xl px-2 py-1.5 sm:px-2.5 sm:py-2 transition text-left bg-white text-slate-700 border-slate-200/80 min-h-[40px] shadow-xs">
+    <div class="font-bold text-[11px] sm:text-xs truncate flex items-center gap-1.5 min-w-0">
+     <i class="fas fa-pen-to-square text-purple-600 shrink-0 text-xs"></i><span class="truncate">Sửa tay</span>
     </div>
-    <span id="badgeManualEdit" class="text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 shrink-0">TẮT</span>
+    <span id="badgeManualEdit" class="text-[9px] sm:text-[10px] font-black px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 shrink-0 uppercase">TẮT</span>
    </button>
   </div>
 
@@ -513,28 +504,28 @@
  <!-- ===== GÓI CƯỚC & FULFILLMENT ===== -->
  <div id="t-pkg" class="hidden w-full min-w-0 space-y-3">
   <!-- Sub-tab Bar -->
-  <div class="w-full overflow-x-auto pb-1 scrollbar-none"><div class="bg-slate-200 p-1 rounded-xl inline-flex gap-1 shrink-0 whitespace-nowrap">
-   <button onclick="switchPkgSubTab('cards')" id="btn-pkg-cards" class="settings-sub-tab whitespace-nowrap shrink-0 active text-center !px-3 font-bold"><i class="fas fa-boxes-stacked mr-1.5"></i>Gói cước &amp; Giá bán</button>
-    <button onclick="switchPkgSubTab('salecoupon')" id="btn-pkg-salecoupon" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 font-bold"><i class="fas fa-fire mr-1.5 text-rose-500"></i>Sale &amp; Coupon</button>
-    <button onclick="switchPkgSubTab('fulfill')" id="btn-pkg-fulfill" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 font-bold"><i class="fas fa-shuffle mr-1.5"></i>Auto cấp link</button>
+  <div class="w-full overflow-x-auto pb-1 scrollbar-none"><div class="bg-slate-200/80 p-1 rounded-xl inline-flex gap-1 shrink-0 whitespace-nowrap">
+   <button onclick="switchPkgSubTab('cards')" id="btn-pkg-cards" class="settings-sub-tab whitespace-nowrap shrink-0 active text-center !px-3 font-bold inline-flex items-center gap-1.5"><i class="fas fa-boxes-stacked text-xs"></i><span>Gói cước</span></button>
+   <button onclick="switchPkgSubTab('salecoupon')" id="btn-pkg-salecoupon" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 font-bold inline-flex items-center gap-1.5"><i class="fas fa-fire text-xs text-rose-500"></i><span>Sale &amp; Mã</span></button>
+   <button onclick="switchPkgSubTab('fulfill')" id="btn-pkg-fulfill" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 font-bold inline-flex items-center gap-1.5"><i class="fas fa-shuffle text-xs"></i><span>Cấp link</span></button>
   </div></div>
 
   <!-- Pane 1: Thẻ Giá Gói Cước & Quản Trị Cửa Hàng Pro -->
   <div id="pane-pkg-cards" class="space-y-4">
    <!-- KHỐI 2: HEADER TAB GÓI CƯỚC -->
-   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-    <div>
-     <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2">
-      <i class="fas fa-boxes-stacked text-indigo-600"></i>Quản lý Gói cước & Bán hàng Pro
+   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 shadow-sm">
+    <div class="min-w-0">
+     <h2 class="text-sm sm:text-lg font-bold text-slate-800 flex items-center gap-1.5 truncate">
+      <i class="fas fa-boxes-stacked text-indigo-600 shrink-0"></i><span>Quản lý Gói cước</span>
      </h2>
-     <p class="text-[11px] text-slate-500 mt-0.5">Kéo thả icon <i class="fas fa-grip-vertical text-slate-400"></i> để đổi thứ tự hiển thị. Hỗ trợ Giảm giá gạch ngang, Tem tặng ngày (+X ngày) và 4 Tag góc thẻ.</p>
+     <p class="text-[11px] text-slate-500 mt-0.5 line-clamp-1 sm:line-clamp-none">Kéo thả icon <i class="fas fa-grip-vertical text-slate-400"></i> để đổi thứ tự. Hỗ trợ giá gạch ngang, tem tặng ngày và tag góc.</p>
     </div>
-    <div class="flex gap-2 shrink-0">
-     <button onclick="addNewCustomPkg()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold px-3 py-2 rounded-xl text-xs transition">
-      <i class="fas fa-plus mr-1"></i>Thêm gói mới
+    <div class="flex items-center gap-2 shrink-0">
+     <button onclick="addNewCustomPkg()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold px-3 py-2 rounded-xl text-xs transition inline-flex items-center gap-1 whitespace-nowrap min-h-[38px]">
+      <i class="fas fa-plus text-xs"></i><span>Thêm gói</span>
      </button>
-     <button id="btnSaveAllPkgs" onclick="saveAllPkgs()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition flex items-center gap-1.5">
-      <i class="fas fa-save"></i>LƯU TOÀN BỘ CỬA HÀNG
+     <button id="btnSaveAllPkgs" onclick="saveAllPkgs()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3.5 py-2 rounded-xl text-xs shadow-md transition inline-flex items-center gap-1.5 whitespace-nowrap min-h-[38px]">
+      <i class="fas fa-save text-xs"></i><span>Lưu gói cước</span>
      </button>
     </div>
    </div>
@@ -1212,14 +1203,96 @@
     <div class="flex gap-2 mb-3 mt-2"><button onclick="migrateDates(false)" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2 rounded-lg text-xs hover:bg-slate-200">Quét thử</button><button onclick="migrateDates(true)" class="flex-1 bg-indigo-600 text-white font-bold py-2 rounded-lg text-xs hover:bg-indigo-700">Áp dụng</button></div>
     <div id="migReport" class="text-xs text-slate-600 space-y-1"></div>
    </div>
-   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
-    <div class="font-bold text-sm text-slate-800 mb-1"><i class="fas fa-box text-indigo-500 mr-1"></i>4. Chuẩn hóa hiển thị gói VPN</div>
-    <div class="flex gap-2 mb-3 mt-2"><button onclick="migratePkg(false)" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2 rounded-lg text-xs hover:bg-slate-200">Quét thử</button><button onclick="migratePkg(true)" class="flex-1 bg-indigo-600 text-white font-bold py-2 rounded-lg text-xs hover:bg-indigo-700">Áp dụng</button></div>
-    <div id="pkgReport" class="text-xs text-slate-600 space-y-1"></div>
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+     <div class="font-bold text-sm text-slate-800 mb-1"><i class="fas fa-box text-indigo-500 mr-1"></i>4. Chuẩn hóa hiển thị gói VPN</div>
+     <div class="flex gap-2 mb-3 mt-2"><button onclick="migratePkg(false)" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2 rounded-lg text-xs hover:bg-slate-200">Quét thử</button><button onclick="migratePkg(true)" class="flex-1 bg-indigo-600 text-white font-bold py-2 rounded-lg text-xs hover:bg-indigo-700">Áp dụng</button></div>
+     <div id="pkgReport" class="text-xs text-slate-600 space-y-1"></div>
+    </div>
    </div>
   </div>
- </div>
-    
+
+  <!-- ===== MỤC 5: TÍNH NĂNG MỞ RỘNG (KONSTA UI INSET GROUPED LIST CHO 6 SUB-TAB CÒN LẠI) ===== -->
+  <div id="t-more" class="hidden w-full min-w-0 space-y-3">
+   <div class="flex items-center justify-between px-1">
+    <h2 class="text-lg md:text-2xl font-black text-slate-800 tracking-tight">Tính năng mở rộng</h2>
+    <span class="text-xs text-slate-400 font-bold">6 mục bổ sung</span>
+   </div>
+   <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs divide-y divide-slate-100 overflow-hidden">
+    <div onclick="go('t-rev')" class="p-3.5 flex items-center justify-between hover:bg-slate-50 active:bg-slate-100 cursor-pointer transition select-none">
+     <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100 shadow-xs">
+       <i class="fas fa-chart-pie text-lg"></i>
+      </div>
+      <div class="min-w-0">
+       <div class="text-sm font-extrabold text-slate-800 truncate">Doanh thu &amp; Thống kê</div>
+       <div class="text-[11px] text-slate-400 truncate">Xem báo cáo Alipay, Weixin, Ngân hàng</div>
+      </div>
+     </div>
+     <i class="fas fa-chevron-right text-xs text-slate-300"></i>
+    </div>
+    <div onclick="go('t-check')" class="p-3.5 flex items-center justify-between hover:bg-slate-50 active:bg-slate-100 cursor-pointer transition select-none">
+     <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100 shadow-xs">
+       <i class="fas fa-clipboard-check text-lg"></i>
+      </div>
+      <div class="min-w-0">
+       <div class="text-sm font-extrabold text-slate-800 truncate">Kiểm tra &amp; Rà quét</div>
+       <div class="text-[11px] text-slate-400 truncate">Quét đơn thiếu link, map lại và dọn dẹp</div>
+      </div>
+     </div>
+     <i class="fas fa-chevron-right text-xs text-slate-300"></i>
+    </div>
+    <div onclick="go('t-dead')" class="p-3.5 flex items-center justify-between hover:bg-slate-50 active:bg-slate-100 cursor-pointer transition select-none">
+     <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-100 shadow-xs">
+       <i class="fas fa-ban text-lg"></i>
+      </div>
+      <div class="min-w-0">
+       <div class="text-sm font-extrabold text-slate-800 truncate">Đã xóa / Thùng rác</div>
+       <div class="text-[11px] text-slate-400 truncate">Quản lý link và đơn đã bị xóa bỏ</div>
+      </div>
+     </div>
+     <i class="fas fa-chevron-right text-xs text-slate-300"></i>
+    </div>
+    <div onclick="go('t-mail')" class="p-3.5 flex items-center justify-between hover:bg-slate-50 active:bg-slate-100 cursor-pointer transition select-none">
+     <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0 border border-sky-100 shadow-xs">
+       <i class="fas fa-envelope text-lg"></i>
+      </div>
+      <div class="min-w-0">
+       <div class="text-sm font-extrabold text-slate-800 truncate">Soạn &amp; Gửi Mail</div>
+       <div class="text-[11px] text-slate-400 truncate">Trình soạn thảo thông báo và gửi hàng loạt</div>
+      </div>
+     </div>
+     <i class="fas fa-chevron-right text-xs text-slate-300"></i>
+    </div>
+    <div onclick="go('t-cms')" class="p-3.5 flex items-center justify-between hover:bg-slate-50 active:bg-slate-100 cursor-pointer transition select-none">
+     <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100 shadow-xs">
+       <i class="fas fa-book text-lg"></i>
+      </div>
+      <div class="min-w-0">
+       <div class="text-sm font-extrabold text-slate-800 truncate">Hướng dẫn &amp; CMS</div>
+       <div class="text-[11px] text-slate-400 truncate">Biên tập bài viết, Quick Links, FAQ</div>
+      </div>
+     </div>
+     <i class="fas fa-chevron-right text-xs text-slate-300"></i>
+    </div>
+    <div onclick="go('t-settings')" class="p-3.5 flex items-center justify-between hover:bg-slate-50 active:bg-slate-100 cursor-pointer transition select-none">
+     <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 border border-purple-100 shadow-xs">
+       <i class="fas fa-cog text-lg"></i>
+      </div>
+      <div class="min-w-0">
+       <div class="text-sm font-extrabold text-slate-800 truncate">Cài đặt hệ thống</div>
+       <div class="text-[11px] text-slate-400 truncate">Cấu hình Web, Backup, Token &amp; Quota</div>
+      </div>
+     </div>
+     <i class="fas fa-chevron-right text-xs text-slate-300"></i>
+    </div>
+   </div>
+  </div>
+     
 <!-- ===== MODAL ĐƠN HÀNG (VAUL BOTTOM SHEET ON MOBILE / CENTERED DIALOG ON DESKTOP) ===== -->
 <div id="mOrd" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-300">
  <div class="glass-card w-full sm:max-w-xl max-h-[92vh] sm:max-h-[90vh] rounded-t-[28px] sm:rounded-2xl border-t sm:border border-slate-200/80 shadow-2xl flex flex-col overflow-hidden pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:pb-0 transform transition-transform duration-300 ease-out">
@@ -1426,28 +1499,35 @@
   </div>
 </div>
 
-<!-- Konsta UI: iOS Fixed Bottom Navigation Bar (Đệm chuẩn safe-area-inset-bottom) -->
-<nav id="adminBottomNav" class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-lg border-t border-slate-200/80 pb-[env(safe-area-inset-bottom,0px)] shadow-lg transition-transform duration-300">
-  <div class="h-14 grid grid-cols-5 items-center px-1">
-    <button type="button" onclick="go('t-ord')" class="flex flex-col items-center justify-center text-slate-500 hover:text-indigo-600 active:scale-95 transition-all py-1 min-h-[44px]">
+<!-- Konsta UI: iOS Fixed Bottom Navigation Bar (5 Slot Chuẩn: Đơn hàng + Link Sub + Bán hàng + Đối soát + Thêm) -->
+<nav id="adminBottomNav" class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200/80 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-2px_10px_rgba(0,0,0,0.05)] transition-transform duration-300">
+  <div class="h-14 grid grid-cols-5 items-center px-1 text-center">
+    <!-- Slot 1: Đơn hàng (BẮT BUỘC) -->
+    <button type="button" id="bnav-t-ord" onclick="go('t-ord')" class="flex flex-col items-center justify-center text-indigo-600 transition-colors py-1 min-h-[44px]">
       <i class="fas fa-box text-base"></i>
-      <span class="text-[10px] font-bold mt-0.5">Đơn hàng</span>
+      <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Đơn hàng</span>
     </button>
-    <button type="button" onclick="go('t-pkg')" class="flex flex-col items-center justify-center text-slate-500 hover:text-indigo-600 active:scale-95 transition-all py-1 min-h-[44px]">
+    <!-- Slot 2: Link Sub (BẮT BUỘC) -->
+    <button type="button" id="bnav-t-lnk" onclick="go('t-lnk')" class="flex flex-col items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors py-1 min-h-[44px]">
+      <i class="fas fa-link text-base"></i>
+      <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Link Sub</span>
+    </button>
+    <!-- Slot 3: Bán hàng -->
+    <button type="button" id="bnav-t-pkg" onclick="go('t-pkg')" class="flex flex-col items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors py-1 min-h-[44px]">
       <i class="fas fa-tags text-base"></i>
-      <span class="text-[10px] font-bold mt-0.5">Bán hàng</span>
+      <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Bán hàng</span>
     </button>
-    <button type="button" onclick="go('t-rev')" class="flex flex-col items-center justify-center text-slate-500 hover:text-indigo-600 active:scale-95 transition-all py-1 min-h-[44px]">
-      <i class="fas fa-chart-pie text-base"></i>
-      <span class="text-[10px] font-bold mt-0.5">Doanh thu</span>
+    <!-- Slot 4: Đối soát -->
+    <button type="button" id="bnav-t-trans" onclick="go('t-trans')" class="flex flex-col items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors py-1 min-h-[44px] relative">
+      <i class="fas fa-file-invoice-dollar text-base"></i>
+      <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Đối soát</span>
+      <span id="transBadgeMobile" class="hidden absolute top-1 right-3 bg-red-500 text-white text-[9px] min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center font-black">!</span>
     </button>
-    <button type="button" onclick="go('t-check')" class="flex flex-col items-center justify-center text-slate-500 hover:text-indigo-600 active:scale-95 transition-all py-1 min-h-[44px]">
-      <i class="fas fa-clipboard-check text-base"></i>
-      <span class="text-[10px] font-bold mt-0.5">Kiểm tra</span>
-    </button>
-    <button type="button" onclick="go('t-settings')" class="flex flex-col items-center justify-center text-slate-500 hover:text-indigo-600 active:scale-95 transition-all py-1 min-h-[44px]">
-      <i class="fas fa-cog text-base"></i>
-      <span class="text-[10px] font-bold mt-0.5">Cài đặt</span>
+    <!-- Slot 5: Thêm (Tất cả mục còn lại) -->
+    <button type="button" id="bnav-t-more" onclick="go('t-more')" class="flex flex-col items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors py-1 min-h-[44px] relative">
+      <i class="fas fa-ellipsis-h text-base"></i>
+      <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Thêm</span>
+      <span id="checkBadgeMobile" class="hidden absolute top-1 right-3 bg-purple-600 text-white text-[9px] min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center font-black">0</span>
     </button>
   </div>
 </nav>
