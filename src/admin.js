@@ -354,23 +354,23 @@ function go(id, fromHistory){
  const a=$("btn-"+id);
  if(a){a.classList.add("active");a.classList.remove("bg-white","text-slate-600");}
 
- // Đồng bộ thanh điều hướng đáy Mobile (4 tab chính + 1 tab Thêm)
- const navItems = ['t-ord', 't-lnk', 't-pkg', 't-trans', 't-more'];
- const moreSubTabs = ['t-rev', 't-check', 't-dead', 't-mail', 't-cms', 't-settings', 't-more'];
- const activeSlot = moreSubTabs.includes(id) ? 't-more' : id;
- navItems.forEach(k => {
-   const btn = $('bnav-' + k);
-   if (!btn) return;
-   if (k === activeSlot) {
-     btn.classList.add('text-indigo-600');
-     btn.classList.remove('text-slate-400');
-   } else {
-     btn.classList.remove('text-indigo-600');
-     btn.classList.add('text-slate-400');
-   }
- });
+  // Đồng bộ thanh điều hướng đáy Mobile (4 tab chính + 1 tab Thêm)
+  const navItems = ['t-ord', 't-lnk', 't-pkg', 't-trans', 't-more'];
+  const moreSubTabs = ['t-rev', 't-check', 't-dead', 't-mail', 't-cms', 't-settings', 't-more'];
+  const activeSlot = moreSubTabs.includes(id) ? 't-more' : id;
+  navItems.forEach(k => {
+    const btn = $('bnav-' + k);
+    if (!btn) return;
+    btn.classList.remove('text-indigo-600', 'active');
+    btn.classList.add('text-slate-400');
+  });
+  const activeBtn = $('bnav-' + activeSlot);
+  if (activeBtn) {
+    activeBtn.classList.add('text-indigo-600', 'active');
+    activeBtn.classList.remove('text-slate-400');
+  }
 
- localStorage.setItem(SITE_KEY+"_lastTab",id);
+  localStorage.setItem(SITE_KEY+"_lastTab",id);
 
  if (!fromHistory) {
    const hName = '#' + id.replace('t-', '');
@@ -469,7 +469,15 @@ window.addEventListener('popstate', (event) => {
 });
 
 // ===================== ĐƠN HÀNG =====================
-function switchOrdTab(t){curOrdTab=t;["success","pending","failed"].forEach(x=>$("otab-"+x).classList.toggle("active",x===t));renderOrd();}
+function switchOrdTab(t){
+  curOrdTab = t || "success";
+  try { localStorage.setItem(SITE_KEY + "_curOrdTab", curOrdTab); } catch(e){}
+  ["success","pending","failed"].forEach(x => {
+    const el = $("otab-" + x);
+    if (el) el.classList.toggle("active", x === curOrdTab);
+  });
+  renderOrd();
+}
 const ordAmountTxt=o=>{const pay=payOf(o),p=pkgOf(o);if(pay==="Bank")return Number(o.totalVnd)>0?fmtVnd(o.totalVnd)+"vnd":"—";const c=Number(o.totalCny)>0?Number(o.totalCny):0;if(c)return "¥"+trimNum(c);return p&&p.cny?"¥"+trimNum(p.cny*(Number(o.qty)||1))+" (theo gói)":"—";};
 function ordCard(o,ro){
  const now=nowMs(),st=normSt(o.status);let daysLeft=null,expiring=false,expired=false;
@@ -525,7 +533,7 @@ function renderOrd(){
  for(const key of Object.keys(groups).sort((a,b)=>b.localeCompare(a))){
   const g=groups[key];
   g.orders.sort((a,b)=>oTs(b)-oTs(a));
-  html+=`<div class="month-header"><i class="far fa-calendar-alt text-indigo-400"></i><span>${g.label}</span><span class="month-count">${g.orders.length} đơn</span></div><div class="space-y-3 mb-6">${g.orders.map(o=>ordCard(o,false)).join("")}</div>`;}
+  html+=`<div class="month-header flex items-center justify-between py-2 border-b border-slate-200 mb-3"><div class="flex items-center gap-2 text-xs md:text-sm font-bold text-slate-700"><i class="far fa-calendar-alt text-indigo-500"></i><span>${g.label}</span></div><span class="bg-purple-100 text-purple-700 border border-purple-200 text-[10px] font-black px-2.5 py-0.5 rounded-full">${g.orders.length} đơn</span></div><div class="space-y-3 mb-5">${g.orders.map(o=>ordCard(o,false)).join("")}</div>`;}
  tb.innerHTML=html;}
 function updateOrderTogglesUI(){
   const lf = lockFulfillOn(), ms = mailOnSaveOn(), me = manualEditOn();
@@ -2218,14 +2226,14 @@ function renderLinks(){
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
           <div class="bg-white p-2 rounded-lg border border-slate-100">
             <div class="text-[10px] font-bold text-emerald-700">Chân 1:</div>
-            <div class="text-[11px] text-slate-600 mt-0.5">Dung lượng: <b>${esc(pItem.remainGb || "—")}/${esc(pItem.gb || "—")} GB</b></div>
-            <div class="text-[11px] text-slate-600">Tải trọng: <b>${pItem.used || g.ch.length}/${pItem.max || 30} thiết bị</b></div>
+            <div class="text-[11px] text-slate-600 mt-0.5">Dung lượng: <b>${pItem.gb ? `${esc(pItem.remainGb || "—")}/${esc(pItem.gb)} GB` : "Chưa xác định"}</b></div>
+            <div class="text-[11px] text-slate-600">Tải trọng: <b>${pItem.used || g.ch.length}/${(pItem.max !== undefined && pItem.max !== null && pItem.max !== "") ? `${pItem.max} thiết bị` : "Chưa xác định"}</b></div>
           </div>
           ${g.isCombo ? `
           <div class="bg-white p-2 rounded-lg border border-slate-100">
             <div class="text-[10px] font-bold text-blue-700">Chân 2:</div>
-            <div class="text-[11px] text-slate-600 mt-0.5">Dung lượng: <b>${esc(pItem.remainGb2 || "—")}/${esc(pItem.gb2 || "—")} GB</b></div>
-            <div class="text-[11px] text-slate-600">Tải trọng: <b>${pItem.used || g.ch.length}/${pItem.max2 || 30} thiết bị</b></div>
+            <div class="text-[11px] text-slate-600 mt-0.5">Dung lượng: <b>${pItem.gb2 ? `${esc(pItem.remainGb2 || "—")}/${esc(pItem.gb2)} GB` : "Chưa xác định"}</b></div>
+            <div class="text-[11px] text-slate-600">Tải trọng: <b>${pItem.used || g.ch.length}/${(pItem.max2 !== undefined && pItem.max2 !== null && pItem.max2 !== "") ? `${pItem.max2} thiết bị` : "Chưa xác định"}</b></div>
           </div>` : ''}
         </div>
       </div>
@@ -2277,20 +2285,21 @@ async function saveRootEdit(){
   });
 
   const poolItem = linkPoolDb.find(x => oldIsCombo ? (x.isCombo && x.url === oldO1 && x.url2 === oldO2) : (!x.isCombo && x.url === oldO1));
+  const m1Val = $("mREMax").value.trim();
   const newSpecs = {
-    url: finalO1,
-    isCombo: isNowCombo,
+    orig: finalO1,
     gb: $("mREGb").value.trim(),
     remainGb: $("mRERemain").value.trim(),
-    exp: newExp1,
-    max: parseInt($("mREMax").value) || 30
+    exp: $("mREExp").value.trim(),
+    max: m1Val === "" ? "" : (isNaN(parseInt(m1Val)) ? "" : parseInt(m1Val))
   };
   if (isNowCombo) {
+    const m2Val = $("mREMax2").value.trim();
     newSpecs.url2 = finalO2;
     newSpecs.gb2 = $("mREGb2").value.trim();
     newSpecs.remainGb2 = $("mRERemain2").value.trim();
-    newSpecs.exp2 = newExp2;
-    newSpecs.max2 = parseInt($("mREMax2").value) || 30;
+    newSpecs.exp2 = $("mREExp2").value.trim();
+    newSpecs.max2 = m2Val === "" ? "" : (isNaN(parseInt(m2Val)) ? "" : parseInt(m2Val));
   }
 
   if (poolItem) {
@@ -2332,9 +2341,13 @@ async function createLink(){
 
  // Lấy thông số khai báo ngầm từ nút mở rộng (nếu có)
  const gb1 = $("lkGb1")?.value.trim() || "", remainGb1 = $("lkRemainGb1")?.value.trim() || "";
- const poolExp1 = $("lkPoolExp1")?.value.trim() || expDate, max1 = parseInt($("lkMax1")?.value) || 30;
+ const lk1Raw = $("lkMax1")?.value.trim();
+ const max1 = (lk1Raw === "" || lk1Raw === undefined) ? "" : (isNaN(parseInt(lk1Raw)) ? "" : parseInt(lk1Raw));
+ const poolExp1 = $("lkPoolExp1")?.value.trim() || expDate;
  const gb2 = $("lkGb2")?.value.trim() || "", remainGb2 = $("lkRemainGb2")?.value.trim() || "";
- const poolExp2 = $("lkPoolExp2")?.value.trim() || expDate, max2 = parseInt($("lkMax2")?.value) || 30;
+ const lk2Raw = $("lkMax2")?.value.trim();
+ const max2 = (lk2Raw === "" || lk2Raw === undefined) ? "" : (isNaN(parseInt(lk2Raw)) ? "" : parseInt(lk2Raw));
+ const poolExp2 = $("lkPoolExp2")?.value.trim() || expDate;
 
  if (isCombo) {
    let pFound = linkPoolDb.find(p => p.isCombo && p.url === finalOrig1 && p.url2 === finalOrig2);
@@ -3427,13 +3440,21 @@ function artAdd(){
  guides._articles[curCms].push(a);
  openArt(a.slug);
 }
-function artDel(slug){
+async function artDel(slug){
  const list=artsOf(curCms);
- if(list.length<=1)return toast("Mỗi tab cần ít nhất 1 bài","err");
- if(!confirm("Xóa bài này? (bấm LƯU BÀI để áp dụng lên các web)"))return;
+ if(list.length<=1)return toast("Mỗi chuyên mục cần ít nhất 1 bài viết","err");
+ if(!confirm("Bạn có chắc chắn muốn xóa bài viết này không? Thao tác này sẽ đồng bộ ngay lên hệ thống."))return;
  guides._articles[curCms]=list.filter(a=>(a.slug||toSlug(a.name))!==slug);
  if(curArt===slug){curArt=null;curArtSlug="";curArtHtml="";curArtWatermark="";}
- renderArtList();renderCmsEditor();
+ try {
+   await aj("/api/guides", { method: "POST", body: guides });
+   toast("Đã xóa bài viết thành công!");
+ } catch(e) {
+   toast("Lỗi đồng bộ xóa bài: " + e.message, "err");
+ }
+ renderArtList();
+ renderCmsEditor();
+ renderGuideCategoriesTree();
 }
 function renderArtList(){
  const el = $("cmsArtList");
@@ -4176,6 +4197,9 @@ function openCmsEditorForArt(tabId, slug, fromHistory = false) {
  openArt(slug);
  $("cmsCategoriesView").classList.add("hidden");
  $("cmsEditorWrap").classList.remove("hidden");
+ if (!fromHistory && typeof history !== 'undefined') {
+   history.pushState({ tab: 't-cms', inEditor: true, cmsTab: tabId, artSlug: slug }, '', '#cms-edit');
+ }
 }
 
 function addArticleToCategory(tabId) {
@@ -5236,9 +5260,11 @@ function startApp(fresh){
  if(started){fetchAll();return;}
  started=true;
  buildTabs();
- go(localStorage.getItem(SITE_KEY+"_lastTab")||"t-ord");
- if(fresh)toast("Đăng nhập thành công!");
- fetchAll();loadTx(true);loadQuota();
+  const savedOrdTab = localStorage.getItem(SITE_KEY + "_curOrdTab");
+  if (savedOrdTab) curOrdTab = savedOrdTab;
+  go(localStorage.getItem(SITE_KEY+"_lastTab")||"t-ord");
+  if(fresh)toast("Đăng nhập thành công!");
+  fetchAll();loadTx(true);loadQuota();checkTestModeStatus();
 setInterval(pollMain,10000);setInterval(loadStatus,120000);setInterval(tickClocks,1000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden){pollMain();loadTx();}});
 }
@@ -5376,14 +5402,21 @@ function updateTestModeUI() {
 }
 
 async function toggleTestMode(checked) {
-  isTestModeActive = checked;
-  try { localStorage.setItem(SITE_KEY + "_testMode", checked ? "1" : "0"); } catch(e) {}
-  updateTestModeUI();
+  const toggleEl = $("toggleTestMode");
   try {
-    await aj("/api/admin/test/toggle", { method: "POST", body: { active: checked } });
-    toast(checked ? "Đã BẬT Chế độ Test (ALL_ORDERS_TEST)" : "Đã chuyển về Kho Thật (ALL_ORDERS)");
-    fetchAll(true);
+    const res = await aj("/api/admin/test/toggle", { method: "POST", body: { active: checked } });
+    if (res && res.ok !== false) {
+      isTestModeActive = checked;
+      try { localStorage.setItem(SITE_KEY + "_testMode", checked ? "1" : "0"); } catch(e) {}
+      updateTestModeUI();
+      toast(checked ? "Đã BẬT Chế độ Test (ALL_ORDERS_TEST)" : "Đã chuyển về Kho Thật (ALL_ORDERS)");
+      fetchAll(true);
+    } else {
+      throw new Error(res?.error || "Không nhận được phản hồi hợp lệ từ server");
+    }
   } catch(e) {
+    if (toggleEl) toggleEl.checked = isTestModeActive;
+    updateTestModeUI();
     toast("Lỗi chuyển chế độ: " + e.message, "err");
   }
 }
