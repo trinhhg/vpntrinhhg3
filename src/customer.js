@@ -107,7 +107,7 @@ let lastScrollY=0, pollT=null, tickT=null, skew=0, lastSig='';
 paintThemeIcon();
 
 const i18n={
- vi:{brand:"VPN Trinh Hg",search_placeholder:"Nhập Mã Đơn hoặc Email...",btn_logout:"Thoát",tab_p_home:"Bảng điều khiển",tab_p_store:"Cửa hàng",tab_p_guide:"Hướng dẫn"
+ vi:{brand:"VPN Trinh Hg",search_placeholder:"Nhập Mã Đơn hoặc Email...",btn_logout:"Thoát",tab_p_home:"Bảng điều khiển",tab_p_store:"Cửa hàng",tab_p_guide:"Hướng dẫn",
   hero_title:"Chặn thì vượt. <span class='text-indigo-600 dark:text-indigo-400'>Lướt mượt như gió.</span>",hero_desc:"Hệ thống VPN tự động hóa 100%. Nhận Link VPN chỉ trong <b class='text-indigo-600 dark:text-indigo-400 font-black'>5 phút</b> không cần đợi Admin duyệt.",
   feat_1:"Mở khóa mọi nền tảng",feat_1_desc:"Truy cập mượt mà Facebook, TikTok, Netflix xuyên quốc gia mà không gặp rào cản địa lý.",feat_2:"Tốc độ cực cao",feat_2_desc:"Độ trễ thấp, tối ưu tuyệt đối cho Game Mobile & Stream video chuẩn 4K.",feat_3:"Không lưu Nhật ký",feat_3_desc:"Bảo mật tuyệt đối thông tin dữ liệu, ẩn danh hoàn toàn trên Internet.",
   tab_all:"Tất cả",tab_travel:"Du lịch",tab_cycle:"Chu kỳ",tab_usage:"Dung lượng",checkout_title:"Thanh toán Đơn hàng",email_placeholder:"Nhập Email nhận đơn",btn_create_order:"TẠO MÃ QR CHUYỂN KHOẢN",btn_paid:"TÔI ĐÃ CHUYỂN KHOẢN",
@@ -1052,6 +1052,20 @@ window.addEventListener('resize', updateDrawerOffsets);
 // Network and toast helpers imported from ./api.js and ./shared.js
 
 let indexScrollTimer = null;
+let curActiveIndexTab = 'landing';
+const tabScrollPositions = {};
+
+// Quy tắc Phase 4: Khi F5 reload, ép buộc scroll về đỉnh trang (0, 0)
+if (typeof history !== 'undefined' && 'scrollRestoration' in history) {
+  history.scrollRestoration = 'manual';
+}
+window.addEventListener('DOMContentLoaded', () => {
+  const isReload = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]?.type === 'reload') || (performance.navigation && performance.navigation.type === 1);
+  if (isReload) {
+    window.scrollTo(0, 0);
+  }
+});
+
 window.addEventListener('scroll',()=>{
   const nav=$('mainNav'), sc=window.scrollY;
   if(sc>lastScrollY && sc>80) nav.classList.add('nav-hidden');
@@ -1060,9 +1074,9 @@ window.addEventListener('scroll',()=>{
 
   clearTimeout(indexScrollTimer);
   indexScrollTimer = setTimeout(() => {
-    const pageKey = location.hash || '#packages';
-    sessionStorage.setItem('idx_scroll_' + pageKey, String(window.scrollY));
-  }, 150);
+    tabScrollPositions[curActiveIndexTab] = window.scrollY;
+    try { sessionStorage.setItem('idx_scroll_' + curActiveIndexTab, String(window.scrollY)); } catch(e){}
+  }, 120);
 
   const co=$('checkoutSection'), fs=$('floatingSocials'), mnw=$('mobileNavWrapper');
   if(window.innerWidth<768){
@@ -1086,11 +1100,23 @@ window.addEventListener('scroll',()=>{
   }
 });
 
+function saveAndSwitchTabScroll(newTabId) {
+  tabScrollPositions[curActiveIndexTab] = window.scrollY;
+  curActiveIndexTab = newTabId;
+  const targetPos = tabScrollPositions[newTabId] !== undefined 
+    ? tabScrollPositions[newTabId] 
+    : (Number(sessionStorage.getItem('idx_scroll_' + newTabId)) || 0);
+  setTimeout(() => {
+    window.scrollTo({ top: targetPos, behavior: 'instant' });
+  }, 30);
+}
+
 function restoreIndexScroll(){
-  const pageKey = location.hash || '#packages';
-  const saved = sessionStorage.getItem('idx_scroll_' + pageKey);
+  const saved = tabScrollPositions[curActiveIndexTab] !== undefined 
+    ? tabScrollPositions[curActiveIndexTab] 
+    : sessionStorage.getItem('idx_scroll_' + curActiveIndexTab);
   if(saved !== null && !isNaN(Number(saved))){
-    setTimeout(() => window.scrollTo({ top: Number(saved), behavior: 'instant' }), 60);
+    setTimeout(() => window.scrollTo({ top: Number(saved), behavior: 'instant' }), 40);
   }
 }
 
@@ -1870,9 +1896,9 @@ function fillDashboard(o){
  let ut=L.upg_none,uc='bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400';
  if(o.pendingUpgrade){ut=L.upg_pending;uc='bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400';}else if(o.upgradeStatus==='failed'){ut=L.upg_failed;uc='bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400';}else if(o.isUpgrade){ut=L.upg_ok;uc='bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400';}
  $('displayUpgradeStatus').innerText=ut;$('displayUpgradeStatus').className='text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap '+uc;
-  const titles=['Subscription URL 1:','Subscription URL 2:','Subscription URL 3:'];
-  $('linkBoxes').innerHTML=[1,2,3].map(i=>`<div class="w-full ${i>1?'mt-2 border-t border-green-200/50 dark:border-green-800/50 pt-3':''}"><h3 class="text-green-700 dark:text-green-500 font-extrabold mb-1.5 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>${titles[i-1]}</h3><div class="flex flex-col sm:flex-row gap-2 w-full items-stretch"><div class="relative w-full sm:flex-1 flex items-center overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#14151a]"><input type="text" id="subLink${i}" readonly class="w-full bg-transparent text-green-600 dark:text-green-400 p-2 sm:p-2.5 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()"><div id="subBlurOverlay${i}" onclick="copyToClipboard('subLink${i}')" class="hidden absolute inset-0 z-10 flex items-center justify-start pl-3.5 pr-3 bg-white/25 dark:bg-black/30 backdrop-blur-[2px] cursor-pointer select-none"><span class="text-red-600 dark:text-amber-300 font-extrabold text-[11px] md:text-xs text-left leading-tight">🔒 Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!</span></div></div><div class="flex gap-1.5 shrink-0 justify-end"><button type="button" onclick="copyToClipboard('subLink${i}')" class="bg-green-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs hover:bg-green-700 transition flex items-center justify-center z-10 shadow-xs"><i class="fas fa-copy mr-1 text-[11px]"></i>COPY</button><button type="button" onclick="openQrModal('subLink${i}', ${i})" class="bg-indigo-600 text-white font-bold px-3 py-1.5 rounded-xl text-xs hover:bg-indigo-700 transition flex items-center justify-center z-10 shadow-xs"><i class="fas fa-qrcode mr-1 text-[11px]"></i>LẤY QR</button></div></div></div>`).join('')+
-   `<div class="mt-3.5 grid grid-cols-2 gap-2.5 border-t border-green-300 dark:border-green-800 pt-3"><button onclick="startUpgrade()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-xl text-xs sm:text-sm transition flex items-center justify-center shadow-xs"><i class="fas fa-arrow-up mr-1.5"></i> NÂNG GÓI</button><button onclick="startRenew()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded-xl text-xs sm:text-sm transition flex items-center justify-center shadow-xs"><i class="fas fa-redo-alt mr-1.5"></i> ${L.btn_renew}</button></div>`;
+   const titles=['Subscription URL 1:','Subscription URL 2:','Subscription URL 3:'];
+   $('linkBoxes').innerHTML=[1,2,3].map(i=>`<div class="w-full ${i>1?'mt-2 border-t border-green-200/50 dark:border-green-800/50 pt-2.5':''}"><h3 class="text-green-700 dark:text-green-500 font-extrabold mb-1.5 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>${titles[i-1]}</h3><div class="flex flex-col sm:flex-row gap-2 w-full items-stretch"><div class="relative w-full sm:flex-1 flex items-center overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#14151a]"><input type="text" id="subLink${i}" readonly class="w-full bg-transparent text-green-600 dark:text-green-400 p-2 sm:p-2.5 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()"><div id="subBlurOverlay${i}" onclick="copyToClipboard('subLink${i}')" class="hidden absolute inset-0 z-10 flex items-center justify-start pl-3.5 pr-3 bg-white/25 dark:bg-black/30 backdrop-blur-[2px] cursor-pointer select-none"><span class="text-red-600 dark:text-amber-300 font-extrabold text-[11px] md:text-xs text-left leading-tight">🔒 Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!</span></div></div><div class="flex gap-1.5 shrink-0 justify-end"><button type="button" onclick="copyToClipboard('subLink${i}')" class="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-emerald-700 transition flex items-center justify-center z-10 shadow-xs"><i class="fas fa-copy mr-1 text-[11px]"></i>COPY</button><button type="button" onclick="openQrModal('subLink${i}', ${i})" class="bg-indigo-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-indigo-700 transition flex items-center justify-center z-10 shadow-xs"><i class="fas fa-qrcode mr-1 text-[11px]"></i>LẤY QR</button></div></div></div>`).join('')+
+    `<div class="mt-3 grid grid-cols-2 gap-2 border-t border-green-300 dark:border-green-800/60 pt-3"><button onclick="startUpgrade()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 rounded-xl text-xs sm:text-sm transition flex items-center justify-center shadow-xs active:scale-95"><i class="fas fa-arrow-up mr-1.5 text-xs"></i>NÂNG GÓI</button><button onclick="startRenew()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded-xl text-xs sm:text-sm transition flex items-center justify-center shadow-xs active:scale-95"><i class="fas fa-redo-alt mr-1.5 text-xs"></i>GIA HẠN</button></div>`;
   [1,2,3].forEach(i=>{
    const inp = $('subLink' + i), ov = $('subBlurOverlay' + i), v = o['info' + i];
    if (o['blur' + i]) {
@@ -2032,6 +2058,7 @@ function showPolicyPage(targetSection, skipPush=false){
 function switchPortalTab(tabId, fromUpgrade=false, skipPush=false){
  if(!fromUpgrade && tabId !== 'p-store')disableUpgradeMode();
 
+ saveAndSwitchTabScroll('portal_' + tabId);
  enablePortalFrame();
 
  // 1. Tab Quản lý Đơn hàng (Auth Guard): Chưa đăng nhập thì Modal khóa lại
