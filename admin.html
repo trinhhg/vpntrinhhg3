@@ -14,74 +14,85 @@
 <script>try{if(localStorage.getItem(location.hostname.replace(/\./g,"_")+"_tok"))document.documentElement.classList.add('has-tok');}catch(e){}</script>
 </head>
 
-<body class="min-h-screen pb-20 overflow-x-hidden bg-slate-50">
+<body class="min-h-screen pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] overflow-x-hidden bg-slate-50 text-slate-800">
 <div id="toastBox" class="toast"></div>
 
-<div id="loginWrap" class="fixed inset-0 bg-slate-50 z-50 flex items-center justify-center p-4">
- <div class="glass-card p-8 md:p-10 w-full max-w-sm text-center">
-  <div class="w-14 h-14 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4"><i class="fas fa-shield-halved text-2xl text-indigo-600"></i></div>
-  <h2 class="text-2xl font-extrabold mb-8 text-slate-800">Admin Panel</h2>
-  <input id="pwInput" type="password" placeholder="Mật khẩu..." class="w-full bg-slate-100 rounded-xl p-4 text-center mb-4 outline-none font-bold tracking-widest focus:bg-white focus:ring-2 focus:ring-indigo-300 transition" onkeydown="if(event.key==='Enter')doLogin()">
-  <button id="loginBtn" onclick="doLogin()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition shadow-md"><i class="fas fa-sign-in-alt mr-2"></i>ĐĂNG NHẬP</button>
+<div id="loginWrap" class="fixed inset-0 bg-slate-50/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+ <div class="glass-card p-8 md:p-10 w-full max-w-sm text-center shadow-xl border border-slate-200/80 rounded-3xl">
+  <div class="w-16 h-16 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-600 shadow-inner"><i class="fas fa-shield-halved text-2xl"></i></div>
+  <h2 class="text-2xl font-black mb-6 text-slate-900 tracking-tight">Admin Panel</h2>
+  <input id="pwInput" type="password" placeholder="Mật khẩu..." class="w-full bg-slate-100/80 rounded-2xl p-4 text-center mb-4 outline-none font-bold tracking-widest focus:bg-white focus:ring-2 focus:ring-indigo-400 border border-transparent focus:border-indigo-300 transition" onkeydown="if(event.key==='Enter')doLogin()">
+  <button id="loginBtn" onclick="doLogin()" class="w-full min-h-[48px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3.5 rounded-2xl transition shadow-md active:scale-95 flex items-center justify-center gap-2"><i class="fas fa-sign-in-alt"></i>ĐĂNG NHẬP</button>
  </div>
 </div>
 
-<header id="hdr" class="hidden bg-white px-4 py-2 border-b border-slate-200 justify-between items-center shadow-sm w-full sticky top-0 z-40">
+<!-- Konsta UI iOS Sticky Top Navigation Bar -->
+<header id="hdr" class="hidden bg-white/85 backdrop-blur-md px-4 py-2 border-b border-slate-200/60 justify-between items-center shadow-xs w-full sticky top-0 z-40 pt-[calc(env(safe-area-inset-top,0px)+0.4rem)] transition-all">
  <div class="flex items-center gap-2 min-w-0">
-  <h1 onclick="resetAndHardReload()" title="Bấm để xóa sạch cache, session và tải lại toàn bộ trang" class="text-base md:text-xl font-extrabold text-indigo-600 truncate cursor-pointer hover:opacity-80 transition select-none">VPN Trinh Hg</h1>
+  <h1 onclick="resetAndHardReload()" title="Bấm để xóa sạch cache, session và tải lại toàn bộ trang" class="text-base md:text-xl font-black text-indigo-600 truncate cursor-pointer hover:opacity-80 transition select-none tracking-tight">VPN Trinh Hg</h1>
   <span id="hdrTestBadge" class="hidden text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500 text-slate-900 border border-amber-600 uppercase tracking-wider animate-pulse">TEST MODE</span>
-  
  </div>
  <div class="flex gap-2 shrink-0">
-  <button onclick="fetchAll(true)" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm flex items-center"><i class="fas fa-sync-alt"></i><span class="hidden sm:inline ml-1.5">Làm mới</span></button>
-  <button onclick="doLogout()" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm flex items-center"><i class="fas fa-sign-out-alt"></i><span class="hidden sm:inline ml-1.5">Thoát</span></button>
+  <button onclick="fetchAll(true)" class="min-h-[44px] min-w-[44px] bg-indigo-50/80 hover:bg-indigo-100 text-indigo-600 px-3.5 py-2 rounded-xl font-bold text-xs md:text-sm flex items-center justify-center transition active:scale-95 shadow-xs"><i class="fas fa-sync-alt"></i><span class="hidden sm:inline ml-1.5">Làm mới</span></button>
+  <button onclick="doLogout()" class="min-h-[44px] min-w-[44px] bg-red-50/80 hover:bg-red-100 text-red-600 px-3.5 py-2 rounded-xl font-bold text-xs md:text-sm flex items-center justify-center transition active:scale-95 shadow-xs"><i class="fas fa-sign-out-alt"></i><span class="hidden sm:inline ml-1.5">Thoát</span></button>
  </div>
 </header>
 
 <main id="main" class="hidden max-w-7xl mx-auto p-2 md:p-4 w-full min-w-0">
- <div id="tabBar" class="grid grid-cols-4 md:flex md:flex-wrap gap-1 md:gap-2 mb-3"></div>
+ <!-- Konsta UI Segmented Tab Bar -->
+ <div id="tabBar" class="grid grid-cols-4 md:flex md:flex-wrap gap-1.5 md:gap-2 mb-4 p-1.5 bg-slate-200/70 rounded-2xl backdrop-blur-sm"></div>
     
- <!-- ===== ĐƠN HÀNG ===== -->
+ <!-- ===== ĐƠN HÀNG (KONSTA INSET GROUPED STYLE) ===== -->
  <div id="t-ord" class="w-full min-w-0">
-  <div class="flex items-center justify-between mb-3"><h2 class="text-lg md:text-2xl font-bold text-slate-800">Quản lý Đơn hàng</h2><button onclick="openOrdModal(null)" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs lg:text-sm shadow-sm"><i class="fas fa-plus mr-1"></i>Tạo thủ công</button></div>
-    <div class="grid grid-cols-3 gap-1.5 sm:gap-2 mb-3">
+  <div class="flex items-center justify-between mb-3 px-1">
+   <h2 class="text-lg md:text-2xl font-black text-slate-800 tracking-tight">Quản lý Đơn hàng</h2>
+   <button onclick="openOrdModal(null)" class="min-h-[44px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3.5 py-2 md:px-4 md:py-2.5 rounded-xl text-xs md:text-sm shadow-sm active:scale-95 transition flex items-center gap-1.5">
+    <i class="fas fa-plus"></i><span>Tạo thủ công</span>
+   </button>
+  </div>
+
+  <div class="grid grid-cols-3 gap-2 mb-3">
    <!-- 1. Khóa fulfillment -->
-   <button type="button" id="btnToggleLockFulfill" onclick="toggleLockFulfillBtn()" class="flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2 border rounded-xl p-2 sm:p-2.5 shadow-sm transition text-left bg-slate-100 text-slate-600 border-slate-200">
+   <button type="button" id="btnToggleLockFulfill" onclick="toggleLockFulfillBtn()" class="flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2 border rounded-2xl p-2.5 sm:p-3 shadow-xs transition active:scale-97 text-left bg-white text-slate-700 border-slate-200/80 min-h-[48px]">
     <div class="min-w-0 w-full sm:w-auto text-center sm:text-left">
      <div class="font-bold text-[11px] sm:text-xs truncate flex items-center justify-center sm:justify-start gap-1">
       <i class="fas fa-lock text-amber-500"></i><span>Khóa fulfillment</span>
      </div>
-     <div class="hidden sm:block text-[10px] opacity-75 leading-snug mt-0.5">Sửa đơn thủ công KHÔNG chạy automation</div>
+     <div class="hidden sm:block text-[10px] text-slate-400 leading-snug mt-0.5">Sửa đơn không chạy automation</div>
     </div>
-    <span id="badgeLockFulfill" class="text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 shrink-0">TẮT</span>
+    <span id="badgeLockFulfill" class="text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 shrink-0">TẮT</span>
    </button>
    <!-- 2. Gửi mail báo khách -->
-   <button type="button" id="btnToggleMailOnSave" onclick="toggleMailOnSaveBtn()" class="flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2 border rounded-xl p-2 sm:p-2.5 shadow-sm transition text-left bg-slate-100 text-slate-600 border-slate-200">
+   <button type="button" id="btnToggleMailOnSave" onclick="toggleMailOnSaveBtn()" class="flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2 border rounded-2xl p-2.5 sm:p-3 shadow-xs transition active:scale-97 text-left bg-white text-slate-700 border-slate-200/80 min-h-[48px]">
     <div class="min-w-0 w-full sm:w-auto text-center sm:text-left">
      <div class="font-bold text-[11px] sm:text-xs truncate flex items-center justify-center sm:justify-start gap-1">
       <i class="fas fa-envelope text-indigo-500"></i><span>Gửi mail khách</span>
      </div>
-     <div class="hidden sm:block text-[10px] opacity-75 leading-snug mt-0.5">Áp dụng cho mọi lần lưu đơn (quyền Master)</div>
+     <div class="hidden sm:block text-[10px] text-slate-400 leading-snug mt-0.5">Áp dụng khi lưu đơn (Master)</div>
     </div>
-    <span id="badgeMailOnSave" class="text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 shrink-0">TẮT</span>
+    <span id="badgeMailOnSave" class="text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 shrink-0">TẮT</span>
    </button>
    <!-- 3. Sửa tay -->
-   <button type="button" id="btnToggleManualEdit" onclick="toggleManualEditBtn()" class="flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2 border rounded-xl p-2 sm:p-2.5 shadow-sm transition text-left bg-slate-100 text-slate-600 border-slate-200">
+   <button type="button" id="btnToggleManualEdit" onclick="toggleManualEditBtn()" class="flex flex-col sm:flex-row items-center justify-between gap-1 sm:gap-2 border rounded-2xl p-2.5 sm:p-3 shadow-xs transition active:scale-97 text-left bg-white text-slate-700 border-slate-200/80 min-h-[48px]">
     <div class="min-w-0 w-full sm:w-auto text-center sm:text-left">
      <div class="font-bold text-[11px] sm:text-xs truncate flex items-center justify-center sm:justify-start gap-1">
       <i class="fas fa-pen-to-square text-purple-600"></i><span>Sửa tay</span>
      </div>
-     <div class="hidden sm:block text-[10px] opacity-75 leading-snug mt-0.5">Cho phép sửa 3 ô link định tuyến, khóa ghi đè</div>
+     <div class="hidden sm:block text-[10px] text-slate-400 leading-snug mt-0.5">Sửa 3 ô link định tuyến</div>
     </div>
-    <span id="badgeManualEdit" class="text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 shrink-0">TẮT</span>
+    <span id="badgeManualEdit" class="text-[9px] sm:text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 shrink-0">TẮT</span>
    </button>
   </div>
+
+  <!-- iOS Segmented Control cho Bộ lọc trạng thái đơn -->
   <div class="inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 mb-4 w-fit max-w-full overflow-x-auto scroll-hide">
-   <div class="ord-sub-tab active" id="otab-success" onclick="switchOrdTab('success')"><div class="mac-dot mac-green"></div>Thành công<span id="cnt-success" class="bg-green-100 text-green-700 text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
-   <div class="ord-sub-tab" id="otab-pending" onclick="switchOrdTab('pending')"><div class="mac-dot mac-yellow"></div>Chờ duyệt<span id="cnt-pending" class="bg-yellow-100 text-yellow-700 text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
-   <div class="ord-sub-tab" id="otab-failed" onclick="switchOrdTab('failed')"><div class="mac-dot mac-red"></div>Thất bại<span id="cnt-failed" class="bg-red-100 text-red-700 text-[10px] font-black px-1.5 py-0.5 rounded-full ml-0.5">0</span></div>
+   <div class="ord-sub-tab active" id="otab-success" onclick="switchOrdTab('success')"><div class="mac-dot mac-green"></div>Thành công<span id="cnt-success" class="bg-green-100 text-green-700 text-[10px] font-black px-2 py-0.5 rounded-full ml-1">0</span></div>
+   <div class="ord-sub-tab" id="otab-pending" onclick="switchOrdTab('pending')"><div class="mac-dot mac-yellow"></div>Chờ duyệt<span id="cnt-pending" class="bg-yellow-100 text-yellow-700 text-[10px] font-black px-2 py-0.5 rounded-full ml-1">0</span></div>
+   <div class="ord-sub-tab" id="otab-failed" onclick="switchOrdTab('failed')"><div class="mac-dot mac-red"></div>Thất bại<span id="cnt-failed" class="bg-red-100 text-red-700 text-[10px] font-black px-2 py-0.5 rounded-full ml-1">0</span></div>
   </div>
-    <div id="ordBody" class="w-full min-w-0"></div>
+
+  <!-- Container Danh sách đơn hàng dạng Inset Grouped Cards -->
+  <div id="ordBody" class="w-full min-w-0 space-y-2.5"></div>
  </div>
 
  <!-- ===== TAB KIỂM TRA & QUÉT (2 SUB-TAB CON) ===== -->
@@ -1209,181 +1220,291 @@
   </div>
  </div>
     
-<!-- ===== MODAL ĐƠN HÀNG ===== -->
-<div id="mOrd" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 md:p-4">
- <div class="glass-card p-4 md:p-6 w-full max-w-lg max-h-[98vh] overflow-y-auto min-w-0">
-  <div class="flex justify-between items-start mb-3"><h3 id="mOrdTtl" class="text-base md:text-xl font-bold text-slate-800">Đơn hàng</h3>
-   <div class="flex items-center gap-1 flex-wrap justify-end max-w-[60%]" id="upgChecks"></div></div>
-  <div class="grid grid-cols-2 gap-2 mb-2">
-   <div>
-    <label class="block font-bold text-[10px] text-slate-600 mb-0.5">Mã đơn</label>
-    <div class="flex gap-1.5">
-     <input id="mOId" type="text" maxlength="14" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" class="w-full p-2 text-xs border rounded-lg bg-slate-50 font-mono font-bold outline-none focus:border-indigo-500">
-     <button type="button" onclick="document.getElementById('mOId').value=genId()" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold px-3 rounded-lg text-xs transition shadow-sm shrink-0" title="Tạo mã ngẫu nhiên">
-      <i class="fas fa-random"></i>
-     </button>
+<!-- ===== MODAL ĐƠN HÀNG (VAUL BOTTOM SHEET ON MOBILE / CENTERED DIALOG ON DESKTOP) ===== -->
+<div id="mOrd" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-300">
+ <div class="glass-card w-full sm:max-w-xl max-h-[92vh] sm:max-h-[90vh] rounded-t-[28px] sm:rounded-2xl border-t sm:border border-slate-200/80 shadow-2xl flex flex-col overflow-hidden pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:pb-0 transform transition-transform duration-300 ease-out">
+  
+  <!-- Vaul Drag Handle (Affordance cho cử chỉ vuốt kéo) -->
+  <div class="w-full py-2.5 flex justify-center cursor-grab active:cursor-grabbing touch-none shrink-0 sm:hidden" id="mOrdHandle">
+   <div class="w-12 h-1.5 rounded-full bg-slate-300"></div>
+  </div>
+
+  <div class="p-4 md:p-6 overflow-y-auto overscroll-contain flex-1 min-w-0">
+   <div class="flex justify-between items-start mb-3"><h3 id="mOrdTtl" class="text-base md:text-xl font-black text-slate-800 tracking-tight">Đơn hàng</h3>
+    <div class="flex items-center gap-1 flex-wrap justify-end max-w-[60%]" id="upgChecks"></div></div>
+   <div class="grid grid-cols-2 gap-2 mb-2">
+    <div>
+     <label class="block font-bold text-[10px] text-slate-600 mb-0.5">Mã đơn</label>
+     <div class="flex gap-1.5">
+      <input id="mOId" type="text" maxlength="14" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" class="w-full p-2.5 text-xs border rounded-xl bg-slate-50 font-mono font-bold outline-none focus:border-indigo-500">
+      <button type="button" onclick="document.getElementById('mOId').value=genId()" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold px-3 rounded-xl text-xs transition active:scale-95 shadow-xs shrink-0" title="Tạo mã ngẫu nhiên">
+       <i class="fas fa-random"></i>
+      </button>
+     </div>
+    </div>
+    <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5"><i class="fas fa-user-tag text-indigo-400 mr-1"></i>Nickname</label><input id="mONickname" type="text" placeholder="VD: Anh Tuấn FB..." class="w-full p-2.5 text-xs border rounded-xl outline-none bg-yellow-50 border-yellow-200 font-medium"></div>
+   </div>
+   <div id="mOIdNote" class="hidden text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-2 mb-2"></div>
+   <div class="mb-2"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Email Khách</label><input id="mOEmail" type="text" onblur="autoFillNickname();if(modalNew)autoFillDays();" class="w-full p-2.5 text-xs border rounded-xl outline-none bg-slate-50 font-medium"></div>
+   <div class="mb-2"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Gói VPN</label><select id="mOPkg" onchange="onPkgChange()" class="w-full p-2.5 text-xs border rounded-xl font-bold text-indigo-700 bg-indigo-50 outline-none"></select></div>
+   <div class="grid grid-cols-3 gap-2 mb-2">
+    <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Trạng thái</label><select id="mOStatus" onchange="togSF()" class="w-full p-2.5 text-xs border rounded-xl font-bold outline-none bg-white"><option value="pending">Chờ duyệt</option><option value="success">Thành công</option><option value="failed">Từ chối</option></select></div>
+    <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Thanh toán</label><select id="mOMethod" onchange="onMethodChange()" class="w-full p-2.5 text-xs border rounded-xl font-bold outline-none bg-white"><option value="Ngân hàng VN">Bank VN</option><option value="Alipay">Alipay</option><option value="Weixin">Weixin</option></select></div>
+    <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">HSD</label><input id="mOExp" type="text" oninput="recalcDaysFromExp()" class="w-full p-2.5 text-xs border rounded-xl outline-none text-center font-bold bg-white" placeholder="DD/MM/YYYY"></div>
+   </div>
+   <div class="grid grid-cols-2 gap-2 mb-2">
+    <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">SĐT Zalo</label><input id="mOZalo" type="text" placeholder="0917..." class="w-full p-2.5 text-xs border rounded-xl outline-none bg-slate-50 font-medium"></div>
+    <div class="grid grid-cols-2 gap-2">
+     <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Số ngày SD</label><input id="mODays" type="number" min="1" placeholder="30" class="w-full p-2.5 text-xs border rounded-xl outline-none text-center bg-slate-50 font-bold" oninput="recalcExpFromDays()"></div>
+     <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Số tháng</label><input id="mOMonths" type="text" readonly class="w-full p-2.5 text-xs border rounded-xl outline-none text-center bg-slate-100 text-slate-600 font-bold" placeholder="—"></div>
     </div>
    </div>
-   <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5"><i class="fas fa-user-tag text-indigo-400 mr-1"></i>Nickname</label><input id="mONickname" type="text" placeholder="VD: Anh Tuấn FB..." class="w-full p-2 text-xs border rounded-lg outline-none bg-yellow-50 border-yellow-200"></div>
-  </div>
-  <div id="mOIdNote" class="hidden text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-1.5 mb-2"></div>
-<div class="mb-2"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Email Khách</label><input id="mOEmail" type="text" onblur="autoFillNickname();if(modalNew)autoFillDays();" class="w-full p-2 text-xs border rounded-lg outline-none"></div>  <div class="mb-2"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Gói VPN</label><select id="mOPkg" onchange="onPkgChange()" class="w-full p-2 text-xs border rounded-lg font-bold text-indigo-700 bg-indigo-50 outline-none"></select></div>
-  <div class="grid grid-cols-3 gap-2 mb-2">
-   <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Trạng thái</label><select id="mOStatus" onchange="togSF()" class="w-full p-2 text-xs border rounded-lg font-bold outline-none"><option value="pending">Chờ duyệt</option><option value="success">Thành công</option><option value="failed">Từ chối</option></select></div>
-   <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Thanh toán</label><select id="mOMethod" onchange="onMethodChange()" class="w-full p-2 text-xs border rounded-lg font-bold outline-none"><option value="Ngân hàng VN">Bank VN</option><option value="Alipay">Alipay</option><option value="Weixin">Weixin</option></select></div>
-<div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">HSD</label><input id="mOExp" type="text" oninput="recalcDaysFromExp()" class="w-full p-2 text-xs border rounded-lg outline-none text-center font-bold" placeholder="DD/MM/YYYY"></div>  </div>
-  <div class="grid grid-cols-2 gap-2 mb-2">
-   <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">SĐT Zalo</label><input id="mOZalo" type="text" placeholder="0917..." class="w-full p-2 text-xs border rounded-lg outline-none bg-slate-50"></div>
-   <div class="grid grid-cols-2 gap-2">
-    <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Số ngày SD</label><input id="mODays" type="number" min="1" placeholder="30" class="w-full p-2 text-xs border rounded-lg outline-none text-center bg-slate-50" oninput="recalcExpFromDays()"></div>
-    <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Số tháng</label><input id="mOMonths" type="text" readonly class="w-full p-2 text-xs border rounded-lg outline-none text-center bg-slate-100 text-slate-600 font-bold" placeholder="—"></div>
+   <div class="mb-2"><label id="mOAmountLbl" class="block font-bold text-[10px] text-slate-600 mb-0.5">Số tiền đã nhận</label><input id="mOAmount" type="text" inputmode="decimal" class="w-full p-2.5 text-xs border rounded-xl outline-none bg-slate-50 font-bold"><div id="mOAmountNote" class="text-[10px] text-slate-400 mt-0.5"></div></div>
+   <div id="mOLockNote" class="hidden text-[10px] text-purple-700 bg-purple-50 border border-purple-200 rounded-xl p-2 mb-2"></div>
+   <div id="fSuc" class="hidden mb-3 p-3 border border-green-200 bg-green-50/70 rounded-2xl space-y-2.5">
+    <div><label class="block font-bold text-[10px] text-green-700 mb-0.5">Link 1 <span id="mOLkTag1"></span></label><input id="mOLink1" type="text" class="w-full p-2 text-[10px] border border-green-300 bg-white rounded-lg font-mono outline-none"><label id="mOUnlW1" class="hidden text-[10px] text-slate-600 font-bold"><input type="checkbox" id="mOUnl1" class="mr-1 accent-green-600">Mở khóa ô này (cho Worker/Cron tự cập nhật lại)</label></div>
+    <div><label class="block font-bold text-[10px] text-green-700 mb-0.5">Link 2 <span id="mOLkTag2"></span></label><input id="mOLink2" type="text" class="w-full p-2 text-[10px] border border-green-300 bg-white rounded-lg font-mono outline-none"><label id="mOUnlW2" class="hidden text-[10px] text-slate-600 font-bold"><input type="checkbox" id="mOUnl2" class="mr-1 accent-green-600">Mở khóa ô này</label></div>
+    <div><label class="block font-bold text-[10px] text-green-700 mb-0.5">Link 3 <span id="mOLkTag3"></span></label><input id="mOLink3" type="text" class="w-full p-2 text-[10px] border border-green-300 bg-white rounded-lg font-mono outline-none"><label id="mOUnlW3" class="hidden text-[10px] text-slate-600 font-bold"><input type="checkbox" id="mOUnl3" class="mr-1 accent-green-600">Mở khóa ô này</label></div>
+    <p class="text-[10px] text-green-700 leading-relaxed">Để trống ô = hệ thống tự tạo link ẩn cho ô đó (theo Định tuyến đã nhập; không áp dụng khi bật Khóa fulfillment). Ô bạn sửa tay sẽ bị khóa để Worker không ghi đè.</p>
    </div>
-  </div>
-  <div class="mb-2"><label id="mOAmountLbl" class="block font-bold text-[10px] text-slate-600 mb-0.5">Số tiền đã nhận</label><input id="mOAmount" type="text" inputmode="decimal" class="w-full p-2 text-xs border rounded-lg outline-none bg-slate-50 font-bold"><div id="mOAmountNote" class="text-[10px] text-slate-400 mt-0.5"></div></div>
-  <div id="mOLockNote" class="hidden text-[10px] text-purple-700 bg-purple-50 border border-purple-200 rounded-lg p-1.5 mb-2"></div>
-  <div id="fSuc" class="hidden mb-3 p-2 border border-green-200 bg-green-50 rounded-lg space-y-2">
-   <div><label class="block font-bold text-[10px] text-green-700 mb-0.5">Link 1 <span id="mOLkTag1"></span></label><input id="mOLink1" type="text" class="w-full p-2 text-[10px] border border-green-300 bg-white rounded font-mono outline-none"><label id="mOUnlW1" class="hidden text-[10px] text-slate-600 font-bold"><input type="checkbox" id="mOUnl1" class="mr-1 accent-green-600">Mở khóa ô này (cho Worker/Cron tự cập nhật lại)</label></div>
-   <div><label class="block font-bold text-[10px] text-green-700 mb-0.5">Link 2 <span id="mOLkTag2"></span></label><input id="mOLink2" type="text" class="w-full p-2 text-[10px] border border-green-300 bg-white rounded font-mono outline-none"><label id="mOUnlW2" class="hidden text-[10px] text-slate-600 font-bold"><input type="checkbox" id="mOUnl2" class="mr-1 accent-green-600">Mở khóa ô này</label></div>
-   <div><label class="block font-bold text-[10px] text-green-700 mb-0.5">Link 3 <span id="mOLkTag3"></span></label><input id="mOLink3" type="text" class="w-full p-2 text-[10px] border border-green-300 bg-white rounded font-mono outline-none"><label id="mOUnlW3" class="hidden text-[10px] text-slate-600 font-bold"><input type="checkbox" id="mOUnl3" class="mr-1 accent-green-600">Mở khóa ô này</label></div>
-   <p class="text-[10px] text-green-700">Để trống ô = hệ thống tự tạo link ẩn cho ô đó (theo Định tuyến đã nhập; không áp dụng khi bật Khóa fulfillment). Ô bạn sửa tay sẽ bị khóa để Worker không ghi đè.</p>
-  </div>
-  <div id="fFail" class="hidden mb-3 p-2 border border-red-200 bg-red-50 rounded-lg"><label class="block font-bold text-[10px] text-red-700 mb-0.5">Lý do</label><input id="mOReason" type="text" class="w-full p-2 text-[10px] border border-red-300 bg-white rounded outline-none"></div>
-  <div class="flex gap-2"><button id="btnSaveOrd" onclick="saveOrd()" class="flex-1 bg-indigo-600 text-white font-bold py-2.5 rounded-lg hover:bg-indigo-700 text-xs shadow-md"><i class="fas fa-save mr-1"></i>LƯU</button><button onclick="cm('mOrd')" class="bg-white border border-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-lg hover:bg-slate-50 text-xs shadow-sm">Hủy</button></div>
- </div>
-</div>
-
-<!-- MODAL SỬA NGUỒN CẤP CỤM (ROOT SOURCE - 2 CHÂN ĐẦY ĐỦ THÔNG SỐ) -->
-<div id="mRootEdit" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
- <div class="glass-card p-5 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-  <div class="flex items-center justify-between mb-2">
-   <h3 class="font-extrabold text-lg text-slate-800">Sửa Nguồn Cấp Cụm</h3>
-   <span class="text-xs font-black px-2 py-0.5 rounded bg-indigo-100 text-indigo-800">Đầy đủ 2 chân</span>
-  </div>
-  <p class="text-[11px] text-slate-500 mb-3">Đổi link gốc &amp; thông số cụm (nhập 1 chân = Đơn, 2 chân = Trộn). <b>Token link ẩn của khách giữ nguyên 100%</b>.</p>
-  <input type="hidden" id="mREGroupKey">
-
-  <!-- BẢNG CHÂN 1 -->
-  <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/50 mb-3 space-y-2">
-   <div class="text-xs font-black text-slate-700 flex justify-between">
-    <span>Thông số Chân 1</span>
-    <span class="badge-lx">Chân 1 (LX)</span>
-   </div>
-   <div>
-    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link gốc 1</label>
-    <input id="mREOrig1" type="text" placeholder="https://liangxin..." class="w-full p-2 text-xs border border-slate-300 rounded-lg font-mono outline-none bg-white">
-   </div>
-   <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-    <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB</label><input id="mREGb" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
-    <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB</label><input id="mRERemain" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
-    <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Hết hạn</label><input id="mREExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-1.5 border rounded-lg bg-white text-xs text-center"></div>
-    <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max thiết bị</label><input id="mREMax" type="number" min="1" value="30" class="w-full p-1.5 border rounded-lg bg-white text-xs text-center"></div>
-   </div>
-  </div>
-
-  <!-- BẢNG CHÂN 2 -->
-  <div class="border border-indigo-200 rounded-xl p-3 bg-indigo-50/30 mb-4 space-y-2">
-   <div class="text-xs font-black text-blue-700 flex justify-between">
-    <span>Thông số Chân 2 (Để trống link nếu muốn chuyển về Link Đơn)</span>
-    <span class="badge-dj">Chân 2 (DJ)</span>
-   </div>
-   <div>
-    <label class="block text-[10px] font-bold text-indigo-700 mb-0.5">Link gốc 2</label>
-    <input id="mREOrig2" type="text" placeholder="Để trống nếu là Link Đơn" class="w-full p-2 text-xs border border-indigo-300 rounded-lg font-mono outline-none bg-white">
-   </div>
-   <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-    <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB 2</label><input id="mREGb2" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
-    <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB 2</label><input id="mRERemain2" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-white text-xs"></div>
-    <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Hết hạn 2</label><input id="mREExp2" type="text" placeholder="DD/MM/YYYY" class="w-full p-1.5 border rounded-lg bg-white text-xs text-center"></div>
-    <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max thiết bị 2</label><input id="mREMax2" type="number" min="1" value="30" class="w-full p-1.5 border rounded-lg bg-white text-xs text-center"></div>
-   </div>
-  </div>
-
-  <div class="flex gap-2">
-   <button onclick="saveRootEdit()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg text-xs shadow-md">CẬP NHẬT CẢ CỤM LINK</button>
-   <button onclick="cm('mRootEdit')" class="bg-white border border-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-lg text-xs shadow-sm">Hủy</button>
+   <div id="fFail" class="hidden mb-3 p-2.5 border border-red-200 bg-red-50 rounded-xl"><label class="block font-bold text-[10px] text-red-700 mb-0.5">Lý do</label><input id="mOReason" type="text" class="w-full p-2 text-[10px] border border-red-300 bg-white rounded-lg outline-none"></div>
+   <div class="flex gap-2 pt-2"><button id="btnSaveOrd" onclick="saveOrd()" class="flex-1 min-h-[48px] bg-indigo-600 text-white font-bold py-3 sm:py-2.5 rounded-xl hover:bg-indigo-700 text-xs shadow-md active:scale-95 transition"><i class="fas fa-save mr-1.5"></i>LƯU ĐƠN HÀNG</button><button onclick="cm('mOrd')" class="min-h-[48px] bg-white border border-slate-200 text-slate-700 font-bold py-3 sm:py-2.5 px-5 rounded-xl hover:bg-slate-50 text-xs shadow-xs active:scale-95 transition">Hủy</button></div>
   </div>
  </div>
 </div>
 
-<div id="mLnk" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
- <div class="glass-card p-5 w-full max-w-2xl">
-  <h3 class="font-extrabold text-lg mb-3 text-slate-800">Sửa Link Sub Ẩn</h3><input type="hidden" id="mLId">
-  <div class="mb-2"><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link gốc 1 (Liangxin hoặc DJJC)</label><input id="mLOrig" type="text" class="w-full p-2 text-xs border border-slate-300 rounded-lg font-mono outline-none bg-slate-50"></div>
-  <div class="mb-2"><label class="block text-[10px] font-bold text-indigo-700 mb-0.5"><i class="fas fa-shuffle mr-1"></i>Link gốc 2 (Nguồn thứ 2 - xóa trắng để chuyển về Link Đơn)</label><input id="mLOrig2" type="text" placeholder="Để trống nếu là Link Đơn" class="w-full p-2 text-xs border border-indigo-200 rounded-lg font-mono outline-none bg-indigo-50/30"></div>
-  <div class="mb-2"><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Email khách</label><input id="mLEmail" type="text" class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none bg-slate-50"></div>
-  <div class="grid grid-cols-2 gap-2 mb-4"><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Hết hạn</label><input id="mLExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none text-center bg-slate-50"></div><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Số máy (Index)</label><input id="mLIdx" type="number" min="1" class="w-full p-2 text-xs border border-slate-300 rounded-lg outline-none text-center bg-slate-50"></div></div>
-  <div class="flex gap-2"><button onclick="saveLnkEdit()" class="flex-1 bg-indigo-600 text-white font-bold py-2.5 rounded-lg text-xs shadow-md">CẬP NHẬT</button><button onclick="cm('mLnk')" class="bg-white border border-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-lg text-xs shadow-sm">Hủy</button></div>
+<!-- MODAL SỬA NGUỒN CẤP CỤM (VAUL BOTTOM SHEET ON MOBILE / CENTERED ON DESKTOP) -->
+<div id="mRootEdit" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-300">
+ <div class="glass-card w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] rounded-t-[28px] sm:rounded-2xl border-t sm:border border-slate-200/80 shadow-2xl flex flex-col overflow-hidden pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:pb-0 transform transition-transform duration-300 ease-out">
+  <!-- Vaul Drag Handle -->
+  <div class="w-full py-2.5 flex justify-center cursor-grab active:cursor-grabbing touch-none shrink-0 sm:hidden" id="mRootEditHandle">
+   <div class="w-12 h-1.5 rounded-full bg-slate-300"></div>
+  </div>
+  <div class="p-5 overflow-y-auto overscroll-contain flex-1">
+   <div class="flex items-center justify-between mb-2">
+    <h3 class="font-black text-lg text-slate-800 tracking-tight">Sửa Nguồn Cấp Cụm</h3>
+    <span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800">Đầy đủ 2 chân</span>
+   </div>
+   <p class="text-[11px] text-slate-500 mb-3">Đổi link gốc &amp; thông số cụm (nhập 1 chân = Đơn, 2 chân = Trộn). <b>Token link ẩn của khách giữ nguyên 100%</b>.</p>
+   <input type="hidden" id="mREGroupKey">
+
+   <!-- BẢNG CHÂN 1 -->
+   <div class="border border-slate-200 rounded-2xl p-3.5 bg-slate-50/50 mb-3 space-y-2">
+    <div class="text-xs font-black text-slate-700 flex justify-between">
+     <span>Thông số Chân 1</span>
+     <span class="badge-lx">Chân 1 (LX)</span>
+    </div>
+    <div>
+     <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link gốc 1</label>
+     <input id="mREOrig1" type="text" placeholder="https://liangxin..." class="w-full p-2.5 text-xs border border-slate-300 rounded-xl font-mono outline-none bg-white">
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB</label><input id="mREGb" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
+     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB</label><input id="mRERemain" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
+     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Hết hạn</label><input id="mREExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 border rounded-xl bg-white text-xs text-center font-bold"></div>
+     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max thiết bị</label><input id="mREMax" type="number" min="1" value="30" class="w-full p-2 border rounded-xl bg-white text-xs text-center font-bold"></div>
+    </div>
+   </div>
+
+   <!-- BẢNG CHÂN 2 -->
+   <div class="border border-indigo-200 rounded-2xl p-3.5 bg-indigo-50/30 mb-4 space-y-2">
+    <div class="text-xs font-black text-blue-700 flex justify-between">
+     <span>Thông số Chân 2 (Để trống link nếu muốn chuyển về Link Đơn)</span>
+     <span class="badge-dj">Chân 2 (DJ)</span>
+    </div>
+    <div>
+     <label class="block text-[10px] font-bold text-indigo-700 mb-0.5">Link gốc 2</label>
+     <input id="mREOrig2" type="text" placeholder="Để trống nếu là Link Đơn" class="w-full p-2.5 text-xs border border-indigo-300 rounded-xl font-mono outline-none bg-white">
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB 2</label><input id="mREGb2" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
+     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB 2</label><input id="mRERemain2" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
+     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Hết hạn 2</label><input id="mREExp2" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 border rounded-xl bg-white text-xs text-center font-bold"></div>
+     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max thiết bị 2</label><input id="mREMax2" type="number" min="1" value="30" class="w-full p-2 border rounded-xl bg-white text-xs text-center font-bold"></div>
+    </div>
+   </div>
+
+   <div class="flex gap-2 pt-2">
+    <button onclick="saveRootEdit()" class="flex-1 min-h-[48px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 sm:py-2.5 rounded-xl text-xs shadow-md active:scale-95 transition">CẬP NHẬT CẢ CỤM LINK</button>
+    <button onclick="cm('mRootEdit')" class="min-h-[48px] bg-white border border-slate-200 text-slate-700 font-bold py-3 sm:py-2.5 px-5 rounded-xl text-xs shadow-xs active:scale-95 transition">Hủy</button>
+   </div>
+  </div>
+ </div>
+</div>
+
+<!-- MODAL SỬA LINK SUB ẨN (VAUL BOTTOM SHEET ON MOBILE / CENTERED ON DESKTOP) -->
+<div id="mLnk" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-300">
+ <div class="glass-card w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] rounded-t-[28px] sm:rounded-2xl border-t sm:border border-slate-200/80 shadow-2xl flex flex-col overflow-hidden pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:pb-0 transform transition-transform duration-300 ease-out">
+  <!-- Vaul Drag Handle -->
+  <div class="w-full py-2.5 flex justify-center cursor-grab active:cursor-grabbing touch-none shrink-0 sm:hidden" id="mLnkHandle">
+   <div class="w-12 h-1.5 rounded-full bg-slate-300"></div>
+  </div>
+  <div class="p-5 overflow-y-auto overscroll-contain flex-1">
+   <h3 class="font-black text-lg mb-3 text-slate-800 tracking-tight">Sửa Link Sub Ẩn</h3><input type="hidden" id="mLId">
+   <div class="mb-2"><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link gốc 1 (Liangxin hoặc DJJC)</label><input id="mLOrig" type="text" class="w-full p-2.5 text-xs border border-slate-300 rounded-xl font-mono outline-none bg-slate-50"></div>
+   <div class="mb-2"><label class="block text-[10px] font-bold text-indigo-700 mb-0.5"><i class="fas fa-shuffle mr-1"></i>Link gốc 2 (Nguồn thứ 2 - xóa trắng để chuyển về Link Đơn)</label><input id="mLOrig2" type="text" placeholder="Để trống nếu là Link Đơn" class="w-full p-2.5 text-xs border border-indigo-200 rounded-xl font-mono outline-none bg-indigo-50/30"></div>
+   <div class="mb-2"><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Email khách</label><input id="mLEmail" type="text" class="w-full p-2.5 text-xs border border-slate-300 rounded-xl outline-none bg-slate-50"></div>
+   <div class="grid grid-cols-2 gap-2 mb-4"><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Hết hạn</label><input id="mLEExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-2.5 text-xs border border-slate-300 rounded-xl outline-none text-center bg-slate-50 font-bold"></div><div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Số máy (Index)</label><input id="mLIdx" type="number" min="1" class="w-full p-2.5 text-xs border border-slate-300 rounded-xl outline-none text-center bg-slate-50 font-bold"></div></div>
+   <div class="flex gap-2 pt-2"><button onclick="saveLnkEdit()" class="flex-1 min-h-[48px] bg-indigo-600 text-white font-bold py-3 sm:py-2.5 rounded-xl text-xs shadow-md active:scale-95 transition">CẬP NHẬT</button><button onclick="cm('mLnk')" class="min-h-[48px] bg-white border border-slate-200 text-slate-700 font-bold py-3 sm:py-2.5 px-5 rounded-xl text-xs shadow-xs active:scale-95 transition">Hủy</button></div>
+  </div>
  </div>
 </div>
     
 <script type="module" src="/src/admin.js"></script>
 
-<!-- MODAL TẠO / SỬA MÃ GIẢM GIÁ (COUPON MODAL) -->
-<div id="mCouponModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/60 backdrop-blur-xs">
-  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl max-w-md w-full shadow-2xl p-5 space-y-4 animate-scaleIn">
-    <div class="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
-      <h3 class="font-black text-base text-slate-800 dark:text-white flex items-center gap-2">
-        <i class="fas fa-ticket text-purple-600"></i>Tạo Mã Giảm Giá Mới
-      </h3>
-      <button type="button" onclick="closeCouponModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fas fa-times text-sm"></i></button>
+<!-- MODAL TẠO / SỬA MÃ GIẢM GIÁ (VAUL BOTTOM SHEET ON MOBILE / CENTERED DIALOG ON DESKTOP) -->
+<div id="mCouponModal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-3 bg-black/60 backdrop-blur-xs transition-opacity duration-300">
+  <div class="bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-white/10 rounded-t-[28px] sm:rounded-2xl max-w-md w-full shadow-2xl flex flex-col overflow-hidden pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:pb-0 animate-scaleIn">
+    <!-- Vaul Drag Handle -->
+    <div class="w-full py-2.5 flex justify-center cursor-grab active:cursor-grabbing touch-none shrink-0 sm:hidden" id="mCouponModalHandle">
+      <div class="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600"></div>
     </div>
 
-    <div class="space-y-3 text-xs">
-      <div>
-        <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Mã Coupon (Tự động in hoa):</label>
-        <input type="text" id="couponModalCode" placeholder="VD: SALE2026, VIP10, HETGIA" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-black font-mono font-black text-indigo-600 dark:text-indigo-400 uppercase outline-none focus:border-purple-500">
+    <div class="p-5 space-y-4 overflow-y-auto overscroll-contain flex-1">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
+        <h3 class="font-black text-base text-slate-800 dark:text-white flex items-center gap-2">
+          <i class="fas fa-ticket text-purple-600"></i>Tạo Mã Giảm Giá Mới
+        </h3>
+        <button type="button" onclick="closeCouponModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fas fa-times text-sm"></i></button>
       </div>
 
-      <div class="grid grid-cols-2 gap-2.5">
+      <div class="space-y-3 text-xs">
         <div>
-          <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Loại giảm giá:</label>
-          <select id="couponModalType" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-slate-800 dark:text-white outline-none focus:border-purple-500">
-            <option value="percent">Phần trăm (%)</option>
-            <option value="fixed">Số tiền cố định (VND)</option>
-          </select>
+          <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Mã Coupon (Tự động in hoa):</label>
+          <input type="text" id="couponModalCode" placeholder="VD: SALE2026, VIP10, HETGIA" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-black font-mono font-black text-indigo-600 dark:text-indigo-400 uppercase outline-none focus:border-purple-500">
         </div>
-        <div>
-          <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Mức giảm:</label>
-          <input type="number" id="couponModalValue" min="1" placeholder="VD: 10 (%) hoặc 20000 (đ)" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-rose-600 outline-none focus:border-purple-500">
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Loại giảm giá:</label>
+            <select id="couponModalType" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-slate-800 dark:text-white outline-none focus:border-purple-500">
+              <option value="percent">Phần trăm (%)</option>
+              <option value="fixed">Số tiền cố định (VND)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Mức giảm:</label>
+            <input type="number" id="couponModalValue" min="1" placeholder="VD: 10 (%) hoặc 20000 (đ)" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-rose-600 outline-none focus:border-purple-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Đơn tối thiểu (đ):</label>
+            <input type="number" id="couponModalMinSpend" min="0" step="1000" placeholder="0 = Không có" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-slate-800 dark:text-white outline-none focus:border-purple-500">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Số lượt dùng tối đa:</label>
+            <input type="number" id="couponModalMaxUsage" min="0" placeholder="Để trống = Không giới hạn" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-slate-800 dark:text-white outline-none focus:border-purple-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Bắt đầu từ:</label>
+            <input type="datetime-local" id="couponModalStart" class="w-full p-2 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black text-slate-800 dark:text-white outline-none focus:border-purple-500 text-xs">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Kết thúc vào:</label>
+            <input type="datetime-local" id="couponModalEnd" class="w-full p-2 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black text-slate-800 dark:text-white outline-none focus:border-purple-500 text-xs">
+          </div>
+        </div>
+
+        <div class="pt-1 flex items-center justify-between bg-slate-50 dark:bg-black/40 p-2.5 rounded-xl border border-slate-100 dark:border-white/5">
+          <span class="font-bold text-slate-700 dark:text-slate-300">Trạng thái mã:</span>
+          <label class="flex items-center gap-2 cursor-pointer font-bold text-emerald-600">
+            <input type="checkbox" id="couponModalEnabled" checked class="w-4 h-4 accent-emerald-600"> Hoạt động
+          </label>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-2.5">
-        <div>
-          <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Đơn tối thiểu (đ):</label>
-          <input type="number" id="couponModalMinSpend" min="0" step="1000" placeholder="0 = Không có" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-slate-800 dark:text-white outline-none focus:border-purple-500">
-        </div>
-        <div>
-          <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Số lượt dùng tối đa:</label>
-          <input type="number" id="couponModalMaxUsage" min="0" placeholder="Để trống = Không giới hạn" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-slate-800 dark:text-white outline-none focus:border-purple-500">
-        </div>
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-white/10">
+        <button type="button" onclick="closeCouponModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition min-h-[44px]">Hủy</button>
+        <button type="button" onclick="saveCouponModal()" class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs shadow-md transition active:scale-95 flex items-center gap-1.5 min-h-[44px]"><i class="fas fa-check"></i>LƯU MÃ COUPON</button>
       </div>
-
-      <div class="grid grid-cols-2 gap-2.5">
-        <div>
-          <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Bắt đầu từ:</label>
-          <input type="datetime-local" id="couponModalStart" class="w-full p-2 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black text-slate-800 dark:text-white outline-none focus:border-purple-500 text-xs">
-        </div>
-        <div>
-          <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Kết thúc vào:</label>
-          <input type="datetime-local" id="couponModalEnd" class="w-full p-2 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black text-slate-800 dark:text-white outline-none focus:border-purple-500 text-xs">
-        </div>
-      </div>
-
-      <div class="pt-1 flex items-center justify-between bg-slate-50 dark:bg-black/40 p-2.5 rounded-xl border border-slate-100 dark:border-white/5">
-        <span class="font-bold text-slate-700 dark:text-slate-300">Trạng thái mã:</span>
-        <label class="flex items-center gap-2 cursor-pointer font-bold text-emerald-600">
-          <input type="checkbox" id="couponModalEnabled" checked class="w-4 h-4 accent-emerald-600"> Hoạt động
-        </label>
-      </div>
-    </div>
-
-    <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-white/10">
-      <button type="button" onclick="closeCouponModal()" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800">Hủy</button>
-      <button type="button" onclick="saveCouponModal()" class="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs shadow-md transition active:scale-95 flex items-center gap-1.5"><i class="fas fa-check"></i>LƯU MÃ COUPON</button>
     </div>
   </div>
 </div>
+
+<!-- Konsta UI: iOS Fixed Bottom Navigation Bar (Đệm chuẩn safe-area-inset-bottom) -->
+<nav id="adminBottomNav" class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-lg border-t border-slate-200/80 pb-[env(safe-area-inset-bottom,0px)] shadow-lg transition-transform duration-300">
+  <div class="h-14 grid grid-cols-5 items-center px-1">
+    <button type="button" onclick="go('t-ord')" class="flex flex-col items-center justify-center text-slate-500 hover:text-indigo-600 active:scale-95 transition-all py-1 min-h-[44px]">
+      <i class="fas fa-box text-base"></i>
+      <span class="text-[10px] font-bold mt-0.5">Đơn hàng</span>
+    </button>
+    <button type="button" onclick="go('t-pkg')" class="flex flex-col items-center justify-center text-slate-500 hover:text-indigo-600 active:scale-95 transition-all py-1 min-h-[44px]">
+      <i class="fas fa-tags text-base"></i>
+      <span class="text-[10px] font-bold mt-0.5">Bán hàng</span>
+    </button>
+    <button type="button" onclick="go('t-rev')" class="flex flex-col items-center justify-center text-slate-500 hover:text-indigo-600 active:scale-95 transition-all py-1 min-h-[44px]">
+      <i class="fas fa-chart-pie text-base"></i>
+      <span class="text-[10px] font-bold mt-0.5">Doanh thu</span>
+    </button>
+    <button type="button" onclick="go('t-check')" class="flex flex-col items-center justify-center text-slate-500 hover:text-indigo-600 active:scale-95 transition-all py-1 min-h-[44px]">
+      <i class="fas fa-clipboard-check text-base"></i>
+      <span class="text-[10px] font-bold mt-0.5">Kiểm tra</span>
+    </button>
+    <button type="button" onclick="go('t-settings')" class="flex flex-col items-center justify-center text-slate-500 hover:text-indigo-600 active:scale-95 transition-all py-1 min-h-[44px]">
+      <i class="fas fa-cog text-base"></i>
+      <span class="text-[10px] font-bold mt-0.5">Cài đặt</span>
+    </button>
+  </div>
+</nav>
+
+<!-- Vaul: Lightweight Gesture Physics Engine (Vuốt trượt kéo xuống để đóng Bottom Sheet) -->
+<script>
+(function() {
+  function attachVaulPhysics(overlayId, handleId) {
+    const overlay = document.getElementById(overlayId);
+    if (!overlay) return;
+    const sheet = overlay.querySelector('.glass-card') || overlay.firstElementChild;
+    const handle = document.getElementById(handleId) || sheet;
+    if (!sheet || !handle) return;
+
+    let startY = 0, currentY = 0, isDragging = false;
+
+    handle.addEventListener('touchstart', function(e) {
+      if (window.innerWidth >= 640) return;
+      startY = e.touches[0].clientY;
+      isDragging = true;
+      sheet.style.transition = 'none';
+    }, { passive: true });
+
+    handle.addEventListener('touchmove', function(e) {
+      if (!isDragging) return;
+      currentY = e.touches[0].clientY;
+      const deltaY = currentY - startY;
+      if (deltaY > 0) {
+        sheet.style.transform = 'translateY(' + deltaY + 'px)';
+      }
+    }, { passive: true });
+
+    handle.addEventListener('touchend', function(e) {
+      if (!isDragging) return;
+      isDragging = false;
+      sheet.style.transition = 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)';
+      const deltaY = currentY - startY;
+      if (deltaY > 110) {
+        sheet.style.transform = 'translateY(100%)';
+        setTimeout(function() {
+          overlay.classList.add('hidden');
+          sheet.style.transform = '';
+        }, 220);
+      } else {
+        sheet.style.transform = 'translateY(0)';
+      }
+    }, { passive: true });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    attachVaulPhysics('mOrd', 'mOrdHandle');
+    attachVaulPhysics('mRootEdit', 'mRootEditHandle');
+    attachVaulPhysics('mLnk', 'mLnkHandle');
+    attachVaulPhysics('mCouponModal', 'mCouponModalHandle');
+  });
+})();
+</script>
 
 </body>
 </html>
