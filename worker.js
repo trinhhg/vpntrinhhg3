@@ -5,15 +5,15 @@
 // Biến môi trường (Settings > Variables > Secret): ADMIN_PASSWORD, WEB_API_SECRET2, D1_URL, D1_SECRET, GH_PAT, CF_API_TOKEN
 // Biến thường: WEB_INDEX = 1 | 2 | 3, ADMIN_EMAIL (không bắt buộc), PUBLIC_WORKER_URL, CF_ACCOUNT_ID, KV_NAMESPACE_ID, WORKER_SCRIPT_NAME, D1_DATABASE_ID
 // Cron Trigger: */15 * * * *
-const getKV = (env) => env && (env.VPN_KV3 || getKV(env) || env.KV);
+const getKV = (env) => env && (env.VPN_KV3 || env.VPN_KV || env.KV);
 
 
 // ====================================================================
 // SUPABASE CLIENT ĐẦY ĐỦ TÍNH NĂNG (RPC QUOTA & DATABASE)
 // ====================================================================
 function getSupabase(env, isTest = false) {
-  const url = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = env.SUPABASE_KEY || env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_KEY || env.SUPABASE_ANON_KEY;
+  const url = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || (env.SUPABASE_PROJECT_REF ? `https://${env.SUPABASE_PROJECT_REF}.supabase.co` : "");
+  const key = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_KEY || env.SUPABASE_KEY || env.SUPABASE_ANON_KEY || "";
   if (!url || !key) return null;
   const table = isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS";
   return {
@@ -21,7 +21,43 @@ function getSupabase(env, isTest = false) {
       const res = await fetch(`${url}/rest/v1/${table}?select=*&order=createdTs.desc&limit=5000`, {
         headers: { apikey: key, Authorization: "Bearer " + key }
       });
-      return res.ok ? await res.json() : [];
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        throw new Error(`Supabase getAll HTTP ${res.status}: ${errText.slice(0, 150) || "Truy vấn database thất bại"}`);
+      }
+      return await res.json();
+    },
+    async listOrders({ status, search, limit = 50, offset = 0 } = {}) {
+      let query = `${url}/rest/v1/${table}?select=*&order=createdTs.desc&limit=${Math.min(limit, 500)}&offset=${offset}`;
+      if (status && status !== "all") {
+        query += `&status=eq.${encodeURIComponent(status)}`;
+      }
+      if (search) {
+        const s = encodeURIComponent(`*${search}*`);
+        query += `&or=(id.ilike.${s},email.ilike.${s},nickname.ilike.${s},zalo.ilike.${s})`;
+      }
+      const res = await fetch(query, {
+        headers: { apikey: key, Authorization: "Bearer " + key, Prefer: "count=exact" }
+      });
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        throw new Error(`Supabase listOrders HTTP ${res.status}: ${errText.slice(0, 150) || "Truy vấn thất bại"}`);
+      }
+      const totalHeader = res.headers.get("content-range")?.split("/")[1];
+      const count = totalHeader ? Number(totalHeader) : null;
+      const data = await res.json();
+      return { data, count, limit, offset };
+    },
+    async getOrder(id) {
+      const res = await fetch(`${url}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}&limit=1`, {
+        headers: { apikey: key, Authorization: "Bearer " + key }
+      });
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        throw new Error(`Supabase getOrder HTTP ${res.status}: ${errText.slice(0, 150)}`);
+      }
+      const items = await res.json();
+      return Array.isArray(items) && items.length ? items[0] : null;
     },
     async upsert(order) {
       const res = await fetch(`${url}/rest/v1/${table}`, {
@@ -57,7 +93,7 @@ function getSupabase(env, isTest = false) {
           headers: { apikey: key, Authorization: "Bearer " + key, Prefer: "count=exact" }
         });
         const total = countRes.headers.get("content-range")?.split("/")[1] || 0;
-        return { ok: true, ms: Date.now() - t0, count: Number(total) };
+        return { ok: true, ms: Date.now() - t0, count: Number(total), table, url: `${url}/rest/v1/${table}` };
       } catch (e) {
         return { ok: false, status: 0, error: e.message || String(e) };
       }
@@ -100,6 +136,20 @@ function getSupabase(env, isTest = false) {
       return res.ok;
     }
   };
+}
+
+async function pingSupabase(env, isTest = false) {
+  const sb = getSupabase(env, isTest);
+  if (!sb) {
+    const hasUrl = !!(env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || env.SUPABASE_PROJECT_REF);
+    const hasKey = !!(env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_KEY || env.SUPABASE_KEY || env.SUPABASE_ANON_KEY);
+    return {
+      ok: false,
+      status: 0,
+      error: !hasKey ? "Chưa cấu hình SUPABASE_KEY / SUPABASE_SERVICE_ROLE_KEY" : (!hasUrl ? "Chưa cấu hình SUPABASE_URL / SUPABASE_PROJECT_REF" : "Thiếu biến cấu hình Supabase")
+    };
+  }
+  return await sb.ping();
 }
 
 // ====================================================================
@@ -524,12 +574,21 @@ async function loadAll(KV, env) {
   const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
   const sb = env ? getSupabase(env, isTest) : null;
   let sbOk = false;
+  let sbError = null;
   let ordersPromise = Promise.resolve([]);
   if (sb) {
-    ordersPromise = sb.getAll().then((res) => { sbOk = Array.isArray(res); return res; }).catch(() => []);
+    ordersPromise = sb.getAll().then((res) => { sbOk = Array.isArray(res); return res; }).catch((err) => { sbOk = false; sbError = err.message || String(err); return []; });
+  } else {
+    sbError = "Chưa cấu hình SUPABASE_KEY / SUPABASE_URL";
   }
-  const [orders, links, pool, cms] = await Promise.all([ordersPromise, g("ALL_LINKS", []), g("LINK_POOL", []), g("ALL_CMS", {})]);
-  const st = { orders: arr(orders), links: arr(links), pool: arr(pool), cms: cms && typeof cms === "object" && !Array.isArray(cms) ? cms : {}, dO: false, dL: false, dP: false, isTest, sbOk };
+  const [sbOrders, links, pool, cms] = await Promise.all([ordersPromise, g("ALL_LINKS", []), g("LINK_POOL", []), g("ALL_CMS", {})]);
+  let orders = arr(sbOrders);
+  // Fallback đọc ALL_ORDERS từ KV nếu production và Supabase chưa trả về dữ liệu (bảo toàn 224 đơn cũ)
+  if (!isTest && (!sbOk || orders.length === 0)) {
+    const kvOrders = arr(await g("ALL_ORDERS", []));
+    if (kvOrders.length > 0) orders = kvOrders;
+  }
+  const st = { orders, links: arr(links), pool: arr(pool), cms: cms && typeof cms === "object" && !Array.isArray(cms) ? cms : {}, dO: false, dL: false, dP: false, isTest, sbOk, sbError };
   for (const p of st.pool) p.used = st.links.filter((l) => l && (l.orig === p.url || l.orig2 === p.url)).length;
   return st;
 }
@@ -1215,13 +1274,11 @@ export default {
     }
     if (p === "/api/admin/test/status" && m === "GET") {
       const active = (await KV.get("TEST_MODE_ACTIVE")) === "1";
-      const sbProd = getSupabase(env, false);
-      const sbTest = getSupabase(env, true);
       const [ping_prod, ping_test] = await Promise.all([
-        sbProd ? sbProd.ping() : Promise.resolve({ ok: false, error: "Chưa cấu hình SUPABASE_URL / SUPABASE_KEY" }),
-        sbTest ? sbTest.ping() : Promise.resolve({ ok: false, error: "Chưa cấu hình SUPABASE_URL / SUPABASE_KEY" })
+        pingSupabase(env, false),
+        pingSupabase(env, true)
       ]);
-      return J({ ok: true, active, ping: ping_test, ping_prod, ping_test });
+      return J({ ok: true, active, isTest: active, ping: active ? ping_test : ping_prod, ping_prod, ping_test, pingProd: ping_prod, pingTest: ping_test });
     }
     if (p === "/api/admin/test/fake_order" && m === "POST") {
       const sb = getSupabase(env, true);
@@ -1475,16 +1532,25 @@ export default {
         const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
         const sb = getSupabase(env, isTest);
         let ordersData = "[]";
+        let sbError = null;
         if (sb) {
           try {
             const sbOrders = await sb.getAll();
             if (Array.isArray(sbOrders)) {
               ordersData = JSON.stringify(sbOrders);
             }
-          } catch {}
+          } catch (e) {
+            sbError = e.message || String(e);
+          }
+        } else {
+          sbError = "Chưa cấu hình SUPABASE_KEY / SUPABASE_URL";
+        }
+        if (!isTest && ordersData === "[]") {
+          const kvOrders = await KV.get("ALL_ORDERS");
+          if (kvOrders && kvOrders !== "[]") ordersData = kvOrders;
         }
         const [l, pl, dr] = await Promise.all(["ALL_LINKS", "LINK_POOL", "ALL_DATA_REQUESTS"].map((k) => KV.get(k)));
-        return RAW(`{"orders":${ordersData},"links":${l || "[]"},"pool":${pl || "[]"},"data_requests":${dr || "[]"}}`);
+        return RAW(`{"orders":${ordersData},"links":${l || "[]"},"pool":${pl || "[]"},"data_requests":${dr || "[]"}${sbError ? `,"sbError":${JSON.stringify(sbError)}` : ""}}`);
       }
       if (p === "/api/admin/status") {
         const cron = safeJson(await KV.get("CRON_LAST_RUN"), null), r = await d1(env, "/api/admin/logs?limit=1");
@@ -1685,7 +1751,14 @@ export default {
       }
 
       // Giao dịch D1 (worker giữ secret, trình duyệt không cần biết)
-      if (p === "/api/admin/tx" && m === "GET") { const r = await d1(env, "/api/admin/transactions" + url.search); return J(r.data || { ok: false }, r.ok ? 200 : r.status || 502); }
+      if (p === "/api/admin/tx" && m === "GET") {
+        const r = await d1(env, "/api/admin/transactions" + url.search);
+        if (!r.ok) {
+          const errMsg = (r.data && r.data.error) || (r.status === 0 ? "Không thể kết nối đến D1 Payment Webhook" : `D1 trả về lỗi HTTP ${r.status}`);
+          return J({ ok: false, error: errMsg, transactions: [], status: r.status }, r.status >= 400 && r.status < 600 ? r.status : 502);
+        }
+        return J(r.data || { ok: true, transactions: [] }, 200);
+      }
       const tm = p.match(/^\/api\/admin\/tx\/(\d+)\/(approve|reject)$/);
       if (tm && m === "POST") {
         const b = await body(), r = await d1(env, `/api/admin/reviews/${tm[1]}/${tm[2]}`, { method: "POST", body: b });
@@ -1702,7 +1775,62 @@ export default {
         return J(r.data || { ok: false }, r.ok ? 200 : r.status || 502);
       }
 
-            // ===== Đơn hàng: upsert 1 đơn theo admin.html v2
+            // ===== Đơn hàng: API danh sách phân trang, tìm kiếm & chi tiết
+      if (p === "/api/admin/orders" && m === "GET") {
+        const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
+        const sb = getSupabase(env, isTest);
+        const status = url.searchParams.get("status") || "all";
+        const search = url.searchParams.get("q") || url.searchParams.get("search") || "";
+        const limit = Math.min(Number(url.searchParams.get("limit")) || 50, 500);
+        const offset = Math.max(Number(url.searchParams.get("offset")) || 0, 0);
+        if (sb) {
+          try {
+            const res = await sb.listOrders({ status, search, limit, offset });
+            return J({ ok: true, orders: res.data, count: res.count, limit, offset, source: isTest ? "supabase_test" : "supabase_prod" });
+          } catch (e) {
+            if (!isTest) {
+              const all = arr(safeJson(await KV.get("ALL_ORDERS"), []));
+              let filtered = all;
+              if (status && status !== "all") filtered = filtered.filter(o => normStatus(o.status) === normStatus(status));
+              if (search) {
+                const s = search.toLowerCase();
+                filtered = filtered.filter(o => (o.id && o.id.toLowerCase().includes(s)) || (o.email && o.email.toLowerCase().includes(s)) || (o.nickname && o.nickname.toLowerCase().includes(s)));
+              }
+              const paged = filtered.slice(offset, offset + limit);
+              return J({ ok: true, orders: paged, count: filtered.length, limit, offset, source: "kv_fallback", sbError: e.message || String(e) });
+            }
+            return J({ ok: false, error: e.message || String(e) }, 500);
+          }
+        }
+        const all = arr(safeJson(await KV.get(isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS"), []));
+        let filtered = all;
+        if (status && status !== "all") filtered = filtered.filter(o => normStatus(o.status) === normStatus(status));
+        if (search) {
+          const s = search.toLowerCase();
+          filtered = filtered.filter(o => (o.id && o.id.toLowerCase().includes(s)) || (o.email && o.email.toLowerCase().includes(s)) || (o.nickname && o.nickname.toLowerCase().includes(s)));
+        }
+        const paged = filtered.slice(offset, offset + limit);
+        return J({ ok: true, orders: paged, count: filtered.length, limit, offset, source: "kv", sbError: "Chưa cấu hình SUPABASE_KEY / SUPABASE_URL" });
+      }
+
+      const ordDetailMatch = p.match(/^\/api\/admin\/orders\/([A-Za-z0-9_-]+)$/);
+      if (ordDetailMatch && m === "GET") {
+        const oid = normId(ordDetailMatch[1]);
+        const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
+        const sb = getSupabase(env, isTest);
+        if (sb) {
+          try {
+            const order = await sb.getOrder(oid);
+            if (order) return J({ ok: true, order, source: isTest ? "supabase_test" : "supabase_prod" });
+          } catch (e) {}
+        }
+        const st = await loadAll(KV, env);
+        const order = st.orders.find(o => o && normId(o.id) === oid);
+        if (!order) return J({ ok: false, error: "Không tìm thấy đơn hàng" }, 404);
+        return J({ ok: true, order, source: "kv" });
+      }
+
+      // ===== Đơn hàng: upsert 1 đơn theo admin.html v2
       //  · newId: đổi Mã đơn của chính đơn đó (đồng bộ link/yêu cầu dung lượng/vệ tinh) · lockAuto: KHÔNG chạy automation (cấp link, sync 3 web)
       //  · lockExpiry (hoặc settings.lockExpiry): expDate & days của đơn có sẵn KHÔNG bao giờ đổi · unlockInfo: ["info1",...] mở khóa ô đã sửa tay
       //  · Bank -> totalVnd, Alipay/Weixin -> totalCny · KHÔNG tự sửa totalVnd/totalCny/days/expDate của dữ liệu cũ

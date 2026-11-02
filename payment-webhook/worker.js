@@ -40,7 +40,7 @@ function parseAmount(str) {
 function parseBankNotification(notification) {
   const raw = String(notification || "").trim();
   if (!raw) return { amount: null, content: null, orderId: null, raw };
-  const am = raw.match(/GD\s*:\s*\+?\s*([\d,.]+)/i) || raw.match(/\+\s*([\d,.]+)\s*(?:VND|VNÄ|Ä)/i) || raw.match(/\+\s*([\d,.]+)/);
+  const am = raw.match(/GD\s*:\s*\+?\s*([\d,.]+)/i) || raw.match(/\+\s*([\d,.]+)\s*(?:VND|VNĐ|vnđ|đ|d)\b/i) || raw.match(/\+\s*([\d,.]+)/);
   let amount = null;
   if (am) { const n = parseAmount(am[1]); if (Number.isSafeInteger(n) && n > 0) amount = n; }
   const cm = raw.match(/ND\s*[:|]\s*(.*)$/is) || raw.match(/\|ND\s*(.*)$/is);
@@ -422,7 +422,10 @@ export default {
           return json({ ok: true, status: "unmatched", reason: "possible_upgrade", transactionId: txId, orderId, amount });
         }
         if (order.status === "failed") { await updateTx(env, txId, "invalid_order_status", "ÄÆ¡n hÃ ng ÄÃ£ bá» tá»« chá»i", orderId); return json({ ok: true, status: "invalid_order_status", transactionId: txId }); }
-        if (Math.abs(amount - Number(order.total_vnd)) > 1) { await updateTx(env, txId, "amount_mismatch", `Sai sá» tiá»n (ÄÆ¡n: ${order.total_vnd}, Nháº­n: ${amount})`, orderId); return json({ ok: true, status: "amount_mismatch", transactionId: txId, expected: Number(order.total_vnd), received: amount }); }
+        if (amount < Number(order.total_vnd) - 1) {
+          await updateTx(env, txId, "amount_mismatch", `Thiếu tiền (Đơn: ${order.total_vnd}, Nhận: ${amount})`, orderId);
+          return json({ ok: true, status: "amount_mismatch", transactionId: txId, expected: Number(order.total_vnd), received: amount, substatus: "underpaid" });
+        }
 
         // Kiá»m tra Äá»i chiáº¿u mÃ£ gÃ³i tá»« ná»i dung chuyá»n khoáº£n náº¿u cÃ³
         const pkgInContent = extractPkgCodeFromContent(content);
@@ -431,7 +434,11 @@ export default {
           return json({ ok: true, status: "review_required", reason: "pkg_mismatch", transactionId: txId, orderId });
         }
 
-        await updateTx(env, txId, "success", "Khá»p thanh toÃ¡n thÃ nh cÃ´ng", orderId, order.order_type === "renew" ? "renew" : "new");
+        let successNote = "Khớp thanh toán thành công";
+        if (amount > Number(order.total_vnd) + 1) {
+          successNote = `Khớp thanh toán thừa tiền (Đơn: ${order.total_vnd}, Nhận: ${amount}, Thừa: ${amount - Number(order.total_vnd)})`;
+        }
+        await updateTx(env, txId, "success", successNote, orderId, order.order_type === "renew" ? "renew" : "new");
         const ur = await env.DB.prepare(`UPDATE orders SET status = 'success', paid_at = ${NOW}, fulfillment_status = 'pending', fulfill_at = ${NOW}, fulfill_tries = 0 WHERE order_id = ? AND status = 'pending'`).bind(orderId).run();
         if (ur.meta.changes === 0) { await updateTx(env, txId, "already_processed", "ÄÆ¡n vá»«a ÄÆ°á»£c xá»­ lÃ½ trÆ°á»c ÄÃ³"); return json({ ok: true, status: "already_processed", transactionId: txId }); }
         await logSys(env, "ok", "Khá»p thanh toÃ¡n", `${orderId} Â· ${amount}`, orderId);
@@ -521,7 +528,7 @@ export default {
   async scheduled(event, env, ctx) {
     env.DB = env.DB || env["payment-db"] || env.payment_db;
     const CONFIG = getConfig(env);
-    if (!env.DB || !CONFIG.WEB_API_SECRET2) return;
+    if (!env.DB || (!CONFIG.WEB_API_SECRET2 && !CONFIG.D1_SECRET && !CONFIG.WEB_API_SECRET)) return;
     let matched = 0, retried = 0;
 
     // 1. Khá»p tá»± Äá»ng ÄÆ¡n pending báº±ng 1 cÃ¢u INNER JOIN duy nháº¥t (khÃ´ng láº·p SELECT)

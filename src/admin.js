@@ -291,9 +291,8 @@ async function fetchAll(msg){
   deadDb=arr(dead);applyPoll(poll);cmsDb=cms&&typeof cms==="object"&&!Array.isArray(cms)?cms:{};cmsDb.settings=cmsDb.settings||{};cmsDb.link_origins=cmsDb.link_origins||{};
   devicesDb=arr(devs);guides=g&&typeof g==="object"?g:{};
   const healed=arr(poll&&poll.links).length-linksDb.length;
-  let pc=false;linksDb.forEach(l=>{if(l.orig&&l.orig!=="Da_bi_khoa"&&!linkPoolDb.find(p=>p.url===l.orig)&&!isLockedPoolUrl(l.orig)){linkPoolDb.push({id:"POOL-"+Date.now()+Math.floor(Math.random()*100),url:l.orig,gb:"",remainGb:"",exp:l.expDate||"",max:30});pc=true;}});
-  if(pc)await aj("/api/link_pool",{method:"POST",body:linkPoolDb});
-  if(healed>0){try{await aj("/api/links",{method:"POST",body:linksDb});logEvent("warn","Link Sub",`Tự chữa: loại ${healed} link đã xóa bị quay lại danh sách`);}catch(e){}}
+  // AGENTS.md Quy tắc 40 & 44: fetchAll chỉ đọc dữ liệu hiển thị, không tự ý ghi KV khi vừa tải trang
+  linksDb.forEach(l=>{if(l.orig&&l.orig!=="Da_bi_khoa"&&!linkPoolDb.find(p=>p.url===l.orig)&&!isLockedPoolUrl(l.orig)){linkPoolDb.push({id:"POOL-"+Date.now()+Math.floor(Math.random()*100),url:l.orig,gb:"",remainGb:"",exp:l.expDate||"",max:30});}});
   lastSig={o:JSON.stringify(ordersDb),l:JSON.stringify(linksDb),p:JSON.stringify(linkPoolDb),d:JSON.stringify(dataReqDb)};
   renderOrd();renderCheckTab();renderDataRequests();renderLinks();renderDead();renderDev();loadSettingsUI();if(!curArtsReady)initGuides();
   loadStatus();if(msg)toast("Đã làm mới dữ liệu!");
@@ -367,7 +366,7 @@ function go(id, fromHistory){
   if(id==="t-lnk")renderLinks();
   if(id==="t-settings"){loadSettingsUI();loadStatus();loadQuota();}
   if(id==="t-rev")renderRevenue();
-  if(id==="t-trans"){localStorage.setItem(SITE_KEY+"_txSeen",Date.now());$("transBadge").classList.add("hidden");if(curTxTab==="exception")renderExceptionsTab();else renderTransactions();}
+  if(id==="t-trans"){localStorage.setItem(SITE_KEY+"_txSeen",Date.now());$("transBadge").classList.add("hidden");if(!txData.length)loadTx(true);if(curTxTab==="exception")renderExceptionsTab();else renderTransactions();}
   if(id==="t-mail")renderMailComposer();
   if(id==="t-cms"&&curArtsReady)renderGuideAll();
  }catch(e){console.error("go("+id+") lỗi:",e);toast("Lỗi mở tab: "+e.message,"err");}
@@ -1897,15 +1896,21 @@ function switchTxTab(t){
 window.switchTxTab = switchTxTab;
 const extractOrder=raw=>{if(!raw)return null;const m=String(raw).replace(/[-_.\s]/g,"").toUpperCase().match(/(DH[A-Z0-9]{10})/);return m?m[1]:null;};
 function mergeTx(list){const map=new Map(txData.map(t=>[t.id,t]));list.forEach(t=>{map.set(t.id,t);if(t.updated_at&&t.updated_at>txSince)txSince=t.updated_at;});txData=[...map.values()].sort((a,b)=>b.id-a.id).slice(0,300);}
+let lastTxError = "";
 async function loadTx(force){
  clearTimeout(txPollT);
  try{
   const first=force||!txData.length;
   const j=await aj(first?"/api/admin/tx?status=all&limit=100":`/api/admin/tx?status=all&limit=100&updated_since=${encodeURIComponent(txSince||"2000-01-01 00:00:00")}`);
+  if(j&&j.ok===false)throw new Error(j.error||"D1 trả về lỗi");
   if(first){txData=[];txSince="";}
-  const list=arr(j&&j.transactions);mergeTx(list);txFails=0;
+  const list=arr(j&&j.transactions);mergeTx(list);txFails=0;lastTxError="";
   if(!$("t-trans").classList.contains("hidden")){if(curTxTab!=="rev")renderTransactions();}else{const seen=+localStorage.getItem(SITE_KEY+"_txSeen")||0;const n=txData.filter(t=>/unmatched|review|mismatch/.test(t.status)&&parseAny(t.created_at)>seen).length;if(n){$("transBadge").innerText=n;$("transBadge").classList.remove("hidden");}}
- }catch(e){txFails++;if(!txData.length&&!$("t-trans").classList.contains("hidden"))$("transBody").innerHTML=`<tr><td colspan="10" class="text-center py-8 text-slate-400 font-bold">Lỗi tải giao dịch: ${esc(e.message)}</td></tr>`;}
+ }catch(e){
+  txFails++;
+  lastTxError = e.message || String(e);
+  if(!txData.length&&!$("t-trans").classList.contains("hidden"))$("transBody").innerHTML=`<tr><td colspan="10" class="text-center py-8 text-rose-500 font-bold"><i class="fas fa-exclamation-triangle mr-2"></i> Lỗi kết nối D1 đối soát: ${esc(lastTxError)}<br><button onclick="loadTx(true)" class="mt-3 px-3 py-1 bg-rose-50 border border-rose-200 text-rose-700 rounded text-xs hover:bg-rose-100 font-bold"><i class="fas fa-sync-alt mr-1"></i> Thử lại</button></td></tr>`;
+ }
  const active=!$("t-trans").classList.contains("hidden");
  txPollT=setTimeout(()=>{if(document.hidden)return loadTx();loadTx();},document.hidden?30000:Math.min(30000,(active?5000:20000)*(1+txFails)));}
 const kindBadge=k=>k==="upgrade"?`<span class="bg-purple-100 text-purple-700 border border-purple-200 px-2 py-0.5 rounded text-[9px] font-black uppercase ml-1">NÂNG CẤP</span>`:k==="renew"?`<span class="bg-sky-100 text-sky-700 border border-sky-200 px-2 py-0.5 rounded text-[9px] font-black uppercase ml-1">GIA HẠN</span>`:`<span class="bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded text-[9px] font-black uppercase ml-1">MỚI</span>`;
@@ -1917,7 +1922,15 @@ async function deleteTx(id){
 const delBtn=id=>`<button onclick="deleteTx(${id})" title="Xóa hẳn khỏi D1" class="bg-red-50 text-red-600 border border-red-100 hover:bg-red-500 hover:text-white font-bold w-9 h-8 rounded-lg text-xs"><i class="fas fa-trash"></i></button>`;
 function renderTransactions(){
  const th=$("transHead"),tb=$("transBody");if(curTxTab==="rev")return;
- if(!txData.length){th.innerHTML="";tb.innerHTML='<tr><td colspan="10" class="text-center py-8 text-slate-400 font-bold">Không có giao dịch nào</td></tr>';return;}
+ if(!txData.length){
+  th.innerHTML="";
+  if(lastTxError){
+    tb.innerHTML=`<tr><td colspan="10" class="text-center py-8 text-rose-500 font-bold"><i class="fas fa-exclamation-triangle mr-2"></i> Không thể tải giao dịch: ${esc(lastTxError)}<br><button onclick="loadTx(true)" class="mt-3 px-3 py-1 bg-rose-50 border border-rose-200 text-rose-700 rounded text-xs hover:bg-rose-100 font-bold"><i class="fas fa-sync-alt mr-1"></i> Thử lại</button></td></tr>`;
+  } else {
+    tb.innerHTML='<tr><td colspan="10" class="text-center py-8 text-slate-400 font-bold">Không có giao dịch nào</td></tr>';
+  }
+  return;
+ }
  if(curTxTab==="giamsat"){
   th.innerHTML='<tr><th>STT</th><th>Mã Đơn</th><th>Giờ Tạo Đơn</th><th>Email Khách</th><th>Tiền Thu & SL</th><th>Nguồn Web</th><th>Mã CK (Regex)</th><th>Trạng Thái</th><th class="col-ok">Khớp</th><th class="col-x">Xóa</th></tr>';
   tb.innerHTML=txData.map((tx,i)=>{
@@ -6260,6 +6273,12 @@ if (typeof window !== 'undefined') {
     ['started', typeof started !== 'undefined' ? started : undefined],
     ['adminScrollTimer', typeof adminScrollTimer !== 'undefined' ? adminScrollTimer : undefined],
     ['isTestModeActive', typeof isTestModeActive !== 'undefined' ? isTestModeActive : undefined],
+    ['toggleTestMode', typeof toggleTestMode !== 'undefined' ? toggleTestMode : undefined],
+    ['testPingTest', typeof testPingTest !== 'undefined' ? testPingTest : undefined],
+    ['createFakeTestOrder', typeof createFakeTestOrder !== 'undefined' ? createFakeTestOrder : undefined],
+    ['cloneProdOrdersToTest', typeof cloneProdOrdersToTest !== 'undefined' ? cloneProdOrdersToTest : undefined],
+    ['clearTestOrders', typeof clearTestOrders !== 'undefined' ? clearTestOrders : undefined],
+    ['lastTxError', typeof lastTxError !== 'undefined' ? lastTxError : undefined],
   ];
   _exposed.forEach(([k, v]) => {
     if (v !== undefined) window[k] = v;
