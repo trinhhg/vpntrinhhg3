@@ -111,28 +111,46 @@ a[role="button"]:active,
   transform:scale(0.97) !important;
 }
 
-/* ===== SIGNATURE PURPLE CHARCOAL GLASS (Nền tím signature tỏa từ tâm + Kính mờ than chì) ===== */
-html.dark{
-  color-scheme:dark;
-  scrollbar-color:#4c1d95 #0d0e12;
-  --g-card:rgba(20, 21, 26, 0.75);
-  --g-sub:rgba(0, 0, 0, 0.45);
-  --bd:rgba(255, 255, 255, 0.09);
-  --bd2:rgba(168, 85, 247, 0.25);
-  --t1:#F5F5F5;--t2:#CBD5E1;--t3:#94A3B8;--t4:#64748B;
-  --blur:blur(20px) saturate(160%);
-  --shadow:0 15px 35px -10px rgba(0,0,0,0.65), inset 0 1px 1px 0 rgba(255,255,255,0.12);
+/* ===== SIGNATURE PURPLE CHARCOAL GLASS ===== */
+:root {
+  --color-primary: #4f46e5;
+  --color-primary-hover: #4338ca;
+
+  --g-card: rgba(255, 255, 255, 0.95);
+  --g-sub: rgba(248, 250, 252, 0.85);
+  --bd: rgba(226, 232, 240, 0.8);
+  --blur: blur(12px);
 }
 
-/* Nền xám than chì với quầng tím signature tỏa từ tâm */
-html.dark body{
-  background-color:#0d0e12 !important;
+html.dark {
+  color-scheme: dark;
+  scrollbar-color: #4c1d95 #0d0e12;
+
+  --g-card: rgba(20, 21, 26, 0.78);
+  --g-sub: rgba(26, 29, 36, 0.65);
+  --bd: rgba(168, 85, 247, 0.18);
+  --bd2: rgba(168, 85, 247, 0.25);
+
+  --t1: #F5F5F5;
+  --t2: #CBD5E1;
+  --t3: #94A3B8;
+  --t4: #64748B;
+
+  --blur: blur(16px);
+  --shadow: 0 15px 35px -10px rgba(0,0,0,0.65),
+            inset 0 1px 1px 0 rgba(255,255,255,0.12);
+}
+
+/* Background ánh tím Signature Purple Charcoal Glass */
+html.dark body {
+  background-color: #0b0f19 !important;
   background-image:
-    radial-gradient(circle 850px at 50% 120px, rgba(124, 58, 237, 0.18), transparent 70%),
-    radial-gradient(circle 600px at 80% 450px, rgba(139, 92, 246, 0.10), transparent 60%),
-    radial-gradient(circle 500px at 20% 850px, rgba(99, 102, 241, 0.08), transparent 60%) !important;
-  color:#E2E8F0 !important;
-  min-height:100vh;
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.15) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(79, 70, 229, 0.1) 0px, transparent 50%) !important;
+  background-attachment: fixed;
+  color: #E2E8F0 !important;
+  min-height: 100vh;
 }
 
 /* Tầng 1: Card kính mờ than chì */
