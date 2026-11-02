@@ -58,15 +58,22 @@ async function ensureSchema(env) {
     await run(`CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, order_id TEXT, amount INTEGER, payment_method TEXT, content TEXT, notification TEXT, status TEXT, kind TEXT DEFAULT 'new', created_at TEXT, updated_at TEXT, reviewed_at TEXT, review_note TEXT)`);
     await run(`CREATE TABLE IF NOT EXISTS order_upgrades (id INTEGER PRIMARY KEY AUTOINCREMENT, order_id TEXT NOT NULL, from_price_vnd INTEGER NOT NULL, target_package_id TEXT NOT NULL, target_price_vnd INTEGER NOT NULL, upgrade_amount_vnd INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'pending', transaction_id INTEGER, created_at TEXT NOT NULL, paid_at TEXT, review_note TEXT, fulfillment_status TEXT DEFAULT 'pending', fulfill_at TEXT, fulfill_tries INTEGER DEFAULT 0)`);
     await run(`CREATE TABLE IF NOT EXISTS sys_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, level TEXT, action TEXT, details TEXT, ref TEXT, created_at TEXT)`);
-    // Táº¡o chá» má»¥c SQLite tÄng tá»c truy váº¥n D1 tá»©c thÃ¬
-    await run(`CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)`);
-    await run(`CREATE INDEX IF NOT EXISTS idx_orders_order_id ON orders(order_id)`);
-    await run(`CREATE INDEX IF NOT EXISTS idx_orders_pending_amt ON orders(status, total_vnd)`);
-    await run(`CREATE INDEX IF NOT EXISTS idx_tx_order_id ON transactions(order_id)`);
-    await run(`CREATE INDEX IF NOT EXISTS idx_tx_status ON transactions(status)`);
-    await run(`CREATE INDEX IF NOT EXISTS idx_upgrades_order ON order_upgrades(order_id, status)`);
-    // bÃ¹ cá»t cho DB cÅ©
-    const addCol = async (t, c, d) => { const cols = (await env.DB.prepare(`PRAGMA table_info(${t})`).all()).results || []; if (!cols.some((x) => x.name === c)) { try { await run(`ALTER TABLE ${t} ADD COLUMN ${c} ${d}`); } catch {} } };
+    // Tạo chỉ mục SQLite tăng tốc truy vấn D1 tức thì
+    try { await run(`CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)`); } catch {}
+    try { await run(`CREATE INDEX IF NOT EXISTS idx_orders_order_id ON orders(order_id)`); } catch {}
+    try { await run(`CREATE INDEX IF NOT EXISTS idx_orders_pending_amt ON orders(status, total_vnd)`); } catch {}
+    try { await run(`CREATE INDEX IF NOT EXISTS idx_tx_order_id ON transactions(order_id)`); } catch {}
+    try { await run(`CREATE INDEX IF NOT EXISTS idx_tx_status ON transactions(status)`); } catch {}
+    try { await run(`CREATE INDEX IF NOT EXISTS idx_upgrades_order ON order_upgrades(order_id, status)`); } catch {}
+    // bù cột cho DB cũ
+    const addCol = async (t, c, d) => {
+      try {
+        const cols = (await env.DB.prepare(`PRAGMA table_info(${t})`).all()).results || [];
+        if (!cols.some((x) => x.name === c)) {
+          try { await run(`ALTER TABLE ${t} ADD COLUMN ${c} ${d}`); } catch {}
+        }
+      } catch {}
+    };
     for (const [t, c, d] of [["orders", "fulfill_at", "TEXT"], ["orders", "fulfill_tries", "INTEGER DEFAULT 0"], ["orders", "email", "TEXT"], ["orders", "target_web", "TEXT"], ["orders", "worker_url", "TEXT"], ["orders", "order_type", "TEXT DEFAULT 'new'"], ["orders", "pkg_id", "TEXT"], ["transactions", "kind", "TEXT DEFAULT 'new'"], ["transactions", "updated_at", "TEXT"], ["order_upgrades", "fulfill_at", "TEXT"], ["order_upgrades", "fulfill_tries", "INTEGER DEFAULT 0"]]) await addCol(t, c, d);
     return true;
   })().catch((e) => { schemaPromise = null; throw e; });
@@ -177,7 +184,7 @@ async function notifyFulfillmentReady(env, cfg, ctx, args) {
 async function fetchOrderFromSource(env, cfg, orderId) {
   if (cfg.SUPABASE_URL && cfg.SUPABASE_KEY) {
     try {
-      const res = await fetch(`${cfg.SUPABASE_URL}/rest/v1/ALL_ORDERS?id=eq.${encodeURIComponent(orderId)}&select=*`, {
+      const res = await fetch(`${cfg.SUPABASE_URL}ALL_ORDERS?id=eq.${encodeURIComponent(orderId)}&select=*`, {
         headers: { apikey: cfg.SUPABASE_KEY, Authorization: "Bearer " + cfg.SUPABASE_KEY }
       });
       if (res.ok) {
@@ -212,7 +219,7 @@ async function adoptOrderFromSource(env, ko, orderId, amount) {
 
 export default {
   async fetch(request, env, ctx) {
-    env.DB = env.DB || env["payment-db"] || env.payment_db;
+    env.DB = env.DB || env["payment-db"] || env.payment_db || env.DATABASE || env.d1 || env.PAYMENT_DB || env.DB_PAYMENT || env.database;
     const url = new URL(request.url), CONFIG = getConfig(env), m = request.method, p = url.pathname;
     if (m === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
     if (m === "GET" && p === "/") return new Response("PAYMENT WEBHOOK ONLINE - HANOI UTC+7", { status: 200, headers: { "Content-Type": "text/plain; charset=UTF-8", "Cache-Control": "no-store", ...CORS } });
@@ -327,11 +334,21 @@ export default {
       else if (afterId) { cond.push(`t.id > ?`); prm.push(afterId); order = "t.id ASC"; }
       else if (beforeId) { cond.push(`t.id < ?`); prm.push(beforeId); }
       const sql = `SELECT t.*, o.email AS o_email, o.target_web AS o_target_web, o.status AS o_status, o.total_vnd AS o_total, o.created_at AS o_created_at, o.fulfillment_status AS o_fulfill, o.order_type AS o_type, o.worker_url AS o_worker_url FROM transactions t LEFT JOIN orders o ON t.order_id = o.order_id ${cond.length ? "WHERE " + cond.join(" AND ") : ""} ORDER BY ${order} LIMIT ?`;
-      const rows = (await env.DB.prepare(sql).bind(...prm, limit).all()).results || [];
+      let rows = [];
+      try {
+        rows = (await env.DB.prepare(sql).bind(...prm, limit).all()).results || [];
+      } catch (err) {
+        const fallbackSql = `SELECT t.* FROM transactions t ${cond.length ? "WHERE " + cond.join(" AND ") : ""} ORDER BY ${order} LIMIT ?`;
+        rows = (await env.DB.prepare(fallbackSql).bind(...prm, limit).all()).results || [];
+      }
       const list = [];
       for (const r of rows) {
         let candidateOrders = [];
-        if (r.status === "review_required" || r.status === "success_review") candidateOrders = (await env.DB.prepare(`SELECT order_id, total_vnd, status, created_at FROM orders WHERE status = 'pending' AND ABS(total_vnd - ?) <= 1 ORDER BY id DESC`).bind(r.amount).all()).results || [];
+        if (r.status === "review_required" || r.status === "success_review") {
+          try {
+            candidateOrders = (await env.DB.prepare(`SELECT order_id, total_vnd, status, created_at FROM orders WHERE status = 'pending' AND ABS(total_vnd - ?) <= 1 ORDER BY id DESC`).bind(r.amount).all()).results || [];
+          } catch {}
+        }
         const tx = { id: r.id, order_id: r.order_id, amount: r.amount, payment_method: r.payment_method, content: r.content, notification: r.notification, status: r.status, kind: r.kind || "new", created_at: r.created_at, updated_at: r.updated_at, reviewed_at: r.reviewed_at, review_note: r.review_note };
         list.push({ ...tx, candidateOrders, matchedOrder: r.order_id && r.o_status ? { order_id: r.order_id, email: r.o_email, target_web: r.o_target_web, status: r.o_status, total_vnd: r.o_total, created_at: r.o_created_at, fulfillment_status: r.o_fulfill, order_type: r.o_type, worker_url: r.o_worker_url } : null });
       }
