@@ -7,18 +7,18 @@
 // Cron Trigger: */15 * * * *
 const getKV = (env) => env && (env.VPN_KV3 || env.VPN_KV || env.KV);
 
-
+ 
 // ====================================================================
-// SUPABASE CLIENT ĐẦY ĐỦ TÍNH NĂNG (RPC QUOTA & DATABASE)
+// SUPABASE CLIENT ĐẦY ĐỦ TÍNH NĂNG (RPC QUOTA & DATABASE) 
 // ====================================================================
 function getSupabase(env, isTest = false) {
-  const url = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || (env.SUPABASE_PROJECT_REF ? `https://${env.SUPABASE_PROJECT_REF}.supabase.co` : "");
+  const url = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || (env.SUPABASE_PROJECT_REF ? `https://${env.SUPABASE_PROJECT_REF}.supabase.co/rest/v1/` : "");
   const key = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_KEY || env.SUPABASE_KEY || env.SUPABASE_ANON_KEY || "";
   if (!url || !key) return null;
   const table = isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS";
   return {
     async getAll() {
-      const res = await fetch(`${url}/rest/v1/${table}?select=*&order=createdTs.desc&limit=5000`, {
+      const res = await fetch(`${url}${table}?select=*&order=createdTs.desc&limit=5000`, {
         headers: { apikey: key, Authorization: "Bearer " + key }
       });
       if (!res.ok) {
@@ -28,7 +28,7 @@ function getSupabase(env, isTest = false) {
       return await res.json();
     },
     async listOrders({ status, search, limit = 50, offset = 0 } = {}) {
-      let query = `${url}/rest/v1/${table}?select=*&order=createdTs.desc&limit=${Math.min(limit, 500)}&offset=${offset}`;
+      let query = `${url}${table}?select=*&order=createdTs.desc&limit=${Math.min(limit, 500)}&offset=${offset}`;
       if (status && status !== "all") {
         query += `&status=eq.${encodeURIComponent(status)}`;
       }
@@ -49,7 +49,7 @@ function getSupabase(env, isTest = false) {
       return { data, count, limit, offset };
     },
     async getOrder(id) {
-      const res = await fetch(`${url}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}&limit=1`, {
+      const res = await fetch(`${url}${table}?id=eq.${encodeURIComponent(id)}&limit=1`, {
         headers: { apikey: key, Authorization: "Bearer " + key }
       });
       if (!res.ok) {
@@ -60,7 +60,7 @@ function getSupabase(env, isTest = false) {
       return Array.isArray(items) && items.length ? items[0] : null;
     },
     async upsert(order) {
-      const res = await fetch(`${url}/rest/v1/${table}`, {
+      const res = await fetch(`${url}${table}`, {
         method: "POST",
         headers: {
           apikey: key,
@@ -74,7 +74,7 @@ function getSupabase(env, isTest = false) {
     },
     async delete(id, rawId) {
       const q = (rawId && rawId !== id) ? `or=(id.eq.${encodeURIComponent(rawId)},id.eq.${encodeURIComponent(id)})` : `id=eq.${encodeURIComponent(id)}`;
-      await fetch(`${url}/rest/v1/${table}?${q}`, {
+      await fetch(`${url}${table}?${q}`, {
         method: "DELETE",
         headers: { apikey: key, Authorization: "Bearer " + key }
       });
@@ -82,24 +82,24 @@ function getSupabase(env, isTest = false) {
     async ping() {
       const t0 = Date.now();
       try {
-        const res = await fetch(`${url}/rest/v1/${table}?select=id&limit=1`, {
+        const res = await fetch(`${url}${table}?select=id&limit=1`, {
           headers: { apikey: key, Authorization: "Bearer " + key }
         });
         if (!res.ok) {
           const errText = await res.text().catch(() => "");
           return { ok: false, status: res.status, error: `HTTP ${res.status}: ${errText.slice(0, 150) || "Không phản hồi"}` };
         }
-        const countRes = await fetch(`${url}/rest/v1/${table}?select=count`, {
+        const countRes = await fetch(`${url}${table}?select=count`, {
           headers: { apikey: key, Authorization: "Bearer " + key, Prefer: "count=exact" }
         });
         const total = countRes.headers.get("content-range")?.split("/")[1] || 0;
-        return { ok: true, ms: Date.now() - t0, count: Number(total), table, url: `${url}/rest/v1/${table}` };
+        return { ok: true, ms: Date.now() - t0, count: Number(total), table, url: `${url}${table}` };
       } catch (e) {
         return { ok: false, status: 0, error: e.message || String(e) };
       }
     },
     async getRpcQuota() {
-      const res = await fetch(`${url}/rest/v1/rpc/get_db_quota`, {
+      const res = await fetch(`${url}rpc/get_db_quota`, {
         method: "POST",
         headers: { apikey: key, Authorization: "Bearer " + key, "Content-Type": "application/json" }
       });
@@ -110,17 +110,17 @@ function getSupabase(env, isTest = false) {
       return await res.json();
     },
     async cloneProdToTest() {
-      await fetch(`${url}/rest/v1/ALL_ORDERS_TEST?id=neq.NULL`, {
+      await fetch(`${url}ALL_ORDERS_TEST?id=neq.NULL`, {
         method: "DELETE",
         headers: { apikey: key, Authorization: "Bearer " + key }
       });
-      const prodRes = await fetch(`${url}/rest/v1/ALL_ORDERS?select=*`, {
+      const prodRes = await fetch(`${url}ALL_ORDERS?select=*`, {
         headers: { apikey: key, Authorization: "Bearer " + key }
       });
       const prod = await prodRes.json();
       if (!Array.isArray(prod) || !prod.length) return 0;
       for (let i = 0; i < prod.length; i += 100) {
-        await fetch(`${url}/rest/v1/ALL_ORDERS_TEST`, {
+        await fetch(`${url}ALL_ORDERS_TEST`, {
           method: "POST",
           headers: { apikey: key, Authorization: "Bearer " + key, "Content-Type": "application/json" },
           body: JSON.stringify(prod.slice(i, i + 100))
@@ -129,7 +129,7 @@ function getSupabase(env, isTest = false) {
       return prod.length;
     },
     async clearTest() {
-      const res = await fetch(`${url}/rest/v1/ALL_ORDERS_TEST?id=neq.NULL`, {
+      const res = await fetch(`${url}ALL_ORDERS_TEST?id=neq.NULL`, {
         method: "DELETE",
         headers: { apikey: key, Authorization: "Bearer " + key }
       });
@@ -545,13 +545,20 @@ async function flushLog(KV, log) {
 async function d1(env, path, opt = {}) {
   if (!env.D1_URL || !env.D1_SECRET) return { ok: false, status: 0, data: { error: "Chưa cấu hình D1_URL / D1_SECRET" } };
   try {
-    const r = await fetch(env.D1_URL.replace(/\/$/, "") + path, {
+    const fullUrl = env.D1_URL.replace(/\/$/, "") + path;
+    const r = await fetch(fullUrl, {
       method: opt.method || "GET",
       headers: { Authorization: "Bearer " + env.D1_SECRET, "Content-Type": "application/json" },
       body: opt.body ? JSON.stringify(opt.body) : undefined
     });
-    let data = null; try { data = await r.json(); } catch {}
-    return { ok: r.ok, status: r.status, data };
+    let data = null;
+    const rawText = await r.text().catch(() => "");
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      data = { error: rawText.replace(/<[^>]*>/g, " ").trim().slice(0, 300) || `Downstream HTTP ${r.status}` };
+    }
+    return { ok: r.ok, status: r.status, data, url: fullUrl };
   } catch (e) { return { ok: false, status: 0, data: { error: String(e && e.message || e) } }; }
 }
 const d1Register = (env, url, o, kind) => isBankMethod(o.method)
@@ -1754,7 +1761,8 @@ export default {
       if (p === "/api/admin/tx" && m === "GET") {
         const r = await d1(env, "/api/admin/transactions" + url.search);
         if (!r.ok) {
-          const errMsg = (r.data && r.data.error) || (r.status === 0 ? "Không thể kết nối đến D1 Payment Webhook" : `D1 trả về lỗi HTTP ${r.status}`);
+          const detail = (r.data && (r.data.details || r.data.error)) || (r.status === 0 ? "Không thể kết nối đến D1 Payment Webhook" : `D1 trả về lỗi HTTP ${r.status}`);
+          const errMsg = `[D1 /api/admin/transactions] ${detail}`;
           return J({ ok: false, error: errMsg, transactions: [], status: r.status }, r.status >= 400 && r.status < 600 ? r.status : 502);
         }
         return J(r.data || { ok: true, transactions: [] }, 200);
