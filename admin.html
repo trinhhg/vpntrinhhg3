@@ -44,9 +44,9 @@
     
  <!-- ===== ĐƠN HÀNG (KONSTA INSET GROUPED STYLE) ===== -->
  <div id="t-ord" class="w-full min-w-0">
-  <div class="flex items-center justify-between mb-3 px-1">
-   <h2 class="text-lg md:text-2xl font-black text-slate-800 tracking-tight">Quản lý Đơn hàng</h2>
-   <button onclick="openOrdModal(null)" class="h-8.5 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs md:text-sm shadow-sm transition flex items-center gap-1.5 shrink-0">
+  <div class="flex items-center justify-between gap-2 mb-3">
+   <h2 class="text-base sm:text-lg md:text-2xl font-bold text-slate-800 min-w-0">Quản lý Đơn hàng</h2>
+   <button onclick="openOrdModal(null)" class="h-8 px-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs md:text-sm shadow-sm transition flex items-center gap-1.5 shrink-0 active:scale-95">
     <i class="fas fa-plus text-xs"></i><span>Tạo thủ công</span>
    </button>
   </div>
@@ -76,10 +76,10 @@
   </div>
 
   <!-- iOS Segmented Control cho Bộ lọc trạng thái đơn -->
-  <div class="inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 mb-4 w-fit max-w-full overflow-x-auto scroll-hide">
-   <div class="ord-sub-tab active" id="otab-success" onclick="switchOrdTab('success')"><div class="mac-dot mac-green"></div>Thành công<span id="cnt-success" class="bg-green-100 text-green-700 text-[10px] font-black px-2 py-0.5 rounded-full ml-1">0</span></div>
-   <div class="ord-sub-tab" id="otab-pending" onclick="switchOrdTab('pending')"><div class="mac-dot mac-yellow"></div>Chờ duyệt<span id="cnt-pending" class="bg-yellow-100 text-yellow-700 text-[10px] font-black px-2 py-0.5 rounded-full ml-1">0</span></div>
-   <div class="ord-sub-tab" id="otab-failed" onclick="switchOrdTab('failed')"><div class="mac-dot mac-red"></div>Thất bại<span id="cnt-failed" class="bg-red-100 text-red-700 text-[10px] font-black px-2 py-0.5 rounded-full ml-1">0</span></div>
+  <div class="grid grid-cols-3 sm:inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 mb-4 w-full sm:w-fit">
+   <div class="ord-sub-tab active justify-center" id="otab-success" onclick="switchOrdTab('success')"><div class="mac-dot mac-green"></div>Thành công<span id="cnt-success" class="bg-green-100 text-green-700 text-[10px] font-black px-1.5 py-0.2 rounded-full ml-1">0</span></div>
+   <div class="ord-sub-tab justify-center" id="otab-pending" onclick="switchOrdTab('pending')"><div class="mac-dot mac-yellow"></div>Chờ duyệt<span id="cnt-pending" class="bg-yellow-100 text-yellow-700 text-[10px] font-black px-1.5 py-0.2 rounded-full ml-1">0</span></div>
+   <div class="ord-sub-tab justify-center" id="otab-failed" onclick="switchOrdTab('failed')"><div class="mac-dot mac-red"></div>Thất bại<span id="cnt-failed" class="bg-red-100 text-red-700 text-[10px] font-black px-1.5 py-0.2 rounded-full ml-1">0</span></div>
   </div>
 
   <!-- Container Danh sách đơn hàng dạng Inset Grouped Cards -->
@@ -312,7 +312,7 @@
    <div class="mb-3">
     <button type="button" onclick="$('extraSourceFields').classList.toggle('hidden');$('extraSrcIcon').classList.toggle('fa-rotate-180')" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1.5 py-1 outline-none transition">
      <i class="fas fa-sliders text-indigo-500"></i>
-     <span>⚙️ Khai báo thông số nguồn mới (GB, HSD gốc, Max máy)</span>
+     <span>Khai báo thông số nguồn mới</span>
      <i id="extraSrcIcon" class="fas fa-chevron-down text-[10px] transition-transform duration-200"></i>
     </button>
     
@@ -322,20 +322,20 @@
      <div class="border border-slate-200 rounded-lg p-2.5 bg-white space-y-1.5">
       <div class="text-[11px] font-black text-emerald-700 flex justify-between"><span>Thông số Nguồn 1</span><span class="badge-lx">Chân 1</span></div>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB</label><input id="lkGb1" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs"></div>
-       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB</label><input id="lkRemainGb1" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs"></div>
-       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">HSD gốc</label><input id="lkPoolExp1" type="text" placeholder="DD/MM/YYYY" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs text-center"></div>
-       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max máy</label><input id="lkMax1" type="number" min="1" value="30" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs text-center"></div>
+       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB</label><input id="lkGb1" type="number" placeholder="Chưa xác định" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs"></div>
+       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB</label><input id="lkRemainGb1" type="number" placeholder="Chưa xác định" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs"></div>
+       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">HSD gốc</label><input id="lkPoolExp1" type="text" placeholder="Chưa xác định" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs text-center"></div>
+       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max máy</label><input id="lkMax1" type="number" min="1" placeholder="Chưa xác định" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs text-center"></div>
       </div>
      </div>
      <!-- Thông số Nguồn 2 -->
      <div class="border border-indigo-200 rounded-lg p-2.5 bg-white space-y-1.5">
       <div class="text-[11px] font-black text-blue-700 flex justify-between"><span>Thông số Nguồn 2 (khi làm Combo)</span><span class="badge-dj">Chân 2</span></div>
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB 2</label><input id="lkGb2" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs"></div>
-       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB 2</label><input id="lkRemainGb2" type="number" placeholder="1000" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs"></div>
-       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">HSD gốc 2</label><input id="lkPoolExp2" type="text" placeholder="DD/MM/YYYY" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs text-center"></div>
-       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max máy 2</label><input id="lkMax2" type="number" min="1" value="30" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs text-center"></div>
+       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB 2</label><input id="lkGb2" type="number" placeholder="Chưa xác định" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs"></div>
+       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB 2</label><input id="lkRemainGb2" type="number" placeholder="Chưa xác định" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs"></div>
+       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">HSD gốc 2</label><input id="lkPoolExp2" type="text" placeholder="Chưa xác định" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs text-center"></div>
+       <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max máy 2</label><input id="lkMax2" type="number" min="1" placeholder="Chưa xác định" class="w-full p-1.5 border rounded-lg bg-slate-50 text-xs text-center"></div>
       </div>
      </div>
     </div>
@@ -1375,7 +1375,7 @@
      <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB</label><input id="mREGb" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
      <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB</label><input id="mRERemain" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
      <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Hết hạn</label><input id="mREExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 border rounded-xl bg-white text-xs text-center font-bold"></div>
-     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max thiết bị</label><input id="mREMax" type="number" min="1" value="30" class="w-full p-2 border rounded-xl bg-white text-xs text-center font-bold"></div>
+     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max thiết bị</label><input id="mREMax" type="number" min="1" placeholder="Chưa xác định" class="w-full p-2 border rounded-xl bg-white text-xs text-center font-bold"></div>
     </div>
    </div>
 
@@ -1393,7 +1393,7 @@
      <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB 2</label><input id="mREGb2" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
      <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB 2</label><input id="mRERemain2" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
      <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Hết hạn 2</label><input id="mREExp2" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 border rounded-xl bg-white text-xs text-center font-bold"></div>
-     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max thiết bị 2</label><input id="mREMax2" type="number" min="1" value="30" class="w-full p-2 border rounded-xl bg-white text-xs text-center font-bold"></div>
+     <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max thiết bị 2</label><input id="mREMax2" type="number" min="1" placeholder="Chưa xác định" class="w-full p-2 border rounded-xl bg-white text-xs text-center font-bold"></div>
     </div>
    </div>
 
@@ -1508,23 +1508,23 @@
       <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Đơn hàng</span>
     </button>
     <!-- Slot 2: Link Sub (BẮT BUỘC) -->
-    <button type="button" id="bnav-t-lnk" onclick="go('t-lnk')" class="flex flex-col items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors py-1 min-h-[44px]">
+    <button type="button" id="bnav-t-lnk" onclick="go('t-lnk')" class="flex flex-col items-center justify-center text-slate-400 transition-colors py-1 min-h-[44px]">
       <i class="fas fa-link text-base"></i>
       <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Link Sub</span>
     </button>
     <!-- Slot 3: Bán hàng -->
-    <button type="button" id="bnav-t-pkg" onclick="go('t-pkg')" class="flex flex-col items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors py-1 min-h-[44px]">
+    <button type="button" id="bnav-t-pkg" onclick="go('t-pkg')" class="flex flex-col items-center justify-center text-slate-400 transition-colors py-1 min-h-[44px]">
       <i class="fas fa-tags text-base"></i>
       <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Bán hàng</span>
     </button>
     <!-- Slot 4: Đối soát -->
-    <button type="button" id="bnav-t-trans" onclick="go('t-trans')" class="flex flex-col items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors py-1 min-h-[44px] relative">
+    <button type="button" id="bnav-t-trans" onclick="go('t-trans')" class="flex flex-col items-center justify-center text-slate-400 transition-colors py-1 min-h-[44px] relative">
       <i class="fas fa-file-invoice-dollar text-base"></i>
       <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Đối soát</span>
       <span id="transBadgeMobile" class="hidden absolute top-1 right-3 bg-red-500 text-white text-[9px] min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center font-black">!</span>
     </button>
     <!-- Slot 5: Thêm (Tất cả mục còn lại) -->
-    <button type="button" id="bnav-t-more" onclick="go('t-more')" class="flex flex-col items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors py-1 min-h-[44px] relative">
+    <button type="button" id="bnav-t-more" onclick="go('t-more')" class="flex flex-col items-center justify-center text-slate-400 transition-colors py-1 min-h-[44px] relative">
       <i class="fas fa-ellipsis-h text-base"></i>
       <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Thêm</span>
       <span id="checkBadgeMobile" class="hidden absolute top-1 right-3 bg-purple-600 text-white text-[9px] min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center font-black">0</span>
