@@ -308,6 +308,7 @@ async function pollMain(){
 
 // ===================== TAB NAVIGATION =====================
 function switchPkgSubTab(tab){
+  try { localStorage.setItem(SITE_KEY + "_subTab_t-pkg", tab); } catch(e) {}
   $("pane-pkg-cards").classList.toggle("hidden", tab !== "cards");
   if ($("pane-pkg-salecoupon")) $("pane-pkg-salecoupon").classList.toggle("hidden", tab !== "salecoupon" && tab !== "sale" && tab !== "coupon");
   if ($("pane-pkg-sale")) $("pane-pkg-sale").classList.toggle("hidden", tab !== "salecoupon" && tab !== "sale");
@@ -378,18 +379,31 @@ function go(id, fromHistory){
    }
  }
 
- try{
-  if(id==="t-pkg"){loadAdminPkgs();loadFulfillmentConfig();}
-  if(id==="t-check")renderCheckTab();
-  if(id==="t-dead")renderDead();
-  if(id==="t-lnk")renderLinks();
-  if(id==="t-settings"){loadSettingsUI();loadStatus();loadQuota();}
-  if(id==="t-rev")renderRevenue();
-  if(id==="t-trans"){localStorage.setItem(SITE_KEY+"_txSeen",Date.now());const tb=$("transBadge");if(tb)tb.classList.add("hidden");const tbm=$("transBadgeMobile");if(tbm)tbm.classList.add("hidden");if(!txData.length)loadTx(true);if(curTxTab==="exception")renderExceptionsTab();else renderTransactions();}
-  if(id==="t-mail")renderMailComposer();
-  if(id==="t-cms"&&curArtsReady)renderGuideAll();
- }catch(e){console.error("go("+id+") lỗi:",e);toast("Lỗi mở tab: "+e.message,"err");}
- restoreAdminScroll(id);
+  try{
+   if(id==="t-pkg"){
+     loadAdminPkgs();
+     loadFulfillmentConfig();
+     const savedSub = localStorage.getItem(SITE_KEY + "_subTab_t-pkg") || "cards";
+     switchPkgSubTab(savedSub);
+   }
+   if(id==="t-check"){
+     renderCheckTab();
+     const savedSub = localStorage.getItem(SITE_KEY + "_subTab_t-check") || "data";
+     switchCheckSubTab(savedSub, true);
+   }
+   if(id==="t-dead")renderDead();
+   if(id==="t-lnk")renderLinks();
+   if(id==="t-settings"){
+     loadSettingsUI();loadStatus();loadQuota();
+     const savedSub = localStorage.getItem(SITE_KEY + "_subTab_t-settings") || "webadmin";
+     switchSettingsTab(savedSub);
+   }
+   if(id==="t-rev")renderRevenue();
+   if(id==="t-trans"){localStorage.setItem(SITE_KEY+"_txSeen",Date.now());const tb=$("transBadge");if(tb)tb.classList.add("hidden");const tbm=$("transBadgeMobile");if(tbm)tbm.classList.add("hidden");if(!txData.length)loadTx(true);if(curTxTab==="exception")renderExceptionsTab();else renderTransactions();}
+   if(id==="t-mail")renderMailComposer();
+   if(id==="t-cms"&&curArtsReady)renderGuideAll();
+  }catch(e){console.error("go("+id+") lỗi:",e);toast("Lỗi mở tab: "+e.message,"err");}
+  restoreAdminScroll(id);
 }
 
 let isNavigatingFromHistory = false;
@@ -408,6 +422,13 @@ window.addEventListener('popstate', (event) => {
   const openModal = document.querySelector('#mOrd:not(.hidden), #mRootEdit:not(.hidden), #mLnk:not(.hidden), #mCouponModal:not(.hidden)');
   if (openModal) {
     openModal.classList.add('hidden');
+    return;
+  }
+
+  // Khi đang sửa bài viết CMS: Ưu tiên đóng trình soạn thảo quay về danh sách bài viết
+  const cmsEditor = $("cmsEditorWrap");
+  if (cmsEditor && !cmsEditor.classList.contains("hidden")) {
+    closeCmsEditor();
     return;
   }
 
@@ -2754,10 +2775,10 @@ function renderPkgAdmin() {
           <span class="bg-indigo-100 text-indigo-700 font-mono font-black text-xs px-2.5 py-0.5 rounded-lg border border-indigo-200">
             ${esc(p.id)} ${isFixed ? '(Cố định)' : '(Tùy chỉnh)'}
           </span>
-          <input type="text" value="${esc(p.name || '')}" oninput="updatePkgField(${idx}, 'name', this.value)" placeholder="Tên gói cước..." class="p-1 text-xs font-extrabold text-slate-800 border border-slate-200 rounded-lg outline-none focus:border-indigo-500 bg-white">
-          ${isHidden ? '<span class="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-black px-2 py-0.5 rounded uppercase">ĐÃ ẨN INDEX</span>' : ''}
+          <input type="text" value="${esc(p.name || '')}" oninput="updatePkgField(${idx}, 'name', this.value)" placeholder="Tên gói cước..." class="p-1 text-xs font-extrabold text-slate-800 border border-slate-200 rounded-lg outline-none focus:border-indigo-500 bg-white flex-1 min-w-[110px]">
+          ${isHidden ? '<span class="bg-amber-100 text-amber-800 border border-amber-300 text-[9.5px] font-black px-1.5 py-0.5 rounded uppercase shrink-0">ĐÃ ẨN INDEX</span>' : ''}
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
           <button type="button" onclick="toggleHidePkg(${idx})" class="font-bold text-xs px-2.5 py-1 rounded-lg border transition ${isHidden ? 'bg-amber-500 text-white border-amber-500 hover:bg-amber-600' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'}">
             <i class="fas ${isHidden ? 'fa-eye' : 'fa-eye-slash'} mr-1"></i>${isHidden ? 'Hiện gói' : 'Ẩn gói'}
           </button>
@@ -4209,7 +4230,7 @@ function renderGuideCategoriesTree() {
            <div class="flex items-center justify-end sm:justify-start gap-1.5 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200/60" onclick="event.stopPropagation()">
              <button type="button" onclick="copyArtDeepLink('${esc(tab.id)}', '${esc(sl)}')" class="whitespace-nowrap shrink-0 text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-emerald-600 hover:text-white transition"><i class="fas fa-link mr-1"></i>Link</button>
              <button type="button" onclick="openCmsEditorForArt('${esc(tab.id)}', '${esc(sl)}')" class="whitespace-nowrap shrink-0 text-indigo-600 bg-white border border-indigo-200 px-3 py-1 rounded-lg text-xs font-bold hover:bg-indigo-600 hover:text-white transition"><i class="fas fa-pen mr-1"></i>Sửa bài</button>
-             ${(isProtectedTab || /lưu ý chung|tiktok/i.test(a.name || '') || /luu-y-chung|tiktok/i.test(sl)) ? '' : `<button type="button" onclick="curCms='${esc(tab.id)}';artDel('${esc(sl)}')" class="whitespace-nowrap shrink-0 text-red-500 bg-white border border-red-200 px-2 py-1 rounded-lg text-xs hover:bg-red-500 hover:text-white transition" title="Xóa bài viết"><i class="fas fa-trash"></i></button>`}
+             <button type="button" onclick="curCms='${esc(tab.id)}';artDel('${esc(sl)}')" class="whitespace-nowrap shrink-0 text-red-500 bg-white border border-red-200 px-2 py-1 rounded-lg text-xs hover:bg-red-500 hover:text-white transition" title="Xóa bài viết"><i class="fas fa-trash"></i></button>
            </div>
          </div>
          `;
@@ -5326,14 +5347,19 @@ async function triggerTelegramBackupNow(reason = "Admin bấm Bắn Backup ngay"
 
 
 // ==================== CHẾ ĐỘ THỬ NGHIỆM (TEST MODE / ALL_ORDERS_TEST) ====================
-let isTestModeActive = false;
+let isTestModeActive = (function() {
+  try { return localStorage.getItem(SITE_KEY + "_testMode") === "1"; } catch(e) { return false; }
+})();
 
 async function checkTestModeStatus() {
   try {
     const res = await aj("/api/admin/test/status");
-    isTestModeActive = !!res.active;
-    if ($("toggleTestMode")) $("toggleTestMode").checked = isTestModeActive;
-    updateTestModeUI();
+    if (res && res.active !== undefined) {
+      isTestModeActive = !!res.active;
+      try { localStorage.setItem(SITE_KEY + "_testMode", isTestModeActive ? "1" : "0"); } catch(e) {}
+      if ($("toggleTestMode")) $("toggleTestMode").checked = isTestModeActive;
+      updateTestModeUI();
+    }
   } catch {}
 }
 
@@ -5351,6 +5377,7 @@ function updateTestModeUI() {
 
 async function toggleTestMode(checked) {
   isTestModeActive = checked;
+  try { localStorage.setItem(SITE_KEY + "_testMode", checked ? "1" : "0"); } catch(e) {}
   updateTestModeUI();
   try {
     await aj("/api/admin/test/toggle", { method: "POST", body: { active: checked } });
