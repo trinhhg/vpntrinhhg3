@@ -9,7 +9,7 @@
 @tailwind components;
 @tailwind utilities;
 
-*{box-sizing:border-box;}
+*{box-sizing:border-box;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 body, input, button, select, textarea {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -17,8 +17,32 @@ body, input, button, select, textarea {
 }
 body{font-weight:600;background:#f8fafc;color:#0f172a;margin:0;overflow-x:hidden;}
 .glass-card{background:#fff;border:1px solid #e2e8f0;box-shadow:0 10px 40px -10px rgba(0,0,0,.05);border-radius:1.25rem;}
-.tab-btn{transition:all .15s;}
-.tab-btn.active{background:#4f46e5;color:#fff;box-shadow:0 4px 12px rgba(79,70,229,.35);border-color:#4f46e5;}
+
+/* Konsta UI iOS Segmented Control */
+.tab-btn{
+  transition:all .2s cubic-bezier(0.16, 1, 0.3, 1);
+  min-height:38px;
+  touch-action:manipulation;
+}
+.tab-btn:active{transform:scale(0.97);}
+.tab-btn.active{
+  background:#ffffff !important;
+  color:#4f46e5 !important;
+  box-shadow:0 2px 8px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04) !important;
+  border-color:transparent !important;
+}
+
+/* Konsta UI iOS Inset Grouped Cards cho Order Container */
+#ordBody > div{
+  border-radius:1rem !important;
+  border-color:rgba(226, 232, 240, 0.8) !important;
+  box-shadow:0 2px 8px -2px rgba(0,0,0,.04), 0 1px 4px -1px rgba(0,0,0,.02) !important;
+  transition:transform 0.15s ease, box-shadow 0.15s ease;
+}
+#ordBody > div:active{transform:scale(0.995);}
+
+/* Vaul Gesture Handle Affordance */
+.cursor-grab{touch-action:none;}
 /* SweetAlert2 Toast chuẩn góc phải, nhỏ gọn, dưới thanh header */
 .swal2-container.swal2-top-end,
 .swal2-container.swal2-top {
