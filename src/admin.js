@@ -294,7 +294,7 @@ async function fetchAll(msg){
   // AGENTS.md Quy tắc 40 & 44: fetchAll chỉ đọc dữ liệu hiển thị, không tự ý ghi KV khi vừa tải trang
   linksDb.forEach(l=>{if(l.orig&&l.orig!=="Da_bi_khoa"&&!linkPoolDb.find(p=>p.url===l.orig)&&!isLockedPoolUrl(l.orig)){linkPoolDb.push({id:"POOL-"+Date.now()+Math.floor(Math.random()*100),url:l.orig,gb:"",remainGb:"",exp:l.expDate||"",max:30});}});
   lastSig={o:JSON.stringify(ordersDb),l:JSON.stringify(linksDb),p:JSON.stringify(linkPoolDb),d:JSON.stringify(dataReqDb)};
-  renderOrd();renderCheckTab();renderDataRequests();renderLinks();renderDead();renderDev();loadSettingsUI();if(!curArtsReady)initGuides();
+  renderOrd();renderCheckTab();renderDataRequests();renderLinks();renderDead();renderDev();loadSettingsUI();renderCouponAdmin();renderFlashSaleAdmin();if(!curArtsReady)initGuides();
   loadStatus();if(msg)toast("Đã làm mới dữ liệu!");
  }catch(e){if(e.message!=="401")toast("Lỗi tải dữ liệu: "+e.message,"err");}}
 const isLockedPoolUrl=u=>u==="Da_bi_khoa";
@@ -355,8 +355,8 @@ function go(id, fromHistory){
  if(a){a.classList.add("active");a.classList.remove("bg-white","text-slate-600");}
 
   // Đồng bộ thanh điều hướng đáy Mobile (4 tab chính + 1 tab Thêm)
-  const navItems = ['t-ord', 't-lnk', 't-pkg', 't-trans', 't-more'];
-  const moreSubTabs = ['t-rev', 't-check', 't-dead', 't-mail', 't-cms', 't-settings', 't-more'];
+  const navItems = ['t-ord', 't-lnk', 't-check', 't-trans', 't-more'];
+  const moreSubTabs = ['t-pkg', 't-rev', 't-dead', 't-mail', 't-cms', 't-settings', 't-more'];
   const activeSlot = moreSubTabs.includes(id) ? 't-more' : id;
   navItems.forEach(k => {
     const btn = $('bnav-' + k);
@@ -777,13 +777,34 @@ function getMissingOrders(){
 
 function updateCheckBadge(){
  const list = getMissingOrders();
- const b = $("checkBadge"), cnt = $("checkBadgeCount");
+ const b = $("checkBadge"), cnt = $("checkBadgeCount"), bm = $("checkBadgeMobile");
  if (b) {
    b.textContent = list.length;
    b.classList.toggle("hidden", list.length === 0);
  }
+ if (bm) {
+   bm.textContent = list.length;
+   bm.classList.toggle("hidden", list.length === 0);
+ }
  if (cnt) cnt.textContent = list.length;
+ updateMoreBadge();
 }
+
+function updateMoreBadge() {
+  const bm = $("moreBadgeMobile");
+  if (!bm) return;
+  let count = 0;
+  // Tính tổng số lượng cần xử lý từ các tab con nằm trong mục Thêm
+  const deadCount = (deadDb && deadDb.length) || 0;
+  count += deadCount;
+  if (count > 0) {
+    bm.textContent = count > 99 ? "99+" : count;
+    bm.classList.remove("hidden");
+  } else {
+    bm.classList.add("hidden");
+  }
+}
+window.updateMoreBadge = updateMoreBadge;
 
 function renderCheckTab(){
  const me = getMe();
@@ -5612,6 +5633,38 @@ function renderFlashSaleAdmin() {
 }
 window.renderFlashSaleAdmin = renderFlashSaleAdmin;
 
+function broadcastAdminSync(type, payload = {}) {
+  try {
+    const ch = new BroadcastChannel('vpn_trinhhg_sync');
+    ch.postMessage({ type, payload, ts: Date.now() });
+    ch.close();
+  } catch(e) {}
+  try {
+    localStorage.setItem('vpn_last_config_sync', JSON.stringify({ type, payload, ts: Date.now() }));
+  } catch(e) {}
+}
+
+async function toggleFlashSale(checked) {
+  cmsDb.sales = cmsDb.sales || {};
+  cmsDb.sales.campaign = cmsDb.sales.campaign || {};
+  const prev = !!cmsDb.sales.campaign.enabled;
+  cmsDb.sales.campaign.enabled = checked;
+  cmsDb.settings = cmsDb.settings || {};
+  cmsDb.settings.flashSale = cmsDb.sales.campaign;
+  if ($("saleCampaignActive")) $("saleCampaignActive").checked = checked;
+  try {
+    await saveCmsDb();
+    broadcastAdminSync('flash_sale_toggle', { flashSale: cmsDb.sales.campaign });
+    toast(checked ? "Đã BẬT chiến dịch Flash Sale" : "Đã TẮT chiến dịch Flash Sale");
+  } catch(e) {
+    cmsDb.sales.campaign.enabled = prev;
+    cmsDb.settings.flashSale = cmsDb.sales.campaign;
+    if ($("saleCampaignActive")) $("saleCampaignActive").checked = prev;
+    toast("Lỗi lưu Flash Sale: " + e.message, "err");
+  }
+}
+window.toggleFlashSale = toggleFlashSale;
+
 async function saveFlashSaleConfig() {
   cmsDb.sales = cmsDb.sales || {};
   const c = {
@@ -5624,11 +5677,11 @@ async function saveFlashSaleConfig() {
   };
   cmsDb.sales.campaign = c;
   cmsDb.settings = cmsDb.settings || {};
-  cmsDb.settings.flashSale = c; try{ localStorage.setItem('vpn_flash_sale_cache', JSON.stringify(c)); }catch(e){}
+  cmsDb.settings.flashSale = c;
 
   try {
     await saveCmsDb();
-    await syncPublicPackagesPayload(); try{ if(Array.isArray(cmsDb.coupons)) localStorage.setItem('vpn_coupons_cache', JSON.stringify(cmsDb.coupons)); }catch(e){}
+    broadcastAdminSync('flash_sale_update', { flashSale: c });
     toast("Đã lưu chiến dịch Flash Sale thành công!");
     logEvent("ok", "admin", "Lưu Flash Sale: " + (c.title || "Chiến dịch mới"));
   } catch(e) {
@@ -5782,19 +5835,55 @@ async function deleteCouponItem(idx) {
 window.deleteCouponItem = deleteCouponItem;
 
 async function toggleCouponCheckout(checked) {
+  const prev = (cmsDb && cmsDb.settings && cmsDb.settings.couponEnabled !== false);
   cmsDb.settings = cmsDb.settings || {};
   cmsDb.settings.couponEnabled = checked;
   if ($("couponCheckoutStatusLabel")) $("couponCheckoutStatusLabel").textContent = checked ? "BẬT" : "TẮT";
   try {
     await saveCmsDb();
-    await syncPublicPackagesPayload();
+    broadcastAdminSync('coupon_toggle', { couponEnabled: checked });
     toast(checked ? "Đã BẬT ô nhập mã giảm giá tại trang thanh toán" : "Đã TẮT ô nhập mã giảm giá tại trang thanh toán");
   } catch(e) {
+    cmsDb.settings.couponEnabled = prev;
+    if ($("couponCheckoutEnabledToggle")) $("couponCheckoutEnabledToggle").checked = prev;
+    if ($("couponCheckoutStatusLabel")) $("couponCheckoutStatusLabel").textContent = prev ? "BẬT" : "TẮT";
     toast("Lỗi lưu cài đặt: " + e.message, "err");
   }
 }
 window.toggleCouponCheckout = toggleCouponCheckout;
 window.toggleCouponCheckoutInput = toggleCouponCheckout;
+
+// Hàm tự động phục hồi tiếng Việt bị lỗi encoding Mojibake từ D1 Database
+function fixMojibake(str) {
+  if (!str || typeof str !== "string") return str || "";
+  if (/[\u00C0-\u00DF][\u0080-\u00BF]|\u00C3|\u00C4|\u00C5|\u00C6|\u00E1|\u00E0/.test(str)) {
+    try {
+      const bytes = new Uint8Array([...str].map(c => c.charCodeAt(0) & 0xff));
+      const decoded = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+      if (decoded && !decoded.includes("")) return decoded;
+    } catch(e) {}
+  }
+  return str;
+}
+window.fixMojibake = fixMojibake;
+
+// Nút Làm sạch giao dịch D1: Xác nhận và xóa sạch 3 tab đối soát mà không ảnh hưởng đơn hàng
+async function clearAllTransactions() {
+  if (!confirm("CẢNH BÁO: Thao tác này sẽ xóa toàn bộ dữ liệu giao dịch đối soát D1 (cả 3 tab Đối soát D1, Ngoại lệ & Ghép đơn, Giao dịch thô).\n\nĐơn hàng và luồng cấp link VPN vẫn được bảo vệ 100% không bị ảnh hưởng.\n\nBạn có chắc chắn muốn làm sạch toàn bộ?")) return;
+  try {
+    const res = await aj("/api/admin/tx/clear", { method: "POST" });
+    if (!res || res.ok === false) throw new Error(res?.error || "D1 từ chối thao tác làm sạch");
+    txData = [];
+    renderTransactions();
+    renderExceptionsTab();
+    renderRawTab();
+    toast(`Đã làm sạch toàn bộ giao dịch D1 (${res.deleted || 0} dòng)!`);
+    logEvent("warn", "admin", "Làm sạch toàn bộ giao dịch D1");
+  } catch(e) {
+    toast("Lỗi làm sạch D1: " + e.message, "err");
+  }
+}
+window.clearAllTransactions = clearAllTransactions;
 
 // ===================== ĐỐI SOÁT NGOẠI LỆ MACRODROID =====================
 function renderExceptionsTab() {
@@ -5865,7 +5954,7 @@ function renderExceptionsTab() {
               <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                 <div class="text-[10px] font-bold text-slate-400 uppercase">Số tiền nhận được</div>
                 <div class="text-lg font-black text-emerald-600 mt-0.5">${fmtVnd(amt)} đ</div>
-                ${tx.review_note ? `<div class="text-[10px] text-rose-500 font-bold mt-1">${esc(tx.review_note)}</div>` : ''}
+                ${tx.review_note ? `<div class="text-[10px] text-rose-500 font-bold mt-1">${esc(fixMojibake(tx.review_note))}</div>` : ''}
               </div>
 
               <div class="md:col-span-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
