@@ -1,653 +1,468 @@
-<!-- v1.6 - Fix Dark Mode chuẩn Tailwind, FontAwesome toggle, Xóa UI rác - 2026-09-25 -->
+<!-- v1.0 -2026-11-03 -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>VPNTrinhHg – Lướt mượt như gió</title>
-<meta name="description" content="VPN Trinh Hg - Dịch vụ VPN tốc độ cao, hỗ trợ đa nền tảng iOS, Android, Windows, macOS, Shadowrocket, Clash, v2rayN. Tối ưu TikTok, Facebook, Game.">
-<link rel="canonical" href="https://vpntrinhhg3.pages.dev/">
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Organization",
-      "@id": "https://vpntrinhhg3.pages.dev/#organization",
-      "name": "VPN Trinh Hg",
-      "url": "https://vpntrinhhg3.pages.dev/",
-      "logo": "https://vpntrinhhg3.pages.dev/icon-512.png",
-      "description": "Dịch vụ VPN tốc độ cao & đa nền tảng tối ưu TikTok, Facebook, Game và giải trí trực tuyến."
-    },
-    {
-      "@type": "WebSite",
-      "@id": "https://vpntrinhhg3.pages.dev/#website",
-      "url": "https://vpntrinhhg3.pages.dev/",
-      "name": "VPN Trinh Hg",
-      "publisher": {
-        "@id": "https://vpntrinhhg3.pages.dev/#organization"
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VPNTrinhHg – Lướt mượt như gió</title>
+    <meta name="description" content="VPN Trinh Hg - Dịch vụ VPN tốc độ cao, hỗ trợ đa nền tảng iOS, Android, Windows, macOS, Shadowrocket, Clash, v2rayN. Tối ưu TikTok, Facebook, Game.">
+    <link rel="canonical" href="https://vpntrinhhg3.pages.dev/">
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://vpntrinhhg3.pages.dev/#organization",
+            "name": "VPN Trinh Hg",
+            "url": "https://vpntrinhhg3.pages.dev/",
+            "logo": "https://vpntrinhhg3.pages.dev/icon-512.png",
+            "description": "Dịch vụ VPN tốc độ cao & đa nền tảng tối ưu TikTok, Facebook, Game và giải trí trực tuyến."
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://vpntrinhhg3.pages.dev/#website",
+            "url": "https://vpntrinhhg3.pages.dev/",
+            "name": "VPN Trinh Hg",
+            "publisher": {
+              "@id": "https://vpntrinhhg3.pages.dev/#organization"
+            }
+          }
+        ]
       }
-    }
-  ]
-}
-</script>
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#ffffff">
-<meta name="referrer" content="strict-origin-when-cross-origin">
-<link rel="apple-touch-icon" href="/icon-192.png">
-<link rel="stylesheet" href="/src/customer.css">
-<script>
- try{
-  const s=JSON.parse(localStorage.getItem('vpn_portal_session_24h')||'null');
-  if(s&&Date.now()-s.time<864e5){
-    document.documentElement.classList.add('has-user-session');
-  }
- }catch(e){}
- try{const t=localStorage.getItem('vpn_theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark');}catch(e){}
-</script>
-</head>
-<body class="min-h-screen flex flex-col w-full overflow-x-hidden bg-slate-50 dark:bg-black text-slate-800 dark:text-slate-200 transition-colors duration-300">
-<!-- HEADER ANNOUNCEMENT DRAWER (THÔNG BÁO KHUYẾN MÃI ĐỈNH WEB - CRYPTO GLASS PURPLE THEME) -->
-<div id="headerAnnouncementDrawer" class="hidden fixed top-0 left-0 w-full z-[80] text-xs py-2 px-3 md:px-6 shadow-lg border-b transition-all duration-300 bg-gradient-to-r from-indigo-700/95 via-purple-700/95 to-indigo-800/95 text-white backdrop-blur-md border-purple-400/30">
-  <div class="max-w-[1400px] mx-auto flex items-center justify-between gap-2.5">
-    <!-- CỘT TRÁI: BADGE LỬA + TIÊU ĐỀ & NỘI DUNG (THẲNG HÀNG 100%) -->
-    <div class="flex items-center gap-2 min-w-0 flex-1">
-      <span id="headerDrawerBadge" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shrink-0 uppercase tracking-wider bg-amber-400 text-slate-900 shadow-sm">
-        <i id="headerDrawerBadgeIcon" class="fas fa-fire text-amber-800"></i>
-        <span id="headerDrawerBadgeText">Flash Sale</span>
-      </span>
-      <div class="flex flex-col min-w-0 flex-1">
-        <div class="flex items-center gap-1.5 cursor-pointer select-none" onclick="toggleHeaderDrawerDetail()">
-          <span id="headerDrawerTitleText" class="font-extrabold truncate text-xs sm:text-sm text-white drop-shadow-xs"></span>
-          <button type="button" id="headerDrawerChevronBtn" class="text-white/80 hover:text-white p-0.5 transition shrink-0" aria-label="Toggle details">
-            <i id="headerDrawerChevronIcon" class="fas fa-chevron-down text-[11px] transition-transform duration-200"></i>
-          </button>
-        </div>
-        <div id="headerDrawerDetail" class="hidden mt-1 text-[11px] sm:text-xs leading-relaxed font-medium whitespace-pre-wrap text-purple-100"></div>
-      </div>
-    </div>
-    <!-- CỘT PHẢI: NÚT CTA (TRẮNG TÍM NỔI BẬT) + NÚT ĐÓNG -->
-    <div class="flex items-center gap-2 shrink-0">
-      <a id="headerDrawerBtnLink" href="#packages" class="hidden font-extrabold px-3 py-1 rounded-full text-[11px] bg-white text-indigo-700 hover:bg-purple-50 shadow-sm transition whitespace-nowrap flex items-center gap-1 shrink-0">
-        <span id="headerDrawerBtnText">Xem ngay</span>
-        <i class="fas fa-arrow-right text-[9px]"></i>
-      </a>
-      <button type="button" id="headerDrawerCloseBtn" onclick="closeHeaderDrawer()" class="text-white/70 hover:text-white p-1 transition shrink-0" title="Đóng thông báo">
-        <i class="fas fa-times text-xs"></i>
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- 4 BONG BÓNG HỖ TRỢ TRÊN MÁY TÍNH (GIỮ NGUYÊN 100% VỊ TRÍ VÀ HIỆU ỨNG GỐC) -->
-<div id="floatingSocials" class="hidden md:flex fixed bottom-6 right-6 z-50 flex-col gap-3 transition-all duration-300">
-  <button onclick="openWechatModal()" class="w-12 h-12 bg-wechat text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce"><i class="fab fa-weixin"></i></button>
-  <a href="https://t.me/hoaian57" target="_blank" class="w-12 h-12 bg-tele text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.1s"><i class="fab fa-telegram-plane"></i></a>
-  <a href="https://www.facebook.com/trinh.hg.57" target="_blank" class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.2s"><i class="fab fa-facebook-messenger"></i></a>
-  <a href="https://zalo.me/0917678211" target="_blank" class="w-12 h-12 bg-[#0068ff] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.3s"><span class="font-bold text-[14px]">Zalo</span></a>
-</div>
-
-<!-- MODAL ĐĂNG NHẬP PORTAL (LAYER z-[99900] - DƯỚI TOAST) -->
-<div id="guideAuthModal" class="hidden fixed inset-0 z-[99900] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all" onclick="closeGuideAuthModal()">
-  <div class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-6 md:p-8 rounded-3xl text-center max-w-md w-full shadow-2xl relative" onclick="event.stopPropagation()">
-    <button type="button" onclick="closeGuideAuthModal()" title="Đóng" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition">
-      <i class="fas fa-times text-sm"></i>
-    </button>
-    <div class="w-14 h-14 bg-indigo-100 dark:bg-indigo-900/40 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-600 dark:text-indigo-400 text-2xl shadow-inner">
-      <i class="fas fa-shield-halved"></i>
-    </div>
-    <h3 class="font-extrabold text-lg md:text-xl text-slate-800 dark:text-slate-100 mb-1">Truy cập Cổng Đơn Hàng</h3>
-    <p id="guideAuthArtTitle" class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 mb-2"></p>
-    <p class="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">Nhập <b>Email</b> hoặc <b>Mã đơn hàng (DH...)</b> của bạn để xem thông tin đơn hàng & lấy Link Subscription.</p>
-    <form onsubmit="submitGuideAuth(event)" class="space-y-3">
-      <input type="text" id="guideAuthInput" name="vpn_portal_no_autofill_auth" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-lpignore="true" required placeholder="Nhập Email hoặc Mã đơn hàng..." class="w-full bg-slate-50 dark:bg-black border-2 border-indigo-100 dark:border-white/15 rounded-xl px-4 py-3 text-sm text-center font-bold text-slate-800 dark:text-white outline-none focus:border-indigo-500 transition">
-      <button type="submit" id="btnGuideAuthSubmit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 rounded-xl text-xs md:text-sm uppercase transition shadow-md">
-        <i class="fas fa-unlock-keyhole mr-1.5"></i>ĐĂNG NHẬP PORTAL NGAY
-      </button>
-    </form>
-  </div>
-</div>
-
-<!-- MODAL WECHAT (LAYER z-[99900] - DƯỚI TOAST) -->
-<div id="wechatModal" class="hidden fixed inset-0 z-[99900] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all" onclick="closeWechatModal()">
-  <div class="bg-white dark:bg-[#0a0a0a] border dark:border-white/10 p-6 rounded-3xl text-center max-w-sm w-full shadow-2xl relative" onclick="event.stopPropagation()">
-    <button type="button" onclick="closeWechatModal()" title="Đóng" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition">
-      <i class="fas fa-times text-sm"></i>
-    </button>
-    <h3 class="font-extrabold text-xl text-slate-800 dark:text-slate-100 mb-2">WeChat Hỗ trợ</h3>
-    <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Lưu ảnh hoặc dùng chức năng quét mã của WeChat để thêm Admin.</p>
-    <div class="bg-slate-50 dark:bg-[#111111] p-2 rounded-2xl mb-4 border border-slate-200 dark:border-white/10 shadow-inner overflow-hidden flex justify-center"><img src="https://i.pinimg.com/736x/93/29/1e/93291e3f736f05f2f5722ecbcb7ca428.jpg" alt="WeChat QR" referrerpolicy="no-referrer" class="max-w-[250px] w-full h-auto rounded-xl object-contain"></div>
-    <button onclick="closeWechatModal()" class="w-full bg-slate-800 dark:bg-slate-700 text-white font-bold py-3 rounded-xl hover:bg-slate-900 dark:hover:bg-slate-600 transition">ĐÓNG BẢNG NÀY</button>
-  </div>
-</div>
-
-<!-- MODAL MÃ QR LINK SUB CHUẨN VIP THEO GIAO DIỆN APP VPN -->
-<div id="qrSubModal" class="hidden fixed inset-0 z-[90000] bg-black/75 flex items-center justify-center p-4 transition-all" onclick="closeQrModal()">
-  <div class="bg-white dark:bg-[#1a1d24] border border-slate-100 dark:border-white/10 p-7 md:p-8 rounded-[32px] text-center max-w-[360px] w-full shadow-2xl relative" onclick="event.stopPropagation()">
-    <button type="button" onclick="closeQrModal()" title="Đóng" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center justify-center transition">
-      <i class="fas fa-times text-sm"></i>
-    </button>
-    
-    <!-- Tiêu đề & Thông tin hướng dẫn quét -->
-    <div class="mb-4">
-      <h3 id="qrSubModalTitle" class="text-2xl font-black text-slate-800 dark:text-white tracking-tight mb-1">Mã QR Link Sub #1</h3>
-      <p class="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">Dùng app VPN đã cài để quét mã</p>
-      <p class="text-xs md:text-sm font-bold text-indigo-600 dark:text-indigo-400">Mua VPN tại vpntrinhhg.pages.dev</p>
-      <p class="text-xs md:text-sm font-bold text-emerald-600 dark:text-emerald-400">Zalo: 0917678211</p>
-    </div>
-
-    <!-- Khung QR trắng sắc nét bo viền nhẹ -->
-    <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm flex justify-center items-center mx-auto w-[220px] h-[220px]" id="qrCanvasBox" translate="no"></div>
-
-    <!-- Đếm ngược tự hủy & Thanh tiến trình tím -->
-    <div class="mt-4 space-y-2">
-      <div class="flex justify-between items-center text-xs sm:text-sm font-extrabold px-1">
-        <span class="text-slate-600 dark:text-slate-300">Mã QR tự hủy sau:</span>
-        <span id="qrCountdownText" class="text-indigo-600 dark:text-indigo-400 font-mono text-sm font-black" translate="no">36s</span>
-      </div>
-      <div class="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
-        <div id="qrProgressBar" class="bg-gradient-to-r from-indigo-500 to-purple-600 h-full w-full transition-all duration-1000 ease-linear rounded-full" style="width:100%"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- BANNER THÔNG BÁO ĐỈNH WEB CHUẨN DESIGN SYSTEM (SHOPIFY POLARIS & RED HAT) -->
-<aside id="siteAnnouncementBanner" class="hidden fixed top-0 inset-x-0 z-[75] transition-all duration-300 shadow-sm border-b" aria-label="Thông báo hệ thống">
-  <div class="max-w-[1400px] mx-auto px-4 py-2 flex items-center justify-between gap-3 text-xs md:text-sm font-semibold">
-    <div class="flex items-center gap-2.5 min-w-0 flex-1">
-      <span id="announcementIcon" class="shrink-0 text-base"></span>
-      <span id="announcementText" class="truncate leading-tight"></span>
-    </div>
-    <div class="flex items-center gap-2 shrink-0">
-      <a id="announcementCta" href="#" class="hidden font-bold px-3 py-1 rounded-lg text-xs transition active:scale-95 shadow-xs"></a>
-      <button id="announcementDismiss" onclick="dismissAnnouncement()" class="p-1 rounded-md opacity-70 hover:opacity-100 transition" title="Đóng thông báo"><i class="fas fa-xmark text-sm"></i></button>
-    </div>
-  </div>
-</aside>
-
-<nav id="mainNav" class="fixed top-0 w-full z-[70] border-b border-slate-200 dark:border-white/10 bg-white/95 dark:bg-black/90 backdrop-blur-md py-3 transition-colors duration-300">
-  <div class="max-w-[1400px] mx-auto px-4 w-full flex flex-col md:flex-row items-center justify-between gap-3">
-    <div class="flex items-center justify-between w-full md:w-auto shrink-0">
-      <div class="font-extrabold text-xl md:text-2xl tracking-tighter cursor-pointer text-indigo-700 dark:text-indigo-400 select-none flex items-center gap-1.5" onclick="window.location.reload(true)"><span data-i18n="brand">VPN Trinh Hg</span></div>
-      <div class="flex md:hidden items-center gap-2">
-        <select id="langSelectMobile" onchange="changeLanguage(this.value)" class="hidden"><option value="vi">Tiếng Việt</option><option value="en">English</option><option value="zh">中文</option></select>
-        <!-- Dropdown ngôn ngữ Mobile có Cờ SVG -->
-        <div class="relative" translate="no">
-          <button type="button" onclick="toggleLangMenu('mobile')" id="langBtnMobile" class="bg-indigo-50 dark:bg-[#0a0a0a] text-indigo-700 dark:text-white border border-indigo-100 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 outline-none"></button>
-          <div id="langMenuMobile" class="hidden absolute right-0 mt-1.5 w-36 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 rounded-xl shadow-xl py-1 z-[100]">
-            <button type="button" onclick="pickLangOption('vi')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2"><img src="https://flagcdn.com/w40/vn.png" class="w-4 h-3 object-cover rounded-[2px]"><span>Tiếng Việt</span></button>
-            <button type="button" onclick="pickLangOption('en')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2"><img src="https://flagcdn.com/w40/gb.png" class="w-4 h-3 object-cover rounded-[2px]"><span>English</span></button>
-            <button type="button" onclick="pickLangOption('zh')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2"><img src="https://flagcdn.com/w40/cn.png" class="w-4 h-3 object-cover rounded-[2px]"><span>中文</span></button>
+    </script>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <link rel="stylesheet" href="/src/customer.css">
+    <script>
+      try {
+        const s = JSON.parse(localStorage.getItem('vpn_portal_session_24h') || 'null');
+        if (s && Date.now() - s.time < 864e5) {
+          document.documentElement.classList.add('has-user-session');
+        }
+      } catch (e) {}
+      try {
+        const t = localStorage.getItem('vpn_theme');
+        if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
+      } catch (e) {}
+    </script>
+  </head>
+  <body class="min-h-screen flex flex-col w-full overflow-x-hidden bg-slate-50 dark:bg-black text-slate-800 dark:text-slate-200 transition-colors duration-300">
+    <!-- HEADER ANNOUNCEMENT DRAWER (THÔNG BÁO KHUYẾN MÃI ĐỈNH WEB - CRYPTO GLASS PURPLE THEME) -->
+    <div id="headerAnnouncementDrawer" class="hidden fixed top-0 left-0 w-full z-[80] text-xs py-2 px-3 md:px-6 shadow-lg border-b transition-all duration-300 bg-gradient-to-r from-indigo-700/95 via-purple-700/95 to-indigo-800/95 text-white backdrop-blur-md border-purple-400/30">
+      <div class="max-w-[1400px] mx-auto flex items-center justify-between gap-2.5">
+        <!-- CỘT TRÁI: BADGE LỬA + TIÊU ĐỀ & NỘI DUNG (THẲNG HÀNG 100%) -->
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <span id="headerDrawerBadge" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shrink-0 uppercase tracking-wider bg-amber-400 text-slate-900 shadow-sm"> <i id="headerDrawerBadgeIcon" class="fas fa-fire text-amber-800"></i> <span id="headerDrawerBadgeText">Flash Sale</span> </span>
+          <div class="flex flex-col min-w-0 flex-1">
+            <div class="flex items-center gap-1.5 cursor-pointer select-none" onclick="toggleHeaderDrawerDetail()"><span id="headerDrawerTitleText" class="font-extrabold truncate text-xs sm:text-sm text-white drop-shadow-xs"></span> <button type="button" id="headerDrawerChevronBtn" class="text-white/80 hover:text-white p-0.5 transition shrink-0" aria-label="Toggle details"> <i id="headerDrawerChevronIcon" class="fas fa-chevron-down text-[11px] transition-transform duration-200"></i> </button></div>
+            <div id="headerDrawerDetail" class="hidden mt-1 text-[11px] sm:text-xs leading-relaxed font-medium whitespace-pre-wrap text-purple-100"></div>
           </div>
         </div>
-        <button id="themeToggleMobile" onclick="toggleTheme()" title="Sáng / Tối" class="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0 transition bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-[#0a0a0a] dark:text-indigo-400 dark:hover:bg-[#111111]"></button>
-        <div id="userMenuMobile" class="hidden"><button onclick="logout()" title="Thoát" class="w-9 h-9 rounded-full bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center text-sm shadow-sm"><i class="fas fa-sign-out-alt"></i></button></div>
+        <!-- CỘT PHẢI: NÚT CTA (TRẮNG TÍM NỔI BẬT) + NÚT ĐÓNG -->
+        <div class="flex items-center gap-2 shrink-0"><a id="headerDrawerBtnLink" href="#packages" class="hidden font-extrabold px-3 py-1 rounded-full text-[11px] bg-white text-indigo-700 hover:bg-purple-50 shadow-sm transition whitespace-nowrap flex items-center gap-1 shrink-0"> <span id="headerDrawerBtnText">Xem ngay</span> <i class="fas fa-arrow-right text-[9px]"></i> </a> <button type="button" id="headerDrawerCloseBtn" onclick="closeHeaderDrawer()" class="text-white/70 hover:text-white p-1 transition shrink-0" title="Đóng thông báo"> <i class="fas fa-times text-xs"></i> </button></div>
       </div>
     </div>
-    <div class="flex-1 w-full md:flex-1 flex items-center justify-center mx-0 md:mx-2">
-      <div class="w-full relative min-w-0">
-        <input type="text" id="loginInput" name="vpn_no_autofill_order_search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-lpignore="true" onkeyup="if(event.key==='Enter'){event.preventDefault();login();}" class="w-full bg-white dark:bg-[#0a0a0a] border-2 border-indigo-100 dark:border-white/10 rounded-full pl-5 pr-12 py-2.5 text-sm outline-none font-bold text-slate-700 dark:text-white focus:border-indigo-400 dark:focus:border-indigo-500 transition shadow-sm placeholder:dark:text-slate-500" placeholder="Nhập Mã Đơn hoặc Email..." data-i18n-placeholder="search_placeholder">
-        <button onclick="login()" id="loginSearchBtn" title="Tìm kiếm" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 min-h-[32px] max-h-[32px] shrink-0 aspect-square bg-indigo-600 dark:bg-indigo-500 rounded-full text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 flex items-center justify-center transition shadow-sm"><i class="fas fa-search text-xs"></i></button>
+    <!-- 4 BONG BÓNG HỖ TRỢ TRÊN MÁY TÍNH (GIỮ NGUYÊN 100% VỊ TRÍ VÀ HIỆU ỨNG GỐC) -->
+    <div id="floatingSocials" class="hidden md:flex fixed bottom-6 right-6 z-50 flex-col gap-3 transition-all duration-300"><button onclick="openWechatModal()" class="w-12 h-12 bg-wechat text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce"><i class="fab fa-weixin"></i></button> <a href="https://t.me/hoaian57" target="_blank" class="w-12 h-12 bg-tele text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.1s"><i class="fab fa-telegram-plane"></i></a> <a href="https://www.facebook.com/trinh.hg.57" target="_blank" class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.2s"><i class="fab fa-facebook-messenger"></i></a> <a href="https://zalo.me/0917678211" target="_blank" class="w-12 h-12 bg-[#0068ff] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.3s"><span class="font-bold text-[14px]">Zalo</span></a></div>
+    <!-- MODAL ĐĂNG NHẬP PORTAL (LAYER z-[99900] - DƯỚI TOAST) -->
+    <div id="guideAuthModal" class="hidden fixed inset-0 z-[99900] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all" onclick="closeGuideAuthModal()">
+      <div class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-6 md:p-8 rounded-3xl text-center max-w-md w-full shadow-2xl relative" onclick="event.stopPropagation()">
+        <button type="button" onclick="closeGuideAuthModal()" title="Đóng" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition"> <i class="fas fa-times text-sm"></i> </button>
+        <div class="w-14 h-14 bg-indigo-100 dark:bg-indigo-900/40 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-600 dark:text-indigo-400 text-2xl shadow-inner"><i class="fas fa-shield-halved"></i></div>
+        <h3 class="font-extrabold text-lg md:text-xl text-slate-800 dark:text-slate-100 mb-1">Truy cập Cổng Đơn Hàng</h3>
+        <p id="guideAuthArtTitle" class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 mb-2"></p>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">Nhập <b>Email</b> hoặc <b>Mã đơn hàng (DH...)</b> của bạn để xem thông tin đơn hàng & lấy Link Subscription.</p>
+        <form onsubmit="submitGuideAuth(event)" class="space-y-3"><input type="text" id="guideAuthInput" name="vpn_portal_no_autofill_auth" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-lpignore="true" required placeholder="Nhập Email hoặc Mã đơn hàng..." class="w-full bg-slate-50 dark:bg-black border-2 border-indigo-100 dark:border-white/15 rounded-xl px-4 py-3 text-sm text-center font-bold text-slate-800 dark:text-white outline-none focus:border-indigo-500 transition"> <button type="submit" id="btnGuideAuthSubmit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 rounded-xl text-xs md:text-sm uppercase transition shadow-md"> <i class="fas fa-unlock-keyhole mr-1.5"></i>ĐĂNG NHẬP PORTAL NGAY </button></form>
       </div>
     </div>
-    <div class="hidden md:flex items-center justify-end w-auto gap-3 shrink-0">
-      <div id="desktopPortalNav" class="hidden flex items-center gap-2 shrink-0 whitespace-nowrap transition-all duration-300">
-        <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center"><i class="fas fa-tv mr-2"></i><span data-i18n="tab_p_home">Bảng điều khiển</span></button>
-        <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center"><i class="fas fa-shopping-cart mr-2"></i><span data-i18n="tab_p_store">Cửa hàng</span></button>
-        <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center"><i class="fas fa-book mr-2"></i><span data-i18n="tab_p_guide">Hướng dẫn</span></button>
+    <!-- MODAL WECHAT (LAYER z-[99900] - DƯỚI TOAST) -->
+    <div id="wechatModal" class="hidden fixed inset-0 z-[99900] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all" onclick="closeWechatModal()">
+      <div class="bg-white dark:bg-[#0a0a0a] border dark:border-white/10 p-6 rounded-3xl text-center max-w-sm w-full shadow-2xl relative" onclick="event.stopPropagation()">
+        <button type="button" onclick="closeWechatModal()" title="Đóng" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition"> <i class="fas fa-times text-sm"></i> </button>
+        <h3 class="font-extrabold text-xl text-slate-800 dark:text-slate-100 mb-2">WeChat Hỗ trợ</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Lưu ảnh hoặc dùng chức năng quét mã của WeChat để thêm Admin.</p>
+        <div class="bg-slate-50 dark:bg-[#111111] p-2 rounded-2xl mb-4 border border-slate-200 dark:border-white/10 shadow-inner overflow-hidden flex justify-center"><img src="https://i.pinimg.com/736x/93/29/1e/93291e3f736f05f2f5722ecbcb7ca428.jpg" alt="WeChat QR" referrerpolicy="no-referrer" class="max-w-[250px] w-full h-auto rounded-xl object-contain"></div>
+        <button onclick="closeWechatModal()" class="w-full bg-slate-800 dark:bg-slate-700 text-white font-bold py-3 rounded-xl hover:bg-slate-900 dark:hover:bg-slate-600 transition">ĐÓNG BẢNG NÀY</button>
       </div>
-      <select id="langSelectDesktop" onchange="changeLanguage(this.value)" class="hidden"><option value="vi">Tiếng Việt</option><option value="en">English</option><option value="zh">中文</option></select>
-      <!-- Dropdown ngôn ngữ Desktop có Cờ SVG hiển thị chuẩn trên Windows (Khóa mép phải chuẩn xác) -->
-      <div class="relative shrink-0" translate="no">
-        <button type="button" onclick="toggleLangMenu('desktop')" id="langBtnDesktop" class="bg-indigo-50 dark:bg-[#0a0a0a] text-indigo-700 dark:text-white border border-indigo-100 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold flex items-center gap-2 outline-none hover:border-indigo-300 transition shrink-0"></button>
-        <div id="langMenuDesktop" class="hidden absolute right-0 top-full mt-2 w-40 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 rounded-xl shadow-2xl py-1 z-[100] origin-top-right">
-          <button type="button" onclick="pickLangOption('vi')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/vn.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>Tiếng Việt</span></button>
-          <button type="button" onclick="pickLangOption('en')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/gb.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>English</span></button>
-          <button type="button" onclick="pickLangOption('zh')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/cn.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>中文</span></button>
+    </div>
+    <!-- MODAL MÃ QR LINK SUB CHUẨN VIP THEO GIAO DIỆN APP VPN -->
+    <div id="qrSubModal" class="hidden fixed inset-0 z-[90000] bg-black/75 flex items-center justify-center p-4 transition-all" onclick="closeQrModal()">
+      <div class="bg-white dark:bg-[#1a1d24] border border-slate-100 dark:border-white/10 p-7 md:p-8 rounded-[32px] text-center max-w-[360px] w-full shadow-2xl relative" onclick="event.stopPropagation()">
+        <button type="button" onclick="closeQrModal()" title="Đóng" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white flex items-center justify-center transition"> <i class="fas fa-times text-sm"></i> </button> <!-- Tiêu đề & Thông tin hướng dẫn quét -->
+        <div class="mb-4">
+          <h3 id="qrSubModalTitle" class="text-2xl font-black text-slate-800 dark:text-white tracking-tight mb-1">Mã QR Link Sub #1</h3>
+          <p class="text-xs md:text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">Dùng app VPN đã cài để quét mã</p>
+          <p class="text-xs md:text-sm font-bold text-indigo-600 dark:text-indigo-400">Mua VPN tại vpntrinhhg.pages.dev</p>
+          <p class="text-xs md:text-sm font-bold text-emerald-600 dark:text-emerald-400">Zalo: 0917678211</p>
+        </div>
+        <!-- Khung QR trắng sắc nét bo viền nhẹ -->
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm flex justify-center items-center mx-auto w-[220px] h-[220px]" id="qrCanvasBox" translate="no"></div>
+        <!-- Đếm ngược tự hủy & Thanh tiến trình tím -->
+        <div class="mt-4 space-y-2">
+          <div class="flex justify-between items-center text-xs sm:text-sm font-extrabold px-1"><span class="text-slate-600 dark:text-slate-300">Mã QR tự hủy sau:</span> <span id="qrCountdownText" class="text-indigo-600 dark:text-indigo-400 font-mono text-sm font-black" translate="no">36s</span></div>
+          <div class="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+            <div id="qrProgressBar" class="bg-gradient-to-r from-indigo-500 to-purple-600 h-full w-full transition-all duration-1000 ease-linear rounded-full" style="width:100%"></div>
+          </div>
         </div>
       </div>
-      <button id="themeToggleDesktop" onclick="toggleTheme()" title="Sáng / Tối" class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-[#0a0a0a] dark:text-yellow-400 dark:hover:bg-[#111111]"></button>
-      <div id="userMenu" class="hidden"><button onclick="logout()" class="text-sm bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-bold px-4 py-2 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/50 transition shadow-sm flex items-center justify-center whitespace-nowrap"><i class="fas fa-sign-out-alt md:mr-1"></i><span class="hidden md:inline" data-i18n="btn_logout">Thoát</span></button></div>
     </div>
-  </div>
-</nav>
-<div class="h-[120px] md:h-[80px]"></div>
-
-<!-- CỤM ĐIỀU HƯỚNG & HỖ TRỢ DƯỚI ĐÁY TRÊN MOBILE (CĂN GIỮA TOÀN NHÓM, 2 BLOCK ĐỘC LẬP THEO ẢNH CHUẨN) -->
-<div id="mobileBottomGroup" class="md:hidden fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] inset-x-0 z-[60] flex items-center justify-center gap-2.5 pointer-events-none transition-all duration-300">
-  <!-- Block 1: Navigation Bar 3 Tab (Icon-only, pill độc lập bên trái) -->
-  <div id="mobileNavWrapper" class="hidden pointer-events-auto bg-white/90 dark:bg-[#121318]/90 backdrop-blur-xl shadow-lg rounded-full p-1.5 flex items-center gap-1.5 border border-slate-200/80 dark:border-white/10 transition-all duration-200">
-    <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home mobile-tab-btn active flex items-center justify-center text-slate-500 dark:text-slate-400 w-11 h-11 rounded-full transition" title="Bảng điều khiển"><i class="fas fa-tv text-lg"></i></button>
-    <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store mobile-tab-btn flex items-center justify-center text-slate-500 dark:text-slate-400 w-11 h-11 rounded-full transition" title="Cửa hàng"><i class="fas fa-shopping-cart text-lg"></i></button>
-    <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide mobile-tab-btn flex items-center justify-center text-slate-500 dark:text-slate-400 w-11 h-11 rounded-full transition" title="Hướng dẫn"><i class="fas fa-book text-lg"></i></button>
-  </div>
-
-  <!-- Block 2: Nút Hỗ trợ FAB Speed Dial (Nằm bên phải, độc lập style và chức năng) -->
-  <div id="mobileFabWrapper" class="pointer-events-auto relative flex flex-col items-center">
-    <div id="mobileFabMenu" class="hidden absolute bottom-full mb-3 right-0 flex-col items-end gap-2.5 transition-all duration-200">
-      <button type="button" onclick="openWechatModal();toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl">
-        <span class="text-xs font-extrabold text-slate-700 dark:text-white">WeChat</span>
-        <span class="w-9 h-9 bg-wechat text-white rounded-full flex items-center justify-center text-lg shadow"><i class="fab fa-weixin"></i></span>
-      </button>
-      <a href="https://t.me/hoaian57" target="_blank" onclick="toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl">
-        <span class="text-xs font-extrabold text-slate-700 dark:text-white">Telegram</span>
-        <span class="w-9 h-9 bg-tele text-white rounded-full flex items-center justify-center text-lg shadow"><i class="fab fa-telegram-plane"></i></span>
-      </a>
-      <a href="https://www.facebook.com/trinh.hg.57" target="_blank" onclick="toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl">
-        <span class="text-xs font-extrabold text-slate-700 dark:text-white">Messenger</span>
-        <span class="w-9 h-9 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg shadow"><i class="fab fa-facebook-messenger"></i></span>
-      </a>
-      <a href="https://zalo.me/0917678211" target="_blank" onclick="toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl">
-        <span class="text-xs font-extrabold text-slate-700 dark:text-white">Chat Zalo</span>
-        <span class="w-9 h-9 bg-[#0068ff] text-white rounded-full flex items-center justify-center text-[11px] font-black shadow">Zalo</span>
-      </a>
-    </div>
-    <button type="button" id="mobileFabBtn" onclick="toggleMobileFab()" aria-label="Hỗ trợ" class="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white shadow-xl flex items-center justify-center text-xl border-2 border-white dark:border-slate-800 active:scale-95 transition btn-heartbeat">
-      <i id="mobileFabIcon" class="fas fa-headset"></i>
-    </button>
-  </div>
-</div>
-<main class="flex-grow z-10 px-2 md:px-4 py-4 md:py-6 max-w-[1400px] mx-auto w-full overflow-x-hidden">
-  <div id="view-portal" class="view-section mb-20 w-full">
-    <div id="p-home" class="portal-tab-content active w-full space-y-6">
-      <div class="bg-white dark:bg-[#1E293B] p-4 md:p-6 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-700/50 w-full overflow-hidden">
-        
-        <!-- TRẠNG THÁI 1: PENDING -->
-        <div id="portalContentPending" class="hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-[#1E293B] dark:via-[#1E293B] dark:to-[#1E293B] border border-indigo-200 dark:border-indigo-500/50 p-5 md:p-7 rounded-2xl flex flex-col items-center text-center mb-5 shadow-sm dark:shadow-[0_0_15px_rgba(99,102,241,0.15)]">
-          
-          <div id="pendingActiveState" class="w-full">
-            <div class="loader-ring"><i class="fas fa-shield-halved"></i></div>
-            <h4 id="pendingTitleUI" class="font-extrabold text-indigo-800 dark:text-indigo-400 text-sm md:text-lg uppercase">Đang kiểm tra giao dịch...</h4>
-            <div class="countdown-wrap my-4">
-              <span id="countdownTimer" class="font-mono text-4xl md:text-6xl font-black text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-900 px-6 py-2 md:py-3 rounded-2xl shadow-inner border-2 border-indigo-100 dark:border-slate-700">05:00</span>
-              <div class="w-full max-w-xs mx-auto h-2 bg-indigo-100 dark:bg-slate-700 rounded-full overflow-hidden mt-3 mb-3">
-                <div id="pendingBar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-1000" style="width:100%"></div>
-              </div>
+    <!-- BANNER THÔNG BÁO ĐỈNH WEB CHUẨN DESIGN SYSTEM (SHOPIFY POLARIS & RED HAT) -->
+    <aside id="siteAnnouncementBanner" class="hidden fixed top-0 inset-x-0 z-[75] transition-all duration-300 shadow-sm border-b" aria-label="Thông báo hệ thống">
+      <div class="max-w-[1400px] mx-auto px-4 py-2 flex items-center justify-between gap-3 text-xs md:text-sm font-semibold">
+        <div class="flex items-center gap-2.5 min-w-0 flex-1"><span id="announcementIcon" class="shrink-0 text-base"></span> <span id="announcementText" class="truncate leading-tight"></span></div>
+        <div class="flex items-center gap-2 shrink-0"><a id="announcementCta" href="#" class="hidden font-bold px-3 py-1 rounded-lg text-xs transition active:scale-95 shadow-xs"></a> <button id="announcementDismiss" onclick="dismissAnnouncement()" class="p-1 rounded-md opacity-70 hover:opacity-100 transition" title="Đóng thông báo"><i class="fas fa-xmark text-sm"></i></button></div>
+      </div>
+    </aside>
+    <nav id="mainNav" class="fixed top-0 w-full z-[70] border-b border-slate-200 dark:border-white/10 bg-white/95 dark:bg-black/90 backdrop-blur-md py-3 transition-colors duration-300">
+      <div class="max-w-[1400px] mx-auto px-4 w-full flex flex-col md:flex-row items-center justify-between gap-3">
+        <div class="flex items-center justify-between w-full md:w-auto shrink-0">
+          <div class="font-extrabold text-xl md:text-2xl tracking-tighter cursor-pointer text-indigo-700 dark:text-indigo-400 select-none flex items-center gap-1.5" onclick="window.location.reload(true)"><span data-i18n="brand">VPN Trinh Hg</span></div>
+          <div class="flex md:hidden items-center gap-2">
+            <select id="langSelectMobile" onchange="changeLanguage(this.value)" class="hidden">
+              <option value="vi">Tiếng Việt</option>
+              <option value="en">English</option>
+              <option value="zh">中文</option>
+            </select>
+            <!-- Dropdown ngôn ngữ Mobile có Cờ SVG -->
+            <div class="relative" translate="no">
+              <button type="button" onclick="toggleLangMenu('mobile')" id="langBtnMobile" class="bg-indigo-50 dark:bg-[#0a0a0a] text-indigo-700 dark:text-white border border-indigo-100 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 outline-none"></button>
+              <div id="langMenuMobile" class="hidden absolute right-0 mt-1.5 w-36 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 rounded-xl shadow-xl py-1 z-[100]"><button type="button" onclick="pickLangOption('vi')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2"><img src="https://flagcdn.com/w40/vn.png" class="w-4 h-3 object-cover rounded-[2px]"><span>Tiếng Việt</span></button> <button type="button" onclick="pickLangOption('en')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2"><img src="https://flagcdn.com/w40/gb.png" class="w-4 h-3 object-cover rounded-[2px]"><span>English</span></button> <button type="button" onclick="pickLangOption('zh')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2"><img src="https://flagcdn.com/w40/cn.png" class="w-4 h-3 object-cover rounded-[2px]"><span>中文</span></button></div>
             </div>
-            <p id="pendingWaitText" class="text-indigo-700 dark:text-indigo-300 text-sm md:text-base font-bold mb-1">Hệ thống xử lý tự động, vui lòng đợi trong ít phút.</p>
-            <div class="dots text-indigo-400 dark:text-indigo-500 text-xl leading-none"><span>•</span><span>•</span><span>•</span></div>
+            <button id="themeToggleMobile" onclick="toggleTheme()" title="Sáng / Tối" class="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0 transition bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-[#0a0a0a] dark:text-indigo-400 dark:hover:bg-[#111111]"></button>
+            <div id="userMenuMobile" class="hidden"><button onclick="logout()" title="Thoát" class="w-9 h-9 rounded-full bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center text-sm shadow-sm"><i class="fas fa-sign-out-alt"></i></button></div>
           </div>
-
-          <!-- Trạng thái Timeout -->
-          <div id="pendingTimeoutState" class="hidden w-full mb-2">
-            <div class="flex flex-col items-center">
-              <div class="relative w-16 h-16 flex items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30 border-4 border-white dark:border-slate-800 shadow-sm mb-4 mx-auto">
-                <i class="fas fa-clock-rotate-left text-3xl text-orange-500 dark:text-orange-400"></i>
-                <span class="absolute -top-1 -right-1 flex h-4 w-4">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-4 w-4 bg-orange-500 border-2 border-white dark:border-slate-800"></span>
-                </span>
+        </div>
+        <div class="flex-1 w-full md:flex-1 flex items-center justify-center mx-0 md:mx-2">
+          <div class="w-full relative min-w-0"><input type="text" id="loginInput" name="vpn_no_autofill_order_search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-lpignore="true" onkeyup="if(event.key==='Enter'){event.preventDefault();login();}" class="w-full bg-white dark:bg-[#0a0a0a] border-2 border-indigo-100 dark:border-white/10 rounded-full pl-5 pr-12 py-2.5 text-sm outline-none font-bold text-slate-700 dark:text-white focus:border-indigo-400 dark:focus:border-indigo-500 transition shadow-sm placeholder:dark:text-slate-500" placeholder="Nhập Mã Đơn hoặc Email..." data-i18n-placeholder="search_placeholder"> <button onclick="login()" id="loginSearchBtn" title="Tìm kiếm" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 min-h-[32px] max-h-[32px] shrink-0 aspect-square bg-indigo-600 dark:bg-indigo-500 rounded-full text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 flex items-center justify-center transition shadow-sm"><i class="fas fa-search text-xs"></i></button></div>
+        </div>
+        <div class="hidden md:flex items-center justify-end w-auto gap-3 shrink-0">
+          <div id="desktopPortalNav" class="hidden flex items-center gap-2 shrink-0 whitespace-nowrap transition-all duration-300"><button onclick="switchPortalTab('p-home')" class="btn-nav-p-home desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center"><i class="fas fa-tv mr-2"></i><span data-i18n="tab_p_home">Bảng điều khiển</span></button> <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center"><i class="fas fa-shopping-cart mr-2"></i><span data-i18n="tab_p_store">Cửa hàng</span></button> <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center"><i class="fas fa-book mr-2"></i><span data-i18n="tab_p_guide">Hướng dẫn</span></button></div>
+          <select id="langSelectDesktop" onchange="changeLanguage(this.value)" class="hidden">
+            <option value="vi">Tiếng Việt</option>
+            <option value="en">English</option>
+            <option value="zh">中文</option>
+          </select>
+          <!-- Dropdown ngôn ngữ Desktop có Cờ SVG hiển thị chuẩn trên Windows (Khóa mép phải chuẩn xác) -->
+          <div class="relative shrink-0" translate="no">
+            <button type="button" onclick="toggleLangMenu('desktop')" id="langBtnDesktop" class="bg-indigo-50 dark:bg-[#0a0a0a] text-indigo-700 dark:text-white border border-indigo-100 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold flex items-center gap-2 outline-none hover:border-indigo-300 transition shrink-0"></button>
+            <div id="langMenuDesktop" class="hidden absolute right-0 top-full mt-2 w-40 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 rounded-xl shadow-2xl py-1 z-[100] origin-top-right"><button type="button" onclick="pickLangOption('vi')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/vn.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>Tiếng Việt</span></button> <button type="button" onclick="pickLangOption('en')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/gb.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>English</span></button> <button type="button" onclick="pickLangOption('zh')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/cn.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>中文</span></button></div>
+          </div>
+          <button id="themeToggleDesktop" onclick="toggleTheme()" title="Sáng / Tối" class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-[#0a0a0a] dark:text-yellow-400 dark:hover:bg-[#111111]"></button>
+          <div id="userMenu" class="hidden"><button onclick="logout()" class="text-sm bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-bold px-4 py-2 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/50 transition shadow-sm flex items-center justify-center whitespace-nowrap"><i class="fas fa-sign-out-alt md:mr-1"></i><span class="hidden md:inline" data-i18n="btn_logout">Thoát</span></button></div>
+        </div>
+      </div>
+    </nav>
+    <div class="h-[120px] md:h-[80px]"></div>
+    <!-- CỤM ĐIỀU HƯỚNG & HỖ TRỢ DƯỚI ĐÁY TRÊN MOBILE (CĂN GIỮA TOÀN NHÓM, 2 BLOCK ĐỘC LẬP THEO ẢNH CHUẨN) -->
+    <div id="mobileBottomGroup" class="md:hidden fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] inset-x-0 z-[60] flex items-center justify-center gap-2.5 pointer-events-none transition-all duration-300">
+      <!-- Block 1: Navigation Bar 3 Tab (Icon-only, pill độc lập bên trái) -->
+      <div id="mobileNavWrapper" class="hidden pointer-events-auto bg-white/90 dark:bg-[#121318]/90 backdrop-blur-xl shadow-lg rounded-full p-1.5 flex items-center gap-1.5 border border-slate-200/80 dark:border-white/10 transition-all duration-200"><button onclick="switchPortalTab('p-home')" class="btn-nav-p-home mobile-tab-btn active flex items-center justify-center text-slate-500 dark:text-slate-400 w-11 h-11 rounded-full transition" title="Bảng điều khiển"><i class="fas fa-tv text-lg"></i></button> <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store mobile-tab-btn flex items-center justify-center text-slate-500 dark:text-slate-400 w-11 h-11 rounded-full transition" title="Cửa hàng"><i class="fas fa-shopping-cart text-lg"></i></button> <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide mobile-tab-btn flex items-center justify-center text-slate-500 dark:text-slate-400 w-11 h-11 rounded-full transition" title="Hướng dẫn"><i class="fas fa-book text-lg"></i></button></div>
+      <!-- Block 2: Nút Hỗ trợ FAB Speed Dial (Nằm bên phải, độc lập style và chức năng) -->
+      <div id="mobileFabWrapper" class="pointer-events-auto relative flex flex-col items-center">
+        <div id="mobileFabMenu" class="hidden absolute bottom-full mb-3 right-0 flex-col items-end gap-2.5 transition-all duration-200"><button type="button" onclick="openWechatModal();toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl"> <span class="text-xs font-extrabold text-slate-700 dark:text-white">WeChat</span> <span class="w-9 h-9 bg-wechat text-white rounded-full flex items-center justify-center text-lg shadow"><i class="fab fa-weixin"></i></span> </button> <a href="https://t.me/hoaian57" target="_blank" onclick="toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl"> <span class="text-xs font-extrabold text-slate-700 dark:text-white">Telegram</span> <span class="w-9 h-9 bg-tele text-white rounded-full flex items-center justify-center text-lg shadow"><i class="fab fa-telegram-plane"></i></span> </a> <a href="https://www.facebook.com/trinh.hg.57" target="_blank" onclick="toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl"> <span class="text-xs font-extrabold text-slate-700 dark:text-white">Messenger</span> <span class="w-9 h-9 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg shadow"><i class="fab fa-facebook-messenger"></i></span> </a> <a href="https://zalo.me/0917678211" target="_blank" onclick="toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl"> <span class="text-xs font-extrabold text-slate-700 dark:text-white">Chat Zalo</span> <span class="w-9 h-9 bg-[#0068ff] text-white rounded-full flex items-center justify-center text-[11px] font-black shadow">Zalo</span> </a></div>
+        <button type="button" id="mobileFabBtn" onclick="toggleMobileFab()" aria-label="Hỗ trợ" class="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white shadow-xl flex items-center justify-center text-xl border-2 border-white dark:border-slate-800 active:scale-95 transition btn-heartbeat"> <i id="mobileFabIcon" class="fas fa-headset"></i> </button>
+      </div>
+    </div>
+    <main class="flex-grow z-10 px-2 md:px-4 py-4 md:py-6 max-w-[1400px] mx-auto w-full overflow-x-hidden">
+      <div id="view-portal" class="view-section mb-20 w-full">
+        <div id="p-home" class="portal-tab-content active w-full space-y-6">
+          <div class="bg-white dark:bg-[#1E293B] p-4 md:p-6 rounded-3xl shadow-sm border border-slate-200/80 dark:border-slate-700/50 w-full overflow-hidden">
+            <!-- TRẠNG THÁI 1: PENDING -->
+            <div id="portalContentPending" class="hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-[#1E293B] dark:via-[#1E293B] dark:to-[#1E293B] border border-indigo-200 dark:border-indigo-500/50 p-5 md:p-7 rounded-2xl flex flex-col items-center text-center mb-5 shadow-sm dark:shadow-[0_0_15px_rgba(99,102,241,0.15)]">
+              <div id="pendingActiveState" class="w-full">
+                <div class="loader-ring"><i class="fas fa-shield-halved"></i></div>
+                <h4 id="pendingTitleUI" class="font-extrabold text-indigo-800 dark:text-indigo-400 text-sm md:text-lg uppercase">Đang kiểm tra giao dịch...</h4>
+                <div class="countdown-wrap my-4">
+                  <span id="countdownTimer" class="font-mono text-4xl md:text-6xl font-black text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-900 px-6 py-2 md:py-3 rounded-2xl shadow-inner border-2 border-indigo-100 dark:border-slate-700">05:00</span>
+                  <div class="w-full max-w-xs mx-auto h-2 bg-indigo-100 dark:bg-slate-700 rounded-full overflow-hidden mt-3 mb-3">
+                    <div id="pendingBar" class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-1000" style="width:100%"></div>
+                  </div>
+                </div>
+                <p id="pendingWaitText" class="text-indigo-700 dark:text-indigo-300 text-sm md:text-base font-bold mb-1">Hệ thống xử lý tự động, vui lòng đợi trong ít phút.</p>
+                <div class="dots text-indigo-400 dark:text-indigo-500 text-xl leading-none"><span>•</span><span>•</span><span>•</span></div>
               </div>
-              <h4 id="pendingTimeoutTitle" class="font-extrabold text-orange-700 dark:text-orange-400 text-sm md:text-lg uppercase">Chưa nhận được thanh toán</h4>
-              <p id="pendingTimeoutDesc" class="text-orange-600 dark:text-orange-300 text-sm md:text-base font-bold mt-1 mb-4">Đã quá thời gian tự động duyệt. Bạn đã chuyển khoản chưa?</p>
-              
-              <div class="w-full max-w-md mx-auto bg-white/80 dark:bg-black border border-orange-200 dark:border-orange-500/50 rounded-2xl px-4 py-3 shadow-sm text-left">
-                <div class="flex items-start gap-3">
-                  <i class="fas fa-circle-info text-orange-400 mt-0.5"></i>
-                  <p class="text-orange-800 dark:text-orange-300 text-xs md:text-sm font-medium">Nếu bạn đã chuyển khoản, hệ thống có thể đang xử lý chậm. Vui lòng gửi biên lai cho Admin để được duyệt tay nhanh chóng.</p>
+              <!-- Trạng thái Timeout -->
+              <div id="pendingTimeoutState" class="hidden w-full mb-2">
+                <div class="flex flex-col items-center">
+                  <div class="relative w-16 h-16 flex items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30 border-4 border-white dark:border-slate-800 shadow-sm mb-4 mx-auto"><i class="fas fa-clock-rotate-left text-3xl text-orange-500 dark:text-orange-400"></i> <span class="absolute -top-1 -right-1 flex h-4 w-4"> <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span> <span class="relative inline-flex rounded-full h-4 w-4 bg-orange-500 border-2 border-white dark:border-slate-800"></span> </span></div>
+                  <h4 id="pendingTimeoutTitle" class="font-extrabold text-orange-700 dark:text-orange-400 text-sm md:text-lg uppercase">Chưa nhận được thanh toán</h4>
+                  <p id="pendingTimeoutDesc" class="text-orange-600 dark:text-orange-300 text-sm md:text-base font-bold mt-1 mb-4">Đã quá thời gian tự động duyệt. Bạn đã chuyển khoản chưa?</p>
+                  <div class="w-full max-w-md mx-auto bg-white/80 dark:bg-black border border-orange-200 dark:border-orange-500/50 rounded-2xl px-4 py-3 shadow-sm text-left">
+                    <div class="flex items-start gap-3">
+                      <i class="fas fa-circle-info text-orange-400 mt-0.5"></i>
+                      <p class="text-orange-800 dark:text-orange-300 text-xs md:text-sm font-medium">Nếu bạn đã chuyển khoản, hệ thống có thể đang xử lý chậm. Vui lòng gửi biên lai cho Admin để được duyệt tay nhanh chóng.</p>
+                    </div>
+                  </div>
                 </div>
               </div>
+              <div class="w-full flex flex-col items-center mt-3 border-t border-indigo-100 dark:border-slate-700 pt-4">
+                <p id="pendingSupportText" class="text-slate-500 dark:text-slate-400 text-[11px] md:text-sm mb-3 font-medium px-4">Cần hỗ trợ? Hãy nhắn cho Admin.</p>
+                <a href="https://zalo.me/0917678211" target="_blank" id="pendingZaloBtn" class="mx-auto bg-[#0068ff]/85 dark:bg-[#0068ff]/30 text-white dark:text-[#66a3ff] font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition shadow-md"> <i class="fas fa-comment-dots text-lg"></i><span id="pendingZaloBtnTxt">Nhắn Zalo Admin</span> </a>
+              </div>
+            </div>
+            <!-- TRẠNG THÁI 2: ĐỢI ADMIN DUYỆT -->
+            <div id="portalContentManual" class="hidden bg-gradient-to-br from-amber-50 via-white to-orange-50 dark:from-black dark:via-black dark:to-black border border-amber-200 dark:border-amber-500/80 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-sm dark:shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+              <div class="loader-ring amber"><i class="fas fa-hourglass-half"></i></div>
+              <h4 class="font-extrabold text-amber-800 dark:text-amber-400 text-sm md:text-lg uppercase" data-i18n="pending_manual_title">Đơn hàng đang chờ Admin duyệt</h4>
+              <p class="text-amber-700 dark:text-amber-300 text-xs md:text-sm font-bold mt-1 mb-4 max-w-md" data-i18n="pending_manual_desc">Vui lòng nhắn tin cho Admin cùng với biên lai để được kích hoạt sớm nhất.</p>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full max-w-2xl mb-5">
+                <div class="flex items-center gap-2 bg-white dark:bg-slate-900 border border-amber-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-amber-800 dark:text-amber-400 text-left"><b class="bg-amber-500 text-white w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0">1</b><span>Gửi biên lai cho Admin</span></div>
+                <div class="flex items-center gap-2 bg-white dark:bg-slate-900 border border-amber-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-amber-800 dark:text-amber-400 text-left"><b class="bg-amber-500 text-white w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0">2</b><span>Admin kiểm tra & duyệt</span></div>
+                <div class="flex items-center gap-2 bg-white dark:bg-slate-900 border border-amber-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-amber-800 dark:text-amber-400 text-left"><b class="bg-amber-500 text-white w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0">3</b><span>Nhận link, tự cập nhật</span></div>
+              </div>
+              <div class="flex gap-3 flex-wrap justify-center"><a href="https://zalo.me/0917678211" target="_blank" class="bg-[#0068ff]/85 dark:bg-[#0068ff]/30 text-white dark:text-[#66a3ff] font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-sm shadow-md hover:scale-105 transition"><i class="fas fa-comment-dots"></i> Zalo Admin</a> <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="bg-[#07C160]/85 dark:bg-[#07C160]/30 text-white dark:text-[#20d877] font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-sm shadow-md hover:scale-105 transition"><i class="fab fa-weixin"></i> WeChat</button></div>
+            </div>
+            <!-- TRẠNG THÁI 3: TỪ CHỐI -->
+            <div id="portalContentFailed" class="hidden relative overflow-hidden bg-gradient-to-br from-red-100 via-rose-50 to-red-100 dark:from-red-900/60 dark:via-red-800/40 dark:to-rose-900/60 border border-red-200 dark:border-red-500 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-lg dark:shadow-[0_0_20px_rgba(239,68,68,0.3)]">
+              <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-red-500 to-rose-500"></div>
+              <div class="relative w-20 h-20 flex items-center justify-center rounded-2xl bg-white dark:bg-slate-800 border border-red-200 dark:border-red-900/50 shadow-md mb-5 mx-auto transform rotate-3 hover:rotate-0 transition-transform duration-300"><i class="fas fa-file-circle-xmark text-4xl text-red-500"></i> <span class="absolute -top-2 -right-2 flex h-5 w-5"> <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span> <span class="relative inline-flex rounded-full h-5 w-5 bg-red-500 border-2 border-white dark:border-slate-800 items-center justify-center shadow-sm"> <i class="fas fa-exclamation text-[10px] text-white"></i> </span> </span></div>
+              <h4 class="font-black text-red-800 dark:text-red-400 text-base md:text-xl uppercase tracking-wide" data-i18n="failed_title">Giao dịch bị từ chối</h4>
+              <p class="text-red-600 dark:text-red-400 text-sm md:text-base font-semibold mt-1 mb-5">Hệ thống không thể xác minh thanh toán của bạn.</p>
+              <div class="w-full max-w-sm mx-auto bg-white dark:bg-slate-900 border-2 border-red-100 dark:border-red-900/50 rounded-2xl p-5 shadow-inner mb-6 text-left relative mt-2">
+                <div class="absolute -top-3.5 left-4 bg-gradient-to-r from-red-500 to-rose-500 text-white text-[11px] font-black uppercase px-3 py-1 rounded-lg shadow-sm tracking-wider flex items-center gap-1.5 border border-white dark:border-slate-900"><i class="fas fa-triangle-exclamation"></i> Lý do</div>
+                <span id="failReasonText" class="font-mono text-slate-700 dark:text-slate-300 font-bold text-sm md:text-base block mt-2 whitespace-normal break-words">Chưa nhận được thanh toán</span>
+              </div>
+              <div class="w-full flex flex-col items-center mt-2 pt-5 border-t border-red-200/60 dark:border-red-900/30">
+                <p class="text-slate-600 dark:text-slate-400 text-xs md:text-sm mb-4 font-medium px-4">Đừng lo lắng! Hãy nhắn cho Admin kèm ảnh chụp giao dịch để được hỗ trợ kiểm tra tay.</p>
+                <a href="https://zalo.me/0917678211" target="_blank" class="mx-auto bg-gradient-to-r from-[#0068ff] to-[#0055d4] dark:from-[#0068ff]/30 dark:to-[#0055d4]/30 text-white dark:text-[#66a3ff] font-bold py-3.5 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition-all shadow-lg shadow-blue-500/30 dark:shadow-none"> <i class="fas fa-comment-dots text-lg"></i> Nhắn Zalo Admin ngay </a>
+              </div>
+            </div>
+            <div id="portalContentSuccess" class="hidden w-full">
+              <!-- BẢNG CẢNH BÁO BẢO MẬT THU GỌN - ICON CĂN TRÁI PHỦ 2 DÒNG -->
+              <div class="mb-3.5 flex justify-center w-full">
+                <div class="bg-gradient-to-r from-rose-50/90 to-amber-50/90 dark:from-rose-950/30 dark:to-amber-950/30 border-l-4 border-l-rose-500 border border-rose-200/80 dark:border-rose-900/40 px-3 py-2.5 rounded-xl shadow-xs flex items-center gap-3 w-full text-left">
+                  <div class="w-8 h-8 rounded-full bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center shrink-0 shadow-xs"><i class="fas fa-user-shield text-rose-600 dark:text-rose-400 text-sm"></i></div>
+                  <div class="flex-1 min-w-0">
+                    <h4 id="securityAlertTitle" class="text-rose-700 dark:text-rose-400 font-black text-xs uppercase tracking-wider leading-tight">CẢNH BÁO BẢO MẬT</h4>
+                    <p id="securityAlertDesc" class="text-slate-700 dark:text-slate-300 font-medium text-[11px] sm:text-xs leading-snug mt-0.5">Bắt buộc giữ bí mật <strong class="font-bold text-red-600 dark:text-red-500">Email</strong> và <strong class="font-bold text-red-600 dark:text-red-500">Mã đơn hàng</strong> để tránh bị lộ Link VPN.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-slate-50 dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 rounded-2xl p-3.5 md:p-5 mb-4 shadow-sm relative overflow-hidden">
+                <div id="upgradeSuccessBadge" class="hidden absolute top-0 right-0 bg-red-600 dark:bg-red-500 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md z-10" data-i18n="badge_upgrade_success">🎉 NÂNG GÓI THÀNH CÔNG</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 mb-3">
+                  <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-2 min-w-0"><i class="fas fa-envelope text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0">Email:</span><span id="displayEmail" class="font-bold text-slate-800 dark:text-slate-200 text-[11px] md:text-xs truncate"></span></div>
+                    <div class="flex items-center gap-2 min-w-0"><i class="fas fa-hashtag text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0" data-i18n="order_id_label">Mã đơn:</span><span id="displayOrderId" class="font-mono font-black text-indigo-600 dark:text-indigo-400 text-xs md:text-sm"></span></div>
+                    <div class="flex items-center gap-2 min-w-0"><i class="fas fa-box text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0" data-i18n="pkg_name_label">Gói VPN:</span><span id="displayPkg" class="font-bold text-slate-800 dark:text-slate-200 text-[11px] md:text-xs truncate"></span></div>
+                  </div>
+                  <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-2 min-w-0"><i class="fas fa-clock text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0" data-i18n="exp_date_label">HSD:</span><span id="displayExp" class="font-bold text-slate-800 dark:text-slate-200 text-[11px] md:text-xs truncate"></span></div>
+                    <div class="flex items-center gap-2 min-w-0"><i class="fas fa-arrow-up text-blue-500 dark:text-blue-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0">Nâng cấp:</span><span id="displayUpgradeStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span></div>
+                    <div class="flex items-center gap-2 min-w-0"><i class="fas fa-check-circle text-green-500 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0" data-i18n="status_lbl">Trạng thái:</span><span id="displayStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span></div>
+                  </div>
+                </div>
+                <div class="mt-2.5 flex justify-center border-t border-slate-100 dark:border-white/10 pt-2.5"><button id="btnRequestData" onclick="requestDataCheck()" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold px-4 py-2 rounded-xl text-xs hover:scale-105 transition shadow-sm flex items-center justify-center btn-heartbeat outline-none whitespace-nowrap shrink-0"><i class="fas fa-chart-pie mr-1.5"></i><span data-i18n="btn_check_data">Kiểm tra dung lượng</span></button></div>
+              </div>
+              <!-- BLOCK 1: CHỈ CHỨA CÁC ĐƯỜNG LINK SUBSCRIPTION VÀ NÚT COPY / LẤY QR -->
+              <div class="bg-green-50/70 dark:bg-green-950/20 border-2 border-dashed border-green-500 dark:border-green-800 p-3 sm:p-4 rounded-2xl w-full space-y-2.5 relative" id="linkBoxes"></div>
+              <!-- BLOCK 2: CONTAINER ĐỘC LẬP CHỨA 2 NÚT NÂNG GÓI VÀ GIA HẠN (TÁCH BIỆT KHỎI KHỐI LINK SUB) -->
+              <div id="portalActionButtons" class="mt-4 grid grid-cols-2 gap-3 w-full"></div>
             </div>
           </div>
-
-          <div class="w-full flex flex-col items-center mt-3 border-t border-indigo-100 dark:border-slate-700 pt-4">
-            <p id="pendingSupportText" class="text-slate-500 dark:text-slate-400 text-[11px] md:text-sm mb-3 font-medium px-4">Cần hỗ trợ? Hãy nhắn cho Admin.</p>
-            <a href="https://zalo.me/0917678211" target="_blank" id="pendingZaloBtn" class="mx-auto bg-[#0068ff]/85 dark:bg-[#0068ff]/30 text-white dark:text-[#66a3ff] font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition shadow-md">
-              <i class="fas fa-comment-dots text-lg"></i><span id="pendingZaloBtnTxt">Nhắn Zalo Admin</span>
-            </a>
-          </div>
+          <div class="flex justify-center mt-6 mb-8"><button onclick="switchPortalTab('p-guide')" class="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-400 dark:to-indigo-500 text-white font-black py-3 px-6 rounded-full shadow-lg dark:shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:scale-105 transition-transform flex items-center gap-2 text-xs md:text-sm max-w-[90vw] text-center"><i class="fas fa-question-circle text-lg"></i><span data-i18n="btn_watch_guide">Chưa biết sử dụng? Xem hướng dẫn ngay!</span></button></div>
+          <h3 class="text-xl font-extrabold text-center mb-6 text-slate-800 dark:text-slate-200" data-i18n="faq_title">Câu hỏi thường gặp (FAQ)</h3>
+          <div id="faqPortalHomeContainer" class="space-y-3"></div>
         </div>
-
-        <!-- TRẠNG THÁI 2: ĐỢI ADMIN DUYỆT -->
-        <div id="portalContentManual" class="hidden bg-gradient-to-br from-amber-50 via-white to-orange-50 dark:from-black dark:via-black dark:to-black border border-amber-200 dark:border-amber-500/80 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-sm dark:shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-          <div class="loader-ring amber"><i class="fas fa-hourglass-half"></i></div>
-          <h4 class="font-extrabold text-amber-800 dark:text-amber-400 text-sm md:text-lg uppercase" data-i18n="pending_manual_title">Đơn hàng đang chờ Admin duyệt</h4>
-          <p class="text-amber-700 dark:text-amber-300 text-xs md:text-sm font-bold mt-1 mb-4 max-w-md" data-i18n="pending_manual_desc">Vui lòng nhắn tin cho Admin cùng với biên lai để được kích hoạt sớm nhất.</p>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full max-w-2xl mb-5">
-            <div class="flex items-center gap-2 bg-white dark:bg-slate-900 border border-amber-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-amber-800 dark:text-amber-400 text-left"><b class="bg-amber-500 text-white w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0">1</b><span>Gửi biên lai cho Admin</span></div>
-            <div class="flex items-center gap-2 bg-white dark:bg-slate-900 border border-amber-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-amber-800 dark:text-amber-400 text-left"><b class="bg-amber-500 text-white w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0">2</b><span>Admin kiểm tra & duyệt</span></div>
-            <div class="flex items-center gap-2 bg-white dark:bg-slate-900 border border-amber-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-amber-800 dark:text-amber-400 text-left"><b class="bg-amber-500 text-white w-[22px] h-[22px] rounded-full flex items-center justify-center shrink-0">3</b><span>Nhận link, tự cập nhật</span></div>
-          </div>
-          <div class="flex gap-3 flex-wrap justify-center">
-            <a href="https://zalo.me/0917678211" target="_blank" class="bg-[#0068ff]/85 dark:bg-[#0068ff]/30 text-white dark:text-[#66a3ff] font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-sm shadow-md hover:scale-105 transition"><i class="fas fa-comment-dots"></i> Zalo Admin</a>
-            <button onclick="document.getElementById('wechatModal').classList.remove('hidden')" class="bg-[#07C160]/85 dark:bg-[#07C160]/30 text-white dark:text-[#20d877] font-bold py-2.5 px-6 rounded-xl flex items-center gap-2 text-sm shadow-md hover:scale-105 transition"><i class="fab fa-weixin"></i> WeChat</button>
-          </div>
-        </div>
-
-        <!-- TRẠNG THÁI 3: TỪ CHỐI -->
-        <div id="portalContentFailed" class="hidden relative overflow-hidden bg-gradient-to-br from-red-100 via-rose-50 to-red-100 dark:from-red-900/60 dark:via-red-800/40 dark:to-rose-900/60 border border-red-200 dark:border-red-500 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-6 shadow-lg dark:shadow-[0_0_20px_rgba(239,68,68,0.3)]">
-          <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-red-500 to-rose-500"></div>
-          
-          <div class="relative w-20 h-20 flex items-center justify-center rounded-2xl bg-white dark:bg-slate-800 border border-red-200 dark:border-red-900/50 shadow-md mb-5 mx-auto transform rotate-3 hover:rotate-0 transition-transform duration-300">
-            <i class="fas fa-file-circle-xmark text-4xl text-red-500"></i>
-            <span class="absolute -top-2 -right-2 flex h-5 w-5">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-5 w-5 bg-red-500 border-2 border-white dark:border-slate-800 items-center justify-center shadow-sm">
-                <i class="fas fa-exclamation text-[10px] text-white"></i>
-              </span>
-            </span>
-          </div>
-          
-          <h4 class="font-black text-red-800 dark:text-red-400 text-base md:text-xl uppercase tracking-wide" data-i18n="failed_title">Giao dịch bị từ chối</h4>
-          <p class="text-red-600 dark:text-red-400 text-sm md:text-base font-semibold mt-1 mb-5">Hệ thống không thể xác minh thanh toán của bạn.</p>
-          
-          <div class="w-full max-w-sm mx-auto bg-white dark:bg-slate-900 border-2 border-red-100 dark:border-red-900/50 rounded-2xl p-5 shadow-inner mb-6 text-left relative mt-2">
-            <div class="absolute -top-3.5 left-4 bg-gradient-to-r from-red-500 to-rose-500 text-white text-[11px] font-black uppercase px-3 py-1 rounded-lg shadow-sm tracking-wider flex items-center gap-1.5 border border-white dark:border-slate-900">
-              <i class="fas fa-triangle-exclamation"></i> Lý do
+        <div id="p-store" class="portal-tab-content w-full">
+          <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 md:p-8 mb-8 text-white shadow-lg flex flex-col md:flex-row items-center gap-6">
+            <div class="flex-1">
+              <h3 class="text-xl md:text-3xl font-black mb-3" data-i18n="promo_title"></h3>
+              <p class="text-sm font-medium opacity-90" data-i18n="promo_desc"></p>
             </div>
-            <span id="failReasonText" class="font-mono text-slate-700 dark:text-slate-300 font-bold text-sm md:text-base block mt-2 whitespace-normal break-words">Chưa nhận được thanh toán</span>
+            <i class="fas fa-rocket text-6xl opacity-80 hidden md:block"></i>
           </div>
-
-          <div class="w-full flex flex-col items-center mt-2 pt-5 border-t border-red-200/60 dark:border-red-900/30">
-            <p class="text-slate-600 dark:text-slate-400 text-xs md:text-sm mb-4 font-medium px-4">Đừng lo lắng! Hãy nhắn cho Admin kèm ảnh chụp giao dịch để được hỗ trợ kiểm tra tay.</p>
-            <a href="https://zalo.me/0917678211" target="_blank" class="mx-auto bg-gradient-to-r from-[#0068ff] to-[#0055d4] dark:from-[#0068ff]/30 dark:to-[#0055d4]/30 text-white dark:text-[#66a3ff] font-bold py-3.5 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition-all shadow-lg shadow-blue-500/30 dark:shadow-none">
-              <i class="fas fa-comment-dots text-lg"></i> Nhắn Zalo Admin ngay
-            </a>
-          </div>
+          <div class="flex justify-center gap-1.5 mb-6 pkg-filters-wrap p-1.5 rounded-2xl w-fit max-w-full mx-auto overflow-x-auto flex-nowrap pkg-filters backdrop-blur-md"><button onclick="renderPackages('all')" id="ptab-all" class="tab-btn active px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_all">Tất cả</button> <button onclick="renderPackages('travel')" id="ptab-travel" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_travel">Du lịch</button> <button onclick="renderPackages('cycle')" id="ptab-cycle" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_cycle">Chu kỳ</button> <button onclick="renderPackages('usage')" id="ptab-usage" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_usage">Dung lượng</button></div>
+          <div id="packagesContainerPortal" class="grid md:grid-cols-3 gap-4 md:gap-6 mb-10 w-full"></div>
         </div>
-
-        <div id="portalContentSuccess" class="hidden w-full">
-          <!-- BẢNG CẢNH BÁO BẢO MẬT THU GỌN - ICON CĂN TRÁI PHỦ 2 DÒNG -->
-          <div class="mb-3.5 flex justify-center w-full">
-            <div class="bg-gradient-to-r from-rose-50/90 to-amber-50/90 dark:from-rose-950/30 dark:to-amber-950/30 border-l-4 border-l-rose-500 border border-rose-200/80 dark:border-rose-900/40 px-3 py-2.5 rounded-xl shadow-xs flex items-center gap-3 w-full text-left">
-              <div class="w-8 h-8 rounded-full bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center shrink-0 shadow-xs"><i class="fas fa-user-shield text-rose-600 dark:text-rose-400 text-sm"></i></div>
-              <div class="flex-1 min-w-0">
-                <h4 id="securityAlertTitle" class="text-rose-700 dark:text-rose-400 font-black text-xs uppercase tracking-wider leading-tight">CẢNH BÁO BẢO MẬT</h4>
-                <p id="securityAlertDesc" class="text-slate-700 dark:text-slate-300 font-medium text-[11px] sm:text-xs leading-snug mt-0.5">Bắt buộc giữ bí mật <strong class="font-bold text-red-600 dark:text-red-500">Email</strong> và <strong class="font-bold text-red-600 dark:text-red-500">Mã đơn hàng</strong> để tránh bị lộ Link VPN.</p>
+        <div id="p-guide" class="portal-tab-content w-full">
+          <div class="bg-white dark:bg-[#0a0a0a] p-4 md:p-8 rounded-3xl mb-8 border border-slate-200 dark:border-white/10 shadow-sm w-full relative overflow-hidden">
+            <div id="guideCategoryList" class="w-full">
+              <h2 class="text-xl font-extrabold text-slate-800 dark:text-slate-200 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4"><i class="fas fa-book-open text-indigo-500 mr-2"></i>Hướng dẫn Cài đặt</h2>
+              <div id="guideCategoriesContainer" class="space-y-8"></div>
+            </div>
+            <div id="guideDetailView" class="hidden w-full relative">
+              <button onclick="closeGuideArticle()" class="mb-4 text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-2 hover:opacity-80 transition text-sm"><i class="fas fa-arrow-left"></i> Quay lại danh sách</button>
+              <div id="guideDetailWatermark" class="absolute inset-0 overflow-hidden pointer-events-none z-0"></div>
+              <div class="relative z-10">
+                <h2 id="guideDetailTitle" class="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-slate-200 mb-2"></h2>
+                <div id="guideDetailMeta" class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4"></div>
+                <div id="guideText" class="text-sm text-slate-800 dark:text-slate-300 leading-relaxed font-medium"></div>
               </div>
             </div>
           </div>
-          <div class="bg-slate-50 dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 rounded-2xl p-3.5 md:p-5 mb-4 shadow-sm relative overflow-hidden">
-            <div id="upgradeSuccessBadge" class="hidden absolute top-0 right-0 bg-red-600 dark:bg-red-500 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md z-10" data-i18n="badge_upgrade_success">🎉 NÂNG GÓI THÀNH CÔNG</div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 mb-3">
-              <div class="flex flex-col gap-2">
-                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-envelope text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0">Email:</span><span id="displayEmail" class="font-bold text-slate-800 dark:text-slate-200 text-[11px] md:text-xs truncate"></span></div>
-                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-hashtag text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0" data-i18n="order_id_label">Mã đơn:</span><span id="displayOrderId" class="font-mono font-black text-indigo-600 dark:text-indigo-400 text-xs md:text-sm"></span></div>
-                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-box text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0" data-i18n="pkg_name_label">Gói VPN:</span><span id="displayPkg" class="font-bold text-slate-800 dark:text-slate-200 text-[11px] md:text-xs truncate"></span></div>
-              </div>
-              <div class="flex flex-col gap-2">
-                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-clock text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0" data-i18n="exp_date_label">HSD:</span><span id="displayExp" class="font-bold text-slate-800 dark:text-slate-200 text-[11px] md:text-xs truncate"></span></div>
-                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-arrow-up text-blue-500 dark:text-blue-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0">Nâng cấp:</span><span id="displayUpgradeStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span></div>
-                <div class="flex items-center gap-2 min-w-0"><i class="fas fa-check-circle text-green-500 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0" data-i18n="status_lbl">Trạng thái:</span><span id="displayStatus" class="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap"></span></div>
-              </div>
-            </div>
-            <div class="mt-2.5 flex justify-center border-t border-slate-100 dark:border-white/10 pt-2.5">
-              <button id="btnRequestData" onclick="requestDataCheck()" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold px-4 py-2 rounded-xl text-xs hover:scale-105 transition shadow-sm flex items-center justify-center btn-heartbeat outline-none whitespace-nowrap shrink-0"><i class="fas fa-chart-pie mr-1.5"></i><span data-i18n="btn_check_data">Kiểm tra dung lượng</span></button>
-            </div>
-          </div>
-          <!-- BLOCK 1: CHỈ CHỨA CÁC ĐƯỜNG LINK SUBSCRIPTION VÀ NÚT COPY / LẤY QR -->
-          <div class="bg-green-50/70 dark:bg-green-950/20 border-2 border-dashed border-green-500 dark:border-green-800 p-3 sm:p-4 rounded-2xl w-full space-y-2.5 relative" id="linkBoxes"></div>
-          
-          <!-- BLOCK 2: CONTAINER ĐỘC LẬP CHỨA 2 NÚT NÂNG GÓI VÀ GIA HẠN (TÁCH BIỆT KHỎI KHỐI LINK SUB) -->
-          <div id="portalActionButtons" class="mt-4 grid grid-cols-2 gap-3 w-full"></div>
         </div>
       </div>
-      <div class="flex justify-center mt-6 mb-8">
-        <button onclick="switchPortalTab('p-guide')" class="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-400 dark:to-indigo-500 text-white font-black py-3 px-6 rounded-full shadow-lg dark:shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:scale-105 transition-transform flex items-center gap-2 text-xs md:text-sm max-w-[90vw] text-center"><i class="fas fa-question-circle text-lg"></i><span data-i18n="btn_watch_guide">Chưa biết sử dụng? Xem hướng dẫn ngay!</span></button>
-      </div>
-      <h3 class="text-xl font-extrabold text-center mb-6 text-slate-800 dark:text-slate-200" data-i18n="faq_title">Câu hỏi thường gặp (FAQ)</h3>
-      <div id="faqPortalHomeContainer" class="space-y-3"></div>
-    </div>
-    <div id="p-store" class="portal-tab-content w-full">
-      <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 md:p-8 mb-8 text-white shadow-lg flex flex-col md:flex-row items-center gap-6">
-        <div class="flex-1"><h3 class="text-xl md:text-3xl font-black mb-3" data-i18n="promo_title"></h3><p class="text-sm font-medium opacity-90" data-i18n="promo_desc"></p></div>
-        <i class="fas fa-rocket text-6xl opacity-80 hidden md:block"></i>
-      </div>
-      <div class="flex justify-center gap-1.5 mb-6 pkg-filters-wrap p-1.5 rounded-2xl w-fit max-w-full mx-auto overflow-x-auto flex-nowrap pkg-filters backdrop-blur-md">
-        <button onclick="renderPackages('all')" id="ptab-all" class="tab-btn active px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_all">Tất cả</button>
-        <button onclick="renderPackages('travel')" id="ptab-travel" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_travel">Du lịch</button>
-        <button onclick="renderPackages('cycle')" id="ptab-cycle" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_cycle">Chu kỳ</button>
-        <button onclick="renderPackages('usage')" id="ptab-usage" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_usage">Dung lượng</button>
-      </div>
-      <div id="packagesContainerPortal" class="grid md:grid-cols-3 gap-4 md:gap-6 mb-10 w-full"></div>
-    </div>
-    <div id="p-guide" class="portal-tab-content w-full">
-      <div class="bg-white dark:bg-[#0a0a0a] p-4 md:p-8 rounded-3xl mb-8 border border-slate-200 dark:border-white/10 shadow-sm w-full relative overflow-hidden">
-        <div id="guideCategoryList" class="w-full">
-          <h2 class="text-xl font-extrabold text-slate-800 dark:text-slate-200 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4"><i class="fas fa-book-open text-indigo-500 mr-2"></i>Hướng dẫn Cài đặt</h2>
-          <div id="guideCategoriesContainer" class="space-y-8"></div>
-        </div>
-        <div id="guideDetailView" class="hidden w-full relative">
-          <button onclick="closeGuideArticle()" class="mb-4 text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-2 hover:opacity-80 transition text-sm"><i class="fas fa-arrow-left"></i> Quay lại danh sách</button>
-<div id="guideDetailWatermark" class="absolute inset-0 overflow-hidden pointer-events-none z-0"></div>
-          <div class="relative z-10">
-            <h2 id="guideDetailTitle" class="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-slate-200 mb-2"></h2>
-            <div id="guideDetailMeta" class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 mb-6 border-b border-slate-100 dark:border-slate-700 pb-4"></div>
-            <div id="guideText" class="text-sm text-slate-800 dark:text-slate-300 leading-relaxed font-medium"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div id="view-store" class="view-section active mb-20 w-full">
+      <div id="view-store" class="view-section active mb-20 w-full">
         <div class="text-center mb-4 mt-2 md:mt-3 px-2 w-full">
-      <h1 class="text-3xl md:text-5xl font-extrabold mb-2.5 text-slate-800 dark:text-slate-100 leading-tight" data-i18n="hero_title">Dịch Vụ VPN Tốc Độ Cao &amp; Đa Nền Tảng</h1>
-      <p class="text-xs md:text-base text-slate-600 dark:text-slate-400 font-medium mb-3" data-i18n="hero_desc">Tối ưu cho Tiktok, Facebook, Game &amp; Lướt web mượt mà không giới hạn</p>
-      <div class="dock-wrapper" id="dockWrapper"><div class="dock-marquee" id="dockMarquee"></div></div>
-    </div>
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 mb-10 w-full">
-      <div class="col-span-2 md:col-span-1 w-full bg-gradient-to-br from-indigo-500 to-indigo-700 p-5 md:p-6 rounded-[1.5rem] text-white shadow-md flex flex-col justify-center relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
-        <div class="absolute -right-4 -bottom-4 text-indigo-400/40 text-6xl md:text-8xl group-hover:rotate-12 transition-transform duration-500"><i class="fas fa-globe-asia"></i></div>
-        <div class="relative z-10"><h3 class="text-lg md:text-2xl font-black mb-1.5 md:mb-2" data-i18n="feat_1"></h3><p class="text-indigo-100 text-[11px] md:text-sm font-medium opacity-95 leading-relaxed" data-i18n="feat_1_desc"></p></div>
-      </div>
-      <div class="col-span-1 w-full bg-white dark:bg-[#0a0a0a] p-5 md:p-6 rounded-[1.5rem] border border-slate-100 dark:border-amber-500/30 shadow-sm flex flex-col justify-center hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden group">
-        <div class="absolute -right-4 -bottom-4 text-amber-100 dark:text-amber-500/10 text-6xl md:text-8xl group-hover:-rotate-12 transition-transform duration-500"><i class="fas fa-bolt"></i></div>
-        <div class="relative z-10"><div class="w-10 h-10 md:w-12 md:h-12 bg-amber-50 dark:bg-[#111111] rounded-2xl flex items-center justify-center mb-2 md:mb-3"><i class="fas fa-bolt text-xl md:text-2xl text-amber-500 dark:text-amber-400"></i></div><h4 class="font-bold text-slate-800 dark:text-white text-lg md:text-2xl mb-1.5 md:mb-2" data-i18n="feat_2"></h4><p class="text-[11px] md:text-sm text-slate-500 dark:text-slate-300 font-medium leading-relaxed" data-i18n="feat_2_desc"></p></div>
-      </div>
-      <div class="col-span-1 w-full bg-white dark:bg-[#0a0a0a] p-5 md:p-6 rounded-[1.5rem] border border-slate-100 dark:border-emerald-500/30 shadow-sm flex flex-col justify-center hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden group">
-        <div class="absolute -right-4 -bottom-4 text-emerald-50 dark:text-emerald-500/10 text-6xl md:text-8xl group-hover:rotate-12 transition-transform duration-500"><i class="fas fa-user-secret"></i></div>
-        <div class="relative z-10"><div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 dark:bg-[#111111] rounded-2xl flex items-center justify-center mb-2 md:mb-3"><i class="fas fa-user-secret text-xl md:text-2xl text-emerald-500 dark:text-emerald-400"></i></div><h4 class="font-bold text-slate-800 dark:text-white text-lg md:text-2xl mb-1.5 md:mb-2" data-i18n="feat_3"></h4><p class="text-[11px] md:text-sm text-slate-500 dark:text-slate-300 font-medium leading-relaxed" data-i18n="feat_3_desc"></p></div>
-      </div>
-    </div>
-    <div class="flex justify-center gap-1.5 mb-6 pkg-filters-wrap p-1.5 rounded-2xl w-fit max-w-full mx-auto overflow-x-auto flex-nowrap pkg-filters backdrop-blur-md">
-        <button onclick="renderPackages('all')" id="htab-all" class="tab-btn active px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_all">Tất cả</button>
-        <button onclick="renderPackages('travel')" id="htab-travel" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_travel">Du lịch</button>
-        <button onclick="renderPackages('cycle')" id="htab-cycle" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_cycle">Chu kỳ</button>
-        <button onclick="renderPackages('usage')" id="htab-usage" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_usage">Dung lượng</button>
-    </div>
-    <div id="packagesContainerHome" class="grid md:grid-cols-3 gap-4 md:gap-6 mb-10 w-full"></div>
-    <div id="checkoutSection" class="hidden mt-6 scroll-mt-24 w-full">
-      <div class="text-center mb-6"><h3 id="checkoutTitle" class="text-xl md:text-3xl font-extrabold text-slate-800 dark:text-slate-200" data-i18n="checkout_title">Thanh toán Đơn hàng</h3></div>
-      <form id="orderForm" onsubmit="submitOrder(event)">
-        <div class="grid lg:grid-cols-2 gap-6 items-start">
-<div class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-5 md:p-8 rounded-3xl flex flex-col shadow-sm">
-            <div id="checkoutPackageCardSummary" class="bg-indigo-50 dark:bg-indigo-900/40 px-5 py-4 rounded-xl mb-5 flex justify-between items-center border border-indigo-100 dark:border-indigo-500/30">
-              <div><p class="text-sm font-black text-slate-800 dark:text-white uppercase" id="selectedPackageName"></p><p class="text-xs font-bold text-slate-500 dark:text-slate-200 mt-0.5" id="selectedPackageData"></p></div>
-              <p class="text-lg md:text-xl font-black text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.8)]" id="selectedPackagePrice"></p>
-            </div>
-            <div id="upgradePriceNote" class="hidden bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 p-3 rounded-xl mb-5 text-amber-800 dark:text-amber-300 text-[11px] md:text-xs font-bold text-center"></div>
-            <div id="emailBlock">
-              <input type="email" id="cusEmail" required placeholder="Nhập Email nhận đơn" data-i18n-placeholder="email_placeholder" class="w-full border border-slate-200 dark:border-white/20 rounded-xl p-3.5 outline-none text-sm focus:border-indigo-500 mb-2 bg-slate-50 dark:bg-black text-slate-800 dark:text-white placeholder:dark:text-slate-500">
-              <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 p-3 rounded-xl mb-5 flex items-start gap-2"><i class="fas fa-exclamation-triangle text-red-500 mt-0.5"></i><p class="text-[11px] md:text-xs text-red-700 dark:text-red-400 font-bold" data-i18n="email_warning"></p></div>
-            </div>
-            <label class="block font-bold text-xs text-slate-700 dark:text-slate-200 mb-2" data-i18n="choose_method">Phương thức thanh toán:</label>
-            <div class="grid grid-cols-4 gap-2 mb-4">
-              <button type="button" onclick="selectPayMethod('bank')" id="pay-btn-bank" class="col-span-2 pay-btn active bg-indigo-50 dark:bg-indigo-500/30 border-indigo-500 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300 border-2 font-bold py-2.5 rounded-xl flex flex-col items-center gap-1 text-xs shadow-sm relative"><i class="fas fa-university text-xl"></i>Ngân hàng VN<span class="absolute -top-2.5 right-1 bg-green-100 border border-green-300 text-green-700 text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap" data-i18n="auto_badge">Tự động 24/24</span></button>
-              <button type="button" onclick="selectPayMethod('alipay')" id="pay-btn-alipay" class="col-span-1 pay-btn bg-white dark:bg-black border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 border-2 font-bold py-2.5 rounded-xl flex flex-col items-center gap-1 text-xs shadow-sm hover:bg-slate-50 dark:hover:bg-slate-900"><i class="fab fa-alipay text-xl text-blue-500"></i>Alipay</button>
-              <button type="button" onclick="selectPayMethod('wechat')" id="pay-btn-wechat" class="col-span-1 pay-btn bg-white dark:bg-black border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 border-2 font-bold py-2.5 rounded-xl flex flex-col items-center gap-1 text-xs shadow-sm hover:bg-slate-50 dark:hover:bg-slate-900"><i class="fab fa-weixin text-xl text-green-500"></i>Weixin</button>
-            </div>
-            <input type="hidden" id="payMethod" value="bank">
-            <div class="bg-slate-50 dark:bg-black/50 p-3 rounded-xl border border-slate-200 dark:border-white/10 mb-4">
-              <label class="flex items-start gap-2 cursor-pointer"><input type="checkbox" id="needSupport" onchange="toggleZalo()" checked class="mt-1 w-4 h-4 accent-indigo-600"><span class="font-bold text-xs md:text-sm text-slate-800 dark:text-slate-200 pt-0.5" data-i18n="need_support">Cần Hỗ trợ Cài đặt (Zalo/Tele)</span></label>
-              <input type="text" id="cusZalo" required class="w-full border border-slate-300 dark:border-white/20 rounded-lg p-2.5 mt-3 outline-none text-xs text-slate-800 dark:text-white bg-white dark:bg-black placeholder:dark:text-slate-500" placeholder="Nhập Zalo / Telegram...">
-            </div>
-            <div id="durationBlock" class="mb-4">
-              <label class="block font-bold text-xs text-slate-700 dark:text-slate-200 mb-2" data-i18n="choose_dur">Chọn thời gian:</label>
-              <div class="grid grid-cols-5 gap-2 text-center">
-                <button type="button" onclick="selectDuration(1)" id="dur-btn-1" class="dur-btn active bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900 whitespace-nowrap shrink-0">1 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
-                <button type="button" onclick="selectDuration(3)" id="dur-btn-3" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900 whitespace-nowrap shrink-0">3 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
-                <button type="button" onclick="selectDuration(6)" id="dur-btn-6" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900 whitespace-nowrap shrink-0">6 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
-                <button type="button" onclick="selectDuration(12)" id="dur-btn-12" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900 whitespace-nowrap shrink-0">12 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
-                <button type="button" onclick="selectDuration('custom')" id="dur-btn-custom" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900 whitespace-nowrap shrink-0">X <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
-              </div>
-              <div id="customDurWrap" class="hidden mt-3"><div class="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 p-2 rounded-lg border border-indigo-100 dark:border-indigo-500/30"><label class="text-xs font-bold text-indigo-800 dark:text-indigo-300 whitespace-nowrap pl-1" data-i18n="input_months">Nhập số tháng:</label><input type="number" id="customDurInput" min="1" max="120" value="2" oninput="calculateTotal()" class="w-full p-2 text-sm border border-slate-300 dark:border-white/20 rounded outline-none focus:border-indigo-500 font-bold bg-white dark:bg-black text-center text-slate-800 dark:text-white"></div></div>
-              <div id="priceCalculation" class="mt-3 text-sm font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-500/30 p-2.5 rounded-lg text-center"></div>
-            </div>
-
-            <!-- KHỐI LỰA CHỌN VÒNG ĐỜI LINK SUB (PHẦN F) -->
-            <div id="subLinkLifecycleWrap" class="hidden mb-4 p-3.5 bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-white/10 rounded-2xl space-y-2.5">
-              <div class="flex items-center gap-1.5">
-                <span class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider">Xử lý link sub</span>
-                <span class="relative group cursor-pointer" tabindex="0">
-                  <i class="fas fa-circle-question text-slate-400 hover:text-indigo-600 text-xs"></i>
-                  <span class="hidden group-hover:block group-focus:block absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-60 p-2 bg-slate-900 text-white text-[11px] rounded-xl shadow-lg z-30 font-medium leading-relaxed text-center">
-                    Chọn tiếp tục dùng link sub cũ hoặc nhận link sub hoàn toàn mới.
-                  </span>
-                </span>
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <label id="lblSubKeep" class="cursor-pointer border-2 border-slate-200 dark:border-white/10 rounded-xl p-3 flex flex-col justify-between hover:border-indigo-300 transition select-none bg-white dark:bg-black">
-                  <div class="flex items-center gap-2 mb-1.5">
-                    <input type="radio" name="subLinkDecisionRadio" value="KEEP_EXISTING" onchange="onSubDecisionChange(this.value)" class="text-indigo-600">
-                    <span class="font-extrabold text-xs text-slate-800 dark:text-white">Giữ link cũ</span>
-                  </div>
-                  <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-tight">Bạn sẽ tiếp tục dùng link sub đã thêm từ gói trước đó. Sau khi thanh toán và kích hoạt thành công, bạn chỉ cần cập nhật lại gói đăng ký trong app VPN tương ứng.</p>
-                </label>
-                <label id="lblSubNew" class="cursor-pointer border-2 border-slate-200 dark:border-white/10 rounded-xl p-3 flex flex-col justify-between hover:border-indigo-300 transition select-none bg-white dark:bg-black">
-                  <div class="flex items-center gap-2 mb-1.5">
-                    <input type="radio" name="subLinkDecisionRadio" value="CREATE_NEW" onchange="onSubDecisionChange(this.value)" class="text-indigo-600">
-                    <span class="font-extrabold text-xs text-slate-800 dark:text-white">Cấp link mới</span>
-                  </div>
-                  <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-tight">Sau khi thanh toán và kích hoạt thành công, bạn sẽ cần copy hoặc quét QR để thêm link sub mới vào trong app VPN tương ứng để sử dụng.</p>
-                </label>
-              </div>
-              <!-- Chọn link đích nếu email có nhiều link -->
-              <div id="multiLinkSelectorWrap" class="hidden mt-2 pt-2 border-t border-slate-200 dark:border-white/10">
-                <span class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Chọn link đích cần giữ:</span>
-                <select id="targetLinkSubSelect" class="w-full text-xs font-bold p-2 border border-slate-300 dark:border-white/20 rounded-lg bg-white dark:bg-black text-slate-800 dark:text-white outline-none focus:border-indigo-500"></select>
-              </div>
-            </div>
-
-            <!-- KHỐI NHẬP MÃ GIẢM GIÁ (COUPON / VOUCHER) -->
-            <div id="couponBlockWrap" class="mb-4">
-              <label class="block font-bold text-xs text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
-                <i class="fas fa-ticket text-purple-600"></i>Mã giảm giá (Coupon):
-              </label>
-              <div class="flex gap-2">
-                <input type="text" id="couponInput" placeholder="Nhập mã coupon (nếu có)..." class="flex-1 border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-800 dark:text-white bg-slate-50 dark:bg-black uppercase outline-none focus:border-purple-500">
-                <button type="button" onclick="applyCouponCode()" id="btnApplyCoupon" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-3.5 py-2 rounded-xl text-xs transition active:scale-95 whitespace-nowrap shadow-sm">
-                  Áp dụng
-                </button>
-              </div>
-              <div id="couponAppliedMsg" class="hidden mt-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1"></div>
-            </div>
-            <!-- Dòng Note Hoàn tiền (nền đỏ nhạt, viền đỏ, tĩnh không hiệu ứng) -->
-            <div class="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 p-3.5 rounded-2xl mb-4 text-left">
-              <p class="text-[11px] md:text-xs text-red-700 dark:text-red-400 font-medium leading-relaxed m-0">
-                <b class="font-bold text-red-800 dark:text-red-300">Hoàn tiền:</b> Website không hỗ trợ hoàn tiền sau khi đã mua hàng. Quý khách vui lòng chú ý trước khi thanh toán.
-              </p>
-            </div>
-            <div class="mt-auto pt-4"><button type="submit" id="btnConfirm" class="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md dark:shadow-[0_0_20px_rgba(99,102,241,0.5)] whitespace-nowrap" data-i18n="btn_create_order">TẠO MÃ QR CHUYỂN KHOẢN</button></div>
+          <h1 class="text-3xl md:text-5xl font-extrabold mb-2.5 text-slate-800 dark:text-slate-100 leading-tight" data-i18n="hero_title">Dịch Vụ VPN Tốc Độ Cao &amp; Đa Nền Tảng</h1>
+          <p class="text-xs md:text-base text-slate-600 dark:text-slate-400 font-medium mb-3" data-i18n="hero_desc">Tối ưu cho Tiktok, Facebook, Game &amp; Lướt web mượt mà không giới hạn</p>
+          <div class="dock-wrapper" id="dockWrapper">
+            <div class="dock-marquee" id="dockMarquee"></div>
           </div>
-          <div id="checkoutRightCol" class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-5 md:p-8 rounded-3xl shadow-sm flex flex-col"></div>
         </div>
-      </form>
-    </div>
-    <h3 class="text-xl font-extrabold text-center mt-16 mb-6 text-slate-800 dark:text-slate-200" data-i18n="faq_title">Câu hỏi thường gặp (FAQ)</h3>
-    <div id="faqStoreContainer" class="space-y-3"></div>
-  </div>
-  <div id="view-policy" class="view-section mb-20 w-full">
-    <div class="bg-white dark:bg-[#0a0a0a] p-5 md:p-8 rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm w-full">
-      <div class="mb-6 pb-4 border-b border-slate-100 dark:border-white/10">
-        <button onclick="router.navigate('/')" class="text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-2 hover:opacity-80 transition text-xs md:text-sm mb-2"><i class="fas fa-arrow-left"></i> Quay lại trang chủ</button>
-        <h1 class="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-white">Chính Sách &amp; Pháp Lý</h1>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Các điều khoản, quy định sử dụng và chính sách hoàn tiền chính thức của VPN Trinh Hg.</p>
-      </div>
-
-      <!-- Mục lục xem nhanh -->
-      <div class="bg-[#f8faff] dark:bg-[#14151a] border border-indigo-100 dark:border-white/10 rounded-2xl p-4 md:p-5 mb-8 shadow-sm">
-        <div class="font-extrabold text-indigo-600 dark:text-indigo-400 text-sm md:text-base flex items-center gap-2 mb-3">
-          <i class="fas fa-list-ul"></i><span>Mục lục xem nhanh</span>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 mb-10 w-full">
+          <div class="col-span-2 md:col-span-1 w-full bg-gradient-to-br from-indigo-500 to-indigo-700 p-5 md:p-6 rounded-[1.5rem] text-white shadow-md flex flex-col justify-center relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
+            <div class="absolute -right-4 -bottom-4 text-indigo-400/40 text-6xl md:text-8xl group-hover:rotate-12 transition-transform duration-500"><i class="fas fa-globe-asia"></i></div>
+            <div class="relative z-10">
+              <h3 class="text-lg md:text-2xl font-black mb-1.5 md:mb-2" data-i18n="feat_1"></h3>
+              <p class="text-indigo-100 text-[11px] md:text-sm font-medium opacity-95 leading-relaxed" data-i18n="feat_1_desc"></p>
+            </div>
+          </div>
+          <div class="col-span-1 w-full bg-white dark:bg-[#0a0a0a] p-5 md:p-6 rounded-[1.5rem] border border-slate-100 dark:border-amber-500/30 shadow-sm flex flex-col justify-center hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden group">
+            <div class="absolute -right-4 -bottom-4 text-amber-100 dark:text-amber-500/10 text-6xl md:text-8xl group-hover:-rotate-12 transition-transform duration-500"><i class="fas fa-bolt"></i></div>
+            <div class="relative z-10">
+              <div class="w-10 h-10 md:w-12 md:h-12 bg-amber-50 dark:bg-[#111111] rounded-2xl flex items-center justify-center mb-2 md:mb-3"><i class="fas fa-bolt text-xl md:text-2xl text-amber-500 dark:text-amber-400"></i></div>
+              <h4 class="font-bold text-slate-800 dark:text-white text-lg md:text-2xl mb-1.5 md:mb-2" data-i18n="feat_2"></h4>
+              <p class="text-[11px] md:text-sm text-slate-500 dark:text-slate-300 font-medium leading-relaxed" data-i18n="feat_2_desc"></p>
+            </div>
+          </div>
+          <div class="col-span-1 w-full bg-white dark:bg-[#0a0a0a] p-5 md:p-6 rounded-[1.5rem] border border-slate-100 dark:border-emerald-500/30 shadow-sm flex flex-col justify-center hover:scale-[1.02] transition-transform duration-300 relative overflow-hidden group">
+            <div class="absolute -right-4 -bottom-4 text-emerald-50 dark:text-emerald-500/10 text-6xl md:text-8xl group-hover:rotate-12 transition-transform duration-500"><i class="fas fa-user-secret"></i></div>
+            <div class="relative z-10">
+              <div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 dark:bg-[#111111] rounded-2xl flex items-center justify-center mb-2 md:mb-3"><i class="fas fa-user-secret text-xl md:text-2xl text-emerald-500 dark:text-emerald-400"></i></div>
+              <h4 class="font-bold text-slate-800 dark:text-white text-lg md:text-2xl mb-1.5 md:mb-2" data-i18n="feat_3"></h4>
+              <p class="text-[11px] md:text-sm text-slate-500 dark:text-slate-300 font-medium leading-relaxed" data-i18n="feat_3_desc"></p>
+            </div>
+          </div>
         </div>
-        <div class="flex flex-col gap-2">
-          <a onclick="scrollToPolicySection('policy-terms')" class="cursor-pointer text-indigo-950 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold text-xs md:text-sm flex items-center gap-2"><span class="text-indigo-400 font-black">›</span><span>Chính sách sử dụng</span></a>
-          <a onclick="scrollToPolicySection('policy-disclaimer')" class="cursor-pointer text-indigo-950 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold text-xs md:text-sm flex items-center gap-2"><span class="text-indigo-400 font-black">›</span><span>Miễn trừ trách nhiệm</span></a>
-          <a onclick="scrollToPolicySection('policy-refund')" class="cursor-pointer text-indigo-950 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold text-xs md:text-sm flex items-center gap-2"><span class="text-indigo-400 font-black">›</span><span>Quy định hoàn tiền</span></a>
+        <div class="flex justify-center gap-1.5 mb-6 pkg-filters-wrap p-1.5 rounded-2xl w-fit max-w-full mx-auto overflow-x-auto flex-nowrap pkg-filters backdrop-blur-md"><button onclick="renderPackages('all')" id="htab-all" class="tab-btn active px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_all">Tất cả</button> <button onclick="renderPackages('travel')" id="htab-travel" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_travel">Du lịch</button> <button onclick="renderPackages('cycle')" id="htab-cycle" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_cycle">Chu kỳ</button> <button onclick="renderPackages('usage')" id="htab-usage" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_usage">Dung lượng</button></div>
+        <div id="packagesContainerHome" class="grid md:grid-cols-3 gap-4 md:gap-6 mb-10 w-full"></div>
+        <div id="checkoutSection" class="hidden mt-6 scroll-mt-24 w-full">
+          <div class="text-center mb-6">
+            <h3 id="checkoutTitle" class="text-xl md:text-3xl font-extrabold text-slate-800 dark:text-slate-200" data-i18n="checkout_title">Thanh toán Đơn hàng</h3>
+          </div>
+          <form id="orderForm" onsubmit="submitOrder(event)">
+            <div class="grid lg:grid-cols-2 gap-6 items-start">
+              <div class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-5 md:p-8 rounded-3xl flex flex-col shadow-sm">
+                <div id="checkoutPackageCardSummary" class="bg-indigo-50 dark:bg-indigo-900/40 px-5 py-4 rounded-xl mb-5 flex justify-between items-center border border-indigo-100 dark:border-indigo-500/30">
+                  <div>
+                    <p class="text-sm font-black text-slate-800 dark:text-white uppercase" id="selectedPackageName"></p>
+                    <p class="text-xs font-bold text-slate-500 dark:text-slate-200 mt-0.5" id="selectedPackageData"></p>
+                  </div>
+                  <p class="text-lg md:text-xl font-black text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.8)]" id="selectedPackagePrice"></p>
+                </div>
+                <div id="upgradePriceNote" class="hidden bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 p-3 rounded-xl mb-5 text-amber-800 dark:text-amber-300 text-[11px] md:text-xs font-bold text-center"></div>
+                <div id="emailBlock">
+                  <input type="email" id="cusEmail" required placeholder="Nhập Email nhận đơn" data-i18n-placeholder="email_placeholder" class="w-full border border-slate-200 dark:border-white/20 rounded-xl p-3.5 outline-none text-sm focus:border-indigo-500 mb-2 bg-slate-50 dark:bg-black text-slate-800 dark:text-white placeholder:dark:text-slate-500">
+                  <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 p-3 rounded-xl mb-5 flex items-start gap-2">
+                    <i class="fas fa-exclamation-triangle text-red-500 mt-0.5"></i>
+                    <p class="text-[11px] md:text-xs text-red-700 dark:text-red-400 font-bold" data-i18n="email_warning"></p>
+                  </div>
+                </div>
+                <label class="block font-bold text-xs text-slate-700 dark:text-slate-200 mb-2" data-i18n="choose_method">Phương thức thanh toán:</label>
+                <div class="grid grid-cols-4 gap-2 mb-4"><button type="button" onclick="selectPayMethod('bank')" id="pay-btn-bank" class="col-span-2 pay-btn active bg-indigo-50 dark:bg-indigo-500/30 border-indigo-500 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300 border-2 font-bold py-2.5 rounded-xl flex flex-col items-center gap-1 text-xs shadow-sm relative"><i class="fas fa-university text-xl"></i>Ngân hàng VN<span class="absolute -top-2.5 right-1 bg-green-100 border border-green-300 text-green-700 text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap" data-i18n="auto_badge">Tự động 24/24</span></button> <button type="button" onclick="selectPayMethod('alipay')" id="pay-btn-alipay" class="col-span-1 pay-btn bg-white dark:bg-black border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 border-2 font-bold py-2.5 rounded-xl flex flex-col items-center gap-1 text-xs shadow-sm hover:bg-slate-50 dark:hover:bg-slate-900"><i class="fab fa-alipay text-xl text-blue-500"></i>Alipay</button> <button type="button" onclick="selectPayMethod('wechat')" id="pay-btn-wechat" class="col-span-1 pay-btn bg-white dark:bg-black border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 border-2 font-bold py-2.5 rounded-xl flex flex-col items-center gap-1 text-xs shadow-sm hover:bg-slate-50 dark:hover:bg-slate-900"><i class="fab fa-weixin text-xl text-green-500"></i>Weixin</button></div>
+                <input type="hidden" id="payMethod" value="bank">
+                <div class="bg-slate-50 dark:bg-black/50 p-3 rounded-xl border border-slate-200 dark:border-white/10 mb-4"><label class="flex items-start gap-2 cursor-pointer"><input type="checkbox" id="needSupport" onchange="toggleZalo()" checked class="mt-1 w-4 h-4 accent-indigo-600"><span class="font-bold text-xs md:text-sm text-slate-800 dark:text-slate-200 pt-0.5" data-i18n="need_support">Cần Hỗ trợ Cài đặt (Zalo/Tele)</span></label> <input type="text" id="cusZalo" required class="w-full border border-slate-300 dark:border-white/20 rounded-lg p-2.5 mt-3 outline-none text-xs text-slate-800 dark:text-white bg-white dark:bg-black placeholder:dark:text-slate-500" placeholder="Nhập Zalo / Telegram..."></div>
+                <div id="durationBlock" class="mb-4">
+                  <label class="block font-bold text-xs text-slate-700 dark:text-slate-200 mb-2" data-i18n="choose_dur">Chọn thời gian:</label>
+                  <div class="grid grid-cols-5 gap-2 text-center"><button type="button" onclick="selectDuration(1)" id="dur-btn-1" class="dur-btn active bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900 whitespace-nowrap shrink-0">1 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button> <button type="button" onclick="selectDuration(3)" id="dur-btn-3" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900 whitespace-nowrap shrink-0">3 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button> <button type="button" onclick="selectDuration(6)" id="dur-btn-6" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900 whitespace-nowrap shrink-0">6 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button> <button type="button" onclick="selectDuration(12)" id="dur-btn-12" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900 whitespace-nowrap shrink-0">12 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button> <button type="button" onclick="selectDuration('custom')" id="dur-btn-custom" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900 whitespace-nowrap shrink-0">X <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button></div>
+                  <div id="customDurWrap" class="hidden mt-3">
+                    <div class="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 p-2 rounded-lg border border-indigo-100 dark:border-indigo-500/30"><label class="text-xs font-bold text-indigo-800 dark:text-indigo-300 whitespace-nowrap pl-1" data-i18n="input_months">Nhập số tháng:</label><input type="number" id="customDurInput" min="1" max="120" value="2" oninput="calculateTotal()" class="w-full p-2 text-sm border border-slate-300 dark:border-white/20 rounded outline-none focus:border-indigo-500 font-bold bg-white dark:bg-black text-center text-slate-800 dark:text-white"></div>
+                  </div>
+                  <div id="priceCalculation" class="mt-3 text-sm font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-500/30 p-2.5 rounded-lg text-center"></div>
+                </div>
+                <!-- KHỐI LỰA CHỌN VÒNG ĐỜI LINK SUB (PHẦN F) -->
+                <div id="subLinkLifecycleWrap" class="hidden mb-4 p-3.5 bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-white/10 rounded-2xl space-y-2.5">
+                  <div class="flex items-center gap-1.5"><span class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider">Xử lý link sub</span> <span class="relative group cursor-pointer" tabindex="0"> <i class="fas fa-circle-question text-slate-400 hover:text-indigo-600 text-xs"></i> <span class="hidden group-hover:block group-focus:block absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-60 p-2 bg-slate-900 text-white text-[11px] rounded-xl shadow-lg z-30 font-medium leading-relaxed text-center"> Chọn tiếp tục dùng link sub cũ hoặc nhận link sub hoàn toàn mới. </span> </span></div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <label id="lblSubKeep" class="cursor-pointer border-2 border-slate-200 dark:border-white/10 rounded-xl p-3 flex flex-col justify-between hover:border-indigo-300 transition select-none bg-white dark:bg-black">
+                      <div class="flex items-center gap-2 mb-1.5"><input type="radio" name="subLinkDecisionRadio" value="KEEP_EXISTING" onchange="onSubDecisionChange(this.value)" class="text-indigo-600"> <span class="font-extrabold text-xs text-slate-800 dark:text-white">Giữ link cũ</span></div>
+                      <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-tight">Bạn sẽ tiếp tục dùng link sub đã thêm từ gói trước đó. Sau khi thanh toán và kích hoạt thành công, bạn chỉ cần cập nhật lại gói đăng ký trong app VPN tương ứng.</p>
+                    </label>
+                    <label id="lblSubNew" class="cursor-pointer border-2 border-slate-200 dark:border-white/10 rounded-xl p-3 flex flex-col justify-between hover:border-indigo-300 transition select-none bg-white dark:bg-black">
+                      <div class="flex items-center gap-2 mb-1.5"><input type="radio" name="subLinkDecisionRadio" value="CREATE_NEW" onchange="onSubDecisionChange(this.value)" class="text-indigo-600"> <span class="font-extrabold text-xs text-slate-800 dark:text-white">Cấp link mới</span></div>
+                      <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-tight">Sau khi thanh toán và kích hoạt thành công, bạn sẽ cần copy hoặc quét QR để thêm link sub mới vào trong app VPN tương ứng để sử dụng.</p>
+                    </label>
+                  </div>
+                  <!-- Chọn link đích nếu email có nhiều link -->
+                  <div id="multiLinkSelectorWrap" class="hidden mt-2 pt-2 border-t border-slate-200 dark:border-white/10"><span class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Chọn link đích cần giữ:</span> <select id="targetLinkSubSelect" class="w-full text-xs font-bold p-2 border border-slate-300 dark:border-white/20 rounded-lg bg-white dark:bg-black text-slate-800 dark:text-white outline-none focus:border-indigo-500"></select></div>
+                </div>
+                <!-- KHỐI NHẬP MÃ GIẢM GIÁ (COUPON / VOUCHER) -->
+                <div id="couponBlockWrap" class="mb-4">
+                  <label class="block font-bold text-xs text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5"> <i class="fas fa-ticket text-purple-600"></i>Mã giảm giá (Coupon): </label>
+                  <div class="flex gap-2"><input type="text" id="couponInput" placeholder="Nhập mã coupon (nếu có)..." class="flex-1 border border-slate-200 dark:border-white/20 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-800 dark:text-white bg-slate-50 dark:bg-black uppercase outline-none focus:border-purple-500"> <button type="button" onclick="applyCouponCode()" id="btnApplyCoupon" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-3.5 py-2 rounded-xl text-xs transition active:scale-95 whitespace-nowrap shadow-sm"> Áp dụng </button></div>
+                  <div id="couponAppliedMsg" class="hidden mt-1.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1"></div>
+                </div>
+                <!-- Dòng Note Hoàn tiền (nền đỏ nhạt, viền đỏ, tĩnh không hiệu ứng) -->
+                <div class="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 p-3.5 rounded-2xl mb-4 text-left">
+                  <p class="text-[11px] md:text-xs text-red-700 dark:text-red-400 font-medium leading-relaxed m-0"><b class="font-bold text-red-800 dark:text-red-300">Hoàn tiền:</b> Website không hỗ trợ hoàn tiền sau khi đã mua hàng. Quý khách vui lòng chú ý trước khi thanh toán.</p>
+                </div>
+                <div class="mt-auto pt-4"><button type="submit" id="btnConfirm" class="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md dark:shadow-[0_0_20px_rgba(99,102,241,0.5)] whitespace-nowrap" data-i18n="btn_create_order">TẠO MÃ QR CHUYỂN KHOẢN</button></div>
+              </div>
+              <div id="checkoutRightCol" class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-5 md:p-8 rounded-3xl shadow-sm flex flex-col"></div>
+            </div>
+          </form>
+        </div>
+        <h3 class="text-xl font-extrabold text-center mt-16 mb-6 text-slate-800 dark:text-slate-200" data-i18n="faq_title">Câu hỏi thường gặp (FAQ)</h3>
+        <div id="faqStoreContainer" class="space-y-3"></div>
+      </div>
+      <div id="view-policy" class="view-section mb-20 w-full">
+        <div class="bg-white dark:bg-[#0a0a0a] p-5 md:p-8 rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm w-full">
+          <div class="mb-6 pb-4 border-b border-slate-100 dark:border-white/10">
+            <button onclick="router.navigate('/')" class="text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-2 hover:opacity-80 transition text-xs md:text-sm mb-2"><i class="fas fa-arrow-left"></i> Quay lại trang chủ</button>
+            <h1 class="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-white">Chính Sách &amp; Pháp Lý</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Các điều khoản, quy định sử dụng và chính sách hoàn tiền chính thức của VPN Trinh Hg.</p>
+          </div>
+          <!-- Mục lục xem nhanh -->
+          <div class="bg-[#f8faff] dark:bg-[#14151a] border border-indigo-100 dark:border-white/10 rounded-2xl p-4 md:p-5 mb-8 shadow-sm">
+            <div class="font-extrabold text-indigo-600 dark:text-indigo-400 text-sm md:text-base flex items-center gap-2 mb-3"><i class="fas fa-list-ul"></i><span>Mục lục xem nhanh</span></div>
+            <div class="flex flex-col gap-2"><a onclick="scrollToPolicySection('policy-terms')" class="cursor-pointer text-indigo-950 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold text-xs md:text-sm flex items-center gap-2"><span class="text-indigo-400 font-black">›</span><span>Chính sách sử dụng</span></a> <a onclick="scrollToPolicySection('policy-disclaimer')" class="cursor-pointer text-indigo-950 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold text-xs md:text-sm flex items-center gap-2"><span class="text-indigo-400 font-black">›</span><span>Miễn trừ trách nhiệm</span></a> <a onclick="scrollToPolicySection('policy-refund')" class="cursor-pointer text-indigo-950 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 font-bold text-xs md:text-sm flex items-center gap-2"><span class="text-indigo-400 font-black">›</span><span>Quy định hoàn tiền</span></a></div>
+          </div>
+          <!-- 3 Phần nội dung nối tiếp -->
+          <div class="max-w-4xl space-y-8">
+            <section id="policy-terms" class="scroll-mt-24 pt-2">
+              <h2 class="text-lg md:text-xl font-extrabold text-indigo-700 dark:text-indigo-400 mb-3 pb-2 border-b border-slate-100 dark:border-white/10 flex items-center gap-2"><i class="fas fa-shield-halved text-indigo-500"></i>1. Chính sách sử dụng dịch vụ</h2>
+              <div id="policyBodyTerms" class="text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium space-y-2.5"></div>
+            </section>
+            <section id="policy-disclaimer" class="scroll-mt-24 pt-2">
+              <h2 class="text-lg md:text-xl font-extrabold text-indigo-700 dark:text-indigo-400 mb-3 pb-2 border-b border-slate-100 dark:border-white/10 flex items-center gap-2"><i class="fas fa-scale-balanced text-indigo-500"></i>2. Miễn trừ trách nhiệm pháp lý</h2>
+              <div id="policyBodyDisclaimer" class="text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium space-y-2.5"></div>
+            </section>
+            <section id="policy-refund" class="scroll-mt-24 pt-2">
+              <h2 class="text-lg md:text-xl font-extrabold text-indigo-700 dark:text-indigo-400 mb-3 pb-2 border-b border-slate-100 dark:border-white/10 flex items-center gap-2"><i class="fas fa-hand-holding-dollar text-indigo-500"></i>3. Quy định hoàn tiền</h2>
+              <div id="policyBodyRefund" class="text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium space-y-2.5"></div>
+            </section>
+          </div>
         </div>
       </div>
-
-      <!-- 3 Phần nội dung nối tiếp -->
-      <div class="max-w-4xl space-y-8">
-        <section id="policy-terms" class="scroll-mt-24 pt-2">
-          <h2 class="text-lg md:text-xl font-extrabold text-indigo-700 dark:text-indigo-400 mb-3 pb-2 border-b border-slate-100 dark:border-white/10 flex items-center gap-2">
-            <i class="fas fa-shield-halved text-indigo-500"></i>1. Chính sách sử dụng dịch vụ
-          </h2>
-          <div id="policyBodyTerms" class="text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium space-y-2.5"></div>
-        </section>
-
-        <section id="policy-disclaimer" class="scroll-mt-24 pt-2">
-          <h2 class="text-lg md:text-xl font-extrabold text-indigo-700 dark:text-indigo-400 mb-3 pb-2 border-b border-slate-100 dark:border-white/10 flex items-center gap-2">
-            <i class="fas fa-scale-balanced text-indigo-500"></i>2. Miễn trừ trách nhiệm pháp lý
-          </h2>
-          <div id="policyBodyDisclaimer" class="text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium space-y-2.5"></div>
-        </section>
-
-        <section id="policy-refund" class="scroll-mt-24 pt-2">
-          <h2 class="text-lg md:text-xl font-extrabold text-indigo-700 dark:text-indigo-400 mb-3 pb-2 border-b border-slate-100 dark:border-white/10 flex items-center gap-2">
-            <i class="fas fa-hand-holding-dollar text-indigo-500"></i>3. Quy định hoàn tiền
-          </h2>
-          <div id="policyBodyRefund" class="text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium space-y-2.5"></div>
-        </section>
-      </div>
-    </div>
-  </div>
-</main>
-<footer id="footerArea" class="bg-white dark:bg-black border-t border-slate-200 dark:border-white/10 pt-8 pb-4 z-10 w-full mt-auto transition-colors duration-300">
-  <div class="max-w-[1400px] mx-auto px-4">
-    <!-- KHỐI 5 CỘT TRÊN MÁY TÍNH / 2x2 TRÊN ĐIỆN THOẠI -->
-    <div class="grid grid-cols-2 lg:grid-cols-5 gap-5 md:gap-6 mb-4 pb-5 border-b border-slate-100 dark:border-white/10 text-xs">
-      <!-- CỘT 1: THƯƠNG HIỆU -->
-      <div class="col-span-2 lg:col-span-1 space-y-2.5">
-        <div class="font-extrabold text-lg text-indigo-700 dark:text-indigo-400">VPN Trinh Hg</div>
-        <p class="text-slate-500 dark:text-slate-400 leading-relaxed">Chặn thì vượt. Lướt mượt như gió. Hệ thống hạ tầng VPN tự động hóa 100%, bảo mật &amp; ẩn danh tuyệt đối.</p>
-        <div class="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>Hệ thống trực tuyến 24/7</span>
+    </main>
+    <footer id="footerArea" class="bg-white dark:bg-black border-t border-slate-200 dark:border-white/10 pt-8 pb-4 z-10 w-full mt-auto transition-colors duration-300">
+      <div class="max-w-[1400px] mx-auto px-4">
+        <!-- KHỐI 5 CỘT TRÊN MÁY TÍNH / 2x2 TRÊN ĐIỆN THOẠI -->
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-5 md:gap-6 mb-4 pb-5 border-b border-slate-100 dark:border-white/10 text-xs">
+          <!-- CỘT 1: THƯƠNG HIỆU -->
+          <div class="col-span-2 lg:col-span-1 space-y-2.5">
+            <div class="font-extrabold text-lg text-indigo-700 dark:text-indigo-400">VPN Trinh Hg</div>
+            <p class="text-slate-500 dark:text-slate-400 leading-relaxed">Chặn thì vượt. Lướt mượt như gió. Hệ thống hạ tầng VPN tự động hóa 100%, bảo mật &amp; ẩn danh tuyệt đối.</p>
+            <div class="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> <span>Hệ thống trực tuyến 24/7</span></div>
+          </div>
+          <!-- 4 CỘT TIẾP THEO (DỊCH VỤ, HƯỚNG DẪN, PHÁP LÝ, WEB DỰ PHÒNG) -->
+          <div id="footerDynCols" class="contents"></div>
+        </div>
+        <!-- HÀNG TIỆN ÍCH DƯỚI: 4 NÚT HỖ TRỢ BÊN TRÁI & COPYRIGHT BÊN PHẢI -->
+        <div class="flex flex-col md:flex-row justify-between items-center gap-3 py-2">
+          <div class="hidden" id="footerBackupsContainer"></div>
+          <!-- 4 nút hỗ trợ: Đồng nhất chiều cao 36px, kích thước chuẩn tuyệt đối -->
+          <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full md:w-auto"><a href="https://zalo.me/0917678211" target="_blank" class="h-9 min-h-[36px] bg-[#0068ff]/10 text-[#0068ff] dark:bg-[#0068ff]/20 dark:text-[#66a3ff] px-3 rounded-xl font-bold text-xs hover:bg-[#0068ff]/20 transition flex items-center justify-center gap-1.5 leading-none"><i class="fas fa-phone text-xs"></i><span>Zalo Support</span></a> <a href="https://www.facebook.com/trinh.hg.57" target="_blank" class="h-9 min-h-[36px] bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 px-3 rounded-xl font-bold text-xs hover:bg-blue-100 transition flex items-center justify-center gap-1.5 leading-none"><i class="fab fa-facebook-messenger text-xs"></i><span>Mess Support</span></a> <button type="button" onclick="openWechatModal()" class="h-9 min-h-[36px] bg-green-50 text-[#07C160] dark:bg-green-900/30 dark:text-[#20d877] px-3 rounded-xl font-bold text-xs hover:bg-green-100 transition flex items-center justify-center gap-1.5 leading-none"><i class="fab fa-weixin text-xs"></i><span>WeChat</span></button> <a href="https://t.me/hoaian57" target="_blank" class="h-9 min-h-[36px] bg-sky-50 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400 px-3 rounded-xl font-bold text-xs hover:bg-sky-100 transition flex items-center justify-center gap-1.5 leading-none"><i class="fab fa-telegram-plane text-xs"></i><span>Telegram</span></a></div>
+          <!-- Dòng copyright cùng 1 hàng bên phải trên máy tính, căn giữa trên điện thoại -->
+          <div class="text-center md:text-right text-[11px] md:text-xs font-semibold text-slate-400 dark:text-slate-500 shrink-0">© 2026 VPN Trinh Hg. All rights reserved.</div>
         </div>
       </div>
-
-      <!-- 4 CỘT TIẾP THEO (DỊCH VỤ, HƯỚNG DẪN, PHÁP LÝ, WEB DỰ PHÒNG) -->
-      <div id="footerDynCols" class="contents"></div>
-    </div>
-
-    <!-- HÀNG TIỆN ÍCH DƯỚI: 4 NÚT HỖ TRỢ BÊN TRÁI & COPYRIGHT BÊN PHẢI -->
-    <div class="flex flex-col md:flex-row justify-between items-center gap-3 py-2">
-      <div class="hidden" id="footerBackupsContainer"></div>
-      <!-- 4 nút hỗ trợ: Đồng nhất chiều cao 36px, kích thước chuẩn tuyệt đối -->
-      <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full md:w-auto">
-        <a href="https://zalo.me/0917678211" target="_blank" class="h-9 min-h-[36px] bg-[#0068ff]/10 text-[#0068ff] dark:bg-[#0068ff]/20 dark:text-[#66a3ff] px-3 rounded-xl font-bold text-xs hover:bg-[#0068ff]/20 transition flex items-center justify-center gap-1.5 leading-none"><i class="fas fa-phone text-xs"></i><span>Zalo Support</span></a>
-        <a href="https://www.facebook.com/trinh.hg.57" target="_blank" class="h-9 min-h-[36px] bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 px-3 rounded-xl font-bold text-xs hover:bg-blue-100 transition flex items-center justify-center gap-1.5 leading-none"><i class="fab fa-facebook-messenger text-xs"></i><span>Mess Support</span></a>
-        <button type="button" onclick="openWechatModal()" class="h-9 min-h-[36px] bg-green-50 text-[#07C160] dark:bg-green-900/30 dark:text-[#20d877] px-3 rounded-xl font-bold text-xs hover:bg-green-100 transition flex items-center justify-center gap-1.5 leading-none"><i class="fab fa-weixin text-xs"></i><span>WeChat</span></button>
-        <a href="https://t.me/hoaian57" target="_blank" class="h-9 min-h-[36px] bg-sky-50 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400 px-3 rounded-xl font-bold text-xs hover:bg-sky-100 transition flex items-center justify-center gap-1.5 leading-none"><i class="fab fa-telegram-plane text-xs"></i><span>Telegram</span></a>
-      </div>
-      <!-- Dòng copyright cùng 1 hàng bên phải trên máy tính, căn giữa trên điện thoại -->
-      <div class="text-center md:text-right text-[11px] md:text-xs font-semibold text-slate-400 dark:text-slate-500 shrink-0">
-        © 2026 VPN Trinh Hg. All rights reserved.
+    </footer>
+    <!-- MODAL XEM NỘI DUNG CHÍNH SÁCH / MIỄN TRỪ PHÁP LÝ -->
+    <div id="policyModal" class="hidden fixed inset-0 z-[99900] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm" onclick="closePolicyModal()">
+      <div class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-6 md:p-8 rounded-3xl max-w-xl w-full shadow-2xl relative max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
+        <button type="button" onclick="closePolicyModal()" title="Đóng" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition"> <i class="fas fa-times text-sm"></i> </button>
+        <h3 id="policyModalTitle" class="font-extrabold text-lg md:text-xl text-slate-800 dark:text-slate-100 mb-3 pb-2 border-b border-slate-100 dark:border-white/10"></h3>
+        <div id="policyModalContent" class="overflow-y-auto text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium space-y-2.5 pr-1"></div>
       </div>
     </div>
-  </div>
-</footer>
-
-<!-- MODAL XEM NỘI DUNG CHÍNH SÁCH / MIỄN TRỪ PHÁP LÝ -->
-<div id="policyModal" class="hidden fixed inset-0 z-[99900] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm" onclick="closePolicyModal()">
-  <div class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-6 md:p-8 rounded-3xl max-w-xl w-full shadow-2xl relative max-h-[85vh] flex flex-col" onclick="event.stopPropagation()">
-    <button type="button" onclick="closePolicyModal()" title="Đóng" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition">
-      <i class="fas fa-times text-sm"></i>
-    </button>
-    <h3 id="policyModalTitle" class="font-extrabold text-lg md:text-xl text-slate-800 dark:text-slate-100 mb-3 pb-2 border-b border-slate-100 dark:border-white/10"></h3>
-    <div id="policyModalContent" class="overflow-y-auto text-xs md:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium space-y-2.5 pr-1"></div>
-  </div>
-</div>
-<script type="module" src="/src/customer.js"></script>
-
-<!-- MODAL PHÓNG TO ẢNH HƯỚNG DẪN (LIGHTBOX ZOOM) -->
-<div id="imgLightboxModal" class="hidden fixed inset-0 z-[99999] bg-white/40 dark:bg-slate-900/60 backdrop-blur-xl flex items-center justify-center p-4 transition-all duration-200 cursor-zoom-out" onclick="closeImageLightbox()">
-  <button type="button" onclick="closeImageLightbox()" title="Đóng zoom ảnh (Escape)" class="fixed top-5 right-5 z-[100000] w-10 h-10 rounded-full bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white flex items-center justify-center text-xl transition active:scale-95 shadow-lg border border-slate-300/60 dark:border-white/10">
-    <i class="fas fa-times"></i>
-  </button>
-  <img id="imgLightboxTarget" src="" class="min-w-[280px] sm:min-w-[420px] max-w-[95vw] max-h-[90vh] rounded-2xl shadow-2xl object-contain select-none transition-transform duration-300 scale-95 hover:scale-100 cursor-zoom-out border border-slate-200/50 dark:border-white/10" onclick="closeImageLightbox()">
-</div>
-
-</body>
+    <script type="module" src="/src/customer.js"></script>
+    <!-- MODAL PHÓNG TO ẢNH HƯỚNG DẪN (LIGHTBOX ZOOM) -->
+    <div id="imgLightboxModal" class="hidden fixed inset-0 z-[99999] bg-white/40 dark:bg-slate-900/60 backdrop-blur-xl flex items-center justify-center p-4 transition-all duration-200 cursor-zoom-out" onclick="closeImageLightbox()"><button type="button" onclick="closeImageLightbox()" title="Đóng zoom ảnh (Escape)" class="fixed top-5 right-5 z-[100000] w-10 h-10 rounded-full bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white flex items-center justify-center text-xl transition active:scale-95 shadow-lg border border-slate-300/60 dark:border-white/10"> <i class="fas fa-times"></i> </button> <img id="imgLightboxTarget" src="" class="min-w-[280px] sm:min-w-[420px] max-w-[95vw] max-h-[90vh] rounded-2xl shadow-2xl object-contain select-none transition-transform duration-300 scale-95 hover:scale-100 cursor-zoom-out border border-slate-200/50 dark:border-white/10" onclick="closeImageLightbox()"></div>
+  </body>
 </html>
