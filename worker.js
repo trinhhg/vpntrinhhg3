@@ -11,8 +11,31 @@ const getKV = (env) => env && (env.VPN_KV3 || env.VPN_KV || env.KV);
 // ====================================================================
 // SUPABASE CLIENT ĐẦY ĐỦ TÍNH NĂNG (RPC QUOTA & DATABASE) 
 // ====================================================================
+function cleanOrderForSupabase(o) {
+  if (!o || typeof o !== "object") return o;
+  const c = { ...o };
+  // Chuẩn hóa kiểu tiền tệ: Tránh gửi chuỗi rỗng "" vào cột BIGINT / NUMERIC
+  if (c.totalVnd === "" || c.totalVnd === undefined || c.totalVnd === null || isNaN(Number(c.totalVnd))) {
+    c.totalVnd = null;
+  } else {
+    c.totalVnd = Math.round(Number(c.totalVnd));
+  }
+  if (c.totalCny === "" || c.totalCny === undefined || c.totalCny === null || isNaN(Number(c.totalCny))) {
+    c.totalCny = null;
+  } else {
+    c.totalCny = Math.round(Number(c.totalCny) * 100) / 100;
+  }
+  if (typeof c.lockInfo === "object" && c.lockInfo !== null) {
+    c.lockInfo = JSON.stringify(c.lockInfo);
+  }
+  if (typeof c.expFinal === "boolean") {
+    c.expFinal = c.expFinal ? "true" : "false";
+  }
+  return c;
+}
+
 function getSupabase(env, isTest = false) {
-  const url = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || (env.SUPABASE_PROJECT_REF ? `https://${env.SUPABASE_PROJECT_REF}.supabase.co/rest/v1/` : "");
+  const url = (env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || (env.SUPABASE_PROJECT_REF ? `https://${env.SUPABASE_PROJECT_REF}.supabase.co` : ""))?.replace(/\/$/, "") + "/rest/v1/";
   const key = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_KEY || env.SUPABASE_KEY || env.SUPABASE_ANON_KEY || "";
   if (!url || !key) return null;
   const table = isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS";
@@ -60,6 +83,7 @@ function getSupabase(env, isTest = false) {
       return Array.isArray(items) && items.length ? items[0] : null;
     },
     async upsert(order) {
+      const cleaned = cleanOrderForSupabase(order);
       const res = await fetch(`${url}${table}`, {
         method: "POST",
         headers: {
@@ -68,7 +92,7 @@ function getSupabase(env, isTest = false) {
           "Content-Type": "application/json",
           Prefer: "resolution=merge-duplicates,return=representation"
         },
-        body: JSON.stringify(order)
+        body: JSON.stringify(cleaned)
       });
       return res.ok ? (await res.json())[0] : null;
     },
@@ -1113,7 +1137,10 @@ export default {
       const routes = s.routes || null;
       const footer = cms.footer || null;
       const headerDrawer = s.headerDrawer || null;
-      return J({ ok: true, guides: g, blur, dock: dock.length ? dock : null, packages: dynamicPkgs, faqs: dynamicFaqs, qrExpireSeconds, routes, footer, headerDrawer });
+      const couponEnabled = s.couponEnabled !== false;
+      const coupons = Array.isArray(cms.coupons) ? cms.coupons.filter(c => c && c.enabled !== false) : [];
+      const flashSale = (cms.sales && cms.sales.campaign) || s.flashSale || null;
+      return J({ ok: true, guides: g, blur, dock: dock.length ? dock : null, packages: dynamicPkgs, faqs: dynamicFaqs, qrExpireSeconds, routes, footer, headerDrawer, couponEnabled, coupons, flashSale });
     }
 
     // Endpoint tạo Vé QR tạm thời (Tự hủy sau qrExpireSeconds giây)
@@ -1142,7 +1169,15 @@ export default {
     if (p === "/api/packages") {
       if (m === "GET") {
         const pkgs = safeJson(await KV.get("ALL_PACKAGES"), null);
-        return J({ ok: true, packages: pkgs });
+        const cms = safeJson(await KV.get("ALL_CMS"), {});
+        const s = cms.settings || {};
+        return J({ 
+          ok: true, 
+          packages: pkgs, 
+          couponEnabled: s.couponEnabled !== false,
+          coupons: Array.isArray(cms.coupons) ? cms.coupons : [],
+          flashSale: (cms.sales && cms.sales.campaign) || s.flashSale || null
+        });
       }
       if (m === "POST") {
         const bad = need(admin); if (bad) return bad;
@@ -1151,7 +1186,20 @@ export default {
         await KV.put("ALL_PACKAGES", JSON.stringify(list));
         CACHED_PKGS = null; // Xóa cache in-memory
         await getActivePkgs(KV); // Cập nhật ngay lập tức vào DYNAMIC_PKGS
-        log("ok", "admin", "Lưu cấu hình Giá gói", `${list.length} gói cước`);
+
+        // Đồng bộ lưu couponEnabled, flashSale & coupons vào ALL_CMS
+        const cms = safeJson(await KV.get("ALL_CMS"), {});
+        cms.settings = cms.settings || {};
+        if (b.couponEnabled !== undefined) cms.settings.couponEnabled = !!b.couponEnabled;
+        if (b.flashSale !== undefined) {
+          cms.sales = cms.sales || {};
+          cms.sales.campaign = b.flashSale;
+          cms.settings.flashSale = b.flashSale;
+        }
+        if (Array.isArray(b.coupons)) cms.coupons = b.coupons;
+        await KV.put("ALL_CMS", JSON.stringify(cms));
+
+        log("ok", "admin", "Lưu cấu hình Giá gói & Sale", `${list.length} gói cước`);
         await flushLog(KV, log);
         return J({ ok: true, count: list.length });
       }
@@ -1177,7 +1225,13 @@ export default {
       return RAW(t || '{"version":"","vi":{},"en":{},"zh":{}}');
     }
     if (p === "/api/public/lookup" && m === "POST") {
-      const b = await body(), st = await loadAll(KV, env), o = findOrder(st.orders, b.q);
+      const b = await body(), st = await loadAll(KV, env);
+      let o = findOrder(st.orders, b.q);
+      // Fallback kiểm tra bộ nhớ đệm đơn hàng chờ (KV Pending Cache)
+      if (!o && b.q) {
+        const rawPending = await KV.get("PENDING_ORD_" + normId(b.q));
+        if (rawPending) o = safeJson(rawPending, null);
+      }
       if (!o) return J({ ok: false, error: "not_found" }, 404);
       return J({ ok: true, order: pub(o, st) });
     }
@@ -1188,22 +1242,77 @@ export default {
       const dup = st.orders.find((o) => o && normId(o.id) === id);
       if (dup) return J({ ok: true, order: pub(dup, st), existed: true });
       let email = String(b.email || "").trim(), zalo = String(b.zalo || "").trim();
-      const renewSrc = b.renewOf ? st.orders.find((o) => o && normId(o.id) === normId(b.renewOf) && normStatus(o.status) === "success") : null;
-      if (renewSrc) { email = renewSrc.email; zalo = zalo || renewSrc.zalo || ""; }
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return J({ ok: false, error: "Email không hợp lệ" }, 400);
-      // SPEC #2: purchaseSource quyết định loại mail, KHÔNG suy luận từ email cũ/còn hạn/đã từng mua.
-      // isRenew = true CHỈ khi đơn tạo đúng luồng Portal → nút "Gia hạn" (có renewOf hợp lệ trỏ đơn success).
-      // Mua ở Index bằng email cũ (dù còn hạn hay hết hạn) KHÔNG được tính là renew.
+      const renewSrc = b.renewOf ? st.orders.find((x) => x && normId(x.id) === normId(b.renewOf) && normStatus(x.status) === "success") : null;
+      if (renewSrc) {
+        if (!email && renewSrc.email) email = renewSrc.email;
+        if (!zalo && renewSrc.zalo) zalo = renewSrc.zalo;
+      }
+      if (!email && !zalo) return J({ ok: false, error: "Cần ít nhất Email hoặc Zalo" }, 400);
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return J({ ok: false, error: "Email không hợp lệ" }, 400);
       const isRenew = !!renewSrc;
       const method = String(b.method || "Ngân hàng VN"), bank = isBankMethod(method);
+
+      // TÍNH TOÁN GIÁ TIỀN AUTHORITATIVE PHÍA SERVER (HỖ TRỢ FLASH SALE & COUPON)
+      let baseVnd = pk.vnd * qty;
+      let finalVnd = baseVnd;
+      let appliedCouponCode = "";
+      let discountVnd = 0;
+
+      // 1. Áp dụng Flash Sale nếu có hiệu lực
+      const fs = (st.cms && st.cms.sales && st.cms.sales.campaign) || (st.cms && st.cms.settings && st.cms.settings.flashSale);
+      if (fs && fs.enabled && Number(fs.discountPercent) > 0) {
+        const fsStart = fs.startDate ? new Date(fs.startDate).getTime() : 0;
+        const fsEnd = fs.endDate ? new Date(fs.endDate).getTime() : Infinity;
+        if (now >= fsStart && now <= fsEnd) {
+          const discountPct = Math.min(90, Math.max(1, Number(fs.discountPercent)));
+          finalVnd = Math.round(baseVnd * (100 - discountPct) / 100);
+        }
+      }
+
+      // 2. Xác thực và áp dụng mã giảm giá Coupon từ ALL_CMS phía Server
+      const rawCode = String(b.couponCode || b.coupon || "").trim().toUpperCase();
+      const couponsList = Array.isArray(st.cms?.coupons) ? st.cms.coupons : [];
+      if (rawCode && st.cms?.settings?.couponEnabled !== false) {
+        const foundC = couponsList.find(c => c && String(c.code).trim().toUpperCase() === rawCode && c.enabled !== false);
+        if (foundC) {
+          const cEnd = foundC.endDate ? new Date(foundC.endDate).getTime() : (foundC.expiry ? new Date(foundC.expiry).getTime() : Infinity);
+          const cStart = foundC.startDate ? new Date(foundC.startDate).getTime() : 0;
+          const minSpend = Number(foundC.minSpend || foundC.minOrder) || 0;
+          const maxUsage = Number(foundC.maxUsage || foundC.usageLimit) || 0;
+          const curUsage = Number(foundC.usedCount) || 0;
+
+          if (now >= cStart && now <= cEnd && baseVnd >= minSpend && (maxUsage === 0 || curUsage < maxUsage)) {
+            appliedCouponCode = foundC.code;
+            if (foundC.type === "percent") {
+              discountVnd = Math.round(finalVnd * (Number(foundC.value) || 0) / 100);
+            } else {
+              discountVnd = Math.round(Number(foundC.value) || 0);
+            }
+            finalVnd = Math.max(1000, finalVnd - discountVnd);
+            // Ghi nhận số lượt dùng coupon
+            foundC.usedCount = curUsage + 1;
+            ctx.waitUntil(KV.put("ALL_CMS", JSON.stringify(st.cms)));
+          }
+        }
+      }
+
       const o = {
         id, email, zalo, method, pkgId: b.pkgId, qty, pkgName: pk.n, pkgData: pk.d, pkg: pkgStr(pk),
-        // Schema tiền: Bank VN -> totalVnd (totalCny rỗng); Alipay/Weixin -> totalCny (totalVnd rỗng)
-        totalVnd: bank ? pk.vnd * qty : "", totalCny: bank ? "" : Math.round(pk.cny * qty * 100) / 100, days: daysOfPkg(pk, qty),
+        // Schema tiền chuẩn hóa (không rỗng): Bank VN lưu totalVnd, Cổng CNY lưu totalCny
+        totalVnd: bank ? finalVnd : 0, 
+        totalCny: bank ? 0 : Math.round(pk.cny * qty * 100) / 100, 
+        originalVnd: baseVnd,
+        discountVnd,
+        couponCode: appliedCouponCode,
+        days: daysOfPkg(pk, qty),
         needSupport: !!b.needSupport, status: "pending", createdTs: now, date: fmtBank(now), dateCreated: dmy(now), expFinal: false, workerUrl: env.PUBLIC_WORKER_URL || url.origin, nickname: "", reason: "", info1: "", info2: "", info3: "", lockInfo: {}, sourceWeb: String(b.sourceWeb || "").slice(0, 80), orderType: isRenew ? "renew" : "new"
       };
       o.expDate = computeExp(o, st.orders, now);
       st.orders.unshift(o);
+
+      // Lưu bộ đệm dự phòng vào KV với TTL 24h để tra cứu không bao giờ 404
+      await KV.put("PENDING_ORD_" + o.id, JSON.stringify(o), { expirationTtl: 86400 });
+
       const sb = getSupabase(env, st.isTest);
       if (sb) await sb.upsert(o).catch(() => {});
       ctx.waitUntil((async () => {
@@ -1757,7 +1866,7 @@ export default {
         return J({ ok: true, applied: n, field: me.field, items: appliedItems });
       }
 
-      // Giao dịch D1 (worker giữ secret, trình duyệt không cần biết)
+      // Giao dịch D1 (worker giữ secret, trình duyệt không cần biết) 
       if (p === "/api/admin/tx" && m === "GET") {
         const r = await d1(env, "/api/admin/transactions" + url.search);
         if (!r.ok) {
