@@ -31,133 +31,363 @@ function cleanOrderForSupabase(o) {
   if (typeof c.expFinal === "boolean") {
     c.expFinal = c.expFinal ? "true" : "false";
   }
+  // Loại bỏ các trường tính giá nội bộ không có trong bảng ALL_ORDERS của Supabase để tránh lỗi PGRST204
+  delete c.originalVnd;
+  delete c.discountVnd;
+  delete c.couponCode;
   return c;
 }
 
 function getSupabase(env, isTest = false) {
-  const url = (env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || (env.SUPABASE_PROJECT_REF ? `https://${env.SUPABASE_PROJECT_REF}.supabase.co` : ""))?.replace(/\/$/, "") + "/rest/v1/";
-  const key = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_KEY || env.SUPABASE_KEY || env.SUPABASE_ANON_KEY || "";
+  // Chuẩn hóa URL: chấp nhận cả URL gốc lẫn URL đã có /rest/v1
+  const rawUrl =
+    env.SUPABASE_URL ||
+    env.NEXT_PUBLIC_SUPABASE_URL ||
+    (env.SUPABASE_PROJECT_REF
+      ? `https://${env.SUPABASE_PROJECT_REF}.supabase.co`
+      : "");
+
+  const baseUrl = String(rawUrl)
+    .trim()
+    .replace(/\/+$/, "")
+    .replace(/\/rest\/v1$/i, "");
+
+  const url = baseUrl ? `${baseUrl}/rest/v1` : "";
+
+  const key =
+    env.SUPABASE_SERVICE_ROLE_KEY ||
+    env.SUPABASE_SERVICE_KEY ||
+    env.SUPABASE_KEY ||
+    env.SUPABASE_ANON_KEY ||
+    "";
+
   if (!url || !key) return null;
+
+  // isTest=true chỉ thao tác bảng test
   const table = isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS";
+
+  const headers = {
+    apikey: key,
+    Authorization: `Bearer ${key}`
+  };
+
+  async function readError(res, fallback = "Supabase request failed") {
+    const body = await res.text().catch(() => "");
+    return `HTTP ${res.status}: ${body.slice(0, 500) || fallback}`;
+  }
+
   return {
     async getAll() {
-      const res = await fetch(`${url}${table}?select=*&order=createdTs.desc&limit=5000`, {
-        headers: { apikey: key, Authorization: "Bearer " + key }
-      });
+      const res = await fetch(
+        `${url}/${table}?select=*&order=createdTs.desc&limit=5000`,
+        { headers }
+      );
+
       if (!res.ok) {
-        const errText = await res.text().catch(() => "");
-        throw new Error(`Supabase getAll HTTP ${res.status}: ${errText.slice(0, 150) || "Truy vấn database thất bại"}`);
+        throw new Error(
+          `Supabase getAll: ${await readError(res, "Không lấy được dữ liệu")}`
+        );
       }
+
       return await res.json();
     },
+
     async listOrders({ status, search, limit = 50, offset = 0 } = {}) {
-      let query = `${url}${table}?select=*&order=createdTs.desc&limit=${Math.min(limit, 500)}&offset=${offset}`;
+      const safeLimit = Math.max(1, Math.min(Number(limit) || 50, 500));
+      const safeOffset = Math.max(0, Number(offset) || 0);
+
+      let query =
+        `${url}/${table}?select=*&order=createdTs.desc` +
+        `&limit=${safeLimit}&offset=${safeOffset}`;
+
       if (status && status !== "all") {
         query += `&status=eq.${encodeURIComponent(status)}`;
       }
+
       if (search) {
         const s = encodeURIComponent(`*${search}*`);
         query += `&or=(id.ilike.${s},email.ilike.${s},nickname.ilike.${s},zalo.ilike.${s})`;
       }
+
       const res = await fetch(query, {
-        headers: { apikey: key, Authorization: "Bearer " + key, Prefer: "count=exact" }
+        headers: {
+          ...headers,
+          Prefer: "count=exact"
+        }
       });
+
       if (!res.ok) {
-        const errText = await res.text().catch(() => "");
-        throw new Error(`Supabase listOrders HTTP ${res.status}: ${errText.slice(0, 150) || "Truy vấn thất bại"}`);
+        throw new Error(
+          `Supabase listOrders: ${await readError(res, "Không lấy được danh sách đơn")}`
+        );
       }
-      const totalHeader = res.headers.get("content-range")?.split("/")[1];
-      const count = totalHeader ? Number(totalHeader) : null;
-      const data = await res.json();
-      return { data, count, limit, offset };
+
+      const contentRange = res.headers.get("content-range") || "";
+      const totalPart = contentRange.split("/")[1];
+      const count =
+        totalPart && totalPart !== "*"
+          ? Number(totalPart)
+          : null;
+
+      return {
+        data: await res.json(),
+        count,
+        limit: safeLimit,
+        offset: safeOffset
+      };
     },
+
     async getOrder(id) {
-      const res = await fetch(`${url}${table}?id=eq.${encodeURIComponent(id)}&limit=1`, {
-        headers: { apikey: key, Authorization: "Bearer " + key }
-      });
+      const res = await fetch(
+        `${url}/${table}?id=eq.${encodeURIComponent(id)}&limit=1`,
+        { headers }
+      );
+
       if (!res.ok) {
-        const errText = await res.text().catch(() => "");
-        throw new Error(`Supabase getOrder HTTP ${res.status}: ${errText.slice(0, 150)}`);
+        throw new Error(
+          `Supabase getOrder: ${await readError(res, "Không tìm được đơn")}`
+        );
       }
+
       const items = await res.json();
       return Array.isArray(items) && items.length ? items[0] : null;
     },
+
     async upsert(order) {
       const cleaned = cleanOrderForSupabase(order);
-      const res = await fetch(`${url}${table}`, {
+
+      const res = await fetch(`${url}/${table}`, {
         method: "POST",
         headers: {
-          apikey: key,
-          Authorization: "Bearer " + key,
+          ...headers,
           "Content-Type": "application/json",
           Prefer: "resolution=merge-duplicates,return=representation"
         },
         body: JSON.stringify(cleaned)
       });
-      return res.ok ? (await res.json())[0] : null;
-    },
-    async delete(id, rawId) {
-      const q = (rawId && rawId !== id) ? `or=(id.eq.${encodeURIComponent(rawId)},id.eq.${encodeURIComponent(id)})` : `id=eq.${encodeURIComponent(id)}`;
-      await fetch(`${url}${table}?${q}`, {
-        method: "DELETE",
-        headers: { apikey: key, Authorization: "Bearer " + key }
-      });
-    },
-    async ping() {
-      const t0 = Date.now();
-      try {
-        const res = await fetch(`${url}${table}?select=id&limit=1`, {
-          headers: { apikey: key, Authorization: "Bearer " + key }
-        });
-        if (!res.ok) {
-          const errText = await res.text().catch(() => "");
-          return { ok: false, status: res.status, error: `HTTP ${res.status}: ${errText.slice(0, 150) || "Không phản hồi"}` };
-        }
-        const countRes = await fetch(`${url}${table}?select=count`, {
-          headers: { apikey: key, Authorization: "Bearer " + key, Prefer: "count=exact" }
-        });
-        const total = countRes.headers.get("content-range")?.split("/")[1] || 0;
-        return { ok: true, ms: Date.now() - t0, count: Number(total), table, url: `${url}${table}` };
-      } catch (e) {
-        return { ok: false, status: 0, error: e.message || String(e) };
-      }
-    },
-    async getRpcQuota() {
-      const res = await fetch(`${url}rpc/get_db_quota`, {
-        method: "POST",
-        headers: { apikey: key, Authorization: "Bearer " + key, "Content-Type": "application/json" }
-      });
+
+      // Không được trả null khi ghi thất bại:
+      // lỗi phải được ném ra để giao diện không báo thành công giả.
       if (!res.ok) {
-        const errText = await res.text().catch(() => "");
-        throw new Error(`HTTP ${res.status}: ${errText.slice(0, 150) || "RPC thất bại"}`);
+        throw new Error(
+          `Supabase upsert: ${await readError(res, "Ghi dữ liệu thất bại")}`
+        );
       }
+
+      const result = await res.json().catch(() => []);
+      return Array.isArray(result) ? (result[0] || cleaned) : cleaned;
+    },
+
+    async delete(id, rawId) {
+      const query =
+        rawId && rawId !== id
+          ? `or=(id.eq.${encodeURIComponent(rawId)},id.eq.${encodeURIComponent(id)})`
+          : `id=eq.${encodeURIComponent(id)}`;
+
+      const res = await fetch(`${url}/${table}?${query}`, {
+        method: "DELETE",
+        headers
+      });
+
+      if (!res.ok) {
+        throw new Error(
+          `Supabase delete: ${await readError(res, "Xóa dữ liệu thất bại")}`
+        );
+      }
+
+      return true;
+    },
+
+    async ping() {
+      const startedAt = Date.now();
+
+      try {
+        const res = await fetch(
+          `${url}/${table}?select=id&limit=1`,
+          { headers }
+        );
+
+        if (!res.ok) {
+          return {
+            ok: false,
+            status: res.status,
+            error: await readError(res, "Không kết nối được bảng")
+          };
+        }
+
+        const countRes = await fetch(
+          `${url}/${table}?select=count`,
+          {
+            headers: {
+              ...headers,
+              Prefer: "count=exact"
+            }
+          }
+        );
+
+        let count = null;
+
+        if (countRes.ok) {
+          const contentRange =
+            countRes.headers.get("content-range") || "";
+          const totalPart = contentRange.split("/")[1];
+
+          if (totalPart && totalPart !== "*") {
+            count = Number(totalPart);
+          }
+        }
+
+        return {
+          ok: true,
+          ms: Date.now() - startedAt,
+          count,
+          table,
+          url: `${url}/${table}`
+        };
+      } catch (e) {
+        return {
+          ok: false,
+          status: 0,
+          error: e?.message || String(e)
+        };
+      }
+    },
+
+    async getRpcQuota() {
+      const res = await fetch(`${url}/rpc/get_db_quota`, {
+        method: "POST",
+        headers: {
+          ...headers,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!res.ok) {
+        throw new Error(
+          `Supabase getRpcQuota: ${await readError(res, "RPC quota thất bại")}`
+        );
+      }
+
       return await res.json();
     },
+
     async cloneProdToTest() {
-      await fetch(`${url}ALL_ORDERS_TEST?id=neq.NULL`, {
-        method: "DELETE",
-        headers: { apikey: key, Authorization: "Bearer " + key }
-      });
-      const prodRes = await fetch(`${url}ALL_ORDERS?select=*`, {
-        headers: { apikey: key, Authorization: "Bearer " + key }
-      });
-      const prod = await prodRes.json();
-      if (!Array.isArray(prod) || !prod.length) return 0;
-      for (let i = 0; i < prod.length; i += 100) {
-        await fetch(`${url}ALL_ORDERS_TEST`, {
-          method: "POST",
-          headers: { apikey: key, Authorization: "Bearer " + key, "Content-Type": "application/json" },
-          body: JSON.stringify(prod.slice(i, i + 100))
-        });
+      // Chỉ xóa dữ liệu trong bảng TEST.
+      const clearRes = await fetch(
+        `${url}/ALL_ORDERS_TEST?id=not.is.null`,
+        {
+          method: "DELETE",
+          headers
+        }
+      );
+
+      if (!clearRes.ok) {
+        throw new Error(
+          `Clone: không xóa được kho TEST: ${
+            await readError(clearRes, "Xóa kho test thất bại")
+          }`
+        );
       }
+
+      // Đọc dữ liệu từ kho PROD.
+      const prodRes = await fetch(
+        `${url}/ALL_ORDERS?select=*&limit=5000`,
+        { headers }
+      );
+
+      if (!prodRes.ok) {
+        throw new Error(
+          `Clone: không đọc được kho PROD: ${
+            await readError(prodRes, "Đọc kho thật thất bại")
+          }`
+        );
+      }
+
+      const prod = await prodRes.json();
+
+      if (!Array.isArray(prod)) {
+        throw new Error("Clone: dữ liệu PROD trả về không phải mảng");
+      }
+
+      if (prod.length === 0) {
+        return 0;
+      }
+
+      // Ghi từng nhóm 100 đơn vào bảng TEST.
+      for (let i = 0; i < prod.length; i += 100) {
+        const batch = prod.slice(i, i + 100);
+
+        const writeRes = await fetch(`${url}/ALL_ORDERS_TEST`, {
+          method: "POST",
+          headers: {
+            ...headers,
+            "Content-Type": "application/json",
+            Prefer: "resolution=merge-duplicates,return=minimal"
+          },
+          body: JSON.stringify(batch)
+        });
+
+        if (!writeRes.ok) {
+          throw new Error(
+            `Clone: ghi kho TEST thất bại ở nhóm ${i + 1}–${i + batch.length}: ${
+              await readError(writeRes, "Ghi kho test thất bại")
+            }`
+          );
+        }
+      }
+
+      // Kiểm tra số dòng thực tế sau khi ghi.
+      const verifyRes = await fetch(
+        `${url}/ALL_ORDERS_TEST?select=id`,
+        {
+          headers: {
+            ...headers,
+            Prefer: "count=exact"
+          }
+        }
+      );
+
+      if (!verifyRes.ok) {
+        throw new Error(
+          `Clone: không xác minh được kho TEST: ${
+            await readError(verifyRes, "Xác minh kho test thất bại")
+          }`
+        );
+      }
+
+      const contentRange =
+        verifyRes.headers.get("content-range") || "";
+      const totalPart = contentRange.split("/")[1];
+      const actualCount =
+        totalPart && totalPart !== "*"
+          ? Number(totalPart)
+          : null;
+
+      if (actualCount !== null && actualCount < prod.length) {
+        throw new Error(
+          `Clone chưa đủ dữ liệu: PROD=${prod.length}, TEST=${actualCount}`
+        );
+      }
+
       return prod.length;
     },
+
     async clearTest() {
-      const res = await fetch(`${url}ALL_ORDERS_TEST?id=neq.NULL`, {
-        method: "DELETE",
-        headers: { apikey: key, Authorization: "Bearer " + key }
-      });
-      return res.ok;
+      const res = await fetch(
+        `${url}/ALL_ORDERS_TEST?id=not.is.null`,
+        {
+          method: "DELETE",
+          headers
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error(
+          `Supabase clearTest: ${await readError(res, "Xóa kho test thất bại")}`
+        );
+      }
+
+      return true;
     }
   };
 }
@@ -1499,8 +1729,60 @@ export default {
         const results = { fulfilled: [], already_fulfilled: [], missing: [], errors: [] };
         if (!ids.length) return J({ ok: true, skipped: true });
         for (const oid of ids) {
-          const o = st.orders.find((x) => x && normId(x.id) === oid);
-          if (!o) { results.missing.push(oid); log("warn", "fulfill", "D1 báo đã thanh toán nhưng Supabase chưa có đơn", oid, oid); continue; }
+          let o = st.orders.find((x) => x && normId(x.id) === oid);
+          // Cơ chế phục hồi an toàn tầng 1: Kiểm tra bộ nhớ đệm PENDING_ORD_ trong KV
+          if (!o) {
+            const rawPending = await KV.get("PENDING_ORD_" + oid);
+            if (rawPending) {
+              const po = safeJson(rawPending, null);
+              if (po && po.id) {
+                o = po;
+                st.orders.unshift(o);
+                log("info", "fulfill", "Phục hồi đơn từ KV PENDING cache để fulfillment", oid, oid);
+              }
+            }
+          }
+          // Cơ chế phục hồi an toàn tầng 2: Truy vấn trực tiếp từ D1 database
+          if (!o) {
+            try {
+              const d1Res = await d1(env, `/api/orders/${oid}`);
+              if (d1Res.ok && d1Res.data && d1Res.data.order) {
+                const d1o = d1Res.data.order;
+                const d1Pk = PKGS[d1o.pkg_id] || PKGS.d1 || { n: "Gói VPN", d: "100GB", vnd: d1o.total_vnd, cny: 0, m: 1 };
+                o = {
+                  id: oid,
+                  email: d1o.email || "",
+                  zalo: "",
+                  method: "Ngân hàng VN",
+                  pkgId: d1o.pkg_id || "d1",
+                  qty: 1,
+                  pkgName: d1Pk.n,
+                  pkgData: d1Pk.d,
+                  pkg: pkgStr(d1Pk),
+                  totalVnd: Number(d1o.total_vnd) || 0,
+                  totalCny: 0,
+                  days: daysOfPkg(d1Pk, 1),
+                  needSupport: false,
+                  status: "pending",
+                  createdTs: d1o.created_at ? new Date(d1o.created_at).getTime() : NOW(),
+                  date: fmtBank(NOW()),
+                  dateCreated: dmy(NOW()),
+                  expFinal: false,
+                  workerUrl: d1o.worker_url || env.PUBLIC_WORKER_URL || url.origin,
+                  nickname: "",
+                  reason: "",
+                  info1: "", info2: "", info3: "",
+                  lockInfo: {},
+                  sourceWeb: d1o.target_web || "Web 3",
+                  orderType: d1o.order_type || "new"
+                };
+                o.expDate = computeExp(o, st.orders, NOW());
+                st.orders.unshift(o);
+                log("info", "fulfill", "Phục hồi đơn từ D1 Database để fulfillment", oid, oid);
+              }
+            } catch (errD1) {}
+          }
+          if (!o) { results.missing.push(oid); log("warn", "fulfill", "D1 báo đã thanh toán nhưng không tìm thấy thông tin đơn", oid, oid); continue; }
           let kind = null;
           if (normStatus(o.status) !== "success") { o.status = "success"; o.paidAt = NOW(); o.reason = ""; st.dO = true; }
           if (upOrders.has(oid)) {
@@ -1510,6 +1792,14 @@ export default {
           const r = fulfillOrder(st, o, me, log);
           if (r === "error") { results.errors.push(oid); continue; }
           if (sb) await sb.upsert(o).catch(() => {});
+          // Lưu trạng thái thành công và link VPN vào KV cache để Index tra cứu ra ngay
+          await KV.put("PENDING_ORD_" + o.id, JSON.stringify(o), { expirationTtl: 86400 });
+          // Đồng bộ vào ALL_ORDERS dự phòng của KV
+          const kvAll = arr(safeJson(await KV.get("ALL_ORDERS"), []));
+          const idxAll = kvAll.findIndex(x => x && normId(x.id) === normId(o.id));
+          if (idxAll >= 0) kvAll[idxAll] = o; else kvAll.unshift(o);
+          await KV.put("ALL_ORDERS", JSON.stringify(kvAll.slice(0, 3000)));
+
           const mailKind = o.orderType === "renew" ? "renew" : "new";
           if (r === "new" || r === "renew") { results.fulfilled.push(oid); mailFor(ctx, env, st, o, mailKind, me); }
           else { results.already_fulfilled.push(oid); if (kind === "upgrade") mailFor(ctx, env, st, o, "upgrade", me); }
@@ -1647,13 +1937,13 @@ export default {
       if (p === "/api/admin/poll") {
         const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
         const sb = getSupabase(env, isTest);
-        let ordersData = "[]";
+        let ordersList = [];
         let sbError = null;
         if (sb) {
           try {
             const sbOrders = await sb.getAll();
             if (Array.isArray(sbOrders)) {
-              ordersData = JSON.stringify(sbOrders);
+              ordersList = sbOrders;
             }
           } catch (e) {
             sbError = e.message || String(e);
@@ -1661,10 +1951,24 @@ export default {
         } else {
           sbError = "Chưa cấu hình SUPABASE_KEY / SUPABASE_URL";
         }
-        if (!isTest && ordersData === "[]") {
-          const kvOrders = await KV.get("ALL_ORDERS");
-          if (kvOrders && kvOrders !== "[]") ordersData = kvOrders;
+        if (!isTest && ordersList.length === 0) {
+          const kvOrders = safeJson(await KV.get("ALL_ORDERS"), []);
+          if (Array.isArray(kvOrders) && kvOrders.length > 0) ordersList = kvOrders;
         }
+        // Hợp nhất bổ sung các đơn mới từ KV ALL_ORDERS nếu Supabase chưa kịp hiển thị
+        if (!isTest && ordersList.length > 0) {
+          const kvOrders = safeJson(await KV.get("ALL_ORDERS"), []);
+          if (Array.isArray(kvOrders) && kvOrders.length > 0) {
+            const knownIds = new Set(ordersList.map(o => o && normId(o.id)));
+            for (const ko of kvOrders) {
+              if (ko && ko.id && !knownIds.has(normId(ko.id))) {
+                ordersList.unshift(ko);
+                knownIds.add(normId(ko.id));
+              }
+            }
+          }
+        }
+        const ordersData = JSON.stringify(ordersList);
         const [l, pl, dr] = await Promise.all(["ALL_LINKS", "LINK_POOL", "ALL_DATA_REQUESTS"].map((k) => KV.get(k)));
         return RAW(`{"orders":${ordersData},"links":${l || "[]"},"pool":${pl || "[]"},"data_requests":${dr || "[]"}${sbError ? `,"sbError":${JSON.stringify(sbError)}` : ""}}`);
       }
@@ -1889,6 +2193,12 @@ export default {
             if (sb) await sb.upsert(o).catch(() => {});
           }
         }
+        return J(r.data || { ok: false }, r.ok ? 200 : r.status || 502);
+      }
+      if (p === "/api/admin/tx/clear" && m === "POST") {
+        const r = await d1(env, "/api/admin/transactions/clear", { method: "POST" });
+        log("warn", "admin", "Làm sạch giao dịch D1", r.ok ? `Đã xóa ${r.data && r.data.deleted} dòng` : "Lỗi D1");
+        await flushLog(KV, log);
         return J(r.data || { ok: false }, r.ok ? 200 : r.status || 502);
       }
 
