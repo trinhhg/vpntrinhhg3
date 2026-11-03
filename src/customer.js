@@ -1052,8 +1052,9 @@ window.addEventListener('resize', updateDrawerOffsets);
 // Network and toast helpers imported from ./api.js and ./shared.js
 
 let indexScrollTimer = null;
-let curActiveIndexTab = 'landing';
+let curActiveIndexTab = 'p-home';
 const tabScrollPositions = {};
+let isRestoringScroll = false;
 
 // Quy tắc Phase 4: Khi F5 reload, ép buộc scroll về đỉnh trang (0, 0)
 if (typeof history !== 'undefined' && 'scrollRestoration' in history) {
@@ -1067,6 +1068,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 window.addEventListener('scroll',()=>{
+  if (isRestoringScroll) return;
   const nav=$('mainNav'), sc=window.scrollY;
   const co=$('checkoutSection'), fs=$('floatingSocials'), mbg=$('mobileBottomGroup'), mnw=$('mobileNavWrapper');
 
@@ -1084,8 +1086,10 @@ window.addEventListener('scroll',()=>{
 
   clearTimeout(indexScrollTimer);
   indexScrollTimer = setTimeout(() => {
-    tabScrollPositions[curActiveIndexTab] = window.scrollY;
-    try { sessionStorage.setItem('idx_scroll_' + curActiveIndexTab, String(window.scrollY)); } catch(e){}
+    if (!isRestoringScroll && curActiveIndexTab) {
+      tabScrollPositions[curActiveIndexTab] = window.scrollY;
+      try { sessionStorage.setItem('idx_scroll_' + curActiveIndexTab, String(window.scrollY)); } catch(e){}
+    }
   }, 120);
 
   if(window.innerWidth<768){
@@ -1126,23 +1130,29 @@ window.addEventListener('scroll',()=>{
 });
 
 function saveAndSwitchTabScroll(newTabId) {
-  tabScrollPositions[curActiveIndexTab] = window.scrollY;
+  if (curActiveIndexTab && !isRestoringScroll) {
+    tabScrollPositions[curActiveIndexTab] = window.scrollY;
+  }
   curActiveIndexTab = newTabId;
-  const targetPos = tabScrollPositions[newTabId] !== undefined 
-    ? tabScrollPositions[newTabId] 
-    : (Number(sessionStorage.getItem('idx_scroll_' + newTabId)) || 0);
-  setTimeout(() => {
+  const targetPos = tabScrollPositions[newTabId] !== undefined ? tabScrollPositions[newTabId] : 0;
+  isRestoringScroll = true;
+  requestAnimationFrame(() => {
     window.scrollTo({ top: targetPos, behavior: 'instant' });
-  }, 30);
+    setTimeout(() => {
+      isRestoringScroll = false;
+    }, 60);
+  });
 }
 
 function restoreIndexScroll(){
-  const saved = tabScrollPositions[curActiveIndexTab] !== undefined 
-    ? tabScrollPositions[curActiveIndexTab] 
-    : sessionStorage.getItem('idx_scroll_' + curActiveIndexTab);
-  if(saved !== null && !isNaN(Number(saved))){
-    setTimeout(() => window.scrollTo({ top: Number(saved), behavior: 'instant' }), 40);
-  }
+  const targetPos = tabScrollPositions[curActiveIndexTab] !== undefined ? tabScrollPositions[curActiveIndexTab] : 0;
+  isRestoringScroll = true;
+  requestAnimationFrame(() => {
+    window.scrollTo({ top: targetPos, behavior: 'instant' });
+    setTimeout(() => {
+      isRestoringScroll = false;
+    }, 60);
+  });
 }
 
 async function changeLanguage(val){
@@ -2082,7 +2092,7 @@ function showPolicyPage(targetSection, skipPush=false){
 function switchPortalTab(tabId, fromUpgrade=false, skipPush=false){
  if(!fromUpgrade && tabId !== 'p-store')disableUpgradeMode();
 
- saveAndSwitchTabScroll('portal_' + tabId);
+ saveAndSwitchTabScroll(tabId);
  enablePortalFrame();
 
  // 1. Tab Quản lý Đơn hàng (Auth Guard): Chưa đăng nhập thì Modal khóa lại
@@ -2496,3 +2506,28 @@ function dismissAnnouncement() {
   if (mainNav) mainNav.style.top = '0px';
 }
 window.dismissAnnouncement = dismissAnnouncement;
+
+// Lắng nghe sự kiện đồng bộ từ Admin (Cập nhật tức thì không cần F5)
+(function initAdminRealtimeSync() {
+  const syncHandler = async () => {
+    try {
+      await loadConfig();
+      if (typeof renderPackages === 'function') renderPackages('all');
+      if (typeof renderDock === 'function') renderDock();
+      const cWrap = $('couponBlockWrap');
+      if (cWrap) {
+        const ce = (cfgCache && (cfgCache.couponEnabled !== undefined ? cfgCache.couponEnabled : (cfgCache.cms && cfgCache.cms.settings && cfgCache.cms.settings.couponEnabled))) !== false;
+        cWrap.classList.toggle('hidden', !ce);
+      }
+    } catch(e) {}
+  };
+  try {
+    const ch = new BroadcastChannel('vpn_trinhhg_sync');
+    ch.onmessage = () => syncHandler();
+  } catch(e) {}
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'vpn_last_config_sync') {
+      syncHandler();
+    }
+  });
+})();
