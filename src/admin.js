@@ -5860,11 +5860,26 @@ window.toggleCouponCheckoutInput = toggleCouponCheckout;
 // Hàm tự động phục hồi tiếng Việt bị lỗi encoding Mojibake từ D1 Database
 function fixMojibake(str) {
   if (!str || typeof str !== "string") return str || "";
+  if (/Kh.*ng.*c.*m.*n.*v.*kh.*ng.*60.*ph.*t.*ti.*n/i.test(str)) {
+    return "Không có mã đơn và không có đơn chờ nào trong vòng 60 phút trùng số tiền";
+  }
+  if (/Kh.*p.*t.*ng.*ti.*n.*v.*o.*tr.*c/i.test(str)) {
+    return "Khớp tự động - tiền vào trước";
+  }
+  if (/Ch.*a.*c.*m.*n.*ch.*n.*t.*i/i.test(str)) {
+    return "Chưa có mã đơn - chờ đơn tới rồi tự khớp";
+  }
+  if (/Thi.*u.*ti.*n/i.test(str)) {
+    return str.replace(/Thi.*u\s+ti.*n/i, "Thiếu tiền");
+  }
+  if (/Th.*a.*ti.*n/i.test(str)) {
+    return str.replace(/Th.*a\s+ti.*n/i, "Thừa tiền");
+  }
   if (/[\u00C0-\u00DF][\u0080-\u00BF]|\u00C3|\u00C4|\u00C5|\u00C6|\u00E1|\u00E0/.test(str)) {
     try {
       const bytes = new Uint8Array([...str].map(c => c.charCodeAt(0) & 0xff));
       const decoded = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
-      if (decoded && !decoded.includes("")) return decoded;
+      if (decoded && !decoded.includes("\uFFFD")) return decoded;
     } catch(e) {}
   }
   return str;
