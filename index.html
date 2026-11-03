@@ -79,40 +79,12 @@
   </div>
 </div>
 
-<!-- 4 BONG BÓNG HỖ TRỢ: TRÊN MÁY TÍNH GIỮ NGUYÊN 100%, TRÊN ĐIỆN THOẠI CÙNG HÀNG VỚI NAVIGATION BAR -->
-<div id="floatingSocials" class="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] md:bottom-6 right-3 md:right-6 z-50 transition-all duration-300">
-  <!-- Giao diện Máy tính (md trở lên): Giữ nguyên 100% vị trí và kích thước 4 nút -->
-  <div class="hidden md:flex flex-col gap-3">
-    <button onclick="openWechatModal()" class="w-12 h-12 bg-wechat text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce"><i class="fab fa-weixin"></i></button>
-    <a href="https://t.me/hoaian57" target="_blank" class="w-12 h-12 bg-tele text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.1s"><i class="fab fa-telegram-plane"></i></a>
-    <a href="https://www.facebook.com/trinh.hg.57" target="_blank" class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.2s"><i class="fab fa-facebook-messenger"></i></a>
-    <a href="https://zalo.me/0917678211" target="_blank" class="w-12 h-12 bg-[#0068ff] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.3s"><span class="font-bold text-[14px]">Zalo</span></a>
-  </div>
-
-  <!-- Giao diện Điện thoại (nhỏ hơn md): 1 nút FAB gọn gàng, bấm vào mới bung 4 kênh -->
-  <div class="md:hidden relative flex flex-col items-end">
-    <div id="mobileFabMenu" class="hidden flex-col items-end gap-2.5 mb-3 transition-all duration-200">
-      <button type="button" onclick="openWechatModal();toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl">
-        <span class="text-xs font-extrabold text-slate-700 dark:text-white">WeChat</span>
-        <span class="w-9 h-9 bg-wechat text-white rounded-full flex items-center justify-center text-lg shadow"><i class="fab fa-weixin"></i></span>
-      </button>
-      <a href="https://t.me/hoaian57" target="_blank" onclick="toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl">
-        <span class="text-xs font-extrabold text-slate-700 dark:text-white">Telegram</span>
-        <span class="w-9 h-9 bg-tele text-white rounded-full flex items-center justify-center text-lg shadow"><i class="fab fa-telegram-plane"></i></span>
-      </a>
-      <a href="https://www.facebook.com/trinh.hg.57" target="_blank" onclick="toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl">
-        <span class="text-xs font-extrabold text-slate-700 dark:text-white">Messenger</span>
-        <span class="w-9 h-9 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg shadow"><i class="fab fa-facebook-messenger"></i></span>
-      </a>
-      <a href="https://zalo.me/0917678211" target="_blank" onclick="toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl">
-        <span class="text-xs font-extrabold text-slate-700 dark:text-white">Chat Zalo</span>
-        <span class="w-9 h-9 bg-[#0068ff] text-white rounded-full flex items-center justify-center text-[11px] font-black shadow">Zalo</span>
-      </a>
-    </div>
-    <button type="button" id="mobileFabBtn" onclick="toggleMobileFab()" aria-label="Hỗ trợ" class="w-12 h-12 md:w-12 md:h-12 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white shadow-xl flex items-center justify-center text-xl border-2 border-white dark:border-slate-800 active:scale-95 transition btn-heartbeat">
-      <i id="mobileFabIcon" class="fas fa-headset"></i>
-    </button>
-  </div>
+<!-- 4 BONG BÓNG HỖ TRỢ TRÊN MÁY TÍNH (GIỮ NGUYÊN 100% VỊ TRÍ VÀ HIỆU ỨNG GỐC) -->
+<div id="floatingSocials" class="hidden md:flex fixed bottom-6 right-6 z-50 flex-col gap-3 transition-all duration-300">
+  <button onclick="openWechatModal()" class="w-12 h-12 bg-wechat text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce"><i class="fab fa-weixin"></i></button>
+  <a href="https://t.me/hoaian57" target="_blank" class="w-12 h-12 bg-tele text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.1s"><i class="fab fa-telegram-plane"></i></a>
+  <a href="https://www.facebook.com/trinh.hg.57" target="_blank" class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.2s"><i class="fab fa-facebook-messenger"></i></a>
+  <a href="https://zalo.me/0917678211" target="_blank" class="w-12 h-12 bg-[#0068ff] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.3s"><span class="font-bold text-[14px]">Zalo</span></a>
 </div>
 
 <!-- MODAL ĐĂNG NHẬP PORTAL (LAYER z-[99900] - DƯỚI TOAST) -->
@@ -228,12 +200,38 @@
 </nav>
 <div class="h-[120px] md:h-[80px]"></div>
 
-<!-- Floating Bottom Navigation Bar: Thanh nổi 3 Tab giữa màn hình chuẩn index cũ (Chỉ Icon, không chữ phía dưới) -->
-<div id="mobileNavWrapper" class="hidden fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[60] transition-all duration-300">
-  <div class="md:hidden bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md shadow-lg rounded-full px-3 py-1.5 flex gap-2 border border-slate-200 dark:border-white/10">
-    <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home mobile-tab-btn active flex items-center justify-center text-slate-500 dark:text-slate-400 w-10 h-10 rounded-full transition" title="Bảng điều khiển"><i class="fas fa-tv text-lg"></i></button>
-    <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store mobile-tab-btn flex items-center justify-center text-slate-500 dark:text-slate-400 w-10 h-10 rounded-full transition" title="Cửa hàng"><i class="fas fa-shopping-cart text-lg"></i></button>
-    <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide mobile-tab-btn flex items-center justify-center text-slate-500 dark:text-slate-400 w-10 h-10 rounded-full transition" title="Hướng dẫn"><i class="fas fa-book text-lg"></i></button>
+<!-- CỤM ĐIỀU HƯỚNG & HỖ TRỢ DƯỚI ĐÁY TRÊN MOBILE (CĂN GIỮA TOÀN NHÓM, 2 BLOCK ĐỘC LẬP THEO ẢNH CHUẨN) -->
+<div id="mobileBottomGroup" class="md:hidden fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] inset-x-0 z-[60] flex items-center justify-center gap-2.5 pointer-events-none transition-all duration-300">
+  <!-- Block 1: Navigation Bar 3 Tab (Icon-only, pill độc lập bên trái) -->
+  <div id="mobileNavWrapper" class="hidden pointer-events-auto bg-white/90 dark:bg-[#121318]/90 backdrop-blur-xl shadow-lg rounded-full p-1.5 flex items-center gap-1.5 border border-slate-200/80 dark:border-white/10 transition-all duration-200">
+    <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home mobile-tab-btn active flex items-center justify-center text-slate-500 dark:text-slate-400 w-11 h-11 rounded-full transition" title="Bảng điều khiển"><i class="fas fa-tv text-lg"></i></button>
+    <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store mobile-tab-btn flex items-center justify-center text-slate-500 dark:text-slate-400 w-11 h-11 rounded-full transition" title="Cửa hàng"><i class="fas fa-shopping-cart text-lg"></i></button>
+    <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide mobile-tab-btn flex items-center justify-center text-slate-500 dark:text-slate-400 w-11 h-11 rounded-full transition" title="Hướng dẫn"><i class="fas fa-book text-lg"></i></button>
+  </div>
+
+  <!-- Block 2: Nút Hỗ trợ FAB Speed Dial (Nằm bên phải, độc lập style và chức năng) -->
+  <div id="mobileFabWrapper" class="pointer-events-auto relative flex flex-col items-center">
+    <div id="mobileFabMenu" class="hidden absolute bottom-full mb-3 right-0 flex-col items-end gap-2.5 transition-all duration-200">
+      <button type="button" onclick="openWechatModal();toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl">
+        <span class="text-xs font-extrabold text-slate-700 dark:text-white">WeChat</span>
+        <span class="w-9 h-9 bg-wechat text-white rounded-full flex items-center justify-center text-lg shadow"><i class="fab fa-weixin"></i></span>
+      </button>
+      <a href="https://t.me/hoaian57" target="_blank" onclick="toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl">
+        <span class="text-xs font-extrabold text-slate-700 dark:text-white">Telegram</span>
+        <span class="w-9 h-9 bg-tele text-white rounded-full flex items-center justify-center text-lg shadow"><i class="fab fa-telegram-plane"></i></span>
+      </a>
+      <a href="https://www.facebook.com/trinh.hg.57" target="_blank" onclick="toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl">
+        <span class="text-xs font-extrabold text-slate-700 dark:text-white">Messenger</span>
+        <span class="w-9 h-9 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg shadow"><i class="fab fa-facebook-messenger"></i></span>
+      </a>
+      <a href="https://zalo.me/0917678211" target="_blank" onclick="toggleMobileFab(false)" class="flex items-center gap-2 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 pl-3 pr-1.5 py-1.5 rounded-full shadow-xl">
+        <span class="text-xs font-extrabold text-slate-700 dark:text-white">Chat Zalo</span>
+        <span class="w-9 h-9 bg-[#0068ff] text-white rounded-full flex items-center justify-center text-[11px] font-black shadow">Zalo</span>
+      </a>
+    </div>
+    <button type="button" id="mobileFabBtn" onclick="toggleMobileFab()" aria-label="Hỗ trợ" class="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white shadow-xl flex items-center justify-center text-xl border-2 border-white dark:border-slate-800 active:scale-95 transition btn-heartbeat">
+      <i id="mobileFabIcon" class="fas fa-headset"></i>
+    </button>
   </div>
 </div>
 <main class="flex-grow z-10 px-2 md:px-4 py-4 md:py-6 max-w-[1400px] mx-auto w-full overflow-x-hidden">
@@ -342,7 +340,7 @@
               <div class="w-8 h-8 rounded-full bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center shrink-0 shadow-xs"><i class="fas fa-user-shield text-rose-600 dark:text-rose-400 text-sm"></i></div>
               <div class="flex-1 min-w-0">
                 <h4 id="securityAlertTitle" class="text-rose-700 dark:text-rose-400 font-black text-xs uppercase tracking-wider leading-tight">CẢNH BÁO BẢO MẬT</h4>
-                <p id="securityAlertDesc" class="text-slate-700 dark:text-slate-300 font-medium text-[11px] sm:text-xs leading-snug mt-0.5">Bắt buộc giữ bí mật <span class="text-rose-600 dark:text-rose-400 font-bold">Email</span> và <span class="text-rose-600 dark:text-rose-400 font-bold">Mã đơn hàng</span> để tránh bị lộ Link VPN.</p>
+                <p id="securityAlertDesc" class="text-slate-700 dark:text-slate-300 font-medium text-[11px] sm:text-xs leading-snug mt-0.5">Bắt buộc giữ bí mật <strong class="font-bold text-red-600 dark:text-red-500">Email</strong> và <strong class="font-bold text-red-600 dark:text-red-500">Mã đơn hàng</strong> để tránh bị lộ Link VPN.</p>
               </div>
             </div>
           </div>
@@ -378,11 +376,11 @@
         <div class="flex-1"><h3 class="text-xl md:text-3xl font-black mb-3" data-i18n="promo_title"></h3><p class="text-sm font-medium opacity-90" data-i18n="promo_desc"></p></div>
         <i class="fas fa-rocket text-6xl opacity-80 hidden md:block"></i>
       </div>
-      <div class="flex justify-center gap-2 mb-6 bg-transparent dark:bg-transparent p-1.5 rounded-xl w-fit max-w-full mx-auto overflow-x-auto flex-nowrap pkg-filters">
-        <button onclick="renderPackages('all')" id="ptab-all" class="tab-btn active text-slate-600 dark:text-slate-200 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_all">Tất cả</button>
-        <button onclick="renderPackages('travel')" id="ptab-travel" class="tab-btn text-slate-600 dark:text-slate-400 hover:dark:text-slate-200 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_travel">Du lịch</button>
-        <button onclick="renderPackages('cycle')" id="ptab-cycle" class="tab-btn text-slate-600 dark:text-slate-400 hover:dark:text-slate-200 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_cycle">Chu kỳ</button>
-        <button onclick="renderPackages('usage')" id="ptab-usage" class="tab-btn text-slate-600 dark:text-slate-400 hover:dark:text-slate-200 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_usage">Dung lượng</button>
+      <div class="flex justify-center gap-1.5 mb-6 pkg-filters-wrap p-1.5 rounded-2xl w-fit max-w-full mx-auto overflow-x-auto flex-nowrap pkg-filters backdrop-blur-md">
+        <button onclick="renderPackages('all')" id="ptab-all" class="tab-btn active px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_all">Tất cả</button>
+        <button onclick="renderPackages('travel')" id="ptab-travel" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_travel">Du lịch</button>
+        <button onclick="renderPackages('cycle')" id="ptab-cycle" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_cycle">Chu kỳ</button>
+        <button onclick="renderPackages('usage')" id="ptab-usage" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_usage">Dung lượng</button>
       </div>
       <div id="packagesContainerPortal" class="grid md:grid-cols-3 gap-4 md:gap-6 mb-10 w-full"></div>
     </div>
@@ -424,11 +422,11 @@
         <div class="relative z-10"><div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 dark:bg-[#111111] rounded-2xl flex items-center justify-center mb-2 md:mb-3"><i class="fas fa-user-secret text-xl md:text-2xl text-emerald-500 dark:text-emerald-400"></i></div><h4 class="font-bold text-slate-800 dark:text-white text-lg md:text-2xl mb-1.5 md:mb-2" data-i18n="feat_3"></h4><p class="text-[11px] md:text-sm text-slate-500 dark:text-slate-300 font-medium leading-relaxed" data-i18n="feat_3_desc"></p></div>
       </div>
     </div>
-    <div class="flex justify-center gap-2 mb-6 bg-transparent dark:bg-transparent p-1.5 rounded-xl w-fit max-w-full mx-auto overflow-x-auto flex-nowrap pkg-filters">
-        <button onclick="renderPackages('all')" id="htab-all" class="tab-btn active text-slate-600 dark:text-slate-200 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_all">Tất cả</button>
-        <button onclick="renderPackages('travel')" id="htab-travel" class="tab-btn text-slate-600 dark:text-slate-400 hover:dark:text-slate-200 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_travel">Du lịch</button>
-        <button onclick="renderPackages('cycle')" id="htab-cycle" class="tab-btn text-slate-600 dark:text-slate-400 hover:dark:text-slate-200 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_cycle">Chu kỳ</button>
-        <button onclick="renderPackages('usage')" id="htab-usage" class="tab-btn text-slate-600 dark:text-slate-400 hover:dark:text-slate-200 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_usage">Dung lượng</button>
+    <div class="flex justify-center gap-1.5 mb-6 pkg-filters-wrap p-1.5 rounded-2xl w-fit max-w-full mx-auto overflow-x-auto flex-nowrap pkg-filters backdrop-blur-md">
+        <button onclick="renderPackages('all')" id="htab-all" class="tab-btn active px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_all">Tất cả</button>
+        <button onclick="renderPackages('travel')" id="htab-travel" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_travel">Du lịch</button>
+        <button onclick="renderPackages('cycle')" id="htab-cycle" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_cycle">Chu kỳ</button>
+        <button onclick="renderPackages('usage')" id="htab-usage" class="tab-btn px-4 py-2 rounded-xl font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_usage">Dung lượng</button>
     </div>
     <div id="packagesContainerHome" class="grid md:grid-cols-3 gap-4 md:gap-6 mb-10 w-full"></div>
     <div id="checkoutSection" class="hidden mt-6 scroll-mt-24 w-full">
