@@ -450,7 +450,7 @@
     <div id="checkoutSection" class="hidden mt-6 scroll-mt-24 w-full">
       <div class="text-center mb-6"><h3 id="checkoutTitle" class="text-xl md:text-3xl font-extrabold text-slate-800 dark:text-slate-200" data-i18n="checkout_title">Thanh toán Đơn hàng</h3></div>
       <form id="orderForm" onsubmit="submitOrder(event)">
-        <div class="grid lg:grid-cols-2 gap-6">
+        <div class="grid lg:grid-cols-2 gap-6 items-start">
 <div class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-5 md:p-8 rounded-3xl flex flex-col shadow-sm">
             <div id="checkoutPackageCardSummary" class="bg-indigo-50 dark:bg-indigo-900/40 px-5 py-4 rounded-xl mb-5 flex justify-between items-center border border-indigo-100 dark:border-indigo-500/30">
               <div><p class="text-sm font-black text-slate-800 dark:text-white uppercase" id="selectedPackageName"></p><p class="text-xs font-bold text-slate-500 dark:text-slate-200 mt-0.5" id="selectedPackageData"></p></div>
@@ -484,6 +484,41 @@
               <div id="customDurWrap" class="hidden mt-3"><div class="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 p-2 rounded-lg border border-indigo-100 dark:border-indigo-500/30"><label class="text-xs font-bold text-indigo-800 dark:text-indigo-300 whitespace-nowrap pl-1" data-i18n="input_months">Nhập số tháng:</label><input type="number" id="customDurInput" min="1" max="120" value="2" oninput="calculateTotal()" class="w-full p-2 text-sm border border-slate-300 dark:border-white/20 rounded outline-none focus:border-indigo-500 font-bold bg-white dark:bg-black text-center text-slate-800 dark:text-white"></div></div>
               <div id="priceCalculation" class="mt-3 text-sm font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-500/30 p-2.5 rounded-lg text-center"></div>
             </div>
+
+            <!-- KHỐI LỰA CHỌN VÒNG ĐỜI LINK SUB (PHẦN F) -->
+            <div id="subLinkLifecycleWrap" class="hidden mb-4 p-3.5 bg-slate-50 dark:bg-[#121212] border border-slate-200 dark:border-white/10 rounded-2xl space-y-2.5">
+              <div class="flex items-center gap-1.5">
+                <span class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider">Xử lý link sub</span>
+                <span class="relative group cursor-pointer" tabindex="0">
+                  <i class="fas fa-circle-question text-slate-400 hover:text-indigo-600 text-xs"></i>
+                  <span class="hidden group-hover:block group-focus:block absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-60 p-2 bg-slate-900 text-white text-[11px] rounded-xl shadow-lg z-30 font-medium leading-relaxed text-center">
+                    Chọn tiếp tục dùng link sub cũ hoặc nhận link sub hoàn toàn mới.
+                  </span>
+                </span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <label id="lblSubKeep" class="cursor-pointer border-2 border-slate-200 dark:border-white/10 rounded-xl p-3 flex flex-col justify-between hover:border-indigo-300 transition select-none bg-white dark:bg-black">
+                  <div class="flex items-center gap-2 mb-1.5">
+                    <input type="radio" name="subLinkDecisionRadio" value="KEEP_EXISTING" onchange="onSubDecisionChange(this.value)" class="text-indigo-600">
+                    <span class="font-extrabold text-xs text-slate-800 dark:text-white">Giữ link cũ</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-tight">Bạn sẽ tiếp tục dùng link sub đã thêm từ gói trước đó. Sau khi thanh toán và kích hoạt thành công, bạn chỉ cần cập nhật lại gói đăng ký trong app VPN tương ứng.</p>
+                </label>
+                <label id="lblSubNew" class="cursor-pointer border-2 border-slate-200 dark:border-white/10 rounded-xl p-3 flex flex-col justify-between hover:border-indigo-300 transition select-none bg-white dark:bg-black">
+                  <div class="flex items-center gap-2 mb-1.5">
+                    <input type="radio" name="subLinkDecisionRadio" value="CREATE_NEW" onchange="onSubDecisionChange(this.value)" class="text-indigo-600">
+                    <span class="font-extrabold text-xs text-slate-800 dark:text-white">Cấp link mới</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-tight">Sau khi thanh toán và kích hoạt thành công, bạn sẽ cần copy hoặc quét QR để thêm link sub mới vào trong app VPN tương ứng để sử dụng.</p>
+                </label>
+              </div>
+              <!-- Chọn link đích nếu email có nhiều link -->
+              <div id="multiLinkSelectorWrap" class="hidden mt-2 pt-2 border-t border-slate-200 dark:border-white/10">
+                <span class="block text-[11px] font-bold text-slate-600 dark:text-slate-300 mb-1">Chọn link đích cần giữ:</span>
+                <select id="targetLinkSubSelect" class="w-full text-xs font-bold p-2 border border-slate-300 dark:border-white/20 rounded-lg bg-white dark:bg-black text-slate-800 dark:text-white outline-none focus:border-indigo-500"></select>
+              </div>
+            </div>
+
             <!-- KHỐI NHẬP MÃ GIẢM GIÁ (COUPON / VOUCHER) -->
             <div id="couponBlockWrap" class="mb-4">
               <label class="block font-bold text-xs text-slate-700 dark:text-slate-200 mb-1.5 flex items-center gap-1.5">
