@@ -117,7 +117,7 @@ const i18n={
   data_label:"Dung lượng: ",dev_label:"Giới hạn thiết bị: ",dev_unlimited_label:"Không giới hạn thiết bị",speed_label:"Băng thông lên đến 3Gbps",btn_buy:"Đăng ký Gói Này",btn_contact:"Liên hệ Admin",copy_memo:"Nội dung chuyển khoản:",copy_amount:"Số tiền:",need_support:"Cần Hỗ trợ Cài đặt (Zalo/Tele)",
   faq_title:"Câu hỏi thường gặp (FAQ)",faq_1_q:"Làm sao lấy Link cài đặt?",faq_1_a:"Nhập Mã Đơn hoặc Email vào thanh tìm kiếm trên cùng.",faq_2_q:"VPN hỗ trợ những app nào?",faq_2_a:"TikTok, Facebook, Messenger, Instagram, Telegram, Zalo, YouTube... Nhắn Admin để test.",faq_3_q:"Có những phương thức thanh toán nào?",faq_3_a:"Ngân hàng VN (VietQR), Alipay, Weixin.",faq_4_q:"Đổi máy có dùng tiếp được không?",faq_4_a:"Có. Tra cứu lại Mã Đơn trên web.",
   refund_q:"Hoàn tiền",refund_a:"Website không áp dụng hoàn tiền cho đơn hàng đã mua, khách hàng vui lòng chú ý và cân nhắc khi thanh toán.",status_pending:"Chờ duyệt",status_success:"Thành công",status_failed:"Từ chối",lifetime_lbl:"Vĩnh viễn",days_lbl:" Ngày",expired_lbl:"Đã hết hạn",btn_check_data:"Kiểm tra dung lượng",security_alert:"Cảnh báo bảo mật",
-  security_desc:"Bắt buộc giữ bí mật <span class='text-red-600 dark:text-red-400 font-black bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm border border-red-100 dark:border-red-900/50'>Email</span> và <span class='text-red-600 dark:text-red-400 font-black bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm border border-red-100 dark:border-red-900/50'>Mã đơn hàng</span> để tránh bị lộ Link VPN.",
+  security_desc:"Bắt buộc giữ bí mật <strong class='font-bold text-red-600 dark:text-red-500'>Email</strong> và <strong class='font-bold text-red-600 dark:text-red-500'>Mã đơn hàng</strong> để tránh bị lộ Link VPN.",
   pending_wait:"Hệ thống xử lý tự động, vui lòng đợi trong ít phút.",pending_timeout:"Chưa nhận được thanh toán",pending_timeout_desc:"Đã quá thời gian tự động duyệt. Bạn đã chuyển khoản chưa?",pending_support_text:"Cần hỗ trợ? Hãy nhắn cho Admin.",pending_zalo_btn:"Nhắn Zalo Admin",pending_manual_wait_title:"Đợi Admin duyệt",pending_manual_title:"Đơn hàng đang chờ Admin duyệt",pending_manual_desc:"Vui lòng nhắn tin cho Admin cùng với biên lai để được kích hoạt sớm nhất.",failed_title:"Đơn hàng bị từ chối",
   bank_owner:"Chủ TK:",bank_name:"Ngân hàng:",bank_num:"Số TK:",click_copy:"(NHẤP VÀO MÃ ĐỂ COPY - BẮT BUỘC)",input_manual:"Vui lòng tự nhập nội dung chuyển khoản!",upgrade_confirm_title:"Xác nhận nâng gói",upgrade_confirm_desc:"Vui lòng kiểm tra số tiền chênh lệch và thông tin gói mới. Bấm <b>TẠO MÃ QR CHUYỂN KHOẢN</b> để tạo mã.",
   req_wait:"Yêu cầu đang chờ xử lý. Vui lòng quay lại sau!",req_sent:"Đã gửi yêu cầu! Vui lòng chờ Email báo cáo.",req_err:"Có lỗi xảy ra, vui lòng thử lại!",select_higher:"Vui lòng chọn gói cao hơn gói hiện tại để nâng cấp",copy_success:"Đã Copy!",not_found:"Không tìm thấy Đơn hàng/Email!",login_success:"Vào cổng thành công!",sending:"Đang gửi...",
@@ -393,8 +393,8 @@ function toggleMobileFab(force){
  if(ic)ic.className=open?'fas fa-times':'fas fa-headset';
 }
 document.addEventListener('click',e=>{
- const fs=$('floatingSocials'),lmM=$('langMenuMobile'),lmD=$('langMenuDesktop');
- if(fs&&!fs.contains(e.target))toggleMobileFab(false);
+ const fs=$('floatingSocials'),mfw=$('mobileFabWrapper'),lmM=$('langMenuMobile'),lmD=$('langMenuDesktop');
+ if((!fs||!fs.contains(e.target))&&(!mfw||!mfw.contains(e.target)))toggleMobileFab(false);
  if(lmM&&!lmM.parentElement.contains(e.target))lmM.classList.add('hidden');
  if(lmD&&!lmD.parentElement.contains(e.target))lmD.classList.add('hidden');
 });
@@ -1068,13 +1068,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
 window.addEventListener('scroll',()=>{
   const nav=$('mainNav'), sc=window.scrollY;
-  const co=$('checkoutSection'), fs=$('floatingSocials'), mnw=$('mobileNavWrapper');
+  const co=$('checkoutSection'), fs=$('floatingSocials'), mbg=$('mobileBottomGroup'), mnw=$('mobileNavWrapper');
 
-  // Header & Navigation CỐ ĐỊNH khi cuộn trang thông thường; CHỈ ẩn khi cuộn tới khu vực Thanh toán (#checkoutSection)
+  // Header & Bottom Navigation CỐ ĐỊNH khi cuộn trang thông thường; CHỈ ẩn khi cuộn tới khu vực Thanh toán (#checkoutSection)
   let inCheckout = false;
   if(co && !co.classList.contains('hidden')){
     const r=co.getBoundingClientRect();
-    if(r.top < window.innerHeight - 80 && r.bottom > 120) inCheckout = true;
+    if(r.top < window.innerHeight - 60 && r.bottom > 100) inCheckout = true;
   }
   if(nav){
     if(inCheckout) nav.classList.add('nav-hidden');
@@ -1089,18 +1089,38 @@ window.addEventListener('scroll',()=>{
   }, 120);
 
   if(window.innerWidth<768){
-    let hideBottomWidgets = inCheckout;
-    const ft=$('footerArea');
-    if(ft){
-      const fr=ft.getBoundingClientRect();
-      if(fr.top < window.innerHeight) hideBottomWidgets = true;
+    if(mbg){
+      if(inCheckout){
+        mbg.style.opacity='0';
+        mbg.style.pointerEvents='none';
+        mbg.style.transform='translateY(24px)';
+      }else{
+        mbg.style.opacity='1';
+        mbg.style.pointerEvents='auto';
+        mbg.style.transform='translateY(0)';
+      }
+    } else if(mnw){
+      if(inCheckout){
+        mnw.style.opacity='0';
+        mnw.style.pointerEvents='none';
+        mnw.style.transform='translate(-50%, 20px)';
+      }else{
+        mnw.style.opacity='1';
+        mnw.style.pointerEvents='auto';
+        mnw.style.transform='translate(-50%, 0)';
+      }
     }
-    if(hideBottomWidgets){
-      if(fs){fs.style.opacity='0'; fs.style.pointerEvents='none'; fs.style.transform='translateY(20px)';}
-      if(mnw){mnw.style.opacity='0'; mnw.style.pointerEvents='none'; mnw.style.transform='translate(-50%, 20px)';}
-    }else{
-      if(fs && !fs.dataset.footerHidden){fs.style.opacity='1'; fs.style.pointerEvents='auto'; fs.style.transform='translateY(0)';}
-      if(mnw){mnw.style.opacity='1'; mnw.style.pointerEvents='auto'; mnw.style.transform='translate(-50%, 0)';}
+  }else{
+    if(fs){
+      if(inCheckout){
+        fs.style.opacity='0';
+        fs.style.pointerEvents='none';
+        fs.style.transform='translateY(20px)';
+      }else{
+        fs.style.opacity='1';
+        fs.style.pointerEvents='auto';
+        fs.style.transform='translateY(0)';
+      }
     }
   }
 });
@@ -1124,18 +1144,6 @@ function restoreIndexScroll(){
     setTimeout(() => window.scrollTo({ top: Number(saved), behavior: 'instant' }), 40);
   }
 }
-
-// 4 Bong bóng: Chỉ ẩn khi cuộn chạm tới footer
-const obs=new IntersectionObserver(es=>es.forEach(e=>{
-  const s=$('floatingSocials');if(!s)return;
-  if(e.isIntersecting){
-    s.dataset.footerHidden='1';
-    s.style.opacity='0';s.style.pointerEvents='none';s.style.transform='translateY(20px)';
-  }else{
-    delete s.dataset.footerHidden;
-    s.style.opacity='1';s.style.pointerEvents='auto';s.style.transform='translateY(0)';
-  }
-}),{threshold:.1});
 
 async function changeLanguage(val){
  const cy=window.scrollY;lang=val;$('langSelectMobile').value=val;$('langSelectDesktop').value=val;paintLangButtons(val);
@@ -1289,7 +1297,7 @@ function genHTML(rawPkg){
 
  const priceHTML = pkg.isCustom
    ? `<div class="text-xl font-black text-red-600 dark:text-red-400 mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${p.price || ''}</div>`
-   : `<div class="mb-4 border-b border-slate-100 dark:border-white/10 pb-3 mt-1.5 flex flex-wrap items-baseline"><span class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-indigo-300">${realPriceDisplay}</span>${origPriceStr}</div>`;
+   : `<div class="mb-4 border-b border-slate-100 dark:border-white/10 pb-3 mt-1.5 flex flex-wrap items-baseline"><span class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-white price-glow">${realPriceDisplay}</span>${origPriceStr}</div>`;
 
  const btn = isDisabled
    ? `<button disabled class="w-full bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 font-bold py-3 rounded-xl text-sm cursor-not-allowed">Không khả dụng</button>`
@@ -2336,8 +2344,6 @@ function setupAppRoutes(){
  }
  await Promise.all(tasks);
 
- const f = $('footerArea');
- if (f) obs.observe(f);
 };
 
 async function requestDataCheck(){
