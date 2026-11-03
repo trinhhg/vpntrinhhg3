@@ -79,8 +79,8 @@
   </div>
 </div>
 
-<!-- 4 BONG BÓNG HỖ TRỢ: TRÊN MÁY TÍNH GIỮ NGUYÊN 100%, TRÊN ĐIỆN THOẠI THU GỌN THÀNH 1 NÚT FAB SPEED DIAL -->
-<div id="floatingSocials" class="fixed bottom-[74px] md:bottom-6 right-3 md:right-6 z-50 transition-all duration-300">
+<!-- 4 BONG BÓNG HỖ TRỢ: TRÊN MÁY TÍNH GIỮ NGUYÊN 100%, TRÊN ĐIỆN THOẠI CÙNG HÀNG VỚI NAVIGATION BAR -->
+<div id="floatingSocials" class="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] md:bottom-6 right-3 md:right-6 z-50 transition-all duration-300">
   <!-- Giao diện Máy tính (md trở lên): Giữ nguyên 100% vị trí và kích thước 4 nút -->
   <div class="hidden md:flex flex-col gap-3">
     <button onclick="openWechatModal()" class="w-12 h-12 bg-wechat text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce"><i class="fab fa-weixin"></i></button>
@@ -202,7 +202,7 @@
     <div class="flex-1 w-full md:flex-1 flex items-center justify-center mx-0 md:mx-2">
       <div class="w-full relative min-w-0">
         <input type="text" id="loginInput" name="vpn_no_autofill_order_search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-lpignore="true" onkeyup="if(event.key==='Enter'){event.preventDefault();login();}" class="w-full bg-white dark:bg-[#0a0a0a] border-2 border-indigo-100 dark:border-white/10 rounded-full pl-5 pr-12 py-2.5 text-sm outline-none font-bold text-slate-700 dark:text-white focus:border-indigo-400 dark:focus:border-indigo-500 transition shadow-sm placeholder:dark:text-slate-500" placeholder="Nhập Mã Đơn hoặc Email..." data-i18n-placeholder="search_placeholder">
-        <button onclick="login()" title="Tìm kiếm" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 bg-indigo-600 dark:bg-indigo-500 rounded-full text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 flex items-center justify-center transition shadow-sm"><i class="fas fa-search text-xs"></i></button>
+        <button onclick="login()" id="loginSearchBtn" title="Tìm kiếm" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 min-h-[32px] max-h-[32px] shrink-0 aspect-square bg-indigo-600 dark:bg-indigo-500 rounded-full text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 flex items-center justify-center transition shadow-sm"><i class="fas fa-search text-xs"></i></button>
       </div>
     </div>
     <div class="hidden md:flex items-center justify-end w-auto gap-3 shrink-0">
@@ -212,10 +212,10 @@
         <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center"><i class="fas fa-book mr-2"></i><span data-i18n="tab_p_guide">Hướng dẫn</span></button>
       </div>
       <select id="langSelectDesktop" onchange="changeLanguage(this.value)" class="hidden"><option value="vi">Tiếng Việt</option><option value="en">English</option><option value="zh">中文</option></select>
-      <!-- Dropdown ngôn ngữ Desktop có Cờ SVG hiển thị chuẩn trên Windows -->
-      <div class="relative" translate="no">
-        <button type="button" onclick="toggleLangMenu('desktop')" id="langBtnDesktop" class="bg-indigo-50 dark:bg-[#0a0a0a] text-indigo-700 dark:text-white border border-indigo-100 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold flex items-center gap-2 outline-none hover:border-indigo-300 transition"></button>
-        <div id="langMenuDesktop" class="hidden absolute right-0 mt-2 w-44 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 rounded-2xl shadow-2xl py-1.5 z-[100]">
+      <!-- Dropdown ngôn ngữ Desktop có Cờ SVG hiển thị chuẩn trên Windows (Khóa mép phải chuẩn xác) -->
+      <div class="relative shrink-0" translate="no">
+        <button type="button" onclick="toggleLangMenu('desktop')" id="langBtnDesktop" class="bg-indigo-50 dark:bg-[#0a0a0a] text-indigo-700 dark:text-white border border-indigo-100 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold flex items-center gap-2 outline-none hover:border-indigo-300 transition shrink-0"></button>
+        <div id="langMenuDesktop" class="hidden absolute right-0 top-full mt-2 w-40 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 rounded-xl shadow-2xl py-1 z-[100] origin-top-right">
           <button type="button" onclick="pickLangOption('vi')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/vn.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>Tiếng Việt</span></button>
           <button type="button" onclick="pickLangOption('en')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/gb.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>English</span></button>
           <button type="button" onclick="pickLangOption('zh')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/cn.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>中文</span></button>
@@ -228,23 +228,14 @@
 </nav>
 <div class="h-[120px] md:h-[80px]"></div>
 
-<!-- Floating Bottom Navigation Bar: Thanh nổi 3 Tab giữa màn hình chuẩn App iOS/Android (Icon Trên - Chữ Dưới) -->
-<nav id="mobileNavWrapper" class="md:hidden hidden fixed bottom-2 left-1/2 -translate-x-1/2 z-[60] bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-xl border border-slate-200 dark:border-white/15 rounded-full px-3 py-1.5 shadow-2xl transition-all pb-[max(0.375rem,env(safe-area-inset-bottom))]">
-  <div class="flex items-center gap-1 sm:gap-2">
-    <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home mobile-tab-btn active flex flex-col items-center justify-center px-3 py-1 rounded-2xl text-indigo-600 bg-indigo-50 dark:text-white dark:bg-white/10 transition">
-      <i class="fas fa-tv text-xs"></i>
-      <span class="text-[10px] font-extrabold mt-0.5 whitespace-nowrap" data-i18n="tab_p_home">Bảng điều khiển</span>
-    </button>
-    <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store mobile-tab-btn flex flex-col items-center justify-center px-3 py-1 rounded-2xl text-slate-500 dark:text-slate-400 transition hover:text-indigo-600">
-      <i class="fas fa-shopping-cart text-xs"></i>
-      <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap" data-i18n="tab_p_store">Cửa hàng</span>
-    </button>
-    <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide mobile-tab-btn flex flex-col items-center justify-center px-3 py-1 rounded-2xl text-slate-500 dark:text-slate-400 transition hover:text-indigo-600">
-      <i class="fas fa-book text-xs"></i>
-      <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap" data-i18n="tab_p_guide">Hướng dẫn</span>
-    </button>
+<!-- Floating Bottom Navigation Bar: Thanh nổi 3 Tab giữa màn hình chuẩn index cũ (Chỉ Icon, không chữ phía dưới) -->
+<div id="mobileNavWrapper" class="hidden fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[60] transition-all duration-300">
+  <div class="md:hidden bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md shadow-lg rounded-full px-3 py-1.5 flex gap-2 border border-slate-200 dark:border-white/10">
+    <button onclick="switchPortalTab('p-home')" class="btn-nav-p-home mobile-tab-btn active flex items-center justify-center text-slate-500 dark:text-slate-400 w-10 h-10 rounded-full transition" title="Bảng điều khiển"><i class="fas fa-tv text-lg"></i></button>
+    <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store mobile-tab-btn flex items-center justify-center text-slate-500 dark:text-slate-400 w-10 h-10 rounded-full transition" title="Cửa hàng"><i class="fas fa-shopping-cart text-lg"></i></button>
+    <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide mobile-tab-btn flex items-center justify-center text-slate-500 dark:text-slate-400 w-10 h-10 rounded-full transition" title="Hướng dẫn"><i class="fas fa-book text-lg"></i></button>
   </div>
-</nav>
+</div>
 <main class="flex-grow z-10 px-2 md:px-4 py-4 md:py-6 max-w-[1400px] mx-auto w-full overflow-x-hidden">
   <div id="view-portal" class="view-section mb-20 w-full">
     <div id="p-home" class="portal-tab-content active w-full space-y-6">
@@ -355,7 +346,7 @@
               </div>
             </div>
           </div>
-          <div class="bg-slate-50/80 dark:bg-[#14151a] border border-slate-200/80 dark:border-white/10 rounded-2xl p-3.5 md:p-5 mb-4 shadow-xs relative overflow-hidden">
+          <div class="bg-slate-50 dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 rounded-2xl p-3.5 md:p-5 mb-4 shadow-sm relative overflow-hidden">
             <div id="upgradeSuccessBadge" class="hidden absolute top-0 right-0 bg-red-600 dark:bg-red-500 text-white text-[9px] md:text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md z-10" data-i18n="badge_upgrade_success">🎉 NÂNG GÓI THÀNH CÔNG</div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 mb-3">
               <div class="flex flex-col gap-2">
@@ -387,7 +378,7 @@
         <div class="flex-1"><h3 class="text-xl md:text-3xl font-black mb-3" data-i18n="promo_title"></h3><p class="text-sm font-medium opacity-90" data-i18n="promo_desc"></p></div>
         <i class="fas fa-rocket text-6xl opacity-80 hidden md:block"></i>
       </div>
-      <div class="flex justify-center gap-2 mb-6 bg-white dark:bg-[#0a0a0a] p-1.5 rounded-xl w-fit max-w-full mx-auto border border-slate-100 dark:border-white/10 shadow-sm overflow-x-auto flex-nowrap pkg-filters">
+      <div class="flex justify-center gap-2 mb-6 bg-transparent dark:bg-transparent p-1.5 rounded-xl w-fit max-w-full mx-auto overflow-x-auto flex-nowrap pkg-filters">
         <button onclick="renderPackages('all')" id="ptab-all" class="tab-btn active text-slate-600 dark:text-slate-200 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_all">Tất cả</button>
         <button onclick="renderPackages('travel')" id="ptab-travel" class="tab-btn text-slate-600 dark:text-slate-400 hover:dark:text-slate-200 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_travel">Du lịch</button>
         <button onclick="renderPackages('cycle')" id="ptab-cycle" class="tab-btn text-slate-600 dark:text-slate-400 hover:dark:text-slate-200 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_cycle">Chu kỳ</button>
@@ -433,7 +424,7 @@
         <div class="relative z-10"><div class="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 dark:bg-[#111111] rounded-2xl flex items-center justify-center mb-2 md:mb-3"><i class="fas fa-user-secret text-xl md:text-2xl text-emerald-500 dark:text-emerald-400"></i></div><h4 class="font-bold text-slate-800 dark:text-white text-lg md:text-2xl mb-1.5 md:mb-2" data-i18n="feat_3"></h4><p class="text-[11px] md:text-sm text-slate-500 dark:text-slate-300 font-medium leading-relaxed" data-i18n="feat_3_desc"></p></div>
       </div>
     </div>
-    <div class="flex justify-center gap-2 mb-6 bg-white dark:bg-[#0a0a0a] p-1.5 rounded-xl w-fit max-w-full mx-auto border border-slate-100 dark:border-white/10 shadow-sm overflow-x-auto flex-nowrap pkg-filters">
+    <div class="flex justify-center gap-2 mb-6 bg-transparent dark:bg-transparent p-1.5 rounded-xl w-fit max-w-full mx-auto overflow-x-auto flex-nowrap pkg-filters">
         <button onclick="renderPackages('all')" id="htab-all" class="tab-btn active text-slate-600 dark:text-slate-200 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_all">Tất cả</button>
         <button onclick="renderPackages('travel')" id="htab-travel" class="tab-btn text-slate-600 dark:text-slate-400 hover:dark:text-slate-200 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_travel">Du lịch</button>
         <button onclick="renderPackages('cycle')" id="htab-cycle" class="tab-btn text-slate-600 dark:text-slate-400 hover:dark:text-slate-200 px-4 py-2.5 rounded-lg font-bold text-xs md:text-sm shrink-0 whitespace-nowrap" data-i18n="tab_cycle">Chu kỳ</button>
