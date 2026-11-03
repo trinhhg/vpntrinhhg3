@@ -717,8 +717,8 @@ function computeExp(o, orders, now) {
   if (pk.m === 0) return "Vĩnh viễn";
   const em = String(o.email || "").toLowerCase();
   let base = day0(now);
-  // CHỈ đơn gia hạn (orderType === "renew") mới cộng dồn nối tiếp vào HSD cũ; đơn mua mới ("new") luôn tính từ hôm nay
-  if (o.orderType === "renew" && em) {
+  // CHỈ đơn gia hạn (orderType === "renew") mới cộng dồn nối tiếp vào HSD cũ; đơn mua mới ("new") hoặc chọn cấp link mới luôn tính từ hôm nay
+  if (o.orderType === "renew" && em && o.subLinkDecision !== "CREATE_NEW") {
     for (const x of orders) {
       if (!x || x === o || normStatus(x.status) !== "success" || String(x.email || "").toLowerCase() !== em || isLifetime(x.expDate)) continue;
       const t = parseDmy(x.expDate); if (t > base) base = t;
@@ -941,50 +941,64 @@ function fulfillOrder(st, o, me, log) {
   const targetExpKey = expKey(o.expDate);
   let link = null;
 
-  // 1. Tìm link theo chính orderId của đơn hiện tại
+  // 1. Chống retry tạo trùng link: Nếu đơn đã có link hợp lệ được cấp trên web này, trả về ngay
+  if (o[f] && st.links.some(l => l && l.masked === o[f])) return "already";
+
+  // 2. Tìm link theo chính orderId của đơn hiện tại
   link = st.links.find((l) => l && l.orderId && normId(l.orderId) === normId(o.id));
 
-  // 2. Logic phân nhánh cấp link sub ẩn thông minh (Master Plan V1):
-  if (!link && em) {
+  // 3. Đọc quyết định vòng đời link sub tạm thời từ Cloudflare KV (Phần E, F & G)
+  let decisionObj = null;
+  if (st._kvDecisions && st._kvDecisions[normId(o.id)]) {
+    decisionObj = st._kvDecisions[normId(o.id)];
+  }
+
+  let finalDecision = decisionObj?.decision || (o.orderType === "renew" ? "KEEP_EXISTING" : "AUTO");
+  let targetLink = null;
+
+  if (finalDecision === "CREATE_NEW") {
+    link = null; // Bắt buộc cấp link mới theo lựa chọn của khách
+    log("ok", "fulfill", "Quyết định vòng đời: Cấp link mới theo lựa chọn của khách", o.id, o.id);
+  } else if (!link && em) {
     const prevOrders = st.orders
       .filter((x) => x && x !== o && normStatus(x.status) === "success" && String(x.email || "").toLowerCase() === em)
       .sort((a, b) => (b.createdTs || 0) - (a.createdTs || 0));
 
-    // Lọc các đơn còn hạn đang hoạt động
-    const activeOrders = prevOrders.filter(x => isLifetime(x.expDate) || (parseDmy(x.expDate) >= now));
+    // Nếu có targetLinkSubId cụ thể (khách chọn giữ link đích hoặc gia hạn từ portal)
+    if (decisionObj?.targetLinkSubId) {
+      targetLink = st.links.find(l => l && (l.id === decisionObj.targetLinkSubId || l.masked === decisionObj.targetLinkSubId || (l.orderId && normId(l.orderId) === normId(decisionObj.targetLinkSubId))));
+    }
+    if (!targetLink && o.renewOf) {
+      const srcOrd = st.orders.find(x => x && normId(x.id) === normId(o.renewOf));
+      if (srcOrd && srcOrd[f]) targetLink = st.links.find(l => l && l.masked === srcOrd[f]);
+    }
 
-    if (activeOrders.length >= 2) {
-      // Trường hợp 1: Email có >= 2 đơn còn hạn đang hoạt động -> BẮT BUỘC AUTO CẤP LINK MỚI ĐỘC LẬP
-      link = null;
-    } else if (activeOrders.length === 1) {
-      // Trường hợp 2: Email có đúng 1 đơn đang hoạt động
-      const oldOrd = activeOrders[0];
-      const isLifeOrd = isLifetime(oldOrd.expDate);
-      const daysLeft = isLifeOrd ? 999 : Math.floor((parseDmy(oldOrd.expDate) - now) / 864e5);
+    // Quy tắc 10 ngày (Phần E): Nếu đơn cũ nhất đã hết hạn từ 10 ngày trở lên và không tìm thấy link khả dụng -> cấp mới
+    const newestExpiredOrd = prevOrders.find(x => !isLifetime(x.expDate) && parseDmy(x.expDate) < now);
+    const expiredOver10Days = newestExpiredOrd && (now - parseDmy(newestExpiredOrd.expDate) >= 10 * 864e5);
 
-      if (daysLeft < 7) {
-        // Đơn cũ sát ngày hết hạn (< 7 ngày) -> Tái sử dụng link cũ, cộng dồn hạn dùng, mở khóa
-        if (oldOrd[f]) link = st.links.find(l => l && l.masked === oldOrd[f]);
-        if (!link) link = st.links.find(l => l && l.orderId && normId(l.orderId) === normId(oldOrd.id));
-      } else {
-        // Đơn cũ còn hạn dài (> 7 ngày) -> Ưu tiên CẤP LINK MỚI
-        link = null;
-      }
+    if (targetLink) {
+      link = targetLink;
+    } else if (expiredOver10Days && !targetLink) {
+      link = null; // Quá 10 ngày hết hạn: tự động cấp link mới
+      log("info", "fulfill", "Đơn cũ đã hết hạn trên 10 ngày → Cấp link mới", o.id, o.id);
     } else {
-      // Tất cả đơn cũ đã hết hạn -> khôi phục link cũ nếu còn trong kho, không có thì auto cấp link mới
-      for (const x of prevOrders) {
-        if (x[f]) {
-          const found = st.links.find((l) => l && l.masked === x[f]);
-          if (found) { link = found; break; }
+      // Ưu tiên tái sử dụng link của đơn gần nhất nếu gói chưa hết hạn hoặc hết hạn < 7 ngày
+      const oldOrd = prevOrders[0];
+      if (oldOrd) {
+        const isLifeOrd = isLifetime(oldOrd.expDate);
+        const expTime = isLifeOrd ? Infinity : parseDmy(oldOrd.expDate);
+        const daysFromExpiry = (now - expTime) / 864e5;
+        // Còn hạn, đúng ngày hết hạn hoặc hết hạn dưới 7 ngày -> tái sử dụng
+        if (isLifeOrd || daysFromExpiry <= 7) {
+          if (oldOrd[f]) link = st.links.find(l => l && l.masked === oldOrd[f]);
+          if (!link) link = st.links.find(l => l && l.orderId && normId(l.orderId) === normId(oldOrd.id));
         }
-      }
-      if (!link) {
-        link = st.links.find((l) => l && String(l.email || "").toLowerCase() === em);
       }
     }
   }
 
-  if (link) { // TÁI SỬ DỤNG & MỞ KHÓA LINK CŨ (Không tạo link mới)
+  if (link) { // TÁI SỬ DỤNG & MỞ KHÓA LINK CŨ (Giữ nguyên ID link sub ẩn cho khách)
     if (link.orig === LOCK_ORIG && link.origBackup) link.orig = link.origBackup;
     if (link.origBackup2 && !link.orig2) link.orig2 = link.origBackup2;
     delete link.origBackup;
@@ -996,8 +1010,12 @@ function fulfillOrder(st, o, me, log) {
     }
     Object.assign(link, { expDate: life ? "Vĩnh viễn" : o.expDate, createdTs: cts, date: linkDate(life ? "Vĩnh viễn" : o.expDate, cts), isLocked: false, orderId: o.id, pkg: o.pkgName || "", email: o.email || link.email });
     o[f] = link.masked; o.fulfilledAt = now; st.dL = st.dO = true;
-    log("ok", "fulfill", "Mở khóa & tái sử dụng link cũ", `${o.id} (${o.email}) → ${link.masked}`, o.id);
+    log("ok", "fulfill", `Quyết định: Giữ link cũ → Kết quả: Mở khóa & giữ nguyên link sub ẩn (${link.masked})`, o.id, o.id);
     return "renew";
+  }
+
+  if (finalDecision === "KEEP_EXISTING") {
+    log("warn", "fulfill", "Khách chọn giữ link cũ nhưng link cũ không thể khôi phục → Buộc phải cấp link mới", o.id, o.id);
   }
   // Đọc cấu hình Mapping Fulfillment động (đã nạp sẵn trong st, mặc định luôn là single_lx)
   const fulfillData = st.fulfillment_config || safeJson(st.cms?.fulfillment_config, {}) || {};
@@ -1463,7 +1481,25 @@ export default {
         if (rawPending) o = safeJson(rawPending, null);
       }
       if (!o) return J({ ok: false, error: "not_found" }, 404);
-      return J({ ok: true, order: pub(o, st) });
+      const em = String(o.email || b.q || "").toLowerCase();
+      const existingLinks = [];
+      const seenMasked = new Set();
+      for (const ord of st.orders) {
+        if (!ord || String(ord.email || "").toLowerCase() !== em) continue;
+        for (const f of ["info1", "info2", "info3"]) {
+          const lk = ord[f];
+          if (lk && !seenMasked.has(lk)) {
+            seenMasked.add(lk);
+            existingLinks.push({
+              url: lk,
+              orderId: ord.id,
+              pkgName: ord.pkgName || ord.pkg || "",
+              expDate: ord.expDate || ""
+            });
+          }
+        }
+      }
+      return J({ ok: true, order: pub(o, st), existingLinks });
     }
     if (p === "/api/public/order" && m === "POST") {
       const b = await body(), id = normId(b.id), pk = PKGS[b.pkgId], qty = Math.max(1, Math.min(120, parseInt(b.qty) || 1));
@@ -1535,7 +1571,10 @@ export default {
         discountVnd,
         couponCode: appliedCouponCode,
         days: daysOfPkg(pk, qty),
-        needSupport: !!b.needSupport, status: "pending", createdTs: now, date: fmtBank(now), dateCreated: dmy(now), expFinal: false, workerUrl: env.PUBLIC_WORKER_URL || url.origin, nickname: "", reason: "", info1: "", info2: "", info3: "", lockInfo: {}, sourceWeb: String(b.sourceWeb || "").slice(0, 80), orderType: isRenew ? "renew" : "new"
+        needSupport: !!b.needSupport, status: "pending", createdTs: now, date: fmtBank(now), dateCreated: dmy(now), expFinal: false, workerUrl: env.PUBLIC_WORKER_URL || url.origin, nickname: "", reason: "", info1: "", info2: "", info3: "", lockInfo: {}, sourceWeb: String(b.sourceWeb || "").slice(0, 80), orderType: isRenew ? "renew" : "new",
+        subLinkDecision: String(b.subLinkDecision || (isRenew ? "KEEP_EXISTING" : "CREATE_NEW")).trim(),
+        targetLink: String(b.targetLink || "").trim(),
+        renewOf: renewSrc ? renewSrc.id : (b.renewOf ? String(b.renewOf) : "")
       };
       o.expDate = computeExp(o, st.orders, now);
       st.orders.unshift(o);
@@ -1569,7 +1608,21 @@ export default {
       if (normStatus(o.status) !== "success") return J({ ok: false, error: "Đơn chưa kích hoạt" }, 409);
       if (o.pendingUpgrade) return J({ ok: false, error: "Đang có yêu cầu nâng gói chờ xác minh" }, 409);
       const cur = PKGS[o.pkgId] || Object.values(PKGS).find((x) => x.n === o.pkgName && x.d === o.pkgData);
-      const diff = tg.vnd - (cur ? cur.vnd : 0);
+
+      // Tính giá gói đích chuẩn hóa (Áp dụng giảm giá Flash Sale nếu gói đích thỏa điều kiện)
+      let targetVnd = tg.vnd;
+      const fs = (st.cms && st.cms.sales && st.cms.sales.campaign) || (st.cms && st.cms.settings && st.cms.settings.flashSale);
+      if (fs && fs.enabled && Number(fs.discountPercent) > 0) {
+        const fsStart = fs.startDate ? new Date(fs.startDate).getTime() : 0;
+        const fsEnd = fs.endDate ? new Date(fs.endDate).getTime() : Infinity;
+        const nowMs = NOW();
+        if (nowMs >= fsStart && nowMs <= fsEnd) {
+          const pct = Math.min(90, Math.max(1, Number(fs.discountPercent)));
+          targetVnd = Math.max(1000, Math.round((Number(tg.vnd || 0) * (100 - pct) / 100) / 1000) * 1000);
+        }
+      }
+
+      const diff = targetVnd - (cur ? cur.vnd : 0);
       if (!cur || diff <= 0) return J({ ok: false, error: "Vui lòng chọn gói cao hơn gói hiện tại" }, 400);
       o.pendingUpgrade = { ts: NOW(), targetPkg: tg.n, targetPkgData: tg.d, targetPkgId: b.pkgId, amount: diff * qty, amountCny: Math.round(Math.max(0, tg.cny - cur.cny) * qty * 100) / 100, qty, method: String(b.method || "Ngân hàng VN") };
       o.upgradeStatus = "pending"; o.isUpgrade = true;
@@ -1970,7 +2023,7 @@ export default {
         }
         const ordersData = JSON.stringify(ordersList);
         const [l, pl, dr] = await Promise.all(["ALL_LINKS", "LINK_POOL", "ALL_DATA_REQUESTS"].map((k) => KV.get(k)));
-        return RAW(`{"orders":${ordersData},"links":${l || "[]"},"pool":${pl || "[]"},"data_requests":${dr || "[]"}${sbError ? `,"sbError":${JSON.stringify(sbError)}` : ""}}`);
+        return RAW(`{"orders":${ordersData},"links":${l || "[]"},"pool":${pl || "[]"},"data_requests":${dr || "[]"}${sbError ? `,"sbError":${JSON.stringify(sbError)}` : ""},"isTest":${isTest}}`);
       }
       if (p === "/api/admin/status") {
         const cron = safeJson(await KV.get("CRON_LAST_RUN"), null), r = await d1(env, "/api/admin/logs?limit=1");
