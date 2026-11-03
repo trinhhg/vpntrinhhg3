@@ -3,7 +3,15 @@
  * Tách từ admin.html theo kiến trúc Giai đoạn 3
  */
 
-import { WORKER_URL, getSiteKey, getAdminToken, setAdminToken, clearAdminToken, api, aj } from './api.js';
+import {
+  WORKER_URL,
+  getSiteKey,
+  getAdminToken,
+  setAdminToken,
+  clearAdminToken,
+  api,
+  aj
+} from './api.js';
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
 
@@ -40,7 +48,9 @@ class CtaButtonBlot extends BlockEmbed {
   static value(node) {
     const jsonStr = node.getAttribute('data-cta-json');
     if (jsonStr) {
-      try { return JSON.parse(jsonStr); } catch(e){}
+      try {
+        return JSON.parse(jsonStr);
+      } catch (e) {}
     }
     const a = node.querySelector('a');
     let align = 'left';
@@ -84,21 +94,99 @@ if (typeof window !== 'undefined') {
 }
 
 import {
-  $, arr, esc, q, cm, genId, genHex, normId, isLife, normSt, trimNum,
-  VND_SEP, fmtVnd, toast, cp, sleep, autoGrow, parseAny, fmtBank, oTs
+  $,
+  arr,
+  esc,
+  q,
+  cm,
+  genId,
+  genHex,
+  normId,
+  isLife,
+  normSt,
+  trimNum,
+  VND_SEP,
+  fmtVnd,
+  toast,
+  cp,
+  sleep,
+  autoGrow,
+  parseAny,
+  fmtBank,
+  oTs
 } from './shared.js';
-
 
 // ===================== CẤU HÌNH =====================
 const SITE_KEY = getSiteKey();
 const API = WORKER_URL;
-const PDS={1:"https://vpntrinhhg.pages.dev",2:"https://vpntrinhhg2.pages.dev",3:"https://vpntrinhhg3.pages.dev"};
-let PD=/pages\.dev$/.test(location.hostname)?location.origin:PDS[3];
-const GH_REPO="trinhhg/vpntrinhhg3";
-const PKG_LIST=[["t1","Gói 1 tháng - 60,000VND / $2.5 / ¥15.5 (100GB)",30],["t2","Gói 1 tháng - 70,000VND / $3 / ¥18 (500GB)",30],["c1","Gói 1 tháng - 80,000VND / $3.5 / ¥20.5 (1000GB)",30],["c2","Gói Cao Cấp - 200,000VND / $8 / ¥50 (3000GB)",30],["c3","Gói 1 Năm - 799,000VND / $30 / ¥199 (300GB/tháng)",365],["d1","Không Giới Hạn - 200,000VND / $8 / ¥52 (200GB)",0],["d2","Không Giới Hạn - 399,000VND / $16 / ¥102 (1000GB)",0],["d3","Không Giới Hạn - 999,000VND / $40 / ¥256 (5000GB)",0],["o1","[Giá cũ] Gói 1 tháng - 50,000VND / ¥12.5 (100GB)",30],["o2","[Giá cũ] Gói 1 tháng - 60,000VND / ¥15 (500GB)",30],["o3","[Giá cũ] Gói 1 tháng - 70,000VND / ¥17.5 (1000GB)",30]];
-const TABS=[["t-ord","fa-box","Đơn hàng"],["t-pkg","fa-tags","Bán hàng"],["t-rev","fa-chart-pie","Doanh thu"],["t-trans","fa-file-invoice-dollar","Đối soát"],["t-check","fa-clipboard-check","Kiểm tra"],["t-lnk","fa-link","Link Sub"],["t-dead","fa-ban","Đã xóa"],["t-mail","fa-envelope","Soạn mail"],["t-cms","fa-book","H.Dẫn"],["t-settings","fa-cog","Cài đặt"],["t-more","fa-ellipsis-h","Thêm"]];
+const PDS = {
+  1: "https://vpntrinhhg.pages.dev",
+  2: "https://vpntrinhhg2.pages.dev",
+  3: "https://vpntrinhhg3.pages.dev"
+};
+let PD = /pages\.dev$/.test(location.hostname) ? location.origin : PDS[3];
+const GH_REPO = "trinhhg/vpntrinhhg3";
+const PKG_LIST = [["t1", "Gói 1 tháng - 60,000VND / $2.5 / ¥15.5 (100GB)", 30], ["t2", "Gói 1 tháng - 70,000VND / $3 / ¥18 (500GB)", 30], ["c1", "Gói 1 tháng - 80,000VND / $3.5 / ¥20.5 (1000GB)", 30], ["c2", "Gói Cao Cấp - 200,000VND / $8 / ¥50 (3000GB)", 30], ["c3", "Gói 1 Năm - 799,000VND / $30 / ¥199 (300GB/tháng)", 365], ["d1", "Không Giới Hạn - 200,000VND / $8 / ¥52 (200GB)", 0], ["d2", "Không Giới Hạn - 399,000VND / $16 / ¥102 (1000GB)", 0], ["d3", "Không Giới Hạn - 999,000VND / $40 / ¥256 (5000GB)", 0], ["o1", "[Giá cũ] Gói 1 tháng - 50,000VND / ¥12.5 (100GB)", 30], ["o2", "[Giá cũ] Gói 1 tháng - 60,000VND / ¥15 (500GB)", 30], ["o3", "[Giá cũ] Gói 1 tháng - 70,000VND / ¥17.5 (1000GB)", 30]];
+const TABS = [["t-ord", "fa-box", "Đơn hàng"], ["t-pkg", "fa-tags", "Bán hàng"], ["t-rev", "fa-chart-pie", "Doanh thu"], ["t-trans", "fa-file-invoice-dollar", "Đối soát"], ["t-check", "fa-clipboard-check", "Kiểm tra"], ["t-lnk", "fa-link", "Link Sub"], ["t-dead", "fa-ban", "Đã xóa"], ["t-mail", "fa-envelope", "Soạn mail"], ["t-cms", "fa-book", "H.Dẫn"], ["t-settings", "fa-cog", "Cài đặt"], ["t-more", "fa-ellipsis-h", "Thêm"]];
 // PKG_DB: giá hiện tại + giá cũ (o1/o2/o3) để nhận diện dữ liệu lịch sử — TUYỆT ĐỐI không quy đổi totalVnd của đơn cũ sang giá mới.
-const PKG_DB={t1:{n:"Gói 1 tháng",d:"100GB",vnd:60000,cny:15.5,m:1},t2:{n:"Gói 1 tháng",d:"500GB",vnd:70000,cny:18,m:1},c1:{n:"Gói 1 tháng",d:"1000GB",vnd:80000,cny:20.5,m:1},c2:{n:"Gói Cao Cấp",d:"3000GB",vnd:200000,cny:50,m:1},c3:{n:"Gói 1 Năm",d:"300GB/tháng",vnd:799000,cny:199,m:12},d1:{n:"Không Giới Hạn",d:"200GB",vnd:200000,cny:52,m:0},d2:{n:"Không Giới Hạn",d:"1000GB",vnd:399000,cny:102,m:0},d3:{n:"Không Giới Hạn",d:"5000GB",vnd:999000,cny:256,m:0},o1:{n:"Gói 1 tháng",d:"100GB",vnd:50000,cny:12.5,m:1,old:true},o2:{n:"Gói 1 tháng",d:"500GB",vnd:60000,cny:15,m:1,old:true},o3:{n:"Gói 1 tháng",d:"1000GB",vnd:70000,cny:17.5,m:1,old:true}};
+const PKG_DB = {
+  t1: { n: "Gói 1 tháng", d: "100GB", vnd: 60000, cny: 15.5, m: 1 },
+  t2: { n: "Gói 1 tháng", d: "500GB", vnd: 70000, cny: 18, m: 1 },
+  c1: { n: "Gói 1 tháng", d: "1000GB", vnd: 80000, cny: 20.5, m: 1 },
+  c2: { n: "Gói Cao Cấp", d: "3000GB", vnd: 200000, cny: 50, m: 1 },
+  c3: {
+    n: "Gói 1 Năm",
+    d: "300GB/tháng",
+    vnd: 799000,
+    cny: 199,
+    m: 12
+  },
+  d1: {
+    n: "Không Giới Hạn",
+    d: "200GB",
+    vnd: 200000,
+    cny: 52,
+    m: 0
+  },
+  d2: {
+    n: "Không Giới Hạn",
+    d: "1000GB",
+    vnd: 399000,
+    cny: 102,
+    m: 0
+  },
+  d3: {
+    n: "Không Giới Hạn",
+    d: "5000GB",
+    vnd: 999000,
+    cny: 256,
+    m: 0
+  },
+  o1: {
+    n: "Gói 1 tháng",
+    d: "100GB",
+    vnd: 50000,
+    cny: 12.5,
+    m: 1,
+    old: true
+  },
+  o2: {
+    n: "Gói 1 tháng",
+    d: "500GB",
+    vnd: 60000,
+    cny: 15,
+    m: 1,
+    old: true
+  },
+  o3: {
+    n: "Gói 1 tháng",
+    d: "1000GB",
+    vnd: 70000,
+    cny: 17.5,
+    m: 1,
+    old: true
+  }
+};
 
 // ===================== TIỆN ÍCH =====================
 // $ from shared.js
@@ -111,7 +199,13 @@ const PKG_DB={t1:{n:"Gói 1 tháng",d:"100GB",vnd:60000,cny:15.5,m:1},t2:{n:"Gó
 // normId from shared.js
 // isLife from shared.js
 // normSt from shared.js
-const getT=m=>{try{const u=new URL(m);return u.searchParams.get("top")||u.searchParams.get("liki")||u.searchParams.get("lidj")||u.searchParams.get("kidj")||u.searchParams.get("OwO")||u.searchParams.get("token")||u.searchParams.get("oos")||"";}catch{return "";}};
+const getT = m => {
+  try {
+    const u = new URL(m);
+    return u.searchParams.get("top") || u.searchParams.get("liki") || u.searchParams.get("lidj") || u.searchParams.get("kidj") || u.searchParams.get("OwO") || u.searchParams.get("token") || u.searchParams.get("oos") || "";
+  } catch { return "";
+  }
+};
 // trimNum from shared.js
 // VND_SEP from shared.js
 // fmtVnd from shared.js
@@ -141,114 +235,242 @@ const expEnd = e => {
 const monthInfo = ts => {
   if (!ts) return { key: "000000", label: "Không rõ tháng" };
   const d = dayjs(ts).tz(TZN());
-  return { key: d.format("YYYYMM"), label: `Tháng ${d.format("M")} năm ${d.format("YYYY")}` };
+  return {
+    key: d.format("YYYYMM"),
+    label: `Tháng ${d.format("M")} năm ${d.format("YYYY")}`
+  };
 };
 const fmtFull = (ms, tz) => dayjs(ms).tz(tz).format("HH:mm:ss DD/MM/YYYY");
-function tickClocks() { const a = $("clkVN"); if (!a) return; a.textContent = fmtFull(Date.now(), "Asia/Ho_Chi_Minh"); $("clkCN").textContent = fmtFull(Date.now(), "Asia/Shanghai"); $("clkWeb").textContent = fmtFull(nowMs(), TZN()); }
-function paintTimeUI(){
- const s=cmsDb.settings,tz=s.tz||"VN",sim=!!s.simMode;
- ["VN","CN"].forEach(k=>{const el=$("tzCard"+k);if(!el)return;const on=tz===k;el.classList.toggle("border-indigo-500",on);el.classList.toggle("bg-indigo-50",on);el.classList.toggle("border-slate-200",!on);});
- const b=$("simBadge");if(b){b.className="text-[11px] font-black px-2 py-1 rounded "+(sim?"bg-purple-100 text-purple-700":"bg-emerald-100 text-emerald-700");b.textContent=sim?"ĐANG CHẠY GIỜ TÙY CHỈNH":"ĐANG CHẠY GIỜ THỰC";}
- const i=$("simInput");if(i&&!i.value)i.value=new Date(nowMs()+off()*36e5).toISOString().slice(0,16);tickClocks();}
-async function pickTz(k){cmsDb.settings.tz=k;paintTimeUI();try{await saveCmsDb();renderOrd();renderLinks();toast("Đã chọn múi giờ "+(k==="CN"?"Trung Quốc (UTC+8)":"Việt Nam (UTC+7)"));}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
-async function applySim(){
- const m=String($("simInput").value||"").match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);if(!m)return toast("Chọn ngày giờ trước!","err");
- const target=Date.UTC(+m[1],m[2]-1,+m[3],+m[4],+m[5])-off()*36e5,s=cmsDb.settings;s.simMode=true;s.simOffset=target-Date.now();
- try{await saveCmsDb();paintTimeUI();renderOrd();renderLinks();toast("Web đang chạy theo giờ tùy chỉnh");logEvent("warn","Giờ hệ thống","Bật giờ tùy chỉnh: "+fmtBank(target));}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
-async function clearSim(){const s=cmsDb.settings;s.simMode=false;s.simOffset=0;try{await saveCmsDb();$("simInput").value="";paintTimeUI();renderOrd();renderLinks();toast("Đã về giờ thực");logEvent("ok","Giờ hệ thống","Tắt giờ tùy chỉnh");}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
+function tickClocks() {
+  const a = $("clkVN");
+  if (!a) return;
+  a.textContent = fmtFull(Date.now(), "Asia/Ho_Chi_Minh");
+  $("clkCN").textContent = fmtFull(Date.now(), "Asia/Shanghai");
+  $("clkWeb").textContent = fmtFull(nowMs(), TZN());
+}
+function paintTimeUI() {
+  const s = cmsDb.settings, tz = s.tz || "VN", sim = !!s.simMode;
+  ["VN", "CN"].forEach(k => {
+    const el = $("tzCard" + k);
+    if (!el) return;
+    const on = tz === k;
+    el.classList.toggle("border-indigo-500", on);
+    el.classList.toggle("bg-indigo-50", on);
+    el.classList.toggle("border-slate-200", !on);
+  });
+  const b = $("simBadge");
+  if (b) {
+    b.className = "text-[11px] font-black px-2 py-1 rounded " + (sim ? "bg-purple-100 text-purple-700" : "bg-emerald-100 text-emerald-700");
+    b.textContent = sim ? "ĐANG CHẠY GIỜ TÙY CHỈNH" : "ĐANG CHẠY GIỜ THỰC";
+  }
+  const i = $("simInput");
+  if (i && !i.value) i.value = new Date(nowMs() + off() * 36e5).toISOString().slice(0, 16);
+  tickClocks();
+}
+async function pickTz(k) {
+  cmsDb.settings.tz = k;
+  paintTimeUI();
+  try {
+    await saveCmsDb();
+    renderOrd();
+    renderLinks();
+    toast("Đã chọn múi giờ " + (k === "CN" ? "Trung Quốc (UTC+8)" : "Việt Nam (UTC+7)"));
+  } catch (e) {
+    toast("Lỗi lưu: " + e.message, "err");
+  }
+}
+async function applySim() {
+  const m = String($("simInput").value || "").match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!m) return toast("Chọn ngày giờ trước!", "err");
+  const target = Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5]) - off() * 36e5, s = cmsDb.settings;
+  s.simMode = true;
+  s.simOffset = target - Date.now();
+  try {
+    await saveCmsDb();
+    paintTimeUI();
+    renderOrd();
+    renderLinks();
+    toast("Web đang chạy theo giờ tùy chỉnh");
+    logEvent("warn", "Giờ hệ thống", "Bật giờ tùy chỉnh: " + fmtBank(target));
+  } catch (e) {
+    toast("Lỗi lưu: " + e.message, "err");
+  }
+}
+async function clearSim() {
+  const s = cmsDb.settings;
+  s.simMode = false;
+  s.simOffset = 0;
+  try {
+    await saveCmsDb();
+    $("simInput").value = "";
+    paintTimeUI();
+    renderOrd();
+    renderLinks();
+    toast("Đã về giờ thực");
+    logEvent("ok", "Giờ hệ thống", "Tắt giờ tùy chỉnh");
+  } catch (e) {
+    toast("Lỗi lưu: " + e.message, "err");
+  }
+}
 
 // ===================== GÓI / GIÁ =====================
-const OLD_BY_DATA={"100GB":"o1","500GB":"o2","1000GB":"o3"};
-function pkgOf(o){
- if(!o) return null;
- if(o.pkgId){
-   if(PKG_DB[o.pkgId]) return PKG_DB[o.pkgId];
-   if(Array.isArray(adminPkgsList)){
-     const dp = adminPkgsList.find(x => x.id === o.pkgId);
-     if(dp) return { n: dp.name || dp.n, d: dp.data || dp.d, vnd: Number(dp.vnd)||0, cny: Number(dp.cny)||0, m: dp.time === "lifetime" ? 0 : Number(dp.time)||1 };
-   }
- }
- const total=Number(o.totalVnd)||0,data=String(o.pkgData||"").toUpperCase();
- if(total>0&&OLD_BY_DATA[data]){const op=PKG_DB[OLD_BY_DATA[data]];const np=Object.values(PKG_DB).find(p=>!p.old&&p.d===data);
-  if(op&&total%op.vnd===0&&total/op.vnd<=36)return op;
-  if(np&&total%np.vnd===0&&total/np.vnd<=36)return np;}
- const found = Object.values(PKG_DB).find(p=>!p.old&&p.n===o.pkgName&&p.d===o.pkgData)||Object.values(PKG_DB).find(p=>p.n===o.pkgName&&p.d===o.pkgData);
- if(found) return found;
- if(Array.isArray(adminPkgsList)){
-   const dp = adminPkgsList.find(p => (p.name === o.pkgName || p.id === o.pkgId) && (!o.pkgData || p.data === o.pkgData));
-   if(dp) return { n: dp.name || dp.n, d: dp.data || dp.d, vnd: Number(dp.vnd)||0, cny: Number(dp.cny)||0, m: dp.time === "lifetime" ? 0 : Number(dp.time)||1 };
- }
- return null;
+const OLD_BY_DATA = { "100GB": "o1", "500GB": "o2", "1000GB": "o3" };
+function pkgOf(o) {
+  if (!o) return null;
+  if (o.pkgId) {
+    if (PKG_DB[o.pkgId]) return PKG_DB[o.pkgId];
+    if (Array.isArray(adminPkgsList)) {
+      const dp = adminPkgsList.find(x => x.id === o.pkgId);
+      if (dp) return {
+        n: dp.name || dp.n,
+        d: dp.data || dp.d,
+        vnd: Number(dp.vnd) || 0,
+        cny: Number(dp.cny) || 0,
+        m: dp.time === "lifetime" ? 0 : Number(dp.time) || 1
+      };
+    }
+  }
+  const total = Number(o.totalVnd) || 0, data = String(o.pkgData || "").toUpperCase();
+  if (total > 0 && OLD_BY_DATA[data]) {
+    const op = PKG_DB[OLD_BY_DATA[data]];
+    const np = Object.values(PKG_DB).find(p => !p.old && p.d === data);
+    if (op && total % op.vnd === 0 && total / op.vnd <= 36) return op;
+    if (np && total % np.vnd === 0 && total / np.vnd <= 36) return np;
+  }
+  const found = Object.values(PKG_DB).find(p => !p.old && p.n === o.pkgName && p.d === o.pkgData) || Object.values(PKG_DB).find(p => p.n === o.pkgName && p.d === o.pkgData);
+  if (found) return found;
+  if (Array.isArray(adminPkgsList)) {
+    const dp = adminPkgsList.find(p => (p.name === o.pkgName || p.id === o.pkgId) && (!o.pkgData || p.data === o.pkgData));
+    if (dp) return {
+      n: dp.name || dp.n,
+      d: dp.data || dp.d,
+      vnd: Number(dp.vnd) || 0,
+      cny: Number(dp.cny) || 0,
+      m: dp.time === "lifetime" ? 0 : Number(dp.time) || 1
+    };
+  }
+  return null;
 }
-const pkgLabel=o=>{const p=pkgOf(o);return p?`${p.n} - ${fmtVnd(p.vnd)}VND${p.old?" (giá cũ)":""}`:(o.pkgName||"—");};
+const pkgLabel = o => {
+  const p = pkgOf(o);
+  return p ? `${p.n} - ${fmtVnd(p.vnd)}VND${p.old?" (giá cũ)":""}` : (o.pkgName || "—");
+};
 // Số tháng: days/30; doanh thu chỉ tính phần nguyên (6.5 tháng => 6). Không làm tròn lên.
-const fmtMonths=d=>{d=Number(d)||0;return d>0?String(Math.floor(d/30)):"";};
-function ordMonths(o){const p=pkgOf(o);if(p&&p.m===0)return 0;const d=Number(o.days);if(d>0)return Math.floor(d/30);return (p?p.m:1)*(Number(o.qty)||1);}
-function webLabel(v,wu){const t=String(v||"")+" "+String(wu||"");if(/vpntrinhhg3|lucastanora/i.test(t))return "Web 3";if(/vpntrinhhg2|onepiece/i.test(t))return "Web 2";if(/vpntrinhhg\.|doicucden/i.test(t))return "Web 1";return v?String(v).replace(/^https?:\/\//,"").replace(/\/$/,""):"—";}
+const fmtMonths = d => {
+  d = Number(d) || 0;
+  return d > 0 ? String(Math.floor(d / 30)) : "";
+};
+function ordMonths(o) {
+  const p = pkgOf(o);
+  if (p && p.m === 0) return 0;
+  const d = Number(o.days);
+  if (d > 0) return Math.floor(d / 30);
+  return (p ? p.m : 1) * (Number(o.qty) || 1);
+}
+function webLabel(v, wu) {
+  const t = String(v || "") + " " + String(wu || "");
+  if (/vpntrinhhg3|lucastanora/i.test(t)) return "Web 3";
+  if (/vpntrinhhg2|onepiece/i.test(t)) return "Web 2";
+  if (/vpntrinhhg\.|doicucden/i.test(t)) return "Web 1";
+  return v ? String(v).replace(/^https?:\/\//, "").replace(/\/$/, "") : "—";
+}
 let myWebIndex = /vpntrinhhg2|onepiece/i.test(location.hostname) ? 2 : /vpntrinhhg\.|doicucden/i.test(location.hostname) ? 1 : 3;
-function getMe(){
+function getMe() {
   const n = myWebIndex || 3;
   return { n, field: "info" + n, PD: PDS[n] || PDS[3] };
 }
-function linkBottom(l){
- if (!l) return '<span class="text-purple-600 font-bold">Vĩnh viễn</span>';
- let exp = "";
- if (l.orderId) {
-   const od = ordersDb.find(o => normId(o.id) === normId(l.orderId));
-   if (od && od.expDate) exp = od.expDate;
- }
- if (!exp && l.masked) {
-   const od = ordersDb.find(o => o.info1 === l.masked || o.info2 === l.masked || o.info3 === l.masked);
-   if (od && od.expDate) exp = od.expDate;
- }
- if (!exp) exp = l.expDate || "";
+function linkBottom(l) {
+  if (!l) return '<span class="text-purple-600 font-bold">Vĩnh viễn</span>';
+  let exp = "";
+  if (l.orderId) {
+    const od = ordersDb.find(o => normId(o.id) === normId(l.orderId));
+    if (od && od.expDate) exp = od.expDate;
+  }
+  if (!exp && l.masked) {
+    const od = ordersDb.find(o => o.info1 === l.masked || o.info2 === l.masked || o.info3 === l.masked);
+    if (od && od.expDate) exp = od.expDate;
+  }
+  if (!exp) exp = l.expDate || "";
 
- if (!exp) {
-   return '<span class="text-slate-400 font-medium">Chưa xác định</span>';
- }
- if (isLife(exp)) {
-   return '<span class="text-purple-600 font-bold">Vĩnh viễn</span>';
- }
+  if (!exp) {
+    return '<span class="text-slate-400 font-medium">Chưa xác định</span>';
+  }
+  if (isLife(exp)) {
+    return '<span class="text-purple-600 font-bold">Vĩnh viễn</span>';
+  }
 
- // Chuẩn hóa xóa bỏ giờ HH:mm, chỉ lấy ngày DD/MM/YYYY
- const cleanDmy = String(exp).trim().split(/\s+/)[0];
- try {
-   if (typeof dayjs !== "undefined") {
-     const ms = parseAny(cleanDmy);
-     if (ms > 0) {
-       const target = dayjs(ms).tz(TZN()).startOf('day');
-       const now = dayjs(nowMs()).tz(TZN()).startOf('day');
-       const daysLeft = target.diff(now, 'day');
-       if (daysLeft >= 0 && daysLeft <= 3) {
-         return `<span class="text-orange-500 font-bold">${esc(cleanDmy)}</span>`;
-       }
-       if (daysLeft < 0) {
-         return `<span class="text-red-600 font-bold">${esc(cleanDmy)}</span>`;
-       }
-     }
-   }
- } catch(e) {}
+  // Chuẩn hóa xóa bỏ giờ HH:mm, chỉ lấy ngày DD/MM/YYYY
+  const cleanDmy = String(exp).trim().split(/\s+/)[0];
+  try {
+    if (typeof dayjs !== "undefined") {
+      const ms = parseAny(cleanDmy);
+      if (ms > 0) {
+        const target = dayjs(ms).tz(TZN()).startOf('day');
+        const now = dayjs(nowMs()).tz(TZN()).startOf('day');
+        const daysLeft = target.diff(now, 'day');
+        if (daysLeft >= 0 && daysLeft <= 3) {
+          return `<span class="text-orange-500 font-bold">${esc(cleanDmy)}</span>`;
+        }
+        if (daysLeft < 0) {
+          return `<span class="text-red-600 font-bold">${esc(cleanDmy)}</span>`;
+        }
+      }
+    }
+  } catch (e) {}
 
- return `<span class="text-slate-500 font-medium">${esc(cleanDmy)}</span>`;
+  return `<span class="text-slate-500 font-medium">${esc(cleanDmy)}</span>`;
 }
-const payOf=o=>/alipay/i.test(o.method||"")?"Alipay":/weixin|wechat/i.test(o.method||"")?"Weixin":"Bank";
+const payOf = o => /alipay/i.test(o.method || "") ? "Alipay" : /weixin|wechat/i.test(o.method || "") ? "Weixin" : "Bank";
 
 // ===================== API + ĐĂNG NHẬP =====================
-let TOKEN=localStorage.getItem(SITE_KEY+"_tok")||"";
-let myDev=localStorage.getItem(SITE_KEY+"_dev")||"";
-if(!myDev){myDev="DEV-"+genHex(9).toUpperCase();localStorage.setItem(SITE_KEY+"_dev",myDev);}
+let TOKEN = localStorage.getItem(SITE_KEY + "_tok") || "";
+let myDev = localStorage.getItem(SITE_KEY + "_dev") || "";
+if (!myDev) {
+  myDev = "DEV-" + genHex(9).toUpperCase();
+  localStorage.setItem(SITE_KEY + "_dev", myDev);
+}
 // api from ./api.js
 // aj from api.js
-const logEvent=(lvl,act,msg,ref)=>api("/api/admin/log",{method:"POST",body:{lvl,act,msg,ref}}).catch(()=>{});
-function toLogin(msg){TOKEN="";localStorage.removeItem(SITE_KEY+"_tok");document.documentElement.classList.remove("has-tok");$("main").classList.add("hidden");$("hdr").classList.add("hidden");$("hdr").style.display="none";$("loginWrap").classList.remove("hidden");if(msg)toast(msg,"warn");}
-async function doLogin(){
- const btn=$("loginBtn");btn.disabled=true;
- try{const r=await api("/api/admin/login",{method:"POST",body:{password:$("pwInput").value,dev:{id:myDev,ua:navigator.userAgent.slice(0,70)}},noRedirect:true});const j=await r.json().catch(()=>({}));
-  if(r.ok&&j.token){TOKEN=j.token;localStorage.setItem(SITE_KEY+"_tok",TOKEN);$("pwInput").value="";startApp(true);}else toast(j.error||"Đăng nhập thất bại","err");
- }catch(e){toast("Không kết nối được Worker: "+e.message,"err");}
- btn.disabled=false;}
-function doLogout(){localStorage.removeItem(SITE_KEY+"_tok");location.reload();}
-function resetAndHardReload(){
+const logEvent = (lvl, act, msg, ref) => api("/api/admin/log", { method: "POST", body: { lvl, act, msg, ref } }).catch(() => {});
+function toLogin(msg) {
+  TOKEN = "";
+  localStorage.removeItem(SITE_KEY + "_tok");
+  document.documentElement.classList.remove("has-tok");
+  $("main").classList.add("hidden");
+  $("hdr").classList.add("hidden");
+  $("hdr").style.display = "none";
+  $("loginWrap").classList.remove("hidden");
+  if (msg) toast(msg, "warn");
+}
+async function doLogin() {
+  const btn = $("loginBtn");
+  btn.disabled = true;
+  try {
+    const r = await api("/api/admin/login", {
+      method: "POST",
+      body: {
+        password: $("pwInput").value,
+        dev: { id: myDev, ua: navigator.userAgent.slice(0, 70) }
+      },
+      noRedirect: true
+    });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok && j.token) {
+      TOKEN = j.token;
+      localStorage.setItem(SITE_KEY + "_tok", TOKEN);
+      $("pwInput").value = "";
+      startApp(true);
+    } else toast(j.error || "Đăng nhập thất bại", "err");
+  } catch (e) {
+    toast("Không kết nối được Worker: " + e.message, "err");
+  }
+  btn.disabled = false;
+}
+function doLogout() {
+  localStorage.removeItem(SITE_KEY + "_tok");
+  location.reload();
+}
+function resetAndHardReload() {
   try {
     localStorage.clear();
     sessionStorage.clear();
@@ -256,59 +478,139 @@ function resetAndHardReload(){
       document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
     });
     if ('caches' in window) {
-      caches.keys().then(names => { names.forEach(name => caches.delete(name)); });
+      caches.keys().then(names => {
+        names.forEach(name => caches.delete(name));
+      });
     }
-  } catch(e) {}
+  } catch (e) {}
   window.location.reload(true);
 }
 
 // ===================== DỮ LIỆU =====================
-let ordersDb=[],linksDb=[],linkPoolDb=[],dataReqDb=[],deadDb=[],devicesDb=[],cmsDb={settings:{},link_origins:{}},guides={},txData=[],txSince="",txPollT=null,txFails=0;
-let curOrdTab="success",curTxTab="giamsat",logsData={worker:[],d1:[]},lastSig={},modalInit={},modalNew=false,modalOldId="",upgInit="";
-const isMailMaster=()=>cmsDb.settings.emailRole==="master";
-const expLocked=()=>!!(cmsDb.settings&&cmsDb.settings.lockExpiry);
-const lockFulfillOn=()=>!!(cmsDb.settings&&cmsDb.settings.lockFulfill);
-const mailOnSaveOn=()=>localStorage.getItem(SITE_KEY+"_mailOnSave")!=="0";
-const manualEditOn=()=>localStorage.getItem(SITE_KEY+"_manualEdit")==="1";
-function setManualEdit(v){
-  localStorage.setItem(SITE_KEY+"_manualEdit", v ? "1" : "0");
+let ordersDb = [], linksDb = [], linkPoolDb = [], dataReqDb = [], deadDb = [], devicesDb = [], cmsDb = { settings: {}, link_origins: {} }, guides = {}, txData = [], txSince = "", txPollT = null, txFails = 0;
+let curOrdTab = "success", curTxTab = "giamsat", logsData = { worker: [], d1: [] }, lastSig = {}, modalInit = {}, modalNew = false, modalOldId = "", upgInit = "";
+const isMailMaster = () => cmsDb.settings.emailRole === "master";
+const expLocked = () => !!(cmsDb.settings && cmsDb.settings.lockExpiry);
+const lockFulfillOn = () => !!(cmsDb.settings && cmsDb.settings.lockFulfill);
+const mailOnSaveOn = () => localStorage.getItem(SITE_KEY + "_mailOnSave") !== "0";
+const manualEditOn = () => localStorage.getItem(SITE_KEY + "_manualEdit") === "1";
+function setManualEdit(v) {
+  localStorage.setItem(SITE_KEY + "_manualEdit", v ? "1" : "0");
   toast(v ? "Đã BẬT Sửa tay — cho phép sửa 3 ô định tuyến, lưu xong không bị ghi đè" : "Đã TẮT Sửa tay — 3 ô link định tuyến ở chế độ chỉ đọc");
 }
 
 // Link đã xóa KHÔNG được quay lại: mọi link có id nằm trong "Đã xóa" (server) hoặc trong tombstone cục bộ đều bị loại khỏi danh sách active
 // trước khi hiển thị / trước khi ghi ngược lên ALL_LINKS (tự chữa nếu Worker/Cron/nguồn cũ ghi đè lại).
-const tombGet=()=>{try{return JSON.parse(localStorage.getItem(SITE_KEY+"_delLinks")||"[]");}catch{return[];}};
-const tombSet=a=>{try{localStorage.setItem(SITE_KEY+"_delLinks",JSON.stringify(a.slice(-600)));}catch{}};
-const addTomb=l=>{const a=tombGet();if(!a.some(t=>t.id===l.id))a.push({id:l.id,ts:Date.now()});tombSet(a);};
-const rmTomb=id=>tombSet(tombGet().filter(t=>t.id!==id));
-const isDeleted=l=>!!l&&(deadDb.some(d=>d.id===l.id)||tombGet().some(t=>t.id===l.id));
-function healLinks(){const n=linksDb.length;linksDb=linksDb.filter(l=>!isDeleted(l));return n-linksDb.length;}
+const tombGet = () => {
+  try {
+    return JSON.parse(localStorage.getItem(SITE_KEY + "_delLinks") || "[]");
+  } catch { return [];
+  }
+};
+const tombSet = a => {
+  try {
+    localStorage.setItem(SITE_KEY + "_delLinks", JSON.stringify(a.slice(-600)));
+  } catch {}
+};
+const addTomb = l => {
+  const a = tombGet();
+  if (!a.some(t => t.id === l.id)) a.push({ id: l.id, ts: Date.now() });
+  tombSet(a);
+};
+const rmTomb = id => tombSet(tombGet().filter(t => t.id !== id));
+const isDeleted = l => !!l && (deadDb.some(d => d.id === l.id) || tombGet().some(t => t.id === l.id));
+function healLinks() {
+  const n = linksDb.length;
+  linksDb = linksDb.filter(l => !isDeleted(l));
+  return n - linksDb.length;
+}
 
-function applyPoll(j){if(!j)return;ordersDb=arr(j.orders);linksDb=arr(j.links);healLinks();linkPoolDb=arr(j.pool);dataReqDb=arr(j.data_requests);}
-async function fetchAll(msg){
- try{
-  const [poll,cms,dead,devs,g]=await Promise.all([aj("/api/admin/poll"),aj("/api/cms"),aj("/api/deadlinks"),aj("/api/devices"),aj("/api/guides")]);
-  deadDb=arr(dead);applyPoll(poll);cmsDb=cms&&typeof cms==="object"&&!Array.isArray(cms)?cms:{};cmsDb.settings=cmsDb.settings||{};cmsDb.link_origins=cmsDb.link_origins||{};
-  devicesDb=arr(devs);guides=g&&typeof g==="object"?g:{};
-  const healed=arr(poll&&poll.links).length-linksDb.length;
-  // AGENTS.md Quy tắc 40 & 44: fetchAll chỉ đọc dữ liệu hiển thị, không tự ý ghi KV khi vừa tải trang
-  linksDb.forEach(l=>{if(l.orig&&l.orig!=="Da_bi_khoa"&&!linkPoolDb.find(p=>p.url===l.orig)&&!isLockedPoolUrl(l.orig)){linkPoolDb.push({id:"POOL-"+Date.now()+Math.floor(Math.random()*100),url:l.orig,gb:"",remainGb:"",exp:l.expDate||"",max:30});}});
-  lastSig={o:JSON.stringify(ordersDb),l:JSON.stringify(linksDb),p:JSON.stringify(linkPoolDb),d:JSON.stringify(dataReqDb)};
-  renderOrd();renderCheckTab();renderDataRequests();renderLinks();renderDead();renderDev();loadSettingsUI();renderCouponAdmin();renderFlashSaleAdmin();if(!curArtsReady)initGuides();
-  loadStatus();if(msg)toast("Đã làm mới dữ liệu!");
- }catch(e){if(e.message!=="401")toast("Lỗi tải dữ liệu: "+e.message,"err");}}
-const isLockedPoolUrl=u=>u==="Da_bi_khoa";
-async function pollMain(){
- if(document.hidden||!TOKEN||!$("mOrd").classList.contains("hidden"))return;
- try{const j=await aj("/api/admin/poll");
-  const s={o:JSON.stringify(arr(j.orders)),l:JSON.stringify(arr(j.links)),p:JSON.stringify(arr(j.pool)),d:JSON.stringify(arr(j.data_requests))};const oldPending=dataReqDb.filter(r=>r.status==="pending").length;
-  applyPoll(j);if(s.o!==lastSig.o){renderOrd();renderCheckTab();if(!$("t-trans").classList.contains("hidden")&&curTxTab==="rev")renderRevenue();}if(s.l!==lastSig.l||s.p!==lastSig.p)renderLinks();
-  if(s.d!==lastSig.d){renderDataRequests();if(dataReqDb.filter(r=>r.status==="pending").length>oldPending)toast("Có yêu cầu dung lượng mới!","warn");}
-  lastSig=s;}catch(e){}}
+function applyPoll(j) {
+  if (!j) return;
+  ordersDb = arr(j.orders);
+  linksDb = arr(j.links);
+  healLinks();
+  linkPoolDb = arr(j.pool);
+  dataReqDb = arr(j.data_requests);
+}
+async function fetchAll(msg) {
+  try {
+    const [poll, cms, dead, devs, g] = await Promise.all([aj("/api/admin/poll"), aj("/api/cms"), aj("/api/deadlinks"), aj("/api/devices"), aj("/api/guides")]);
+    deadDb = arr(dead);
+    applyPoll(poll);
+    cmsDb = cms && typeof cms === "object" && !Array.isArray(cms) ? cms : {};
+    cmsDb.settings = cmsDb.settings || {};
+    cmsDb.link_origins = cmsDb.link_origins || {};
+    devicesDb = arr(devs);
+    guides = g && typeof g === "object" ? g : {};
+    const healed = arr(poll && poll.links).length - linksDb.length;
+    // AGENTS.md Quy tắc 40 & 44: fetchAll chỉ đọc dữ liệu hiển thị, không tự ý ghi KV khi vừa tải trang
+    linksDb.forEach(l => {
+      if (l.orig && l.orig !== "Da_bi_khoa" && !linkPoolDb.find(p => p.url === l.orig) && !isLockedPoolUrl(l.orig)) {
+        linkPoolDb.push({
+          id: "POOL-" + Date.now() + Math.floor(Math.random() * 100),
+          url: l.orig,
+          gb: "",
+          remainGb: "",
+          exp: l.expDate || "",
+          max: 30
+        });
+      }
+    });
+    lastSig = {
+      o: JSON.stringify(ordersDb),
+      l: JSON.stringify(linksDb),
+      p: JSON.stringify(linkPoolDb),
+      d: JSON.stringify(dataReqDb)
+    };
+    renderOrd();
+    renderCheckTab();
+    renderDataRequests();
+    renderLinks();
+    renderDead();
+    renderDev();
+    loadSettingsUI();
+    renderCouponAdmin();
+    renderFlashSaleAdmin();
+    if (!curArtsReady) initGuides();
+    loadStatus();
+    if (msg) toast("Đã làm mới dữ liệu!");
+  } catch (e) {
+    if (e.message !== "401") toast("Lỗi tải dữ liệu: " + e.message, "err");
+  }
+}
+const isLockedPoolUrl = u => u === "Da_bi_khoa";
+async function pollMain() {
+  if (document.hidden || !TOKEN || !$("mOrd").classList.contains("hidden")) return;
+  try {
+    const j = await aj("/api/admin/poll");
+    const s = {
+      o: JSON.stringify(arr(j.orders)),
+      l: JSON.stringify(arr(j.links)),
+      p: JSON.stringify(arr(j.pool)),
+      d: JSON.stringify(arr(j.data_requests))
+    };
+    const oldPending = dataReqDb.filter(r => r.status === "pending").length;
+    applyPoll(j);
+    if (s.o !== lastSig.o) {
+      renderOrd();
+      renderCheckTab();
+      if (!$("t-trans").classList.contains("hidden") && curTxTab === "rev") renderRevenue();
+    }
+    if (s.l !== lastSig.l || s.p !== lastSig.p) renderLinks();
+    if (s.d !== lastSig.d) {
+      renderDataRequests();
+      if (dataReqDb.filter(r => r.status === "pending").length > oldPending) toast("Có yêu cầu dung lượng mới!", "warn");
+    }
+    lastSig = s;
+  } catch (e) {}
+}
 
 // ===================== TAB NAVIGATION =====================
-function switchPkgSubTab(tab){
-  try { localStorage.setItem(SITE_KEY + "_subTab_t-pkg", tab); } catch(e) {}
+function switchPkgSubTab(tab) {
+  try {
+    localStorage.setItem(SITE_KEY + "_subTab_t-pkg", tab);
+  } catch (e) {}
   $("pane-pkg-cards").classList.toggle("hidden", tab !== "cards");
   if ($("pane-pkg-salecoupon")) $("pane-pkg-salecoupon").classList.toggle("hidden", tab !== "salecoupon" && tab !== "sale" && tab !== "coupon");
   if ($("pane-pkg-sale")) $("pane-pkg-sale").classList.toggle("hidden", tab !== "salecoupon" && tab !== "sale");
@@ -329,8 +631,8 @@ function switchPkgSubTab(tab){
 }
 window.switchPkgSubTab = switchPkgSubTab;
 
-function buildTabs(){
-  $("tabBar").innerHTML=TABS.filter(([id])=>id!=="t-more").map(([id,ic,lb])=>`
+function buildTabs() {
+  $("tabBar").innerHTML = TABS.filter(([id]) => id !== "t-more").map(([id, ic, lb]) => `
     <button onclick="go('${id}')" id="btn-${id}" class="col-span-1 tab-btn flex flex-col md:flex-row items-center px-1 py-2 md:px-4 md:py-1.5 rounded-xl font-bold text-[10px] sm:text-xs md:text-sm bg-white text-slate-600 border border-slate-200 shadow-sm justify-center gap-1 relative">
       <i class="fas ${ic} md:mr-1"></i>
       <span>${lb}</span>
@@ -340,19 +642,25 @@ function buildTabs(){
   `).join("");
 }
 
-function go(id, fromHistory){
- if(id==="t-sales") id = "t-pkg";
- if(!TABS.some(t=>t[0]===id))id="t-ord";
- TABS.forEach(([t])=>{
-   const el=$(t);
-   if(el) el.classList.add("hidden");
-   const b=$("btn-"+t);
-   if(b){b.classList.remove("active");b.classList.add("bg-white","text-slate-600");}
- });
- const target=$(id);
- if(target) target.classList.remove("hidden");
- const a=$("btn-"+id);
- if(a){a.classList.add("active");a.classList.remove("bg-white","text-slate-600");}
+function go(id, fromHistory) {
+  if (id === "t-sales") id = "t-pkg";
+  if (!TABS.some(t => t[0] === id)) id = "t-ord";
+  TABS.forEach(([t]) => {
+    const el = $(t);
+    if (el) el.classList.add("hidden");
+    const b = $("btn-" + t);
+    if (b) {
+      b.classList.remove("active");
+      b.classList.add("bg-white", "text-slate-600");
+    }
+  });
+  const target = $(id);
+  if (target) target.classList.remove("hidden");
+  const a = $("btn-" + id);
+  if (a) {
+    a.classList.add("active");
+    a.classList.remove("bg-white", "text-slate-600");
+  }
 
   // Đồng bộ thanh điều hướng đáy Mobile (4 tab chính + 1 tab Thêm)
   const navItems = ['t-ord', 't-lnk', 't-check', 't-trans', 't-more'];
@@ -370,39 +678,53 @@ function go(id, fromHistory){
     activeBtn.classList.remove('text-slate-400');
   }
 
-  localStorage.setItem(SITE_KEY+"_lastTab",id);
+  localStorage.setItem(SITE_KEY + "_lastTab", id);
 
- if (!fromHistory) {
-   const hName = '#' + id.replace('t-', '');
-   if (location.hash !== hName) {
-     history.pushState({ tab: id }, '', hName);
-   }
- }
+  if (!fromHistory) {
+    const hName = '#' + id.replace('t-', '');
+    if (location.hash !== hName) {
+      history.pushState({ tab: id }, '', hName);
+    }
+  }
 
-  try{
-   if(id==="t-pkg"){
-     loadAdminPkgs();
-     loadFulfillmentConfig();
-     const savedSub = localStorage.getItem(SITE_KEY + "_subTab_t-pkg") || "cards";
-     switchPkgSubTab(savedSub);
-   }
-   if(id==="t-check"){
-     renderCheckTab();
-     const savedSub = localStorage.getItem(SITE_KEY + "_subTab_t-check") || "data";
-     switchCheckSubTab(savedSub, true);
-   }
-   if(id==="t-dead")renderDead();
-   if(id==="t-lnk")renderLinks();
-   if(id==="t-settings"){
-     loadSettingsUI();loadStatus();loadQuota();
-     const savedSub = localStorage.getItem(SITE_KEY + "_subTab_t-settings") || "webadmin";
-     switchSettingsTab(savedSub);
-   }
-   if(id==="t-rev")renderRevenue();
-   if(id==="t-trans"){localStorage.setItem(SITE_KEY+"_txSeen",Date.now());const tb=$("transBadge");if(tb)tb.classList.add("hidden");const tbm=$("transBadgeMobile");if(tbm)tbm.classList.add("hidden");if(!txData.length)loadTx(true);if(curTxTab==="exception")renderExceptionsTab();else renderTransactions();}
-   if(id==="t-mail")renderMailComposer();
-   if(id==="t-cms"&&curArtsReady)renderGuideAll();
-  }catch(e){console.error("go("+id+") lỗi:",e);toast("Lỗi mở tab: "+e.message,"err");}
+  try {
+    if (id === "t-pkg") {
+      loadAdminPkgs();
+      loadFulfillmentConfig();
+      const savedSub = localStorage.getItem(SITE_KEY + "_subTab_t-pkg") || "cards";
+      switchPkgSubTab(savedSub);
+    }
+    if (id === "t-check") {
+      renderCheckTab();
+      const savedSub = localStorage.getItem(SITE_KEY + "_subTab_t-check") || "data";
+      switchCheckSubTab(savedSub, true);
+    }
+    if (id === "t-dead") renderDead();
+    if (id === "t-lnk") renderLinks();
+    if (id === "t-settings") {
+      loadSettingsUI();
+      loadStatus();
+      loadQuota();
+      const savedSub = localStorage.getItem(SITE_KEY + "_subTab_t-settings") || "webadmin";
+      switchSettingsTab(savedSub);
+    }
+    if (id === "t-rev") renderRevenue();
+    if (id === "t-trans") {
+      localStorage.setItem(SITE_KEY + "_txSeen", Date.now());
+      const tb = $("transBadge");
+      if (tb) tb.classList.add("hidden");
+      const tbm = $("transBadgeMobile");
+      if (tbm) tbm.classList.add("hidden");
+      if (!txData.length) loadTx(true);
+      if (curTxTab === "exception") renderExceptionsTab();
+      else renderTransactions();
+    }
+    if (id === "t-mail") renderMailComposer();
+    if (id === "t-cms" && curArtsReady) renderGuideAll();
+  } catch (e) {
+    console.error("go(" + id + ") lỗi:", e);
+    toast("Lỗi mở tab: " + e.message, "err");
+  }
   restoreAdminScroll(id);
 }
 
@@ -413,7 +735,7 @@ function recordAdminNav(state) {
     const cur = history.state || {};
     if (JSON.stringify(cur) === JSON.stringify(state)) return;
     history.pushState(state, '', location.href);
-  } catch(e) {}
+  } catch (e) {}
 }
 window.recordAdminNav = recordAdminNav;
 
@@ -449,8 +771,14 @@ window.addEventListener('popstate', (event) => {
       if (s.tab === 't-trans') {
         if (s.txSub) switchTxTab(s.txSub, true);
         if (s.revTab) setRevTab(s.revTab, true);
-        if (s.revMonth) { revMonth = s.revMonth; renderRevenue(); }
-        if (s.revPayView !== undefined) { revPayView = s.revPayView; renderRevenue(); }
+        if (s.revMonth) {
+          revMonth = s.revMonth;
+          renderRevenue();
+        }
+        if (s.revPayView !== undefined) {
+          revPayView = s.revPayView;
+          renderRevenue();
+        }
       }
       if (s.tab === 't-pkg' && s.pkgSub) switchPkgSubTab(s.pkgSub, true);
       if (s.tab === 't-mail' && s.mailSub) mcSwitchTab(s.mailSub, true);
@@ -469,73 +797,98 @@ window.addEventListener('popstate', (event) => {
 });
 
 // ===================== ĐƠN HÀNG =====================
-function switchOrdTab(t){
+function switchOrdTab(t) {
   curOrdTab = t || "success";
-  try { localStorage.setItem(SITE_KEY + "_curOrdTab", curOrdTab); } catch(e){}
-  ["success","pending","failed"].forEach(x => {
+  try {
+    localStorage.setItem(SITE_KEY + "_curOrdTab", curOrdTab);
+  } catch (e) {}
+  ["success", "pending", "failed"].forEach(x => {
     const el = $("otab-" + x);
     if (el) el.classList.toggle("active", x === curOrdTab);
   });
   renderOrd();
 }
-const ordAmountTxt=o=>{const pay=payOf(o),p=pkgOf(o);if(pay==="Bank")return Number(o.totalVnd)>0?fmtVnd(o.totalVnd)+"vnd":"—";const c=Number(o.totalCny)>0?Number(o.totalCny):0;if(c)return "¥"+trimNum(c);return p&&p.cny?"¥"+trimNum(p.cny*(Number(o.qty)||1))+" (theo gói)":"—";};
-function ordCard(o,ro){
- const now=nowMs(),st=normSt(o.status);let daysLeft=null,expiring=false,expired=false;
- if(st==="success"&&o.expDate&&!isLife(o.expDate)){
-  const lockTs=parseDmy(o.expDate); // 00:00:00 ngày hết hạn theo chuẩn Worker
-  if(lockTs){
-   if(now>=lockTs){
-    // Chạm 00:00:00 ngày hết hạn -> Khóa link & đổi sang ĐÃ HẾT HẠN (xám ngoét)
-    expired=true;
-    daysLeft=-1;
-   }else{
-    // Đang trong hạn: đếm lùi số ngày nguyên còn lại (mua hôm nay 27/10 gói 30 ngày -> còn 29n)
-    expired=false;
-    daysLeft=Math.floor((lockTs-now)/864e5);
-    expiring=daysLeft<=3;
-   }
+const ordAmountTxt = o => {
+  const pay = payOf(o), p = pkgOf(o);
+  if (pay === "Bank") return Number(o.totalVnd) > 0 ? fmtVnd(o.totalVnd) + "vnd" : "—";
+  const c = Number(o.totalCny) > 0 ? Number(o.totalCny) : 0;
+  if (c) return "¥" + trimNum(c);
+  return p && p.cny ? "¥" + trimNum(p.cny * (Number(o.qty) || 1)) + " (theo gói)" : "—";
+};
+function ordCard(o, ro) {
+  const now = nowMs(), st = normSt(o.status);
+  let daysLeft = null, expiring = false, expired = false;
+  if (st === "success" && o.expDate && !isLife(o.expDate)) {
+    const lockTs = parseDmy(o.expDate); // 00:00:00 ngày hết hạn theo chuẩn Worker
+    if (lockTs) {
+      if (now >= lockTs) {
+        // Chạm 00:00:00 ngày hết hạn -> Khóa link & đổi sang ĐÃ HẾT HẠN (xám ngoét)
+        expired = true;
+        daysLeft = -1;
+      } else {
+        // Đang trong hạn: đếm lùi số ngày nguyên còn lại (mua hôm nay 27/10 gói 30 ngày -> còn 29n)
+        expired = false;
+        daysLeft = Math.floor((lockTs - now) / 864e5);
+        expiring = daysLeft <= 3;
+      }
+    }
   }
- }
- const dot=expired?'<div class="dot-gray"></div>':st==="success"?'<div class="dot-green"></div>':st==="pending"?'<div class="dot-yellow"></div>':'<div class="dot-red"></div>';
- const card=expired?'card-expired-done border border-slate-300':expiring?'card-expiring':'bg-white border border-slate-200';
- let bu="";if(o.pendingUpgrade)bu=`<span class="bg-yellow-100 text-yellow-800 border border-yellow-200 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 uppercase">Xác minh Nâng gói</span>`;else if(o.upgradeStatus==="failed")bu=`<span class="bg-red-100 text-red-800 border border-red-200 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 uppercase">Từ chối Nâng gói</span>`;else if(o.isUpgrade)bu=`<span class="bg-green-100 text-green-800 border border-green-200 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 uppercase">Nâng gói Thành công</span>`;
- const kind=o.orderType==="renew"?`<span class="bg-sky-100 text-sky-700 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 uppercase">Gia hạn</span>`:"";
- const nick=o.nickname?`<span class="text-[10px] font-black bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded ml-1"><i class="fas fa-user-tag mr-0.5"></i>${esc(o.nickname)}</span>`:"";
- const lk=o.lockInfo?Object.keys(o.lockInfo).filter(k=>o.lockInfo[k]):[];const lkb=lk.length?`<span title="Ô đã khóa (sửa tay): ${esc(lk.join(", "))}" class="text-[9px] font-black bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded ml-1"><i class="fas fa-lock mr-0.5"></i>${lk.map(k=>k.replace("info","")).join("/")}</span>`:"";
+  const dot = expired ? '<div class="dot-gray"></div>' : st === "success" ? '<div class="dot-green"></div>' : st === "pending" ? '<div class="dot-yellow"></div>' : '<div class="dot-red"></div>';
+  const card = expired ? 'card-expired-done border border-slate-300' : expiring ? 'card-expiring' : 'bg-white border border-slate-200';
+  let bu = "";
+  if (o.pendingUpgrade) bu = `<span class="bg-yellow-100 text-yellow-800 border border-yellow-200 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 uppercase">Xác minh Nâng gói</span>`;
+  else if (o.upgradeStatus === "failed") bu = `<span class="bg-red-100 text-red-800 border border-red-200 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 uppercase">Từ chối Nâng gói</span>`;
+  else if (o.isUpgrade) bu = `<span class="bg-green-100 text-green-800 border border-green-200 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 uppercase">Nâng gói Thành công</span>`;
+  const kind = o.orderType === "renew" ? `<span class="bg-sky-100 text-sky-700 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 uppercase">Gia hạn</span>` : "";
+  const nick = o.nickname ? `<span class="text-[10px] font-black bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded ml-1"><i class="fas fa-user-tag mr-0.5"></i>${esc(o.nickname)}</span>` : "";
+  const lk = o.lockInfo ? Object.keys(o.lockInfo).filter(k => o.lockInfo[k]) : [];
+  const lkb = lk.length ? `<span title="Ô đã khóa (sửa tay): ${esc(lk.join(", "))}" class="text-[9px] font-black bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded ml-1"><i class="fas fa-lock mr-0.5"></i>${lk.map(k=>k.replace("info","")).join("/")}</span>` : "";
 
- // Hàng 3: Zalo chiếm cố định ~140px (đủ 15 số điện thoại), HSD nhận trọn 65% đất còn lại không bị cắt ngày
- const zaloPart = `Zalo: <span class="font-bold text-slate-700 cp" onclick="cp(${q(o.zalo)})">${esc(o.zalo||"")}</span>`;
- const hsdPart = `| HSD: <span class="font-bold text-slate-700">${esc(o.expDate||"—")}</span>${daysLeft!==null&&daysLeft>=0?` <span class="font-black ${daysLeft<=1?"text-red-600":"text-orange-500"}">(còn ${daysLeft}n)</span>`:""}`;
+  // Hàng 3: Zalo chiếm cố định ~140px (đủ 15 số điện thoại), HSD nhận trọn 65% đất còn lại không bị cắt ngày
+  const zaloPart = `Zalo: <span class="font-bold text-slate-700 cp" onclick="cp(${q(o.zalo)})">${esc(o.zalo||"")}</span>`;
+  const hsdPart = `| HSD: <span class="font-bold text-slate-700">${esc(o.expDate||"—")}</span>${daysLeft!==null&&daysLeft>=0?` <span class="font-black ${daysLeft<=1?"text-red-600":"text-orange-500"}">(còn ${daysLeft}n)</span>`:""}`;
 
- // Hàng 4: 3 Badge riêng biệt (Method tag màu giống tab doanh thu + Thực nhận + Số tháng)
- const pay = payOf(o);
- const methodBadge = pay === "Alipay" ? '<span class="bg-sky-100 text-sky-700 px-2 py-0.5 rounded text-[10px] font-black">Alipay</span>'
-                   : pay === "Weixin" ? '<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-black">Weixin</span>'
-                   : '<span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-black">Bank VN</span>';
- const amtBadge = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded text-[10px] font-bold">Thực nhận: ${esc(ordAmountTxt(o))}</span>`;
- const mBadge = `<span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded text-[10px] font-bold">${pkgOf(o)&&pkgOf(o).m===0?"Vĩnh viễn":ordMonths(o)+" tháng"}</span>`;
+  // Hàng 4: 3 Badge riêng biệt (Method tag màu giống tab doanh thu + Thực nhận + Số tháng)
+  const pay = payOf(o);
+  const methodBadge = pay === "Alipay" ? '<span class="bg-sky-100 text-sky-700 px-2 py-0.5 rounded text-[10px] font-black">Alipay</span>' : pay === "Weixin" ? '<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-black">Weixin</span>' : '<span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-black">Bank VN</span>';
+  const amtBadge = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded text-[10px] font-bold">Thực nhận: ${esc(ordAmountTxt(o))}</span>`;
+  const mBadge = `<span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded text-[10px] font-bold">${pkgOf(o)&&pkgOf(o).m===0?"Vĩnh viễn":ordMonths(o)+" tháng"}</span>`;
 
- const acts=ro?"":`<div class="flex gap-1.5">${st==="success"&&o.expDate&&!expired&&!isLife(o.expDate)?`<button onclick="sendExpMail(${q(o.id)})" title="Nhắc hết hạn" class="text-amber-500 font-bold px-2.5 py-1.5 bg-amber-50 border border-amber-100 rounded-lg text-xs hover:bg-amber-500 hover:text-white"><i class="fas fa-clock"></i></button>`:""}<button onclick="sendZaloMail(${q(o.id)})" title="Nhắc hỗ trợ cài đặt (Zalo)" class="text-blue-500 font-bold px-2.5 py-1.5 bg-blue-50 border border-blue-100 rounded-lg text-xs hover:bg-blue-500 hover:text-white"><i class="fas fa-comment-dots"></i></button><button onclick="openOrdModal(${q(o.id)})" title="Sửa" class="text-indigo-600 font-bold px-3 py-1.5 bg-indigo-50 border border-indigo-100 rounded-lg text-xs hover:bg-indigo-600 hover:text-white"><i class="fas fa-pen md:mr-1"></i><span class="hidden md:inline">Sửa</span></button><button onclick="delOrd(${q(o.id)})" title="Xóa" class="text-red-500 font-bold px-2.5 py-1.5 bg-red-50 border border-red-100 rounded-lg text-xs hover:bg-red-500 hover:text-white"><i class="fas fa-trash"></i></button></div>`;
+  const acts = ro ? "" : `<div class="flex gap-1.5">${st==="success"&&o.expDate&&!expired&&!isLife(o.expDate)?`<button onclick="sendExpMail(${q(o.id)})" title="Nhắc hết hạn" class="text-amber-500 font-bold px-2.5 py-1.5 bg-amber-50 border border-amber-100 rounded-lg text-xs hover:bg-amber-500 hover:text-white"><i class="fas fa-clock"></i></button>`:""}<button onclick="sendZaloMail(${q(o.id)})" title="Nhắc hỗ trợ cài đặt (Zalo)" class="text-blue-500 font-bold px-2.5 py-1.5 bg-blue-50 border border-blue-100 rounded-lg text-xs hover:bg-blue-500 hover:text-white"><i class="fas fa-comment-dots"></i></button><button onclick="openOrdModal(${q(o.id)})" title="Sửa" class="text-indigo-600 font-bold px-3 py-1.5 bg-indigo-50 border border-indigo-100 rounded-lg text-xs hover:bg-indigo-600 hover:text-white"><i class="fas fa-pen md:mr-1"></i><span class="hidden md:inline">Sửa</span></button><button onclick="delOrd(${q(o.id)})" title="Xóa" class="text-red-500 font-bold px-2.5 py-1.5 bg-red-50 border border-red-100 rounded-lg text-xs hover:bg-red-500 hover:text-white"><i class="fas fa-trash"></i></button></div>`;
 
- return `<div class="${card} rounded-xl p-3 shadow-sm flex flex-col md:flex-row md:items-stretch justify-between gap-2 md:gap-3 w-full min-w-0"><div class="flex-1 min-w-0">
+  return `<div class="${card} rounded-xl p-3 shadow-sm flex flex-col md:flex-row md:items-stretch justify-between gap-2 md:gap-3 w-full min-w-0"><div class="flex-1 min-w-0">
   <div class="flex items-center gap-2 mb-1 flex-wrap">${dot}<span class="font-bold text-[10px] text-slate-400">#${ordersDb.indexOf(o)+1}</span><span class="font-mono font-extrabold text-indigo-600 text-xs md:text-base cp order-id-text" onclick="cp(${q(o.id)})">${esc(o.id)}</span>${nick}${kind}${st==="pending"?`<span class="bg-yellow-100 text-yellow-800 text-[10px] font-bold px-1.5 py-0.5 rounded ml-1">Chưa xác nhận CK</span>`:""}${bu}${lkb}${expired?`<span class="text-[10px] font-black bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1">ĐÃ HẾT HẠN</span>`:""}</div>
   <div class="font-bold text-slate-800 text-xs md:text-sm cp truncate pl-5 order-email-text" onclick="cp(${q(o.email)})">${esc(o.email||"—")}</div>
   <div class="text-[11px] md:text-sm text-slate-500 mt-1 pl-5 order-meta-text flex items-center gap-2 w-full"><div class="shrink-0 whitespace-nowrap">${zaloPart}</div><div class="flex-1 min-w-0 truncate">${hsdPart}</div></div>
   <div class="pl-5 mt-2 flex flex-wrap items-center gap-1.5">${methodBadge}${amtBadge}${mBadge}</div></div>
-  <div class="flex flex-row md:flex-col items-center md:items-end justify-between gap-2 shrink-0 border-t border-slate-100 md:border-0 pt-2 md:pt-0"><span class="text-[10px] md:text-xs text-slate-400 font-semibold whitespace-nowrap">${esc(o.date || fmtBank(o.createdTs || 0))}</span>${acts}</div></div>`;}
-function renderOrd(){
- const counts={success:0,pending:0,failed:0};ordersDb.forEach(o=>{const s=normSt(o.status);if(counts[s]!==undefined)counts[s]++;});
- ["success","pending","failed"].forEach(t=>$("cnt-"+t).textContent=counts[t]);
- const list=ordersDb.filter(o=>normSt(o.status)===curOrdTab),tb=$("ordBody");
- if(!list.length){tb.innerHTML=`<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold">Không có đơn nào</div>`;return;}
- const groups={};list.forEach(o=>{const mi=monthInfo(oTs(o));(groups[mi.key]=groups[mi.key]||{label:mi.label,orders:[]}).orders.push(o);});
- let html="";
- for(const key of Object.keys(groups).sort((a,b)=>b.localeCompare(a))){
-  const g=groups[key];
-  g.orders.sort((a,b)=>oTs(b)-oTs(a));
-  html+=`<div class="month-header"><i class="far fa-calendar-alt text-indigo-500"></i><span>${g.label}</span><span class="month-count">${g.orders.length} đơn</span></div><div class="space-y-3 mb-5">${g.orders.map(o=>ordCard(o,false)).join("")}</div>`;}
- tb.innerHTML=html;}
-function updateOrderTogglesUI(){
+  <div class="flex flex-row md:flex-col items-center md:items-end justify-between gap-2 shrink-0 border-t border-slate-100 md:border-0 pt-2 md:pt-0"><span class="text-[10px] md:text-xs text-slate-400 font-semibold whitespace-nowrap">${esc(o.date || fmtBank(o.createdTs || 0))}</span>${acts}</div></div>`;
+}
+function renderOrd() {
+  const counts = { success: 0, pending: 0, failed: 0 };
+  ordersDb.forEach(o => {
+    const s = normSt(o.status);
+    if (counts[s] !== undefined) counts[s]++;
+  });
+  ["success", "pending", "failed"].forEach(t => $("cnt-" + t).textContent = counts[t]);
+  const list = ordersDb.filter(o => normSt(o.status) === curOrdTab), tb = $("ordBody");
+  if (!list.length) {
+    tb.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold">Không có đơn nào</div>`;
+    return;
+  }
+  const groups = {};
+  list.forEach(o => {
+    const mi = monthInfo(oTs(o));
+    (groups[mi.key] = groups[mi.key] || { label: mi.label, orders: [] }).orders.push(o);
+  });
+  let html = "";
+  for (const key of Object.keys(groups).sort((a, b) => b.localeCompare(a))) {
+    const g = groups[key];
+    g.orders.sort((a, b) => oTs(b) - oTs(a));
+    html += `<div class="month-header"><i class="far fa-calendar-alt text-indigo-500"></i><span>${g.label}</span><span class="month-count">${g.orders.length} đơn</span></div><div class="space-y-3 mb-5">${g.orders.map(o=>ordCard(o,false)).join("")}</div>`;
+  }
+  tb.innerHTML = html;
+}
+function updateOrderTogglesUI() {
   const lf = lockFulfillOn(), ms = mailOnSaveOn(), me = manualEditOn();
   const setBtn = (btnId, badgeId, active) => {
     const btn = $(btnId), b = $(badgeId);
@@ -554,37 +907,57 @@ function updateOrderTogglesUI(){
   setBtn("btnToggleMailOnSave", "badgeMailOnSave", ms);
   setBtn("btnToggleManualEdit", "badgeManualEdit", me);
 }
-async function toggleLockFulfillBtn(){
-  const s = cmsDb.settings; const cur = !s.lockFulfill;
+async function toggleLockFulfillBtn() {
+  const s = cmsDb.settings;
+  const cur = !s.lockFulfill;
   s.lockFulfill = cur;
   updateOrderTogglesUI();
   try {
     await saveCmsDb();
     toast(cur ? "Đã BẬT Khóa fulfillment — sửa đơn không chạy auto" : "Đã TẮT Khóa fulfillment");
     logEvent("warn", "Khóa fulfillment", cur ? "Bật" : "Tắt");
-  } catch(e) {
-    s.lockFulfill = !cur; updateOrderTogglesUI(); toast("Lỗi lưu: " + e.message, "err");
+  } catch (e) {
+    s.lockFulfill = !cur;
+    updateOrderTogglesUI();
+    toast("Lỗi lưu: " + e.message, "err");
   }
 }
 
-function toggleMailOnSaveBtn(){
+function toggleMailOnSaveBtn() {
   const cur = !mailOnSaveOn();
   localStorage.setItem(SITE_KEY + "_mailOnSave", cur ? "1" : "0");
   updateOrderTogglesUI();
   toast(cur ? "Đã BẬT gửi mail báo khách khi lưu đơn" : "Đã TẮT gửi mail khi lưu đơn");
 }
 
-function toggleManualEditBtn(){
+function toggleManualEditBtn() {
   const cur = !manualEditOn();
   localStorage.setItem(SITE_KEY + "_manualEdit", cur ? "1" : "0");
   updateOrderTogglesUI();
   toast(cur ? "Đã BẬT Sửa tay — cho phép sửa 3 ô định tuyến" : "Đã TẮT Sửa tay");
 }
 
-function autoFillNickname(){const e=$("mOEmail").value.trim().toLowerCase();if(!e||$("mONickname").value)return;const x=ordersDb.find(o=>String(o.email||"").toLowerCase()===e&&o.nickname);if(x)$("mONickname").value=x.nickname;}
-function updMonths(){$("mOMonths").value=fmtMonths($("mODays").value);}
-function updAmountUi(){const bank=!/alipay|weixin/i.test($("mOMethod").value);$("mOAmountLbl").textContent=bank?"Số tiền thu (VND) — lưu vào totalVnd":"Số tiền đã nhận (¥ CNY) — lưu vào totalCny";$("mOAmountNote").textContent=bank?"Bank VN: totalCny để trống.":"Alipay/Weixin: totalVnd để trống. Đơn mới tự lấy tiền từ gói; đơn cũ thiếu tiền thì bạn tự nhập.";}
-function fillAmount(){const pk=PKG_DB[$("mOPkg").value];if(!pk)return;const bank=!/alipay|weixin/i.test($("mOMethod").value),d=parseInt($("mODays").value)||0,qty=pk.m===1?Math.max(1,Math.floor(d/30)):1,v=bank?pk.vnd*qty:(pk.cny?pk.cny*qty:0);$("mOAmount").value=v?trimNum(v):"";updAmountUi();}
+function autoFillNickname() {
+  const e = $("mOEmail").value.trim().toLowerCase();
+  if (!e || $("mONickname").value) return;
+  const x = ordersDb.find(o => String(o.email || "").toLowerCase() === e && o.nickname);
+  if (x) $("mONickname").value = x.nickname;
+}
+function updMonths() {
+  $("mOMonths").value = fmtMonths($("mODays").value);
+}
+function updAmountUi() {
+  const bank = !/alipay|weixin/i.test($("mOMethod").value);
+  $("mOAmountLbl").textContent = bank ? "Số tiền thu (VND) — lưu vào totalVnd" : "Số tiền đã nhận (¥ CNY) — lưu vào totalCny";
+  $("mOAmountNote").textContent = bank ? "Bank VN: totalCny để trống." : "Alipay/Weixin: totalVnd để trống. Đơn mới tự lấy tiền từ gói; đơn cũ thiếu tiền thì bạn tự nhập.";
+}
+function fillAmount() {
+  const pk = PKG_DB[$("mOPkg").value];
+  if (!pk) return;
+  const bank = !/alipay|weixin/i.test($("mOMethod").value), d = parseInt($("mODays").value) || 0, qty = pk.m === 1 ? Math.max(1, Math.floor(d / 30)) : 1, v = bank ? pk.vnd * qty : (pk.cny ? pk.cny * qty : 0);
+  $("mOAmount").value = v ? trimNum(v) : "";
+  updAmountUi();
+}
 // Tính ngày 2 chiều tức thì, mỏ neo createdTs cố định, 1 tháng = 30 ngày, 1 năm = 365 ngày
 function getOrderAnchorTs() {
   const curDateStr = $("mODate")?.value || "";
@@ -595,8 +968,11 @@ function getOrderAnchorTs() {
 function autoFillDays() {
   const p = PKG_LIST.find(x => x[0] === $("mOPkg").value);
   if (!p) return;
-  if (!modalNew && expLocked()) { updMonths(); return; }
-  
+  if (!modalNew && expLocked()) {
+    updMonths();
+    return;
+  }
+
   if (modalNew) {
     const em = $("mOEmail").value.trim().toLowerCase();
     if (em) {
@@ -633,8 +1009,14 @@ function autoFillDays() {
   updMonths();
 }
 
-function onPkgChange() { autoFillDays(); fillAmount(); }
-function onMethodChange() { if(modalNew) fillAmount(); else updAmountUi(); }
+function onPkgChange() {
+  autoFillDays();
+  fillAmount();
+}
+function onMethodChange() {
+  if (modalNew) fillAmount();
+  else updAmountUi();
+}
 
 // Khi người dùng sửa ô "Số ngày SD"
 function recalcExpFromDays() {
@@ -664,130 +1046,231 @@ function recalcDaysFromExp() {
     updMonths();
   }
 }
-function togSF(){const s=$("mOStatus").value;$("fSuc").classList.toggle("hidden",s!=="success");$("fFail").classList.toggle("hidden",s!=="failed");}
-function syncUpg(t){const ids={verify:"mOUpgVerify",success:"mOUpgSuccess",reject:"mOUpgReject"};if($(ids[t]).checked)for(const k in ids)if(k!==t)$(ids[k]).checked=false;}
-const curUpg=()=>$("mOUpgVerify").checked?"verify":$("mOUpgSuccess").checked?"success":$("mOUpgReject").checked?"reject":"none";
-function readModal(){return{email:$("mOEmail").value.trim(),nickname:$("mONickname").value.trim(),zalo:$("mOZalo").value.trim(),method:$("mOMethod").value,status:$("mOStatus").value,expDate:$("mOExp").value.trim(),days:parseInt($("mODays").value)||"",reason:$("mOReason").value.trim(),info1:$("mOLink1").value.trim(),info2:$("mOLink2").value.trim(),info3:$("mOLink3").value.trim(),pkgId:$("mOPkg").value,amount:$("mOAmount").value.trim()};}
-function openOrdModal(id){
- const o=id?ordersDb.find(x=>x.id===id):null;if(id&&!o)return;modalNew=!o;modalOldId=o?o.id:"";
- $("upgChecks").innerHTML=[["Verify","verify","yellow","Đang xác minh"],["Success","success","green","Thành công"],["Reject","reject","red","Từ chối"]].map(([n,k,c,l])=>`<label class="flex items-center bg-${c}-50 text-${c}-700 px-2 py-1 rounded-full cursor-pointer border border-${c}-200"><input type="checkbox" id="mOUpg${n}" onchange="syncUpg('${k}')" class="w-3 h-3 mr-1 accent-${c}-600"><span class="text-[9px] font-bold">${l}</span></label>`).join("");
- $("mOrdTtl").textContent=o?"Sửa đơn":"Tạo thủ công";$("mOId").value=o?o.id:genId();
- $("mOIdNote").classList.toggle("hidden",!o);if(o)$("mOIdNote").textContent="Đổi mã đơn ở ô trên = ĐỔI ID của chính đơn này (không tạo đơn trùng). Cần Worker hỗ trợ đổi ID.";
- $("mOEmail").value=o?.email||"";$("mONickname").value=o?.nickname||"";$("mOZalo").value=o?.zalo||"";$("mOExp").value=o?.expDate||"";$("mODays").value=o?.days||"";
- $("mOUpgVerify").checked=!!o?.pendingUpgrade;$("mOUpgSuccess").checked=!!(o?.isUpgrade&&!o.pendingUpgrade&&o.upgradeStatus!=="failed");$("mOUpgReject").checked=o?.upgradeStatus==="failed";
- $("mOLink1").value=o?.info1||o?.info||"";$("mOLink2").value=o?.info2||"";$("mOLink3").value=o?.info3||"";$("mOReason").value=o?.reason||"";
- $("mOStatus").value=o?normSt(o.status):"pending";$("mOMethod").value=/alipay/i.test(o?.method||"")?"Alipay":/weixin|wechat/i.test(o?.method||"")?"Weixin":"Ngân hàng VN";
- const sel=$("mOPkg");
- const dynamicList = [...PKG_LIST];
- if(Array.isArray(adminPkgsList) && adminPkgsList.length){
-   adminPkgsList.forEach(dp => {
-     if(!dynamicList.some(x => x[0] === dp.id)){
-       const timeNum = dp.time === "lifetime" ? 0 : (Number(dp.time) || 1) * 30;
-       dynamicList.push([dp.id, `${dp.name || dp.id} - ${fmtVnd(dp.vnd)}VND (${dp.data || ''})`, timeNum]);
-     }
-   });
- }
- sel.innerHTML=dynamicList.map(p=>`<option value="${p[0]}">${esc(p[1])}</option>`).join("");
- if(o){let pid=dynamicList.find(p=>p[0]===o.pkgId)?.[0];if(!pid){const pp=pkgOf(o);if(pp)pid=Object.keys(PKG_DB).find(k=>PKG_DB[k]===pp);}
-  if(!pid)pid=dynamicList.find(p=>o.pkgName&&o.pkgData&&p[1].startsWith(o.pkgName)&&p[1].includes("("+o.pkgData+")"))?.[0];
-  if(pid)sel.value=pid;else{sel.innerHTML+=`<option value="-1" selected>${esc(o.pkg||o.pkgName||"Gói custom")}</option>`;sel.value="-1";}
-  const bank=!/alipay|weixin/i.test($("mOMethod").value);$("mOAmount").value=bank?(o.totalVnd||""):(o.totalCny||o.totalVnd||"");}
- else{sel.value="t1";$("mOAmount").value="";}
-
- // Quản lý 3 ô Link theo công tắc "Sửa tay":
- const canEditManual = manualEditOn();
- ["1","2","3"].forEach(i=>{
-   const inp = $("mOLink"+i);
-   inp.readOnly = !canEditManual;
-   if(canEditManual){
-     inp.classList.remove("bg-slate-100","cursor-not-allowed","text-slate-500");
-     inp.classList.add("bg-white","cursor-text");
-     inp.placeholder = "Dán link sub vào đây (sau khi lưu sẽ được khóa)";
-   } else {
-     inp.classList.add("bg-slate-100","cursor-not-allowed","text-slate-500");
-     inp.classList.remove("bg-white","cursor-text");
-     inp.placeholder = "Đang tắt Sửa tay (chỉ đọc) — bật công tắc Sửa tay ngoài tab để sửa";
-   }
-   $("mOUnl"+i).checked=false;
-   const lk=!!(o&&o.lockInfo&&o.lockInfo["info"+i]);
-   $("mOUnlW"+i).classList.toggle("hidden",!lk);
-   $("mOLkTag"+i).innerHTML=lk?'<span class="text-purple-600 font-bold"><i class="fas fa-lock"></i> đã khóa (sửa tay)</span>':"";
- });
-
- const lockOn=!modalNew&&expLocked();$("mOExp").disabled=lockOn;$("mODays").disabled=lockOn;
- const ln=$("mOLockNote");ln.classList.toggle("hidden",!(lockOn||lockFulfillOn()||canEditManual));
- ln.innerHTML=(lockOn?'<i class="fas fa-lock mr-1"></i>Đang bật <b>Khóa thông tin hết hạn</b>: HSD &amp; số ngày sẽ KHÔNG đổi. ':"")
-  +(lockFulfillOn()?'<i class="fas fa-lock mr-1"></i>Đang bật <b>Khóa fulfillment</b>: lưu đơn sẽ không cấp link / gửi mail tự động. ':"")
-  +(canEditManual?'<i class="fas fa-pen-to-square text-purple-600 mr-1"></i>Đang bật <b>Sửa tay</b>: bạn có thể sửa 3 ô Link, lưu xong sẽ khóa không bị ghi đè.':"");
- if(modalNew){autoFillDays();fillAmount();}
- updMonths();updAmountUi();togSF();modalInit=readModal();upgInit=curUpg();$("mOrd").classList.remove("hidden");}
-
-async function saveOrd(){
- const oldId=modalOldId,id=normId($("mOId").value);
- if(!/^DH[A-Z0-9]{10}$/.test(id))return toast("Mã đơn phải dạng DH + 10 ký tự chữ/số","err");
- if((!oldId||id!==oldId)&&ordersDb.some(x=>normId(x.id)===id))return toast("Mã đơn "+id+" đã tồn tại","err");
- const cur=readModal(),body={id:oldId||id};
- if(oldId&&id!==oldId)body.newId=id;
- for(const k in cur){if(k==="amount")continue;if(modalNew?(cur[k]!==""&&cur[k]!=="-1"):cur[k]!==modalInit[k]){if(k==="pkgId"&&cur[k]==="-1")continue;body[k]=cur[k];}}
- const bank=!/alipay|weixin/i.test(cur.method),amt=Number(String(cur.amount).replace(/[,\s]/g,""))||0;
- if(modalNew){body.totalVnd=bank&&amt?amt:"";body.totalCny=!bank&&amt?amt:"";}
- else if(cur.amount!==modalInit.amount){if(bank)body.totalVnd=amt||"";else body.totalCny=amt||"";}
- const pk=PKG_DB[cur.pkgId];if(pk&&(modalNew||cur.days!==modalInit.days||cur.pkgId!==modalInit.pkgId))body.qty=pk.m===1?Math.max(1,Math.floor((parseInt(cur.days)||0)/30)):1;
- if(!modalNew&&expLocked()){delete body.expDate;delete body.days;}
- if(lockFulfillOn())body.lockAuto=true;if(expLocked())body.lockExpiry=true;
- if(manualEditOn())body.manualEdit=true; // Báo cho server biết đang bật chế độ Sửa tay
- const un=["1","2","3"].filter(i=>$("mOUnl"+i).checked).map(i=>"info"+i);if(un.length)body.unlockInfo=un;
- if(modalNew||curUpg()!==upgInit)body.upg=curUpg();
- if(modalNew&&!body.status)body.status="pending";
- const btn=$("btnSaveOrd");btn.disabled=true;
- try{const j=await aj("/api/admin/order",{method:"POST",body});const o=j.order;
-  if(body.newId&&o.id!==body.newId)toast("Worker chưa hỗ trợ đổi Mã đơn — mã đơn giữ nguyên "+o.id,"warn");
-  let i=ordersDb.findIndex(x=>x.id===(oldId||o.id));if(i<0)i=ordersDb.findIndex(x=>x.id===o.id);if(i>=0)ordersDb[i]=o;else ordersDb.unshift(o);
-  lastSig.o=JSON.stringify(ordersDb);renderOrd();cm("mOrd");toast("Đã lưu"+((j.kind==="new"||j.kind==="renew")&&!lockFulfillOn()?" & đã cấp link":""));
-  if (modalNew) {
-    triggerTelegramBackupNow(`Đơn hàng mới #${o.id} (${o.email || "Khách"})`);
+function togSF() {
+  const s = $("mOStatus").value;
+  $("fSuc").classList.toggle("hidden", s !== "success");
+  $("fFail").classList.toggle("hidden", s !== "failed");
+}
+function syncUpg(t) {
+  const ids = {
+    verify: "mOUpgVerify",
+    success: "mOUpgSuccess",
+    reject: "mOUpgReject"
+  };
+  if ($(ids[t]).checked) for (const k in ids) if (k !== t) $(ids[k]).checked = false;
+}
+const curUpg = () => $("mOUpgVerify").checked ? "verify" : $("mOUpgSuccess").checked ? "success" : $("mOUpgReject").checked ? "reject" : "none";
+function readModal() {
+  return {
+    email: $("mOEmail").value.trim(),
+    nickname: $("mONickname").value.trim(),
+    zalo: $("mOZalo").value.trim(),
+    method: $("mOMethod").value,
+    status: $("mOStatus").value,
+    expDate: $("mOExp").value.trim(),
+    days: parseInt($("mODays").value) || "",
+    reason: $("mOReason").value.trim(),
+    info1: $("mOLink1").value.trim(),
+    info2: $("mOLink2").value.trim(),
+    info3: $("mOLink3").value.trim(),
+    pkgId: $("mOPkg").value,
+    amount: $("mOAmount").value.trim()
+  };
+}
+function openOrdModal(id) {
+  const o = id ? ordersDb.find(x => x.id === id) : null;
+  if (id && !o) return;
+  modalNew = !o;
+  modalOldId = o ? o.id : "";
+  $("upgChecks").innerHTML = [["Verify", "verify", "yellow", "Đang xác minh"], ["Success", "success", "green", "Thành công"], ["Reject", "reject", "red", "Từ chối"]].map(([n, k, c, l]) => `<label class="flex items-center bg-${c}-50 text-${c}-700 px-2 py-1 rounded-full cursor-pointer border border-${c}-200"><input type="checkbox" id="mOUpg${n}" onchange="syncUpg('${k}')" class="w-3 h-3 mr-1 accent-${c}-600"><span class="text-[9px] font-bold">${l}</span></label>`).join("");
+  $("mOrdTtl").textContent = o ? "Sửa đơn" : "Tạo thủ công";
+  $("mOId").value = o ? o.id : genId();
+  $("mOIdNote").classList.toggle("hidden", !o);
+  if (o) $("mOIdNote").textContent = "Đổi mã đơn ở ô trên = ĐỔI ID của chính đơn này (không tạo đơn trùng). Cần Worker hỗ trợ đổi ID.";
+  $("mOEmail").value = o?.email || "";
+  $("mONickname").value = o?.nickname || "";
+  $("mOZalo").value = o?.zalo || "";
+  $("mOExp").value = o?.expDate || "";
+  $("mODays").value = o?.days || "";
+  $("mOUpgVerify").checked = !!o?.pendingUpgrade;
+  $("mOUpgSuccess").checked = !!(o?.isUpgrade && !o.pendingUpgrade && o.upgradeStatus !== "failed");
+  $("mOUpgReject").checked = o?.upgradeStatus === "failed";
+  $("mOLink1").value = o?.info1 || o?.info || "";
+  $("mOLink2").value = o?.info2 || "";
+  $("mOLink3").value = o?.info3 || "";
+  $("mOReason").value = o?.reason || "";
+  $("mOStatus").value = o ? normSt(o.status) : "pending";
+  $("mOMethod").value = /alipay/i.test(o?.method || "") ? "Alipay" : /weixin|wechat/i.test(o?.method || "") ? "Weixin" : "Ngân hàng VN";
+  const sel = $("mOPkg");
+  const dynamicList = [...PKG_LIST];
+  if (Array.isArray(adminPkgsList) && adminPkgsList.length) {
+    adminPkgsList.forEach(dp => {
+      if (!dynamicList.some(x => x[0] === dp.id)) {
+        const timeNum = dp.time === "lifetime" ? 0 : (Number(dp.time) || 1) * 30;
+        dynamicList.push([dp.id, `${dp.name || dp.id} - ${fmtVnd(dp.vnd)}VND (${dp.data || ''})`, timeNum]);
+      }
+    });
   }
-  const st=normSt(o.status);
-  if(mailOnSaveOn()&&!lockFulfillOn()&&o.email&&(body.status==="success"||body.status==="failed")&&(st==="success"||st==="failed")){
-   if(!isMailMaster())toast("Web đang ở chế độ SLAVE, bỏ qua gửi mail","warn");else{const key=st==="success"?mailKeyOf(o):"failed";sendMailClient(o.email,subjVars(getTpl(key).subject,orderVars(o)),st==="success"?mailSuccess(o):mailFailed(o));logEvent("ok","Gửi mail",(st==="success"?"Kích hoạt thành công → ":"Kích hoạt thất bại → ")+o.email,o.id);}}
- }catch(e){if(e.message!=="401")toast("Lỗi lưu đơn: "+e.message,"err");}
- btn.disabled=false;}
-async function delOrd(id){
- if(!confirm("Xóa đơn "+id+"? Toàn bộ Link Sub của đơn này sẽ được khóa và chuyển sang tab Đã Xóa."))return;
- try{
-   await api("/api/admin/order?id="+id,{method:"DELETE"});
-   ordersDb=ordersDb.filter(x=>x.id!==id);
-   lastSig.o=JSON.stringify(ordersDb);
-   renderOrd();renderCheckTab();
-   fetchAll();
-   toast("Đã xóa đơn & thu hồi toàn bộ link sub liên quan");
-   triggerTelegramBackupNow(`Xóa đơn hàng #${id}`);
- }catch(e){}
+  sel.innerHTML = dynamicList.map(p => `<option value="${p[0]}">${esc(p[1])}</option>`).join("");
+  if (o) {
+    let pid = dynamicList.find(p => p[0] === o.pkgId)?.[0];
+    if (!pid) {
+      const pp = pkgOf(o);
+      if (pp) pid = Object.keys(PKG_DB).find(k => PKG_DB[k] === pp);
+    }
+    if (!pid) pid = dynamicList.find(p => o.pkgName && o.pkgData && p[1].startsWith(o.pkgName) && p[1].includes("(" + o.pkgData + ")"))?.[0];
+    if (pid) sel.value = pid;
+    else {
+      sel.innerHTML += `<option value="-1" selected>${esc(o.pkg||o.pkgName||"Gói custom")}</option>`;
+      sel.value = "-1";
+    }
+    const bank = !/alipay|weixin/i.test($("mOMethod").value);
+    $("mOAmount").value = bank ? (o.totalVnd || "") : (o.totalCny || o.totalVnd || "");
+  }
+  else {
+    sel.value = "t1";
+    $("mOAmount").value = "";
+  }
+
+  // Quản lý 3 ô Link theo công tắc "Sửa tay":
+  const canEditManual = manualEditOn();
+  ["1", "2", "3"].forEach(i => {
+    const inp = $("mOLink" + i);
+    inp.readOnly = !canEditManual;
+    if (canEditManual) {
+      inp.classList.remove("bg-slate-100", "cursor-not-allowed", "text-slate-500");
+      inp.classList.add("bg-white", "cursor-text");
+      inp.placeholder = "Dán link sub vào đây (sau khi lưu sẽ được khóa)";
+    } else {
+      inp.classList.add("bg-slate-100", "cursor-not-allowed", "text-slate-500");
+      inp.classList.remove("bg-white", "cursor-text");
+      inp.placeholder = "Đang tắt Sửa tay (chỉ đọc) — bật công tắc Sửa tay ngoài tab để sửa";
+    }
+    $("mOUnl" + i).checked = false;
+    const lk = !!(o && o.lockInfo && o.lockInfo["info" + i]);
+    $("mOUnlW" + i).classList.toggle("hidden", !lk);
+    $("mOLkTag" + i).innerHTML = lk ? '<span class="text-purple-600 font-bold"><i class="fas fa-lock"></i> đã khóa (sửa tay)</span>' : "";
+  });
+
+  const lockOn = !modalNew && expLocked();
+  $("mOExp").disabled = lockOn;
+  $("mODays").disabled = lockOn;
+  const ln = $("mOLockNote");
+  ln.classList.toggle("hidden", !(lockOn || lockFulfillOn() || canEditManual));
+  ln.innerHTML = (lockOn ? '<i class="fas fa-lock mr-1"></i>Đang bật <b>Khóa thông tin hết hạn</b>: HSD &amp; số ngày sẽ KHÔNG đổi. ' : "")
+    + (lockFulfillOn() ? '<i class="fas fa-lock mr-1"></i>Đang bật <b>Khóa fulfillment</b>: lưu đơn sẽ không cấp link / gửi mail tự động. ' : "")
+    + (canEditManual ? '<i class="fas fa-pen-to-square text-purple-600 mr-1"></i>Đang bật <b>Sửa tay</b>: bạn có thể sửa 3 ô Link, lưu xong sẽ khóa không bị ghi đè.' : "");
+  if (modalNew) {
+    autoFillDays();
+    fillAmount();
+  }
+  updMonths();
+  updAmountUi();
+  togSF();
+  modalInit = readModal();
+  upgInit = curUpg();
+  $("mOrd").classList.remove("hidden");
+}
+
+async function saveOrd() {
+  const oldId = modalOldId, id = normId($("mOId").value);
+  if (!/^DH[A-Z0-9]{10}$/.test(id)) return toast("Mã đơn phải dạng DH + 10 ký tự chữ/số", "err");
+  if ((!oldId || id !== oldId) && ordersDb.some(x => normId(x.id) === id)) return toast("Mã đơn " + id + " đã tồn tại", "err");
+  const cur = readModal(), body = { id: oldId || id };
+  if (oldId && id !== oldId) body.newId = id;
+  for (const k in cur) {
+    if (k === "amount") continue;
+    if (modalNew ? (cur[k] !== "" && cur[k] !== "-1") : cur[k] !== modalInit[k]) {
+      if (k === "pkgId" && cur[k] === "-1") continue;
+      body[k] = cur[k];
+    }
+  }
+  const bank = !/alipay|weixin/i.test(cur.method), amt = Number(String(cur.amount).replace(/[,\s]/g, "")) || 0;
+  if (modalNew) {
+    body.totalVnd = bank && amt ? amt : "";
+    body.totalCny = !bank && amt ? amt : "";
+  }
+  else if (cur.amount !== modalInit.amount) {
+    if (bank) body.totalVnd = amt || "";
+    else body.totalCny = amt || "";
+  }
+  const pk = PKG_DB[cur.pkgId];
+  if (pk && (modalNew || cur.days !== modalInit.days || cur.pkgId !== modalInit.pkgId)) body.qty = pk.m === 1 ? Math.max(1, Math.floor((parseInt(cur.days) || 0) / 30)) : 1;
+  if (!modalNew && expLocked()) {
+    delete body.expDate;
+    delete body.days;
+  }
+  if (lockFulfillOn()) body.lockAuto = true;
+  if (expLocked()) body.lockExpiry = true;
+  if (manualEditOn()) body.manualEdit = true; // Báo cho server biết đang bật chế độ Sửa tay
+  const un = ["1", "2", "3"].filter(i => $("mOUnl" + i).checked).map(i => "info" + i);
+  if (un.length) body.unlockInfo = un;
+  if (modalNew || curUpg() !== upgInit) body.upg = curUpg();
+  if (modalNew && !body.status) body.status = "pending";
+  const btn = $("btnSaveOrd");
+  btn.disabled = true;
+  try {
+    const j = await aj("/api/admin/order", { method: "POST", body });
+    const o = j.order;
+    if (body.newId && o.id !== body.newId) toast("Worker chưa hỗ trợ đổi Mã đơn — mã đơn giữ nguyên " + o.id, "warn");
+    let i = ordersDb.findIndex(x => x.id === (oldId || o.id));
+    if (i < 0) i = ordersDb.findIndex(x => x.id === o.id);
+    if (i >= 0) ordersDb[i] = o;
+    else ordersDb.unshift(o);
+    lastSig.o = JSON.stringify(ordersDb);
+    renderOrd();
+    cm("mOrd");
+    toast("Đã lưu" + ((j.kind === "new" || j.kind === "renew") && !lockFulfillOn() ? " & đã cấp link" : ""));
+    if (modalNew) {
+      triggerTelegramBackupNow(`Đơn hàng mới #${o.id} (${o.email || "Khách"})`);
+    }
+    const st = normSt(o.status);
+    if (mailOnSaveOn() && !lockFulfillOn() && o.email && (body.status === "success" || body.status === "failed") && (st === "success" || st === "failed")) {
+      if (!isMailMaster()) toast("Web đang ở chế độ SLAVE, bỏ qua gửi mail", "warn");
+      else {
+        const key = st === "success" ? mailKeyOf(o) : "failed";
+        sendMailClient(o.email, subjVars(getTpl(key).subject, orderVars(o)), st === "success" ? mailSuccess(o) : mailFailed(o));
+        logEvent("ok", "Gửi mail", (st === "success" ? "Kích hoạt thành công → " : "Kích hoạt thất bại → ") + o.email, o.id);
+      }
+    }
+  } catch (e) {
+    if (e.message !== "401") toast("Lỗi lưu đơn: " + e.message, "err");
+  }
+  btn.disabled = false;
+}
+async function delOrd(id) {
+  if (!confirm("Xóa đơn " + id + "? Toàn bộ Link Sub của đơn này sẽ được khóa và chuyển sang tab Đã Xóa.")) return;
+  try {
+    await api("/api/admin/order?id=" + id, { method: "DELETE" });
+    ordersDb = ordersDb.filter(x => x.id !== id);
+    lastSig.o = JSON.stringify(ordersDb);
+    renderOrd();
+    renderCheckTab();
+    fetchAll();
+    toast("Đã xóa đơn & thu hồi toàn bộ link sub liên quan");
+    triggerTelegramBackupNow(`Xóa đơn hàng #${id}`);
+  } catch (e) {}
 }
 // ===================== TAB KIỂM TRA ĐƠN THIẾU LINK CỤC BỘ =====================
-function getMissingOrders(){
- const now = nowMs();
- const me = getMe();
- return ordersDb.filter(o => 
-   o && normSt(o.status) === "success" && 
-   (!o.expDate || isLife(o.expDate) || (expEnd(o.expDate) >= now)) &&
-   !o[me.field]
- );
+function getMissingOrders() {
+  const now = nowMs();
+  const me = getMe();
+  return ordersDb.filter(o => o && normSt(o.status) === "success" && (!o.expDate || isLife(o.expDate) || (expEnd(o.expDate) >= now)) && !o[me.field]);
 }
 
-function updateCheckBadge(){
- const list = getMissingOrders();
- const b = $("checkBadge"), cnt = $("checkBadgeCount"), bm = $("checkBadgeMobile");
- if (b) {
-   b.textContent = list.length;
-   b.classList.toggle("hidden", list.length === 0);
- }
- if (bm) {
-   bm.textContent = list.length;
-   bm.classList.toggle("hidden", list.length === 0);
- }
- if (cnt) cnt.textContent = list.length;
- updateMoreBadge();
+function updateCheckBadge() {
+  const list = getMissingOrders();
+  const b = $("checkBadge"), cnt = $("checkBadgeCount"), bm = $("checkBadgeMobile");
+  if (b) {
+    b.textContent = list.length;
+    b.classList.toggle("hidden", list.length === 0);
+  }
+  if (bm) {
+    bm.textContent = list.length;
+    bm.classList.toggle("hidden", list.length === 0);
+  }
+  if (cnt) cnt.textContent = list.length;
+  updateMoreBadge();
 }
 
 function updateMoreBadge() {
@@ -805,26 +1288,26 @@ function updateMoreBadge() {
 }
 window.updateMoreBadge = updateMoreBadge;
 
-function renderCheckTab(){
- const me = getMe();
- updateCheckBadge();
- const tb = $("checkBody");
- if (!tb) return;
+function renderCheckTab() {
+  const me = getMe();
+  updateCheckBadge();
+  const tb = $("checkBody");
+  if (!tb) return;
 
- if ($("checkHeaderTitle")) $("checkHeaderTitle").innerHTML = `<i class="fas fa-clipboard-check text-indigo-600 mr-1.5"></i>Kiểm tra bù link (${me.field.toUpperCase()}) <span id="checkBadgeCount" class="bg-indigo-100 text-indigo-700 text-xs font-black px-2 py-0.5 rounded-full ml-1">0</span>`;
- if ($("scanRoutingFieldTxt")) $("scanRoutingFieldTxt").textContent = me.field.toUpperCase();
+  if ($("checkHeaderTitle")) $("checkHeaderTitle").innerHTML = `<i class="fas fa-clipboard-check text-indigo-600 mr-1.5"></i>Kiểm tra bù link (${me.field.toUpperCase()}) <span id="checkBadgeCount" class="bg-indigo-100 text-indigo-700 text-xs font-black px-2 py-0.5 rounded-full ml-1">0</span>`;
+  if ($("scanRoutingFieldTxt")) $("scanRoutingFieldTxt").textContent = me.field.toUpperCase();
 
- const list = getMissingOrders();
- if (!list.length) {
-   tb.innerHTML = `<div class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-slate-200 shadow-sm font-bold">
+  const list = getMissingOrders();
+  if (!list.length) {
+    tb.innerHTML = `<div class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-slate-200 shadow-sm font-bold">
      <i class="fas fa-circle-check text-emerald-500 text-3xl mb-2 block"></i>
      Tuyệt vời! Tất cả đơn hàng còn hạn đều đã có link ${me.field.toUpperCase()} của web này.
    </div>`;
-   return;
- }
+    return;
+  }
 
- tb.innerHTML = list.map((o, idx) => {
-   return `
+  tb.innerHTML = list.map((o, idx) => {
+    return `
    <div class="bg-white border-2 border-purple-200 rounded-2xl p-4 shadow-sm flex flex-col gap-3">
      <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-100 pb-3">
        <div>
@@ -856,182 +1339,345 @@ function renderCheckTab(){
        <input type="text" id="chkLink_${o.id}" value="${esc(o[me.field] || '')}" placeholder="Dán link ${me.field.toUpperCase()} vào đây..." class="w-full p-2 text-xs border ${o[me.field] ? 'border-slate-200 bg-slate-50' : 'border-purple-300 bg-purple-50/30'} rounded-lg font-mono outline-none focus:border-indigo-500">
      </div>
    </div>`;
- }).join("");
+  }).join("");
 }
 
 // Lưu sửa tay trực tiếp ô link cục bộ từ tab Kiểm tra
-async function saveCheckManual(orderId){
- const o = ordersDb.find(x => x.id === orderId);
- if (!o) return;
- const me = getMe();
- const lk = ($("chkLink_" + orderId)?.value || "").trim();
+async function saveCheckManual(orderId) {
+  const o = ordersDb.find(x => x.id === orderId);
+  if (!o) return;
+  const me = getMe();
+  const lk = ($("chkLink_" + orderId)?.value || "").trim();
 
- toast("Đang lưu link sửa tay...");
- try {
-   const body = { id: o.id, [me.field]: lk, manualEdit: true };
-   const j = await aj("/api/admin/order", { method: "POST", body });
-   const idx = ordersDb.findIndex(x => x.id === o.id);
-   if (idx >= 0) ordersDb[idx] = j.order;
-   lastSig.o = JSON.stringify(ordersDb);
-   renderCheckTab();
-   renderOrd();
-   toast(`Đã lưu link ${me.field.toUpperCase()} cho đơn ${o.id}!`);
- } catch(e) {
-   toast("Lỗi lưu link: " + e.message, "err");
- }
+  toast("Đang lưu link sửa tay...");
+  try {
+    const body = { id: o.id, [me.field]: lk, manualEdit: true };
+    const j = await aj("/api/admin/order", { method: "POST", body });
+    const idx = ordersDb.findIndex(x => x.id === o.id);
+    if (idx >= 0) ordersDb[idx] = j.order;
+    lastSig.o = JSON.stringify(ordersDb);
+    renderCheckTab();
+    renderOrd();
+    toast(`Đã lưu link ${me.field.toUpperCase()} cho đơn ${o.id}!`);
+  } catch (e) {
+    toast("Lỗi lưu link: " + e.message, "err");
+  }
 }
 
 // Bù link cục bộ cho 1 đơn cụ thể
-async function healSingleOrder(orderId){
- const me = getMe();
- toast(`Đang cấp bù link ${me.field.toUpperCase()} cho đơn ${orderId}...`);
- try {
-   const res = await aj("/api/admin/heal", { method: "POST", body: { orderIds: [orderId] } });
-   const item = res && res.details && res.details[0];
-   if (item && item.success && item.link) {
-     const targetOrder = ordersDb.find(o => normId(o.id) === normId(item.id));
-     if (targetOrder) targetOrder[item.field || me.field] = item.link;
-     lastSig.o = JSON.stringify(ordersDb);
-     renderCheckTab();
-     renderOrd();
-     toast(`Đã cấp bù link ${me.field.toUpperCase()} thành công!`);
-   } else {
-     toast("Không thể cấp bù link (hết nguồn trống trong kho)!", "warn");
-   }
- } catch(e) {
-   toast("Lỗi: " + e.message, "err");
- }
+async function healSingleOrder(orderId) {
+  const me = getMe();
+  toast(`Đang cấp bù link ${me.field.toUpperCase()} cho đơn ${orderId}...`);
+  try {
+    const res = await aj("/api/admin/heal", { method: "POST", body: { orderIds: [orderId] } });
+    const item = res && res.details && res.details[0];
+    if (item && item.success && item.link) {
+      const targetOrder = ordersDb.find(o => normId(o.id) === normId(item.id));
+      if (targetOrder) targetOrder[item.field || me.field] = item.link;
+      lastSig.o = JSON.stringify(ordersDb);
+      renderCheckTab();
+      renderOrd();
+      toast(`Đã cấp bù link ${me.field.toUpperCase()} thành công!`);
+    } else {
+      toast("Không thể cấp bù link (hết nguồn trống trong kho)!", "warn");
+    }
+  } catch (e) {
+    toast("Lỗi: " + e.message, "err");
+  }
 }
 
 // Bù link cục bộ toàn bộ danh sách (1 request batching)
-async function healAllMissingWithProgress(){
- const list = getMissingOrders();
- const me = getMe();
- if (!list.length) return toast(`Tất cả đơn đã đủ link ${me.field.toUpperCase()}!`, "info");
- const btn = $("btnHealAll");
- btn.disabled = true;
- const box = $("checkProgressBox"), bar = $("checkProgressBar"), pTxt = $("checkProgressPercent"), sTxt = $("checkProgressStatus"), logEl = $("checkLogTerminal");
- box.classList.remove("hidden");
- bar.style.width = "20%";
- pTxt.textContent = "20%";
- $("statTotal").textContent = list.length;
- $("statSuccess").textContent = "0";
- $("statFailed").textContent = "0";
- logEl.innerHTML = `<div class="text-indigo-300">[CỤC BỘ] Đang xử lý cấp bù link ${me.field.toUpperCase()} cho ${list.length} đơn...</div>`;
- sTxt.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Đang cấp bù link từ kho cục bộ...`;
+async function healAllMissingWithProgress() {
+  const list = getMissingOrders();
+  const me = getMe();
+  if (!list.length) return toast(`Tất cả đơn đã đủ link ${me.field.toUpperCase()}!`, "info");
+  const btn = $("btnHealAll");
+  btn.disabled = true;
+  const box = $("checkProgressBox"), bar = $("checkProgressBar"), pTxt = $("checkProgressPercent"), sTxt = $("checkProgressStatus"), logEl = $("checkLogTerminal");
+  box.classList.remove("hidden");
+  bar.style.width = "20%";
+  pTxt.textContent = "20%";
+  $("statTotal").textContent = list.length;
+  $("statSuccess").textContent = "0";
+  $("statFailed").textContent = "0";
+  logEl.innerHTML = `<div class="text-indigo-300">[CỤC BỘ] Đang xử lý cấp bù link ${me.field.toUpperCase()} cho ${list.length} đơn...</div>`;
+  sTxt.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i>Đang cấp bù link từ kho cục bộ...`;
 
- try {
-   const allIds = list.map(o => o.id);
-   const res = await aj("/api/admin/heal", { method: "POST", body: { orderIds: allIds } });
-   bar.style.width = "75%";
-   pTxt.textContent = "75%";
+  try {
+    const allIds = list.map(o => o.id);
+    const res = await aj("/api/admin/heal", { method: "POST", body: { orderIds: allIds } });
+    bar.style.width = "75%";
+    pTxt.textContent = "75%";
 
-   const details = arr(res.details);
-   let successCount = 0, failCount = 0;
+    const details = arr(res.details);
+    let successCount = 0, failCount = 0;
 
-   logEl.innerHTML += `<div class="text-slate-400 mt-1">// === KẾT QUẢ CẤP BÙ CỤC BỘ ===</div>`;
+    logEl.innerHTML += `<div class="text-slate-400 mt-1">// === KẾT QUẢ CẤP BÙ CỤC BỘ ===</div>`;
 
-   for (const item of details) {
-     const targetOrder = ordersDb.find(o => normId(o.id) === normId(item.id));
-     if (targetOrder && item.success && item.link) {
-       targetOrder[item.field || me.field] = item.link;
-     }
-     const logLine = document.createElement("div");
-     if (item.success) {
-       successCount++;
-       logLine.className = "text-emerald-300 font-bold";
-       logLine.textContent = `✔ [THÀNH CÔNG] Đơn ${item.id} (${item.email}): Đã gán link ${item.field.toUpperCase()}`;
-     } else {
-       failCount++;
-       logLine.className = "text-rose-400 font-bold";
-       logLine.textContent = `✘ [THẤT BẠI] Đơn ${item.id} (${item.email}): Hết node trống trong kho`;
-     }
-     logEl.appendChild(logLine);
-   }
+    for (const item of details) {
+      const targetOrder = ordersDb.find(o => normId(o.id) === normId(item.id));
+      if (targetOrder && item.success && item.link) {
+        targetOrder[item.field || me.field] = item.link;
+      }
+      const logLine = document.createElement("div");
+      if (item.success) {
+        successCount++;
+        logLine.className = "text-emerald-300 font-bold";
+        logLine.textContent = `✔ [THÀNH CÔNG] Đơn ${item.id} (${item.email}): Đã gán link ${item.field.toUpperCase()}`;
+      } else {
+        failCount++;
+        logLine.className = "text-rose-400 font-bold";
+        logLine.textContent = `✘ [THẤT BẠI] Đơn ${item.id} (${item.email}): Hết node trống trong kho`;
+      }
+      logEl.appendChild(logLine);
+    }
 
-   lastSig.o = JSON.stringify(ordersDb);
-   renderCheckTab();
-   renderOrd();
+    lastSig.o = JSON.stringify(ordersDb);
+    renderCheckTab();
+    renderOrd();
 
-   $("statSuccess").textContent = successCount;
-   $("statFailed").textContent = failCount;
+    $("statSuccess").textContent = successCount;
+    $("statFailed").textContent = failCount;
 
-   bar.style.width = "100%";
-   pTxt.textContent = "100%";
-   sTxt.innerHTML = `<i class="fas fa-circle-check text-emerald-400 mr-1"></i>Hoàn tất! ${successCount} đơn thành công, ${failCount} đơn lỗi.`;
-   toast(`Đã xử lý xong: ${successCount} đơn thành công, ${failCount} thất bại.`);
- } catch(e) {
-   bar.style.width = "100%";
-   sTxt.innerHTML = `<i class="fas fa-circle-xmark text-rose-400 mr-1"></i>Lỗi trong quá trình bù link!`;
-   const logLine = document.createElement("div");
-   logLine.className = "text-rose-400 font-bold";
-   logLine.textContent = `✘ [LỖI HỆ THỐNG]: ${e.message || "Không phản hồi"}`;
-   logEl.appendChild(logLine);
-   toast("Lỗi bù link: " + e.message, "err");
- } finally {
-   btn.disabled = false;
- }
+    bar.style.width = "100%";
+    pTxt.textContent = "100%";
+    sTxt.innerHTML = `<i class="fas fa-circle-check text-emerald-400 mr-1"></i>Hoàn tất! ${successCount} đơn thành công, ${failCount} đơn lỗi.`;
+    toast(`Đã xử lý xong: ${successCount} đơn thành công, ${failCount} thất bại.`);
+  } catch (e) {
+    bar.style.width = "100%";
+    sTxt.innerHTML = `<i class="fas fa-circle-xmark text-rose-400 mr-1"></i>Lỗi trong quá trình bù link!`;
+    const logLine = document.createElement("div");
+    logLine.className = "text-rose-400 font-bold";
+    logLine.textContent = `✘ [LỖI HỆ THỐNG]: ${e.message || "Không phản hồi"}`;
+    logEl.appendChild(logLine);
+    toast("Lỗi bù link: " + e.message, "err");
+  } finally {
+    btn.disabled = false;
+  }
 }
 const healAllMissing = healAllMissingWithProgress;
 
 // ===================== MAIL: LÕI TEMPLATE (giống hệt Worker để preview = gửi thật) =====================
-const htmlEscape=esc;
-const sendMailClient=(to,subject,html)=>api("/api/admin/send_mail",{method:"POST",body:{to,subject,html}}).catch(()=>{});
-const mailGrad=(c1,c2,ang,stop)=>`linear-gradient(${Number(ang)||135}deg,${c1} 0%,${c2} ${Math.max(1,Math.min(100,Number(stop)||100))}%)`;
-const mailShell=(c1,c2,title,inner,ang,stop)=>`<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;width:100%;max-width:480px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden"><div style="background:${c1};background-image:${mailGrad(c1,c2,ang,stop)};padding:22px 16px;text-align:center"><h2 style="color:#ffffff;margin:0;font-size:18px;font-weight:700;line-height:1.4;text-transform:uppercase;letter-spacing:normal;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">${title}</h2></div><div style="padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">${inner}</div></div>`;
-const mailIdBox=(label,id,color)=>`<div style="background:#f1f5f9;border-left:4px solid ${color};padding:15px;border-radius:8px;margin:18px 0;text-align:center"><p style="margin:0;font-size:11px;color:#64748b;font-weight:bold;text-transform:uppercase">${label}</p><p style="margin:8px 0 0;font-size:22px;font-weight:900;color:${color};letter-spacing:1px;word-break:break-word">${htmlEscape(id)}</p></div>`;
-const mailPortal=(PDx,label)=>`<div style="text-align:center;margin:24px 0 6px"><a href="${htmlEscape(PDx)}" style="display:block;background:#1e293b;color:#ffffff;padding:13px 15px;border-radius:10px;text-decoration:none;font-weight:900;font-size:14px">${label}</a></div><p style="margin:10px 0 0;font-size:12px;color:#64748b;text-align:center;line-height:1.5">👉 <i>Dùng <b>Mã Đơn Hàng</b> hoặc <b>Email</b> để tra cứu thông tin đơn hàng</i></p>`;
-const mailBtn=(href,bg,label)=>`<td width="50%" style="padding:4px"><a href="${htmlEscape(href)}" style="display:block;background:${bg};color:#ffffff;padding:10px 0;border-radius:8px;text-decoration:none;font-weight:bold;font-size:12px;text-align:center">${label}</a></td>`;
-const mailSupport=PDx=>`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-top:22px;text-align:center"><p style="margin:0 0 12px;color:#475569;font-size:13px;line-height:1.5">Cần hỗ trợ? Đội ngũ của chúng tôi luôn sẵn sàng 24/7 để hỗ trợ bạn ❤️</p><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse"><tr>${mailBtn("https://zalo.me/0917678211","#0068ff","Chat Zalo")}${mailBtn("https://www.facebook.com/trinh.hg.57","#0668E1","Messenger")}</tr><tr>${mailBtn("https://t.me/hoaian57","#0088cc","Telegram")}${mailBtn(String(PDx).replace(/\/$/,"")+"/#wechat","#07C160","WeChat")}</tr></table></div>`;
-const TPL_THEME={red:["#fef2f2","#fca5a5","#991b1b","#b91c1c"],amber:["#fefce8","#facc15","#a16207","#ca8a04"],purple:["#f5f3ff","#a78bfa","#6d28d9","#7c3aed"],blue:["#eff6ff","#93c5fd","#1e40af","#2563eb"],green:["#f0fdf4","#86efac","#166534","#16a34a"]};
-const P0={t:"portal",x:"TRUY CẬP CỔNG KHÁCH HÀNG"},S0={t:"support"};
-// Mẫu hệ thống: bản sao đúng cấu trúc SYS_TPL của Worker. UI chỉ cho sửa 5 mẫu; renew/upgrade giữ mặc định của Worker.
-const SYS_TPL={
- success:{subject:"VPN Trinh Hg - Kích hoạt thành công",title:"KÍCH HOẠT THÀNH CÔNG",c1:"#4f46e5",c2:"#8b5cf6",ang:135,stop:100,blocks:[{t:"text",x:"Xin chào, Gói VPN **{pkgName}** của bạn đã sẵn sàng."},{t:"orderid",label:"MÃ ĐƠN HÀNG CỦA BẠN"},P0,S0]},
- renew:{subject:"VPN Trinh Hg - Gia hạn thành công",title:"GIA HẠN THÀNH CÔNG",c1:"#4f46e5",c2:"#8b5cf6",ang:135,stop:100,blocks:[{t:"text",x:"Xin chào, Gói VPN **{pkgName}** của bạn đã được gia hạn thành công."},{t:"orderid",label:"MÃ ĐƠN HÀNG CỦA BẠN"},P0,S0]},
- upgrade:{subject:"VPN Trinh Hg - Nâng cấp thành công",title:"NÂNG CẤP THÀNH CÔNG",c1:"#4f46e5",c2:"#8b5cf6",ang:135,stop:100,blocks:[{t:"text",x:"Xin chào, Gói VPN **{pkgName}** của bạn đã được nâng cấp thành công."},{t:"orderid",label:"MÃ ĐƠN HÀNG CỦA BẠN"},P0,S0]},
- failed:{subject:"VPN Trinh Hg - Kích hoạt thất bại",title:"KÍCH HOẠT THẤT BẠI",c1:"#ef4444",c2:"#b91c1c",ang:135,stop:100,blocks:[{t:"text",x:"Xin chào, Gói VPN **{pkgName}** của bạn không thể kích hoạt."},{t:"orderid",label:"MÃ ĐƠN HÀNG CỦA BẠN",color:"#4f46e5"},{t:"box",label:"LÝ DO TỪ CHỐI",x:"{reason}",theme:"red"},P0,S0]},
- exp:{subject:"VPN Trinh Hg - Gói VPN sắp hết hạn",title:"GÓI VPN SẮP HẾT HẠN",c1:"#f59e0b",c2:"#d97706",ang:135,stop:100,blocks:[{t:"text",x:"Xin chào, Gói VPN **{pkgName}** của bạn {expText}.",al:"c"},{t:"orderid",label:"MÃ ĐƠN HÀNG HIỆN TẠI",color:"#d97706"},{t:"text",x:"Gia hạn ngay để không bị gián đoạn dịch vụ.",al:"c",sz:"m"},{t:"portal",x:"GIA HẠN NGAY TẠI WEBSITE"},S0]},
- support:{subject:"VPN Trinh Hg - Hỗ trợ cài đặt",title:"HỖ TRỢ CÀI ĐẶT",c1:"#2563eb",c2:"#1d4ed8",ang:135,stop:100,blocks:[{t:"text",x:"Vui lòng liên hệ Admin qua Zalo để được hỗ trợ gói VPN mã đơn **{orderId}** nhé!",al:"c"},{t:"box",label:"ZALO ADMIN",x:"0917678211",theme:"amber"},P0,S0]},
- data:{subject:"VPN Trinh Hg - Báo cáo dung lượng {orderId}",title:"KẾT QUẢ TRA CỨU\nDUNG LƯỢNG",c1:"#8b5cf6",c2:"#6d28d9",ang:135,stop:100,blocks:[{t:"text",x:"Đây là dung lượng của đơn hàng **{orderId}**.",al:"c"},{t:"box",label:"DUNG LƯỢNG CÒN LẠI",x:"{gb} GB",theme:"purple"},{t:"text",x:"Nếu tốc độ chậm, có thể gói đã dùng hết dung lượng.",al:"c",sz:"m"},P0,S0]}
+const htmlEscape = esc;
+const sendMailClient = (to, subject, html) => api("/api/admin/send_mail", { method: "POST", body: { to, subject, html } }).catch(() => {});
+const mailGrad = (c1, c2, ang, stop) => `linear-gradient(${Number(ang)||135}deg,${c1} 0%,${c2} ${Math.max(1,Math.min(100,Number(stop)||100))}%)`;
+const mailShell = (c1, c2, title, inner, ang, stop) => `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;width:100%;max-width:480px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden"><div style="background:${c1};background-image:${mailGrad(c1,c2,ang,stop)};padding:22px 16px;text-align:center"><h2 style="color:#ffffff;margin:0;font-size:18px;font-weight:700;line-height:1.4;text-transform:uppercase;letter-spacing:normal;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">${title}</h2></div><div style="padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">${inner}</div></div>`;
+const mailIdBox = (label, id, color) => `<div style="background:#f1f5f9;border-left:4px solid ${color};padding:15px;border-radius:8px;margin:18px 0;text-align:center"><p style="margin:0;font-size:11px;color:#64748b;font-weight:bold;text-transform:uppercase">${label}</p><p style="margin:8px 0 0;font-size:22px;font-weight:900;color:${color};letter-spacing:1px;word-break:break-word">${htmlEscape(id)}</p></div>`;
+const mailPortal = (PDx, label) => `<div style="text-align:center;margin:24px 0 6px"><a href="${htmlEscape(PDx)}" style="display:block;background:#1e293b;color:#ffffff;padding:13px 15px;border-radius:10px;text-decoration:none;font-weight:900;font-size:14px">${label}</a></div><p style="margin:10px 0 0;font-size:12px;color:#64748b;text-align:center;line-height:1.5">👉 <i>Dùng <b>Mã Đơn Hàng</b> hoặc <b>Email</b> để tra cứu thông tin đơn hàng</i></p>`;
+const mailBtn = (href, bg, label) => `<td width="50%" style="padding:4px"><a href="${htmlEscape(href)}" style="display:block;background:${bg};color:#ffffff;padding:10px 0;border-radius:8px;text-decoration:none;font-weight:bold;font-size:12px;text-align:center">${label}</a></td>`;
+const mailSupport = PDx => `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-top:22px;text-align:center"><p style="margin:0 0 12px;color:#475569;font-size:13px;line-height:1.5">Cần hỗ trợ? Đội ngũ của chúng tôi luôn sẵn sàng 24/7 để hỗ trợ bạn ❤️</p><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse"><tr>${mailBtn("https://zalo.me/0917678211","#0068ff","Chat Zalo")}${mailBtn("https://www.facebook.com/trinh.hg.57","#0668E1","Messenger")}</tr><tr>${mailBtn("https://t.me/hoaian57","#0088cc","Telegram")}${mailBtn(String(PDx).replace(/\/$/,"")+"/#wechat","#07C160","WeChat")}</tr></table></div>`;
+const TPL_THEME = {
+  red: ["#fef2f2", "#fca5a5", "#991b1b", "#b91c1c"],
+  amber: ["#fefce8", "#facc15", "#a16207", "#ca8a04"],
+  purple: ["#f5f3ff", "#a78bfa", "#6d28d9", "#7c3aed"],
+  blue: ["#eff6ff", "#93c5fd", "#1e40af", "#2563eb"],
+  green: ["#f0fdf4", "#86efac", "#166534", "#16a34a"]
 };
-const getTpl=k=>({...SYS_TPL[k],...((((cmsDb&&cmsDb.mailSys)||{})[k])||{})});
-const subjVars=(t,v)=>String(t??"").replace(/\{(\w+)\}/g,(m,k)=>(v[k]!==undefined&&v[k]!==null?String(v[k]):m));
-function mailRender(tpl,v,PDx){
- const rp=t=>subjVars(t,v),tx=t=>htmlEscape(rp(t)).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/\n/g,"<br>");
- const al=b=>(b.al==="c"?"center":b.al==="r"?"right":"left"),fs={s:"12px",m:"14px",l:"17px",xl:"22px"};
- const inner=arr(tpl.blocks).map(b=>{
-  if(b.t==="text")return `<p style="margin:0 0 12px;font-size:${fs[b.sz]||"15px"};line-height:1.6;color:#334155;text-align:${al(b)};white-space:pre-wrap;${b.b?"font-weight:bold;":""}${b.i?"font-style:italic;":""}${b.ul?"text-decoration:underline;":""}">${tx(b.x)}</p>`;
-  if(b.t==="orderid")return mailIdBox(htmlEscape(rp(b.label||"MÃ ĐƠN HÀNG CỦA BẠN")),v.orderId||"",b.color||tpl.c1);
-  if(b.t==="box"){const t=TPL_THEME[b.theme]||TPL_THEME.amber;return `<div style="background:${t[0]};border:2px dashed ${t[1]};padding:18px;border-radius:12px;text-align:center;margin:14px 0"><p style="margin:0;font-size:12px;color:${t[2]};font-weight:bold;text-transform:uppercase">${htmlEscape(rp(b.label))}</p><p style="margin:10px 0 0;font-size:${fs[b.sz]||"26px"};font-weight:900;color:${t[3]};word-break:break-word">${tx(b.x)}</p></div>`;}
-  if(b.t==="info")return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:10px 0">${[["✉️","Email",v.email],["#️⃣","Mã đơn",v.orderId],["📦","Gói VPN",v.pkg],["⏰","HSD",v.exp]].map(([ic,lb,val])=>`<tr><td style="padding:9px 6px;border-bottom:1px solid #f1f5f9;width:34%;font-size:13px;color:#64748b">${ic} ${lb}</td><td style="padding:9px 6px;border-bottom:1px solid #f1f5f9;font-size:14px;font-weight:bold;color:#0f172a;word-break:break-word">${htmlEscape(val||"—")}</td></tr>`).join("")}</table>`;
-  if(b.t==="portal")return mailPortal(PDx,htmlEscape(rp(b.x||"TRUY CẬP CỔNG KHÁCH HÀNG")));
-  if(b.t==="support")return mailSupport(PDx);
-  if(b.t==="img")return /^https?:\/\//i.test(b.u||"")?`<div style="text-align:${al(b)};margin:10px 0"><img src="${htmlEscape(b.u)}" style="max-width:100%;border-radius:8px"></div>`:"";
-  if(b.t==="divider")return '<hr style="border:0;border-top:1px solid #e2e8f0;margin:16px 0">';
-  if(b.t==="spacer")return `<div style="height:${Math.max(4,Math.min(200,parseInt(b.h)||16))}px"></div>`;
-  return "";}).join("");
- return mailShell(tpl.c1,tpl.c2,htmlEscape(rp(tpl.title)).replace(/\n/g,"<br>"),inner,tpl.ang,tpl.stop);}
-function orderVars(o,extra){const pk=pkgOf(o),lockTs=parseDmy(o.expDate),dl=o.expDate&&!isLife(o.expDate)&&lockTs>nowMs()?Math.floor((lockTs-nowMs())/864e5):"";
- return {email:o.email||"",orderId:o.id||"",pkgName:o.pkgName||"",pkg:pk?pkgLabel(o):(o.pkgName||""),exp:o.expDate||"",daysLeft:dl,nickname:o.nickname||"",zalo:o.zalo||"",reason:o.reason||"Vui lòng liên hệ Admin",...(extra||{})};}
-const mailKeyOf=o=>o.orderType==="renew"?"renew":"success";
-const mailSuccess=o=>mailRender(getTpl(mailKeyOf(o)),orderVars(o),PD);
-const mailFailed=o=>mailRender(getTpl("failed"),orderVars(o),PD);
-const mailExp=(o,expText)=>mailRender(getTpl("exp"),orderVars(o,{expText}),PD);
-const mailZalo=o=>mailRender(getTpl("support"),orderVars(o),PD);
-const dataVars=(r,gb)=>{const oi=ordersDb.find(o=>normId(o.id)===normId(r.orderId));return {...(oi?orderVars(oi):{email:r.email||"",orderId:r.orderId||"",pkgName:r.pkgName||"",pkg:r.pkgName||"",exp:"",daysLeft:"",nickname:"",zalo:"",reason:""}),email:r.email||"",orderId:r.orderId||"",gb};};
-const mailData=(r,gb)=>mailRender(getTpl("data"),dataVars(r,gb),PD);
-function sendExpMail(id){if(!isMailMaster())return toast("Đang ở chế độ SLAVE Email","err");const o=ordersDb.find(x=>x.id===id);if(!o?.email)return toast("Chưa có email","err");
- const lockTs=parseDmy(o.expDate),dl=lockTs>nowMs()?Math.floor((lockTs-nowMs())/864e5):0;const msg=dl<=1?"**ngày mai hết hạn**":`còn **${dl} ngày** (hết hạn **${o.expDate}**)`;
- sendMailClient(o.email,subjVars(getTpl("exp").subject,orderVars(o,{expText:msg.replace(/\*\*/g,"")})),mailExp(o,msg));logEvent("ok","Gửi mail","Nhắc hết hạn (thủ công) → "+o.email,o.id);toast("Đã gửi mail nhắc hết hạn");}
-function sendZaloMail(id){if(!isMailMaster())return toast("Đang ở chế độ SLAVE Email","err");const o=ordersDb.find(x=>x.id===id);if(!o?.email)return toast("Chưa có email","err");
- sendMailClient(o.email,subjVars(getTpl("support").subject,orderVars(o)),mailZalo(o));logEvent("ok","Gửi mail","Hỗ trợ cài đặt → "+o.email,o.id);toast("Đã gửi mail nhắc hỗ trợ cài đặt");}
+const P0 = { t: "portal", x: "TRUY CẬP CỔNG KHÁCH HÀNG" }, S0 = { t: "support" };
+// Mẫu hệ thống: bản sao đúng cấu trúc SYS_TPL của Worker. UI chỉ cho sửa 5 mẫu; renew/upgrade giữ mặc định của Worker.
+const SYS_TPL = {
+  success: {
+    subject: "VPN Trinh Hg - Kích hoạt thành công",
+    title: "KÍCH HOẠT THÀNH CÔNG",
+    c1: "#4f46e5",
+    c2: "#8b5cf6",
+    ang: 135,
+    stop: 100,
+    blocks: [{
+      t: "text",
+      x: "Xin chào, Gói VPN **{pkgName}** của bạn đã sẵn sàng."
+    }, { t: "orderid", label: "MÃ ĐƠN HÀNG CỦA BẠN" }, P0, S0]
+  },
+  renew: {
+    subject: "VPN Trinh Hg - Gia hạn thành công",
+    title: "GIA HẠN THÀNH CÔNG",
+    c1: "#4f46e5",
+    c2: "#8b5cf6",
+    ang: 135,
+    stop: 100,
+    blocks: [{
+      t: "text",
+      x: "Xin chào, Gói VPN **{pkgName}** của bạn đã được gia hạn thành công."
+    }, { t: "orderid", label: "MÃ ĐƠN HÀNG CỦA BẠN" }, P0, S0]
+  },
+  upgrade: {
+    subject: "VPN Trinh Hg - Nâng cấp thành công",
+    title: "NÂNG CẤP THÀNH CÔNG",
+    c1: "#4f46e5",
+    c2: "#8b5cf6",
+    ang: 135,
+    stop: 100,
+    blocks: [{
+      t: "text",
+      x: "Xin chào, Gói VPN **{pkgName}** của bạn đã được nâng cấp thành công."
+    }, { t: "orderid", label: "MÃ ĐƠN HÀNG CỦA BẠN" }, P0, S0]
+  },
+  failed: {
+    subject: "VPN Trinh Hg - Kích hoạt thất bại",
+    title: "KÍCH HOẠT THẤT BẠI",
+    c1: "#ef4444",
+    c2: "#b91c1c",
+    ang: 135,
+    stop: 100,
+    blocks: [{
+      t: "text",
+      x: "Xin chào, Gói VPN **{pkgName}** của bạn không thể kích hoạt."
+    }, { t: "orderid", label: "MÃ ĐƠN HÀNG CỦA BẠN", color: "#4f46e5" }, {
+      t: "box",
+      label: "LÝ DO TỪ CHỐI",
+      x: "{reason}",
+      theme: "red"
+    }, P0, S0]
+  },
+  exp: {
+    subject: "VPN Trinh Hg - Gói VPN sắp hết hạn",
+    title: "GÓI VPN SẮP HẾT HẠN",
+    c1: "#f59e0b",
+    c2: "#d97706",
+    ang: 135,
+    stop: 100,
+    blocks: [{
+      t: "text",
+      x: "Xin chào, Gói VPN **{pkgName}** của bạn {expText}.",
+      al: "c"
+    }, { t: "orderid", label: "MÃ ĐƠN HÀNG HIỆN TẠI", color: "#d97706" }, {
+      t: "text",
+      x: "Gia hạn ngay để không bị gián đoạn dịch vụ.",
+      al: "c",
+      sz: "m"
+    }, { t: "portal", x: "GIA HẠN NGAY TẠI WEBSITE" }, S0]
+  },
+  support: {
+    subject: "VPN Trinh Hg - Hỗ trợ cài đặt",
+    title: "HỖ TRỢ CÀI ĐẶT",
+    c1: "#2563eb",
+    c2: "#1d4ed8",
+    ang: 135,
+    stop: 100,
+    blocks: [{
+      t: "text",
+      x: "Vui lòng liên hệ Admin qua Zalo để được hỗ trợ gói VPN mã đơn **{orderId}** nhé!",
+      al: "c"
+    }, {
+      t: "box",
+      label: "ZALO ADMIN",
+      x: "0917678211",
+      theme: "amber"
+    }, P0, S0]
+  },
+  data: {
+    subject: "VPN Trinh Hg - Báo cáo dung lượng {orderId}",
+    title: "KẾT QUẢ TRA CỨU\nDUNG LƯỢNG",
+    c1: "#8b5cf6",
+    c2: "#6d28d9",
+    ang: 135,
+    stop: 100,
+    blocks: [{
+      t: "text",
+      x: "Đây là dung lượng của đơn hàng **{orderId}**.",
+      al: "c"
+    }, {
+      t: "box",
+      label: "DUNG LƯỢNG CÒN LẠI",
+      x: "{gb} GB",
+      theme: "purple"
+    }, {
+      t: "text",
+      x: "Nếu tốc độ chậm, có thể gói đã dùng hết dung lượng.",
+      al: "c",
+      sz: "m"
+    }, P0, S0]
+  }
+};
+const getTpl = k => ({
+  ...SYS_TPL[k],
+  ...((((cmsDb && cmsDb.mailSys) || {})[k]) || {})
+});
+const subjVars = (t, v) => String(t ?? "").replace(/\{(\w+)\}/g, (m, k) => (v[k] !== undefined && v[k] !== null ? String(v[k]) : m));
+function mailRender(tpl, v, PDx) {
+  const rp = t => subjVars(t, v), tx = t => htmlEscape(rp(t)).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\n/g, "<br>");
+  const al = b => (b.al === "c" ? "center" : b.al === "r" ? "right" : "left"), fs = { s: "12px", m: "14px", l: "17px", xl: "22px" };
+  const inner = arr(tpl.blocks).map(b => {
+    if (b.t === "text") return `<p style="margin:0 0 12px;font-size:${fs[b.sz]||"15px"};line-height:1.6;color:#334155;text-align:${al(b)};white-space:pre-wrap;${b.b?"font-weight:bold;":""}${b.i?"font-style:italic;":""}${b.ul?"text-decoration:underline;":""}">${tx(b.x)}</p>`;
+    if (b.t === "orderid") return mailIdBox(htmlEscape(rp(b.label || "MÃ ĐƠN HÀNG CỦA BẠN")), v.orderId || "", b.color || tpl.c1);
+    if (b.t === "box") {
+      const t = TPL_THEME[b.theme] || TPL_THEME.amber;
+      return `<div style="background:${t[0]};border:2px dashed ${t[1]};padding:18px;border-radius:12px;text-align:center;margin:14px 0"><p style="margin:0;font-size:12px;color:${t[2]};font-weight:bold;text-transform:uppercase">${htmlEscape(rp(b.label))}</p><p style="margin:10px 0 0;font-size:${fs[b.sz]||"26px"};font-weight:900;color:${t[3]};word-break:break-word">${tx(b.x)}</p></div>`;
+    }
+    if (b.t === "info") return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:10px 0">${[["✉️","Email",v.email],["#️⃣","Mã đơn",v.orderId],["📦","Gói VPN",v.pkg],["⏰","HSD",v.exp]].map(([ic,lb,val])=>`<tr><td style="padding:9px 6px;border-bottom:1px solid #f1f5f9;width:34%;font-size:13px;color:#64748b">${ic} ${lb}</td><td style="padding:9px 6px;border-bottom:1px solid #f1f5f9;font-size:14px;font-weight:bold;color:#0f172a;word-break:break-word">${htmlEscape(val||"—")}</td></tr>`).join("")}</table>`;
+    if (b.t === "portal") return mailPortal(PDx, htmlEscape(rp(b.x || "TRUY CẬP CỔNG KHÁCH HÀNG")));
+    if (b.t === "support") return mailSupport(PDx);
+    if (b.t === "img") return /^https?:\/\//i.test(b.u || "") ? `<div style="text-align:${al(b)};margin:10px 0"><img src="${htmlEscape(b.u)}" style="max-width:100%;border-radius:8px"></div>` : "";
+    if (b.t === "divider") return '<hr style="border:0;border-top:1px solid #e2e8f0;margin:16px 0">';
+    if (b.t === "spacer") return `<div style="height:${Math.max(4,Math.min(200,parseInt(b.h)||16))}px"></div>`;
+    return "";
+  }).join("");
+  return mailShell(tpl.c1, tpl.c2, htmlEscape(rp(tpl.title)).replace(/\n/g, "<br>"), inner, tpl.ang, tpl.stop);
+}
+function orderVars(o, extra) {
+  const pk = pkgOf(o), lockTs = parseDmy(o.expDate), dl = o.expDate && !isLife(o.expDate) && lockTs > nowMs() ? Math.floor((lockTs - nowMs()) / 864e5) : "";
+  return {
+    email: o.email || "",
+    orderId: o.id || "",
+    pkgName: o.pkgName || "",
+    pkg: pk ? pkgLabel(o) : (o.pkgName || ""),
+    exp: o.expDate || "",
+    daysLeft: dl,
+    nickname: o.nickname || "",
+    zalo: o.zalo || "",
+    reason: o.reason || "Vui lòng liên hệ Admin",
+    ...(extra || {})
+  };
+}
+const mailKeyOf = o => o.orderType === "renew" ? "renew" : "success";
+const mailSuccess = o => mailRender(getTpl(mailKeyOf(o)), orderVars(o), PD);
+const mailFailed = o => mailRender(getTpl("failed"), orderVars(o), PD);
+const mailExp = (o, expText) => mailRender(getTpl("exp"), orderVars(o, { expText }), PD);
+const mailZalo = o => mailRender(getTpl("support"), orderVars(o), PD);
+const dataVars = (r, gb) => {
+  const oi = ordersDb.find(o => normId(o.id) === normId(r.orderId));
+  return {
+    ...(oi ? orderVars(oi) : {
+      email: r.email || "",
+      orderId: r.orderId || "",
+      pkgName: r.pkgName || "",
+      pkg: r.pkgName || "",
+      exp: "",
+      daysLeft: "",
+      nickname: "",
+      zalo: "",
+      reason: ""
+    }),
+    email: r.email || "",
+    orderId: r.orderId || "",
+    gb
+  };
+};
+const mailData = (r, gb) => mailRender(getTpl("data"), dataVars(r, gb), PD);
+function sendExpMail(id) {
+  if (!isMailMaster()) return toast("Đang ở chế độ SLAVE Email", "err");
+  const o = ordersDb.find(x => x.id === id);
+  if (!o?.email) return toast("Chưa có email", "err");
+  const lockTs = parseDmy(o.expDate), dl = lockTs > nowMs() ? Math.floor((lockTs - nowMs()) / 864e5) : 0;
+  const msg = dl <= 1 ? "**ngày mai hết hạn**" : `còn **${dl} ngày** (hết hạn **${o.expDate}**)`;
+  sendMailClient(o.email, subjVars(getTpl("exp").subject, orderVars(o, { expText: msg.replace(/\*\*/g, "") })), mailExp(o, msg));
+  logEvent("ok", "Gửi mail", "Nhắc hết hạn (thủ công) → " + o.email, o.id);
+  toast("Đã gửi mail nhắc hết hạn");
+}
+function sendZaloMail(id) {
+  if (!isMailMaster()) return toast("Đang ở chế độ SLAVE Email", "err");
+  const o = ordersDb.find(x => x.id === id);
+  if (!o?.email) return toast("Chưa có email", "err");
+  sendMailClient(o.email, subjVars(getTpl("support").subject, orderVars(o)), mailZalo(o));
+  logEvent("ok", "Gửi mail", "Hỗ trợ cài đặt → " + o.email, o.id);
+  toast("Đã gửi mail nhắc hỗ trợ cài đặt");
+}
 // ===================== DOANH THU =====================
-let revTab="over",revMonth="all",revPayView=null;
-const REV_TABS=[["over","Tổng quan"],["pay","Thanh toán & Tỷ giá"],["cost","Vốn"]];
+let revTab = "over", revMonth = "all", revPayView = null;
+const REV_TABS = [["over", "Tổng quan"], ["pay", "Thanh toán & Tỷ giá"], ["cost", "Vốn"]];
 
 // Bảng Quy Đổi Tỷ Giá Tập Trung dùng chung toàn hệ thống
-function getCentralRates(){
+function getCentralRates() {
   const s = (cmsDb && cmsDb.settings) || {};
   s.rates = s.rates || {};
   return {
@@ -1041,13 +1687,17 @@ function getCentralRates(){
   };
 }
 const cnyRate = () => getCentralRates().vndCny;
-const curVal = (v, prec = 0) => typeof currency !== "undefined" ? currency(v, { precision: prec, symbol: '' }) : { value: Number(v)||0, add: (x)=>({ value: (Number(v)||0)+(Number(x)||0) }), subtract: (x)=>({ value: (Number(v)||0)-(Number(x)||0) }) };
-const shortN = v => v >= 1e6 ? (v/1e6).toFixed(v>=1e7?0:1).replace(/\.0$/,"")+"tr" : v >= 1e3 ? Math.round(v/1e3)+"k" : String(Math.round(v));
+const curVal = (v, prec = 0) => typeof currency !== "undefined" ? currency(v, { precision: prec, symbol: '' }) : {
+  value: Number(v) || 0,
+  add: (x) => ({ value: (Number(v) || 0) + (Number(x) || 0) }),
+  subtract: (x) => ({ value: (Number(v) || 0) - (Number(x) || 0) })
+};
+const shortN = v => v >= 1e6 ? (v / 1e6).toFixed(v >= 1e7 ? 0 : 1).replace(/\.0$/, "") + "tr" : v >= 1e3 ? Math.round(v / 1e3) + "k" : String(Math.round(v));
 const monthLbl = k => k === "000000" ? "Không rõ" : `${+k.slice(4)}/${k.slice(2,4)}`;
 const kpi = (l, v, sub, c) => `<div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm"><div class="text-[11px] font-bold text-slate-500 uppercase">${l}</div><div class="text-xl md:text-2xl font-black ${c||"text-indigo-600"} mt-1 break-words">${v}</div>${sub?`<div class="text-[11px] text-slate-400 mt-0.5">${sub}</div>`:""}</div>`;
 const box = (t, inner) => `<div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm"><div class="font-bold text-sm text-slate-800 mb-3">${t}</div>${inner}</div>`;
 
-function revList(all){
+function revList(all) {
   const revR = getRevRates();
   const pkgR = getPkgRates();
   const r = revR;
@@ -1060,14 +1710,24 @@ function revList(all){
       cny = Number(o.totalCny) || (p ? curVal(p.cny, 2).value * qty : 0);
       vnd = curVal(cny, 2).value * r.vndCny;
     }
-    return { o, p, pay, qty, months: ordMonths(o), cny, vnd, key: monthInfo(oTs(o)).key };
+    return {
+      o,
+      p,
+      pay,
+      qty,
+      months: ordMonths(o),
+      cny,
+      vnd,
+      key: monthInfo(oTs(o)).key
+    };
   }).filter(x => all || revMonth === "all" || x.key === revMonth);
 }
 
-function costSum(selectedMonth = "all"){
+function costSum(selectedMonth = "all") {
   const revR = getRevRates();
   const r = revR;
-  let totalPoolCost = 0; const by = {};
+  let totalPoolCost = 0;
+  const by = {};
   (cmsDb.costs || []).forEach(c => {
     let v = Number(c.total) || 0;
     if (c.cur === "CNY") v = v * r.vndCny;
@@ -1101,7 +1761,7 @@ function costSum(selectedMonth = "all"){
 
   return { total: allocatedCost, by };
 }
-function monthTotals(){
+function monthTotals() {
   const m = {};
   revList(true).forEach(x => {
     const k = x.key;
@@ -1122,23 +1782,35 @@ function setRevMonth(val) {
 }
 window.setRevMonth = setRevMonth;
 
-function setRevTab(k, fromHistory = false){
+function setRevTab(k, fromHistory = false) {
   revTab = k;
   revPayView = null;
   renderRevenue();
-  if (!fromHistory && typeof recordAdminNav === "function") recordAdminNav({ tab: "t-trans", txSub: "rev", revTab, revMonth, revPayView: null });
+  if (!fromHistory && typeof recordAdminNav === "function") recordAdminNav({
+    tab: "t-trans",
+    txSub: "rev",
+    revTab,
+    revMonth,
+    revPayView: null
+  });
 }
 window.setRevTab = setRevTab;
 
-function setRevPayView(k, fromHistory = false){
+function setRevPayView(k, fromHistory = false) {
   revPayView = k;
   renderRevenue();
-  if (!fromHistory && typeof recordAdminNav === "function") recordAdminNav({ tab: "t-trans", txSub: "rev", revTab, revMonth, revPayView: k });
+  if (!fromHistory && typeof recordAdminNav === "function") recordAdminNav({
+    tab: "t-trans",
+    txSub: "rev",
+    revTab,
+    revMonth,
+    revPayView: k
+  });
 }
 window.setRevPayView = setRevPayView;
 
-function renderRevenue(){
-  $("revTabs").innerHTML = REV_TABS.map(([k,l]) => `<button onclick="setRevTab('${k}')" class="settings-sub-tab text-center !px-3 font-bold ${revTab===k?'active':''}">${l}</button>`).join("");
+function renderRevenue() {
+  $("revTabs").innerHTML = REV_TABS.map(([k, l]) => `<button onclick="setRevTab('${k}')" class="settings-sub-tab text-center !px-3 font-bold ${revTab===k?'active':''}">${l}</button>`).join("");
   const ms = new Set(ordersDb.map(o => monthInfo(oTs(o)).key));
   (cmsDb.costs || []).forEach(c => ms.add(monthInfo(c.ts).key));
   $("revMonth").innerHTML = `<option value="all">Tất cả các tháng</option>` + [...ms].sort().reverse().map(k => `<option value="${k}" ${revMonth===k?'selected':''}>Tháng ${monthLbl(k)}</option>`).join("");
@@ -1150,7 +1822,7 @@ let chartRevStacked = null, chartPayDonut = null, chartProfitArea = null;
 let gridPkgTable = null, gridRankTable = null, gridPayDetail = null, gridCostTable = null;
 
 // SUB-TAB 1: TỔNG QUAN KPI & 3 BIỂU ĐỒ (ZERO GRID.JS)
-function revOver(R, b){
+function revOver(R, b) {
   const sum = R.reduce((a, x) => a + x.vnd, 0);
   const cost = costSum(revMonth).total;
   const profit = sum - cost;
@@ -1240,7 +1912,11 @@ function revOver(R, b){
   setTimeout(() => {
     if (typeof Chart !== "undefined") {
       // 1. Biểu đồ Cột phân tầng (Stacked Column)
-      if (chartRevStacked) { try { chartRevStacked.destroy(); } catch(e){} }
+      if (chartRevStacked) {
+        try {
+          chartRevStacked.destroy();
+        } catch (e) {}
+      }
       const el1 = document.getElementById("chartRevStackedBox");
       if (el1) {
         el1.innerHTML = '<canvas id="cvRevStacked" style="max-height:280px; width:100%;"></canvas>';
@@ -1249,29 +1925,54 @@ function revOver(R, b){
           type: 'bar',
           data: {
             labels: chartLabels,
-            datasets: [
-              { label: 'Ngân hàng VN', data: chartDataBank, backgroundColor: '#4f46e5', borderRadius: 4 },
-              { label: 'Alipay', data: chartDataAlipay, backgroundColor: '#0284c7', borderRadius: 4 },
-              { label: 'WeChat', data: chartDataWeChat, backgroundColor: '#10b981', borderRadius: 4 }
-            ]
+            datasets: [{
+              label: 'Ngân hàng VN',
+              data: chartDataBank,
+              backgroundColor: '#4f46e5',
+              borderRadius: 4
+            }, {
+              label: 'Alipay',
+              data: chartDataAlipay,
+              backgroundColor: '#0284c7',
+              borderRadius: 4
+            }, {
+              label: 'WeChat',
+              data: chartDataWeChat,
+              backgroundColor: '#10b981',
+              borderRadius: 4
+            }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-              x: { stacked: true, grid: { display: false }, ticks: { font: { size: 11, weight: '600' } } },
+              x: {
+                stacked: true,
+                grid: { display: false },
+                ticks: { font: { size: 11, weight: '600' } }
+              },
               y: { stacked: true, ticks: { callback: (v) => shortN(v) } }
             },
             plugins: {
-              legend: { position: 'top', align: 'end', labels: { font: { size: 11, weight: 'bold' }, boxWidth: 12 } },
-              tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${fmtVnd(ctx.raw)} đ` } }
+              legend: {
+                position: 'top',
+                align: 'end',
+                labels: { font: { size: 11, weight: 'bold' }, boxWidth: 12 }
+              },
+              tooltip: {
+                callbacks: { label: (ctx) => `${ctx.dataset.label}: ${fmtVnd(ctx.raw)} đ` }
+              }
             }
           }
         });
       }
 
       // 2. Biểu đồ Donut 3 Cổng thanh toán
-      if (chartPayDonut) { try { chartPayDonut.destroy(); } catch(e){} }
+      if (chartPayDonut) {
+        try {
+          chartPayDonut.destroy();
+        } catch (e) {}
+      }
       const el2 = document.getElementById("chartPayDonutBox");
       if (el2) {
         el2.innerHTML = '<canvas id="cvPayDonut" style="max-height:280px; width:100%;"></canvas>';
@@ -1291,15 +1992,24 @@ function revOver(R, b){
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-              legend: { position: 'bottom', labels: { font: { size: 11, weight: 'bold' }, boxWidth: 12 } },
-              tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${fmtVnd(ctx.raw)} đ` } }
+              legend: {
+                position: 'bottom',
+                labels: { font: { size: 11, weight: 'bold' }, boxWidth: 12 }
+              },
+              tooltip: {
+                callbacks: { label: (ctx) => `${ctx.label}: ${fmtVnd(ctx.raw)} đ` }
+              }
             }
           }
         });
       }
 
       // 3. Biểu đồ Vùng (Area Chart) Doanh thu vs Chi phí -> Lãi ròng 12 tháng
-      if (chartProfitArea) { try { chartProfitArea.destroy(); } catch(e){} }
+      if (chartProfitArea) {
+        try {
+          chartProfitArea.destroy();
+        } catch (e) {}
+      }
       const el3 = document.getElementById("chartProfitAreaBox");
       if (el3) {
         el3.innerHTML = '<canvas id="cvProfitArea" style="max-height:260px; width:100%;"></canvas>';
@@ -1308,22 +2018,48 @@ function revOver(R, b){
           type: 'line',
           data: {
             labels: keys.map(k => monthLbl(k)),
-            datasets: [
-              { label: 'Doanh thu', data: keys.map(k => mt[k].vnd || 0), borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.1)', fill: true, tension: 0.3 },
-              { label: 'Chi phí vốn', data: keys.map(k => costSum(true).by[k] || 0), borderColor: '#f97316', backgroundColor: 'transparent', borderDash: [4, 4], tension: 0.3 },
-              { label: 'Lợi nhuận ròng', data: keys.map(k => (mt[k].vnd || 0) - (costSum(true).by[k] || 0)), borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.15)', fill: true, tension: 0.3 }
-            ]
+            datasets: [{
+              label: 'Doanh thu',
+              data: keys.map(k => mt[k].vnd || 0),
+              borderColor: '#4f46e5',
+              backgroundColor: 'rgba(79, 70, 229, 0.1)',
+              fill: true,
+              tension: 0.3
+            }, {
+              label: 'Chi phí vốn',
+              data: keys.map(k => costSum(true).by[k] || 0),
+              borderColor: '#f97316',
+              backgroundColor: 'transparent',
+              borderDash: [4, 4],
+              tension: 0.3
+            }, {
+              label: 'Lợi nhuận ròng',
+              data: keys.map(k => (mt[k].vnd || 0) - (costSum(true).by[k] || 0)),
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.15)',
+              fill: true,
+              tension: 0.3
+            }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-              x: { grid: { display: false }, ticks: { font: { size: 11, weight: '600' } } },
+              x: {
+                grid: { display: false },
+                ticks: { font: { size: 11, weight: '600' } }
+              },
               y: { ticks: { callback: (v) => shortN(v) } }
             },
             plugins: {
-              legend: { position: 'top', align: 'end', labels: { font: { size: 11, weight: 'bold' }, boxWidth: 12 } },
-              tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${fmtVnd(ctx.raw)} đ` } }
+              legend: {
+                position: 'top',
+                align: 'end',
+                labels: { font: { size: 11, weight: 'bold' }, boxWidth: 12 }
+              },
+              tooltip: {
+                callbacks: { label: (ctx) => `${ctx.dataset.label}: ${fmtVnd(ctx.raw)} đ` }
+              }
             }
           }
         });
@@ -1334,10 +2070,15 @@ function revOver(R, b){
     const g = {};
     R.forEach(x => {
       const k = x.p ? x.p.n + "|" + x.p.vnd : (x.o.pkgName || "Gói khác");
-      const e = g[k] = g[k] || { l: x.p ? `${x.p.n} (${x.p.d || ''})` : (x.o.pkgName || "Gói khác"), n: 0, vnd: 0 };
-      e.n++; e.vnd += x.vnd;
+      const e = g[k] = g[k] || {
+        l: x.p ? `${x.p.n} (${x.p.d || ''})` : (x.o.pkgName || "Gói khác"),
+        n: 0,
+        vnd: 0
+      };
+      e.n++;
+      e.vnd += x.vnd;
     });
-    const pkgList = Object.values(g).sort((a,c) => c.vnd - a.vnd);
+    const pkgList = Object.values(g).sort((a, c) => c.vnd - a.vnd);
     const elPkg = document.getElementById("gridPkgBox");
     if (elPkg) {
       elPkg.innerHTML = `
@@ -1364,7 +2105,7 @@ function revOver(R, b){
       `;
     }
 
-    const monthRankList = Object.values(mt).sort((a,c) => c.vnd - a.vnd);
+    const monthRankList = Object.values(mt).sort((a, c) => c.vnd - a.vnd);
     const elRank = document.getElementById("gridRankBox");
     if (elRank) {
       elRank.innerHTML = `
@@ -1396,8 +2137,11 @@ function revOver(R, b){
   }, 60);
 }
 // SUB-TAB 2: THANH TOÁN & BẢNG TỶ GIÁ TẬP TRUNG (CENTRALIZED EXCHANGE RATE TABLE)
-const PAYLBL = { Bank: "🏦 Ngân hàng VN", Alipay: "🔵 Alipay", Weixin: "🟢 WeChat" };
-
+const PAYLBL = {
+  Bank: "🏦 Ngân hàng VN",
+  Alipay: "🔵 Alipay",
+  Weixin: "🟢 WeChat"
+};
 
 function getRevRates() {
   const s = (cmsDb && cmsDb.settings) || {};
@@ -1430,7 +2174,9 @@ async function saveRevRates() {
     toast("Đã lưu Bảng Tỷ Giá Quy Đổi Doanh Thu thành công!");
     logEvent("ok", "Tỷ giá doanh thu", `VND/CNY: ${vndCny} · VND/USD: ${vndUsd}`);
     renderRevenue();
-  } catch(e) { toast("Lỗi: " + e.message, "err"); }
+  } catch (e) {
+    toast("Lỗi: " + e.message, "err");
+  }
 }
 window.saveRevRates = saveRevRates;
 
@@ -1445,7 +2191,9 @@ async function savePkgRates() {
     await saveCmsDb();
     toast("Đã lưu Bảng Tỷ Giá Định Giá Gói Cước thành công!");
     logEvent("ok", "Tỷ giá gói cước", `VND/CNY: ${vndCny} · CNY/USD: ${cnyUsd} · VND/USD: ${vndUsd}`);
-  } catch(e) { toast("Lỗi: " + e.message, "err"); }
+  } catch (e) {
+    toast("Lỗi: " + e.message, "err");
+  }
 }
 window.savePkgRates = savePkgRates;
 
@@ -1461,19 +2209,36 @@ async function syncRatesToPackages() {
   });
   try {
     await aj("/api/packages", { method: "POST", body: { packages: adminPkgsList } });
-    await syncPublicPackagesPayload(); try{ if(Array.isArray(cmsDb.coupons)) localStorage.setItem('vpn_coupons_cache', JSON.stringify(cmsDb.coupons)); }catch(e){}
+    await syncPublicPackagesPayload();
+    try {
+      if (Array.isArray(cmsDb.coupons)) localStorage.setItem('vpn_coupons_cache', JSON.stringify(cmsDb.coupons));
+    } catch (e) {}
     toast("Đã tự động quy đổi và đồng bộ giá CNY & USD cho toàn bộ gói cước!");
     if (!$("t-pkg").classList.contains("hidden")) renderPkgAdmin();
-  } catch(e) { toast("Lỗi đồng bộ gói cước: " + e.message, "err"); }
+  } catch (e) {
+    toast("Lỗi đồng bộ gói cước: " + e.message, "err");
+  }
 }
 window.syncRatesToPackages = syncRatesToPackages;
 
-function revPay(R, b){
-  if (revPayView) { revPayDetail(b); return; }
+function revPay(R, b) {
+  if (revPayView) {
+    revPayDetail(b);
+    return;
+  }
   const revR = getRevRates();
   const pkgR = getPkgRates();
-  const m = { Bank: { n: 0, vnd: 0, cny: 0 }, Alipay: { n: 0, vnd: 0, cny: 0 }, Weixin: { n: 0, vnd: 0, cny: 0 } };
-  R.forEach(x => { const e = m[x.pay]; e.n++; e.vnd += x.vnd; e.cny += x.cny; });
+  const m = {
+    Bank: { n: 0, vnd: 0, cny: 0 },
+    Alipay: { n: 0, vnd: 0, cny: 0 },
+    Weixin: { n: 0, vnd: 0, cny: 0 }
+  };
+  R.forEach(x => {
+    const e = m[x.pay];
+    e.n++;
+    e.vnd += x.vnd;
+    e.cny += x.cny;
+  });
   const total = m.Bank.vnd + m.Alipay.vnd + m.Weixin.vnd;
 
   const cardPay = (title, k, colorCls, icon) => `
@@ -1597,10 +2362,10 @@ function revPay(R, b){
 // [duplicate syncRatesToPackages removed]
 
 // BẢNG DRILL-DOWN CHI TIẾT CỔNG THANH TOÁN (CARD VIEW ĐƠN HÀNG THÀNH CÔNG)
-function revPayDetail(b){
+function revPayDetail(b) {
   const k = revPayView;
   // Chỉ lấy đơn thành công, loại bỏ đơn thất bại
-  const list = ordersDb.filter(o => payOf(o) === k && normSt(o.status) === "success" && (revMonth === "all" || monthInfo(oTs(o)).key === revMonth)).sort((a,c) => oTs(c) - oTs(a));
+  const list = ordersDb.filter(o => payOf(o) === k && normSt(o.status) === "success" && (revMonth === "all" || monthInfo(oTs(o)).key === revMonth)).sort((a, c) => oTs(c) - oTs(a));
 
   b.innerHTML = `
     <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
@@ -1618,10 +2383,10 @@ function revPayDetail(b){
 }
 
 // SUB-TAB 3: QUẢN LÝ CHI PHÍ VỐN (GRID.JS & CURRENCY.JS)
-function revCost(R, b){
+function revCost(R, b) {
   const cs = costSum();
   const sum = R.reduce((a, x) => a + x.vnd, 0);
-  const list = [...(cmsDb.costs || [])].filter(c => revMonth === "all" || monthInfo(c.ts).key === revMonth).sort((a,c) => c.ts - a.ts);
+  const list = [...(cmsDb.costs || [])].filter(c => revMonth === "all" || monthInfo(c.ts).key === revMonth).sort((a, c) => c.ts - a.ts);
 
   b.innerHTML = `
     <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
@@ -1666,15 +2431,7 @@ function revCost(R, b){
       const el = document.getElementById("gridCostBox");
       if (el) {
         el.innerHTML = "";
-        const costRows = list.map(c => [
-          dmyOf(c.ts),
-          c.src,
-          c.item || "-",
-          c.qty,
-          (c.cur === "CNY" ? "¥" : (c.cur === "USD" ? "$" : "")) + Number(c.unit).toLocaleString("en-US") + (c.cur === "VND" ? " đ" : ""),
-          (c.cur === "CNY" ? "¥" : (c.cur === "USD" ? "$" : "")) + Number(c.total).toLocaleString("en-US") + (c.cur === "VND" ? " đ" : ""),
-          gridjs.html(`<button onclick="delCost('${c.id}')" class="text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-600 font-bold px-2 py-1 rounded transition text-xs"><i class="fas fa-trash"></i></button>`)
-        ]);
+        const costRows = list.map(c => [dmyOf(c.ts), c.src, c.item || "-", c.qty, (c.cur === "CNY" ? "¥" : (c.cur === "USD" ? "$" : "")) + Number(c.unit).toLocaleString("en-US") + (c.cur === "VND" ? " đ" : ""), (c.cur === "CNY" ? "¥" : (c.cur === "USD" ? "$" : "")) + Number(c.total).toLocaleString("en-US") + (c.cur === "VND" ? " đ" : ""), gridjs.html(`<button onclick="delCost('${c.id}')" class="text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-600 font-bold px-2 py-1 rounded transition text-xs"><i class="fas fa-trash"></i></button>`)]);
         new gridjs.Grid({
           columns: ["Ngày mua", "Nguồn mua", "Mô tả / Gói", "SL", "Đơn giá", "Thành tiền", "Thao tác"],
           data: costRows,
@@ -1688,16 +2445,20 @@ function revCost(R, b){
   }, 50);
 }
 
-async function addCost(){
+async function addCost() {
   const src = $("cSrc").value.trim(), qty = +$("cQty").value || 0, unit = +$("cUnit").value || 0;
   if (!src || qty <= 0 || unit <= 0) return toast("Vui lòng nhập nguồn mua, số lượng và đơn giá", "warn");
   const m = $("cDate").value.trim().match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  const ts = m ? Date.UTC(+m[3], m[2]-1, +m[1]) - off()*36e5 : nowMs();
+  const ts = m ? Date.UTC(+m[3], m[2] - 1, +m[1]) - off() * 36e5 : nowMs();
   cmsDb.costs = arr(cmsDb.costs);
   cmsDb.costs.push({
     id: "C-" + Date.now(),
-    ts, src, item: $("cItem").value.trim(),
-    qty, unit, cur: $("cCur").value,
+    ts,
+    src,
+    item: $("cItem").value.trim(),
+    qty,
+    unit,
+    cur: $("cCur").value,
     total: curVal(qty).multiply(unit).value,
     note: $("cNote").value.trim()
   });
@@ -1706,98 +2467,221 @@ async function addCost(){
     toast("Đã thêm khoản chi phí vốn thành công!");
     logEvent("ok", "Chi phí vốn", `${src} · ${qty} x ${unit} ${$("cCur").value}`);
     renderRevenue();
-  } catch(e) {
+  } catch (e) {
     toast("Lỗi lưu chi phí: " + e.message, "err");
   }
 }
 
-async function delCost(id){
+async function delCost(id) {
   if (!confirm("Bạn có chắc muốn xóa khoản chi phí vốn này?")) return;
   cmsDb.costs = arr(cmsDb.costs).filter(c => c.id !== id);
   try {
     await saveCmsDb();
     toast("Đã xóa khoản chi phí thành công!");
     renderRevenue();
-  } catch(e) {
+  } catch (e) {
     toast("Lỗi xóa: " + e.message, "err");
   }
 }
 
 // ===================== SOẠN MAIL (Mẫu hệ thống + Mẫu tự do) =====================
-const MC_COLORS={indigo:["#4f46e5","#8b5cf6"],red:["#ef4444","#b91c1c"],green:["#10b981","#059669"],blue:["#2563eb","#6366f1"],amber:["#f59e0b","#d97706"],purple:["#7e22ce","#a855f7"]};
-const MC_BT=[["text","Đoạn văn","fa-paragraph"],["orderid","Mã đơn hàng","fa-hashtag"],["box","Khung nổi bật","fa-square"],["info","Bảng thông tin","fa-table-list"],["portal","Nút vào cổng","fa-arrow-up-right-from-square"],["support","Khối hỗ trợ","fa-headset"],["img","Ảnh","fa-image"],["divider","Đường kẻ","fa-minus"],["spacer","Cách dòng","fa-arrows-up-down"]];
-const MC_VARS_BASE=[["{email}","Email khách"],["{orderId}","Mã đơn hàng"],["{pkg}","Gói VPN"],["{exp}","Ngày hết hạn"]];
-const MC_VARS_SYS=[["{pkgName}","Tên gói"],["{daysLeft}","Số ngày còn lại"],["{expText}","Câu nhắc hạn (mẫu sắp hết hạn)"],["{reason}","Lý do từ chối (mẫu thất bại)"],["{gb}","Số GB (mẫu dung lượng)"]];
-const MC_SYS_KEYS=["support","success","failed","exp","data"];
-const MC_SYS_NAMES={support:"1. Hỗ trợ cài đặt",success:"2. Kích hoạt thành công",failed:"3. Kích hoạt thất bại",exp:"4. VPN sắp hết hạn",data:"5. Báo cáo dung lượng"};
-const MC_PRESETS={
- maint:{name:"Thông báo bảo trì",subject:"VPN Trinh Hg - Thông báo bảo trì hệ thống",title:"THÔNG BÁO\nBẢO TRÌ HỆ THỐNG",c1:MC_COLORS.amber[0],c2:MC_COLORS.amber[1],blocks:[{t:"text",x:"Xin chào {email},"},{t:"text",x:"Hệ thống sẽ bảo trì từ [giờ bắt đầu] đến [giờ kết thúc] ngày [ngày]. Trong thời gian này dịch vụ có thể gián đoạn ngắn, rất mong bạn thông cảm."},{t:"orderid"},{t:"portal",x:"TRUY CẬP CỔNG KHÁCH HÀNG"},{t:"support"}]},
- info:{name:"Thông báo chung",subject:"VPN Trinh Hg - Thông báo",title:"THÔNG BÁO\nTỪ VPN TRINH HG",c1:MC_COLORS.indigo[0],c2:MC_COLORS.indigo[1],blocks:[{t:"text",x:"Xin chào {email},"},{t:"text",x:"Nội dung thông báo..."},{t:"orderid"},{t:"portal",x:"TRUY CẬP CỔNG KHÁCH HÀNG"},{t:"support"}]},
- promo:{name:"Ưu đãi / khuyến mãi",subject:"VPN Trinh Hg - Ưu đãi dành cho bạn",title:"ƯU ĐÃI\nDÀNH RIÊNG CHO BẠN",c1:MC_COLORS.green[0],c2:MC_COLORS.green[1],blocks:[{t:"text",x:"Xin chào {email},",b:1},{t:"text",x:"Gói {pkg} của bạn sẽ hết hạn ngày {exp}. Gia hạn sớm để nhận ưu đãi..."},{t:"portal",x:"GIA HẠN NGAY TẠI WEBSITE"},{t:"support"}]}};
-let mc={subject:"",title:"",color:"indigo",c1:"#4f46e5",c2:"#8b5cf6",ang:135,stop:100,blocks:[]},mcTab="sys",mcInited=false,mcCurKey="",mcRecs=[],mcStop=false,mcSending=false,mcSel=-1,mcLastFocusEl=null;
-document.addEventListener("focusin",e=>{const t=e.target;if(t&&t.classList&&t.classList.contains("mc-ins"))mcLastFocusEl=t;});
-const mcColorName=(c1,c2)=>Object.keys(MC_COLORS).find(k=>MC_COLORS[k][0].toLowerCase()===String(c1).toLowerCase()&&MC_COLORS[k][1].toLowerCase()===String(c2).toLowerCase())||"custom";
-const mcClone=b=>JSON.parse(JSON.stringify(b||[]));
-function tplToMc(t){const c1=t.c1||"#4f46e5",c2=t.c2||"#8b5cf6";return{subject:t.subject||"",title:String(t.title||"").replace(/\\n/g,"\n"),c1,c2,color:mcColorName(c1,c2),ang:Number(t.ang)||135,stop:Number(t.stop)||100,blocks:mcClone(t.blocks)};}
-const mcToTpl=()=>({subject:mc.subject,title:mc.title,c1:mc.c1,c2:mc.c2,ang:Number(mc.ang)||135,stop:Number(mc.stop)||100,blocks:mcClone(mc.blocks)});
-function mcSampleVars(){const base={email:"khachhang@gmail.com",orderId:"DHXXXXXXXXXX",pkgName:"Gói 1 tháng",pkg:"Gói 1 tháng - 60,000VND",exp:"30/10/2026",daysLeft:2,nickname:"",zalo:"",reason:"Không nhận được thanh toán",expText:"còn **2 ngày** (hết hạn **30/10/2026**)",gb:"120"};return base;}
-function mcRenderTabs(){
- ["sys","free"].forEach(t=>$("mcTab-"+t).classList.toggle("active",mcTab===t));
- $("mcRecipPanel").classList.toggle("hidden",mcTab!=="free");
- $("mcHint").innerHTML=mcTab==="sys"?"5 mẫu mail tự động của hệ thống. <b>Lưu mẫu</b> = bản đã lưu trở thành mẫu production mặc định (Worker dùng khi gửi thật). Không có quét danh sách / gửi thử — production quyết định khi nào gửi. Biến như <b>{email}</b> <b>{orderId}</b> <b>{pkgName}</b> được thay theo từng đơn.":"Soạn mail tự do gửi cho khách còn đơn còn hạn. Dùng <b>{email}</b> <b>{orderId}</b> <b>{pkg}</b> <b>{exp}</b>, hệ thống thay theo từng người nhận. Có thể Lưu mẫu / Nạp mẫu để dùng lại.";
- $("mcExtraBtn").innerHTML=mcTab==="sys"?'<i class="fas fa-rotate-left mr-1"></i>Khôi phục mặc định':'<i class="fas fa-trash mr-1"></i>Xóa mẫu đã lưu';}
-function mcRenderPresetOptions(keep){
- const sys=cmsDb.mailSys||{},fr=cmsDb.mailFree||{};
- $("mcPreset").innerHTML=mcTab==="sys"?MC_SYS_KEYS.map(k=>`<option value="sys:${k}">${esc(MC_SYS_NAMES[k])}${sys[k]?" · đã tùy chỉnh":""}</option>`).join(""):
-  `<optgroup label="Mẫu có sẵn">${Object.keys(MC_PRESETS).map(k=>`<option value="builtin:${k}">${esc(MC_PRESETS[k].name)}</option>`).join("")}</optgroup>`+(Object.keys(fr).length?`<optgroup label="Mẫu đã lưu">${Object.entries(fr).map(([id,f])=>`<option value="saved:${esc(id)}">${esc(f.name||id)}</option>`).join("")}</optgroup>`:"");
- if(keep&&[...$("mcPreset").options].some(o=>o.value===keep))$("mcPreset").value=keep;}
-function mcLoadPreset(){
- const v=$("mcPreset").value,i=v.indexOf(":"),kind=v.slice(0,i),key=v.slice(i+1);mcCurKey=v;
- if(kind==="sys")mc=tplToMc(getTpl(key));
- else if(kind==="saved"){const f=(cmsDb.mailFree||{})[key];if(!f)return toast("Không tìm thấy mẫu đã lưu","err");mc=tplToMc(f.tpl);}
- else mc=tplToMc(MC_PRESETS[key]||MC_PRESETS.info);
- mcSel=-1;mcRenderEditor();}
-function mcSwitchTab(t){mcTab=t;mcRenderTabs();mcRenderPresetOptions();mcLoadPreset();}
-function renderMailComposer(){
- if(!mcInited){mcInited=true;mcTab="sys";mcRenderTabs();mcRenderPresetOptions();mcLoadPreset();return;}
- mcRenderTabs();mcRenderEditor();}
-function mcInsertVar(v){
- const el=mcLastFocusEl&&document.body.contains(mcLastFocusEl)?mcLastFocusEl:$("mcSubject");
- const s=el.selectionStart??el.value.length,e=el.selectionEnd??el.value.length;
- el.value=el.value.slice(0,s)+v+el.value.slice(e);el.focus();el.selectionStart=el.selectionEnd=s+v.length;
- el.dispatchEvent(new Event("input",{bubbles:true}));}
-function mcRenderEditor(){
- const vars=mcTab==="sys"?[...MC_VARS_BASE,...MC_VARS_SYS]:MC_VARS_BASE;
- $("mcVarBtns").innerHTML=vars.map(([v,l])=>`<button type="button" onmousedown="event.preventDefault()" onclick="mcInsertVar('${v}')" class="bg-indigo-50 text-indigo-600 font-mono font-bold text-[10px] px-2 py-1 rounded hover:bg-indigo-100" title="${esc(l)}">${v}</button>`).join("");
- $("mcSubject").value=mc.subject;$("mcTitle").value=mc.title;$("mcColor").value=mc.color;$("mcC1").value=mc.c1;$("mcC2").value=mc.c2;
- $("mcStop").value=mc.stop;$("mcStopV").textContent=mc.stop;$("mcAng").value=mc.ang;$("mcAngV").textContent=mc.ang;
- $("mcAddBtns").innerHTML=`<span class="text-[10px] font-bold text-slate-400 px-1">THÊM KHỐI:</span>`+MC_BT.map(([t,l,ic])=>`<button onclick="mcAdd('${t}')" class="bg-white border shadow-sm px-2 py-1 rounded text-[11px] font-bold text-slate-700 hover:bg-slate-50"><i class="fas ${ic} mr-1"></i>${l}</button>`).join("");
- const tb=(i,k,on,ic)=>`<button onclick="mcSet(${i},'${k}',${on?0:1},true)" class="w-6 h-6 rounded border text-[10px] ${on?"bg-indigo-600 text-white border-indigo-600":"bg-white text-slate-500"}"><i class="fas ${ic}"></i></button>`;
- $("mcList").innerHTML=mc.blocks.map((b,i)=>{const nm=(MC_BT.find(x=>x[0]===b.t)||[b.t,b.t])[1],txt=b.t==="text"||b.t==="box",ab=(txt||b.t==="img")?[["l","fa-align-left"],["c","fa-align-center"],["r","fa-align-right"]].map(([a,ic])=>`<button onclick="mcSet(${i},'al','${a}',true)" class="w-6 h-6 rounded border text-[10px] ${(b.al||"l")===a?"bg-indigo-600 text-white border-indigo-600":"bg-white text-slate-500"}"><i class="fas ${ic}"></i></button>`).join(""):"";
-  const tf=b.t==="text"?tb(i,"b",b.b,"fa-bold")+tb(i,"i",b.i,"fa-italic")+tb(i,"ul",b.ul,"fa-underline"):"";
-  const sz=(b.t==="text"||b.t==="box")?`<select onchange="mcSet(${i},'sz',this.value,true)" class="h-6 text-[10px] border rounded bg-white"><option value="">Cỡ</option>${[["s","Nhỏ"],["m","Vừa"],["l","Lớn"],["xl","R.lớn"]].map(([v,l])=>`<option value="${v}" ${b.sz===v?"selected":""}>${l}</option>`).join("")}</select>`:"";
-  const inp=(k,ph,cls)=>`<input value="${esc(b[k]||"")}" oninput="mcSet(${i},'${k}',this.value)" placeholder="${ph}" class="mc-ins w-full p-1.5 text-xs border border-slate-200 rounded-lg bg-white outline-none ${cls||""}">`;
-  let body="";
-  if(b.t==="text")body=`<textarea rows="3" oninput="mcSet(${i},'x',this.value)" class="mc-ins w-full p-1.5 text-xs border border-slate-200 rounded-lg bg-white outline-none">${esc(b.x||"")}</textarea><div class="text-[10px] text-slate-400">**chữ đậm** được hỗ trợ · chèn biến bằng các nút phía trên</div>`;
-  else if(b.t==="box")body=inp("label","Nhãn khung (VD: LÝ DO TỪ CHỐI)")+`<textarea rows="2" oninput="mcSet(${i},'x',this.value)" class="mc-ins w-full p-1.5 text-xs border border-slate-200 rounded-lg bg-white outline-none">${esc(b.x||"")}</textarea><select onchange="mcSet(${i},'theme',this.value,true)" class="h-7 text-[11px] border rounded bg-white">${[["amber","Vàng"],["red","Đỏ"],["purple","Tím"],["blue","Xanh dương"],["green","Xanh lá"]].map(([v,l])=>`<option value="${v}" ${(b.theme||"amber")===v?"selected":""}>${l}</option>`).join("")}</select>`;
-  else if(b.t==="orderid")body=inp("label","Nhãn (mặc định: MÃ ĐƠN HÀNG CỦA BẠN)")+`<div class="flex items-center gap-2 text-[11px] text-slate-500">Màu số mã <input type="color" value="${esc(b.color||mc.c1)}" oninput="mcSet(${i},'color',this.value)" class="h-7 w-10 border rounded"></div>`;
-  else if(b.t==="portal")body=inp("x","Chữ trên nút");
-  else if(b.t==="img")body=inp("u","https://... (link ảnh)","font-mono");
-  else if(b.t==="spacer")body=`<input type="number" value="${b.h||16}" oninput="mcSet(${i},'h',this.value)" class="w-20 p-1 text-xs border rounded bg-white"> px`;
-  else body=`<div class="text-[10px] text-slate-400">${b.t==="info"?"Bảng Email / Mã đơn / Gói / HSD — tự điền theo từng đơn":b.t==="support"?"Khối hỗ trợ Zalo / Messenger / Telegram / WeChat":"—"}</div>`;
-  return `<div onclick="mcSel=${i}" class="bg-white border ${mcSel===i?"border-indigo-400":"border-slate-200"} rounded-lg p-2 space-y-1"><div class="flex items-center gap-1 flex-wrap"><span class="text-[11px] font-black text-slate-500 mr-1">${nm}</span>${ab}${tf}${sz}<div class="ml-auto flex gap-1"><button onclick="mcMove(${i},-1)" class="w-6 h-6 rounded border text-[10px] text-slate-500"><i class="fas fa-arrow-up"></i></button><button onclick="mcMove(${i},1)" class="w-6 h-6 rounded border text-[10px] text-slate-500"><i class="fas fa-arrow-down"></i></button><button onclick="mcDel(${i})" class="w-6 h-6 rounded border text-[10px] text-red-500"><i class="fas fa-xmark"></i></button></div></div>${body}</div>`;}).join("")||'<div class="text-xs text-slate-400 italic p-3 text-center">Chưa có khối nào</div>';
- mcPreview();}
-function mcToHtml(){
+const MC_COLORS = {
+  indigo: ["#4f46e5", "#8b5cf6"],
+  red: ["#ef4444", "#b91c1c"],
+  green: ["#10b981", "#059669"],
+  blue: ["#2563eb", "#6366f1"],
+  amber: ["#f59e0b", "#d97706"],
+  purple: ["#7e22ce", "#a855f7"]
+};
+const MC_BT = [["text", "Đoạn văn", "fa-paragraph"], ["orderid", "Mã đơn hàng", "fa-hashtag"], ["box", "Khung nổi bật", "fa-square"], ["info", "Bảng thông tin", "fa-table-list"], ["portal", "Nút vào cổng", "fa-arrow-up-right-from-square"], ["support", "Khối hỗ trợ", "fa-headset"], ["img", "Ảnh", "fa-image"], ["divider", "Đường kẻ", "fa-minus"], ["spacer", "Cách dòng", "fa-arrows-up-down"]];
+const MC_VARS_BASE = [["{email}", "Email khách"], ["{orderId}", "Mã đơn hàng"], ["{pkg}", "Gói VPN"], ["{exp}", "Ngày hết hạn"]];
+const MC_VARS_SYS = [["{pkgName}", "Tên gói"], ["{daysLeft}", "Số ngày còn lại"], ["{expText}", "Câu nhắc hạn (mẫu sắp hết hạn)"], ["{reason}", "Lý do từ chối (mẫu thất bại)"], ["{gb}", "Số GB (mẫu dung lượng)"]];
+const MC_SYS_KEYS = ["support", "success", "failed", "exp", "data"];
+const MC_SYS_NAMES = {
+  support: "1. Hỗ trợ cài đặt",
+  success: "2. Kích hoạt thành công",
+  failed: "3. Kích hoạt thất bại",
+  exp: "4. VPN sắp hết hạn",
+  data: "5. Báo cáo dung lượng"
+};
+const MC_PRESETS = {
+  maint: {
+    name: "Thông báo bảo trì",
+    subject: "VPN Trinh Hg - Thông báo bảo trì hệ thống",
+    title: "THÔNG BÁO\nBẢO TRÌ HỆ THỐNG",
+    c1: MC_COLORS.amber[0],
+    c2: MC_COLORS.amber[1],
+    blocks: [{ t: "text", x: "Xin chào {email}," }, {
+      t: "text",
+      x: "Hệ thống sẽ bảo trì từ [giờ bắt đầu] đến [giờ kết thúc] ngày [ngày]. Trong thời gian này dịch vụ có thể gián đoạn ngắn, rất mong bạn thông cảm."
+    }, { t: "orderid" }, { t: "portal", x: "TRUY CẬP CỔNG KHÁCH HÀNG" }, { t: "support" }]
+  },
+  info: {
+    name: "Thông báo chung",
+    subject: "VPN Trinh Hg - Thông báo",
+    title: "THÔNG BÁO\nTỪ VPN TRINH HG",
+    c1: MC_COLORS.indigo[0],
+    c2: MC_COLORS.indigo[1],
+    blocks: [{ t: "text", x: "Xin chào {email}," }, { t: "text", x: "Nội dung thông báo..." }, { t: "orderid" }, { t: "portal", x: "TRUY CẬP CỔNG KHÁCH HÀNG" }, { t: "support" }]
+  },
+  promo: {
+    name: "Ưu đãi / khuyến mãi",
+    subject: "VPN Trinh Hg - Ưu đãi dành cho bạn",
+    title: "ƯU ĐÃI\nDÀNH RIÊNG CHO BẠN",
+    c1: MC_COLORS.green[0],
+    c2: MC_COLORS.green[1],
+    blocks: [{ t: "text", x: "Xin chào {email},", b: 1 }, {
+      t: "text",
+      x: "Gói {pkg} của bạn sẽ hết hạn ngày {exp}. Gia hạn sớm để nhận ưu đãi..."
+    }, { t: "portal", x: "GIA HẠN NGAY TẠI WEBSITE" }, { t: "support" }]
+  }
+};
+let mc = {
+  subject: "",
+  title: "",
+  color: "indigo",
+  c1: "#4f46e5",
+  c2: "#8b5cf6",
+  ang: 135,
+  stop: 100,
+  blocks: []
+}, mcTab = "sys", mcInited = false, mcCurKey = "", mcRecs = [], mcStop = false, mcSending = false, mcSel = -1, mcLastFocusEl = null;
+document.addEventListener("focusin", e => {
+  const t = e.target;
+  if (t && t.classList && t.classList.contains("mc-ins")) mcLastFocusEl = t;
+});
+const mcColorName = (c1, c2) => Object.keys(MC_COLORS).find(k => MC_COLORS[k][0].toLowerCase() === String(c1).toLowerCase() && MC_COLORS[k][1].toLowerCase() === String(c2).toLowerCase()) || "custom";
+const mcClone = b => JSON.parse(JSON.stringify(b || []));
+function tplToMc(t) {
+  const c1 = t.c1 || "#4f46e5", c2 = t.c2 || "#8b5cf6";
+  return {
+    subject: t.subject || "",
+    title: String(t.title || "").replace(/\\n/g, "\n"),
+    c1,
+    c2,
+    color: mcColorName(c1, c2),
+    ang: Number(t.ang) || 135,
+    stop: Number(t.stop) || 100,
+    blocks: mcClone(t.blocks)
+  };
+}
+const mcToTpl = () => ({
+  subject: mc.subject,
+  title: mc.title,
+  c1: mc.c1,
+  c2: mc.c2,
+  ang: Number(mc.ang) || 135,
+  stop: Number(mc.stop) || 100,
+  blocks: mcClone(mc.blocks)
+});
+function mcSampleVars() {
+  const base = {
+    email: "khachhang@gmail.com",
+    orderId: "DHXXXXXXXXXX",
+    pkgName: "Gói 1 tháng",
+    pkg: "Gói 1 tháng - 60,000VND",
+    exp: "30/10/2026",
+    daysLeft: 2,
+    nickname: "",
+    zalo: "",
+    reason: "Không nhận được thanh toán",
+    expText: "còn **2 ngày** (hết hạn **30/10/2026**)",
+    gb: "120"
+  };
+  return base;
+}
+function mcRenderTabs() {
+  ["sys", "free"].forEach(t => $("mcTab-" + t).classList.toggle("active", mcTab === t));
+  $("mcRecipPanel").classList.toggle("hidden", mcTab !== "free");
+  $("mcHint").innerHTML = mcTab === "sys" ? "5 mẫu mail tự động của hệ thống. <b>Lưu mẫu</b> = bản đã lưu trở thành mẫu production mặc định (Worker dùng khi gửi thật). Không có quét danh sách / gửi thử — production quyết định khi nào gửi. Biến như <b>{email}</b> <b>{orderId}</b> <b>{pkgName}</b> được thay theo từng đơn." : "Soạn mail tự do gửi cho khách còn đơn còn hạn. Dùng <b>{email}</b> <b>{orderId}</b> <b>{pkg}</b> <b>{exp}</b>, hệ thống thay theo từng người nhận. Có thể Lưu mẫu / Nạp mẫu để dùng lại.";
+  $("mcExtraBtn").innerHTML = mcTab === "sys" ? '<i class="fas fa-rotate-left mr-1"></i>Khôi phục mặc định' : '<i class="fas fa-trash mr-1"></i>Xóa mẫu đã lưu';
+}
+function mcRenderPresetOptions(keep) {
+  const sys = cmsDb.mailSys || {}, fr = cmsDb.mailFree || {};
+  $("mcPreset").innerHTML = mcTab === "sys" ? MC_SYS_KEYS.map(k => `<option value="sys:${k}">${esc(MC_SYS_NAMES[k])}${sys[k]?" · đã tùy chỉnh":""}</option>`).join("") : `<optgroup label="Mẫu có sẵn">${Object.keys(MC_PRESETS).map(k=>`<option value="builtin:${k}">${esc(MC_PRESETS[k].name)}</option>`).join("")}</optgroup>` + (Object.keys(fr).length ? `<optgroup label="Mẫu đã lưu">${Object.entries(fr).map(([id,f])=>`<option value="saved:${esc(id)}">${esc(f.name||id)}</option>`).join("")}</optgroup>` : "");
+  if (keep && [...$("mcPreset").options].some(o => o.value === keep)) $("mcPreset").value = keep;
+}
+function mcLoadPreset() {
+  const v = $("mcPreset").value, i = v.indexOf(":"), kind = v.slice(0, i), key = v.slice(i + 1);
+  mcCurKey = v;
+  if (kind === "sys") mc = tplToMc(getTpl(key));
+  else if (kind === "saved") {
+    const f = (cmsDb.mailFree || {})[key];
+    if (!f) return toast("Không tìm thấy mẫu đã lưu", "err");
+    mc = tplToMc(f.tpl);
+  }
+  else mc = tplToMc(MC_PRESETS[key] || MC_PRESETS.info);
+  mcSel = -1;
+  mcRenderEditor();
+}
+function mcSwitchTab(t) {
+  mcTab = t;
+  mcRenderTabs();
+  mcRenderPresetOptions();
+  mcLoadPreset();
+}
+function renderMailComposer() {
+  if (!mcInited) {
+    mcInited = true;
+    mcTab = "sys";
+    mcRenderTabs();
+    mcRenderPresetOptions();
+    mcLoadPreset();
+    return;
+  }
+  mcRenderTabs();
+  mcRenderEditor();
+}
+function mcInsertVar(v) {
+  const el = mcLastFocusEl && document.body.contains(mcLastFocusEl) ? mcLastFocusEl : $("mcSubject");
+  const s = el.selectionStart ?? el.value.length, e = el.selectionEnd ?? el.value.length;
+  el.value = el.value.slice(0, s) + v + el.value.slice(e);
+  el.focus();
+  el.selectionStart = el.selectionEnd = s + v.length;
+  el.dispatchEvent(new Event("input", { bubbles: true }));
+}
+function mcRenderEditor() {
+  const vars = mcTab === "sys" ? [...MC_VARS_BASE, ...MC_VARS_SYS] : MC_VARS_BASE;
+  $("mcVarBtns").innerHTML = vars.map(([v, l]) => `<button type="button" onmousedown="event.preventDefault()" onclick="mcInsertVar('${v}')" class="bg-indigo-50 text-indigo-600 font-mono font-bold text-[10px] px-2 py-1 rounded hover:bg-indigo-100" title="${esc(l)}">${v}</button>`).join("");
+  $("mcSubject").value = mc.subject;
+  $("mcTitle").value = mc.title;
+  $("mcColor").value = mc.color;
+  $("mcC1").value = mc.c1;
+  $("mcC2").value = mc.c2;
+  $("mcStop").value = mc.stop;
+  $("mcStopV").textContent = mc.stop;
+  $("mcAng").value = mc.ang;
+  $("mcAngV").textContent = mc.ang;
+  $("mcAddBtns").innerHTML = `<span class="text-[10px] font-bold text-slate-400 px-1">THÊM KHỐI:</span>` + MC_BT.map(([t, l, ic]) => `<button onclick="mcAdd('${t}')" class="bg-white border shadow-sm px-2 py-1 rounded text-[11px] font-bold text-slate-700 hover:bg-slate-50"><i class="fas ${ic} mr-1"></i>${l}</button>`).join("");
+  const tb = (i, k, on, ic) => `<button onclick="mcSet(${i},'${k}',${on?0:1},true)" class="w-6 h-6 rounded border text-[10px] ${on?"bg-indigo-600 text-white border-indigo-600":"bg-white text-slate-500"}"><i class="fas ${ic}"></i></button>`;
+  $("mcList").innerHTML = mc.blocks.map((b, i) => {
+    const nm = (MC_BT.find(x => x[0] === b.t) || [b.t, b.t])[1], txt = b.t === "text" || b.t === "box", ab = (txt || b.t === "img") ? [["l", "fa-align-left"], ["c", "fa-align-center"], ["r", "fa-align-right"]].map(([a, ic]) => `<button onclick="mcSet(${i},'al','${a}',true)" class="w-6 h-6 rounded border text-[10px] ${(b.al||"l")===a?"bg-indigo-600 text-white border-indigo-600":"bg-white text-slate-500"}"><i class="fas ${ic}"></i></button>`).join("") : "";
+    const tf = b.t === "text" ? tb(i, "b", b.b, "fa-bold") + tb(i, "i", b.i, "fa-italic") + tb(i, "ul", b.ul, "fa-underline") : "";
+    const sz = (b.t === "text" || b.t === "box") ? `<select onchange="mcSet(${i},'sz',this.value,true)" class="h-6 text-[10px] border rounded bg-white"><option value="">Cỡ</option>${[["s","Nhỏ"],["m","Vừa"],["l","Lớn"],["xl","R.lớn"]].map(([v,l])=>`<option value="${v}" ${b.sz===v?"selected":""}>${l}</option>`).join("")}</select>` : "";
+    const inp = (k, ph, cls) => `<input value="${esc(b[k]||"")}" oninput="mcSet(${i},'${k}',this.value)" placeholder="${ph}" class="mc-ins w-full p-1.5 text-xs border border-slate-200 rounded-lg bg-white outline-none ${cls||""}">`;
+    let body = "";
+    if (b.t === "text") body = `<textarea rows="3" oninput="mcSet(${i},'x',this.value)" class="mc-ins w-full p-1.5 text-xs border border-slate-200 rounded-lg bg-white outline-none">${esc(b.x||"")}</textarea><div class="text-[10px] text-slate-400">**chữ đậm** được hỗ trợ · chèn biến bằng các nút phía trên</div>`;
+    else if (b.t === "box") body = inp("label", "Nhãn khung (VD: LÝ DO TỪ CHỐI)") + `<textarea rows="2" oninput="mcSet(${i},'x',this.value)" class="mc-ins w-full p-1.5 text-xs border border-slate-200 rounded-lg bg-white outline-none">${esc(b.x||"")}</textarea><select onchange="mcSet(${i},'theme',this.value,true)" class="h-7 text-[11px] border rounded bg-white">${[["amber","Vàng"],["red","Đỏ"],["purple","Tím"],["blue","Xanh dương"],["green","Xanh lá"]].map(([v,l])=>`<option value="${v}" ${(b.theme||"amber")===v?"selected":""}>${l}</option>`).join("")}</select>`;
+    else if (b.t === "orderid") body = inp("label", "Nhãn (mặc định: MÃ ĐƠN HÀNG CỦA BẠN)") + `<div class="flex items-center gap-2 text-[11px] text-slate-500">Màu số mã <input type="color" value="${esc(b.color||mc.c1)}" oninput="mcSet(${i},'color',this.value)" class="h-7 w-10 border rounded"></div>`;
+    else if (b.t === "portal") body = inp("x", "Chữ trên nút");
+    else if (b.t === "img") body = inp("u", "https://... (link ảnh)", "font-mono");
+    else if (b.t === "spacer") body = `<input type="number" value="${b.h||16}" oninput="mcSet(${i},'h',this.value)" class="w-20 p-1 text-xs border rounded bg-white"> px`;
+    else body = `<div class="text-[10px] text-slate-400">${b.t==="info"?"Bảng Email / Mã đơn / Gói / HSD — tự điền theo từng đơn":b.t==="support"?"Khối hỗ trợ Zalo / Messenger / Telegram / WeChat":"—"}</div>`;
+    return `<div onclick="mcSel=${i}" class="bg-white border ${mcSel===i?"border-indigo-400":"border-slate-200"} rounded-lg p-2 space-y-1"><div class="flex items-center gap-1 flex-wrap"><span class="text-[11px] font-black text-slate-500 mr-1">${nm}</span>${ab}${tf}${sz}<div class="ml-auto flex gap-1"><button onclick="mcMove(${i},-1)" class="w-6 h-6 rounded border text-[10px] text-slate-500"><i class="fas fa-arrow-up"></i></button><button onclick="mcMove(${i},1)" class="w-6 h-6 rounded border text-[10px] text-slate-500"><i class="fas fa-arrow-down"></i></button><button onclick="mcDel(${i})" class="w-6 h-6 rounded border text-[10px] text-red-500"><i class="fas fa-xmark"></i></button></div></div>${body}</div>`;
+  }).join("") || '<div class="text-xs text-slate-400 italic p-3 text-center">Chưa có khối nào</div>';
+  mcPreview();
+}
+function mcToHtml() {
   try {
     return mailRender(mcToTpl(), mcSampleVars(), PD);
-  } catch(e) {
+  } catch (e) {
     console.error("Lỗi mcToHtml:", e);
     return "<div style='color:red;padding:12px;'>Lỗi render mail preview: " + htmlEscape(e.message) + "</div>";
   }
 }
 window.mcToHtml = mcToHtml;
 
-function mcPreview(){
+function mcPreview() {
   const iframe = $("mcPreviewIframe");
   const rendered = mcToHtml();
   if (iframe) {
@@ -1807,76 +2691,226 @@ function mcPreview(){
   if (el) el.innerHTML = rendered;
   if ($("mcGradBar")) $("mcGradBar").style.background = mailGrad(mc.c1, mc.c2, mc.ang, mc.stop);
 }
-function mcSet(i,k,v,re){mc.blocks[i][k]=v;if(re)mcRenderEditor();else mcPreview();}
-function mcAdd(t){const nb={t};if(t==="text")nb.x="";if(t==="portal")nb.x="TRUY CẬP CỔNG KHÁCH HÀNG";if(t==="box"){nb.label="TIÊU ĐỀ";nb.x="Nội dung";nb.theme="amber";}if(t==="spacer")nb.h=16;if(t==="img")nb.u="";const at=mcSel>=0?mcSel+1:mc.blocks.length;mc.blocks.splice(at,0,nb);mcSel=at;mcRenderEditor();}
-function mcMove(i,d){const j=i+d;if(j<0||j>=mc.blocks.length)return;[mc.blocks[i],mc.blocks[j]]=[mc.blocks[j],mc.blocks[i]];mcSel=j;mcRenderEditor();}
-function mcDel(i){mc.blocks.splice(i,1);mcSel=-1;mcRenderEditor();}
-function mcPickColor(k){mc.color=k;if(MC_COLORS[k]){mc.c1=MC_COLORS[k][0];mc.c2=MC_COLORS[k][1];}$("mcC1").value=mc.c1;$("mcC2").value=mc.c2;mcPreview();}
-function mcColorInput(k,v){mc[k]=v;mc.color=mcColorName(mc.c1,mc.c2);$("mcColor").value=mc.color;mcPreview();}
-function mcGrad(k,v){mc[k]=Number(v);$(k==="stop"?"mcStopV":"mcAngV").textContent=v;mcPreview();}
-async function mcSaveTemplate(){
- const i=mcCurKey.indexOf(":"),kind=mcCurKey.slice(0,i),key=mcCurKey.slice(i+1);
- if(kind==="sys"){cmsDb.mailSys=cmsDb.mailSys||{};cmsDb.mailSys[key]=mcToTpl();if(!cmsDb.mailSys[key].subject)cmsDb.mailSys[key].subject=SYS_TPL[key].subject;
-  try{await saveCmsDb();toast("Đã lưu — trở thành mẫu production mặc định cho \""+MC_SYS_NAMES[key].replace(/^\d\.\s/,"")+"\"");logEvent("ok","Soạn mail","Lưu mẫu hệ thống: "+key);mcRenderPresetOptions(mcCurKey);}catch(e){toast("Lỗi lưu: "+e.message,"err");}return;}
- const cur=kind==="saved"?(cmsDb.mailFree||{})[key]:null;
- const name=prompt("Tên mẫu để lưu:",cur?cur.name:(mc.subject||"Mẫu mới"));if(!name||!name.trim())return;
- const id=cur?key:"f"+Date.now().toString(36);cmsDb.mailFree=cmsDb.mailFree||{};cmsDb.mailFree[id]={name:name.trim(),tpl:mcToTpl(),ts:nowMs()};
- try{await saveCmsDb();toast("Đã lưu mẫu \""+name.trim()+"\"");mcCurKey="saved:"+id;mcRenderPresetOptions(mcCurKey);}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
-async function mcExtraAction(){
- const i=mcCurKey.indexOf(":"),kind=mcCurKey.slice(0,i),key=mcCurKey.slice(i+1);
- if(mcTab==="sys"){if(!(cmsDb.mailSys||{})[key])return toast("Mẫu này đang là mặc định","warn");if(!confirm("Khôi phục mẫu này về mặc định của hệ thống?"))return;delete cmsDb.mailSys[key];try{await saveCmsDb();toast("Đã khôi phục mặc định");mcRenderPresetOptions(mcCurKey);mcLoadPreset();}catch(e){toast("Lỗi lưu: "+e.message,"err");}return;}
- if(kind!=="saved")return toast("Chỉ xóa được mẫu do bạn đã lưu","warn");if(!confirm("Xóa mẫu đã lưu này?"))return;
- delete cmsDb.mailFree[key];try{await saveCmsDb();toast("Đã xóa mẫu");mcRenderPresetOptions();mcLoadPreset();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
-function mcScan(){
- const now=nowMs(),m=new Map();
- ordersDb.filter(o=>normSt(o.status)==="success"&&o.email).forEach(o=>{const life=isLife(o.expDate),end=life?Infinity:expEnd(o.expDate);if(!life&&(!end||end<now))return;const k=o.email.toLowerCase(),c=m.get(k);if(!c||oTs(o)>oTs(c))m.set(k,o);});
- mcRecs=[...m.values()].map(o=>({email:o.email,id:o.id,exp:o.expDate||"Vĩnh viễn",pkg:pkgLabel(o),o,sel:true,st:""})).sort((a,c)=>a.email.localeCompare(c.email));mcRenderRecs();toast(`Tìm thấy ${mcRecs.length} email còn đơn còn hạn`);}
-function mcRenderRecs(){
- const el=$("mcRecs");if(!mcRecs.length){el.innerHTML='<div class="text-xs text-slate-400 italic">Không có email nào còn hạn.</div>';return;}
- const n=mcRecs.filter(r=>r.sel).length,ic={"":"",sending:'<i class="fas fa-spinner fa-spin text-indigo-500"></i>',ok:'<i class="fas fa-circle-check text-emerald-500"></i>',err:'<i class="fas fa-circle-xmark text-red-500"></i>'};
- el.innerHTML=`<label class="flex items-center gap-2 text-xs font-bold text-slate-700 mb-2"><input type="checkbox" ${n===mcRecs.length?"checked":""} onchange="mcRecs.forEach(r=>r.sel=this.checked);mcRenderRecs()" class="w-4 h-4 accent-indigo-600">Chọn tất cả (${n}/${mcRecs.length})</label><div class="max-h-64 overflow-y-auto border border-slate-100 rounded-xl divide-y divide-slate-100">${mcRecs.map((r,i)=>`<label class="flex items-center gap-2 px-3 py-2 text-xs cursor-pointer hover:bg-slate-50"><input type="checkbox" ${r.sel?"checked":""} onchange="mcRecs[${i}].sel=this.checked;mcRenderRecs()" class="w-4 h-4 accent-indigo-600"><span class="font-bold text-slate-700 truncate flex-1">${esc(r.email)}</span><span class="font-mono text-indigo-500">${esc(r.id)}</span><span class="text-slate-400 whitespace-nowrap">HSD ${esc(r.exp)}</span><span class="w-4 text-center">${ic[r.st]||""}</span></label>`).join("")}</div>`;}
-async function mcSend(){
- if(mcSending)return;if(mcTab!=="free")return;if(!isMailMaster())return toast("Web đang ở chế độ SLAVE Email, không được gửi mail","err");
- const list=mcRecs.filter(r=>r.sel);if(!list.length)return toast("Chưa chọn email nào (bấm Quét danh sách)","err");
- const subj=(mc.subject||"").trim();if(!subj)return toast("Nhập tiêu đề (subject) mail","err");if(!mc.blocks.length)return toast("Mail chưa có nội dung","err");
- if(!confirm(`Bắn mail "${subj}" cho ${list.length} người?\nHệ thống gửi lần lượt từng người một, xong người này mới tới người kia.`))return;
- mcSending=true;mcStop=false;$("mcProg").classList.remove("hidden");let ok=0;const tpl=mcToTpl();
- 
- // HẠNG MỤC 4: Gom toàn bộ nhật ký vào RAM trình duyệt, không gửi ghi KV từng mail một
- const batchLogs = [];
- 
- for(let i=0;i<list.length;i++){
-  if(mcStop){toast("Đã dừng theo yêu cầu","warn");break;}
-  const r=list[i];r.st="sending";mcRenderRecs();$("mcProgTxt").textContent=`Đang gửi ${i+1}/${list.length}: ${r.email}`;
-  try{
-    const v=orderVars(r.o);
-    await sendMailClient(r.email,subjVars(subj,v),mailRender(tpl,v,PD));
-    r.st="ok";ok++;
-    batchLogs.push({ lvl: "ok", act: "Gửi mail", msg: `Thông báo "${subj}" → ${r.email}`, ref: r.id });
-  }catch(e){
-    r.st="err";
-    batchLogs.push({ lvl: "error", act: "Gửi mail", msg: `Lỗi "${subj}" → ${r.email}`, ref: r.id });
+function mcSet(i, k, v, re) {
+  mc.blocks[i][k] = v;
+  if (re) mcRenderEditor();
+  else mcPreview();
+}
+function mcAdd(t) {
+  const nb = { t };
+  if (t === "text") nb.x = "";
+  if (t === "portal") nb.x = "TRUY CẬP CỔNG KHÁCH HÀNG";
+  if (t === "box") {
+    nb.label = "TIÊU ĐỀ";
+    nb.x = "Nội dung";
+    nb.theme = "amber";
   }
-  $("mcBar").style.width=Math.round((i+1)/list.length*100)+"%";mcRenderRecs();await sleep(1500);
- }
+  if (t === "spacer") nb.h = 16;
+  if (t === "img") nb.u = "";
+  const at = mcSel >= 0 ? mcSel + 1 : mc.blocks.length;
+  mc.blocks.splice(at, 0, nb);
+  mcSel = at;
+  mcRenderEditor();
+}
+function mcMove(i, d) {
+  const j = i + d;
+  if (j < 0 || j >= mc.blocks.length) return;
+  [mc.blocks[i], mc.blocks[j]] = [mc.blocks[j], mc.blocks[i]];
+  mcSel = j;
+  mcRenderEditor();
+}
+function mcDel(i) {
+  mc.blocks.splice(i, 1);
+  mcSel = -1;
+  mcRenderEditor();
+}
+function mcPickColor(k) {
+  mc.color = k;
+  if (MC_COLORS[k]) {
+    mc.c1 = MC_COLORS[k][0];
+    mc.c2 = MC_COLORS[k][1];
+  }
+  $("mcC1").value = mc.c1;
+  $("mcC2").value = mc.c2;
+  mcPreview();
+}
+function mcColorInput(k, v) {
+  mc[k] = v;
+  mc.color = mcColorName(mc.c1, mc.c2);
+  $("mcColor").value = mc.color;
+  mcPreview();
+}
+function mcGrad(k, v) {
+  mc[k] = Number(v);
+  $(k === "stop" ? "mcStopV" : "mcAngV").textContent = v;
+  mcPreview();
+}
+async function mcSaveTemplate() {
+  const i = mcCurKey.indexOf(":"), kind = mcCurKey.slice(0, i), key = mcCurKey.slice(i + 1);
+  if (kind === "sys") {
+    cmsDb.mailSys = cmsDb.mailSys || {};
+    cmsDb.mailSys[key] = mcToTpl();
+    if (!cmsDb.mailSys[key].subject) cmsDb.mailSys[key].subject = SYS_TPL[key].subject;
+    try {
+      await saveCmsDb();
+      toast("Đã lưu — trở thành mẫu production mặc định cho \"" + MC_SYS_NAMES[key].replace(/^\d\.\s/, "") + "\"");
+      logEvent("ok", "Soạn mail", "Lưu mẫu hệ thống: " + key);
+      mcRenderPresetOptions(mcCurKey);
+    } catch (e) {
+      toast("Lỗi lưu: " + e.message, "err");
+    }
+    return;
+  }
+  const cur = kind === "saved" ? (cmsDb.mailFree || {})[key] : null;
+  const name = prompt("Tên mẫu để lưu:", cur ? cur.name : (mc.subject || "Mẫu mới"));
+  if (!name || !name.trim()) return;
+  const id = cur ? key : "f" + Date.now().toString(36);
+  cmsDb.mailFree = cmsDb.mailFree || {};
+  cmsDb.mailFree[id] = { name: name.trim(), tpl: mcToTpl(), ts: nowMs() };
+  try {
+    await saveCmsDb();
+    toast("Đã lưu mẫu \"" + name.trim() + "\"");
+    mcCurKey = "saved:" + id;
+    mcRenderPresetOptions(mcCurKey);
+  } catch (e) {
+    toast("Lỗi lưu: " + e.message, "err");
+  }
+}
+async function mcExtraAction() {
+  const i = mcCurKey.indexOf(":"), kind = mcCurKey.slice(0, i), key = mcCurKey.slice(i + 1);
+  if (mcTab === "sys") {
+    if (!(cmsDb.mailSys || {})[key]) return toast("Mẫu này đang là mặc định", "warn");
+    if (!confirm("Khôi phục mẫu này về mặc định của hệ thống?")) return;
+    delete cmsDb.mailSys[key];
+    try {
+      await saveCmsDb();
+      toast("Đã khôi phục mặc định");
+      mcRenderPresetOptions(mcCurKey);
+      mcLoadPreset();
+    } catch (e) {
+      toast("Lỗi lưu: " + e.message, "err");
+    }
+    return;
+  }
+  if (kind !== "saved") return toast("Chỉ xóa được mẫu do bạn đã lưu", "warn");
+  if (!confirm("Xóa mẫu đã lưu này?")) return;
+  delete cmsDb.mailFree[key];
+  try {
+    await saveCmsDb();
+    toast("Đã xóa mẫu");
+    mcRenderPresetOptions();
+    mcLoadPreset();
+  } catch (e) {
+    toast("Lỗi lưu: " + e.message, "err");
+  }
+}
+function mcScan() {
+  const now = nowMs(), m = new Map();
+  ordersDb.filter(o => normSt(o.status) === "success" && o.email).forEach(o => {
+    const life = isLife(o.expDate), end = life ? Infinity : expEnd(o.expDate);
+    if (!life && (!end || end < now)) return;
+    const k = o.email.toLowerCase(), c = m.get(k);
+    if (!c || oTs(o) > oTs(c)) m.set(k, o);
+  });
+  mcRecs = [...m.values()].map(o => ({
+    email: o.email,
+    id: o.id,
+    exp: o.expDate || "Vĩnh viễn",
+    pkg: pkgLabel(o),
+    o,
+    sel: true,
+    st: ""
+  })).sort((a, c) => a.email.localeCompare(c.email));
+  mcRenderRecs();
+  toast(`Tìm thấy ${mcRecs.length} email còn đơn còn hạn`);
+}
+function mcRenderRecs() {
+  const el = $("mcRecs");
+  if (!mcRecs.length) {
+    el.innerHTML = '<div class="text-xs text-slate-400 italic">Không có email nào còn hạn.</div>';
+    return;
+  }
+  const n = mcRecs.filter(r => r.sel).length, ic = {
+    "": "",
+    sending: '<i class="fas fa-spinner fa-spin text-indigo-500"></i>',
+    ok: '<i class="fas fa-circle-check text-emerald-500"></i>',
+    err: '<i class="fas fa-circle-xmark text-red-500"></i>'
+  };
+  el.innerHTML = `<label class="flex items-center gap-2 text-xs font-bold text-slate-700 mb-2"><input type="checkbox" ${n===mcRecs.length?"checked":""} onchange="mcRecs.forEach(r=>r.sel=this.checked);mcRenderRecs()" class="w-4 h-4 accent-indigo-600">Chọn tất cả (${n}/${mcRecs.length})</label><div class="max-h-64 overflow-y-auto border border-slate-100 rounded-xl divide-y divide-slate-100">${mcRecs.map((r,i)=>`<label class="flex items-center gap-2 px-3 py-2 text-xs cursor-pointer hover:bg-slate-50"><input type="checkbox" ${r.sel?"checked":""} onchange="mcRecs[${i}].sel=this.checked;mcRenderRecs()" class="w-4 h-4 accent-indigo-600"><span class="font-bold text-slate-700 truncate flex-1">${esc(r.email)}</span><span class="font-mono text-indigo-500">${esc(r.id)}</span><span class="text-slate-400 whitespace-nowrap">HSD ${esc(r.exp)}</span><span class="w-4 text-center">${ic[r.st]||""}</span></label>`).join("")}</div>`;
+}
+async function mcSend() {
+  if (mcSending) return;
+  if (mcTab !== "free") return;
+  if (!isMailMaster()) return toast("Web đang ở chế độ SLAVE Email, không được gửi mail", "err");
+  const list = mcRecs.filter(r => r.sel);
+  if (!list.length) return toast("Chưa chọn email nào (bấm Quét danh sách)", "err");
+  const subj = (mc.subject || "").trim();
+  if (!subj) return toast("Nhập tiêu đề (subject) mail", "err");
+  if (!mc.blocks.length) return toast("Mail chưa có nội dung", "err");
+  if (!confirm(`Bắn mail "${subj}" cho ${list.length} người?\nHệ thống gửi lần lượt từng người một, xong người này mới tới người kia.`)) return;
+  mcSending = true;
+  mcStop = false;
+  $("mcProg").classList.remove("hidden");
+  let ok = 0;
+  const tpl = mcToTpl();
 
- // Gửi gom 1 request duy nhất lên Worker để ghi KV đúng 1 lần
- if(batchLogs.length){
-   try{
-     await aj("/api/admin/log_batch", { method: "POST", body: { logs: batchLogs }, soft: true });
-   }catch(e){}
- }
+  // HẠNG MỤC 4: Gom toàn bộ nhật ký vào RAM trình duyệt, không gửi ghi KV từng mail một
+  const batchLogs = [];
 
- mcSending=false;$("mcProgTxt").textContent=`Hoàn tất: đã gửi ${ok}/${list.length} email. Đã gom log ghi KV 1 lần duy nhất.`;toast(`Đã gửi ${ok}/${list.length} email`);}
+  for (let i = 0; i < list.length; i++) {
+    if (mcStop) {
+      toast("Đã dừng theo yêu cầu", "warn");
+      break;
+    }
+    const r = list[i];
+    r.st = "sending";
+    mcRenderRecs();
+    $("mcProgTxt").textContent = `Đang gửi ${i+1}/${list.length}: ${r.email}`;
+    try {
+      const v = orderVars(r.o);
+      await sendMailClient(r.email, subjVars(subj, v), mailRender(tpl, v, PD));
+      r.st = "ok";
+      ok++;
+      batchLogs.push({
+        lvl: "ok",
+        act: "Gửi mail",
+        msg: `Thông báo "${subj}" → ${r.email}`,
+        ref: r.id
+      });
+    } catch (e) {
+      r.st = "err";
+      batchLogs.push({
+        lvl: "error",
+        act: "Gửi mail",
+        msg: `Lỗi "${subj}" → ${r.email}`,
+        ref: r.id
+      });
+    }
+    $("mcBar").style.width = Math.round((i + 1) / list.length * 100) + "%";
+    mcRenderRecs();
+    await sleep(1500);
+  }
+
+  // Gửi gom 1 request duy nhất lên Worker để ghi KV đúng 1 lần
+  if (batchLogs.length) {
+    try {
+      await aj("/api/admin/log_batch", { method: "POST", body: { logs: batchLogs }, soft: true });
+    } catch (e) {}
+  }
+
+  mcSending = false;
+  $("mcProgTxt").textContent = `Hoàn tất: đã gửi ${ok}/${list.length} email. Đã gom log ghi KV 1 lần duy nhất.`;
+  toast(`Đã gửi ${ok}/${list.length} email`);
+}
 
 // ===================== DUNG LƯỢNG =====================
 // Lấy nguyên tên gói từ Order theo chuẩn pkgLabel (so khớp orderId và email)
-function dataPriceLabel(r){
- const oi=ordersDb.find(o=>normId(o.id)===normId(r.orderId) && String(o.email||"").toLowerCase()===String(r.email||"").toLowerCase());
- return oi ? pkgLabel(oi) : (r.pkgName||"—");
+function dataPriceLabel(r) {
+  const oi = ordersDb.find(o => normId(o.id) === normId(r.orderId) && String(o.email || "").toLowerCase() === String(r.email || "").toLowerCase());
+  return oi ? pkgLabel(oi) : (r.pkgName || "—");
 }
 
-function renderDataRequests(){
+function renderDataRequests() {
   const tb = $("dataReqBody");
   if (!tb) return;
   if (!dataReqDb.length) {
@@ -1931,7 +2965,7 @@ function renderDataRequests(){
   tb.innerHTML = html;
 }
 
-async function sendDataReport(i){
+async function sendDataReport(i) {
   if (!isMailMaster()) return toast("Đang ở chế độ SLAVE Email", "err");
   const r = dataReqDb[i], gb = $("gb-input-" + i).value.trim();
   if (!gb) return toast("Nhập số GB!", "err");
@@ -1946,7 +2980,7 @@ async function sendDataReport(i){
   toast(`Đã báo cáo ${gb} GB cho khách`);
 }
 
-async function toggleDataRequestSeen(i){
+async function toggleDataRequestSeen(i) {
   dataReqDb[i].seen = !dataReqDb[i].seen;
   renderDataRequests();
   await aj("/api/data_requests", { method: "POST", body: dataReqDb });
@@ -1954,7 +2988,7 @@ async function toggleDataRequestSeen(i){
 }
 window.toggleDataRequestSeen = toggleDataRequestSeen;
 
-async function markAllDataRequestsSeen(){
+async function markAllDataRequestsSeen() {
   dataReqDb.forEach(r => r.seen = true);
   renderDataRequests();
   await aj("/api/data_requests", { method: "POST", body: dataReqDb });
@@ -1963,14 +2997,14 @@ async function markAllDataRequestsSeen(){
 }
 window.markAllDataRequestsSeen = markAllDataRequestsSeen;
 
-async function delDataRequest(i){
+async function delDataRequest(i) {
   dataReqDb.splice(i, 1);
   renderDataRequests();
   await aj("/api/data_requests", { method: "POST", body: dataReqDb });
   lastSig.d = JSON.stringify(dataReqDb);
 }
 
-async function clearDataRequests(){
+async function clearDataRequests() {
   dataReqDb = [];
   renderDataRequests();
   await aj("/api/data_requests", { method: "POST", body: [] });
@@ -1978,76 +3012,122 @@ async function clearDataRequests(){
   toast("Đã dọn sạch");
 }
 // ===================== GIAO DỊCH D1 (qua Worker) =====================
-function switchTxTab(t){
-  if(t==="rev"){go("t-rev");return;}
-  curTxTab=t;
-  document.querySelectorAll("#t-trans .settings-sub-tab").forEach(b=>b.classList.remove("active"));
-  const btn=$("tx-"+t);if(btn)btn.classList.add("active");
-  const isExc=(t==="exception");
-  $("txTableWrap").classList.toggle("hidden",isExc);
-  if($("txExceptionWrap"))$("txExceptionWrap").classList.toggle("hidden",!isExc);
-  if(isExc)renderExceptionsTab();
+function switchTxTab(t) {
+  if (t === "rev") {
+    go("t-rev");
+    return;
+  }
+  curTxTab = t;
+  document.querySelectorAll("#t-trans .settings-sub-tab").forEach(b => b.classList.remove("active"));
+  const btn = $("tx-" + t);
+  if (btn) btn.classList.add("active");
+  const isExc = (t === "exception");
+  $("txTableWrap").classList.toggle("hidden", isExc);
+  if ($("txExceptionWrap")) $("txExceptionWrap").classList.toggle("hidden", !isExc);
+  if (isExc) renderExceptionsTab();
   else renderTransactions();
 }
 window.switchTxTab = switchTxTab;
-const extractOrder=raw=>{if(!raw)return null;const m=String(raw).replace(/[-_.\s]/g,"").toUpperCase().match(/(DH[A-Z0-9]{10})/);return m?m[1]:null;};
-function mergeTx(list){const map=new Map(txData.map(t=>[t.id,t]));list.forEach(t=>{map.set(t.id,t);if(t.updated_at&&t.updated_at>txSince)txSince=t.updated_at;});txData=[...map.values()].sort((a,b)=>b.id-a.id).slice(0,300);}
+const extractOrder = raw => {
+  if (!raw) return null;
+  const m = String(raw).replace(/[-_.\s]/g, "").toUpperCase().match(/(DH[A-Z0-9]{10})/);
+  return m ? m[1] : null;
+};
+function mergeTx(list) {
+  const map = new Map(txData.map(t => [t.id, t]));
+  list.forEach(t => {
+    map.set(t.id, t);
+    if (t.updated_at && t.updated_at > txSince) txSince = t.updated_at;
+  });
+  txData = [...map.values()].sort((a, b) => b.id - a.id).slice(0, 300);
+}
 let lastTxError = "";
-async function loadTx(force){
- clearTimeout(txPollT);
- try{
-  const first=force||!txData.length;
-  const j=await aj(first?"/api/admin/tx?status=all&limit=100":`/api/admin/tx?status=all&limit=100&updated_since=${encodeURIComponent(txSince||"2000-01-01 00:00:00")}`);
-  if(j&&j.ok===false)throw new Error(j.error||"D1 trả về lỗi");
-  if(first){txData=[];txSince="";}
-  const list=arr(j&&j.transactions);mergeTx(list);txFails=0;lastTxError="";
-  if(!$("t-trans").classList.contains("hidden")){if(curTxTab!=="rev")renderTransactions();}else{const seen=+localStorage.getItem(SITE_KEY+"_txSeen")||0;const n=txData.filter(t=>/unmatched|review|mismatch/.test(t.status)&&parseAny(t.created_at)>seen).length;if(n){$("transBadge").innerText=n;$("transBadge").classList.remove("hidden");}}
- }catch(e){
-  txFails++;
-  lastTxError = e.message || String(e);
-  if(!txData.length&&!$("t-trans").classList.contains("hidden"))$("transBody").innerHTML=`<tr><td colspan="10" class="text-center py-8 text-rose-500 font-bold"><i class="fas fa-exclamation-triangle mr-2"></i> Lỗi kết nối D1 đối soát: ${esc(lastTxError)}<br><button onclick="loadTx(true)" class="mt-3 px-3 py-1 bg-rose-50 border border-rose-200 text-rose-700 rounded text-xs hover:bg-rose-100 font-bold"><i class="fas fa-sync-alt mr-1"></i> Thử lại</button></td></tr>`;
- }
- const active=!$("t-trans").classList.contains("hidden");
- txPollT=setTimeout(()=>{if(document.hidden)return loadTx();loadTx();},document.hidden?30000:Math.min(30000,(active?5000:20000)*(1+txFails)));}
-const kindBadge=k=>k==="upgrade"?`<span class="bg-purple-100 text-purple-700 border border-purple-200 px-2 py-0.5 rounded text-[9px] font-black uppercase ml-1">NÂNG CẤP</span>`:k==="renew"?`<span class="bg-sky-100 text-sky-700 border border-sky-200 px-2 py-0.5 rounded text-[9px] font-black uppercase ml-1">GIA HẠN</span>`:`<span class="bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded text-[9px] font-black uppercase ml-1">MỚI</span>`;
-// Xóa thật trong D1 qua Worker (/api/admin/tx/:id/delete) — confirm, xóa server, rồi tải lại từ D1 (không chỉ xóa trên UI). Dùng chung cho bảng Đối soát và Giao dịch thô.
-async function deleteTx(id){
- if(!confirm(`Xóa hẳn giao dịch #${id} khỏi D1? Hành động này không thể hoàn tác.`))return;
- try{const j=await aj("/api/admin/tx/"+id+"/delete",{method:"POST"});if(j&&j.ok===false)throw new Error(j.error||"D1 từ chối xóa");txData=txData.filter(t=>t.id!==id);renderTransactions();toast("Đã xóa giao dịch #"+id);logEvent("warn","admin","Xóa giao dịch D1","#"+id);await loadTx(true);}
- catch(e){toast("Lỗi xóa: "+e.message,"err");}}
-const delBtn=id=>`<button onclick="deleteTx(${id})" title="Xóa hẳn khỏi D1" class="bg-red-50 text-red-600 border border-red-100 hover:bg-red-500 hover:text-white font-bold w-9 h-8 rounded-lg text-xs"><i class="fas fa-trash"></i></button>`;
-function renderTransactions(){
- const th=$("transHead"),tb=$("transBody");if(curTxTab==="rev")return;
- if(!txData.length){
-  th.innerHTML="";
-  if(lastTxError){
-    tb.innerHTML=`<tr><td colspan="10" class="text-center py-8 text-rose-500 font-bold"><i class="fas fa-exclamation-triangle mr-2"></i> Không thể tải giao dịch: ${esc(lastTxError)}<br><button onclick="loadTx(true)" class="mt-3 px-3 py-1 bg-rose-50 border border-rose-200 text-rose-700 rounded text-xs hover:bg-rose-100 font-bold"><i class="fas fa-sync-alt mr-1"></i> Thử lại</button></td></tr>`;
-  } else {
-    tb.innerHTML='<tr><td colspan="10" class="text-center py-8 text-slate-400 font-bold">Không có giao dịch nào</td></tr>';
+async function loadTx(force) {
+  clearTimeout(txPollT);
+  try {
+    const first = force || !txData.length;
+    const j = await aj(first ? "/api/admin/tx?status=all&limit=100" : `/api/admin/tx?status=all&limit=100&updated_since=${encodeURIComponent(txSince||"2000-01-01 00:00:00")}`);
+    if (j && j.ok === false) throw new Error(j.error || "D1 trả về lỗi");
+    if (first) {
+      txData = [];
+      txSince = "";
+    }
+    const list = arr(j && j.transactions);
+    mergeTx(list);
+    txFails = 0;
+    lastTxError = "";
+    if (!$("t-trans").classList.contains("hidden")) {
+      if (curTxTab !== "rev") renderTransactions();
+    } else {
+      const seen = +localStorage.getItem(SITE_KEY + "_txSeen") || 0;
+      const n = txData.filter(t => /unmatched|review|mismatch/.test(t.status) && parseAny(t.created_at) > seen).length;
+      if (n) {
+        $("transBadge").innerText = n;
+        $("transBadge").classList.remove("hidden");
+      }
+    }
+  } catch (e) {
+    txFails++;
+    lastTxError = e.message || String(e);
+    if (!txData.length && !$("t-trans").classList.contains("hidden")) $("transBody").innerHTML = `<tr><td colspan="10" class="text-center py-8 text-rose-500 font-bold"><i class="fas fa-exclamation-triangle mr-2"></i> Lỗi kết nối D1 đối soát: ${esc(lastTxError)}<br><button onclick="loadTx(true)" class="mt-3 px-3 py-1 bg-rose-50 border border-rose-200 text-rose-700 rounded text-xs hover:bg-rose-100 font-bold"><i class="fas fa-sync-alt mr-1"></i> Thử lại</button></td></tr>`;
   }
-  return;
- }
- if(curTxTab==="giamsat"){
-  th.innerHTML='<tr><th>STT</th><th>Mã Đơn</th><th>Giờ Tạo Đơn</th><th>Email Khách</th><th>Tiền Thu & SL</th><th>Nguồn Web</th><th>Mã CK (Regex)</th><th>Trạng Thái</th><th class="col-ok">Khớp</th><th class="col-x">Xóa</th></tr>';
-  tb.innerHTML=txData.map((tx,i)=>{
-   const oId=tx.order_id||"Trống",oi=ordersDb.find(o=>normId(o.id)===normId(oId)),mo=tx.matchedOrder||{};
-   const email=oi?.email||mo.email||"Chưa xác định",tc=oi?fmtBank(oTs(oi)):(mo.created_at?fmtBank(mo.created_at):"—"),web=webLabel(oi?.sourceWeb||oi?.target_web||mo.target_web,mo.worker_url);
-   const amt=Number(tx.amount);
-   const sl=oi && oi.qty ? Number(oi.qty) : 1;
-   const rx=extractOrder(tx.notification||tx.content),s=tx.status;
-   const badge=/^(success|paid)$/.test(s)?["emerald","success"]:s==="pending"?["orange","pending"]:s==="unmatched"?["slate","unmatched"]:/reject|invalid|failed/.test(s)?["rose","failed"]:["yellow",s];
-   const kind=tx.kind||mo.order_type||(oi?.isUpgrade?"upgrade":(oi?.orderType==="renew"?"renew":"new"));
-   let oIdBadge = "bg-slate-100 text-slate-600 border-slate-200";
-   if (oId === "Trống" || !oId) {
-     oIdBadge = "bg-slate-100 text-slate-500 border-slate-200";
-   } else if (kind === "upgrade") {
-     oIdBadge = "bg-purple-100 text-purple-800 border-purple-200";
-   } else if (kind === "renew") {
-     oIdBadge = "bg-sky-100 text-sky-800 border-sky-200";
-   } else {
-     oIdBadge = "bg-emerald-100 text-emerald-800 border-emerald-200";
-   }
-   return `<tr>
+  const active = !$("t-trans").classList.contains("hidden");
+  txPollT = setTimeout(() => {
+    if (document.hidden) return loadTx();
+    loadTx();
+  }, document.hidden ? 30000 : Math.min(30000, (active ? 5000 : 20000) * (1 + txFails)));
+}
+const kindBadge = k => k === "upgrade" ? `<span class="bg-purple-100 text-purple-700 border border-purple-200 px-2 py-0.5 rounded text-[9px] font-black uppercase ml-1">NÂNG CẤP</span>` : k === "renew" ? `<span class="bg-sky-100 text-sky-700 border border-sky-200 px-2 py-0.5 rounded text-[9px] font-black uppercase ml-1">GIA HẠN</span>` : `<span class="bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded text-[9px] font-black uppercase ml-1">MỚI</span>`;
+// Xóa thật trong D1 qua Worker (/api/admin/tx/:id/delete) — confirm, xóa server, rồi tải lại từ D1 (không chỉ xóa trên UI). Dùng chung cho bảng Đối soát và Giao dịch thô.
+async function deleteTx(id) {
+  if (!confirm(`Xóa hẳn giao dịch #${id} khỏi D1? Hành động này không thể hoàn tác.`)) return;
+  try {
+    const j = await aj("/api/admin/tx/" + id + "/delete", { method: "POST" });
+    if (j && j.ok === false) throw new Error(j.error || "D1 từ chối xóa");
+    txData = txData.filter(t => t.id !== id);
+    renderTransactions();
+    toast("Đã xóa giao dịch #" + id);
+    logEvent("warn", "admin", "Xóa giao dịch D1", "#" + id);
+    await loadTx(true);
+  }
+  catch (e) {
+    toast("Lỗi xóa: " + e.message, "err");
+  }
+}
+const delBtn = id => `<button onclick="deleteTx(${id})" title="Xóa hẳn khỏi D1" class="bg-red-50 text-red-600 border border-red-100 hover:bg-red-500 hover:text-white font-bold w-9 h-8 rounded-lg text-xs"><i class="fas fa-trash"></i></button>`;
+function renderTransactions() {
+  const th = $("transHead"), tb = $("transBody");
+  if (curTxTab === "rev") return;
+  if (!txData.length) {
+    th.innerHTML = "";
+    if (lastTxError) {
+      tb.innerHTML = `<tr><td colspan="10" class="text-center py-8 text-rose-500 font-bold"><i class="fas fa-exclamation-triangle mr-2"></i> Không thể tải giao dịch: ${esc(lastTxError)}<br><button onclick="loadTx(true)" class="mt-3 px-3 py-1 bg-rose-50 border border-rose-200 text-rose-700 rounded text-xs hover:bg-rose-100 font-bold"><i class="fas fa-sync-alt mr-1"></i> Thử lại</button></td></tr>`;
+    } else {
+      tb.innerHTML = '<tr><td colspan="10" class="text-center py-8 text-slate-400 font-bold">Không có giao dịch nào</td></tr>';
+    }
+    return;
+  }
+  if (curTxTab === "giamsat") {
+    th.innerHTML = '<tr><th>STT</th><th>Mã Đơn</th><th>Giờ Tạo Đơn</th><th>Email Khách</th><th>Tiền Thu & SL</th><th>Nguồn Web</th><th>Mã CK (Regex)</th><th>Trạng Thái</th><th class="col-ok">Khớp</th><th class="col-x">Xóa</th></tr>';
+    tb.innerHTML = txData.map((tx, i) => {
+      const oId = tx.order_id || "Trống", oi = ordersDb.find(o => normId(o.id) === normId(oId)), mo = tx.matchedOrder || {};
+      const email = oi?.email || mo.email || "Chưa xác định", tc = oi ? fmtBank(oTs(oi)) : (mo.created_at ? fmtBank(mo.created_at) : "—"), web = webLabel(oi?.sourceWeb || oi?.target_web || mo.target_web, mo.worker_url);
+      const amt = Number(tx.amount);
+      const sl = oi && oi.qty ? Number(oi.qty) : 1;
+      const rx = extractOrder(tx.notification || tx.content), s = tx.status;
+      const badge = /^(success|paid)$/.test(s) ? ["emerald", "success"] : s === "pending" ? ["orange", "pending"] : s === "unmatched" ? ["slate", "unmatched"] : /reject|invalid|failed/.test(s) ? ["rose", "failed"] : ["yellow", s];
+      const kind = tx.kind || mo.order_type || (oi?.isUpgrade ? "upgrade" : (oi?.orderType === "renew" ? "renew" : "new"));
+      let oIdBadge = "bg-slate-100 text-slate-600 border-slate-200";
+      if (oId === "Trống" || !oId) {
+        oIdBadge = "bg-slate-100 text-slate-500 border-slate-200";
+      } else if (kind === "upgrade") {
+        oIdBadge = "bg-purple-100 text-purple-800 border-purple-200";
+      } else if (kind === "renew") {
+        oIdBadge = "bg-sky-100 text-sky-800 border-sky-200";
+      } else {
+        oIdBadge = "bg-emerald-100 text-emerald-800 border-emerald-200";
+      }
+      return `<tr>
     <td class="text-xs font-bold text-slate-400">${i+1}</td>
     <td><span class="font-mono font-black text-xs px-2 py-1 rounded-md border cp inline-block ${oIdBadge}" onclick="cp(${q(oId)})">${esc(oId)}</span></td>
     <td class="text-xs text-slate-600 whitespace-nowrap">${tc}</td>
@@ -2058,16 +3138,42 @@ function renderTransactions(){
     <td><span class="bg-${badge[0]}-100 text-${badge[0]}-700 border border-${badge[0]}-200 px-2 py-1 rounded text-[10px] font-bold uppercase" title="${esc(tx.review_note||"")}">${esc(badge[1])}</span></td>
     <td class="col-ok">${/^(success|paid|rejected)$/.test(s)?'<span class="text-slate-300">—</span>':`<button onclick="approveTransaction(${tx.id})" title="Ép khớp giao dịch" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold w-8 h-8 rounded-lg shadow text-xs flex items-center justify-center mx-auto transition active:scale-95"><i class="fas fa-bolt"></i></button>`}</td>
     <td class="col-x">${delBtn(tx.id)}</td>
-   </tr>`;}).join("");
- }else{
-  th.innerHTML='<tr><th>STT</th><th>Thời Gian</th><th>Số Tiền</th><th>Nội Dung Thô</th><th class="col-x">Xóa</th></tr>';
-  tb.innerHTML=txData.map((tx,i)=>`<tr><td class="text-xs text-slate-500 font-bold">${i+1}</td><td class="text-xs text-slate-600 whitespace-nowrap">${fmtBank(tx.created_at)}</td><td class="font-black text-rose-600 whitespace-nowrap">${Number(tx.amount).toLocaleString("en-US")}VND</td><td class="font-mono text-[11px] text-slate-600 bg-slate-50 whitespace-normal break-words min-w-[250px]">${esc(tx.notification||tx.content||"—")}</td><td class="col-x">${delBtn(tx.id)}</td></tr>`).join("");}}
-async function approveTransaction(id){
- const tx=txData.find(t=>t.id===id);let oid=extractOrder(tx?.notification||tx?.content)||tx?.order_id||"";
- if(oid){if(!confirm(`ÉP KHỚP giao dịch #${id} cho đơn ${oid}?\nHệ thống sẽ chuyển Success và cấp link.`))return;}else{oid=prompt("Nhập Mã Đơn (DHXXXXXXXXXX) muốn chốt cho giao dịch này:","");if(!oid)return;}
- oid=normId(oid);toast("Đang ép khớp...");
- try{await aj("/api/admin/tx/"+id+"/approve",{method:"POST",body:{orderId:oid,note:"Duyệt tay qua Admin UI"}});toast("Đã ép khớp, hệ thống đang cấp link");if(tx){tx.status="success";tx.order_id=oid;}renderTransactions();setTimeout(pollMain,2500);setTimeout(()=>loadTx(),1500);}
- catch(e){if(e.message!=="401")toast("Lỗi: "+e.message,"err");}}
+   </tr>`;
+    }).join("");
+  } else {
+    th.innerHTML = '<tr><th>STT</th><th>Thời Gian</th><th>Số Tiền</th><th>Nội Dung Thô</th><th class="col-x">Xóa</th></tr>';
+    tb.innerHTML = txData.map((tx, i) => `<tr><td class="text-xs text-slate-500 font-bold">${i+1}</td><td class="text-xs text-slate-600 whitespace-nowrap">${fmtBank(tx.created_at)}</td><td class="font-black text-rose-600 whitespace-nowrap">${Number(tx.amount).toLocaleString("en-US")}VND</td><td class="font-mono text-[11px] text-slate-600 bg-slate-50 whitespace-normal break-words min-w-[250px]">${esc(tx.notification||tx.content||"—")}</td><td class="col-x">${delBtn(tx.id)}</td></tr>`).join("");
+  }
+}
+async function approveTransaction(id) {
+  const tx = txData.find(t => t.id === id);
+  let oid = extractOrder(tx?.notification || tx?.content) || tx?.order_id || "";
+  if (oid) {
+    if (!confirm(`ÉP KHỚP giao dịch #${id} cho đơn ${oid}?\nHệ thống sẽ chuyển Success và cấp link.`)) return;
+  } else {
+    oid = prompt("Nhập Mã Đơn (DHXXXXXXXXXX) muốn chốt cho giao dịch này:", "");
+    if (!oid) return;
+  }
+  oid = normId(oid);
+  toast("Đang ép khớp...");
+  try {
+    await aj("/api/admin/tx/" + id + "/approve", {
+      method: "POST",
+      body: { orderId: oid, note: "Duyệt tay qua Admin UI" }
+    });
+    toast("Đã ép khớp, hệ thống đang cấp link");
+    if (tx) {
+      tx.status = "success";
+      tx.order_id = oid;
+    }
+    renderTransactions();
+    setTimeout(pollMain, 2500);
+    setTimeout(() => loadTx(), 1500);
+  }
+  catch (e) {
+    if (e.message !== "401") toast("Lỗi: " + e.message, "err");
+  }
+}
 // ===================== LINK SUB =====================
 // 1. Hàm nhận diện nhà mạng (Khai báo dạng function chuẩn để hoist lên đầu phạm vi)
 function detectProvider(u) {
@@ -2095,7 +3201,7 @@ function buildMasked(orig, fresh, orig2) {
 }
 
 // Hàm mở Modal Sửa Nguồn Cấp Cụm (Cây bút chì sửa cụm link)
-function openRootEditModal(groupKey){
+function openRootEditModal(groupKey) {
   const parts = groupKey.split("|");
   const isCombo = (parts[0] === "COMBO");
   const o1 = isCombo ? parts[1] : groupKey;
@@ -2107,7 +3213,7 @@ function openRootEditModal(groupKey){
 
   // Nạp thông số hiện tại từ Kho sang Modal để sửa
   const p = linkPoolDb.find(x => isCombo ? (x.isCombo && x.url === o1 && x.url2 === o2) : (!x.isCombo && x.url === o1)) || {};
-  
+
   // Thông số Chân 1
   $("mREGb").value = p.gb || "";
   $("mRERemain").value = p.remainGb || "";
@@ -2123,8 +3229,15 @@ function openRootEditModal(groupKey){
   $("mRootEdit").classList.remove("hidden");
 }
 
-const saveLinks = () => { healLinks(); return aj("/api/links", { method: "POST", body: linksDb }).then(() => { lastSig.l = JSON.stringify(linksDb); }); };
-const savePool = () => aj("/api/link_pool", { method: "POST", body: linkPoolDb }).then(() => { lastSig.p = JSON.stringify(linkPoolDb); });
+const saveLinks = () => {
+  healLinks();
+  return aj("/api/links", { method: "POST", body: linksDb }).then(() => {
+    lastSig.l = JSON.stringify(linksDb);
+  });
+};
+const savePool = () => aj("/api/link_pool", { method: "POST", body: linkPoolDb }).then(() => {
+  lastSig.p = JSON.stringify(linkPoolDb);
+});
 
 // Hàm chuyển đổi ẩn/hiện bảng thông số chi tiết (Icon con mắt) của từng cụm
 function toggleClusterSpecs(idx) {
@@ -2138,73 +3251,76 @@ function toggleClusterSpecs(idx) {
 }
 
 // 3. Render Danh sách Link Sub (Duy nhất 1 giao diện Cây Link - Thiết kế lại Header chuẩn)
-function renderLinks(){
- const c = $("linksViewContainer");
- if(!linksDb.length && !linkPoolDb.length){
-   c.innerHTML = `<div class="border border-dashed border-slate-300 p-8 rounded-2xl text-center text-slate-400 font-bold bg-white">Hệ thống chưa có Link nào</div>`;
-   return;
- }
-
- // Gom nhóm các link con theo từng cụm nguồn
- const grps = {};
- linksDb.forEach(l => {
-  const k = l.isCombo ? `COMBO|${l.orig}|${l.orig2}` : (l.orig || "?");
-  if (!grps[k]) {
-    grps[k] = {
-      key: k,
-      isCombo: !!l.isCombo,
-      orig: l.orig || "",
-      orig2: l.orig2 || "",
-      ch: []
-    };
-  }
-  grps[k].ch.push(l);
- });
-
- let clusterIndex = 0;
- // Cụm Da_bi_khoa luôn luôn bị ghim ở CUỐI BẢNG dù có link mới chuyển vào
- const sortedGroups = Object.values(grps).sort((a, b) => {
-  const aLocked = (a.orig === "Da_bi_khoa" || a.key.includes("Da_bi_khoa"));
-  const bLocked = (b.orig === "Da_bi_khoa" || b.key.includes("Da_bi_khoa"));
-  if (aLocked && !bLocked) return 1;
-  if (!aLocked && bLocked) return -1;
-  return 0;
- });
-
- c.innerHTML = sortedGroups.map(g => {
-  clusterIndex++;
-  const idxId = clusterIndex;
-  
-  let networkBadge = "";
-  if (g.isCombo) {
-    const p1 = detectProvider(g.orig), p2 = detectProvider(g.orig2);
-    const s = new Set([p1, p2]);
-    let cLabel = "Combo Trộn";
-    if (s.has("lx") && s.has("kt")) cLabel = "Liangxin + Kitty (v4)";
-    else if (s.has("lx") && s.has("dj")) cLabel = "Liangxin + DJJC (v5)";
-    else if (s.has("kt") && s.has("dj")) cLabel = "Kitty + DJJC (v6)";
-    networkBadge = `<span class="inline-flex items-center gap-1.5 text-xs font-black text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200"><span class="w-2.5 h-2.5 rounded-full bg-purple-600 shrink-0"></span>${cLabel}</span>`;
-  } else {
-    const p = detectProvider(g.orig);
-    networkBadge = p === "kt" ? `<span class="badge-kt">Kitty</span>` : (p === "lx" ? `<span class="badge-lx">Liangxin</span>` : (p === "dj" ? `<span class="badge-dj">DJJC</span>` : `<span class="badge-ot">Other</span>`));
+function renderLinks() {
+  const c = $("linksViewContainer");
+  if (!linksDb.length && !linkPoolDb.length) {
+    c.innerHTML = `<div class="border border-dashed border-slate-300 p-8 rounded-2xl text-center text-slate-400 font-bold bg-white">Hệ thống chưa có Link nào</div>`;
+    return;
   }
 
-  // Lấy thông số từ LINK_POOL
-  const pItem = linkPoolDb.find(p => g.isCombo ? (p.isCombo && p.url === g.orig && p.url2 === g.orig2) : (!p.isCombo && p.url === g.orig)) || {};
-  const expDisplay = g.isCombo ? (pItem.exp || pItem.exp2 || g.ch[0]?.expDate || "") : (pItem.exp || g.ch[0]?.expDate || "");
-  const isClusterLifetime = !expDisplay || isLife(expDisplay);
+  // Gom nhóm các link con theo từng cụm nguồn
+  const grps = {};
+  linksDb.forEach(l => {
+    const k = l.isCombo ? `COMBO|${l.orig}|${l.orig2}` : (l.orig || "?");
+    if (!grps[k]) {
+      grps[k] = {
+        key: k,
+        isCombo: !!l.isCombo,
+        orig: l.orig || "",
+        orig2: l.orig2 || "",
+        ch: []
+      };
+    }
+    grps[k].ch.push(l);
+  });
 
-  // Quy tắc HSD cụm: Nếu là Vĩnh viễn (Lifetime) -> ẨN HOÀN TOÀN; Chỉ hiện khi có ngày hết hạn cụ thể
-  const expBadgeHtml = isClusterLifetime ? '' : `<span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded border border-orange-200"><i class="fas fa-clock mr-1 text-[9px]"></i>${esc(expDisplay)}</span>`;
+  let clusterIndex = 0;
+  // Cụm Da_bi_khoa luôn luôn bị ghim ở CUỐI BẢNG dù có link mới chuyển vào
+  const sortedGroups = Object.values(grps).sort((a, b) => {
+    const aLocked = (a.orig === "Da_bi_khoa" || a.key.includes("Da_bi_khoa"));
+    const bLocked = (b.orig === "Da_bi_khoa" || b.key.includes("Da_bi_khoa"));
+    if (aLocked && !bLocked) return 1;
+    if (!aLocked && bLocked) return -1;
+    return 0;
+  });
 
-  // Render các link con trong cụm
-  const rows = [...g.ch].sort((a,b) => (parseInt(a.linkIndex||1)) - (parseInt(b.linkIndex||1))).map(l => {
-   if (!l.masked) { l.masked = buildMasked(l.orig, true); saveLinks(); }
-   const tok = getT(l.masked), locked = !!l.isLocked, idx = parseInt(l.linkIndex||1);
-   const bottom = linkBottom(l);
-   const nameDisplay = esc(l.email || "Khách");
-   
-   return `
+  c.innerHTML = sortedGroups.map(g => {
+    clusterIndex++;
+    const idxId = clusterIndex;
+
+    let networkBadge = "";
+    if (g.isCombo) {
+      const p1 = detectProvider(g.orig), p2 = detectProvider(g.orig2);
+      const s = new Set([p1, p2]);
+      let cLabel = "Combo Trộn";
+      if (s.has("lx") && s.has("kt")) cLabel = "Liangxin + Kitty (v4)";
+      else if (s.has("lx") && s.has("dj")) cLabel = "Liangxin + DJJC (v5)";
+      else if (s.has("kt") && s.has("dj")) cLabel = "Kitty + DJJC (v6)";
+      networkBadge = `<span class="inline-flex items-center gap-1.5 text-xs font-black text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200"><span class="w-2.5 h-2.5 rounded-full bg-purple-600 shrink-0"></span>${cLabel}</span>`;
+    } else {
+      const p = detectProvider(g.orig);
+      networkBadge = p === "kt" ? `<span class="badge-kt">Kitty</span>` : (p === "lx" ? `<span class="badge-lx">Liangxin</span>` : (p === "dj" ? `<span class="badge-dj">DJJC</span>` : `<span class="badge-ot">Other</span>`));
+    }
+
+    // Lấy thông số từ LINK_POOL
+    const pItem = linkPoolDb.find(p => g.isCombo ? (p.isCombo && p.url === g.orig && p.url2 === g.orig2) : (!p.isCombo && p.url === g.orig)) || {};
+    const expDisplay = g.isCombo ? (pItem.exp || pItem.exp2 || g.ch[0]?.expDate || "") : (pItem.exp || g.ch[0]?.expDate || "");
+    const isClusterLifetime = !expDisplay || isLife(expDisplay);
+
+    // Quy tắc HSD cụm: Nếu là Vĩnh viễn (Lifetime) -> ẨN HOÀN TOÀN; Chỉ hiện khi có ngày hết hạn cụ thể
+    const expBadgeHtml = isClusterLifetime ? '' : `<span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded border border-orange-200"><i class="fas fa-clock mr-1 text-[9px]"></i>${esc(expDisplay)}</span>`;
+
+    // Render các link con trong cụm
+    const rows = [...g.ch].sort((a, b) => (parseInt(a.linkIndex || 1)) - (parseInt(b.linkIndex || 1))).map(l => {
+      if (!l.masked) {
+        l.masked = buildMasked(l.orig, true);
+        saveLinks();
+      }
+      const tok = getT(l.masked), locked = !!l.isLocked, idx = parseInt(l.linkIndex || 1);
+      const bottom = linkBottom(l);
+      const nameDisplay = esc(l.email || "Khách");
+
+      return `
    <div class="py-2.5 px-3 border rounded-xl mb-2 ${locked ? "bg-red-50/70 border-red-200" : "hover:bg-slate-50 border-slate-100 bg-white"} flex flex-col gap-2 w-full min-w-0">
      <div class="flex items-center justify-between gap-2 min-w-0">
        <div class="flex items-center gap-2 min-w-0">
@@ -2225,9 +3341,9 @@ function renderLinks(){
        </div>
      </div>
    </div>`;
-  }).join("");
+    }).join("");
 
-  return `
+    return `
   <div class="bg-white border ${g.isCombo ? 'border-purple-200' : 'border-slate-200'} rounded-2xl overflow-hidden mb-4 shadow-sm">
     <div class="${g.isCombo ? 'bg-purple-50/40 border-purple-200' : 'bg-slate-50 border-slate-200'} p-3 border-b space-y-2">
       <!-- HEADER CỤM: LUÔN HIỂN THỊ CỐ ĐỊNH -->
@@ -2284,14 +3400,14 @@ function renderLinks(){
     <!-- DANH SÁCH LINK CON -->
     <div class="p-2 lg:p-3">${rows}</div>
   </div>`;
- }).join("");
+  }).join("");
 }
 
 // 4. Bút chì sửa Nguồn cấp Cụm (Gộp lưu Link và Kho bằng 1 request)
-async function saveRootEdit(){
+async function saveRootEdit() {
   const gKey = $("mREGroupKey").value;
   const newO1 = $("mREOrig1").value.trim(), newO2 = $("mREOrig2").value.trim();
-  if(!newO1 && !newO2) return toast("Vui lòng nhập ít nhất 1 link gốc!", "err");
+  if (!newO1 && !newO2) return toast("Vui lòng nhập ít nhất 1 link gốc!", "err");
 
   let isNowCombo = false, finalO1 = newO1, finalO2 = "";
   if (newO1 && newO2) {
@@ -2300,8 +3416,14 @@ async function saveRootEdit(){
       return toast("Không thể chuyển cụm sang Combo với 2 link cùng nhà mạng!", "err");
     }
     isNowCombo = true;
-    if (p1 === "lx" || p2 === "dj") { finalO1 = newO1; finalO2 = newO2; }
-    else { finalO1 = newO2; finalO2 = newO1; }
+    if (p1 === "lx" || p2 === "dj") {
+      finalO1 = newO1;
+      finalO2 = newO2;
+    }
+    else {
+      finalO1 = newO2;
+      finalO2 = newO1;
+    }
   } else {
     finalO1 = newO1 || newO2;
   }
@@ -2346,7 +3468,11 @@ async function saveRootEdit(){
 
   if (poolItem) {
     if (!isNowCombo) {
-      delete poolItem.url2; delete poolItem.gb2; delete poolItem.remainGb2; delete poolItem.exp2; delete poolItem.max2;
+      delete poolItem.url2;
+      delete poolItem.gb2;
+      delete poolItem.remainGb2;
+      delete poolItem.exp2;
+      delete poolItem.max2;
     }
     Object.assign(poolItem, newSpecs);
   } else {
@@ -2361,133 +3487,182 @@ async function saveRootEdit(){
 }
 
 // 6. Tạo Link Thủ Công (Tự động nạp vào Kho nguồn ngầm nếu có thông số khai báo)
-async function createLink(){
- const orig1 = $("lkOrig").value.trim(), orig2 = $("lkOrig2") ? $("lkOrig2").value.trim() : "";
- const email = $("lkEmail").value.trim(), expDate = $("lkExp").value.trim(), idxInput = $("lkIdx").value.trim();
- if (!orig1 && !orig2) return toast("Chưa nhập link gốc!","err");
+async function createLink() {
+  const orig1 = $("lkOrig").value.trim(), orig2 = $("lkOrig2") ? $("lkOrig2").value.trim() : "";
+  const email = $("lkEmail").value.trim(), expDate = $("lkExp").value.trim(), idxInput = $("lkIdx").value.trim();
+  if (!orig1 && !orig2) return toast("Chưa nhập link gốc!", "err");
 
- let isCombo = false, finalOrig1 = orig1, finalOrig2 = "";
- if (orig1 && orig2) {
-   const p1 = detectProvider(orig1), p2 = detectProvider(orig2);
-   if (p1 === p2 && p1 !== "other") {
-     return toast("Không thể tạo Link Trộn với 2 link cùng nhà mạng (" + (p1 === "lx" ? "Liangxin" : "DJJC") + ")!", "err");
-   }
-   isCombo = true;
-   if (p1 === "lx" || p2 === "dj") { finalOrig1 = orig1; finalOrig2 = orig2; }
-   else { finalOrig1 = orig2; finalOrig2 = orig1; }
- } else {
-   finalOrig1 = orig1 || orig2;
- }
+  let isCombo = false, finalOrig1 = orig1, finalOrig2 = "";
+  if (orig1 && orig2) {
+    const p1 = detectProvider(orig1), p2 = detectProvider(orig2);
+    if (p1 === p2 && p1 !== "other") {
+      return toast("Không thể tạo Link Trộn với 2 link cùng nhà mạng (" + (p1 === "lx" ? "Liangxin" : "DJJC") + ")!", "err");
+    }
+    isCombo = true;
+    if (p1 === "lx" || p2 === "dj") {
+      finalOrig1 = orig1;
+      finalOrig2 = orig2;
+    }
+    else {
+      finalOrig1 = orig2;
+      finalOrig2 = orig1;
+    }
+  } else {
+    finalOrig1 = orig1 || orig2;
+  }
 
- try { new URL(finalOrig1); if (finalOrig2) new URL(finalOrig2); } catch { return toast("Link không hợp lệ!","err"); }
+  try {
+    new URL(finalOrig1);
+    if (finalOrig2) new URL(finalOrig2);
+  } catch { return toast("Link không hợp lệ!", "err");
+  }
 
- // Lấy thông số khai báo ngầm từ nút mở rộng (nếu có)
- const gb1 = $("lkGb1")?.value.trim() || "", remainGb1 = $("lkRemainGb1")?.value.trim() || "";
- const lk1Raw = $("lkMax1")?.value.trim();
- const max1 = (lk1Raw === "" || lk1Raw === undefined) ? "" : (isNaN(parseInt(lk1Raw)) ? "" : parseInt(lk1Raw));
- const poolExp1 = $("lkPoolExp1")?.value.trim() || expDate;
- const gb2 = $("lkGb2")?.value.trim() || "", remainGb2 = $("lkRemainGb2")?.value.trim() || "";
- const lk2Raw = $("lkMax2")?.value.trim();
- const max2 = (lk2Raw === "" || lk2Raw === undefined) ? "" : (isNaN(parseInt(lk2Raw)) ? "" : parseInt(lk2Raw));
- const poolExp2 = $("lkPoolExp2")?.value.trim() || expDate;
+  // Lấy thông số khai báo ngầm từ nút mở rộng (nếu có)
+  const gb1 = $("lkGb1")?.value.trim() || "", remainGb1 = $("lkRemainGb1")?.value.trim() || "";
+  const lk1Raw = $("lkMax1")?.value.trim();
+  const max1 = (lk1Raw === "" || lk1Raw === undefined) ? "" : (isNaN(parseInt(lk1Raw)) ? "" : parseInt(lk1Raw));
+  const poolExp1 = $("lkPoolExp1")?.value.trim() || expDate;
+  const gb2 = $("lkGb2")?.value.trim() || "", remainGb2 = $("lkRemainGb2")?.value.trim() || "";
+  const lk2Raw = $("lkMax2")?.value.trim();
+  const max2 = (lk2Raw === "" || lk2Raw === undefined) ? "" : (isNaN(parseInt(lk2Raw)) ? "" : parseInt(lk2Raw));
+  const poolExp2 = $("lkPoolExp2")?.value.trim() || expDate;
 
- if (isCombo) {
-   let pFound = linkPoolDb.find(p => p.isCombo && p.url === finalOrig1 && p.url2 === finalOrig2);
-   if (!pFound) {
-     linkPoolDb.unshift({
-       id: "POOL-COMBO-" + Date.now(), isCombo: true,
-       url: finalOrig1, gb: gb1, remainGb: remainGb1, exp: poolExp1, max: max1,
-       url2: finalOrig2, gb2: gb2, remainGb2: remainGb2, exp2: poolExp2, max2: max2
-     });
-   }
- } else {
-   let pFound = linkPoolDb.find(p => !p.isCombo && p.url === finalOrig1);
-   if (!pFound) {
-     linkPoolDb.unshift({
-       id: "POOL-" + Date.now(), isCombo: false,
-       url: finalOrig1, gb: gb1, remainGb: remainGb1, exp: poolExp1, max: max1
-     });
-   }
- }
+  if (isCombo) {
+    let pFound = linkPoolDb.find(p => p.isCombo && p.url === finalOrig1 && p.url2 === finalOrig2);
+    if (!pFound) {
+      linkPoolDb.unshift({
+        id: "POOL-COMBO-" + Date.now(),
+        isCombo: true,
+        url: finalOrig1,
+        gb: gb1,
+        remainGb: remainGb1,
+        exp: poolExp1,
+        max: max1,
+        url2: finalOrig2,
+        gb2: gb2,
+        remainGb2: remainGb2,
+        exp2: poolExp2,
+        max2: max2
+      });
+    }
+  } else {
+    let pFound = linkPoolDb.find(p => !p.isCombo && p.url === finalOrig1);
+    if (!pFound) {
+      linkPoolDb.unshift({
+        id: "POOL-" + Date.now(),
+        isCombo: false,
+        url: finalOrig1,
+        gb: gb1,
+        remainGb: remainGb1,
+        exp: poolExp1,
+        max: max1
+      });
+    }
+  }
 
- let finalIdx = idxInput;
- if (!finalIdx || parseInt(finalIdx) < 1) {
-   const existingIndices = linksDb
-     .filter(x => isCombo ? (x.isCombo && x.orig === finalOrig1 && x.orig2 === finalOrig2) : (!x.isCombo && x.orig === finalOrig1))
-     .map(x => parseInt(x.linkIndex) || 0);
-   const maxIdx = existingIndices.length ? Math.max(...existingIndices) : 0;
-   finalIdx = String(maxIdx + 1);
- }
+  let finalIdx = idxInput;
+  if (!finalIdx || parseInt(finalIdx) < 1) {
+    const existingIndices = linksDb
+      .filter(x => isCombo ? (x.isCombo && x.orig === finalOrig1 && x.orig2 === finalOrig2) : (!x.isCombo && x.orig === finalOrig1))
+      .map(x => parseInt(x.linkIndex) || 0);
+    const maxIdx = existingIndices.length ? Math.max(...existingIndices) : 0;
+    finalIdx = String(maxIdx + 1);
+  }
 
- const masked = isCombo 
-   ? buildMasked(finalOrig1, true, finalOrig2)
-   : buildMasked(finalOrig1, true);
+  const masked = isCombo ? buildMasked(finalOrig1, true, finalOrig2) : buildMasked(finalOrig1, true);
 
- linksDb.unshift({
-   id: "LNK-" + Date.now() + "-" + genHex(4),
-   isCombo, orig: finalOrig1, orig2: finalOrig2 || undefined,
-   masked, email: email || "Khách", expDate,
-   linkIndex: finalIdx, isLocked: false, createdTs: nowMs(), date: fmtBank(nowMs())
- });
+  linksDb.unshift({
+    id: "LNK-" + Date.now() + "-" + genHex(4),
+    isCombo,
+    orig: finalOrig1,
+    orig2: finalOrig2 || undefined,
+    masked,
+    email: email || "Khách",
+    expDate,
+    linkIndex: finalIdx,
+    isLocked: false,
+    createdTs: nowMs(),
+    date: fmtBank(nowMs())
+  });
 
- try {
-   // Gộp lưu cả Link và Pool trong 1 lượt ghi duy nhất
-   await aj("/api/admin/save_links_and_pool", { method: "POST", body: { links: linksDb, pool: linkPoolDb } });
-   toast((isCombo ? "Đã tạo Link Trộn #" + finalIdx : "Đã tạo Link Đơn #" + finalIdx) + "! Nhớ Đồng bộ GitHub.");
-   ["lkOrig","lkOrig2","lkEmail","lkExp","lkIdx","lkGb1","lkRemainGb1","lkPoolExp1","lkGb2","lkRemainGb2","lkPoolExp2"].forEach(f => { if ($(f)) $(f).value = ""; });
-   renderLinks();
- } catch(e) { toast("Lỗi: " + e.message, "err"); }
+  try {
+    // Gộp lưu cả Link và Pool trong 1 lượt ghi duy nhất
+    await aj("/api/admin/save_links_and_pool", { method: "POST", body: { links: linksDb, pool: linkPoolDb } });
+    toast((isCombo ? "Đã tạo Link Trộn #" + finalIdx : "Đã tạo Link Đơn #" + finalIdx) + "! Nhớ Đồng bộ GitHub.");
+    ["lkOrig", "lkOrig2", "lkEmail", "lkExp", "lkIdx", "lkGb1", "lkRemainGb1", "lkPoolExp1", "lkGb2", "lkRemainGb2", "lkPoolExp2"].forEach(f => {
+      if ($(f)) $(f).value = "";
+    });
+    renderLinks();
+  } catch (e) {
+    toast("Lỗi: " + e.message, "err");
+  }
 }
 
-function openLnkModal(id){
- const l = linksDb.find(x => x.id === id); if (!l) return;
- $("mLId").value = id; $("mLOrig").value = l.orig || "";
- if ($("mLOrig2")) $("mLOrig2").value = l.orig2 || "";
- $("mLEmail").value = l.email || "";
- let expVal = l.expDate || "";
- if (l.orderId) {
-   const od = ordersDb.find(o => normId(o.id) === normId(l.orderId));
-   if (od && od.expDate) expVal = od.expDate;
- }
- $("mLExp").value = expVal;
- $("mLIdx").value = l.linkIndex || l.machine || "";
- $("mLnk").classList.remove("hidden");
+function openLnkModal(id) {
+  const l = linksDb.find(x => x.id === id);
+  if (!l) return;
+  $("mLId").value = id;
+  $("mLOrig").value = l.orig || "";
+  if ($("mLOrig2")) $("mLOrig2").value = l.orig2 || "";
+  $("mLEmail").value = l.email || "";
+  let expVal = l.expDate || "";
+  if (l.orderId) {
+    const od = ordersDb.find(o => normId(o.id) === normId(l.orderId));
+    if (od && od.expDate) expVal = od.expDate;
+  }
+  $("mLExp").value = expVal;
+  $("mLIdx").value = l.linkIndex || l.machine || "";
+  $("mLnk").classList.remove("hidden");
 }
 
 // 7. Bút chì con: Sửa Email, HSD, Index VÀ SỬA LINK GỐC / CHUYỂN ĐƠN <-> COMBO cho riêng link đó
-async function saveLnkEdit(){
- const l = linksDb.find(x => x.id === $("mLId").value); if (!l) return;
- const o1 = $("mLOrig").value.trim(), o2 = $("mLOrig2") ? $("mLOrig2").value.trim() : "";
- if (!o1 && !o2) return toast("Link gốc không được rỗng!", "err");
+async function saveLnkEdit() {
+  const l = linksDb.find(x => x.id === $("mLId").value);
+  if (!l) return;
+  const o1 = $("mLOrig").value.trim(), o2 = $("mLOrig2") ? $("mLOrig2").value.trim() : "";
+  if (!o1 && !o2) return toast("Link gốc không được rỗng!", "err");
 
- let isCombo = false, finalOrig1 = o1, finalOrig2 = "";
- if (o1 && o2) {
-   const p1 = detectProvider(o1), p2 = detectProvider(o2);
-   if (p1 === p2 && p1 !== "other") {
-     return toast("Không thể sửa thành Combo với 2 link cùng nhà mạng!", "err");
-   }
-   isCombo = true;
-   if (p1 === "lx" || p2 === "dj") { finalOrig1 = o1; finalOrig2 = o2; }
-   else { finalOrig1 = o2; finalOrig2 = o1; }
- } else {
-   finalOrig1 = o1 || o2;
- }
+  let isCombo = false, finalOrig1 = o1, finalOrig2 = "";
+  if (o1 && o2) {
+    const p1 = detectProvider(o1), p2 = detectProvider(o2);
+    if (p1 === p2 && p1 !== "other") {
+      return toast("Không thể sửa thành Combo với 2 link cùng nhà mạng!", "err");
+    }
+    isCombo = true;
+    if (p1 === "lx" || p2 === "dj") {
+      finalOrig1 = o1;
+      finalOrig2 = o2;
+    }
+    else {
+      finalOrig1 = o2;
+      finalOrig2 = o1;
+    }
+  } else {
+    finalOrig1 = o1 || o2;
+  }
 
- Object.assign(l, {
-   email: $("mLEmail").value.trim(),
-   expDate: $("mLExp").value.trim(),
-   linkIndex: $("mLIdx").value.trim(),
-   orig: finalOrig1,
-   isCombo: isCombo
- });
- if (isCombo) l.orig2 = finalOrig2; else delete l.orig2;
- delete l.machine;
+  Object.assign(l, {
+    email: $("mLEmail").value.trim(),
+    expDate: $("mLExp").value.trim(),
+    linkIndex: $("mLIdx").value.trim(),
+    orig: finalOrig1,
+    isCombo: isCombo
+  });
+  if (isCombo) l.orig2 = finalOrig2;
+  else delete l.orig2;
+  delete l.machine;
 
- cm("mLnk"); renderLinks();
- try { await saveLinks(); toast("Đã cập nhật link con thành công! Token khách giữ nguyên."); } catch(e) { toast("Lỗi: " + e.message, "err"); }
+  cm("mLnk");
+  renderLinks();
+  try {
+    await saveLinks();
+    toast("Đã cập nhật link con thành công! Token khách giữ nguyên.");
+  } catch (e) {
+    toast("Lỗi: " + e.message, "err");
+  }
 }
 
-async function toggleLock(tok, locked){
+async function toggleLock(tok, locked) {
   if (!tok) return;
   linksDb.forEach(l => {
     if (getT(l.masked) === tok) l.isLocked = !locked;
@@ -2499,17 +3674,25 @@ async function toggleLock(tok, locked){
   } catch (e) {}
 }
 
-async function delLink(id){
+async function delLink(id) {
   const l = linksDb.find(x => x.id === id || x.masked === id);
   if (!l || !confirm("Xóa link này? Link sẽ vào tab Đã xóa và KHÔNG BAO GIỜ tự quay lại.")) return;
-  const dead = { ...l, deadTs: nowMs(), deadDate: new Date(nowMs()).toISOString() };
+  const dead = {
+    ...l,
+    deadTs: nowMs(),
+    deadDate: new Date(nowMs()).toISOString()
+  };
   addTomb(l);
   deadDb.unshift(dead);
   linksDb = linksDb.filter(x => x.id !== l.id && x.masked !== l.masked);
   renderLinks();
   renderDead();
   try {
-    const j = await aj("/api/admin/link/delete", { method: "POST", body: { id: l.id, masked: l.masked, link: dead }, soft: true });
+    const j = await aj("/api/admin/link/delete", {
+      method: "POST",
+      body: { id: l.id, masked: l.masked, link: dead },
+      soft: true
+    });
     if (!(j && j.ok)) {
       await aj("/api/deadlinks", { method: "POST", body: deadDb });
       await saveLinks();
@@ -2522,8 +3705,9 @@ async function delLink(id){
   }
 }
 
-async function sortAllLinks(){
-  const b = $("btnSortLinks"); b.disabled = true;
+async function sortAllLinks() {
+  const b = $("btnSortLinks");
+  b.disabled = true;
   // Lấy HSD từ Tab Đơn hàng làm chuẩn duy nhất để so sánh
   const getOrderExp = l => {
     if (l.orderId) {
@@ -2546,7 +3730,7 @@ async function sortAllLinks(){
   for (const k in g) {
     const cluster = g[k];
     const isLockedCluster = (k === "Da_bi_khoa" || k.includes("Da_bi_khoa"));
-    
+
     // Tìm node kỹ thuật (nếu có)
     let techNode = null;
     const clientLinks = [];
@@ -2564,10 +3748,14 @@ async function sortAllLinks(){
     if (techNode) {
       techNode.linkIndex = "1";
       let n = 2;
-      clientLinks.forEach(l => { l.linkIndex = String(n++); });
+      clientLinks.forEach(l => {
+        l.linkIndex = String(n++);
+      });
     } else {
       let n = 1;
-      clientLinks.forEach(l => { l.linkIndex = String(n++); });
+      clientLinks.forEach(l => {
+        l.linkIndex = String(n++);
+      });
     }
   }
   renderLinks();
@@ -2578,28 +3766,38 @@ async function sortAllLinks(){
   b.disabled = false;
 }
 
-async function triggerGitHub(){
-  const b = $("btnTriggerGH"); b.disabled = true;
+async function triggerGitHub() {
+  const b = $("btnTriggerGH");
+  b.disabled = true;
   try {
-    await aj("/api/trigger_github", { method: "POST", body: { repo: GH_REPO, workflow: "update.yml" } });
+    await aj("/api/trigger_github", {
+      method: "POST",
+      body: { repo: GH_REPO, workflow: "update.yml" }
+    });
     toast("Đã gửi lệnh Đồng bộ sang GitHub!");
-  } catch (e) { toast("Lỗi GH: " + e.message, "err"); }
+  } catch (e) {
+    toast("Lỗi GH: " + e.message, "err");
+  }
   b.disabled = false;
 }
 
-async function runGC(){
-  const b = $("btnRunGC"); b.disabled = true;
+async function runGC() {
+  const b = $("btnRunGC");
+  b.disabled = true;
   toast("Đang quét KV...");
   try {
     const r = await aj("/api/gc", { method: "POST" });
     await rebuildAllMAP();
     toast(`Dọn xong! Xóa ${r.deleted} key rác.`);
-  } catch (e) { toast("Lỗi GC: " + e.message, "err"); }
+  } catch (e) {
+    toast("Lỗi GC: " + e.message, "err");
+  }
   b.disabled = false;
 }
 
-async function rebuildAllMAP(){
-  const b = $("btnRebuildAll"); b.disabled = true;
+async function rebuildAllMAP() {
+  const b = $("btnRebuildAll");
+  b.disabled = true;
   try {
     // Thanh lọc toàn bộ link ảo / neo Index #1 Auto cũ
     const initialCount = linksDb.length;
@@ -2609,10 +3807,12 @@ async function rebuildAllMAP(){
     await saveLinks();
     renderLinks();
     toast("Đã Rebuild MAP thành công" + (purged > 0 ? ` (đã dọn sạch ${purged} link neo ảo #1)` : ""));
-  } catch (e) { toast("Lỗi: " + e.message, "err"); }
+  } catch (e) {
+    toast("Lỗi: " + e.message, "err");
+  }
   b.disabled = false;
 }
-    
+
 // ===================== LOGIC TAB GÓI CƯỚC & CỬA HÀNG PRO (SORTABLEJS) =====================
 const FIXED_PKG_IDS = new Set(["t1", "t2", "c1", "c2", "c3", "d1", "d2", "d3", "custom"]);
 let adminPkgsList = [];
@@ -2620,17 +3820,206 @@ window.adminPkgsList = adminPkgsList;
 let sortablePkgsInstance = null;
 
 function getDefaultAdminPkgs() {
-  return [
-    { id: "t1", name: "Gói 1 tháng", time: 1, original_vnd: 80000, vnd: 60000, cny: 15.5, usd: 2.5, promo_sticker: "+3 NGÀY", bonus_days: 3, data: "100GB", dev: "1 Thiết bị", tag1: "🔥 BÁN CHẠY", tag2: "✈️ Du lịch", tag3: "", tag4: "", tag1On: true, tag2On: true, tag3On: false, tag4On: false, category: ["cycle", "travel"], features: ["Băng thông lên đến 3Gbps"] },
-    { id: "t2", name: "Gói 1 tháng", time: 1, original_vnd: 0, vnd: 70000, cny: 18.0, usd: 3.0, promo_sticker: "", bonus_days: 0, data: "500GB", dev: "3 Thiết bị", tag1: "🔥 BÁN CHẠY", tag2: "✈️ Du lịch", tag3: "", tag4: "", tag1On: true, tag2On: true, tag3On: false, tag4On: false, category: ["cycle", "travel"], features: ["Băng thông lên đến 3Gbps"] },
-    { id: "c1", name: "Gói 1 tháng", time: 1, original_vnd: 0, vnd: 80000, cny: 20.5, usd: 3.5, promo_sticker: "", bonus_days: 0, data: "1000GB", dev: "Không giới hạn thiết bị", tag1: "🔥 BÁN CHẠY", tag2: "✈️ Du lịch", tag3: "", tag4: "", tag1On: true, tag2On: true, tag3On: false, tag4On: false, category: ["cycle", "travel"], features: ["Băng thông lên đến 3Gbps"] },
-    { id: "c2", name: "Gói Cao Cấp", time: 1, original_vnd: 0, vnd: 200000, cny: 50.0, usd: 8.0, promo_sticker: "", bonus_days: 0, data: "3000GB", dev: "Không giới hạn thiết bị", tag1: "", tag2: "", tag3: "", tag4: "", tag1On: false, tag2On: false, tag3On: false, tag4On: false, category: ["cycle"], features: ["Băng thông lên đến 3Gbps"] },
-    { id: "c3", name: "Gói 1 Năm", time: 12, original_vnd: 0, vnd: 799000, cny: 199.0, usd: 30.0, promo_sticker: "", bonus_days: 0, data: "300GB/tháng", dev: "Không giới hạn thiết bị", tag1: "", tag2: "", tag3: "Khuyên dùng", tag4: "", tag1On: false, tag2On: false, tag3On: true, tag4On: false, category: ["cycle"], features: ["Băng thông lên đến 3Gbps"] },
-    { id: "d1", name: "Không Giới Hạn", time: "lifetime", original_vnd: 0, vnd: 200000, cny: 52.0, usd: 8.0, promo_sticker: "", bonus_days: 0, data: "200GB", dev: "Không giới hạn thiết bị", tag1: "", tag2: "", tag3: "", tag4: "", tag1On: false, tag2On: false, tag3On: false, tag4On: false, category: ["usage"], features: ["Băng thông lên đến 3Gbps"] },
-    { id: "d2", name: "Không Giới Hạn", time: "lifetime", original_vnd: 0, vnd: 399000, cny: 102.0, usd: 16.0, promo_sticker: "", bonus_days: 0, data: "1000GB", dev: "Không giới hạn thiết bị", tag1: "", tag2: "", tag3: "", tag4: "", tag1On: false, tag2On: false, tag3On: false, tag4On: false, category: ["usage"], features: ["Băng thông lên đến 3Gbps"] },
-    { id: "d3", name: "Không Giới Hạn", time: "lifetime", original_vnd: 0, vnd: 999000, cny: 256.0, usd: 40.0, promo_sticker: "", bonus_days: 0, data: "5000GB", dev: "Không giới hạn thiết bị", tag1: "", tag2: "", tag3: "", tag4: "", tag1On: false, tag2On: false, tag3On: false, tag4On: false, category: ["usage"], features: ["Băng thông lên đến 3Gbps"] },
-    { id: "custom", name: "Gói Tùy Chọn", time: 1, original_vnd: 0, vnd: 0, cny: 0, usd: 0, isCustom: true, data: "100GB - 100,000GB", dev: "Tùy chọn", promo_sticker: "", bonus_days: 0, tag1: "", tag2: "", tag3: "", tag4: "", tag1On: false, tag2On: false, tag3On: false, tag4On: false, category: ["travel", "cycle", "usage"], features: ["Băng thông lên đến 3Gbps"] }
-  ];
+  return [{
+    id: "t1",
+    name: "Gói 1 tháng",
+    time: 1,
+    original_vnd: 80000,
+    vnd: 60000,
+    cny: 15.5,
+    usd: 2.5,
+    promo_sticker: "+3 NGÀY",
+    bonus_days: 3,
+    data: "100GB",
+    dev: "1 Thiết bị",
+    tag1: "🔥 BÁN CHẠY",
+    tag2: "✈️ Du lịch",
+    tag3: "",
+    tag4: "",
+    tag1On: true,
+    tag2On: true,
+    tag3On: false,
+    tag4On: false,
+    category: ["cycle", "travel"],
+    features: ["Băng thông lên đến 3Gbps"]
+  }, {
+    id: "t2",
+    name: "Gói 1 tháng",
+    time: 1,
+    original_vnd: 0,
+    vnd: 70000,
+    cny: 18.0,
+    usd: 3.0,
+    promo_sticker: "",
+    bonus_days: 0,
+    data: "500GB",
+    dev: "3 Thiết bị",
+    tag1: "🔥 BÁN CHẠY",
+    tag2: "✈️ Du lịch",
+    tag3: "",
+    tag4: "",
+    tag1On: true,
+    tag2On: true,
+    tag3On: false,
+    tag4On: false,
+    category: ["cycle", "travel"],
+    features: ["Băng thông lên đến 3Gbps"]
+  }, {
+    id: "c1",
+    name: "Gói 1 tháng",
+    time: 1,
+    original_vnd: 0,
+    vnd: 80000,
+    cny: 20.5,
+    usd: 3.5,
+    promo_sticker: "",
+    bonus_days: 0,
+    data: "1000GB",
+    dev: "Không giới hạn thiết bị",
+    tag1: "🔥 BÁN CHẠY",
+    tag2: "✈️ Du lịch",
+    tag3: "",
+    tag4: "",
+    tag1On: true,
+    tag2On: true,
+    tag3On: false,
+    tag4On: false,
+    category: ["cycle", "travel"],
+    features: ["Băng thông lên đến 3Gbps"]
+  }, {
+    id: "c2",
+    name: "Gói Cao Cấp",
+    time: 1,
+    original_vnd: 0,
+    vnd: 200000,
+    cny: 50.0,
+    usd: 8.0,
+    promo_sticker: "",
+    bonus_days: 0,
+    data: "3000GB",
+    dev: "Không giới hạn thiết bị",
+    tag1: "",
+    tag2: "",
+    tag3: "",
+    tag4: "",
+    tag1On: false,
+    tag2On: false,
+    tag3On: false,
+    tag4On: false,
+    category: ["cycle"],
+    features: ["Băng thông lên đến 3Gbps"]
+  }, {
+    id: "c3",
+    name: "Gói 1 Năm",
+    time: 12,
+    original_vnd: 0,
+    vnd: 799000,
+    cny: 199.0,
+    usd: 30.0,
+    promo_sticker: "",
+    bonus_days: 0,
+    data: "300GB/tháng",
+    dev: "Không giới hạn thiết bị",
+    tag1: "",
+    tag2: "",
+    tag3: "Khuyên dùng",
+    tag4: "",
+    tag1On: false,
+    tag2On: false,
+    tag3On: true,
+    tag4On: false,
+    category: ["cycle"],
+    features: ["Băng thông lên đến 3Gbps"]
+  }, {
+    id: "d1",
+    name: "Không Giới Hạn",
+    time: "lifetime",
+    original_vnd: 0,
+    vnd: 200000,
+    cny: 52.0,
+    usd: 8.0,
+    promo_sticker: "",
+    bonus_days: 0,
+    data: "200GB",
+    dev: "Không giới hạn thiết bị",
+    tag1: "",
+    tag2: "",
+    tag3: "",
+    tag4: "",
+    tag1On: false,
+    tag2On: false,
+    tag3On: false,
+    tag4On: false,
+    category: ["usage"],
+    features: ["Băng thông lên đến 3Gbps"]
+  }, {
+    id: "d2",
+    name: "Không Giới Hạn",
+    time: "lifetime",
+    original_vnd: 0,
+    vnd: 399000,
+    cny: 102.0,
+    usd: 16.0,
+    promo_sticker: "",
+    bonus_days: 0,
+    data: "1000GB",
+    dev: "Không giới hạn thiết bị",
+    tag1: "",
+    tag2: "",
+    tag3: "",
+    tag4: "",
+    tag1On: false,
+    tag2On: false,
+    tag3On: false,
+    tag4On: false,
+    category: ["usage"],
+    features: ["Băng thông lên đến 3Gbps"]
+  }, {
+    id: "d3",
+    name: "Không Giới Hạn",
+    time: "lifetime",
+    original_vnd: 0,
+    vnd: 999000,
+    cny: 256.0,
+    usd: 40.0,
+    promo_sticker: "",
+    bonus_days: 0,
+    data: "5000GB",
+    dev: "Không giới hạn thiết bị",
+    tag1: "",
+    tag2: "",
+    tag3: "",
+    tag4: "",
+    tag1On: false,
+    tag2On: false,
+    tag3On: false,
+    tag4On: false,
+    category: ["usage"],
+    features: ["Băng thông lên đến 3Gbps"]
+  }, {
+    id: "custom",
+    name: "Gói Tùy Chọn",
+    time: 1,
+    original_vnd: 0,
+    vnd: 0,
+    cny: 0,
+    usd: 0,
+    isCustom: true,
+    data: "100GB - 100,000GB",
+    dev: "Tùy chọn",
+    promo_sticker: "",
+    bonus_days: 0,
+    tag1: "",
+    tag2: "",
+    tag3: "",
+    tag4: "",
+    tag1On: false,
+    tag2On: false,
+    tag3On: false,
+    tag4On: false,
+    category: ["travel", "cycle", "usage"],
+    features: ["Băng thông lên đến 3Gbps"]
+  }];
 }
 
 function updateHeaderDrawerPreview() {
@@ -2712,12 +4101,7 @@ function getHeaderDrawerFromForm() {
   const ce = (cmsDb && cmsDb.settings && cmsDb.settings.couponEnabled !== undefined) ? cmsDb.settings.couponEnabled : (cur.couponEnabled !== false);
 
   if (!$("headerDrawerText")) {
-    return {
-      ...cur,
-      flashSale: fs,
-      coupons: cp,
-      couponEnabled: ce
-    };
+    return { ...cur, flashSale: fs, coupons: cp, couponEnabled: ce };
   }
   return {
     enabled: $("headerDrawerOn") ? $("headerDrawerOn").checked : false,
@@ -2765,7 +4149,7 @@ async function saveHeaderDrawer() {
     toast("Đã lưu cấu hình thanh thông báo đỉnh web thành công!");
     logEvent("ok", "admin", "Lưu thông báo đỉnh web Pro");
     updateHeaderDrawerPreview();
-  } catch(e) {
+  } catch (e) {
     toast("Lỗi lưu thông báo: " + e.message, "err");
   }
 }
@@ -2773,26 +4157,29 @@ async function saveHeaderDrawer() {
 async function loadAdminPkgs() {
   try {
     if (Array.isArray(cmsDb?.packages) && cmsDb.packages.length) {
-      adminPkgsList = cmsDb.packages; window.adminPkgsList = adminPkgsList;
+      adminPkgsList = cmsDb.packages;
+      window.adminPkgsList = adminPkgsList;
     } else {
       const j = await aj("/api/packages").catch(() => null);
       if (Array.isArray(j?.packages) && j.packages.length) {
-        adminPkgsList = j.packages; window.adminPkgsList = adminPkgsList;
+        adminPkgsList = j.packages;
+        window.adminPkgsList = adminPkgsList;
       } else if (Array.isArray(j) && j.length) {
-        adminPkgsList = j; window.adminPkgsList = adminPkgsList;
+        adminPkgsList = j;
+        window.adminPkgsList = adminPkgsList;
       } else {
-        adminPkgsList = getDefaultAdminPkgs(); window.adminPkgsList = adminPkgsList;
+        adminPkgsList = getDefaultAdminPkgs();
+        window.adminPkgsList = adminPkgsList;
       }
     }
-  } catch {
-    adminPkgsList = getDefaultAdminPkgs();
+  } catch { adminPkgsList = getDefaultAdminPkgs();
   }
   renderPkgAdmin();
   renderFlashSaleAdmin();
   renderCouponAdmin();
 }
 
-async function toggleHidePkg(idx){
+async function toggleHidePkg(idx) {
   adminPkgsList[idx].hidden = !adminPkgsList[idx].hidden;
   renderPkgAdmin();
   renderFulfillmentUI();
@@ -2800,7 +4187,7 @@ async function toggleHidePkg(idx){
   toast(isHidden ? `Đã ẩn gói ${adminPkgsList[idx].name || adminPkgsList[idx].id} bên Index` : `Đã hiện lại gói bên Index`);
 }
 
-window.updatePkgField = function(idx, field, val) {
+window.updatePkgField = function (idx, field, val) {
   if (Array.isArray(adminPkgsList) && adminPkgsList[idx]) {
     adminPkgsList[idx][field] = val;
   }
@@ -2819,7 +4206,7 @@ function renderPkgAdmin() {
     const isFixed = FIXED_PKG_IDS.has(p.id);
     const feats = Array.isArray(p.features) ? p.features : ["Băng thông lên đến 3Gbps"];
     const isHidden = !!p.hidden;
-    
+
     return `
     <div data-pkg-id="${esc(p.id)}" class="pkg-sort-item bg-white border-2 ${isHidden ? 'border-amber-300 bg-amber-50/20' : 'border-slate-200'} rounded-2xl p-4 shadow-sm flex flex-col gap-3 transition hover:border-indigo-300">
       <!-- HÀNG 1: TÊN GÓI & GRIP KÉO THẢ (FULL CHIỀU RỘNG TRÊN MOBILE) -->
@@ -2995,8 +4382,6 @@ function togglePkgCat(idx, cat, checked) {
 }
 window.togglePkgCat = togglePkgCat;
 
-
-
 function delPkg(idx) {
   const p = adminPkgsList[idx];
   if (!p) return;
@@ -3027,8 +4412,14 @@ function addCustomPkg() {
     bonus_text: "",
     data: "200GB",
     dev: "1 Thiết bị",
-    tag1: "", tag2: "", tag3: "", tag4: "",
-    tag1On: false, tag2On: false, tag3On: false, tag4On: false,
+    tag1: "",
+    tag2: "",
+    tag3: "",
+    tag4: "",
+    tag1On: false,
+    tag2On: false,
+    tag3On: false,
+    tag4On: false,
     category: ["cycle"],
     features: ["Băng thông lên đến 3Gbps"]
   });
@@ -3095,10 +4486,7 @@ async function saveAllPkgs() {
   cmsDb.packages = adminPkgsList;
 
   try {
-    await Promise.all([
-      saveCmsDb(),
-      aj("/api/packages", { method: "POST", body: { packages: adminPkgsList } }).catch(() => null)
-    ]);
+    await Promise.all([saveCmsDb(), aj("/api/packages", { method: "POST", body: { packages: adminPkgsList } }).catch(() => null)]);
     toast(`Đã lưu toàn bộ cấu hình Cửa hàng & ${adminPkgsList.length} gói cước thành công!`);
     renderPkgAdmin();
   } catch (e) {
@@ -3111,174 +4499,224 @@ async function saveAllPkgs() {
 window.saveAllPkgs = saveAllPkgs;
 
 // ===================== RÀ QUÉT & MAP LẠI (2 bảng, chỉ chạy khi bấm) =====================
-let rsItems=[],rmItems=[],rsLastBody=null,rmLastBody=null;
-const rlPicks=cls=>[...document.querySelectorAll("."+cls+":checked")].map(el=>({id:el.dataset.id,field:el.dataset.field}));
-const rlAll=(cls,on)=>document.querySelectorAll("."+cls).forEach(el=>el.checked=on);
-async function relinkScanRun(){
- const me = getMe();
- const body={action:"scan",mode:"scan",scope:$("rsLink").value,expired:$("rsStatus").value,fields:[me.n],includeManual:$("rsManual").checked};
- $("rsResult").innerHTML='<div class="text-xs text-slate-400"><i class="fas fa-spinner fa-spin mr-1"></i>Đang rà quét trên web này...</div>';$("rsApply").classList.add("hidden");
- try{const j=await aj("/api/admin/relink",{method:"POST",body});rsLastBody=body;rsItems=arr(j.items);
-  if(!rsItems.length){$("rsResult").innerHTML='<div class="text-xs text-slate-400 italic">Không tìm thấy ô nào khớp bộ lọc.</div>';return;}
-  $("rsResult").innerHTML=`<div class="text-[11px] font-bold text-slate-500 mb-1 flex items-center justify-between"><span>${rsItems.length} mục khớp — bỏ chọn mục không muốn làm sạch</span><label class="flex items-center gap-1 font-bold text-indigo-700 cursor-pointer"><input type="checkbox" checked onchange="rlAll('rs-pick',this.checked)" class="accent-indigo-600">Tất cả</label></div><div class="border border-slate-200 rounded-xl max-h-72 overflow-y-auto divide-y divide-slate-100 bg-white">${rsItems.map(it=>`<label class="flex items-center gap-2 px-2 py-1.5 text-[11px] cursor-pointer hover:bg-slate-50"><input type="checkbox" class="rs-pick w-3.5 h-3.5 accent-indigo-600" data-id="${esc(it.id)}" data-field="${esc(it.field)}" checked><span class="font-mono font-bold text-indigo-600">${esc(it.id)}</span><span class="font-bold text-slate-500">${esc(it.field.toUpperCase())}</span><span class="text-slate-600 truncate flex-1" title="${esc(it.link)}">${esc(it.email||"")} · ${esc(String(it.link||"").slice(0,38))}</span>${it.dead?'<span class="bg-red-100 text-red-700 text-[9px] font-black px-1.5 py-0.5 rounded">CHẾT / KHÓA</span>':'<span class="bg-emerald-100 text-emerald-700 text-[9px] font-black px-1.5 py-0.5 rounded">SỐNG</span>'}${it.expired?'<span class="bg-slate-200 text-slate-600 text-[9px] font-black px-1.5 py-0.5 rounded">HẾT HẠN</span>':""}${it.manual?'<span class="bg-purple-100 text-purple-700 text-[9px] font-black px-1.5 py-0.5 rounded">SỬA TAY</span>':""}</label>`).join("")}</div>`;
-  $("rsApply").classList.remove("hidden");
- }catch(e){$("rsResult").innerHTML=`<span class="text-red-600 text-xs">Lỗi: ${esc(e.message)}</span>`;}}
-
-async function relinkMapRun(){
- const me = getMe();
- const body={action:"remap",mode:"scan",fields:[me.n],includeManual:$("rmManual").checked};
- $("rmResult").innerHTML='<div class="text-xs text-slate-400"><i class="fas fa-spinner fa-spin mr-1"></i>Đang quét link còn sống trên web này...</div>';$("rmApply").classList.add("hidden");
- try{const j=await aj("/api/admin/relink",{method:"POST",body});rmLastBody=body;rmItems=arr(j.items);
-  if(!rmItems.length){$("rmResult").innerHTML='<div class="text-xs text-slate-400 italic">Không có đơn còn hạn nào cần map lại trên web này.</div>';return;}
-  $("rmResult").innerHTML=`<div class="text-[11px] font-bold text-slate-500 mb-1 flex items-center justify-between"><span>${rmItems.length} ô sẽ được map lại</span><label class="flex items-center gap-1 font-bold text-indigo-700 cursor-pointer"><input type="checkbox" checked onchange="rlAll('rm-pick',this.checked)" class="accent-indigo-600">Tất cả</label></div><div class="border border-slate-200 rounded-xl max-h-72 overflow-y-auto divide-y divide-slate-100 bg-white">${rmItems.map(it=>{const od=ordersDb.find(o=>normId(o.id)===normId(it.id));return `<label class="flex items-center gap-2 px-2 py-1.5 text-[11px] cursor-pointer hover:bg-slate-50"><input type="checkbox" class="rm-pick w-3.5 h-3.5 accent-indigo-600" data-id="${esc(it.id)}" data-field="${esc(it.field)}" checked><span class="font-mono font-bold text-indigo-600">${esc(it.id)}</span><span class="text-slate-700 font-semibold truncate flex-1">${esc(it.email||"")}${od&&od.expDate?" · HSD "+esc(od.expDate):""}</span><span class="text-emerald-600 font-mono text-[10px] truncate max-w-[45%]" title="${esc(it.to||"")}">→ ${esc(String(it.to||"").slice(0,36))}…</span></label>`;}).join("")}</div>`;
-  $("rmApply").classList.remove("hidden");
- }catch(e){$("rmResult").innerHTML=`<span class="text-red-600 text-xs">Lỗi: ${esc(e.message)}</span>`;}}
-
-async function relinkApply(mode){
- const picks=rlPicks(mode==="scan"?"rs-pick":"rm-pick");if(!picks.length)return toast("Chưa chọn mục nào","err");
- if(!confirm(mode==="scan"?`Làm sạch ${picks.length} ô Info? (chỉ xóa URL khỏi đơn, không xóa Link Sub / đơn / hạn)`:`Map lại ${picks.length} ô Info?`))return;
- const base=mode==="scan"?rsLastBody:rmLastBody;
- try{
-  const j=await aj("/api/admin/relink",{method:"POST",body:{...base,action:mode==="scan"?"scan":"remap",mode:"apply",picks}});
-  toast(`Đã xử lý ${j.applied} mục`);
-  logEvent("ok","admin",mode==="scan"?"Rà quét: làm sạch Info":"Map lại link","áp dụng "+j.applied+" mục");
-
-  // Cập nhật ngay vào RAM ordersDb để Modal Đơn hàng có dữ liệu tức thì
-  if (Array.isArray(j.items)) {
-    for (const it of j.items) {
-      const targetOrder = ordersDb.find(o => normId(o.id) === normId(it.id));
-      if (targetOrder) {
-        targetOrder[it.field] = it.to || "";
-        if (targetOrder.lockInfo) delete targetOrder.lockInfo[it.field];
-      }
+let rsItems = [], rmItems = [], rsLastBody = null, rmLastBody = null;
+const rlPicks = cls => [...document.querySelectorAll("." + cls + ":checked")].map(el => ({ id: el.dataset.id, field: el.dataset.field }));
+const rlAll = (cls, on) => document.querySelectorAll("." + cls).forEach(el => el.checked = on);
+async function relinkScanRun() {
+  const me = getMe();
+  const body = {
+    action: "scan",
+    mode: "scan",
+    scope: $("rsLink").value,
+    expired: $("rsStatus").value,
+    fields: [me.n],
+    includeManual: $("rsManual").checked
+  };
+  $("rsResult").innerHTML = '<div class="text-xs text-slate-400"><i class="fas fa-spinner fa-spin mr-1"></i>Đang rà quét trên web này...</div>';
+  $("rsApply").classList.add("hidden");
+  try {
+    const j = await aj("/api/admin/relink", { method: "POST", body });
+    rsLastBody = body;
+    rsItems = arr(j.items);
+    if (!rsItems.length) {
+      $("rsResult").innerHTML = '<div class="text-xs text-slate-400 italic">Không tìm thấy ô nào khớp bộ lọc.</div>';
+      return;
     }
-    lastSig.o = JSON.stringify(ordersDb);
-    renderCheckTab();
-    renderOrd();
+    $("rsResult").innerHTML = `<div class="text-[11px] font-bold text-slate-500 mb-1 flex items-center justify-between"><span>${rsItems.length} mục khớp — bỏ chọn mục không muốn làm sạch</span><label class="flex items-center gap-1 font-bold text-indigo-700 cursor-pointer"><input type="checkbox" checked onchange="rlAll('rs-pick',this.checked)" class="accent-indigo-600">Tất cả</label></div><div class="border border-slate-200 rounded-xl max-h-72 overflow-y-auto divide-y divide-slate-100 bg-white">${rsItems.map(it=>`<label class="flex items-center gap-2 px-2 py-1.5 text-[11px] cursor-pointer hover:bg-slate-50"><input type="checkbox" class="rs-pick w-3.5 h-3.5 accent-indigo-600" data-id="${esc(it.id)}" data-field="${esc(it.field)}" checked><span class="font-mono font-bold text-indigo-600">${esc(it.id)}</span><span class="font-bold text-slate-500">${esc(it.field.toUpperCase())}</span><span class="text-slate-600 truncate flex-1" title="${esc(it.link)}">${esc(it.email||"")} · ${esc(String(it.link||"").slice(0,38))}</span>${it.dead?'<span class="bg-red-100 text-red-700 text-[9px] font-black px-1.5 py-0.5 rounded">CHẾT / KHÓA</span>':'<span class="bg-emerald-100 text-emerald-700 text-[9px] font-black px-1.5 py-0.5 rounded">SỐNG</span>'}${it.expired?'<span class="bg-slate-200 text-slate-600 text-[9px] font-black px-1.5 py-0.5 rounded">HẾT HẠN</span>':""}${it.manual?'<span class="bg-purple-100 text-purple-700 text-[9px] font-black px-1.5 py-0.5 rounded">SỬA TAY</span>':""}</label>`).join("")}</div>`;
+    $("rsApply").classList.remove("hidden");
+  } catch (e) {
+    $("rsResult").innerHTML = `<span class="text-red-600 text-xs">Lỗi: ${esc(e.message)}</span>`;
   }
+}
 
-  if(mode==="scan"){
-    rsItems=[];$("rsResult").innerHTML='<div class="text-xs text-slate-400 italic">Đã làm sạch. Quét lại để kiểm tra.</div>';$("rsApply").classList.add("hidden");
-  }else{
-    rmItems=[];$("rmResult").innerHTML='<div class="text-xs text-slate-400 italic">Đã map lại thành công. Chuyển sang Tab Đơn hàng mở Modal đã có link!</div>';$("rmApply").classList.add("hidden");
+async function relinkMapRun() {
+  const me = getMe();
+  const body = {
+    action: "remap",
+    mode: "scan",
+    fields: [me.n],
+    includeManual: $("rmManual").checked
+  };
+  $("rmResult").innerHTML = '<div class="text-xs text-slate-400"><i class="fas fa-spinner fa-spin mr-1"></i>Đang quét link còn sống trên web này...</div>';
+  $("rmApply").classList.add("hidden");
+  try {
+    const j = await aj("/api/admin/relink", { method: "POST", body });
+    rmLastBody = body;
+    rmItems = arr(j.items);
+    if (!rmItems.length) {
+      $("rmResult").innerHTML = '<div class="text-xs text-slate-400 italic">Không có đơn còn hạn nào cần map lại trên web này.</div>';
+      return;
+    }
+    $("rmResult").innerHTML = `<div class="text-[11px] font-bold text-slate-500 mb-1 flex items-center justify-between"><span>${rmItems.length} ô sẽ được map lại</span><label class="flex items-center gap-1 font-bold text-indigo-700 cursor-pointer"><input type="checkbox" checked onchange="rlAll('rm-pick',this.checked)" class="accent-indigo-600">Tất cả</label></div><div class="border border-slate-200 rounded-xl max-h-72 overflow-y-auto divide-y divide-slate-100 bg-white">${rmItems.map(it=>{const od=ordersDb.find(o=>normId(o.id)===normId(it.id));return `<label class="flex items-center gap-2 px-2 py-1.5 text-[11px] cursor-pointer hover:bg-slate-50"><input type="checkbox" class="rm-pick w-3.5 h-3.5 accent-indigo-600" data-id="${esc(it.id)}" data-field="${esc(it.field)}" checked><span class="font-mono font-bold text-indigo-600">${esc(it.id)}</span><span class="text-slate-700 font-semibold truncate flex-1">${esc(it.email||"")}${od&&od.expDate?" · HSD "+esc(od.expDate):""}</span><span class="text-emerald-600 font-mono text-[10px] truncate max-w-[45%]" title="${esc(it.to||"")}">→ ${esc(String(it.to||"").slice(0,36))}…</span></label>`;}).join("")}</div>`;
+    $("rmApply").classList.remove("hidden");
+  } catch (e) {
+    $("rmResult").innerHTML = `<span class="text-red-600 text-xs">Lỗi: ${esc(e.message)}</span>`;
   }
-  setTimeout(fetchAll, 2000);
- }catch(e){toast("Lỗi: "+e.message,"err");}}
+}
+
+async function relinkApply(mode) {
+  const picks = rlPicks(mode === "scan" ? "rs-pick" : "rm-pick");
+  if (!picks.length) return toast("Chưa chọn mục nào", "err");
+  if (!confirm(mode === "scan" ? `Làm sạch ${picks.length} ô Info? (chỉ xóa URL khỏi đơn, không xóa Link Sub / đơn / hạn)` : `Map lại ${picks.length} ô Info?`)) return;
+  const base = mode === "scan" ? rsLastBody : rmLastBody;
+  try {
+    const j = await aj("/api/admin/relink", {
+      method: "POST",
+      body: {
+        ...base,
+        action: mode === "scan" ? "scan" : "remap",
+        mode: "apply",
+        picks
+      }
+    });
+    toast(`Đã xử lý ${j.applied} mục`);
+    logEvent("ok", "admin", mode === "scan" ? "Rà quét: làm sạch Info" : "Map lại link", "áp dụng " + j.applied + " mục");
+
+    // Cập nhật ngay vào RAM ordersDb để Modal Đơn hàng có dữ liệu tức thì
+    if (Array.isArray(j.items)) {
+      for (const it of j.items) {
+        const targetOrder = ordersDb.find(o => normId(o.id) === normId(it.id));
+        if (targetOrder) {
+          targetOrder[it.field] = it.to || "";
+          if (targetOrder.lockInfo) delete targetOrder.lockInfo[it.field];
+        }
+      }
+      lastSig.o = JSON.stringify(ordersDb);
+      renderCheckTab();
+      renderOrd();
+    }
+
+    if (mode === "scan") {
+      rsItems = [];
+      $("rsResult").innerHTML = '<div class="text-xs text-slate-400 italic">Đã làm sạch. Quét lại để kiểm tra.</div>';
+      $("rsApply").classList.add("hidden");
+    } else {
+      rmItems = [];
+      $("rmResult").innerHTML = '<div class="text-xs text-slate-400 italic">Đã map lại thành công. Chuyển sang Tab Đơn hàng mở Modal đã có link!</div>';
+      $("rmApply").classList.add("hidden");
+    }
+    setTimeout(fetchAll, 2000);
+  } catch (e) {
+    toast("Lỗi: " + e.message, "err");
+  }
+}
 
 // ===================== ĐÃ XÓA (SUB-TAB LINK ĐÃ XÓA & QUẢN LÝ LINK NGUỒN) =====================
 let curDeadTab = "links";
-function switchDeadSubTab(t){
- curDeadTab = t;
- $("pane-dead-links").classList.toggle("hidden", t !== "links");
- $("pane-dead-sources").classList.toggle("hidden", t !== "sources");
- $("btn-dead-links").classList.toggle("active", t === "links");
- $("btn-dead-sources").classList.toggle("active", t === "sources");
- renderDead();
+function switchDeadSubTab(t) {
+  curDeadTab = t;
+  $("pane-dead-links").classList.toggle("hidden", t !== "links");
+  $("pane-dead-sources").classList.toggle("hidden", t !== "sources");
+  $("btn-dead-links").classList.toggle("active", t === "links");
+  $("btn-dead-sources").classList.toggle("active", t === "sources");
+  renderDead();
 }
 
-const deadLive=()=>deadDb.filter(l=>nowMs()-(Number(l.deadTs)||parseAny(l.deadDate)||nowMs())<=48*36e5);
+const deadLive = () => deadDb.filter(l => nowMs() - (Number(l.deadTs) || parseAny(l.deadDate) || nowMs()) <= 48 * 36e5);
 
-function renderDead(){
- if (curDeadTab === "sources") {
-   renderDeadSources();
-   return;
- }
- const list=deadLive(),tb=$("deadBody");if(!list.length){tb.innerHTML=`<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold">Không có lịch sử xóa</div>`;return;}
- tb.innerHTML=list.map((l,i)=>{const t=Number(l.deadTs)||parseAny(l.deadDate),left=Math.max(0,Math.ceil((t+48*36e5-nowMs())/36e5));
-  return `<div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex flex-col gap-2"><div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="font-bold text-xs text-slate-400">#${i+1}</span><span class="font-bold text-slate-800 text-sm cp truncate" onclick="cp(${q(l.email)})">${esc(l.email||"—")}</span></div><button onclick="restoreLink(${q(l.id)})" class="text-emerald-600 font-bold px-3 py-1.5 bg-emerald-50 rounded-lg text-xs hover:bg-emerald-500 hover:text-white border border-emerald-100"><i class="fas fa-rotate-left mr-1"></i>Khôi phục</button></div>
-  <div class="text-[10px] font-mono text-slate-500 break-all cp" onclick="cp(${q(l.orig)})">${esc(l.orig||"—")}</div><div class="text-[10px] font-mono text-indigo-500 break-all cp" onclick="cp(${q(l.masked)})">${esc(l.masked||"—")}</div><div class="text-xs text-slate-500 font-bold">Ngắt: ${fmtBank(t)} <span class="text-orange-500 ml-1">(tự xóa hẳn sau ${left}h)</span></div></div>`;}).join("");
+function renderDead() {
+  if (curDeadTab === "sources") {
+    renderDeadSources();
+    return;
+  }
+  const list = deadLive(), tb = $("deadBody");
+  if (!list.length) {
+    tb.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold">Không có lịch sử xóa</div>`;
+    return;
+  }
+  tb.innerHTML = list.map((l, i) => {
+    const t = Number(l.deadTs) || parseAny(l.deadDate), left = Math.max(0, Math.ceil((t + 48 * 36e5 - nowMs()) / 36e5));
+    return `<div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex flex-col gap-2"><div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="font-bold text-xs text-slate-400">#${i+1}</span><span class="font-bold text-slate-800 text-sm cp truncate" onclick="cp(${q(l.email)})">${esc(l.email||"—")}</span></div><button onclick="restoreLink(${q(l.id)})" class="text-emerald-600 font-bold px-3 py-1.5 bg-emerald-50 rounded-lg text-xs hover:bg-emerald-500 hover:text-white border border-emerald-100"><i class="fas fa-rotate-left mr-1"></i>Khôi phục</button></div>
+  <div class="text-[10px] font-mono text-slate-500 break-all cp" onclick="cp(${q(l.orig)})">${esc(l.orig||"—")}</div><div class="text-[10px] font-mono text-indigo-500 break-all cp" onclick="cp(${q(l.masked)})">${esc(l.masked||"—")}</div><div class="text-xs text-slate-500 font-bold">Ngắt: ${fmtBank(t)} <span class="text-orange-500 ml-1">(tự xóa hẳn sau ${left}h)</span></div></div>`;
+  }).join("");
 }
 
-function renderDeadSources(){
- const container = $("deadSourcesBody");
- if (!container) return;
+function renderDeadSources() {
+  const container = $("deadSourcesBody");
+  if (!container) return;
 
- // Khử trùng lặp Combo (AB = BA) khi hiển thị
- const dedupedPool = [];
- const seenComboKeys = new Set();
- for (const p of linkPoolDb) {
-   if (p.isCombo && p.url && p.url2) {
-     const comboKey = [p.url.trim(), p.url2.trim()].sort().join("|");
-     if (seenComboKeys.has(comboKey)) continue;
-     seenComboKeys.add(comboKey);
-   }
-   dedupedPool.push(p);
- }
+  // Khử trùng lặp Combo (AB = BA) khi hiển thị
+  const dedupedPool = [];
+  const seenComboKeys = new Set();
+  for (const p of linkPoolDb) {
+    if (p.isCombo && p.url && p.url2) {
+      const comboKey = [p.url.trim(), p.url2.trim()].sort().join("|");
+      if (seenComboKeys.has(comboKey)) continue;
+      seenComboKeys.add(comboKey);
+    }
+    dedupedPool.push(p);
+  }
 
- if ($("deadSourceCountBadge")) $("deadSourceCountBadge").textContent = dedupedPool.length;
- if (!dedupedPool.length) {
-   container.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold">Kho link nguồn đang trống</div>`;
-   return;
- }
+  if ($("deadSourceCountBadge")) $("deadSourceCountBadge").textContent = dedupedPool.length;
+  if (!dedupedPool.length) {
+    container.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold">Kho link nguồn đang trống</div>`;
+    return;
+  }
 
- // Node kỹ thuật Da_bi_khoa luôn luôn ở vị trí đầu tiên (#1) trong kho quản lý nguồn
- dedupedPool.sort((a, b) => {
-   const aLocked = (a.url === "Da_bi_khoa" || a.id === "POOL-179017008791528");
-   const bLocked = (b.url === "Da_bi_khoa" || b.id === "POOL-179017008791528");
-   if (aLocked && !bLocked) return -1;
-   if (!aLocked && bLocked) return 1;
-   return 0;
- });
+  // Node kỹ thuật Da_bi_khoa luôn luôn ở vị trí đầu tiên (#1) trong kho quản lý nguồn
+  dedupedPool.sort((a, b) => {
+    const aLocked = (a.url === "Da_bi_khoa" || a.id === "POOL-179017008791528");
+    const bLocked = (b.url === "Da_bi_khoa" || b.id === "POOL-179017008791528");
+    if (aLocked && !bLocked) return -1;
+    if (!aLocked && bLocked) return 1;
+    return 0;
+  });
 
- container.innerHTML = dedupedPool.map((p, idx) => {
-   const isLockedNode = (p.url === "Da_bi_khoa" || p.id === "POOL-179017008791528");
-   const isCombo = !!p.isCombo;
+  container.innerHTML = dedupedPool.map((p, idx) => {
+    const isLockedNode = (p.url === "Da_bi_khoa" || p.id === "POOL-179017008791528");
+    const isCombo = !!p.isCombo;
 
-   // Tìm tất cả link sub của khách đang chạy trên nguồn này
-   const activeLinks = linksDb.filter(l => {
-     if (!l) return false;
-     if (isCombo) {
-       const ck1 = [p.url.trim(), (p.url2 || "").trim()].sort().join("|");
-       const ck2 = [(l.orig || "").trim(), (l.orig2 || "").trim()].sort().join("|");
-       return l.isCombo && ck1 === ck2;
-     }
-     return !l.isCombo && l.orig === p.url;
-   });
-   const count = activeLinks.length;
-   const isUsing = count > 0;
-   
-   let netTag = "";
-   if (isLockedNode) {
-     netTag = `<span class="bg-slate-200 text-slate-800 font-black px-2.5 py-0.5 rounded-full text-xs border border-slate-300">🔒 Node Kỹ Thuật (Khóa Link Hệ Thống)</span>`;
-   } else if (isCombo) {
-     const p1 = detectProvider(p.url), p2 = detectProvider(p.url2);
-     const s = new Set([p1, p2]);
-     let cTag = "Combo Trộn";
-     if (s.has("lx") && s.has("kt")) cTag = "Combo Liangxin + Kitty";
-     else if (s.has("lx") && s.has("dj")) cTag = "Combo Liangxin + DJJC";
-     else if (s.has("kt") && s.has("dj")) cTag = "Combo Kitty + DJJC";
-     netTag = `<span class="inline-flex items-center gap-1 text-xs font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">${cTag}</span>`;
-   } else {
-     const pr = detectProvider(p.url);
-     netTag = pr === "kt" ? `<span class="badge-kt">Kitty</span>` : (pr === "lx" ? `<span class="badge-lx">Liangxin</span>` : (pr === "dj" ? `<span class="badge-dj">DJJC</span>` : `<span class="badge-ot">Other</span>`));
-   }
+    // Tìm tất cả link sub của khách đang chạy trên nguồn này
+    const activeLinks = linksDb.filter(l => {
+      if (!l) return false;
+      if (isCombo) {
+        const ck1 = [p.url.trim(), (p.url2 || "").trim()].sort().join("|");
+        const ck2 = [(l.orig || "").trim(), (l.orig2 || "").trim()].sort().join("|");
+        return l.isCombo && ck1 === ck2;
+      }
+      return !l.isCombo && l.orig === p.url;
+    });
+    const count = activeLinks.length;
+    const isUsing = count > 0;
 
-   let statusBadge = "";
-   if (isLockedNode) {
-     statusBadge = `<span class="bg-slate-100 text-slate-700 font-bold px-2.5 py-0.5 rounded-full text-xs border border-slate-300">${count} link đang bị ngắt kết nối</span>`;
-   } else if (isUsing) {
-     statusBadge = `<span class="bg-emerald-100 text-emerald-800 font-black px-2.5 py-0.5 rounded-full text-xs border border-emerald-300 flex items-center gap-1 shrink-0"><i class="fas fa-check-circle text-emerald-600"></i>Đang dùng: ${count} link</span>`;
-   } else {
-     statusBadge = `<span class="bg-amber-100 text-amber-800 font-black px-2.5 py-0.5 rounded-full text-xs border border-amber-300 flex items-center gap-1 shrink-0"><i class="fas fa-triangle-exclamation text-amber-600"></i>Không có link ẩn</span>`;
-   }
+    let netTag = "";
+    if (isLockedNode) {
+      netTag = `<span class="bg-slate-200 text-slate-800 font-black px-2.5 py-0.5 rounded-full text-xs border border-slate-300">🔒 Node Kỹ Thuật (Khóa Link Hệ Thống)</span>`;
+    } else if (isCombo) {
+      const p1 = detectProvider(p.url), p2 = detectProvider(p.url2);
+      const s = new Set([p1, p2]);
+      let cTag = "Combo Trộn";
+      if (s.has("lx") && s.has("kt")) cTag = "Combo Liangxin + Kitty";
+      else if (s.has("lx") && s.has("dj")) cTag = "Combo Liangxin + DJJC";
+      else if (s.has("kt") && s.has("dj")) cTag = "Combo Kitty + DJJC";
+      netTag = `<span class="inline-flex items-center gap-1 text-xs font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">${cTag}</span>`;
+    } else {
+      const pr = detectProvider(p.url);
+      netTag = pr === "kt" ? `<span class="badge-kt">Kitty</span>` : (pr === "lx" ? `<span class="badge-lx">Liangxin</span>` : (pr === "dj" ? `<span class="badge-dj">DJJC</span>` : `<span class="badge-ot">Other</span>`));
+    }
 
-   let cardClass = isLockedNode 
-     ? "bg-slate-50 border-2 border-slate-300 shadow-sm"
-     : isUsing 
-       ? "bg-emerald-50/50 border-2 border-emerald-200 hover:border-emerald-300" 
-       : "bg-slate-100/70 border-2 border-slate-200 hover:border-amber-300";
+    let statusBadge = "";
+    if (isLockedNode) {
+      statusBadge = `<span class="bg-slate-100 text-slate-700 font-bold px-2.5 py-0.5 rounded-full text-xs border border-slate-300">${count} link đang bị ngắt kết nối</span>`;
+    } else if (isUsing) {
+      statusBadge = `<span class="bg-emerald-100 text-emerald-800 font-black px-2.5 py-0.5 rounded-full text-xs border border-emerald-300 flex items-center gap-1 shrink-0"><i class="fas fa-check-circle text-emerald-600"></i>Đang dùng: ${count} link</span>`;
+    } else {
+      statusBadge = `<span class="bg-amber-100 text-amber-800 font-black px-2.5 py-0.5 rounded-full text-xs border border-amber-300 flex items-center gap-1 shrink-0"><i class="fas fa-triangle-exclamation text-amber-600"></i>Không có link ẩn</span>`;
+    }
 
-   // Nút Xóa hẳn: ẨN HOÀN TOÀN với node Da_bi_khoa
-   const deleteBtn = isLockedNode ? '' : `
+    let cardClass = isLockedNode ? "bg-slate-50 border-2 border-slate-300 shadow-sm" : isUsing ? "bg-emerald-50/50 border-2 border-emerald-200 hover:border-emerald-300" : "bg-slate-100/70 border-2 border-slate-200 hover:border-amber-300";
+
+    // Nút Xóa hẳn: ẨN HOÀN TOÀN với node Da_bi_khoa
+    const deleteBtn = isLockedNode ? '' : `
      <button onclick="hardDeleteSource('${p.id}', '${p.url}', '${p.url2 || ''}')" title="Xóa vĩnh viễn khỏi toàn bộ KV" class="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 font-bold px-3 py-1 rounded-xl text-xs shadow-sm transition active:scale-95 flex items-center gap-1">
        <i class="fas fa-trash-can text-xs"></i>Xóa hẳn khỏi KV
      </button>
    `;
 
-   // Cây danh sách link con chạy dưới nguồn này
-   let childLinksHtml = "";
-   if (activeLinks.length) {
-     childLinksHtml = `
+    // Cây danh sách link con chạy dưới nguồn này
+    let childLinksHtml = "";
+    if (activeLinks.length) {
+      childLinksHtml = `
        <div class="mt-2 pt-2 border-t border-slate-200/60 space-y-1">
          <div class="text-[10px] font-bold text-slate-500 uppercase">Danh sách link con đang chạy trên nguồn này (${activeLinks.length}):</div>
          <div class="max-h-36 overflow-y-auto space-y-1 pr-1 scroll-hide">
@@ -3295,9 +4733,9 @@ function renderDeadSources(){
          </div>
        </div>
      `;
-   }
+    }
 
-   return `
+    return `
    <div class="${cardClass} rounded-2xl p-3.5 shadow-sm space-y-2.5 transition">
      <div class="flex items-center justify-between gap-2 flex-wrap">
        <div class="flex items-center gap-2">
@@ -3325,90 +4763,153 @@ function renderDeadSources(){
 
      ${childLinksHtml}
    </div>`;
- }).join("");
+  }).join("");
 }
 
-async function hardDeleteSource(id, url, url2){
- if(!confirm("Xóa vĩnh viễn link nguồn này khỏi Cloudflare KV?\n(Hệ thống sẽ xóa trong LINK_POOL, cache node GLOBAL_SUBS, link neo #1 trong ALL_LINKS và build lại GLOBAL_ROUTER).")) return;
- toast("Đang xóa nguồn khỏi KV...");
- try {
-   await aj("/api/admin/source/delete", { method: "POST", body: { id, url, url2 } });
-   toast("Đã xóa vĩnh viễn link nguồn khỏi KV!");
-   fetchAll();
- } catch(e) {
-   toast("Lỗi xóa nguồn: " + e.message, "err");
- }
+async function hardDeleteSource(id, url, url2) {
+  if (!confirm("Xóa vĩnh viễn link nguồn này khỏi Cloudflare KV?\n(Hệ thống sẽ xóa trong LINK_POOL, cache node GLOBAL_SUBS, link neo #1 trong ALL_LINKS và build lại GLOBAL_ROUTER).")) return;
+  toast("Đang xóa nguồn khỏi KV...");
+  try {
+    await aj("/api/admin/source/delete", { method: "POST", body: { id, url, url2 } });
+    toast("Đã xóa vĩnh viễn link nguồn khỏi KV!");
+    fetchAll();
+  } catch (e) {
+    toast("Lỗi xóa nguồn: " + e.message, "err");
+  }
 }
 
-async function cleanUnusedSources(){
- const unused = linkPoolDb.filter(p => {
-   const activeLinks = linksDb.filter(l => l && String(l.linkIndex) !== "1" && (l.orig === p.url || l.orig2 === p.url));
-   return activeLinks.length === 0;
- });
- if (!unused.length) return toast("Tất cả link nguồn đều đang có link ẩn hoạt động!", "info");
- if (!confirm(`Tìm thấy ${unused.length} link nguồn không có bất kỳ link ẩn nào.\nXóa sạch toàn bộ ${unused.length} nguồn này khỏi Cloudflare KV?`)) return;
- toast("Đang quét dọn các nguồn không dùng...");
- try {
-   const res = await aj("/api/admin/source/clean_unused", { method: "POST" });
-   toast(`Đã quét sạch ${res.deleted || unused.length} link nguồn không dùng khỏi KV!`);
-   fetchAll();
- } catch(e) {
-   toast("Lỗi dọn nguồn: " + e.message, "err");
- }
+async function cleanUnusedSources() {
+  const unused = linkPoolDb.filter(p => {
+    const activeLinks = linksDb.filter(l => l && String(l.linkIndex) !== "1" && (l.orig === p.url || l.orig2 === p.url));
+    return activeLinks.length === 0;
+  });
+  if (!unused.length) return toast("Tất cả link nguồn đều đang có link ẩn hoạt động!", "info");
+  if (!confirm(`Tìm thấy ${unused.length} link nguồn không có bất kỳ link ẩn nào.\nXóa sạch toàn bộ ${unused.length} nguồn này khỏi Cloudflare KV?`)) return;
+  toast("Đang quét dọn các nguồn không dùng...");
+  try {
+    const res = await aj("/api/admin/source/clean_unused", { method: "POST" });
+    toast(`Đã quét sạch ${res.deleted || unused.length} link nguồn không dùng khỏi KV!`);
+    fetchAll();
+  } catch (e) {
+    toast("Lỗi dọn nguồn: " + e.message, "err");
+  }
 }
 
-async function restoreLink(id){const l=deadDb.find(x=>x.id===id);if(!l)return;const c={...l};delete c.deadDate;delete c.deadTs;
- deadDb=deadDb.filter(x=>x.id!==id);rmTomb(id);linksDb=linksDb.filter(x=>x.id!==id);linksDb.unshift(c);renderDead();renderLinks();
- try{await aj("/api/deadlinks",{method:"POST",body:deadDb});await saveLinks();toast("Đã khôi phục! Nhớ Rebuild MAP.");}catch(e){toast("Lỗi khôi phục: "+e.message,"err");}}
-async function clearDeadLinks(){if(!confirm("Xóa hẳn toàn bộ lịch sử đã xóa?"))return;deadDb.forEach(addTomb);deadDb=[];renderDead();try{await api("/api/deadlinks",{method:"DELETE"});toast("Đã xóa lịch sử");}catch(e){}}
+async function restoreLink(id) {
+  const l = deadDb.find(x => x.id === id);
+  if (!l) return;
+  const c = { ...l };
+  delete c.deadDate;
+  delete c.deadTs;
+  deadDb = deadDb.filter(x => x.id !== id);
+  rmTomb(id);
+  linksDb = linksDb.filter(x => x.id !== id);
+  linksDb.unshift(c);
+  renderDead();
+  renderLinks();
+  try {
+    await aj("/api/deadlinks", { method: "POST", body: deadDb });
+    await saveLinks();
+    toast("Đã khôi phục! Nhớ Rebuild MAP.");
+  } catch (e) {
+    toast("Lỗi khôi phục: " + e.message, "err");
+  }
+}
+async function clearDeadLinks() {
+  if (!confirm("Xóa hẳn toàn bộ lịch sử đã xóa?")) return;
+  deadDb.forEach(addTomb);
+  deadDb = [];
+  renderDead();
+  try {
+    await api("/api/deadlinks", { method: "DELETE" });
+    toast("Đã xóa lịch sử");
+  } catch (e) {}
+}
 
 // ===================== HƯỚNG DẪN: tab (kéo thả) → bài viết → khối =====================
-const DEF_TABS=[{id:"android",name:"Android",ic:"fab fa-android",col:"text-green-500"},{id:"windows",name:"Windows",ic:"fab fa-windows",col:"text-blue-500"},{id:"macos",name:"MacOS",ic:"fab fa-apple",col:"text-slate-800"},{id:"ios",name:"iOS",ic:"fab fa-app-store-ios",col:"text-blue-400"}];
-const toSlug=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'bai-viet';
-let curArtsReady=false,curCms="android",curArt=null,curArtSlug="",curArtName="",curArtAuthor="",curArtWatermark="";
-const guideTabList=()=>{const t=guides._tabs;return Array.isArray(t)&&t.length?t:DEF_TABS.map(x=>({...x}));};
-function cmsEnsureTabs(){if(!Array.isArray(guides._tabs)||!guides._tabs.length)guides._tabs=DEF_TABS.map(x=>({...x}));}
-
-function ensureArts(){
- guides._articles=guides._articles&&typeof guides._articles==="object"&&!Array.isArray(guides._articles)?guides._articles:{};
- guideTabList().forEach(t=>{
-  if(!Array.isArray(guides._articles[t.id])||!guides._articles[t.id].length){
-   const sl=toSlug(t.name);
-   guides._articles[t.id]=[{slug:sl,name:t.name,author:"Admin",updated:0,html:"<h2>1. Hướng dẫn cài đặt</h2><p>Bắt đầu nhập nội dung bài viết...</p>"}];
-  }else{
-   guides._articles[t.id].forEach(a=>{
-    if(!a.slug)a.slug=toSlug(a.name||'bai-viet');
-    delete a.id;delete a.blocks;
-   });
-  }
- });
+const DEF_TABS = [{
+  id: "android",
+  name: "Android",
+  ic: "fab fa-android",
+  col: "text-green-500"
+}, {
+  id: "windows",
+  name: "Windows",
+  ic: "fab fa-windows",
+  col: "text-blue-500"
+}, {
+  id: "macos",
+  name: "MacOS",
+  ic: "fab fa-apple",
+  col: "text-slate-800"
+}, {
+  id: "ios",
+  name: "iOS",
+  ic: "fab fa-app-store-ios",
+  col: "text-blue-400"
+}];
+const toSlug = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'bai-viet';
+let curArtsReady = false, curCms = "android", curArt = null, curArtSlug = "", curArtName = "", curArtAuthor = "", curArtWatermark = "";
+const guideTabList = () => {
+  const t = guides._tabs;
+  return Array.isArray(t) && t.length ? t : DEF_TABS.map(x => ({ ...x }));
+};
+function cmsEnsureTabs() {
+  if (!Array.isArray(guides._tabs) || !guides._tabs.length) guides._tabs = DEF_TABS.map(x => ({ ...x }));
 }
-const artsOf=tab=>arr((guides._articles||{})[tab]);
-function initGuides(){ensureArts();curArtsReady=true;const tabs=guideTabList();if(!tabs.some(t=>t.id===curCms))curCms=tabs[0].id;curArt=null;curArtSlug="";curArtWatermark="";renderGuideAll();}
-function renderGuideAll(){
+
+function ensureArts() {
+  guides._articles = guides._articles && typeof guides._articles === "object" && !Array.isArray(guides._articles) ? guides._articles : {};
+  guideTabList().forEach(t => {
+    if (!Array.isArray(guides._articles[t.id]) || !guides._articles[t.id].length) {
+      const sl = toSlug(t.name);
+      guides._articles[t.id] = [{
+        slug: sl,
+        name: t.name,
+        author: "Admin",
+        updated: 0,
+        html: "<h2>1. Hướng dẫn cài đặt</h2><p>Bắt đầu nhập nội dung bài viết...</p>"
+      }];
+    } else {
+      guides._articles[t.id].forEach(a => {
+        if (!a.slug) a.slug = toSlug(a.name || 'bai-viet');
+        delete a.id;
+        delete a.blocks;
+      });
+    }
+  });
+}
+const artsOf = tab => arr((guides._articles || {})[tab]);
+function initGuides() {
+  ensureArts();
+  curArtsReady = true;
+  const tabs = guideTabList();
+  if (!tabs.some(t => t.id === curCms)) curCms = tabs[0].id;
+  curArt = null;
+  curArtSlug = "";
+  curArtWatermark = "";
+  renderGuideAll();
+}
+function renderGuideAll() {
   renderGuideCategoriesTree();
   if (curArt) {
     renderCmsEditor();
   }
 }
-let curArtHtml="", curArtShowToc=true, curArtShowFaqs=false, curArtShowRelated=false, curArtWmOpacity=12, curArtFaqs=[], curArtRelated=[];
+let curArtHtml = "", curArtShowToc = true, curArtShowFaqs = false, curArtShowRelated = false, curArtWmOpacity = 12, curArtFaqs = [], curArtRelated = [];
 const CMS_PURIFY_CONFIG = {
   ADD_TAGS: ['iframe', 'video', 'source', 'figure', 'figcaption', 'hr', 'u', 's', 'span', 'i', 'button', 'a'],
-  ADD_ATTR: [
-    'allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'target', 
-    'rel', 'class', 'style', 'width', 'height', 'controls', 'autoplay', 
-    'loop', 'muted', 'poster', 'type', 'data-cta', 'data-cta-json', 'onclick'
-  ]
+  ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'target', 'rel', 'class', 'style', 'width', 'height', 'controls', 'autoplay', 'loop', 'muted', 'poster', 'type', 'data-cta', 'data-cta-json', 'onclick']
 };
 function sanitizeCmsHtml(rawHtml) {
   if (typeof DOMPurify === "undefined") return rawHtml || "";
   return DOMPurify.sanitize(rawHtml || "", CMS_PURIFY_CONFIG);
 }
-function copyArtDeepLink(tabId, slug){
- const s=slug||curArtSlug;
- if(!s)return toast("Hãy mở hoặc lưu bài viết trước!","warn");
- const link = `${PD.replace(/\/$/,"")}/portal/guide/${encodeURIComponent(tabId)}/${encodeURIComponent(s)}`;
- cp(link);
+function copyArtDeepLink(tabId, slug) {
+  const s = slug || curArtSlug;
+  if (!s) return toast("Hãy mở hoặc lưu bài viết trước!", "warn");
+  const link = `${PD.replace(/\/$/,"")}/portal/guide/${encodeURIComponent(tabId)}/${encodeURIComponent(s)}`;
+  cp(link);
 }
 let quillInst = null;
 function getEditorHtml() {
@@ -3418,22 +4919,22 @@ function getEditorHtml() {
   const ed = $("cmsWordEditor");
   return ed ? (typeof DOMPurify !== "undefined" ? sanitizeCmsHtml(ed.innerHTML) : ed.innerHTML) : curArtHtml;
 }
-function commitCms(){
- if(!curArt)return;
- const a=artsOf(curCms).find(x=>(x.slug||toSlug(x.name))===curArt) || artsOf(curCms).find(x=>x.slug===curArtSlug);
- if(!a)return;
+function commitCms() {
+  if (!curArt) return;
+  const a = artsOf(curCms).find(x => (x.slug || toSlug(x.name)) === curArt) || artsOf(curCms).find(x => x.slug === curArtSlug);
+  if (!a) return;
 
- // Quét trực tiếp toàn bộ DOM thực tế của form soạn thảo
- if($("cmsArtNameInp")) curArtName = $("cmsArtNameInp").value.trim();
- if($("cmsArtSlugInp")) curArtSlug = $("cmsArtSlugInp").value.trim();
- if($("cmsArtAuthorInp")) curArtAuthor = $("cmsArtAuthorInp").value.trim();
- if($("cmsArtWatermarkInp")) curArtWatermark = $("cmsArtWatermarkInp").value.trim();
- if($("cmsArtWmOpacityInp")) curArtWmOpacity = Number($("cmsArtWmOpacityInp").value) || 12;
- if($("chkArtShowToc")) curArtShowToc = $("chkArtShowToc").checked;
- if($("chkArtShowFaqs")) curArtShowFaqs = $("chkArtShowFaqs").checked;
- if($("chkArtShowRelated")) curArtShowRelated = $("chkArtShowRelated").checked;
+  // Quét trực tiếp toàn bộ DOM thực tế của form soạn thảo
+  if ($("cmsArtNameInp")) curArtName = $("cmsArtNameInp").value.trim();
+  if ($("cmsArtSlugInp")) curArtSlug = $("cmsArtSlugInp").value.trim();
+  if ($("cmsArtAuthorInp")) curArtAuthor = $("cmsArtAuthorInp").value.trim();
+  if ($("cmsArtWatermarkInp")) curArtWatermark = $("cmsArtWatermarkInp").value.trim();
+  if ($("cmsArtWmOpacityInp")) curArtWmOpacity = Number($("cmsArtWmOpacityInp").value) || 12;
+  if ($("chkArtShowToc")) curArtShowToc = $("chkArtShowToc").checked;
+  if ($("chkArtShowFaqs")) curArtShowFaqs = $("chkArtShowFaqs").checked;
+  if ($("chkArtShowRelated")) curArtShowRelated = $("chkArtShowRelated").checked;
 
- // Quét toàn bộ dòng FAQ riêng trực tiếp từ DOM
+  // Quét toàn bộ dòng FAQ riêng trực tiếp từ DOM
   if ($("artFaqsContainer")) {
     const faqRows = document.querySelectorAll("#artFaqsContainer > div");
     const parsedFaqs = Array.from(faqRows).map(row => ({
@@ -3451,70 +4952,108 @@ function commitCms(){
     curArtRelated = Array.from(checkedRelated).map(cb => cb.dataset.slug || cb.value).filter(Boolean);
   }
 
- curArtHtml = getEditorHtml();
- a.html=curArtHtml;
- a.showToc=curArtShowToc;
- a.name=curArtName;
- a.slug=toSlug(curArtSlug||curArtName);
- a.author=curArtAuthor;
- a.watermark=curArtWatermark;
- a.wmOpacity=curArtWmOpacity||12;
- a.showFaqs=curArtShowFaqs||(Array.isArray(curArtFaqs)&&curArtFaqs.length>0);
- a.showRelated=curArtShowRelated||(Array.isArray(curArtRelated)&&curArtRelated.length>0);
- a.faqs=curArtFaqs;
- a.relatedArts=curArtRelated;
- delete a.id;
- delete a.blocks;
+  curArtHtml = getEditorHtml();
+  a.html = curArtHtml;
+  a.showToc = curArtShowToc;
+  a.name = curArtName;
+  a.slug = toSlug(curArtSlug || curArtName);
+  a.author = curArtAuthor;
+  a.watermark = curArtWatermark;
+  a.wmOpacity = curArtWmOpacity || 12;
+  a.showFaqs = curArtShowFaqs || (Array.isArray(curArtFaqs) && curArtFaqs.length > 0);
+  a.showRelated = curArtShowRelated || (Array.isArray(curArtRelated) && curArtRelated.length > 0);
+  a.faqs = curArtFaqs;
+  a.relatedArts = curArtRelated;
+  delete a.id;
+  delete a.blocks;
 }
-function setCms(dev){commitCms();ensureArts();const tabs=guideTabList();if(!tabs.some(t=>t.id===dev))dev=tabs[0].id;curCms=dev;curArt=null;curArtSlug="";curBlocks=[];curArtHtml="";curArtWatermark="";cmsSel=-1;renderGuideAll();}
-function openArt(slug){
- commitCms();
- const a=artsOf(curCms).find(x=>x.slug===slug||toSlug(x.name)===slug);if(!a)return;
- curArt=a.slug||toSlug(a.name);
- curArtSlug=curArt;
- curArtHtml=a.html||"<p>Bắt đầu viết bài...</p>";
- curArtShowToc=a.showToc!==false;curArtShowFaqs=a.showFaqs!==false&&((Array.isArray(a.faqs)&&a.faqs.length>0)||a.showFaqs===true);curArtShowRelated=a.showRelated!==false&&((Array.isArray(a.relatedArts)&&a.relatedArts.length>0)||a.showRelated===true);curArtWmOpacity=Number(a.wmOpacity)||12;
- curArtName=a.name||"";curArtAuthor=a.author||"";curArtWatermark=a.watermark||"";
- curArtFaqs=arr(a.faqs).map(f=>({...f}));
- curArtRelated=arr(a.relatedArts);
- renderArtList();renderCmsEditor();
+function setCms(dev) {
+  commitCms();
+  ensureArts();
+  const tabs = guideTabList();
+  if (!tabs.some(t => t.id === dev)) dev = tabs[0].id;
+  curCms = dev;
+  curArt = null;
+  curArtSlug = "";
+  curBlocks = [];
+  curArtHtml = "";
+  curArtWatermark = "";
+  cmsSel = -1;
+  renderGuideAll();
 }
-function artAdd(){
- commitCms();
- const baseSlug="bai-viet-moi-"+Date.now().toString(36);
- const a={slug:baseSlug,name:"Bài mới",author:"Admin",updated:0,html:"<h2>1. Tiêu đề mục đầu tiên</h2><p>Nhập nội dung hướng dẫn tại đây...</p>",showToc:true,watermark:"",wmOpacity:12};
- guides._articles[curCms].push(a);
- openArt(a.slug);
+function openArt(slug) {
+  commitCms();
+  const a = artsOf(curCms).find(x => x.slug === slug || toSlug(x.name) === slug);
+  if (!a) return;
+  curArt = a.slug || toSlug(a.name);
+  curArtSlug = curArt;
+  curArtHtml = a.html || "<p>Bắt đầu viết bài...</p>";
+  curArtShowToc = a.showToc !== false;
+  curArtShowFaqs = a.showFaqs !== false && ((Array.isArray(a.faqs) && a.faqs.length > 0) || a.showFaqs === true);
+  curArtShowRelated = a.showRelated !== false && ((Array.isArray(a.relatedArts) && a.relatedArts.length > 0) || a.showRelated === true);
+  curArtWmOpacity = Number(a.wmOpacity) || 12;
+  curArtName = a.name || "";
+  curArtAuthor = a.author || "";
+  curArtWatermark = a.watermark || "";
+  curArtFaqs = arr(a.faqs).map(f => ({ ...f }));
+  curArtRelated = arr(a.relatedArts);
+  renderArtList();
+  renderCmsEditor();
 }
-async function artDel(slug){
- const list=artsOf(curCms);
- if(list.length<=1)return toast("Mỗi chuyên mục cần ít nhất 1 bài viết","err");
- if(!confirm("Bạn có chắc chắn muốn xóa bài viết này không? Thao tác này sẽ đồng bộ ngay lên hệ thống."))return;
- guides._articles[curCms]=list.filter(a=>(a.slug||toSlug(a.name))!==slug);
- if(curArt===slug){curArt=null;curArtSlug="";curArtHtml="";curArtWatermark="";}
- try {
-   await aj("/api/guides", { method: "POST", body: guides });
-   toast("Đã xóa bài viết thành công!");
- } catch(e) {
-   toast("Lỗi đồng bộ xóa bài: " + e.message, "err");
- }
- renderArtList();
- renderCmsEditor();
- renderGuideCategoriesTree();
+function artAdd() {
+  commitCms();
+  const baseSlug = "bai-viet-moi-" + Date.now().toString(36);
+  const a = {
+    slug: baseSlug,
+    name: "Bài mới",
+    author: "Admin",
+    updated: 0,
+    html: "<h2>1. Tiêu đề mục đầu tiên</h2><p>Nhập nội dung hướng dẫn tại đây...</p>",
+    showToc: true,
+    watermark: "",
+    wmOpacity: 12
+  };
+  guides._articles[curCms].push(a);
+  openArt(a.slug);
 }
-function renderArtList(){
- const el = $("cmsArtList");
- if (!el) return;
- const list=artsOf(curCms);
- el.innerHTML=`<div class="flex items-center justify-between mb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-newspaper text-indigo-500 mr-1"></i>Bài viết của tab này (${list.length}) <span class="text-[10px] font-normal text-slate-400">— bấm vào bài để soạn · bấm icon Link để lấy link gửi khách</span></div><button onclick="artAdd()" class="bg-indigo-50 text-indigo-600 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-indigo-100"><i class="fas fa-plus mr-1"></i>Bài mới</button></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2">${list.map(a=>{
+async function artDel(slug) {
+  const list = artsOf(curCms);
+  if (list.length <= 1) return toast("Mỗi chuyên mục cần ít nhất 1 bài viết", "err");
+  if (!confirm("Bạn có chắc chắn muốn xóa bài viết này không? Thao tác này sẽ đồng bộ ngay lên hệ thống.")) return;
+  guides._articles[curCms] = list.filter(a => (a.slug || toSlug(a.name)) !== slug);
+  if (curArt === slug) {
+    curArt = null;
+    curArtSlug = "";
+    curArtHtml = "";
+    curArtWatermark = "";
+  }
+  try {
+    await aj("/api/guides", { method: "POST", body: guides });
+    toast("Đã xóa bài viết thành công!");
+  } catch (e) {
+    toast("Lỗi đồng bộ xóa bài: " + e.message, "err");
+  }
+  renderArtList();
+  renderCmsEditor();
+  renderGuideCategoriesTree();
+}
+function renderArtList() {
+  const el = $("cmsArtList");
+  if (!el) return;
+  const list = artsOf(curCms);
+  el.innerHTML = `<div class="flex items-center justify-between mb-2"><div class="font-bold text-sm text-slate-800"><i class="fas fa-newspaper text-indigo-500 mr-1"></i>Bài viết của tab này (${list.length}) <span class="text-[10px] font-normal text-slate-400">— bấm vào bài để soạn · bấm icon Link để lấy link gửi khách</span></div><button onclick="artAdd()" class="bg-indigo-50 text-indigo-600 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-indigo-100"><i class="fas fa-plus mr-1"></i>Bài mới</button></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2">${list.map(a=>{
   const s=a.slug||toSlug(a.name);
   const on=s===curArt;
-  return `<div onclick="openArt(${q(s)})" class="cursor-pointer border-2 ${on?"border-indigo-500 bg-indigo-50":"border-slate-200 hover:border-indigo-300 bg-white"} rounded-xl p-2.5 flex items-center justify-between gap-2"><div class="min-w-0"><div class="flex items-center gap-1.5"><span class="font-bold text-sm text-slate-800 truncate">${esc(a.name||"(chưa đặt tên)")}</span></div><div class="text-[10px] text-slate-500 mt-0.5">Cập nhật: ${a.updated?fmtBank(a.updated):"chưa lưu"} · Tác giả: ${esc(a.author||"—")}</div></div><div class="flex gap-1 shrink-0"><button title="Copy Link trực tiếp tới bài viết này" onclick="event.stopPropagation();copyArtDeepLink(${q(curCms)},${q(s)})" class="text-emerald-600 bg-emerald-50 border border-emerald-200 hover:bg-emerald-600 hover:text-white px-2.5 py-1 rounded-lg text-xs font-bold transition"><i class="fas fa-link mr-1"></i>Link</button><button onclick="event.stopPropagation();openArt(${q(s)})" class="text-indigo-600 bg-white border border-indigo-100 px-2 py-1 rounded-lg text-xs"><i class="fas fa-pen"></i></button><button onclick="event.stopPropagation();artDel(${q(s)})" class="text-red-500 bg-white border border-red-100 px-2 py-1 rounded-lg text-xs"><i class="fas fa-trash"></i></button></div></div>`;}).join("")}</div>`;}
-function renderCmsTabBtns(){
- const tabs=guideTabList();
- $("cmsDevBtns").innerHTML=tabs.map((t,i)=>{const on=t.id===curCms;const ic=t.img?`<img src="${esc(safeUrl(t.img))}" class="w-5 h-5 mr-2 rounded object-contain">`:`<i class="${esc(t.ic||"fas fa-book")} ${on?"":esc(t.col||"")} mr-2"></i>`;
-  return `<div data-tabid="${esc(t.id)}" class="flex items-center border-2 rounded-xl transition ${on?"bg-indigo-600 text-white border-indigo-600 shadow-lg":"bg-white border-slate-200 text-slate-600"}"><span class="grip cursor-grab px-2 py-2 ${on?"text-indigo-200":"text-slate-400"}" title="Kéo để đổi thứ tự"><i class="fas fa-grip-vertical"></i></span><button onclick="setCms(${q(t.id)})" class="pr-3 py-1.5 font-bold text-xs flex items-center">${ic}${esc(t.name)}${i===0?`<span class="ml-2 text-[9px] font-black px-1.5 py-0.5 rounded ${on?"bg-white/25":"bg-emerald-100 text-emerald-700"}">Mặc định</span>`:""}</button></div>`;}).join("")+`<button onclick="cmsAddTab()" class="border-2 border-dashed border-indigo-300 text-indigo-600 px-3 py-1.5 rounded-xl font-bold text-xs hover:bg-indigo-50"><i class="fas fa-plus mr-1"></i>Thêm tab</button>`;
- setupSortableCmsTabs();
+  return `<div onclick="openArt(${q(s)})" class="cursor-pointer border-2 ${on?"border-indigo-500 bg-indigo-50":"border-slate-200 hover:border-indigo-300 bg-white"} rounded-xl p-2.5 flex items-center justify-between gap-2"><div class="min-w-0"><div class="flex items-center gap-1.5"><span class="font-bold text-sm text-slate-800 truncate">${esc(a.name||"(chưa đặt tên)")}</span></div><div class="text-[10px] text-slate-500 mt-0.5">Cập nhật: ${a.updated?fmtBank(a.updated):"chưa lưu"} · Tác giả: ${esc(a.author||"—")}</div></div><div class="flex gap-1 shrink-0"><button title="Copy Link trực tiếp tới bài viết này" onclick="event.stopPropagation();copyArtDeepLink(${q(curCms)},${q(s)})" class="text-emerald-600 bg-emerald-50 border border-emerald-200 hover:bg-emerald-600 hover:text-white px-2.5 py-1 rounded-lg text-xs font-bold transition"><i class="fas fa-link mr-1"></i>Link</button><button onclick="event.stopPropagation();openArt(${q(s)})" class="text-indigo-600 bg-white border border-indigo-100 px-2 py-1 rounded-lg text-xs"><i class="fas fa-pen"></i></button><button onclick="event.stopPropagation();artDel(${q(s)})" class="text-red-500 bg-white border border-red-100 px-2 py-1 rounded-lg text-xs"><i class="fas fa-trash"></i></button></div></div>`;}).join("")}</div>`;
+}
+function renderCmsTabBtns() {
+  const tabs = guideTabList();
+  $("cmsDevBtns").innerHTML = tabs.map((t, i) => {
+    const on = t.id === curCms;
+    const ic = t.img ? `<img src="${esc(safeUrl(t.img))}" class="w-5 h-5 mr-2 rounded object-contain">` : `<i class="${esc(t.ic||"fas fa-book")} ${on?"":esc(t.col||"")} mr-2"></i>`;
+    return `<div data-tabid="${esc(t.id)}" class="flex items-center border-2 rounded-xl transition ${on?"bg-indigo-600 text-white border-indigo-600 shadow-lg":"bg-white border-slate-200 text-slate-600"}"><span class="grip cursor-grab px-2 py-2 ${on?"text-indigo-200":"text-slate-400"}" title="Kéo để đổi thứ tự"><i class="fas fa-grip-vertical"></i></span><button onclick="setCms(${q(t.id)})" class="pr-3 py-1.5 font-bold text-xs flex items-center">${ic}${esc(t.name)}${i===0?`<span class="ml-2 text-[9px] font-black px-1.5 py-0.5 rounded ${on?"bg-white/25":"bg-emerald-100 text-emerald-700"}">Mặc định</span>`:""}</button></div>`;
+  }).join("") + `<button onclick="cmsAddTab()" class="border-2 border-dashed border-indigo-300 text-indigo-600 px-3 py-1.5 rounded-xl font-bold text-xs hover:bg-indigo-50"><i class="fas fa-plus mr-1"></i>Thêm tab</button>`;
+  setupSortableCmsTabs();
 }
 let sortableCmsTabs = null;
 function setupSortableCmsTabs() {
@@ -3536,144 +5075,265 @@ function setupSortableCmsTabs() {
         s._tabs = guides._tabs.map(t => ({ ...t }));
         await aj("/api/guides", { method: "POST", body: s });
         toast("Đã lưu thứ tự tab thành công!");
-      } catch (e) { toast("Lỗi lưu thứ tự: " + e.message, "err"); }
+      } catch (e) {
+        toast("Lỗi lưu thứ tự: " + e.message, "err");
+      }
     }
   });
 }
-function renderCmsTabEdit(){
- const tabs=guideTabList(),t=tabs.find(x=>x.id===curCms)||tabs[0],isDef=DEF_TABS.some(d=>d.id===t.id);
- $("cmsTabEdit").innerHTML=`<div class="sm:col-span-2"><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tên tab đang sửa</label><input value="${esc(t.name)}" oninput="cmsTabSet('name',this.value)" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div><div class="sm:col-span-2"><div class="flex items-end gap-2"><div class="flex-1"><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Link ảnh làm icon tab (để trống = icon mặc định)</label><input value="${esc(t.img||"")}" oninput="cmsTabSet('img',this.value)" placeholder="https://..." class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-mono"></div>${isDef?"":`<button onclick="cmsDelTab()" title="Xóa tab này" class="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white font-bold py-2 px-3.5 rounded-lg text-xs border border-red-200 transition shrink-0"><i class="fas fa-trash mr-1"></i>Xóa</button>`}</div></div>`;}
-function cmsTabSet(k,v){cmsEnsureTabs();const t=guides._tabs.find(x=>x.id===curCms);if(t){t[k]=v;renderCmsTabBtns();}}
-function cmsAddTab(){const name=prompt("Tên tab mới:","");if(!name||!name.trim())return;commitCms();cmsEnsureTabs();ensureArts();const id="t"+Date.now().toString(36);guides._tabs.push({id,name:name.trim(),img:""});guides[id]=[];guides._articles[id]=[{slug:toSlug(name.trim()),name:name.trim(),author:"Admin",updated:0,blocks:[],html:"<h2>1. Tiêu đề mục đầu tiên</h2><p>Nhập nội dung hướng dẫn tại đây...</p>",showToc:true,watermark:""}];setCms(id);}
-function cmsDelTab(){if(!confirm("Xóa tab này và toàn bộ bài viết của nó?"))return;cmsEnsureTabs();guides._tabs=guides._tabs.filter(x=>x.id!==curCms);delete guides[curCms];if(guides._articles)delete guides._articles[curCms];curArt=null;setCms(guides._tabs[0].id);}
+function renderCmsTabEdit() {
+  const tabs = guideTabList(), t = tabs.find(x => x.id === curCms) || tabs[0], isDef = DEF_TABS.some(d => d.id === t.id);
+  $("cmsTabEdit").innerHTML = `<div class="sm:col-span-2"><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tên tab đang sửa</label><input value="${esc(t.name)}" oninput="cmsTabSet('name',this.value)" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div><div class="sm:col-span-2"><div class="flex items-end gap-2"><div class="flex-1"><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Link ảnh làm icon tab (để trống = icon mặc định)</label><input value="${esc(t.img||"")}" oninput="cmsTabSet('img',this.value)" placeholder="https://..." class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-mono"></div>${isDef?"":`<button onclick="cmsDelTab()" title="Xóa tab này" class="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white font-bold py-2 px-3.5 rounded-lg text-xs border border-red-200 transition shrink-0"><i class="fas fa-trash mr-1"></i>Xóa</button>`}</div></div>`;
+}
+function cmsTabSet(k, v) {
+  cmsEnsureTabs();
+  const t = guides._tabs.find(x => x.id === curCms);
+  if (t) {
+    t[k] = v;
+    renderCmsTabBtns();
+  }
+}
+function cmsAddTab() {
+  const name = prompt("Tên tab mới:", "");
+  if (!name || !name.trim()) return;
+  commitCms();
+  cmsEnsureTabs();
+  ensureArts();
+  const id = "t" + Date.now().toString(36);
+  guides._tabs.push({ id, name: name.trim(), img: "" });
+  guides[id] = [];
+  guides._articles[id] = [{
+    slug: toSlug(name.trim()),
+    name: name.trim(),
+    author: "Admin",
+    updated: 0,
+    blocks: [],
+    html: "<h2>1. Tiêu đề mục đầu tiên</h2><p>Nhập nội dung hướng dẫn tại đây...</p>",
+    showToc: true,
+    watermark: ""
+  }];
+  setCms(id);
+}
+function cmsDelTab() {
+  if (!confirm("Xóa tab này và toàn bộ bài viết của nó?")) return;
+  cmsEnsureTabs();
+  guides._tabs = guides._tabs.filter(x => x.id !== curCms);
+  delete guides[curCms];
+  if (guides._articles) delete guides._articles[curCms];
+  curArt = null;
+  setCms(guides._tabs[0].id);
+}
 
 // ---- nội dung khối
-const safeUrl=u=>/^https?:\/\//i.test(u||"")?u:"#";
-const bAlign=b=>b.al==="c"?"center":b.al==="r"?"right":"left";
-const dAlign=b=>b.dal==="l"?"left":b.dal==="r"?"right":"center";
-const SZ={s:13,m:16,l:20,xl:26};
-function bStyle(b,def){let st="";if(b.b)st+="font-weight:800;";if(b.i)st+="font-style:italic;";if(b.ul)st+=`text-decoration:underline;text-decoration-color:${b.ul==="red"?"#dc2626":"#0f172a"};text-underline-offset:3px;`;st+=`font-size:${SZ[b.sz]||def}px;`;return st;}
-const bText=b=>esc(b.x).replace(/\n/g,"<br>")||"&nbsp;";
-function guideScroll(id){const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:"smooth",block:"start"});}
-function openLightbox(u){
- const d=document.createElement("div");
- d.className="lb";
- const prevOverflow=document.body.style.overflow;
- document.body.style.overflow="hidden";
- const closeLb=()=>{document.body.style.overflow=prevOverflow;d.remove();document.removeEventListener("keydown",onKey);};
- const onKey=e=>{if(e.key==="Escape")closeLb();};
- document.addEventListener("keydown",onKey);
- d.innerHTML=`<button type="button" class="lb-close" title="Đóng ảnh (ESC)"><i class="fas fa-xmark"></i></button><img src="${esc(u)}" onclick="event.stopPropagation()">`;
- d.onclick=closeLb;
- d.querySelector(".lb-close").onclick=e=>{e.stopPropagation();closeLb();};
- document.body.appendChild(d);
+const safeUrl = u => /^https?:\/\//i.test(u || "") ? u : "#";
+const bAlign = b => b.al === "c" ? "center" : b.al === "r" ? "right" : "left";
+const dAlign = b => b.dal === "l" ? "left" : b.dal === "r" ? "right" : "center";
+const SZ = { s: 13, m: 16, l: 20, xl: 26 };
+function bStyle(b, def) {
+  let st = "";
+  if (b.b) st += "font-weight:800;";
+  if (b.i) st += "font-style:italic;";
+  if (b.ul) st += `text-decoration:underline;text-decoration-color:${b.ul==="red"?"#dc2626":"#0f172a"};text-underline-offset:3px;`;
+  st += `font-size:${SZ[b.sz]||def}px;`;
+  return st;
 }
-function videoEmbed(u){u=String(u||"");let m;
- if(m=u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/))([\w-]{6,})/))return `<div style="position:relative;width:100%;max-width:600px;margin:0 auto;aspect-ratio:16/9"><iframe src="https://www.youtube-nocookie.com/embed/${m[1]}?rel=0" referrerpolicy="strict-origin-when-cross-origin" title="Video" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.1)" allowfullscreen loading="lazy"></iframe></div>`;
- if(m=u.match(/vimeo\.com\/(?:video\/)?(\d+)/))return `<div style="position:relative;width:100%;max-width:600px;margin:0 auto;aspect-ratio:16/9"><iframe src="https://player.vimeo.com/video/${m[1]}" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.1)" allowfullscreen loading="lazy"></iframe></div>`;
- if(/^https?:\/\//i.test(u))return `<div style="width:100%;max-width:600px;margin:0 auto;"><video src="${esc(u)}" controls playsinline style="width:100%;max-height:420px;border-radius:12px;background:#000;box-shadow:0 4px 14px rgba(0,0,0,.1)"></video></div>`;
- return `<div style="padding:14px;background:#f1f5f9;border-radius:8px;color:#94a3b8;font-size:13px;text-align:center">Chưa có URL video hợp lệ</div>`;}
+const bText = b => esc(b.x).replace(/\n/g, "<br>") || "&nbsp;";
+function guideScroll(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+function openLightbox(u) {
+  const d = document.createElement("div");
+  d.className = "lb";
+  const prevOverflow = document.body.style.overflow;
+  document.body.style.overflow = "hidden";
+  const closeLb = () => {
+    document.body.style.overflow = prevOverflow;
+    d.remove();
+    document.removeEventListener("keydown", onKey);
+  };
+  const onKey = e => {
+    if (e.key === "Escape") closeLb();
+  };
+  document.addEventListener("keydown", onKey);
+  d.innerHTML = `<button type="button" class="lb-close" title="Đóng ảnh (ESC)"><i class="fas fa-xmark"></i></button><img src="${esc(u)}" onclick="event.stopPropagation()">`;
+  d.onclick = closeLb;
+  d.querySelector(".lb-close").onclick = e => {
+    e.stopPropagation();
+    closeLb();
+  };
+  document.body.appendChild(d);
+}
+function videoEmbed(u) {
+  u = String(u || "");
+  let m;
+  if (m = u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/))([\w-]{6,})/)) return `<div style="position:relative;width:100%;max-width:600px;margin:0 auto;aspect-ratio:16/9"><iframe src="https://www.youtube-nocookie.com/embed/${m[1]}?rel=0" referrerpolicy="strict-origin-when-cross-origin" title="Video" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.1)" allowfullscreen loading="lazy"></iframe></div>`;
+  if (m = u.match(/vimeo\.com\/(?:video\/)?(\d+)/)) return `<div style="position:relative;width:100%;max-width:600px;margin:0 auto;aspect-ratio:16/9"><iframe src="https://player.vimeo.com/video/${m[1]}" style="position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.1)" allowfullscreen loading="lazy"></iframe></div>`;
+  if (/^https?:\/\//i.test(u)) return `<div style="width:100%;max-width:600px;margin:0 auto;"><video src="${esc(u)}" controls playsinline style="width:100%;max-height:420px;border-radius:12px;background:#000;box-shadow:0 4px 14px rgba(0,0,0,.1)"></video></div>`;
+  return `<div style="padding:14px;background:#f1f5f9;border-radius:8px;color:#94a3b8;font-size:13px;text-align:center">Chưa có URL video hợp lệ</div>`;
+}
 // Khớp 100% ký tự (không trim, không phân biệt-hoa-thường-không, không "contains"): target === nội dung khối
-const findTarget=(bl,text)=>{const s=String(text??"");if(s==="")return -1;return bl.findIndex(x=>ANCH.has(x.t)&&String(x.x??"")===s);};
-function renderBlocks(bl,gid){
- let n=1,h="";const g=gid||"g";
- bl.forEach((b,idx)=>{const al=bAlign(b),aid=`g-${g}-${idx}`;let x="";
-  if(b.t==="header"){n=1;x=`<div style="text-align:${al};margin:6px 0 14px"><div style="background:linear-gradient(90deg,#4f46e5,#8b5cf6);display:inline-block;color:#fff;padding:10px 18px;border-radius:10px;font-weight:800;line-height:1.35;box-shadow:0 4px 10px rgba(79,70,229,.3);${bStyle(b,22)}"><i class="fas fa-star" style="margin-right:8px"></i>${bText(b)}</div></div>`;}
-  else if(b.t==="sub"){n=1;x=`<div style="text-align:${al};margin:18px 0 12px"><div style="display:inline-block;background:#e0e7ff;border-left:5px solid #4f46e5;padding:8px 14px;border-radius:5px;font-weight:800;color:#3730a3;line-height:1.35;${bStyle(b,18)}">${bText(b)}</div></div>`;}
-  else if(b.t==="step"){const lb=(b.n!==undefined&&String(b.n).trim()!=="")?esc(b.n):n++;const jc=al==="center"?"center":al==="right"?"flex-end":"flex-start";x=`<div style="display:flex;gap:10px;margin-bottom:12px;align-items:flex-start;justify-content:${jc}"><span style="background:#4f46e5;color:#fff;min-width:26px;height:26px;padding:0 7px;display:flex;align-items:center;justify-content:center;border-radius:13px;font-size:14px;font-weight:bold;flex-shrink:0;margin-top:1px">${lb}</span><p style="margin:0;color:#334155;line-height:1.6;text-align:${al};white-space:pre-wrap;${bStyle(b,17)}">${bText(b)}</p></div>`;}
-  else if(b.t==="note"){
-    const theme = b.theme || 'amber';
-    const themeBg = theme==='red'?['#fef2f2','#fca5a5','#ef4444','#991b1b']:theme==='blue'?['#eff6ff','#93c5fd','#3b82f6','#1e40af']:theme==='purple'?['#f5f3ff','#c4b5fd','#8b5cf6','#5b21b6']:theme==='green'?['#f0fdf4','#86efac','#10b981','#065f46']:['#fffbeb','#fde68a','#f59e0b','#92400e'];
-    const noteIcon = theme==='red'?'⛔ CHÚ Ý:':theme==='blue'?'💡 HƯỚNG DẪN:':theme==='purple'?'✨ GHI CHÚ:':theme==='green'?'✔ MẸO HAY:':'⚠️ LƯU Ý:';
-    x=`<div style="text-align:${al};margin:14px 0"><div style="display:inline-block;max-width:100%;background:${themeBg[0]};border:1px solid ${themeBg[1]};border-left:5px solid ${themeBg[2]};padding:12px 16px;border-radius:10px;text-align:left"><p style="margin:0;color:${themeBg[3]};line-height:1.6;white-space:pre-wrap;${bStyle(b,16)}"><b>${noteIcon}</b> ${bText(b)}</p></div></div>`;
-  }
-  else if(b.t==="btn")x=`<div style="text-align:${al};margin:14px 0"><a href="${esc(safeUrl(b.u))}" target="_blank" rel="noopener" style="display:inline-block;background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;padding:12px 24px;border-radius:12px;font-weight:bold;font-size:${SZ[b.sz]||17}px;text-decoration:none;box-shadow:0 4px 15px rgba(109,40,217,.4)"><i class="fas fa-download" style="margin-right:8px"></i>${esc(b.x||"TẢI VỀ")}</a></div>`;
-  else if(b.t==="img"){
-    const u=safeUrl(b.u);
-    x=`<div style="margin:16px 0;text-align:center"><div style="display:inline-block;max-width:100%"><img src="${esc(u)}" onclick="openLightbox(${q(u)})" title="Bấm để phóng to ảnh" style="max-height:360px;width:auto;max-width:100%;object-fit:contain;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,0.06);cursor:zoom-in" />${String(b.x||"").trim()!==""?`<div style="text-align:center;font-size:13px;color:#64748b;margin-top:6px;line-height:1.5;font-style:italic;white-space:pre-wrap">${esc(b.x)}</div>`:""}</div></div>`;
-  }
-  else if(b.t==="video"){
-    x=`<div style="margin:16px 0;text-align:center"><div style="display:inline-block;width:100%;max-width:640px;margin:auto">${videoEmbed(b.u)}${String(b.x||"").trim()!==""?`<div style="text-align:center;font-size:13px;color:#64748b;margin-top:6px;line-height:1.5;font-style:italic;white-space:pre-wrap">${esc(b.x)}</div>`:""}</div></div>`;
-  }
-  else if(b.t==="qlink"){const ti=findTarget(bl,b.target);x=`<div style="text-align:${al};margin:8px 0"><a ${ti>=0?`onclick="guideScroll('g-${g}-${ti}')"`:'title="Không tìm thấy mục tiêu khớp 100%"'} style="display:inline-flex;align-items:center;gap:6px;cursor:${ti>=0?"pointer":"not-allowed"};opacity:${ti>=0?1:.5};font-weight:900;font-size:15px;background:-webkit-linear-gradient(0deg, #4f46e5, #9333ea);-webkit-background-clip:text;-webkit-text-fill-color:transparent;border-bottom:2px solid #8b5cf6;padding-bottom:1px;text-decoration:none;"><i class="fas fa-link" style="color:#8b5cf6;-webkit-text-fill-color:initial;"></i>${esc(b.x||"Liên kết nhanh")}</a></div>`;}
-  else if(b.t==="qtab")x=`<div style="text-align:${al};margin:8px 0"><a onclick="cmsGoto(${q(b.tab||"")},${q(b.art||"")},${q(b.target||"")})" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-weight:900;font-size:15px;background:-webkit-linear-gradient(0deg, #4f46e5, #9333ea);-webkit-background-clip:text;-webkit-text-fill-color:transparent;border-bottom:2px solid #8b5cf6;padding-bottom:1px;text-decoration:none;"><i class="fas fa-layer-group" style="color:#8b5cf6;-webkit-text-fill-color:initial;"></i>${esc(b.x||"Chuyển tab")}</a></div>`;
-  else if(b.t==="qart")x=`<div style="text-align:${al};margin:8px 0"><a onclick="cmsGotoArt(${q(b.tab||"")},${q(b.art||"")})" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-weight:900;font-size:15px;background:-webkit-linear-gradient(0deg, #4f46e5, #9333ea);-webkit-background-clip:text;-webkit-text-fill-color:transparent;border-bottom:2px solid #8b5cf6;padding-bottom:1px;text-decoration:none;"><i class="fas fa-newspaper" style="color:#8b5cf6;-webkit-text-fill-color:initial;"></i>${esc(b.x||"Mở bài viết")}</a></div>`;
-  else if(b.t==="spacer")x=`<div style="height:${Math.max(4,Math.min(200,parseInt(b.h)||16))}px"></div>`;
-  else if(b.t==="divider")x='<hr style="border:0;border-top:1px solid #e2e8f0;margin:16px 0">';
-  else if(b.t==="toc"){const items=bl.map((y,i)=>({y,i})).filter(o=>o.y.t==="header"||o.y.t==="sub");x=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin:12px 0"><div style="font-weight:800;color:#4f46e5;margin-bottom:8px;font-size:16px"><i class="fas fa-list-ul" style="margin-right:6px"></i>${esc(b.x||"Xem nhanh")}</div>${items.map(o=>`<a onclick="guideScroll('g-${g}-${o.i}')" style="display:block;cursor:pointer;padding:6px 0 6px ${o.y.t==="sub"?"18px":"0"};color:${o.y.t==="sub"?"#475569":"#3730a3"};font-weight:${o.y.t==="sub"?"600":"800"};font-size:15px"><i class="fas fa-angle-right" style="margin-right:6px;color:#818cf8"></i>${esc(o.y.x)}</a>`).join("")||'<span style="font-size:13px;color:#94a3b8">Chưa có mục nào</span>'}</div>`;}
-  else x=`<p style="margin:0 0 12px;color:#334155;line-height:1.65;text-align:${al};white-space:pre-wrap;min-height:1.2em;${bStyle(b,16)}">${bText(b)}</p>`;
-  h+=`<div id="${aid}" style="scroll-margin-top:90px">${x}</div>`;});
- return h;}
+const findTarget = (bl, text) => {
+  const s = String(text ?? "");
+  if (s === "") return -1;
+  return bl.findIndex(x => ANCH.has(x.t) && String(x.x ?? "") === s);
+};
+function renderBlocks(bl, gid) {
+  let n = 1, h = "";
+  const g = gid || "g";
+  bl.forEach((b, idx) => {
+    const al = bAlign(b), aid = `g-${g}-${idx}`;
+    let x = "";
+    if (b.t === "header") {
+      n = 1;
+      x = `<div style="text-align:${al};margin:6px 0 14px"><div style="background:linear-gradient(90deg,#4f46e5,#8b5cf6);display:inline-block;color:#fff;padding:10px 18px;border-radius:10px;font-weight:800;line-height:1.35;box-shadow:0 4px 10px rgba(79,70,229,.3);${bStyle(b,22)}"><i class="fas fa-star" style="margin-right:8px"></i>${bText(b)}</div></div>`;
+    }
+    else if (b.t === "sub") {
+      n = 1;
+      x = `<div style="text-align:${al};margin:18px 0 12px"><div style="display:inline-block;background:#e0e7ff;border-left:5px solid #4f46e5;padding:8px 14px;border-radius:5px;font-weight:800;color:#3730a3;line-height:1.35;${bStyle(b,18)}">${bText(b)}</div></div>`;
+    }
+    else if (b.t === "step") {
+      const lb = (b.n !== undefined && String(b.n).trim() !== "") ? esc(b.n) : n++;
+      const jc = al === "center" ? "center" : al === "right" ? "flex-end" : "flex-start";
+      x = `<div style="display:flex;gap:10px;margin-bottom:12px;align-items:flex-start;justify-content:${jc}"><span style="background:#4f46e5;color:#fff;min-width:26px;height:26px;padding:0 7px;display:flex;align-items:center;justify-content:center;border-radius:13px;font-size:14px;font-weight:bold;flex-shrink:0;margin-top:1px">${lb}</span><p style="margin:0;color:#334155;line-height:1.6;text-align:${al};white-space:pre-wrap;${bStyle(b,17)}">${bText(b)}</p></div>`;
+    }
+    else if (b.t === "note") {
+      const theme = b.theme || 'amber';
+      const themeBg = theme === 'red' ? ['#fef2f2', '#fca5a5', '#ef4444', '#991b1b'] : theme === 'blue' ? ['#eff6ff', '#93c5fd', '#3b82f6', '#1e40af'] : theme === 'purple' ? ['#f5f3ff', '#c4b5fd', '#8b5cf6', '#5b21b6'] : theme === 'green' ? ['#f0fdf4', '#86efac', '#10b981', '#065f46'] : ['#fffbeb', '#fde68a', '#f59e0b', '#92400e'];
+      const noteIcon = theme === 'red' ? '⛔ CHÚ Ý:' : theme === 'blue' ? '💡 HƯỚNG DẪN:' : theme === 'purple' ? '✨ GHI CHÚ:' : theme === 'green' ? '✔ MẸO HAY:' : '⚠️ LƯU Ý:';
+      x = `<div style="text-align:${al};margin:14px 0"><div style="display:inline-block;max-width:100%;background:${themeBg[0]};border:1px solid ${themeBg[1]};border-left:5px solid ${themeBg[2]};padding:12px 16px;border-radius:10px;text-align:left"><p style="margin:0;color:${themeBg[3]};line-height:1.6;white-space:pre-wrap;${bStyle(b,16)}"><b>${noteIcon}</b> ${bText(b)}</p></div></div>`;
+    }
+    else if (b.t === "btn") x = `<div style="text-align:${al};margin:14px 0"><a href="${esc(safeUrl(b.u))}" target="_blank" rel="noopener" style="display:inline-block;background:linear-gradient(135deg,#8b5cf6,#6d28d9);color:#fff;padding:12px 24px;border-radius:12px;font-weight:bold;font-size:${SZ[b.sz]||17}px;text-decoration:none;box-shadow:0 4px 15px rgba(109,40,217,.4)"><i class="fas fa-download" style="margin-right:8px"></i>${esc(b.x||"TẢI VỀ")}</a></div>`;
+    else if (b.t === "img") {
+      const u = safeUrl(b.u);
+      x = `<div style="margin:16px 0;text-align:center"><div style="display:inline-block;max-width:100%"><img src="${esc(u)}" onclick="openLightbox(${q(u)})" title="Bấm để phóng to ảnh" style="max-height:360px;width:auto;max-width:100%;object-fit:contain;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,0.06);cursor:zoom-in" />${String(b.x||"").trim()!==""?`<div style="text-align:center;font-size:13px;color:#64748b;margin-top:6px;line-height:1.5;font-style:italic;white-space:pre-wrap">${esc(b.x)}</div>`:""}</div></div>`;
+    }
+    else if (b.t === "video") {
+      x = `<div style="margin:16px 0;text-align:center"><div style="display:inline-block;width:100%;max-width:640px;margin:auto">${videoEmbed(b.u)}${String(b.x||"").trim()!==""?`<div style="text-align:center;font-size:13px;color:#64748b;margin-top:6px;line-height:1.5;font-style:italic;white-space:pre-wrap">${esc(b.x)}</div>`:""}</div></div>`;
+    }
+    else if (b.t === "qlink") {
+      const ti = findTarget(bl, b.target);
+      x = `<div style="text-align:${al};margin:8px 0"><a ${ti>=0?`onclick="guideScroll('g-${g}-${ti}')"`:'title="Không tìm thấy mục tiêu khớp 100%"'} style="display:inline-flex;align-items:center;gap:6px;cursor:${ti>=0?"pointer":"not-allowed"};opacity:${ti>=0?1:.5};font-weight:900;font-size:15px;background:-webkit-linear-gradient(0deg, #4f46e5, #9333ea);-webkit-background-clip:text;-webkit-text-fill-color:transparent;border-bottom:2px solid #8b5cf6;padding-bottom:1px;text-decoration:none;"><i class="fas fa-link" style="color:#8b5cf6;-webkit-text-fill-color:initial;"></i>${esc(b.x||"Liên kết nhanh")}</a></div>`;
+    }
+    else if (b.t === "qtab") x = `<div style="text-align:${al};margin:8px 0"><a onclick="cmsGoto(${q(b.tab||"")},${q(b.art||"")},${q(b.target||"")})" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-weight:900;font-size:15px;background:-webkit-linear-gradient(0deg, #4f46e5, #9333ea);-webkit-background-clip:text;-webkit-text-fill-color:transparent;border-bottom:2px solid #8b5cf6;padding-bottom:1px;text-decoration:none;"><i class="fas fa-layer-group" style="color:#8b5cf6;-webkit-text-fill-color:initial;"></i>${esc(b.x||"Chuyển tab")}</a></div>`;
+    else if (b.t === "qart") x = `<div style="text-align:${al};margin:8px 0"><a onclick="cmsGotoArt(${q(b.tab||"")},${q(b.art||"")})" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-weight:900;font-size:15px;background:-webkit-linear-gradient(0deg, #4f46e5, #9333ea);-webkit-background-clip:text;-webkit-text-fill-color:transparent;border-bottom:2px solid #8b5cf6;padding-bottom:1px;text-decoration:none;"><i class="fas fa-newspaper" style="color:#8b5cf6;-webkit-text-fill-color:initial;"></i>${esc(b.x||"Mở bài viết")}</a></div>`;
+    else if (b.t === "spacer") x = `<div style="height:${Math.max(4,Math.min(200,parseInt(b.h)||16))}px"></div>`;
+    else if (b.t === "divider") x = '<hr style="border:0;border-top:1px solid #e2e8f0;margin:16px 0">';
+    else if (b.t === "toc") {
+      const items = bl.map((y, i) => ({ y, i })).filter(o => o.y.t === "header" || o.y.t === "sub");
+      x = `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin:12px 0"><div style="font-weight:800;color:#4f46e5;margin-bottom:8px;font-size:16px"><i class="fas fa-list-ul" style="margin-right:6px"></i>${esc(b.x||"Xem nhanh")}</div>${items.map(o=>`<a onclick="guideScroll('g-${g}-${o.i}')" style="display:block;cursor:pointer;padding:6px 0 6px ${o.y.t==="sub"?"18px":"0"};color:${o.y.t==="sub"?"#475569":"#3730a3"};font-weight:${o.y.t==="sub"?"600":"800"};font-size:15px"><i class="fas fa-angle-right" style="margin-right:6px;color:#818cf8"></i>${esc(o.y.x)}</a>`).join("")||'<span style="font-size:13px;color:#94a3b8">Chưa có mục nào</span>'}</div>`;
+    }
+    else x = `<p style="margin:0 0 12px;color:#334155;line-height:1.65;text-align:${al};white-space:pre-wrap;min-height:1.2em;${bStyle(b,16)}">${bText(b)}</p>`;
+    h += `<div id="${aid}" style="scroll-margin-top:90px">${x}</div>`;
+  });
+  return h;
+}
 // ---- điều hướng Quick Tab / Quick Article (trong admin: giữ nguyên bản đang soạn, không mất chỉnh sửa)
-function cmsGoto(tab,artId,detail){commitCms();ensureArts();const tabs=guideTabList();if(!tabs.some(t=>t.id===tab))return toast("Tab đích không tồn tại","warn");curCms=tab;curArt=null;renderCmsTabBtns();renderCmsTabEdit();const list=artsOf(tab),a=list.find(x=>x.id===artId)||list[0];if(!a)return;openArt(a.id);if(detail){const i=findTarget(curBlocks,detail);if(i>=0)setTimeout(()=>guideScroll(`g-${curCms}-${curArt}-${i}`),80);}}
-function cmsGotoArt(tab,name){let t=tab,a=artsOf(t).find(x=>x.name===name);if(!a){for(const tt of guideTabList()){const f=artsOf(tt.id).find(x=>x.name===name);if(f){t=tt.id;a=f;break;}}}if(!a)return toast("Không tìm thấy bài khớp 100% tên","warn");cmsGoto(t,a.id,"");}
+function cmsGoto(tab, artId, detail) {
+  commitCms();
+  ensureArts();
+  const tabs = guideTabList();
+  if (!tabs.some(t => t.id === tab)) return toast("Tab đích không tồn tại", "warn");
+  curCms = tab;
+  curArt = null;
+  renderCmsTabBtns();
+  renderCmsTabEdit();
+  const list = artsOf(tab), a = list.find(x => x.id === artId) || list[0];
+  if (!a) return;
+  openArt(a.id);
+  if (detail) {
+    const i = findTarget(curBlocks, detail);
+    if (i >= 0) setTimeout(() => guideScroll(`g-${curCms}-${curArt}-${i}`), 80);
+  }
+}
+function cmsGotoArt(tab, name) {
+  let t = tab, a = artsOf(t).find(x => x.name === name);
+  if (!a) {
+    for (const tt of guideTabList()) {
+      const f = artsOf(tt.id).find(x => x.name === name);
+      if (f) {
+        t = tt.id;
+        a = f;
+        break;
+      }
+    }
+  }
+  if (!a) return toast("Không tìm thấy bài khớp 100% tên", "warn");
+  cmsGoto(t, a.id, "");
+}
 
 // ---- trình soạn khối
 // Đã loại bỏ hoàn toàn các hàm modal và mảng blocks cũ, Quill.js đảm nhiệm toàn bộ
-function buildRichArticleView(rawHtml, showToc, gid){
- const temp=document.createElement("div");
- temp.innerHTML=rawHtml||"";
- const headings=[];
- let h2Count=0, h3Count=0;
- temp.querySelectorAll("h2, h3").forEach((el, idx)=>{
-  const txt=(el.textContent||"").trim();
-  if(!txt)return;
-  const tag=el.tagName.toLowerCase();
-  const hid=`toc-${gid}-${idx}`;
-  el.id=hid;
-  el.style.scrollMarginTop="90px";
-  // Giữ nguyên 100% nguyên văn tiêu đề do admin soạn thảo, không tự ý chèn số hay bullet tròn (Ảnh 3)
-  headings.push({id:hid,tag,label:txt,raw:txt});
- });
- temp.querySelectorAll("img").forEach(img=>{
-  const src=img.getAttribute("src")||"";
-  img.setAttribute("onclick",`openLightbox(${q(src)})`);
-  img.style.cursor="zoom-in";img.setAttribute("referrerpolicy","no-referrer");img.setAttribute("loading","lazy");
- });
- temp.querySelectorAll("a").forEach(a=>{
-  const href=a.getAttribute("href")||"";
-  if(!a.getAttribute("data-cta")){
-   a.classList.add("word-link");
-   a.style.color="#2563eb";
-   a.style.textDecoration="underline";
-  }
-  if(href.startsWith("#anchor:")){
-   const tgTxt=decodeURIComponent(href.slice(8));
-   a.removeAttribute("href");
-   a.setAttribute("onclick",`scrollToHeadingText(${q(tgTxt)})`);
-  }else if(href.startsWith("#gototab:")){
-   const parts=href.slice(9).split(":");
-   const tb=decodeURIComponent(parts[0]||""), ar=decodeURIComponent(parts[1]||"");
-   a.removeAttribute("href");
-   a.setAttribute("onclick",`cmsGoto(${q(tb)},${q(ar)},'')`);
-  }else if(href.startsWith("#gotoart:")){
-   const parts=href.slice(9).split(":");
-   const tb=decodeURIComponent(parts[0]||""), ar=decodeURIComponent(parts[1]||"");
-   a.removeAttribute("href");
-   a.setAttribute("onclick",`cmsGotoArt(${q(tb)},${q(ar)})`);
-  }else if(/^https?:\/\//i.test(href)){
-   a.setAttribute("target","_blank");
-   a.setAttribute("rel","noopener");
-  }
- });
- let tocHtml="";
- if(showToc && headings.length>0){
-  const bodyId=`toc-body-${gid}`;
-  const icId=`toc-ic-${gid}`;
-  tocHtml=`<div style="background:#f8faff;border:1px solid #e0e7ff;border-radius:14px;padding:14px 18px;margin:0 0 18px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><span style="font-weight:800;font-size:15px;color:#4338ca;display:flex;align-items:center;gap:8px;"><i class="fas fa-list-ul"></i>Xem nhanh</span><button type="button" onclick="const b=document.getElementById('${bodyId}'),ic=document.getElementById('${icId}');const h=b.classList.toggle('hidden');ic.className=h?'fas fa-chevron-down text-indigo-400':'fas fa-chevron-up text-indigo-400';" style="background:transparent;border:0;color:#4338ca;cursor:pointer;"><i id="${icId}" class="fas fa-chevron-up text-xs text-indigo-400"></i></button></div><div id="${bodyId}" style="display:flex;flex-direction:column;gap:8px;">${headings.map(h=>{
+function buildRichArticleView(rawHtml, showToc, gid) {
+  const temp = document.createElement("div");
+  temp.innerHTML = rawHtml || "";
+  const headings = [];
+  let h2Count = 0, h3Count = 0;
+  temp.querySelectorAll("h2, h3").forEach((el, idx) => {
+    const txt = (el.textContent || "").trim();
+    if (!txt) return;
+    const tag = el.tagName.toLowerCase();
+    const hid = `toc-${gid}-${idx}`;
+    el.id = hid;
+    el.style.scrollMarginTop = "90px";
+    // Giữ nguyên 100% nguyên văn tiêu đề do admin soạn thảo, không tự ý chèn số hay bullet tròn (Ảnh 3)
+    headings.push({ id: hid, tag, label: txt, raw: txt });
+  });
+  temp.querySelectorAll("img").forEach(img => {
+    const src = img.getAttribute("src") || "";
+    img.setAttribute("onclick", `openLightbox(${q(src)})`);
+    img.style.cursor = "zoom-in";
+    img.setAttribute("referrerpolicy", "no-referrer");
+    img.setAttribute("loading", "lazy");
+  });
+  temp.querySelectorAll("a").forEach(a => {
+    const href = a.getAttribute("href") || "";
+    if (!a.getAttribute("data-cta")) {
+      a.classList.add("word-link");
+      a.style.color = "#2563eb";
+      a.style.textDecoration = "underline";
+    }
+    if (href.startsWith("#anchor:")) {
+      const tgTxt = decodeURIComponent(href.slice(8));
+      a.removeAttribute("href");
+      a.setAttribute("onclick", `scrollToHeadingText(${q(tgTxt)})`);
+    } else if (href.startsWith("#gototab:")) {
+      const parts = href.slice(9).split(":");
+      const tb = decodeURIComponent(parts[0] || ""), ar = decodeURIComponent(parts[1] || "");
+      a.removeAttribute("href");
+      a.setAttribute("onclick", `cmsGoto(${q(tb)},${q(ar)},'')`);
+    } else if (href.startsWith("#gotoart:")) {
+      const parts = href.slice(9).split(":");
+      const tb = decodeURIComponent(parts[0] || ""), ar = decodeURIComponent(parts[1] || "");
+      a.removeAttribute("href");
+      a.setAttribute("onclick", `cmsGotoArt(${q(tb)},${q(ar)})`);
+    } else if (/^https?:\/\//i.test(href)) {
+      a.setAttribute("target", "_blank");
+      a.setAttribute("rel", "noopener");
+    }
+  });
+  let tocHtml = "";
+  if (showToc && headings.length > 0) {
+    const bodyId = `toc-body-${gid}`;
+    const icId = `toc-ic-${gid}`;
+    tocHtml = `<div style="background:#f8faff;border:1px solid #e0e7ff;border-radius:14px;padding:14px 18px;margin:0 0 18px;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><span style="font-weight:800;font-size:15px;color:#4338ca;display:flex;align-items:center;gap:8px;"><i class="fas fa-list-ul"></i>Xem nhanh</span><button type="button" onclick="const b=document.getElementById('${bodyId}'),ic=document.getElementById('${icId}');const h=b.classList.toggle('hidden');ic.className=h?'fas fa-chevron-down text-indigo-400':'fas fa-chevron-up text-indigo-400';" style="background:transparent;border:0;color:#4338ca;cursor:pointer;"><i id="${icId}" class="fas fa-chevron-up text-xs text-indigo-400"></i></button></div><div id="${bodyId}" style="display:flex;flex-direction:column;gap:8px;">${headings.map(h=>{
    if(h.tag==='h2') return `<a onclick="guideScroll('${h.id}')" style="cursor:pointer;color:#1e1b4b;text-decoration:none;font-weight:700;font-size:14px;display:flex;gap:8px;align-items:flex-start;line-height:1.5;"><span style="color:#818cf8;font-weight:bold;font-size:14px;">&gt;</span><span>${esc(h.label)}</span></a>`;
    return `<a onclick="guideScroll('${h.id}')" style="cursor:pointer;color:#334155;text-decoration:none;font-weight:600;font-size:13px;padding-left:20px;display:flex;gap:8px;align-items:flex-start;line-height:1.5;"><span style="color:#818cf8;font-weight:bold;font-size:13px;">&gt;</span><span>${esc(h.label)}</span></a>`;
   }).join("")}</div></div>`;
+  }
+  return tocHtml + temp.innerHTML;
 }
- return tocHtml + temp.innerHTML;
+function scrollToHeadingText(txt) {
+  const container = $("cmsPreview");
+  if (!container) return;
+  for (const el of container.querySelectorAll("h2, h3")) {
+    if ((el.textContent || "").trim() === txt.trim()) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+  }
 }
-function scrollToHeadingText(txt){
- const container=$("cmsPreview");if(!container)return;
- for(const el of container.querySelectorAll("h2, h3")){
-  if((el.textContent||"").trim()===txt.trim()){el.scrollIntoView({behavior:"smooth",block:"start"});return;}
- }
-}
-function cmsPrev(){
+function cmsPrev() {
   const temp = document.createElement("div");
   temp.innerHTML = curArtHtml || "";
   const headings = [];
@@ -3712,22 +5372,26 @@ function cmsPrev(){
   }
 }
 // Đã loại bỏ 100% modal chèn thủ công, thanh công cụ Quill.js xử lý trực tiếp
-function addArtFaqRow(){
- curArtShowFaqs=true;
- if($("chkArtShowFaqs"))$("chkArtShowFaqs").checked=true;
- if($("artFaqsContainerWrap"))$("artFaqsContainerWrap").classList.remove("hidden");
- curArtFaqs.push({q:"",a:""});
- renderArtFaqsUI();
+function addArtFaqRow() {
+  curArtShowFaqs = true;
+  if ($("chkArtShowFaqs")) $("chkArtShowFaqs").checked = true;
+  if ($("artFaqsContainerWrap")) $("artFaqsContainerWrap").classList.remove("hidden");
+  curArtFaqs.push({ q: "", a: "" });
+  renderArtFaqsUI();
 }
-function delArtFaqRow(idx){
- curArtFaqs.splice(idx,1);
- cmsPrev();
- renderArtFaqsUI();
+function delArtFaqRow(idx) {
+  curArtFaqs.splice(idx, 1);
+  cmsPrev();
+  renderArtFaqsUI();
 }
-function renderArtFaqsUI(){
- const c=$("artFaqsContainer");if(!c)return;
- if(!curArtFaqs.length){c.innerHTML='<div class="text-[11px] text-slate-400 italic">Chưa có câu hỏi thường gặp riêng cho bài này. Bấm nút phía trên để thêm.</div>';return;}
- c.innerHTML=curArtFaqs.map((f,idx)=>`
+function renderArtFaqsUI() {
+  const c = $("artFaqsContainer");
+  if (!c) return;
+  if (!curArtFaqs.length) {
+    c.innerHTML = '<div class="text-[11px] text-slate-400 italic">Chưa có câu hỏi thường gặp riêng cho bài này. Bấm nút phía trên để thêm.</div>';
+    return;
+  }
+  c.innerHTML = curArtFaqs.map((f, idx) => `
   <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1.5">
    <div class="flex items-center justify-between">
     <span class="text-[10px] font-black text-indigo-700 uppercase">Câu hỏi #${idx+1}</span>
@@ -3738,37 +5402,43 @@ function renderArtFaqsUI(){
   </div>
  `).join('');
 }
-function toggleRelatedArtPick(artSlug, checked){
- let s = new Set(curArtRelated);
- if(checked) s.add(artSlug); else s.delete(artSlug);
- curArtRelated = [...s];
- curArtShowRelated=true;
- if($("chkArtShowRelated"))$("chkArtShowRelated").checked=true;
- if($("artRelatedContainerWrap"))$("artRelatedContainerWrap").classList.remove("hidden");
- commitCms();
- saveCms(true);
- cmsPrev();
- toast(checked ? "Đã liên kết bài viết!" : "Đã hủy liên kết bài viết!");
+function toggleRelatedArtPick(artSlug, checked) {
+  let s = new Set(curArtRelated);
+  if (checked) s.add(artSlug);
+  else s.delete(artSlug);
+  curArtRelated = [...s];
+  curArtShowRelated = true;
+  if ($("chkArtShowRelated")) $("chkArtShowRelated").checked = true;
+  if ($("artRelatedContainerWrap")) $("artRelatedContainerWrap").classList.remove("hidden");
+  commitCms();
+  saveCms(true);
+  cmsPrev();
+  toast(checked ? "Đã liên kết bài viết!" : "Đã hủy liên kết bài viết!");
 }
 
-async function saveArtFaqsOnly(){
- curArtShowFaqs=true;
- if($("chkArtShowFaqs"))$("chkArtShowFaqs").checked=true;
- commitCms();
+async function saveArtFaqsOnly() {
+  curArtShowFaqs = true;
+  if ($("chkArtShowFaqs")) $("chkArtShowFaqs").checked = true;
+  commitCms();
   try {
     await saveCms(true);
     toast("Đã lưu FAQ riêng của bài viết thành công!");
-  } catch(e) {
+  } catch (e) {
     toast("Lỗi lưu FAQ: " + e.message, "err");
   }
 }
 window.saveArtFaqsOnly = saveArtFaqsOnly;
 
-function renderCmsEditor(){
- const w=$("cmsEditorWrap");if(!curArt){w.classList.add("hidden");return;}w.classList.remove("hidden");
- const a=artsOf(curCms).find(x=>(x.slug||toSlug(x.name))===curArt);
- const deepLink = `${PD.replace(/\/$/,"")}/portal/guide/${encodeURIComponent(curCms)}/${encodeURIComponent(curArtSlug||curArt)}`;
- $("cmsArtMeta").innerHTML=`
+function renderCmsEditor() {
+  const w = $("cmsEditorWrap");
+  if (!curArt) {
+    w.classList.add("hidden");
+    return;
+  }
+  w.classList.remove("hidden");
+  const a = artsOf(curCms).find(x => (x.slug || toSlug(x.name)) === curArt);
+  const deepLink = `${PD.replace(/\/$/,"")}/portal/guide/${encodeURIComponent(curCms)}/${encodeURIComponent(curArtSlug||curArt)}`;
+  $("cmsArtMeta").innerHTML = `
   <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tên bài viết</label><input id="cmsArtNameInp" value="${esc(curArtName)}" oninput="curArtName=this.value;if(!curArtSlug||curArtSlug.startsWith('bai-viet-moi-')){$('cmsArtSlugInp').value=toSlug(this.value);curArtSlug=toSlug(this.value);}" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-bold"></div>
   <div><label class="block text-[10px] font-bold text-indigo-600 mb-0.5">Slug URL (không dấu, cách nhau dấu -)</label><input id="cmsArtSlugInp" value="${esc(curArtSlug||curArt)}" oninput="this.value=toSlug(this.value);curArtSlug=this.value;" class="w-full p-2 text-xs border border-indigo-200 rounded-lg outline-none font-mono font-bold bg-indigo-50/30"></div>
   <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tác giả</label><input id="cmsArtAuthorInp" value="${esc(curArtAuthor)}" oninput="curArtAuthor=this.value" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div>
@@ -3819,8 +5489,8 @@ function renderCmsEditor(){
     </div>
    </div>
   </div></div></details>`;
- setTimeout(renderArtFaqsUI, 20);
- $("cmsAddBtns").innerHTML = `
+  setTimeout(renderArtFaqsUI, 20);
+  $("cmsAddBtns").innerHTML = `
   <div class="flex items-center gap-2">
    <span class="font-extrabold text-xs text-slate-700"><i class="fas fa-pen-nib text-indigo-600 mr-1.5"></i>Trình soạn thảo chuẩn Word (Quill.js)</span>
    <span class="text-[10px] text-slate-400 font-medium">Bấm Ctrl+S để lưu nhanh · H2/H3 tự động lên mục lục</span>
@@ -3828,133 +5498,125 @@ function renderCmsEditor(){
   <button type="button" onclick="saveCms()" class="tb-btn !bg-indigo-600 !text-white !border-indigo-600 hover:!bg-indigo-700 shadow-sm text-xs font-bold px-3"><i class="fas fa-floppy-disk mr-1"></i>Lưu bài viết</button>
  `;
 
- if (typeof Quill !== "undefined" && $("quillEditor")) {
-   if (!quillInst) {
-    quillInst = new Quill('#quillEditor', {
-     theme: 'snow',
-     placeholder: 'Bắt đầu soạn thảo hoặc dán bài viết Word vào đây...',
-     modules: {
-      toolbar: [
-       [{ 'header': [2, 3, false] }],
-       ['bold', 'italic', 'underline', 'strike'],
-       [{ 'color': [] }, { 'background': [] }],
-       [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-       [{ 'align': [] }],
-       ['link', 'image', 'video'],
-       ['clean']
-      ]
-     }
-    });
+  if (typeof Quill !== "undefined" && $("quillEditor")) {
+    if (!quillInst) {
+      quillInst = new Quill('#quillEditor', {
+        theme: 'snow',
+        placeholder: 'Bắt đầu soạn thảo hoặc dán bài viết Word vào đây...',
+        modules: {
+          toolbar: [[{ 'header': [2, 3, false] }], ['bold', 'italic', 'underline', 'strike'], [{ 'color': [] }, { 'background': [] }], [{ 'list': 'ordered' }, { 'list': 'bullet' }], [{ 'align': [] }], ['link', 'image', 'video'], ['clean']]
+        }
+      });
 
-    // Vô hiệu hóa tính năng tự động đánh số thứ tự khi gõ "1. " (chỉ đánh số khi bấm nút trên toolbar)
-    if (quillInst.keyboard && quillInst.keyboard.bindings) {
-      for (const k of Object.keys(quillInst.keyboard.bindings)) {
-        quillInst.keyboard.bindings[k] = (quillInst.keyboard.bindings[k] || []).filter(b => {
-          if (b.format && b.format.list) return false;
-          const fnStr = String(b.handler || '');
-          if (fnStr.includes('list')) return false;
-          if (b.prefix && typeof b.prefix.test === 'function' && (b.prefix.test('1.') || b.prefix.test('*') || b.prefix.test('-'))) return false;
-          return true;
-        });
+      // Vô hiệu hóa tính năng tự động đánh số thứ tự khi gõ "1. " (chỉ đánh số khi bấm nút trên toolbar)
+      if (quillInst.keyboard && quillInst.keyboard.bindings) {
+        for (const k of Object.keys(quillInst.keyboard.bindings)) {
+          quillInst.keyboard.bindings[k] = (quillInst.keyboard.bindings[k] || []).filter(b => {
+            if (b.format && b.format.list) return false;
+            const fnStr = String(b.handler || '');
+            if (fnStr.includes('list')) return false;
+            if (b.prefix && typeof b.prefix.test === 'function' && (b.prefix.test('1.') || b.prefix.test('*') || b.prefix.test('-'))) return false;
+            return true;
+          });
+        }
       }
-    }
 
-    // Đăng ký custom handler xịn sò cho ảnh và video
-    const tbMod = quillInst.getModule('toolbar');
-    if (tbMod) {
-      tbMod.addHandler('image', customCmsImageHandler);
-      tbMod.addHandler('video', customCmsVideoHandler);
-    }
+      // Đăng ký custom handler xịn sò cho ảnh và video
+      const tbMod = quillInst.getModule('toolbar');
+      if (tbMod) {
+        tbMod.addHandler('image', customCmsImageHandler);
+        tbMod.addHandler('video', customCmsVideoHandler);
+      }
 
-    // Thêm nút Nút Bấm CTA và Đường kẻ ngang Divider vào thanh công cụ Quill
-    const tbEl = document.querySelector('.ql-toolbar');
-    if (tbEl && !tbEl.querySelector('.ql-btn-cta')) {
-      const customGroup = document.createElement('span');
-      customGroup.className = 'ql-formats';
-      customGroup.innerHTML = `
+      // Thêm nút Nút Bấm CTA và Đường kẻ ngang Divider vào thanh công cụ Quill
+      const tbEl = document.querySelector('.ql-toolbar');
+      if (tbEl && !tbEl.querySelector('.ql-btn-cta')) {
+        const customGroup = document.createElement('span');
+        customGroup.className = 'ql-formats';
+        customGroup.innerHTML = `
         <button type="button" class="ql-btn-cta" title="Chèn Nút Bấm / CTA nổi bật" style="width:auto;padding:0 8px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;color:#4f46e5;"><i class="fas fa-rectangle-ad"></i> Nút CTA</button>
         <button type="button" class="ql-btn-hr" title="Chèn Đường kẻ ngang phân cách (---)" style="width:auto;padding:0 8px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;color:#475569;"><i class="fas fa-minus"></i> Đường kẻ</button>
       `;
-      tbEl.appendChild(customGroup);
-      customGroup.querySelector('.ql-btn-cta').onclick = openCmsCtaButtonModal;
-      customGroup.querySelector('.ql-btn-hr').onclick = insertCmsDivider;
-    }
+        tbEl.appendChild(customGroup);
+        customGroup.querySelector('.ql-btn-cta').onclick = openCmsCtaButtonModal;
+        customGroup.querySelector('.ql-btn-hr').onclick = insertCmsDivider;
+      }
 
-    quillInst.on('text-change', () => {
-     curArtHtml = getEditorHtml();
-     cmsPrev();
-    });
-    quillInst.root.addEventListener('keydown', (e) => {
-     if (e.key === 'Enter' || e.key === ' ') {
-       const sel = quillInst.getSelection();
-       if (sel) {
-         const [line, offset] = quillInst.getLine(sel.index);
-         if (line) {
-           const lineText = (line.domNode.textContent || '').trim();
-           if (lineText === '---') {
-             e.preventDefault();
-             const lineStart = sel.index - offset;
-             quillInst.deleteText(lineStart, line.length());
-             quillInst.clipboard.dangerouslyPasteHTML(lineStart, '<hr class="my-6 border-t border-slate-300 dark:border-slate-700"><p><br></p>');
-             quillInst.setSelection(lineStart + 2);
-             curArtHtml = getEditorHtml();
-             cmsPrev();
-             return;
-           }
-         }
-       }
-     }
-     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-      e.preventDefault();
-      saveCms();
-     }
-    });
-   }
-   const cleanHtml = typeof DOMPurify !== "undefined" ? sanitizeCmsHtml(curArtHtml) : curArtHtml;
-   if (quillInst.root.innerHTML !== cleanHtml) {
-    quillInst.root.innerHTML = cleanHtml;
-   }
- }
- cmsPrev();
-}
-async function saveCms(silent = false){
- if(!curArt)return toast("Chưa mở bài nào để lưu!","err");
- cmsEnsureTabs();
- ensureArts();
- commitCms();
- const a=artsOf(curCms).find(x=>(x.slug||toSlug(x.name))===curArt);
- if(a){
-   a.updated=nowMs();
-   delete a.id;
-   delete a.blocks;
- }
- try{
-   await Promise.all([
-      aj("/api/guides", { method: "POST", body: guides }),
-      (async () => {
-        if (typeof cmsDb === "object" && cmsDb) {
-          cmsDb.guides = guides;
-          await saveCmsDb().catch(() => null);
+      quillInst.on('text-change', () => {
+        curArtHtml = getEditorHtml();
+        cmsPrev();
+      });
+      quillInst.root.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          const sel = quillInst.getSelection();
+          if (sel) {
+            const [line, offset] = quillInst.getLine(sel.index);
+            if (line) {
+              const lineText = (line.domNode.textContent || '').trim();
+              if (lineText === '---') {
+                e.preventDefault();
+                const lineStart = sel.index - offset;
+                quillInst.deleteText(lineStart, line.length());
+                quillInst.clipboard.dangerouslyPasteHTML(lineStart, '<hr class="my-6 border-t border-slate-300 dark:border-slate-700"><p><br></p>');
+                quillInst.setSelection(lineStart + 2);
+                curArtHtml = getEditorHtml();
+                cmsPrev();
+                return;
+              }
+            }
+          }
         }
-      })()
-    ]);
-    if(!silent) toast("Đã lưu toàn bộ bài viết, FAQ riêng và cài đặt thành công!");
-   logEvent("ok","admin","Lưu bài viết hướng dẫn",`${curCms} / ${curArtName||curArtSlug}`);
-   if(a) { curArt=a.slug; curArtSlug=a.slug; }
-   renderGuideCategoriesTree();
-   cmsPrev();
- }catch(e){
-   toast("Lỗi lưu bài viết: "+e.message,"err");
- }
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+          e.preventDefault();
+          saveCms();
+        }
+      });
+    }
+    const cleanHtml = typeof DOMPurify !== "undefined" ? sanitizeCmsHtml(curArtHtml) : curArtHtml;
+    if (quillInst.root.innerHTML !== cleanHtml) {
+      quillInst.root.innerHTML = cleanHtml;
+    }
+  }
+  cmsPrev();
+}
+async function saveCms(silent = false) {
+  if (!curArt) return toast("Chưa mở bài nào để lưu!", "err");
+  cmsEnsureTabs();
+  ensureArts();
+  commitCms();
+  const a = artsOf(curCms).find(x => (x.slug || toSlug(x.name)) === curArt);
+  if (a) {
+    a.updated = nowMs();
+    delete a.id;
+    delete a.blocks;
+  }
+  try {
+    await Promise.all([aj("/api/guides", { method: "POST", body: guides }), (async () => {
+      if (typeof cmsDb === "object" && cmsDb) {
+        cmsDb.guides = guides;
+        await saveCmsDb().catch(() => null);
+      }
+    })()]);
+    if (!silent) toast("Đã lưu toàn bộ bài viết, FAQ riêng và cài đặt thành công!");
+    logEvent("ok", "admin", "Lưu bài viết hướng dẫn", `${curCms} / ${curArtName||curArtSlug}`);
+    if (a) {
+      curArt = a.slug;
+      curArtSlug = a.slug;
+    }
+    renderGuideCategoriesTree();
+    cmsPrev();
+  } catch (e) {
+    toast("Lỗi lưu bài viết: " + e.message, "err");
+  }
 }
 
 function closeCmsEditor() {
- commitCms();
- curArt = null;
- curArtSlug = "";
- $("cmsEditorWrap").classList.add("hidden");
- $("cmsCategoriesView").classList.remove("hidden");
- renderGuideCategoriesTree();
+  commitCms();
+  curArt = null;
+  curArtSlug = "";
+  $("cmsEditorWrap").classList.add("hidden");
+  $("cmsCategoriesView").classList.remove("hidden");
+  renderGuideCategoriesTree();
 }
 
 async function customCmsImageHandler() {
@@ -4239,33 +5901,33 @@ window.openCmsCtaButtonModal = openCmsCtaButtonModal;
 window.insertCmsDivider = insertCmsDivider;
 
 function openCmsEditorForArt(tabId, slug, fromHistory = false) {
- curCms = tabId;
- openArt(slug);
- $("cmsCategoriesView").classList.add("hidden");
- $("cmsEditorWrap").classList.remove("hidden");
- if (!fromHistory && typeof history !== 'undefined') {
-   history.pushState({ tab: 't-cms', inEditor: true, cmsTab: tabId, artSlug: slug }, '', '#cms-edit');
- }
+  curCms = tabId;
+  openArt(slug);
+  $("cmsCategoriesView").classList.add("hidden");
+  $("cmsEditorWrap").classList.remove("hidden");
+  if (!fromHistory && typeof history !== 'undefined') {
+    history.pushState({ tab: 't-cms', inEditor: true, cmsTab: tabId, artSlug: slug }, '', '#cms-edit');
+  }
 }
 
 function addArticleToCategory(tabId) {
- curCms = tabId;
- artAdd();
- $("cmsCategoriesView").classList.add("hidden");
- $("cmsEditorWrap").classList.remove("hidden");
+  curCms = tabId;
+  artAdd();
+  $("cmsCategoriesView").classList.add("hidden");
+  $("cmsEditorWrap").classList.remove("hidden");
 }
 
 function renderGuideCategoriesTree() {
- const container = $("cmsCategoriesTree");
- if (!container) return;
- cmsEnsureTabs();
- ensureArts();
- const tabs = guideTabList();
+  const container = $("cmsCategoriesTree");
+  if (!container) return;
+  cmsEnsureTabs();
+  ensureArts();
+  const tabs = guideTabList();
 
- container.innerHTML = tabs.map((tab, tIdx) => {
-   const arts = artsOf(tab.id);
-   const isProtectedTab = DEF_TABS.some(d => d.id === tab.id) || /lưu ý chung|tiktok/i.test(tab.name || '') || ['tmuamybok', 'tmubcksib', 't_general', 't_tiktok'].includes(tab.id);
-   return `
+  container.innerHTML = tabs.map((tab, tIdx) => {
+    const arts = artsOf(tab.id);
+    const isProtectedTab = DEF_TABS.some(d => d.id === tab.id) || /lưu ý chung|tiktok/i.test(tab.name || '') || ['tmuamybok', 'tmubcksib', 't_general', 't_tiktok'].includes(tab.id);
+    return `
    <div data-tabid="${esc(tab.id)}" class="cms-cat-box bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
      <!-- Header Mục / Danh mục lớn -->
      <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
@@ -4308,22 +5970,22 @@ function renderGuideCategoriesTree() {
      </div>
    </div>
    `;
- }).join('');
+  }).join('');
 
- if (typeof Sortable !== "undefined") {
-   new Sortable(container, {
-     handle: ".grip-cat",
-     animation: 150,
-     onEnd: async () => {
-       const ids = [...container.querySelectorAll(".cms-cat-box")].map(el => el.dataset.tabid);
-       guides._tabs.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
-       try {
-         await aj("/api/guides", { method: "POST", body: guides });
-         toast("Đã lưu thứ tự danh mục thành công!");
-       } catch(e) {}
-     }
-   });
- }
+  if (typeof Sortable !== "undefined") {
+    new Sortable(container, {
+      handle: ".grip-cat",
+      animation: 150,
+      onEnd: async () => {
+        const ids = [...container.querySelectorAll(".cms-cat-box")].map(el => el.dataset.tabid);
+        guides._tabs.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
+        try {
+          await aj("/api/guides", { method: "POST", body: guides });
+          toast("Đã lưu thứ tự danh mục thành công!");
+        } catch (e) {}
+      }
+    });
+  }
 }
 // ===================== CÀI ĐẶT =====================
 function prepareCmsDbSync() {
@@ -4339,7 +6001,7 @@ const saveCmsDb = async () => {
   const res = await aj("/api/cms", { method: "POST", body: cmsDb });
   try {
     broadcastAdminSync('cms_update', { ts: Date.now() });
-  } catch(e) {}
+  } catch (e) {}
   return res;
 };
 // Điều hướng 2 sub-tab bên trong Tab Kiểm tra (Kiểm tra bù link vs Rà quét & Map lại)
@@ -4371,24 +6033,31 @@ function switchCheckSubTab(tab, fromHistory = false) {
 window.switchCheckSubTab = switchCheckSubTab;
 
 // Điều hướng đúng chuẩn 5 Sub-tab trong Cài đặt - Khớp 100% ID HTML, triệt tiêu lỗi TypeError classList of null
-function switchSettingsTab(t){
- try { localStorage.setItem(SITE_KEY + "_subTab_t-settings", t); } catch(e) {}
- const tabs = ["webadmin", "setweb", "log", "dev", "time"];
- tabs.forEach(x => {
-   const view = $("settings-view-" + x);
-   const btn = $("stab-" + x);
-   if (view) view.classList.toggle("hidden", x !== t);
-   if (btn) btn.classList.toggle("active", x === t);
- });
- if (t === "webadmin") loadWebAdminUI();
- if (t === "setweb") loadSettingsUI();
- if (t === "log") loadLogs();
- if (t === "dev") renderDev();
- if (t === "time") paintTimeUI();
+function switchSettingsTab(t) {
+  try {
+    localStorage.setItem(SITE_KEY + "_subTab_t-settings", t);
+  } catch (e) {}
+  const tabs = ["webadmin", "setweb", "log", "dev", "time"];
+  tabs.forEach(x => {
+    const view = $("settings-view-" + x);
+    const btn = $("stab-" + x);
+    if (view) view.classList.toggle("hidden", x !== t);
+    if (btn) btn.classList.toggle("active", x === t);
+  });
+  if (t === "webadmin") loadWebAdminUI();
+  if (t === "setweb") loadSettingsUI();
+  if (t === "log") loadLogs();
+  if (t === "dev") renderDev();
+  if (t === "time") paintTimeUI();
 }
-function showCronLog(){switchSettingsTab("log");$("logSrc").value="cron";$("logLvl").value="";loadLogs();}
+function showCronLog() {
+  switchSettingsTab("log");
+  $("logSrc").value = "cron";
+  $("logLvl").value = "";
+  loadLogs();
+}
 // Khối 1: Render & Lưu Định tuyến Gốc (Chỉ phục vụ gán ô dán link)
-function renderRouteRows(){
+function renderRouteRows() {
   const s = cmsDb.settings;
   $("routeRows").innerHTML = [1, 2, 3].map(i => `
     <div class="bg-slate-50 border border-slate-200 p-2 rounded-xl">
@@ -4398,15 +6067,17 @@ function renderRouteRows(){
   `).join("");
 }
 
-async function saveRouting(){
+async function saveRouting() {
   const s = cmsDb.settings;
-  [1, 2, 3].forEach(i => { s["routeWeb" + i] = $("routeWeb" + i).value.trim(); });
+  [1, 2, 3].forEach(i => {
+    s["routeWeb" + i] = $("routeWeb" + i).value.trim();
+  });
   try {
     await saveCmsDb();
     toast("Đã lưu Định tuyến Gốc");
     logEvent("ok", "Lưu cấu hình", "Định tuyến Gốc");
     renderRouteRows();
-  } catch(e) {
+  } catch (e) {
     toast("Lỗi lưu: " + e.message, "err");
   }
 }
@@ -4431,7 +6102,7 @@ function checkBlurValidity(i) {
   }
 }
 
-function renderBlurRows(){
+function renderBlurRows() {
   const s = cmsDb.settings;
   $("blurRows").innerHTML = [1, 2, 3].map(i => `
     <div class="flex items-center justify-between bg-purple-50/50 border border-purple-100 p-2.5 rounded-xl">
@@ -4454,7 +6125,7 @@ function renderBlurRows(){
   [1, 2, 3].forEach(checkBlurValidity);
 }
 
-async function saveBlur(){
+async function saveBlur() {
   const s = cmsDb.settings;
   [1, 2, 3].forEach(i => {
     s["blurRoute" + i] = $("blurRoute" + i).value.trim();
@@ -4467,29 +6138,84 @@ async function saveBlur(){
     logEvent("ok", "Lưu cấu hình", "Làm mờ Blur cục bộ");
     renderBlurRows();
     renderOrd();
-  } catch(e) {
+  } catch (e) {
     toast("Lỗi lưu: " + e.message, "err");
   }
 }
 // Đã loại bỏ hoàn toàn các hàm đồng bộ Worker Vệ Tinh (Hệ thống chạy độc lập 100% qua Supabase)
 // Icon Dock: KHÔNG dùng FontAwesome, KHÔNG màu nền. Icon mặc định chỉ hiện trạng thái; icon tùy chỉnh = tên + URL ảnh (preview ngay) [+ link mở khi bấm, tùy chọn]
-function renderDockRows(){
- const list=arr(cmsDb.settings.dock);
- $("dockRows").innerHTML=`<div class="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-2.5"><div class="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-300"><i class="fas fa-layer-group"></i></div><div class="min-w-0"><div class="text-xs font-bold text-slate-700">Icon mặc định của Trang chủ</div><div class="text-[10px] text-emerald-600 font-bold">Đang bật — dùng danh sách có sẵn, không cần URL</div></div></div>`+
- (list.map((it,i)=>{const legacy=!it.img&&it.icon;return `<div class="flex items-center gap-2 border ${legacy?"border-amber-300 bg-amber-50":"border-slate-200 bg-white"} rounded-xl p-2"><div class="w-10 h-10 shrink-0 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center"><img id="dockPv_${i}" src="${esc(it.img||"")}" class="w-full h-full object-contain ${it.img?"":"hidden"}" onerror="this.classList.add('hidden')" onload="this.classList.remove('hidden')"></div><div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5 flex-1 min-w-0"><input id="dockName_${i}" type="text" value="${esc(it.name||"")}" placeholder="Tên icon" class="p-1.5 border border-slate-200 rounded-lg text-[11px] bg-white outline-none"><input id="dockImg_${i}" type="text" value="${esc(it.img||"")}" oninput="dockPv(${i},this.value)" placeholder="URL ảnh icon https://..." class="p-1.5 border border-slate-200 rounded-lg text-[11px] font-mono bg-white outline-none"><input id="dockUrl_${i}" type="text" value="${esc(it.url||"")}" placeholder="Link mở khi bấm (tùy chọn)" class="p-1.5 border border-slate-200 rounded-lg text-[11px] font-mono bg-white outline-none"></div><button onclick="removeDockIcon(${i})" class="shrink-0 bg-red-50 text-red-500 rounded-lg p-2 hover:bg-red-500 hover:text-white"><i class="fas fa-trash text-[11px]"></i></button>${legacy?'<div class="text-[9px] text-amber-700 font-bold w-full">Icon kiểu cũ (FontAwesome) — nhập URL ảnh mới, nếu không sẽ bị bỏ khi lưu</div>':""}</div>`;}).join(""));}
-function dockPv(i,v){const im=$("dockPv_"+i);if(!im)return;im.classList.add("hidden");im.src=/^https?:\/\//i.test(v)?v:"";}
-function readDockRows(){const a=arr(cmsDb.settings.dock);a.forEach((it,i)=>{if($("dockImg_"+i)){it.name=$("dockName_"+i).value.trim();it.img=$("dockImg_"+i).value.trim();it.url=$("dockUrl_"+i).value.trim();delete it.icon;delete it.bg;}});return a;}
-function addDockIcon(){const a=readDockRows();a.push({name:"",img:"",url:""});cmsDb.settings.dock=a;renderDockRows();}
-function removeDockIcon(i){const a=readDockRows();a.splice(i,1);cmsDb.settings.dock=a;renderDockRows();}
-async function saveDock(){const a=readDockRows().filter(it=>/^https?:\/\//i.test(it.img||""));cmsDb.settings.dock=a;try{await saveCmsDb();toast("Đã lưu Icon Dock ("+a.length+" icon tùy chỉnh)");logEvent("ok","Lưu cấu hình","Icon Dock");renderDockRows();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
+function renderDockRows() {
+  const list = arr(cmsDb.settings.dock);
+  $("dockRows").innerHTML = `<div class="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-2.5"><div class="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-300"><i class="fas fa-layer-group"></i></div><div class="min-w-0"><div class="text-xs font-bold text-slate-700">Icon mặc định của Trang chủ</div><div class="text-[10px] text-emerald-600 font-bold">Đang bật — dùng danh sách có sẵn, không cần URL</div></div></div>` + (list.map((it, i) => {
+    const legacy = !it.img && it.icon;
+    return `<div class="flex items-center gap-2 border ${legacy?"border-amber-300 bg-amber-50":"border-slate-200 bg-white"} rounded-xl p-2"><div class="w-10 h-10 shrink-0 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center"><img id="dockPv_${i}" src="${esc(it.img||"")}" class="w-full h-full object-contain ${it.img?"":"hidden"}" onerror="this.classList.add('hidden')" onload="this.classList.remove('hidden')"></div><div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5 flex-1 min-w-0"><input id="dockName_${i}" type="text" value="${esc(it.name||"")}" placeholder="Tên icon" class="p-1.5 border border-slate-200 rounded-lg text-[11px] bg-white outline-none"><input id="dockImg_${i}" type="text" value="${esc(it.img||"")}" oninput="dockPv(${i},this.value)" placeholder="URL ảnh icon https://..." class="p-1.5 border border-slate-200 rounded-lg text-[11px] font-mono bg-white outline-none"><input id="dockUrl_${i}" type="text" value="${esc(it.url||"")}" placeholder="Link mở khi bấm (tùy chọn)" class="p-1.5 border border-slate-200 rounded-lg text-[11px] font-mono bg-white outline-none"></div><button onclick="removeDockIcon(${i})" class="shrink-0 bg-red-50 text-red-500 rounded-lg p-2 hover:bg-red-500 hover:text-white"><i class="fas fa-trash text-[11px]"></i></button>${legacy?'<div class="text-[9px] text-amber-700 font-bold w-full">Icon kiểu cũ (FontAwesome) — nhập URL ảnh mới, nếu không sẽ bị bỏ khi lưu</div>':""}</div>`;
+  }).join(""));
+}
+function dockPv(i, v) {
+  const im = $("dockPv_" + i);
+  if (!im) return;
+  im.classList.add("hidden");
+  im.src = /^https?:\/\//i.test(v) ? v : "";
+}
+function readDockRows() {
+  const a = arr(cmsDb.settings.dock);
+  a.forEach((it, i) => {
+    if ($("dockImg_" + i)) {
+      it.name = $("dockName_" + i).value.trim();
+      it.img = $("dockImg_" + i).value.trim();
+      it.url = $("dockUrl_" + i).value.trim();
+      delete it.icon;
+      delete it.bg;
+    }
+  });
+  return a;
+}
+function addDockIcon() {
+  const a = readDockRows();
+  a.push({ name: "", img: "", url: "" });
+  cmsDb.settings.dock = a;
+  renderDockRows();
+}
+function removeDockIcon(i) {
+  const a = readDockRows();
+  a.splice(i, 1);
+  cmsDb.settings.dock = a;
+  renderDockRows();
+}
+async function saveDock() {
+  const a = readDockRows().filter(it => /^https?:\/\//i.test(it.img || ""));
+  cmsDb.settings.dock = a;
+  try {
+    await saveCmsDb();
+    toast("Đã lưu Icon Dock (" + a.length + " icon tùy chỉnh)");
+    logEvent("ok", "Lưu cấu hình", "Icon Dock");
+    renderDockRows();
+  } catch (e) {
+    toast("Lỗi lưu: " + e.message, "err");
+  }
+}
 // ===================== LOGIC QUẢN LÝ FAQ =====================
-const DEFAULT_FAQS = [
-  { id: "faq_1", q: "Làm sao lấy Link cài đặt?", a: "Nhập Mã Đơn hoặc Email vào thanh tìm kiếm trên cùng." },
-  { id: "faq_2", q: "VPN hỗ trợ những app nào?", a: "TikTok, Facebook, Messenger, Instagram, Telegram, Zalo, YouTube... Nhắn Admin để test." },
-  { id: "faq_3", q: "Có những phương thức thanh toán nào?", a: "Ngân hàng VN (VietQR), Alipay, Weixin." },
-  { id: "faq_4", q: "Đổi máy có dùng tiếp được không?", a: "Có. Tra cứu lại Mã Đơn trên web." },
-  { id: "refund", q: "Hoàn tiền", a: "Website không áp dụng hoàn tiền cho đơn hàng đã mua, khách hàng vui lòng chú ý và cân nhắc khi thanh toán." }
-];
+const DEFAULT_FAQS = [{
+  id: "faq_1",
+  q: "Làm sao lấy Link cài đặt?",
+  a: "Nhập Mã Đơn hoặc Email vào thanh tìm kiếm trên cùng."
+}, {
+  id: "faq_2",
+  q: "VPN hỗ trợ những app nào?",
+  a: "TikTok, Facebook, Messenger, Instagram, Telegram, Zalo, YouTube... Nhắn Admin để test."
+}, {
+  id: "faq_3",
+  q: "Có những phương thức thanh toán nào?",
+  a: "Ngân hàng VN (VietQR), Alipay, Weixin."
+}, {
+  id: "faq_4",
+  q: "Đổi máy có dùng tiếp được không?",
+  a: "Có. Tra cứu lại Mã Đơn trên web."
+}, {
+  id: "refund",
+  q: "Hoàn tiền",
+  a: "Website không áp dụng hoàn tiền cho đơn hàng đã mua, khách hàng vui lòng chú ý và cân nhắc khi thanh toán."
+}];
 
 let adminFaqsList = [];
 
@@ -4571,7 +6297,7 @@ async function saveFaqs() {
     await saveCmsDb();
     toast(`Đã lưu ${adminFaqsList.length} câu hỏi FAQ và đồng bộ sang Trang chủ thành công!`);
     logEvent("ok", "FAQ", `Lưu ${adminFaqsList.length} câu hỏi`);
-  } catch(e) {
+  } catch (e) {
     toast("Lỗi lưu FAQ: " + e.message, "err");
   }
 }
@@ -4585,7 +6311,7 @@ window.saveFaqs = saveFaqs;
 window.delFaq = delFaq;
 window.moveFaq = moveFaq;
 
-function switchFaqSubTab(tab, fromHistory = false){
+function switchFaqSubTab(tab, fromHistory = false) {
   const pFaq = $("subpane-faq") || $("pane-faq-list");
   const pFooter = $("subpane-footer") || $("pane-footer-cfg");
   if (pFaq) pFaq.classList.toggle("hidden", tab !== "faq");
@@ -4645,17 +6371,22 @@ async function saveRoutesConfig() {
     await saveCmsDb();
     toast("Đã lưu Cấu hình Đường dẫn Hệ thống thành công!");
     logEvent("ok", "Routes", `Cấu hình routes: ${o}, ${p}, ${g}, ${pol}`);
-  } catch(e) {
+  } catch (e) {
     toast("Lỗi lưu routes: " + e.message, "err");
   }
 }
 
 let ftCols = [];
-const FT_TEMPLATE = [
-  { title: "Dịch vụ", links: [{ title: "Bảng giá gói cước", url: "/portal/packages" }, { title: "Tra cứu đơn hàng", url: "/portal/order" }, { title: "Kiểm tra dung lượng", url: "/portal/order" }] },
-  { title: "Hướng dẫn", links: [{ title: "Cài đặt Android", url: "/portal/guide" }, { title: "Cài đặt iOS (iPhone/iPad)", url: "/portal/guide" }, { title: "Cài đặt Windows", url: "/portal/guide" }, { title: "Cài đặt MacOS", url: "/portal/guide" }] },
-  { title: "Pháp lý", links: [{ title: "Chính sách sử dụng", url: "/policy/terms" }, { title: "Miễn trừ trách nhiệm", url: "/policy/disclaimer" }, { title: "Quy định hoàn tiền", url: "/policy/refund" }] }
-];
+const FT_TEMPLATE = [{
+  title: "Dịch vụ",
+  links: [{ title: "Bảng giá gói cước", url: "/portal/packages" }, { title: "Tra cứu đơn hàng", url: "/portal/order" }, { title: "Kiểm tra dung lượng", url: "/portal/order" }]
+}, {
+  title: "Hướng dẫn",
+  links: [{ title: "Cài đặt Android", url: "/portal/guide" }, { title: "Cài đặt iOS (iPhone/iPad)", url: "/portal/guide" }, { title: "Cài đặt Windows", url: "/portal/guide" }, { title: "Cài đặt MacOS", url: "/portal/guide" }]
+}, {
+  title: "Pháp lý",
+  links: [{ title: "Chính sách sử dụng", url: "/policy/terms" }, { title: "Miễn trừ trách nhiệm", url: "/policy/disclaimer" }, { title: "Quy định hoàn tiền", url: "/policy/refund" }]
+}];
 const ftClone = (x) => JSON.parse(JSON.stringify(x));
 function ftColsFromDb(ft) {
   if (Array.isArray(ft.columns) && ft.columns.length) return ftClone(ft.columns);
@@ -4665,7 +6396,8 @@ function ftColsFromDb(ft) {
 }
 
 function renderFtCols() {
-  const w = $("footerColsWrap") || $("ftColsWrap"); if (!w) return;
+  const w = $("footerColsWrap") || $("ftColsWrap");
+  if (!w) return;
   w.innerHTML = ftCols.map((c, ci) => `
    <div data-col-idx="${ci}" class="ft-col-item border-2 border-slate-200 rounded-2xl p-3.5 bg-slate-50/70 space-y-3 transition hover:border-indigo-300">
     <div class="flex items-center gap-1.5 pb-2 border-b border-slate-200">
@@ -4721,43 +6453,69 @@ window.ftMoveCol = ftMoveCol;
 window.ftAddLink = ftAddLink;
 window.ftDelLink = ftDelLink;
 window.saveFooterConfig = saveFooterConfig;
-function ftAddCol() { ftCols.push({ title: "Cột mới", links: [] }); renderFtCols(); }
-function ftDelCol(ci) { if (!confirm("Xóa cả cột này và mọi link trong cột?")) return; ftCols.splice(ci, 1); renderFtCols(); }
-function ftMoveCol(ci, d) { const j = ci + d; if (j < 0 || j >= ftCols.length) return; const [x] = ftCols.splice(ci, 1); ftCols.splice(j, 0, x); renderFtCols(); }
-function ftAddLink(ci) { (ftCols[ci].links = ftCols[ci].links || []).push({ title: "Liên kết mới", url: "/portal/guide" }); renderFtCols(); }
-function ftDelLink(ci, li) { ftCols[ci].links.splice(li, 1); renderFtCols(); }
+function ftAddCol() {
+  ftCols.push({ title: "Cột mới", links: [] });
+  renderFtCols();
+}
+function ftDelCol(ci) {
+  if (!confirm("Xóa cả cột này và mọi link trong cột?")) return;
+  ftCols.splice(ci, 1);
+  renderFtCols();
+}
+function ftMoveCol(ci, d) {
+  const j = ci + d;
+  if (j < 0 || j >= ftCols.length) return;
+  const [x] = ftCols.splice(ci, 1);
+  ftCols.splice(j, 0, x);
+  renderFtCols();
+}
+function ftAddLink(ci) {
+  (ftCols[ci].links = ftCols[ci].links || []).push({ title: "Liên kết mới", url: "/portal/guide" });
+  renderFtCols();
+}
+function ftDelLink(ci, li) {
+  ftCols[ci].links.splice(li, 1);
+  renderFtCols();
+}
 function ftLoadTemplate() {
   if (ftCols.length && !confirm("Thay toàn bộ cột hiện tại bằng mẫu gợi ý? (chưa lưu cho tới khi bấm LƯU)")) return;
-  ftCols = ftClone(FT_TEMPLATE); renderFtCols();
+  ftCols = ftClone(FT_TEMPLATE);
+  renderFtCols();
 }
 
-function loadFooterConfigUI(){
+function loadFooterConfigUI() {
   loadRoutesConfigUI();
   const ft = cmsDb.footer || {};
   const b = ft.backups || [];
-  for(let i=1; i<=3; i++){
-    const item = b[i-1] || {};
-    if($("ftBackupName"+i)) $("ftBackupName"+i).value = item.name || "";
-    if($("ftBackupUrl"+i)) $("ftBackupUrl"+i).value = item.url || "";
+  for (let i = 1; i <= 3; i++) {
+    const item = b[i - 1] || {};
+    if ($("ftBackupName" + i)) $("ftBackupName" + i).value = item.name || "";
+    if ($("ftBackupUrl" + i)) $("ftBackupUrl" + i).value = item.url || "";
   }
-  if($("ftTermsText")) $("ftTermsText").value = ft.terms || "";
-  if($("ftDisclaimerText")) $("ftDisclaimerText").value = ft.disclaimer || "";
-  if($("ftRefundText")) $("ftRefundText").value = ft.refund || "";
+  if ($("ftTermsText")) $("ftTermsText").value = ft.terms || "";
+  if ($("ftDisclaimerText")) $("ftDisclaimerText").value = ft.disclaimer || "";
+  if ($("ftRefundText")) $("ftRefundText").value = ft.refund || "";
   ftCols = ftColsFromDb(ft);
   renderFtCols();
 }
 
-async function saveFooterConfig(){
+async function saveFooterConfig() {
   await saveRoutesConfig();
   const backups = [];
-  for(let i=1; i<=3; i++){
-    const name = ($("ftBackupName"+i)?.value || "").trim();
-    const url = ($("ftBackupUrl"+i)?.value || "").trim();
-    if(name || url) backups.push({ name: name || `Web ${i}`, url: url || "#" });
+  for (let i = 1; i <= 3; i++) {
+    const name = ($("ftBackupName" + i)?.value || "").trim();
+    const url = ($("ftBackupUrl" + i)?.value || "").trim();
+    if (name || url) backups.push({ name: name || `Web ${i}`, url: url || "#" });
   }
   cmsDb.footer = {
     backups,
-    columns: ftCols.map(c => ({ title: (c.title || "").trim(), links: (c.links || []).filter(l => (l.title || "").trim()).map(l => ({ title: l.title.trim(), url: (l.url || "").trim() || "#" })) })),
+    columns: ftCols.map(c => ({
+      title: (c.title || "").trim(),
+      links: (c.links || []).filter(l => (l.title || "").trim()).map(l => ({
+        title: l.title.trim(),
+        url: (l.url || "").trim() || "#"
+      }))
+    })),
     terms: ($("ftTermsText")?.value || "").trim(),
     disclaimer: ($("ftDisclaimerText")?.value || "").trim(),
     refund: ($("ftRefundText")?.value || "").trim()
@@ -4766,41 +6524,41 @@ async function saveFooterConfig(){
     await saveCmsDb();
     toast("Đã lưu toàn bộ cấu hình Footer & Đường dẫn thành công!");
     logEvent("ok", "Footer", "Lưu cấu hình Footer & Routes");
-  } catch(e) {
+  } catch (e) {
     toast("Lỗi lưu footer: " + e.message, "err");
   }
 }
-async function saveQrExpireSeconds(){
- const val = Math.max(5, Math.min(3600, parseInt($("qrExpireSecondsInp")?.value) || 30));
- cmsDb.settings = cmsDb.settings || {};
- cmsDb.settings.qrExpireSeconds = val;
- if($("qrExpireSecondsInp")) $("qrExpireSecondsInp").value = val;
- try {
-   await saveCmsDb();
-   toast(`Đã lưu thời gian tự hủy mã QR: ${val} giây!`);
-   logEvent("ok", "Lưu cấu hình", `Thời gian tự hủy QR: ${val}s`);
- } catch(e) {
-   toast("Lỗi lưu thời gian QR: " + e.message, "err");
- }
+async function saveQrExpireSeconds() {
+  const val = Math.max(5, Math.min(3600, parseInt($("qrExpireSecondsInp")?.value) || 30));
+  cmsDb.settings = cmsDb.settings || {};
+  cmsDb.settings.qrExpireSeconds = val;
+  if ($("qrExpireSecondsInp")) $("qrExpireSecondsInp").value = val;
+  try {
+    await saveCmsDb();
+    toast(`Đã lưu thời gian tự hủy mã QR: ${val} giây!`);
+    logEvent("ok", "Lưu cấu hình", `Thời gian tự hủy QR: ${val}s`);
+  } catch (e) {
+    toast("Lỗi lưu thời gian QR: " + e.message, "err");
+  }
 }
-function switchWebAdminTab(tab, fromHistory = false){
+function switchWebAdminTab(tab, fromHistory = false) {
   $("wpane-ui").classList.toggle("hidden", tab !== "ui");
   $("wpane-footer").classList.toggle("hidden", tab !== "footer");
   $("wtab-ui").classList.toggle("active", tab === "ui");
   $("wtab-footer").classList.toggle("active", tab === "footer");
-  if(tab === "footer") {
+  if (tab === "footer") {
     renderFaqAdmin();
     loadFooterConfigUI();
   }
-  if(!fromHistory && typeof recordAdminNav === "function") {
+  if (!fromHistory && typeof recordAdminNav === "function") {
     recordAdminNav({ tab: 't-settings', settingsSub: 'webadmin', webSub: tab });
   }
 }
 window.switchWebAdminTab = switchWebAdminTab;
 
-function loadWebAdminUI(){
+function loadWebAdminUI() {
   loadDrawerSettingsUI();
-  if($("qrExpireSecondsInp")) $("qrExpireSecondsInp").value = Number((cmsDb.settings||{}).qrExpireSeconds) || 30;
+  if ($("qrExpireSecondsInp")) $("qrExpireSecondsInp").value = Number((cmsDb.settings || {}).qrExpireSeconds) || 30;
   renderBlurRows();
   renderRouteRows();
   renderDockRows();
@@ -4808,108 +6566,217 @@ function loadWebAdminUI(){
   loadFooterConfigUI();
 }
 
-function loadSettingsUI(){
- const s=cmsDb.settings;renderRouteRows();renderBlurRows();renderDockRows();renderMailProvCards();renderFaqAdmin();loadFooterConfigUI();
- if($("qrExpireSecondsInp")) $("qrExpireSecondsInp").value = Number(s.qrExpireSeconds) || 30;
- const rr=document.querySelector(`input[name=emailRoleRad][value=${s.emailRole==="master"?"master":"slave"}]`);if(rr)rr.checked=true;
- if($("toggleAutoMail")) $("toggleAutoMail").checked=!!s.autoMailEnabled;
- if($("toggleAutoMigrate")) $("toggleAutoMigrate").checked=s.autoMigrateNode!==false;
- if($("toggleLockExpiry")) $("toggleLockExpiry").checked=!!s.lockExpiry;
- updateOrderTogglesUI();
- paintTimeUI();
- initAdminNotifyUI();}
-async function saveEmailPerm(){
- const s=cmsDb.settings;s.emailRole=document.querySelector("input[name=emailRoleRad]:checked")?.value||"slave";s.autoMailEnabled=$("toggleAutoMail").checked;
- if(s.autoMailEnabled&&s.emailRole!=="master"){s.autoMailEnabled=false;$("toggleAutoMail").checked=false;toast("Slave không gửi mail — đã tắt Auto Mail","warn");}
- try{await saveCmsDb();const be=await aj("/api/cms"),bs=(be&&be.settings)||{};
-  if(bs.emailRole!==s.emailRole||!!bs.autoMailEnabled!==!!s.autoMailEnabled)toast("Backend chưa nhận đúng cấu hình — thử lưu lại","err");else toast("Đã lưu — Worker xác nhận: "+(s.emailRole==="master"?"Master":"Slave"));
-  logEvent("ok","Lưu cấu hình","Quyền Email: "+s.emailRole+" · auto nhắc hạn "+(s.autoMailEnabled?"bật":"tắt"));loadStatus();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
+function loadSettingsUI() {
+  const s = cmsDb.settings;
+  renderRouteRows();
+  renderBlurRows();
+  renderDockRows();
+  renderMailProvCards();
+  renderFaqAdmin();
+  loadFooterConfigUI();
+  if ($("qrExpireSecondsInp")) $("qrExpireSecondsInp").value = Number(s.qrExpireSeconds) || 30;
+  const rr = document.querySelector(`input[name=emailRoleRad][value=${s.emailRole==="master"?"master":"slave"}]`);
+  if (rr) rr.checked = true;
+  if ($("toggleAutoMail")) $("toggleAutoMail").checked = !!s.autoMailEnabled;
+  if ($("toggleAutoMigrate")) $("toggleAutoMigrate").checked = s.autoMigrateNode !== false;
+  if ($("toggleLockExpiry")) $("toggleLockExpiry").checked = !!s.lockExpiry;
+  updateOrderTogglesUI();
+  paintTimeUI();
+  initAdminNotifyUI();
+}
+async function saveEmailPerm() {
+  const s = cmsDb.settings;
+  s.emailRole = document.querySelector("input[name=emailRoleRad]:checked")?.value || "slave";
+  s.autoMailEnabled = $("toggleAutoMail").checked;
+  if (s.autoMailEnabled && s.emailRole !== "master") {
+    s.autoMailEnabled = false;
+    $("toggleAutoMail").checked = false;
+    toast("Slave không gửi mail — đã tắt Auto Mail", "warn");
+  }
+  try {
+    await saveCmsDb();
+    const be = await aj("/api/cms"), bs = (be && be.settings) || {};
+    if (bs.emailRole !== s.emailRole || !!bs.autoMailEnabled !== !!s.autoMailEnabled) toast("Backend chưa nhận đúng cấu hình — thử lưu lại", "err");
+    else toast("Đã lưu — Worker xác nhận: " + (s.emailRole === "master" ? "Master" : "Slave"));
+    logEvent("ok", "Lưu cấu hình", "Quyền Email: " + s.emailRole + " · auto nhắc hạn " + (s.autoMailEnabled ? "bật" : "tắt"));
+    loadStatus();
+  } catch (e) {
+    toast("Lỗi lưu: " + e.message, "err");
+  }
+}
 
 // ===================== THÔNG BÁO MAIL ADMIN TỪ INDEX =====================
-function initAdminNotifyUI(){
- const s=(cmsDb&&cmsDb.settings)||{};
- const role=s.adminNotifyRole||"master";
- const rr=document.querySelector(`input[name=adminNotifyRoleRad][value=${role==="slave"?"slave":"master"}]`);
- if(rr)rr.checked=true;
- const ev=s.adminNotifyEvents||{new:true,renew:true,upgrade:true,data:true};
- ["new","renew","upgrade","data"].forEach(k=>{
-  const el=$("an-"+k);
-  if(el)el.checked=(ev[k]!==false);
- });
- updateAdminNotifyStatusUI();
-}
-
-function updateAdminNotifyStatusUI(){
- const role=document.querySelector("input[name=adminNotifyRoleRad]:checked")?.value||"master";
- const badge=$("adminNotifyRoleBadge");
- const be=$("beAdminNotify");
- const wrap=$("adminNotifyCheckboxes");
- if(role==="master"){
-  if(badge){badge.textContent="Master";badge.className="text-[10px] px-2 py-0.5 rounded font-black bg-indigo-50 text-indigo-600";}
-  if(wrap)wrap.style.opacity="0.5";
-  if(be)be.innerHTML='<i class="fas fa-server mr-1"></i>Backend đang áp dụng: <b>Master</b> (Báo tất cả: Đơn mới, Gia hạn, Nâng gói, Tra cứu)';
- }else{
-  if(badge){badge.textContent="Slave";badge.className="text-[10px] px-2 py-0.5 rounded font-black bg-amber-50 text-amber-700";}
-  if(wrap)wrap.style.opacity="1";
-  const ev=["new","renew","upgrade","data"].filter(k=>$(`an-${k}`)?.checked);
-  const evNames={new:"Đơn mới",renew:"Gia hạn",upgrade:"Nâng gói",data:"Tra cứu"};
-  const listTxt=ev.length?ev.map(k=>evNames[k]).join(", "):"Tắt sạch (Không báo gì)";
-  if(be)be.innerHTML=`<i class="fas fa-server mr-1"></i>Backend đang áp dụng: <b>Slave</b> · Chỉ báo: <b class="text-indigo-600">${listTxt}</b>`;
- }
-}
-
-async function saveAdminNotifyPerm(){
- const role=document.querySelector("input[name=adminNotifyRoleRad]:checked")?.value||"master";
- const events={
-  new:!!$("an-new")?.checked,
-  renew:!!$("an-renew")?.checked,
-  upgrade:!!$("an-upgrade")?.checked,
-  data:!!$("an-data")?.checked
- };
- cmsDb.settings=cmsDb.settings||{};
- cmsDb.settings.adminNotifyRole=role;
- cmsDb.settings.adminNotifyEvents=events;
- try{
-  await saveCmsDb();
+function initAdminNotifyUI() {
+  const s = (cmsDb && cmsDb.settings) || {};
+  const role = s.adminNotifyRole || "master";
+  const rr = document.querySelector(`input[name=adminNotifyRoleRad][value=${role==="slave"?"slave":"master"}]`);
+  if (rr) rr.checked = true;
+  const ev = s.adminNotifyEvents || { new: true, renew: true, upgrade: true, data: true };
+  ["new", "renew", "upgrade", "data"].forEach(k => {
+    const el = $("an-" + k);
+    if (el) el.checked = (ev[k] !== false);
+  });
   updateAdminNotifyStatusUI();
-  toast("Đã lưu cấu hình Báo Mail Admin: "+(role==="master"?"Master":"Slave"));
-  logEvent("ok","Lưu cấu hình",`Báo Mail Admin: ${role.toUpperCase()}`);
- }catch(e){
-  toast("Lỗi lưu: "+e.message,"err");
- }
 }
-async function saveCronCfg(){cmsDb.settings.autoMigrateNode=$("toggleAutoMigrate").checked;try{await saveCmsDb();toast("Đã lưu cấu hình Cron");logEvent("ok","Lưu cấu hình","Auto Migrate "+(cmsDb.settings.autoMigrateNode?"bật":"tắt"));loadStatus();}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
-async function saveLockExpiry(){cmsDb.settings.lockExpiry=$("toggleLockExpiry").checked;try{await saveCmsDb();toast(cmsDb.settings.lockExpiry?"Đã BẬT khóa thông tin hết hạn (expDate & days không đổi)":"Đã tắt khóa thông tin hết hạn");logEvent("warn","Khóa hạn",cmsDb.settings.lockExpiry?"Bật":"Tắt");}catch(e){toast("Lỗi lưu: "+e.message,"err");}}
-async function runCronNow(){toast("Đang chạy Cron...");const s=cmsDb.settings||{};try{const j=await aj("/api/admin/cron",{method:"POST",body:{force:true,simMode:!!s.simMode,simOffset:Number(s.simOffset)||0}});const d=j.details||{};toast(`Xong: khóa ${d.locked||0} · luân chuyển ${d.migrated||0} · xóa node ${d.delNodes||0} · mail ${d.mails||0}`);loadStatus();fetchAll();}catch(e){toast("Lỗi: "+e.message,"err");}}
-const yn=(v,okTxt,noTxt)=>v?`<b class="text-emerald-700">${okTxt}</b>`:`<b class="text-red-600">${noTxt}</b>`;
-async function loadStatus(){
- let j;try{j=await aj("/api/admin/status");}catch(e){return;}
- if(j.web){myWebIndex=j.web;if(PDS[j.web])PD=PDS[j.web];}
- let bs={};try{const be=await aj("/api/cms");bs=(be&&be.settings)||{};}catch(e){}
- const c=j.cron,age=c?nowMs()-c.ts:null,ok=c&&age<90*60000,cb=$("cronBox"),sb=$("statusBox");
- if(cb){cb.className="text-xs rounded-xl border p-3 space-y-1 "+(ok?"bg-emerald-50 border-emerald-200 text-emerald-800":"bg-red-50 border-red-200 text-red-700");
-  cb.innerHTML=c?`<div><i class="fas ${ok?"fa-circle-check":"fa-triangle-exclamation"} mr-1"></i><b>Lần chạy cuối:</b> ${fmtBank(c.ts)} (${Math.round(age/60000)} phút trước)${c.sim?" · GIỜ TÙY CHỈNH":""}</div><div class="grid grid-cols-2 gap-x-3"><div>Khóa link: <b>${c.locked||0}</b></div><div>Luân chuyển node: <b>${c.migrated||0}</b></div><div>Xóa node rỗng: <b>${c.delNodes||0}</b></div><div>Mail nhắc hạn: <b>${c.mails||0}</b></div><div>Dọn "Đã xóa": <b>${c.deadDel||0}</b></div><div>Thử lại D1: <b>${c.d1Retry||0}</b></div></div><div>Auto Migrate (backend): ${yn(bs.autoMigrateNode!==false,"BẬT","TẮT")} · chu kỳ 15 phút</div>`:`<div><i class="fas fa-triangle-exclamation mr-1"></i><b>Cron CHƯA từng chạy</b> — kiểm tra Cron Trigger của Worker (*/15 * * * *)</div>`;}
- if(sb){const good=j.d1&&j.hasPassword&&j.hasSecret2;sb.className="text-xs rounded-xl border p-3 space-y-1 "+(good?"bg-emerald-50 border-emerald-200 text-slate-700":"bg-amber-50 border-amber-200 text-slate-700");
-  sb.innerHTML=`<div><i class="fas ${j.d1?"fa-circle-check text-emerald-600":"fa-circle-xmark text-red-600"} mr-1"></i><b>D1:</b> ${j.d1?'<b class="text-emerald-700">Connected</b>':`<b class="text-red-600">Disconnected</b> <span class="text-[10px]">(${esc(j.d1Error||"lỗi")})</span>`}</div><div><b>Web số:</b> ${esc(j.web)}</div><div><b>ADMIN_PASSWORD:</b> ${yn(j.hasPassword,"Có","Không")}</div><div><b>WEB_API_SECRET2:</b> ${yn(j.hasSecret2,"Có","Không")}</div>`;}
- const be=$("beEmail");if(be)be.innerHTML=`<i class="fas fa-server mr-1"></i>Backend đang áp dụng: <b>${bs.emailRole==="master"?"Master (gửi)":"Slave (tắt)"}</b> · nhắc hết hạn tự động: <b>${bs.autoMailEnabled&&bs.emailRole==="master"?"Bật (19:00 VN, D-2 / D-1)":"Tắt"}</b>`;}
+
+function updateAdminNotifyStatusUI() {
+  const role = document.querySelector("input[name=adminNotifyRoleRad]:checked")?.value || "master";
+  const badge = $("adminNotifyRoleBadge");
+  const be = $("beAdminNotify");
+  const wrap = $("adminNotifyCheckboxes");
+  if (role === "master") {
+    if (badge) {
+      badge.textContent = "Master";
+      badge.className = "text-[10px] px-2 py-0.5 rounded font-black bg-indigo-50 text-indigo-600";
+    }
+    if (wrap) wrap.style.opacity = "0.5";
+    if (be) be.innerHTML = '<i class="fas fa-server mr-1"></i>Backend đang áp dụng: <b>Master</b> (Báo tất cả: Đơn mới, Gia hạn, Nâng gói, Tra cứu)';
+  } else {
+    if (badge) {
+      badge.textContent = "Slave";
+      badge.className = "text-[10px] px-2 py-0.5 rounded font-black bg-amber-50 text-amber-700";
+    }
+    if (wrap) wrap.style.opacity = "1";
+    const ev = ["new", "renew", "upgrade", "data"].filter(k => $(`an-${k}`)?.checked);
+    const evNames = {
+      new: "Đơn mới",
+      renew: "Gia hạn",
+      upgrade: "Nâng gói",
+      data: "Tra cứu"
+    };
+    const listTxt = ev.length ? ev.map(k => evNames[k]).join(", ") : "Tắt sạch (Không báo gì)";
+    if (be) be.innerHTML = `<i class="fas fa-server mr-1"></i>Backend đang áp dụng: <b>Slave</b> · Chỉ báo: <b class="text-indigo-600">${listTxt}</b>`;
+  }
+}
+
+async function saveAdminNotifyPerm() {
+  const role = document.querySelector("input[name=adminNotifyRoleRad]:checked")?.value || "master";
+  const events = {
+    new: !!$("an-new")?.checked,
+    renew: !!$("an-renew")?.checked,
+    upgrade: !!$("an-upgrade")?.checked,
+    data: !!$("an-data")?.checked
+  };
+  cmsDb.settings = cmsDb.settings || {};
+  cmsDb.settings.adminNotifyRole = role;
+  cmsDb.settings.adminNotifyEvents = events;
+  try {
+    await saveCmsDb();
+    updateAdminNotifyStatusUI();
+    toast("Đã lưu cấu hình Báo Mail Admin: " + (role === "master" ? "Master" : "Slave"));
+    logEvent("ok", "Lưu cấu hình", `Báo Mail Admin: ${role.toUpperCase()}`);
+  } catch (e) {
+    toast("Lỗi lưu: " + e.message, "err");
+  }
+}
+async function saveCronCfg() {
+  cmsDb.settings.autoMigrateNode = $("toggleAutoMigrate").checked;
+  try {
+    await saveCmsDb();
+    toast("Đã lưu cấu hình Cron");
+    logEvent("ok", "Lưu cấu hình", "Auto Migrate " + (cmsDb.settings.autoMigrateNode ? "bật" : "tắt"));
+    loadStatus();
+  } catch (e) {
+    toast("Lỗi lưu: " + e.message, "err");
+  }
+}
+async function saveLockExpiry() {
+  cmsDb.settings.lockExpiry = $("toggleLockExpiry").checked;
+  try {
+    await saveCmsDb();
+    toast(cmsDb.settings.lockExpiry ? "Đã BẬT khóa thông tin hết hạn (expDate & days không đổi)" : "Đã tắt khóa thông tin hết hạn");
+    logEvent("warn", "Khóa hạn", cmsDb.settings.lockExpiry ? "Bật" : "Tắt");
+  } catch (e) {
+    toast("Lỗi lưu: " + e.message, "err");
+  }
+}
+async function runCronNow() {
+  toast("Đang chạy Cron...");
+  const s = cmsDb.settings || {};
+  try {
+    const j = await aj("/api/admin/cron", {
+      method: "POST",
+      body: {
+        force: true,
+        simMode: !!s.simMode,
+        simOffset: Number(s.simOffset) || 0
+      }
+    });
+    const d = j.details || {};
+    toast(`Xong: khóa ${d.locked||0} · luân chuyển ${d.migrated||0} · xóa node ${d.delNodes||0} · mail ${d.mails||0}`);
+    loadStatus();
+    fetchAll();
+  } catch (e) {
+    toast("Lỗi: " + e.message, "err");
+  }
+}
+const yn = (v, okTxt, noTxt) => v ? `<b class="text-emerald-700">${okTxt}</b>` : `<b class="text-red-600">${noTxt}</b>`;
+async function loadStatus() {
+  let j;
+  try {
+    j = await aj("/api/admin/status");
+  } catch (e) {
+    return;
+  }
+  if (j.web) {
+    myWebIndex = j.web;
+    if (PDS[j.web]) PD = PDS[j.web];
+  }
+  let bs = {};
+  try {
+    const be = await aj("/api/cms");
+    bs = (be && be.settings) || {};
+  } catch (e) {}
+  const c = j.cron, age = c ? nowMs() - c.ts : null, ok = c && age < 90 * 60000, cb = $("cronBox"), sb = $("statusBox");
+  if (cb) {
+    cb.className = "text-xs rounded-xl border p-3 space-y-1 " + (ok ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-red-50 border-red-200 text-red-700");
+    cb.innerHTML = c ? `<div><i class="fas ${ok?"fa-circle-check":"fa-triangle-exclamation"} mr-1"></i><b>Lần chạy cuối:</b> ${fmtBank(c.ts)} (${Math.round(age/60000)} phút trước)${c.sim?" · GIỜ TÙY CHỈNH":""}</div><div class="grid grid-cols-2 gap-x-3"><div>Khóa link: <b>${c.locked||0}</b></div><div>Luân chuyển node: <b>${c.migrated||0}</b></div><div>Xóa node rỗng: <b>${c.delNodes||0}</b></div><div>Mail nhắc hạn: <b>${c.mails||0}</b></div><div>Dọn "Đã xóa": <b>${c.deadDel||0}</b></div><div>Thử lại D1: <b>${c.d1Retry||0}</b></div></div><div>Auto Migrate (backend): ${yn(bs.autoMigrateNode!==false,"BẬT","TẮT")} · chu kỳ 15 phút</div>` : `<div><i class="fas fa-triangle-exclamation mr-1"></i><b>Cron CHƯA từng chạy</b> — kiểm tra Cron Trigger của Worker (*/15 * * * *)</div>`;
+  }
+  if (sb) {
+    const good = j.d1 && j.hasPassword && j.hasSecret2;
+    sb.className = "text-xs rounded-xl border p-3 space-y-1 " + (good ? "bg-emerald-50 border-emerald-200 text-slate-700" : "bg-amber-50 border-amber-200 text-slate-700");
+    sb.innerHTML = `<div><i class="fas ${j.d1?"fa-circle-check text-emerald-600":"fa-circle-xmark text-red-600"} mr-1"></i><b>D1:</b> ${j.d1?'<b class="text-emerald-700">Connected</b>':`<b class="text-red-600">Disconnected</b> <span class="text-[10px]">(${esc(j.d1Error||"lỗi")})</span>`}</div><div><b>Web số:</b> ${esc(j.web)}</div><div><b>ADMIN_PASSWORD:</b> ${yn(j.hasPassword,"Có","Không")}</div><div><b>WEB_API_SECRET2:</b> ${yn(j.hasSecret2,"Có","Không")}</div>`;
+  }
+  const be = $("beEmail");
+  if (be) be.innerHTML = `<i class="fas fa-server mr-1"></i>Backend đang áp dụng: <b>${bs.emailRole==="master"?"Master (gửi)":"Slave (tắt)"}</b> · nhắc hết hạn tự động: <b>${bs.autoMailEnabled&&bs.emailRole==="master"?"Bật (19:00 VN, D-2 / D-1)":"Tắt"}</b>`;
+}
 
 // ---- System Quota: chỉ hiển thị dữ liệu thật do Worker lấy được; nguồn không cung cấp thì báo rõ, không giả số
-const QL={kvW:1000,kvR:100000,kvD:1000,wReq:100000,d1R:5e6,d1W:1e5};
-function qBar(used,total,label,unit,reset){
- const pct=total?Math.min(100,Math.round(used/total*100)):0,rem=Math.max(0,total-used),c=pct>=90?["red","text-red-600","bg-red-500"]:pct>=80?["amber","text-amber-600","bg-amber-500"]:["emerald","text-emerald-600","bg-emerald-500"];
- return `<div><div class="flex justify-between text-[11px] font-bold mb-1"><span class="text-slate-600">${label}</span><span class="${c[1]}">${pct}%</span></div><div class="h-2 bg-slate-100 rounded-full overflow-hidden"><div class="h-full ${c[2]} rounded-full" style="width:${pct}%"></div></div><div class="text-[10px] text-slate-500 mt-1">Đã dùng <b>${Number(used).toLocaleString("en-US")}</b> / ${Number(total).toLocaleString("en-US")} ${unit} · còn <b>${rem.toLocaleString("en-US")}</b>${reset?" · reset sau ~"+reset:""}</div></div>`;}
-const MAIL_PROV_META={
- google:{name:"Google Apps Script",sub:"Gửi qua Gmail — miễn phí",logo:'<svg viewBox="0 0 48 48" class="w-7 h-7 shrink-0"><path fill="#4285F4" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13 17.7 9.5 24 9.5z"/><path fill="#34A853" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.6c-.5 2.9-2.2 5.4-4.6 7l7.4 5.7c4.3-4 6.9-9.9 6.9-17.2z"/><path fill="#FBBC05" d="M10.5 19.3c-.5 1.5-.8 3.1-.8 4.7s.3 3.2.8 4.7l-7.9 6.1C1 31.4 0 27.8 0 24s1-7.4 2.6-10.8z"/><path fill="#EA4335" d="M24 48c6.3 0 11.9-2.1 15.9-5.6l-7.4-5.7c-2.1 1.4-4.9 2.3-8.5 2.3-6.3 0-11.6-3.5-13.5-9.3l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>'},
- brevo:{name:"Brevo",sub:"(Sendinblue) — 300 mail/ngày free",logo:'<img src="https://ps.w.org/mailin/assets/icon-256x256.png" class="w-7 h-7 shrink-0 rounded-lg shadow-sm object-contain bg-white">'},
-sendpulse:{name:"SendPulse",sub:"SMTP theo gói / balance",logo:'<svg viewBox="0 0 32 32" class="w-7 h-7 shrink-0 rounded-lg shadow-sm bg-white p-0.5"><rect width="32" height="32" rx="6" fill="#007CF0"/><path d="M7 16h3.5l2.5-6 4 13 3-9 2 4H25" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'}};
+const QL = {
+  kvW: 1000,
+  kvR: 100000,
+  kvD: 1000,
+  wReq: 100000,
+  d1R: 5e6,
+  d1W: 1e5
+};
+function qBar(used, total, label, unit, reset) {
+  const pct = total ? Math.min(100, Math.round(used / total * 100)) : 0, rem = Math.max(0, total - used), c = pct >= 90 ? ["red", "text-red-600", "bg-red-500"] : pct >= 80 ? ["amber", "text-amber-600", "bg-amber-500"] : ["emerald", "text-emerald-600", "bg-emerald-500"];
+  return `<div><div class="flex justify-between text-[11px] font-bold mb-1"><span class="text-slate-600">${label}</span><span class="${c[1]}">${pct}%</span></div><div class="h-2 bg-slate-100 rounded-full overflow-hidden"><div class="h-full ${c[2]} rounded-full" style="width:${pct}%"></div></div><div class="text-[10px] text-slate-500 mt-1">Đã dùng <b>${Number(used).toLocaleString("en-US")}</b> / ${Number(total).toLocaleString("en-US")} ${unit} · còn <b>${rem.toLocaleString("en-US")}</b>${reset?" · reset sau ~"+reset:""}</div></div>`;
+}
+const MAIL_PROV_META = {
+  google: {
+    name: "Google Apps Script",
+    sub: "Gửi qua Gmail — miễn phí",
+    logo: '<svg viewBox="0 0 48 48" class="w-7 h-7 shrink-0"><path fill="#4285F4" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13 17.7 9.5 24 9.5z"/><path fill="#34A853" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.6c-.5 2.9-2.2 5.4-4.6 7l7.4 5.7c4.3-4 6.9-9.9 6.9-17.2z"/><path fill="#FBBC05" d="M10.5 19.3c-.5 1.5-.8 3.1-.8 4.7s.3 3.2.8 4.7l-7.9 6.1C1 31.4 0 27.8 0 24s1-7.4 2.6-10.8z"/><path fill="#EA4335" d="M24 48c6.3 0 11.9-2.1 15.9-5.6l-7.4-5.7c-2.1 1.4-4.9 2.3-8.5 2.3-6.3 0-11.6-3.5-13.5-9.3l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>'
+  },
+  brevo: {
+    name: "Brevo",
+    sub: "(Sendinblue) — 300 mail/ngày free",
+    logo: '<img src="https://ps.w.org/mailin/assets/icon-256x256.png" class="w-7 h-7 shrink-0 rounded-lg shadow-sm object-contain bg-white">'
+  },
+  sendpulse: {
+    name: "SendPulse",
+    sub: "SMTP theo gói / balance",
+    logo: '<svg viewBox="0 0 32 32" class="w-7 h-7 shrink-0 rounded-lg shadow-sm bg-white p-0.5"><rect width="32" height="32" rx="6" fill="#007CF0"/><path d="M7 16h3.5l2.5-6 4 13 3-9 2 4H25" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  }
+};
 let mailProvQuota = {}, mailProvCfg = {}, mailProvErr = {}, selectedMailProv = null;
 
 // Thẻ hiển thị: click trực tiếp vào thẻ để chọn (sáng viền tím)
 function mailProvCard(id) {
   const m = MAIL_PROV_META[id] || { name: id, sub: "", logo: "" };
-  const saved = (cmsDb && cmsDb.settings && cmsDb.settings.mailProvider) 
-             || localStorage.getItem(SITE_KEY + "_mailProv") 
-             || "google";
+  const saved = (cmsDb && cmsDb.settings && cmsDb.settings.mailProvider) || localStorage.getItem(SITE_KEY + "_mailProv") || "google";
   const active = selectedMailProv || saved;
   const isSelected = (active === id);
   const isSaved = (saved === id);
@@ -4966,11 +6833,11 @@ function mailProvCard(id) {
     if (q.monthTotal !== undefined && q.monthTotal !== null) {
       const usedMonth = q.monthLeft !== undefined && q.monthLeft !== null ? Math.max(0, q.monthTotal - q.monthLeft) : (q.totalSent || 0);
       body = `<div class="text-[11px] text-slate-600 mb-1.5 font-bold flex justify-between items-center"><span>${esc(q.tariff || "SMTP Free")}</span></div>`
-           + qBar(usedMonth, q.monthTotal, "Tháng", "email", "")
-           + hourBarHtml;
+        + qBar(usedMonth, q.monthTotal, "Tháng", "email", "")
+        + hourBarHtml;
     } else {
       body = `<div class="text-[11px] text-slate-600">Email tháng: <b class="text-emerald-600">${q.emailsLeftFallback ?? (q.totalSent != null ? q.totalSent + " đã gửi" : "—")}</b></div>`
-           + hourBarHtml;
+        + hourBarHtml;
     }
   }
 
@@ -5012,9 +6879,7 @@ const pickMailProvider = selectMailProvider; // Giữ alias dự phòng
 
 // Bấm nút "LƯU CẤU HÌNH NHÀ CUNG CẤP MAIL" phía dưới
 async function saveMailProvider() {
-  const saved = (cmsDb && cmsDb.settings && cmsDb.settings.mailProvider) 
-             || localStorage.getItem(SITE_KEY + "_mailProv") 
-             || "google";
+  const saved = (cmsDb && cmsDb.settings && cmsDb.settings.mailProvider) || localStorage.getItem(SITE_KEY + "_mailProv") || "google";
   const target = selectedMailProv || saved;
 
   if (!cmsDb.settings) cmsDb.settings = {};
@@ -5031,7 +6896,11 @@ async function saveMailProvider() {
   try {
     await saveCmsDb();
     selectedMailProv = null;
-    const shortName = ({ google: "Google app script", brevo: "Brevo", sendpulse: "Sendpulse" })[target] || target;
+    const shortName = ({
+      google: "Google app script",
+      brevo: "Brevo",
+      sendpulse: "Sendpulse"
+    })[target] || target;
     toast("Đã lưu nhà cung cấp gửi mail: " + shortName);
     logEvent("ok", "Lưu cấu hình", "Nhà cung cấp mail: " + target);
     renderMailProvCards();
@@ -5053,41 +6922,54 @@ function renderMailProvCards() {
   const el = $("mailProvCards");
   if (el) el.innerHTML = ["google", "brevo", "sendpulse"].map(mailProvCard).join("");
 
-  const saved = (cmsDb && cmsDb.settings && cmsDb.settings.mailProvider) 
-             || localStorage.getItem(SITE_KEY + "_mailProv") 
-             || "google";
+  const saved = (cmsDb && cmsDb.settings && cmsDb.settings.mailProvider) || localStorage.getItem(SITE_KEY + "_mailProv") || "google";
   const active = selectedMailProv || saved;
   const btn = $("btnSaveMailProv");
   if (btn) {
-    const shortName = ({ google: "Google app script", brevo: "Brevo", sendpulse: "Sendpulse" })[active] || active;
+    const shortName = ({
+      google: "Google app script",
+      brevo: "Brevo",
+      sendpulse: "Sendpulse"
+    })[active] || active;
     btn.className = "w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 mt-2 flex items-center justify-center gap-1.5";
     btn.innerHTML = `<i class="fas fa-floppy-disk mr-1.5"></i>Lưu cấu hình: ${shortName}`;
   }
 }
-async function loadQuota(){
- const el=$("quotaBody");if(!el)return;
- try{
-  const j=await aj("/api/admin/quota",{soft:true});
-  mailProvCfg=(j&&j.cfg)||{};mailProvErr=(j&&j.err)||{};mailProvQuota={google:j&&j.mail,brevo:j&&j.brevo,sendpulse:j&&j.sendpulse};renderMailProvCards();
-  if(!j||!j.ok){el.innerHTML='<div class="text-red-500 font-bold lg:col-span-2">Không lấy được quota (Worker chưa có CF_API_TOKEN / CF_ACCOUNT_ID hoặc endpoint lỗi)</div>';return;}
-  const h=j.nextReset?Math.max(0,Math.round((j.nextReset-Date.now())/36e5)):null,rs=h!==null?h+" giờ":"";
-  const err=(k,t)=>box(t,`<div class="text-[11px] text-slate-500">Không lấy được số liệu thật: <span class="text-red-500">${esc(j.err&&j.err[k]||"Worker chưa cấu hình nguồn này")}</span></div>`);
-  let html="";
+async function loadQuota() {
+  const el = $("quotaBody");
+  if (!el) return;
+  try {
+    const j = await aj("/api/admin/quota", { soft: true });
+    mailProvCfg = (j && j.cfg) || {};
+    mailProvErr = (j && j.err) || {};
+    mailProvQuota = {
+      google: j && j.mail,
+      brevo: j && j.brevo,
+      sendpulse: j && j.sendpulse
+    };
+    renderMailProvCards();
+    if (!j || !j.ok) {
+      el.innerHTML = '<div class="text-red-500 font-bold lg:col-span-2">Không lấy được quota (Worker chưa có CF_API_TOKEN / CF_ACCOUNT_ID hoặc endpoint lỗi)</div>';
+      return;
+    }
+    const h = j.nextReset ? Math.max(0, Math.round((j.nextReset - Date.now()) / 36e5)) : null, rs = h !== null ? h + " giờ" : "";
+    const err = (k, t) => box(t, `<div class="text-[11px] text-slate-500">Không lấy được số liệu thật: <span class="text-red-500">${esc(j.err&&j.err[k]||"Worker chưa cấu hình nguồn này")}</span></div>`);
+    let html = "";
 
-  // Thẻ Quota Supabase (Hiển thị đầy đủ cả 2 Cơ chế)
-  if (j.supabase && j.supabase.rpc) {
-    const s = j.supabase.rpc;
-    const mgmt = j.supabase.mgmt || {};
-    const hasMgmt = !!j.supabase.hasMgmt;
-    const usedBytes = s.db_size_bytes || 0;
-    const limitBytes = s.db_limit_bytes || 524288000;
-    const pct = Math.min(100, Math.round(usedBytes / limitBytes * 10000) / 100);
-    const egressMb = mgmt.egress ? Math.round((mgmt.egress.bandwidth || 0) / 1048576 * 10) / 10 : 0;
-    const reqCount = mgmt.requests ? (mgmt.requests.total || 0).toLocaleString("en-US") : "—";
+    // Thẻ Quota Supabase (Hiển thị đầy đủ cả 2 Cơ chế)
+    if (j.supabase && j.supabase.rpc) {
+      const s = j.supabase.rpc;
+      const mgmt = j.supabase.mgmt || {};
+      const hasMgmt = !!j.supabase.hasMgmt;
+      const usedBytes = s.db_size_bytes || 0;
+      const limitBytes = s.db_limit_bytes || 524288000;
+      const pct = Math.min(100, Math.round(usedBytes / limitBytes * 10000) / 100);
+      const egressMb = mgmt.egress ? Math.round((mgmt.egress.bandwidth || 0) / 1048576 * 10) / 10 : 0;
+      const reqCount = mgmt.requests ? (mgmt.requests.total || 0).toLocaleString("en-US") : "—";
 
-    let mgmtSectionHtml = "";
-    if (hasMgmt) {
-      mgmtSectionHtml = `
+      let mgmtSectionHtml = "";
+      if (hasMgmt) {
+        mgmtSectionHtml = `
         <div class="grid grid-cols-2 gap-2 text-center">
           <div class="bg-slate-50 p-2 rounded-xl border border-slate-100">
             <div class="text-sm font-black text-indigo-600">${egressMb} MB</div>
@@ -5099,15 +6981,15 @@ async function loadQuota(){
           </div>
         </div>
       `;
-    } else {
-      mgmtSectionHtml = `
+      } else {
+        mgmtSectionHtml = `
         <div class="text-[11px] text-amber-700 italic bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-center">
           (Chưa cấu hình SUPABASE_MGMT_TOKEN trên Worker Secret)
         </div>
       `;
-    }
+      }
 
-    html += box("Supabase Database (ALL_ORDERS)", `
+      html += box("Supabase Database (ALL_ORDERS)", `
       <div class="space-y-3">
         <div>
           <div class="flex justify-between text-[11px] font-bold mb-1">
@@ -5128,53 +7010,112 @@ async function loadQuota(){
         </div>
       </div>
     `);
-  } else {
-    html += err("supabase", "Supabase Database (ALL_ORDERS)");
-  }
+    } else {
+      html += err("supabase", "Supabase Database (ALL_ORDERS)");
+    }
 
-  html+=j.kv?box("Cloudflare KV (chỉ web này, hôm nay)",qBar(j.kv.write||0,QL.kvW,"Write","lượt ghi",rs)+`<div class="h-2"></div>`+qBar(j.kv.read||0,QL.kvR,"Read","lượt đọc",rs)+`<div class="h-2"></div>`+qBar(j.kv.delete||0,QL.kvD,"Delete","lượt xóa",rs)+`<div class="text-[10px] text-slate-400 mt-2">Tổng = giới hạn gói Free của Cloudflare.</div>`):err("kv","Cloudflare KV");
-  html+=j.worker?box("Cloudflare Worker (hôm nay)",qBar(j.worker.requests||0,QL.wReq,"Requests","requests",rs)+`<div class="grid grid-cols-2 gap-2 text-center mt-3"><div><div class="text-lg font-black text-red-500">${(j.worker.errors||0).toLocaleString("en-US")}</div><div class="text-[10px] text-slate-400 font-bold">Errors</div></div><div><div class="text-lg font-black text-slate-600">${(j.worker.subrequests||0).toLocaleString("en-US")}</div><div class="text-[10px] text-slate-400 font-bold">Subrequests</div></div></div>`):err("worker","Cloudflare Worker");
-  html+=j.d1?box("D1 Database (hôm nay)",qBar(j.d1.rowsRead||0,QL.d1R,"Rows read","rows",rs)+`<div class="h-2"></div>`+qBar(j.d1.rowsWritten||0,QL.d1W,"Rows written","rows",rs)):err("d1","D1 Database");
-  el.innerHTML=html;
- }catch(e){el.innerHTML=`<span class="text-red-600 lg:col-span-2">Lỗi tải quota: ${esc(e.message)}</span>`;}}
+    html += j.kv ? box("Cloudflare KV (chỉ web này, hôm nay)", qBar(j.kv.write || 0, QL.kvW, "Write", "lượt ghi", rs) + `<div class="h-2"></div>` + qBar(j.kv.read || 0, QL.kvR, "Read", "lượt đọc", rs) + `<div class="h-2"></div>` + qBar(j.kv.delete || 0, QL.kvD, "Delete", "lượt xóa", rs) + `<div class="text-[10px] text-slate-400 mt-2">Tổng = giới hạn gói Free của Cloudflare.</div>`) : err("kv", "Cloudflare KV");
+    html += j.worker ? box("Cloudflare Worker (hôm nay)", qBar(j.worker.requests || 0, QL.wReq, "Requests", "requests", rs) + `<div class="grid grid-cols-2 gap-2 text-center mt-3"><div><div class="text-lg font-black text-red-500">${(j.worker.errors||0).toLocaleString("en-US")}</div><div class="text-[10px] text-slate-400 font-bold">Errors</div></div><div><div class="text-lg font-black text-slate-600">${(j.worker.subrequests||0).toLocaleString("en-US")}</div><div class="text-[10px] text-slate-400 font-bold">Subrequests</div></div></div>`) : err("worker", "Cloudflare Worker");
+    html += j.d1 ? box("D1 Database (hôm nay)", qBar(j.d1.rowsRead || 0, QL.d1R, "Rows read", "rows", rs) + `<div class="h-2"></div>` + qBar(j.d1.rowsWritten || 0, QL.d1W, "Rows written", "rows", rs)) : err("d1", "D1 Database");
+    el.innerHTML = html;
+  } catch (e) {
+    el.innerHTML = `<span class="text-red-600 lg:col-span-2">Lỗi tải quota: ${esc(e.message)}</span>`;
+  }
+}
 
 // ---- nhật ký hợp nhất
-async function loadLogs(){try{logsData=await aj("/api/admin/logs");renderLogs();}catch(e){}}
-function renderLogs(){
- const now = nowMs(), sevenDays = 7 * 864e5;
- const rows=[...arr(logsData.worker).map(x=>({ts:x.ts,lvl:x.lvl,src:x.src,act:x.act,msg:x.msg,ref:x.ref})),...arr(logsData.d1).map(x=>({ts:parseAny(x.created_at),lvl:x.level||"info",src:"d1",act:x.action,msg:x.details,ref:x.ref}))]
-   .filter(r => r.ts && (now - r.ts <= sevenDays))
-   .sort((a,b)=>b.ts-a.ts);
- const lv=$("logLvl").value,sr=$("logSrc").value,f=rows.filter(r=>(!lv||r.lvl===lv)&&(!sr||r.src===sr));$("logCount").textContent=`(${f.length}/${rows.length} dòng trong 7 ngày)`;
- const col={ok:"bg-emerald-100 text-emerald-800 border border-emerald-200",info:"bg-blue-100 text-blue-800 border border-blue-200",warn:"bg-amber-100 text-amber-800 border border-amber-200",error:"bg-red-100 text-red-800 border border-red-200"},nm={ok:"Thành công",info:"Thông tin",warn:"Cảnh báo",error:"Lỗi"};
- $("logBody").innerHTML=f.length?f.slice(0,300).map(r=>`<tr><td class="text-xs whitespace-nowrap text-slate-500">${fmtBank(r.ts)}</td><td><span class="${col[r.lvl]||col.info} px-2 py-0.5 rounded text-[10px] font-bold">${nm[r.lvl]||"Thông tin"}</span></td><td class="text-xs font-bold text-slate-600">${esc(r.src)}</td><td class="text-xs font-bold text-slate-700">${esc(r.act)}</td><td class="text-xs text-slate-600 break-words min-w-[200px]">${esc(r.msg||"")}${r.ref?` <span class="font-mono text-indigo-500 cp" onclick="cp(${q(r.ref)})">${esc(r.ref)}</span>`:""}</td></tr>`).join(""):`<tr><td colspan="5" class="text-center py-8 text-slate-400 italic">Chưa có nhật ký</td></tr>`;}
+async function loadLogs() {
+  try {
+    logsData = await aj("/api/admin/logs");
+    renderLogs();
+  } catch (e) {}
+}
+function renderLogs() {
+  const now = nowMs(), sevenDays = 7 * 864e5;
+  const rows = [...arr(logsData.worker).map(x => ({
+    ts: x.ts,
+    lvl: x.lvl,
+    src: x.src,
+    act: x.act,
+    msg: x.msg,
+    ref: x.ref
+  })), ...arr(logsData.d1).map(x => ({
+    ts: parseAny(x.created_at),
+    lvl: x.level || "info",
+    src: "d1",
+    act: x.action,
+    msg: x.details,
+    ref: x.ref
+  }))]
+    .filter(r => r.ts && (now - r.ts <= sevenDays))
+    .sort((a, b) => b.ts - a.ts);
+  const lv = $("logLvl").value, sr = $("logSrc").value, f = rows.filter(r => (!lv || r.lvl === lv) && (!sr || r.src === sr));
+  $("logCount").textContent = `(${f.length}/${rows.length} dòng trong 7 ngày)`;
+  const col = {
+    ok: "bg-emerald-100 text-emerald-800 border border-emerald-200",
+    info: "bg-blue-100 text-blue-800 border border-blue-200",
+    warn: "bg-amber-100 text-amber-800 border border-amber-200",
+    error: "bg-red-100 text-red-800 border border-red-200"
+  }, nm = {
+    ok: "Thành công",
+    info: "Thông tin",
+    warn: "Cảnh báo",
+    error: "Lỗi"
+  };
+  $("logBody").innerHTML = f.length ? f.slice(0, 300).map(r => `<tr><td class="text-xs whitespace-nowrap text-slate-500">${fmtBank(r.ts)}</td><td><span class="${col[r.lvl]||col.info} px-2 py-0.5 rounded text-[10px] font-bold">${nm[r.lvl]||"Thông tin"}</span></td><td class="text-xs font-bold text-slate-600">${esc(r.src)}</td><td class="text-xs font-bold text-slate-700">${esc(r.act)}</td><td class="text-xs text-slate-600 break-words min-w-[200px]">${esc(r.msg||"")}${r.ref?` <span class="font-mono text-indigo-500 cp" onclick="cp(${q(r.ref)})">${esc(r.ref)}</span>`:""}</td></tr>`).join("") : `<tr><td colspan="5" class="text-center py-8 text-slate-400 italic">Chưa có nhật ký</td></tr>`;
+}
 
 // ---- thiết bị
-function renderDev(){
- const tb=$("devBody");if(!devicesDb.length){tb.innerHTML=`<div class="p-6 text-center text-slate-400 bg-white rounded-xl border shadow-sm font-bold">Trống</div>`;return;}
- tb.innerHTML=devicesDb.map(d=>`<div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex items-center justify-between gap-3"><div class="min-w-0"><div class="font-mono font-bold text-xs text-indigo-600 cp truncate" onclick="cp(${q(d.id)})">${esc(d.id)}${d.id===myDev?` <span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[9px] font-bold ml-1">Bạn</span>`:""}</div><div class="text-[10px] text-slate-500 truncate my-1">${esc(d.ua||"")}</div><div class="text-[11px] font-bold text-slate-400">Đăng nhập: ${fmtBank(d.ts||d.date)}</div></div><button onclick="delDev(${q(d.id)})" class="text-red-500 font-bold px-3 py-2 bg-red-50 rounded-lg text-xs hover:bg-red-500 hover:text-white shrink-0"><i class="fas fa-trash"></i></button></div>`).join("");}
-async function delDev(id){devicesDb=devicesDb.filter(x=>x.id!==id);renderDev();try{await aj("/api/devices",{method:"POST",body:devicesDb});if(id===myDev)doLogout();else toast("Đã xóa");}catch(e){}}
+function renderDev() {
+  const tb = $("devBody");
+  if (!devicesDb.length) {
+    tb.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border shadow-sm font-bold">Trống</div>`;
+    return;
+  }
+  tb.innerHTML = devicesDb.map(d => `<div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex items-center justify-between gap-3"><div class="min-w-0"><div class="font-mono font-bold text-xs text-indigo-600 cp truncate" onclick="cp(${q(d.id)})">${esc(d.id)}${d.id===myDev?` <span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[9px] font-bold ml-1">Bạn</span>`:""}</div><div class="text-[10px] text-slate-500 truncate my-1">${esc(d.ua||"")}</div><div class="text-[11px] font-bold text-slate-400">Đăng nhập: ${fmtBank(d.ts||d.date)}</div></div><button onclick="delDev(${q(d.id)})" class="text-red-500 font-bold px-3 py-2 bg-red-50 rounded-lg text-xs hover:bg-red-500 hover:text-white shrink-0"><i class="fas fa-trash"></i></button></div>`).join("");
+}
+async function delDev(id) {
+  devicesDb = devicesDb.filter(x => x.id !== id);
+  renderDev();
+  try {
+    await aj("/api/devices", { method: "POST", body: devicesDb });
+    if (id === myDev) doLogout();
+    else toast("Đã xóa");
+  } catch (e) {}
+}
 
 // ---- chuẩn hóa dữ liệu KV (chỉ chạy khi admin bấm; có Quét thử)
-async function migrateDates(apply){
- if(apply&&!confirm("Ghi đè định dạng thời gian trong KV (đơn, link, đã xóa, thiết bị, yêu cầu dung lượng)?\nNên bấm Quét thử trước."))return;
- if(apply){
-   toast("Đang sao lưu All Orders sang Telegram trước khi chuẩn hóa ngày...");
-   await triggerTelegramBackupNow("Sao lưu trước khi Chuẩn hóa định dạng thời gian");
- }
- $("migReport").innerHTML="Đang xử lý...";
- try{const j=await aj("/api/admin/migrate_dates",{method:"POST",body:{apply}});
-  $("migReport").innerHTML=(apply?'<div class="font-bold text-emerald-700 mb-1">✔ Đã áp dụng</div>':'<div class="font-bold text-slate-700 mb-1">Kết quả quét thử (chưa ghi gì)</div>')+Object.entries(j.report).map(([k,v])=>`<div><b>${k}:</b> ${v.changed}/${v.total} bản ghi cần đổi${v.sample.length?`<div class="font-mono text-[10px] text-slate-500 pl-3">${v.sample.map(esc).join("<br>")}</div>`:""}</div>`).join("");
-  if(apply)fetchAll();}catch(e){$("migReport").innerHTML=`<span class="text-red-600">Lỗi: ${esc(e.message)}</span>`;}}
-async function migratePkg(apply){
- if(apply&&!confirm("Ghi đè cách lưu tên gói của các đơn trong KV? Nên bấm Quét thử trước."))return;
- if(apply){
-   toast("Đang sao lưu All Orders sang Telegram trước khi chuẩn hóa gói...");
-   await triggerTelegramBackupNow("Sao lưu trước khi Chuẩn hóa hiển thị gói");
- }
- $("pkgReport").innerHTML="Đang xử lý...";
- try{const j=await aj("/api/admin/migrate_pkg",{method:"POST",body:{apply}});$("pkgReport").innerHTML=(apply?'<div class="font-bold text-emerald-700 mb-1">✔ Đã áp dụng</div>':'<div class="font-bold text-slate-700 mb-1">Kết quả quét thử (chưa ghi gì)</div>')+`<div><b>Đơn hàng:</b> ${j.changed}/${j.total} bản ghi cần đổi${j.oldPrice?` · <span class="text-orange-500 font-bold">${j.oldPrice} đơn giá cũ được giữ nguyên</span>`:""}${j.sample.length?`<div class="font-mono text-[10px] text-slate-500 pl-3">${j.sample.map(esc).join("<br>")}</div>`:""}</div>`;if(apply)fetchAll();}
- catch(e){$("pkgReport").innerHTML=`<span class="text-red-600">Lỗi: ${esc(e.message)}</span>`;}}
+async function migrateDates(apply) {
+  if (apply && !confirm("Ghi đè định dạng thời gian trong KV (đơn, link, đã xóa, thiết bị, yêu cầu dung lượng)?\nNên bấm Quét thử trước.")) return;
+  if (apply) {
+    toast("Đang sao lưu All Orders sang Telegram trước khi chuẩn hóa ngày...");
+    await triggerTelegramBackupNow("Sao lưu trước khi Chuẩn hóa định dạng thời gian");
+  }
+  $("migReport").innerHTML = "Đang xử lý...";
+  try {
+    const j = await aj("/api/admin/migrate_dates", { method: "POST", body: { apply } });
+    $("migReport").innerHTML = (apply ? '<div class="font-bold text-emerald-700 mb-1">✔ Đã áp dụng</div>' : '<div class="font-bold text-slate-700 mb-1">Kết quả quét thử (chưa ghi gì)</div>') + Object.entries(j.report).map(([k, v]) => `<div><b>${k}:</b> ${v.changed}/${v.total} bản ghi cần đổi${v.sample.length?`<div class="font-mono text-[10px] text-slate-500 pl-3">${v.sample.map(esc).join("<br>")}</div>`:""}</div>`).join("");
+    if (apply) fetchAll();
+  } catch (e) {
+    $("migReport").innerHTML = `<span class="text-red-600">Lỗi: ${esc(e.message)}</span>`;
+  }
+}
+async function migratePkg(apply) {
+  if (apply && !confirm("Ghi đè cách lưu tên gói của các đơn trong KV? Nên bấm Quét thử trước.")) return;
+  if (apply) {
+    toast("Đang sao lưu All Orders sang Telegram trước khi chuẩn hóa gói...");
+    await triggerTelegramBackupNow("Sao lưu trước khi Chuẩn hóa hiển thị gói");
+  }
+  $("pkgReport").innerHTML = "Đang xử lý...";
+  try {
+    const j = await aj("/api/admin/migrate_pkg", { method: "POST", body: { apply } });
+    $("pkgReport").innerHTML = (apply ? '<div class="font-bold text-emerald-700 mb-1">✔ Đã áp dụng</div>' : '<div class="font-bold text-slate-700 mb-1">Kết quả quét thử (chưa ghi gì)</div>') + `<div><b>Đơn hàng:</b> ${j.changed}/${j.total} bản ghi cần đổi${j.oldPrice?` · <span class="text-orange-500 font-bold">${j.oldPrice} đơn giá cũ được giữ nguyên</span>`:""}${j.sample.length?`<div class="font-mono text-[10px] text-slate-500 pl-3">${j.sample.map(esc).join("<br>")}</div>`:""}</div>`;
+    if (apply) fetchAll();
+  }
+  catch (e) {
+    $("pkgReport").innerHTML = `<span class="text-red-600">Lỗi: ${esc(e.message)}</span>`;
+  }
+}
 
 // ===================== LOGIC FULFILLMENT CONFIG & LINK TRỘN =====================
 let currentFulfillmentConfig = { mapping: {}, failover_pref: "lx" };
@@ -5301,23 +7242,36 @@ async function saveFailoverPolicy() {
 }
 
 // ===================== KHỞI ĐỘNG =====================
-let started=false;
-function startApp(fresh){
- $("loginWrap").classList.add("hidden");
- document.documentElement.classList.add("has-tok");
- $("hdr").classList.remove("hidden");
- $("hdr").style.display="flex";
- $("main").classList.remove("hidden");
- if(started){fetchAll();return;}
- started=true;
- buildTabs();
+let started = false;
+function startApp(fresh) {
+  $("loginWrap").classList.add("hidden");
+  document.documentElement.classList.add("has-tok");
+  $("hdr").classList.remove("hidden");
+  $("hdr").style.display = "flex";
+  $("main").classList.remove("hidden");
+  if (started) {
+    fetchAll();
+    return;
+  }
+  started = true;
+  buildTabs();
   const savedOrdTab = localStorage.getItem(SITE_KEY + "_curOrdTab");
   if (savedOrdTab) curOrdTab = savedOrdTab;
-  go(localStorage.getItem(SITE_KEY+"_lastTab")||"t-ord");
-  if(fresh)toast("Đăng nhập thành công!");
-  fetchAll();loadTx(true);loadQuota();checkTestModeStatus();
-setInterval(pollMain,10000);setInterval(loadStatus,120000);setInterval(tickClocks,1000);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden){pollMain();loadTx();}});
+  go(localStorage.getItem(SITE_KEY + "_lastTab") || "t-ord");
+  if (fresh) toast("Đăng nhập thành công!");
+  fetchAll();
+  loadTx(true);
+  loadQuota();
+  checkTestModeStatus();
+  setInterval(pollMain, 10000);
+  setInterval(loadStatus, 120000);
+  setInterval(tickClocks, 1000);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      pollMain();
+      loadTx();
+    }
+  });
 }
 
 let adminScrollTimer = null;
@@ -5329,14 +7283,12 @@ window.addEventListener("scroll", () => {
   }, 150);
 });
 
-function restoreAdminScroll(tabId){
+function restoreAdminScroll(tabId) {
   const saved = sessionStorage.getItem("adm_scroll_" + tabId);
-  if(saved !== null && !isNaN(Number(saved))){
+  if (saved !== null && !isNaN(Number(saved))) {
     setTimeout(() => window.scrollTo({ top: Number(saved), behavior: 'instant' }), 60);
   }
 }
-
-
 
 // LOGIC THAO TÁC TELEGRAM TRÊN ADMIN PANEL
 // ====================================================================
@@ -5354,7 +7306,7 @@ async function testTelegramBot() {
       if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Gửi thất bại: ${res.description || res.error || "Kiểm tra lại Token/Chat ID"}</span>`;
       toast("Lỗi kết nối Telegram: " + (res.description || res.error), "err");
     }
-  } catch(e) {
+  } catch (e) {
     if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Lỗi: ${e.message}</span>`;
     toast("Lỗi: " + e.message, "err");
   } finally {
@@ -5376,7 +7328,7 @@ async function triggerTelegramKvBackupNow() {
       if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Gửi backup KV thất bại!</span>`;
       toast("Gửi backup KV thất bại!", "err");
     }
-  } catch(e) {
+  } catch (e) {
     if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Lỗi: ${e.message}</span>`;
     toast("Lỗi: " + e.message, "err");
   } finally {
@@ -5393,7 +7345,7 @@ async function resetTelegramStt() {
       if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Đã reset STT về 0! Lượt bắn kế tiếp sẽ là _01.</span>`;
       toast("Đã reset STT thành công!");
     }
-  } catch(e) {
+  } catch (e) {
     toast("Lỗi reset STT: " + e.message, "err");
   }
 }
@@ -5412,7 +7364,7 @@ async function triggerTelegramBackupNow(reason = "Admin bấm Bắn Backup ngay"
       if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Gửi backup thất bại!</span>`;
       toast("Gửi backup thất bại!", "err");
     }
-  } catch(e) {
+  } catch (e) {
     if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Lỗi: ${e.message}</span>`;
     toast("Lỗi: " + e.message, "err");
   } finally {
@@ -5420,12 +7372,13 @@ async function triggerTelegramBackupNow(reason = "Admin bấm Bắn Backup ngay"
   }
 }
 
-
-
-
 // ==================== CHẾ ĐỘ THỬ NGHIỆM (TEST MODE / ALL_ORDERS_TEST) ====================
-let isTestModeActive = (function() {
-  try { return localStorage.getItem(SITE_KEY + "_testMode") === "1"; } catch(e) { return false; }
+let isTestModeActive = (function () {
+  try {
+    return localStorage.getItem(SITE_KEY + "_testMode") === "1";
+  } catch (e) {
+    return false;
+  }
 })();
 
 async function checkTestModeStatus() {
@@ -5433,7 +7386,9 @@ async function checkTestModeStatus() {
     const res = await aj("/api/admin/test/status");
     if (res && res.active !== undefined) {
       isTestModeActive = !!res.active;
-      try { localStorage.setItem(SITE_KEY + "_testMode", isTestModeActive ? "1" : "0"); } catch(e) {}
+      try {
+        localStorage.setItem(SITE_KEY + "_testMode", isTestModeActive ? "1" : "0");
+      } catch (e) {}
       if ($("toggleTestMode")) $("toggleTestMode").checked = isTestModeActive;
       updateTestModeUI();
     }
@@ -5445,9 +7400,7 @@ function updateTestModeUI() {
   const lbl = $("testStatusLabel");
   if (b) b.classList.toggle("hidden", !isTestModeActive);
   if (lbl) {
-    lbl.className = isTestModeActive 
-      ? "text-xs font-black px-2.5 py-1 rounded-full bg-amber-500 text-slate-900" 
-      : "text-xs font-black px-2.5 py-1 rounded-full bg-slate-200 text-slate-600";
+    lbl.className = isTestModeActive ? "text-xs font-black px-2.5 py-1 rounded-full bg-amber-500 text-slate-900" : "text-xs font-black px-2.5 py-1 rounded-full bg-slate-200 text-slate-600";
     lbl.textContent = isTestModeActive ? "ĐANG BẬT (KHO TEST)" : "TẮT (KHO THẬT)";
   }
 }
@@ -5458,14 +7411,16 @@ async function toggleTestMode(checked) {
     const res = await aj("/api/admin/test/toggle", { method: "POST", body: { active: checked } });
     if (res && res.ok !== false) {
       isTestModeActive = checked;
-      try { localStorage.setItem(SITE_KEY + "_testMode", checked ? "1" : "0"); } catch(e) {}
+      try {
+        localStorage.setItem(SITE_KEY + "_testMode", checked ? "1" : "0");
+      } catch (e) {}
       updateTestModeUI();
       toast(checked ? "Đã BẬT Chế độ Test (ALL_ORDERS_TEST)" : "Đã chuyển về Kho Thật (ALL_ORDERS)");
       fetchAll(true);
     } else {
       throw new Error(res?.error || "Không nhận được phản hồi hợp lệ từ server");
     }
-  } catch(e) {
+  } catch (e) {
     if (toggleEl) toggleEl.checked = isTestModeActive;
     updateTestModeUI();
     toast("Lỗi chuyển chế độ: " + e.message, "err");
@@ -5530,7 +7485,7 @@ async function createFakeTestOrder() {
       toast(`Đã tạo đơn test ${res.order.id}!`);
       if (isTestModeActive) fetchAll();
     }
-  } catch(e) {
+  } catch (e) {
     if (logEl) logEl.textContent = "Lỗi tạo đơn giả: " + e.message;
   }
 }
@@ -5544,7 +7499,7 @@ async function cloneProdOrdersToTest() {
     if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Đã clone ${res.count} đơn từ kho thật sang ALL_ORDERS_TEST!</span>`;
     toast(`Đã sao chép ${res.count} đơn vào kho test!`);
     if (isTestModeActive) fetchAll();
-  } catch(e) {
+  } catch (e) {
     if (logEl) logEl.textContent = "Lỗi sao chép: " + e.message;
   }
 }
@@ -5558,7 +7513,7 @@ async function clearTestOrders() {
     if (logEl) logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Đã xóa trắng ALL_ORDERS_TEST thành công!</span>`;
     toast("Đã dọn sạch kho test");
     if (isTestModeActive) fetchAll();
-  } catch(e) {
+  } catch (e) {
     if (logEl) logEl.textContent = "Lỗi xóa kho test: " + e.message;
   }
 }
@@ -5572,7 +7527,7 @@ async function saveTgOrderAlertSetting() {
   try {
     await saveCmsDb();
     toast(chk.checked ? "Đã BẬT thông báo đơn hàng mới qua Telegram!" : "Đã TẮT thông báo đơn hàng mới qua Telegram!");
-  } catch(e) {
+  } catch (e) {
     toast("Lỗi lưu cài đặt: " + e.message, "err");
   }
 }
@@ -5591,7 +7546,7 @@ async function testTelegramOrderAlert() {
       if (st) st.innerHTML = `<span class="text-red-600 font-bold">✘ Gửi thất bại: ${res.description || res.error || "Lỗi"}</span>`;
       toast("Lỗi gửi thông báo: " + (res.description || res.error), "err");
     }
-  } catch(e) {
+  } catch (e) {
     if (st) st.innerHTML = `<span class="text-red-600 font-bold">✘ Lỗi: ${e.message}</span>`;
     toast("Lỗi: " + e.message, "err");
   } finally {
@@ -5599,9 +7554,13 @@ async function testTelegramOrderAlert() {
   }
 }
 
-window.onload=()=>{if(TOKEN)startApp(false);else{buildTabs();$("loginWrap").classList.remove("hidden");}};
-
-
+window.onload = () => {
+  if (TOKEN) startApp(false);
+  else {
+    buildTabs();
+    $("loginWrap").classList.remove("hidden");
+  }
+};
 
 async function syncPublicPackagesPayload() {
   const pkgs = adminPkgsList && adminPkgsList.length ? adminPkgsList : (cmsDb && cmsDb.packages) || [];
@@ -5611,14 +7570,9 @@ async function syncPublicPackagesPayload() {
   try {
     await aj("/api/packages", {
       method: "POST",
-      body: {
-        packages: pkgs,
-        flashSale,
-        coupons,
-        couponEnabled
-      }
+      body: { packages: pkgs, flashSale, coupons, couponEnabled }
     });
-  } catch(e) {
+  } catch (e) {
     console.warn("Lỗi syncPublicPackagesPayload:", e.message);
   }
 }
@@ -5641,10 +7595,10 @@ function broadcastAdminSync(type, payload = {}) {
     const ch = new BroadcastChannel('vpn_trinhhg_sync');
     ch.postMessage({ type, payload, ts: Date.now() });
     ch.close();
-  } catch(e) {}
+  } catch (e) {}
   try {
     localStorage.setItem('vpn_last_config_sync', JSON.stringify({ type, payload, ts: Date.now() }));
-  } catch(e) {}
+  } catch (e) {}
 }
 
 async function toggleFlashSale(checked) {
@@ -5659,7 +7613,7 @@ async function toggleFlashSale(checked) {
     await saveCmsDb();
     broadcastAdminSync('flash_sale_toggle', { flashSale: cmsDb.sales.campaign });
     toast(checked ? "Đã BẬT chiến dịch Flash Sale" : "Đã TẮT chiến dịch Flash Sale");
-  } catch(e) {
+  } catch (e) {
     cmsDb.sales.campaign.enabled = prev;
     cmsDb.settings.flashSale = cmsDb.sales.campaign;
     if ($("saleCampaignActive")) $("saleCampaignActive").checked = prev;
@@ -5687,7 +7641,7 @@ async function saveFlashSaleConfig() {
     broadcastAdminSync('flash_sale_update', { flashSale: c });
     toast("Đã lưu chiến dịch Flash Sale thành công!");
     logEvent("ok", "admin", "Lưu Flash Sale: " + (c.title || "Chiến dịch mới"));
-  } catch(e) {
+  } catch (e) {
     toast("Lỗi lưu Flash Sale: " + e.message, "err");
   }
 }
@@ -5804,7 +7758,7 @@ async function saveCouponModal() {
     renderCouponAdmin();
     toast(`Đã lưu thành công coupon: ${cleanCode} (-${type === 'percent' ? numVal + '%' : fmtVnd(numVal) + 'đ'})`);
     logEvent("ok", "admin", "Tạo/Sửa coupon", cleanCode);
-  } catch(e) {
+  } catch (e) {
     toast("Lỗi lưu coupon: " + e.message, "err");
   }
 }
@@ -5819,7 +7773,9 @@ async function toggleCouponStatus(idx) {
     await syncPublicPackagesPayload();
     renderCouponAdmin();
     toast("Đã cập nhật trạng thái mã coupon");
-  } catch(e) { toast("Lỗi: " + e.message, "err"); }
+  } catch (e) {
+    toast("Lỗi: " + e.message, "err");
+  }
 }
 window.toggleCouponStatus = toggleCouponStatus;
 
@@ -5833,7 +7789,9 @@ async function deleteCouponItem(idx) {
     await syncPublicPackagesPayload();
     renderCouponAdmin();
     toast("Đã xóa mã coupon: " + code);
-  } catch(e) { toast("Lỗi: " + e.message, "err"); }
+  } catch (e) {
+    toast("Lỗi: " + e.message, "err");
+  }
 }
 window.deleteCouponItem = deleteCouponItem;
 
@@ -5847,7 +7805,7 @@ async function toggleCouponCheckout(checked) {
     await syncPublicPackagesPayload();
     broadcastAdminSync('coupon_toggle', { couponEnabled: checked });
     toast(checked ? "Đã BẬT ô nhập mã giảm giá tại trang thanh toán" : "Đã TẮT ô nhập mã giảm giá tại trang thanh toán");
-  } catch(e) {
+  } catch (e) {
     cmsDb.settings.couponEnabled = prev;
     if ($("couponCheckoutEnabledToggle")) $("couponCheckoutEnabledToggle").checked = prev;
     if ($("couponCheckoutStatusLabel")) $("couponCheckoutStatusLabel").textContent = prev ? "BẬT" : "TẮT";
@@ -5880,7 +7838,7 @@ function fixMojibake(str) {
       const bytes = new Uint8Array([...str].map(c => c.charCodeAt(0) & 0xff));
       const decoded = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
       if (decoded && !decoded.includes("\uFFFD")) return decoded;
-    } catch(e) {}
+    } catch (e) {}
   }
   return str;
 }
@@ -5898,7 +7856,7 @@ async function clearAllTransactions() {
     renderRawTab();
     toast(`Đã làm sạch toàn bộ giao dịch D1 (${res.deleted || 0} dòng)!`);
     logEvent("warn", "admin", "Làm sạch toàn bộ giao dịch D1");
-  } catch(e) {
+  } catch (e) {
     toast("Lỗi làm sạch D1: " + e.message, "err");
   }
 }
@@ -6029,7 +7987,7 @@ async function manualMatchTx(txId) {
     logEvent("ok", "admin", "Ghép giao dịch ngoại lệ", `#${txId} → ${orderId}`);
     await Promise.all([loadTx(true), fetchAll(true)]);
     renderExceptionsTab();
-  } catch(e) {
+  } catch (e) {
     toast("Lỗi ghép giao dịch: " + e.message, "err");
   }
 }
@@ -6038,16 +7996,13 @@ window.manualMatchTx = manualMatchTx;
 async function rejectTxItem(txId) {
   if (!confirm(`Từ chối giao dịch #${txId}?`)) return;
   try {
-    const res = await aj("/api/admin/tx/" + txId + "/reject", {
-      method: "POST",
-      body: { note: "Từ chối bởi Admin" }
-    });
+    const res = await aj("/api/admin/tx/" + txId + "/reject", { method: "POST", body: { note: "Từ chối bởi Admin" } });
     if (res && res.ok === false) throw new Error(res.error || "Không thể từ chối");
     toast(`Đã từ chối giao dịch #${txId}`);
     logEvent("warn", "admin", "Từ chối giao dịch D1", `#${txId}`);
     await loadTx(true);
     renderExceptionsTab();
-  } catch(e) {
+  } catch (e) {
     toast("Lỗi: " + e.message, "err");
   }
 }
@@ -6055,451 +8010,7 @@ window.rejectTxItem = rejectTxItem;
 
 // Expose all admin functions and state to window for HTML inline event handlers
 if (typeof window !== 'undefined') {
-  const _exposed = [
-    ['renderFlashSaleAdmin', typeof renderFlashSaleAdmin !== 'undefined' ? renderFlashSaleAdmin : undefined],
-    ['saveFlashSaleConfig', typeof saveFlashSaleConfig !== 'undefined' ? saveFlashSaleConfig : undefined],
-    ['renderCouponAdmin', typeof renderCouponAdmin !== 'undefined' ? renderCouponAdmin : undefined],
-    ['toggleCouponStatus', typeof toggleCouponStatus !== 'undefined' ? toggleCouponStatus : undefined],
-    ['deleteCouponItem', typeof deleteCouponItem !== 'undefined' ? deleteCouponItem : undefined],
-    ['openAddCouponModal', typeof openAddCouponModal !== 'undefined' ? openAddCouponModal : undefined],
-    ['closeCouponModal', typeof closeCouponModal !== 'undefined' ? closeCouponModal : undefined],
-    ['saveCouponModal', typeof saveCouponModal !== 'undefined' ? saveCouponModal : undefined],
-    ['saveRevRates', typeof saveRevRates !== 'undefined' ? saveRevRates : undefined],
-    ['savePkgRates', typeof savePkgRates !== 'undefined' ? savePkgRates : undefined],
-    ['syncRatesToPackages', typeof syncRatesToPackages !== 'undefined' ? syncRatesToPackages : undefined],
-    ['syncPublicPackagesPayload', typeof syncPublicPackagesPayload !== 'undefined' ? syncPublicPackagesPayload : undefined],
-    ['toggleCouponCheckoutInput', typeof toggleCouponCheckoutInput !== 'undefined' ? toggleCouponCheckoutInput : undefined],
-    ['renderExceptionsTab', typeof renderExceptionsTab !== 'undefined' ? renderExceptionsTab : undefined],
-    ['manualMatchTx', typeof manualMatchTx !== 'undefined' ? manualMatchTx : undefined],
-    ['rejectTxItem', typeof rejectTxItem !== 'undefined' ? rejectTxItem : undefined],
-    ['toast', typeof toast !== 'undefined' ? toast : undefined],
-    ['autoGrow', typeof autoGrow !== 'undefined' ? autoGrow : undefined],
-    ['parseAny', typeof parseAny !== 'undefined' ? parseAny : undefined],
-    ['tickClocks', typeof tickClocks !== 'undefined' ? tickClocks : undefined],
-    ['paintTimeUI', typeof paintTimeUI !== 'undefined' ? paintTimeUI : undefined],
-    ['pickTz', typeof pickTz !== 'undefined' ? pickTz : undefined],
-    ['applySim', typeof applySim !== 'undefined' ? applySim : undefined],
-    ['clearSim', typeof clearSim !== 'undefined' ? clearSim : undefined],
-    ['pkgOf', typeof pkgOf !== 'undefined' ? pkgOf : undefined],
-    ['ordMonths', typeof ordMonths !== 'undefined' ? ordMonths : undefined],
-    ['webLabel', typeof webLabel !== 'undefined' ? webLabel : undefined],
-    ['getMe', typeof getMe !== 'undefined' ? getMe : undefined],
-    ['linkBottom', typeof linkBottom !== 'undefined' ? linkBottom : undefined],
-    ['api', typeof api !== 'undefined' ? api : undefined],
-    ['toLogin', typeof toLogin !== 'undefined' ? toLogin : undefined],
-    ['doLogin', typeof doLogin !== 'undefined' ? doLogin : undefined],
-    ['doLogout', typeof doLogout !== 'undefined' ? doLogout : undefined],
-    ['resetAndHardReload', typeof resetAndHardReload !== 'undefined' ? resetAndHardReload : undefined],
-    ['setManualEdit', typeof setManualEdit !== 'undefined' ? setManualEdit : undefined],
-    ['healLinks', typeof healLinks !== 'undefined' ? healLinks : undefined],
-    ['applyPoll', typeof applyPoll !== 'undefined' ? applyPoll : undefined],
-    ['fetchAll', typeof fetchAll !== 'undefined' ? fetchAll : undefined],
-    ['pollMain', typeof pollMain !== 'undefined' ? pollMain : undefined],
-    ['switchPkgSubTab', typeof switchPkgSubTab !== 'undefined' ? switchPkgSubTab : undefined],
-    ['buildTabs', typeof buildTabs !== 'undefined' ? buildTabs : undefined],
-    ['go', typeof go !== 'undefined' ? go : undefined],
-    ['switchOrdTab', typeof switchOrdTab !== 'undefined' ? switchOrdTab : undefined],
-    ['ordCard', typeof ordCard !== 'undefined' ? ordCard : undefined],
-    ['renderOrd', typeof renderOrd !== 'undefined' ? renderOrd : undefined],
-    ['updateOrderTogglesUI', typeof updateOrderTogglesUI !== 'undefined' ? updateOrderTogglesUI : undefined],
-    ['toggleLockFulfillBtn', typeof toggleLockFulfillBtn !== 'undefined' ? toggleLockFulfillBtn : undefined],
-    ['toggleMailOnSaveBtn', typeof toggleMailOnSaveBtn !== 'undefined' ? toggleMailOnSaveBtn : undefined],
-    ['toggleManualEditBtn', typeof toggleManualEditBtn !== 'undefined' ? toggleManualEditBtn : undefined],
-    ['autoFillNickname', typeof autoFillNickname !== 'undefined' ? autoFillNickname : undefined],
-    ['updMonths', typeof updMonths !== 'undefined' ? updMonths : undefined],
-    ['updAmountUi', typeof updAmountUi !== 'undefined' ? updAmountUi : undefined],
-    ['fillAmount', typeof fillAmount !== 'undefined' ? fillAmount : undefined],
-    ['getOrderAnchorTs', typeof getOrderAnchorTs !== 'undefined' ? getOrderAnchorTs : undefined],
-    ['autoFillDays', typeof autoFillDays !== 'undefined' ? autoFillDays : undefined],
-    ['onPkgChange', typeof onPkgChange !== 'undefined' ? onPkgChange : undefined],
-    ['onMethodChange', typeof onMethodChange !== 'undefined' ? onMethodChange : undefined],
-    ['recalcExpFromDays', typeof recalcExpFromDays !== 'undefined' ? recalcExpFromDays : undefined],
-    ['recalcDaysFromExp', typeof recalcDaysFromExp !== 'undefined' ? recalcDaysFromExp : undefined],
-    ['togSF', typeof togSF !== 'undefined' ? togSF : undefined],
-    ['syncUpg', typeof syncUpg !== 'undefined' ? syncUpg : undefined],
-    ['readModal', typeof readModal !== 'undefined' ? readModal : undefined],
-    ['openOrdModal', typeof openOrdModal !== 'undefined' ? openOrdModal : undefined],
-    ['saveOrd', typeof saveOrd !== 'undefined' ? saveOrd : undefined],
-    ['delOrd', typeof delOrd !== 'undefined' ? delOrd : undefined],
-    ['getMissingOrders', typeof getMissingOrders !== 'undefined' ? getMissingOrders : undefined],
-    ['updateCheckBadge', typeof updateCheckBadge !== 'undefined' ? updateCheckBadge : undefined],
-    ['renderCheckTab', typeof renderCheckTab !== 'undefined' ? renderCheckTab : undefined],
-    ['saveCheckManual', typeof saveCheckManual !== 'undefined' ? saveCheckManual : undefined],
-    ['healSingleOrder', typeof healSingleOrder !== 'undefined' ? healSingleOrder : undefined],
-    ['healAllMissingWithProgress', typeof healAllMissingWithProgress !== 'undefined' ? healAllMissingWithProgress : undefined],
-    ['mailRender', typeof mailRender !== 'undefined' ? mailRender : undefined],
-    ['orderVars', typeof orderVars !== 'undefined' ? orderVars : undefined],
-    ['sendExpMail', typeof sendExpMail !== 'undefined' ? sendExpMail : undefined],
-    ['sendZaloMail', typeof sendZaloMail !== 'undefined' ? sendZaloMail : undefined],
-    ['getCentralRates', typeof getCentralRates !== 'undefined' ? getCentralRates : undefined],
-    ['revList', typeof revList !== 'undefined' ? revList : undefined],
-    ['costSum', typeof costSum !== 'undefined' ? costSum : undefined],
-    ['monthTotals', typeof monthTotals !== 'undefined' ? monthTotals : undefined],
-    ['renderRevenue', typeof renderRevenue !== 'undefined' ? renderRevenue : undefined],
-    ['revOver', typeof revOver !== 'undefined' ? revOver : undefined],
-    ['revPay', typeof revPay !== 'undefined' ? revPay : undefined],
-    ['saveCentralRates', typeof saveCentralRates !== 'undefined' ? saveCentralRates : undefined],
-    ['revPayDetail', typeof revPayDetail !== 'undefined' ? revPayDetail : undefined],
-    ['revCost', typeof revCost !== 'undefined' ? revCost : undefined],
-    ['addCost', typeof addCost !== 'undefined' ? addCost : undefined],
-    ['delCost', typeof delCost !== 'undefined' ? delCost : undefined],
-    ['tplToMc', typeof tplToMc !== 'undefined' ? tplToMc : undefined],
-    ['mcSampleVars', typeof mcSampleVars !== 'undefined' ? mcSampleVars : undefined],
-    ['mcRenderTabs', typeof mcRenderTabs !== 'undefined' ? mcRenderTabs : undefined],
-    ['mcRenderPresetOptions', typeof mcRenderPresetOptions !== 'undefined' ? mcRenderPresetOptions : undefined],
-    ['mcLoadPreset', typeof mcLoadPreset !== 'undefined' ? mcLoadPreset : undefined],
-    ['mcSwitchTab', typeof mcSwitchTab !== 'undefined' ? mcSwitchTab : undefined],
-    ['renderMailComposer', typeof renderMailComposer !== 'undefined' ? renderMailComposer : undefined],
-    ['mcInsertVar', typeof mcInsertVar !== 'undefined' ? mcInsertVar : undefined],
-    ['mcRenderEditor', typeof mcRenderEditor !== 'undefined' ? mcRenderEditor : undefined],
-    ['mcPreview', typeof mcPreview !== 'undefined' ? mcPreview : undefined],
-    ['mcSet', typeof mcSet !== 'undefined' ? mcSet : undefined],
-    ['mcAdd', typeof mcAdd !== 'undefined' ? mcAdd : undefined],
-    ['mcMove', typeof mcMove !== 'undefined' ? mcMove : undefined],
-    ['mcDel', typeof mcDel !== 'undefined' ? mcDel : undefined],
-    ['mcPickColor', typeof mcPickColor !== 'undefined' ? mcPickColor : undefined],
-    ['mcColorInput', typeof mcColorInput !== 'undefined' ? mcColorInput : undefined],
-    ['mcGrad', typeof mcGrad !== 'undefined' ? mcGrad : undefined],
-    ['mcSaveTemplate', typeof mcSaveTemplate !== 'undefined' ? mcSaveTemplate : undefined],
-    ['mcExtraAction', typeof mcExtraAction !== 'undefined' ? mcExtraAction : undefined],
-    ['mcScan', typeof mcScan !== 'undefined' ? mcScan : undefined],
-    ['mcRenderRecs', typeof mcRenderRecs !== 'undefined' ? mcRenderRecs : undefined],
-    ['mcSend', typeof mcSend !== 'undefined' ? mcSend : undefined],
-    ['dataPriceLabel', typeof dataPriceLabel !== 'undefined' ? dataPriceLabel : undefined],
-    ['renderDataRequests', typeof renderDataRequests !== 'undefined' ? renderDataRequests : undefined],
-    ['sendDataReport', typeof sendDataReport !== 'undefined' ? sendDataReport : undefined],
-    ['delDataRequest', typeof delDataRequest !== 'undefined' ? delDataRequest : undefined],
-    ['clearDataRequests', typeof clearDataRequests !== 'undefined' ? clearDataRequests : undefined],
-    ['toggleDataRequestSeen', typeof toggleDataRequestSeen !== 'undefined' ? toggleDataRequestSeen : undefined],
-    ['markAllDataRequestsSeen', typeof markAllDataRequestsSeen !== 'undefined' ? markAllDataRequestsSeen : undefined],
-    ['switchTxTab', typeof switchTxTab !== 'undefined' ? switchTxTab : undefined],
-    ['mergeTx', typeof mergeTx !== 'undefined' ? mergeTx : undefined],
-    ['loadTx', typeof loadTx !== 'undefined' ? loadTx : undefined],
-    ['deleteTx', typeof deleteTx !== 'undefined' ? deleteTx : undefined],
-    ['renderTransactions', typeof renderTransactions !== 'undefined' ? renderTransactions : undefined],
-    ['approveTransaction', typeof approveTransaction !== 'undefined' ? approveTransaction : undefined],
-    ['detectProvider', typeof detectProvider !== 'undefined' ? detectProvider : undefined],
-    ['buildMasked', typeof buildMasked !== 'undefined' ? buildMasked : undefined],
-    ['openRootEditModal', typeof openRootEditModal !== 'undefined' ? openRootEditModal : undefined],
-    ['toggleClusterSpecs', typeof toggleClusterSpecs !== 'undefined' ? toggleClusterSpecs : undefined],
-    ['renderLinks', typeof renderLinks !== 'undefined' ? renderLinks : undefined],
-    ['saveRootEdit', typeof saveRootEdit !== 'undefined' ? saveRootEdit : undefined],
-    ['createLink', typeof createLink !== 'undefined' ? createLink : undefined],
-    ['openLnkModal', typeof openLnkModal !== 'undefined' ? openLnkModal : undefined],
-    ['saveLnkEdit', typeof saveLnkEdit !== 'undefined' ? saveLnkEdit : undefined],
-    ['toggleLock', typeof toggleLock !== 'undefined' ? toggleLock : undefined],
-    ['delLink', typeof delLink !== 'undefined' ? delLink : undefined],
-    ['sortAllLinks', typeof sortAllLinks !== 'undefined' ? sortAllLinks : undefined],
-    ['triggerGitHub', typeof triggerGitHub !== 'undefined' ? triggerGitHub : undefined],
-    ['runGC', typeof runGC !== 'undefined' ? runGC : undefined],
-    ['rebuildAllMAP', typeof rebuildAllMAP !== 'undefined' ? rebuildAllMAP : undefined],
-    ['getDefaultAdminPkgs', typeof getDefaultAdminPkgs !== 'undefined' ? getDefaultAdminPkgs : undefined],
-    ['loadDrawerSettingsUI', typeof loadDrawerSettingsUI !== 'undefined' ? loadDrawerSettingsUI : undefined],
-    ['updateHeaderDrawerPreview', typeof updateHeaderDrawerPreview !== 'undefined' ? updateHeaderDrawerPreview : undefined],
-    ['toggleHeaderDrawer', typeof toggleHeaderDrawer !== 'undefined' ? toggleHeaderDrawer : undefined],
-    ['saveHeaderDrawer', typeof saveHeaderDrawer !== 'undefined' ? saveHeaderDrawer : undefined],
-    ['loadAdminPkgs', typeof loadAdminPkgs !== 'undefined' ? loadAdminPkgs : undefined],
-    ['toggleHidePkg', typeof toggleHidePkg !== 'undefined' ? toggleHidePkg : undefined],
-    ['renderPkgAdmin', typeof renderPkgAdmin !== 'undefined' ? renderPkgAdmin : undefined],
-    ['toggleLifetimePkg', typeof toggleLifetimePkg !== 'undefined' ? toggleLifetimePkg : undefined],
-    ['togglePkgCat', typeof togglePkgCat !== 'undefined' ? togglePkgCat : undefined],
-    ['addNewCustomPkg', typeof addNewCustomPkg !== 'undefined' ? addNewCustomPkg : undefined],
-    ['delPkg', typeof delPkg !== 'undefined' ? delPkg : undefined],
-    ['saveAllPkgs', typeof saveAllPkgs !== 'undefined' ? saveAllPkgs : undefined],
-    ['relinkScanRun', typeof relinkScanRun !== 'undefined' ? relinkScanRun : undefined],
-    ['relinkMapRun', typeof relinkMapRun !== 'undefined' ? relinkMapRun : undefined],
-    ['relinkApply', typeof relinkApply !== 'undefined' ? relinkApply : undefined],
-    ['switchDeadSubTab', typeof switchDeadSubTab !== 'undefined' ? switchDeadSubTab : undefined],
-    ['renderDead', typeof renderDead !== 'undefined' ? renderDead : undefined],
-    ['renderDeadSources', typeof renderDeadSources !== 'undefined' ? renderDeadSources : undefined],
-    ['hardDeleteSource', typeof hardDeleteSource !== 'undefined' ? hardDeleteSource : undefined],
-    ['cleanUnusedSources', typeof cleanUnusedSources !== 'undefined' ? cleanUnusedSources : undefined],
-    ['restoreLink', typeof restoreLink !== 'undefined' ? restoreLink : undefined],
-    ['clearDeadLinks', typeof clearDeadLinks !== 'undefined' ? clearDeadLinks : undefined],
-    ['cmsEnsureTabs', typeof cmsEnsureTabs !== 'undefined' ? cmsEnsureTabs : undefined],
-    ['ensureArts', typeof ensureArts !== 'undefined' ? ensureArts : undefined],
-    ['initGuides', typeof initGuides !== 'undefined' ? initGuides : undefined],
-    ['renderGuideAll', typeof renderGuideAll !== 'undefined' ? renderGuideAll : undefined],
-    ['copyArtDeepLink', typeof copyArtDeepLink !== 'undefined' ? copyArtDeepLink : undefined],
-    ['getEditorHtml', typeof getEditorHtml !== 'undefined' ? getEditorHtml : undefined],
-    ['commitCms', typeof commitCms !== 'undefined' ? commitCms : undefined],
-    ['setCms', typeof setCms !== 'undefined' ? setCms : undefined],
-    ['openArt', typeof openArt !== 'undefined' ? openArt : undefined],
-    ['artAdd', typeof artAdd !== 'undefined' ? artAdd : undefined],
-    ['artDel', typeof artDel !== 'undefined' ? artDel : undefined],
-    ['renderArtList', typeof renderArtList !== 'undefined' ? renderArtList : undefined],
-    ['renderCmsTabBtns', typeof renderCmsTabBtns !== 'undefined' ? renderCmsTabBtns : undefined],
-    ['setupSortableCmsTabs', typeof setupSortableCmsTabs !== 'undefined' ? setupSortableCmsTabs : undefined],
-    ['renderCmsTabEdit', typeof renderCmsTabEdit !== 'undefined' ? renderCmsTabEdit : undefined],
-    ['cmsTabSet', typeof cmsTabSet !== 'undefined' ? cmsTabSet : undefined],
-    ['cmsAddTab', typeof cmsAddTab !== 'undefined' ? cmsAddTab : undefined],
-    ['cmsDelTab', typeof cmsDelTab !== 'undefined' ? cmsDelTab : undefined],
-    ['bStyle', typeof bStyle !== 'undefined' ? bStyle : undefined],
-    ['guideScroll', typeof guideScroll !== 'undefined' ? guideScroll : undefined],
-    ['openLightbox', typeof openLightbox !== 'undefined' ? openLightbox : undefined],
-    ['videoEmbed', typeof videoEmbed !== 'undefined' ? videoEmbed : undefined],
-    ['renderBlocks', typeof renderBlocks !== 'undefined' ? renderBlocks : undefined],
-    ['cmsGoto', typeof cmsGoto !== 'undefined' ? cmsGoto : undefined],
-    ['cmsGotoArt', typeof cmsGotoArt !== 'undefined' ? cmsGotoArt : undefined],
-    ['buildRichArticleView', typeof buildRichArticleView !== 'undefined' ? buildRichArticleView : undefined],
-    ['scrollToHeadingText', typeof scrollToHeadingText !== 'undefined' ? scrollToHeadingText : undefined],
-    ['cmsPrev', typeof cmsPrev !== 'undefined' ? cmsPrev : undefined],
-    ['addArtFaqRow', typeof addArtFaqRow !== 'undefined' ? addArtFaqRow : undefined],
-    ['delArtFaqRow', typeof delArtFaqRow !== 'undefined' ? delArtFaqRow : undefined],
-    ['renderArtFaqsUI', typeof renderArtFaqsUI !== 'undefined' ? renderArtFaqsUI : undefined],
-    ['toggleRelatedArtPick', typeof toggleRelatedArtPick !== 'undefined' ? toggleRelatedArtPick : undefined],
-    ['renderCmsEditor', typeof renderCmsEditor !== 'undefined' ? renderCmsEditor : undefined],
-    ['saveArtFaqsOnly', typeof saveArtFaqsOnly !== 'undefined' ? saveArtFaqsOnly : undefined],
-    ['saveCms', typeof saveCms !== 'undefined' ? saveCms : undefined],
-    ['closeCmsEditor', typeof closeCmsEditor !== 'undefined' ? closeCmsEditor : undefined],
-    ['openCmsEditorForArt', typeof openCmsEditorForArt !== 'undefined' ? openCmsEditorForArt : undefined],
-    ['addArticleToCategory', typeof addArticleToCategory !== 'undefined' ? addArticleToCategory : undefined],
-    ['renderGuideCategoriesTree', typeof renderGuideCategoriesTree !== 'undefined' ? renderGuideCategoriesTree : undefined],
-    ['switchCheckSubTab', typeof switchCheckSubTab !== 'undefined' ? switchCheckSubTab : undefined],
-    ['switchSettingsTab', typeof switchSettingsTab !== 'undefined' ? switchSettingsTab : undefined],
-    ['showCronLog', typeof showCronLog !== 'undefined' ? showCronLog : undefined],
-    ['renderRouteRows', typeof renderRouteRows !== 'undefined' ? renderRouteRows : undefined],
-    ['saveRouting', typeof saveRouting !== 'undefined' ? saveRouting : undefined],
-    ['checkBlurValidity', typeof checkBlurValidity !== 'undefined' ? checkBlurValidity : undefined],
-    ['renderBlurRows', typeof renderBlurRows !== 'undefined' ? renderBlurRows : undefined],
-    ['saveBlur', typeof saveBlur !== 'undefined' ? saveBlur : undefined],
-    ['renderDockRows', typeof renderDockRows !== 'undefined' ? renderDockRows : undefined],
-    ['dockPv', typeof dockPv !== 'undefined' ? dockPv : undefined],
-    ['readDockRows', typeof readDockRows !== 'undefined' ? readDockRows : undefined],
-    ['addDockIcon', typeof addDockIcon !== 'undefined' ? addDockIcon : undefined],
-    ['removeDockIcon', typeof removeDockIcon !== 'undefined' ? removeDockIcon : undefined],
-    ['saveDock', typeof saveDock !== 'undefined' ? saveDock : undefined],
-    ['loadAdminFaqs', typeof loadAdminFaqs !== 'undefined' ? loadAdminFaqs : undefined],
-    ['renderFaqAdmin', typeof renderFaqAdmin !== 'undefined' ? renderFaqAdmin : undefined],
-    ['addNewFaq', typeof addNewFaq !== 'undefined' ? addNewFaq : undefined],
-    ['delFaq', typeof delFaq !== 'undefined' ? delFaq : undefined],
-    ['moveFaq', typeof moveFaq !== 'undefined' ? moveFaq : undefined],
-    ['saveFaqs', typeof saveFaqs !== 'undefined' ? saveFaqs : undefined],
-    ['switchFaqSubTab', typeof switchFaqSubTab !== 'undefined' ? switchFaqSubTab : undefined],
-    ['normRouteInput', typeof normRouteInput !== 'undefined' ? normRouteInput : undefined],
-    ['loadRoutesConfigUI', typeof loadRoutesConfigUI !== 'undefined' ? loadRoutesConfigUI : undefined],
-    ['saveRoutesConfig', typeof saveRoutesConfig !== 'undefined' ? saveRoutesConfig : undefined],
-    ['ftColsFromDb', typeof ftColsFromDb !== 'undefined' ? ftColsFromDb : undefined],
-    ['renderFtCols', typeof renderFtCols !== 'undefined' ? renderFtCols : undefined],
-    ['ftAddCol', typeof ftAddCol !== 'undefined' ? ftAddCol : undefined],
-    ['ftDelCol', typeof ftDelCol !== 'undefined' ? ftDelCol : undefined],
-    ['ftMoveCol', typeof ftMoveCol !== 'undefined' ? ftMoveCol : undefined],
-    ['ftAddLink', typeof ftAddLink !== 'undefined' ? ftAddLink : undefined],
-    ['ftDelLink', typeof ftDelLink !== 'undefined' ? ftDelLink : undefined],
-    ['ftLoadTemplate', typeof ftLoadTemplate !== 'undefined' ? ftLoadTemplate : undefined],
-    ['loadFooterConfigUI', typeof loadFooterConfigUI !== 'undefined' ? loadFooterConfigUI : undefined],
-    ['saveFooterConfig', typeof saveFooterConfig !== 'undefined' ? saveFooterConfig : undefined],
-    ['saveQrExpireSeconds', typeof saveQrExpireSeconds !== 'undefined' ? saveQrExpireSeconds : undefined],
-    ['switchWebAdminTab', typeof switchWebAdminTab !== 'undefined' ? switchWebAdminTab : undefined],
-    ['loadWebAdminUI', typeof loadWebAdminUI !== 'undefined' ? loadWebAdminUI : undefined],
-    ['loadSettingsUI', typeof loadSettingsUI !== 'undefined' ? loadSettingsUI : undefined],
-    ['saveEmailPerm', typeof saveEmailPerm !== 'undefined' ? saveEmailPerm : undefined],
-    ['initAdminNotifyUI', typeof initAdminNotifyUI !== 'undefined' ? initAdminNotifyUI : undefined],
-    ['updateAdminNotifyStatusUI', typeof updateAdminNotifyStatusUI !== 'undefined' ? updateAdminNotifyStatusUI : undefined],
-    ['saveAdminNotifyPerm', typeof saveAdminNotifyPerm !== 'undefined' ? saveAdminNotifyPerm : undefined],
-    ['saveCronCfg', typeof saveCronCfg !== 'undefined' ? saveCronCfg : undefined],
-    ['saveLockExpiry', typeof saveLockExpiry !== 'undefined' ? saveLockExpiry : undefined],
-    ['runCronNow', typeof runCronNow !== 'undefined' ? runCronNow : undefined],
-    ['loadStatus', typeof loadStatus !== 'undefined' ? loadStatus : undefined],
-    ['qBar', typeof qBar !== 'undefined' ? qBar : undefined],
-    ['mailProvCard', typeof mailProvCard !== 'undefined' ? mailProvCard : undefined],
-    ['selectMailProvider', typeof selectMailProvider !== 'undefined' ? selectMailProvider : undefined],
-    ['saveMailProvider', typeof saveMailProvider !== 'undefined' ? saveMailProvider : undefined],
-    ['renderMailProvCards', typeof renderMailProvCards !== 'undefined' ? renderMailProvCards : undefined],
-    ['loadQuota', typeof loadQuota !== 'undefined' ? loadQuota : undefined],
-    ['loadLogs', typeof loadLogs !== 'undefined' ? loadLogs : undefined],
-    ['renderLogs', typeof renderLogs !== 'undefined' ? renderLogs : undefined],
-    ['renderDev', typeof renderDev !== 'undefined' ? renderDev : undefined],
-    ['delDev', typeof delDev !== 'undefined' ? delDev : undefined],
-    ['migrateDates', typeof migrateDates !== 'undefined' ? migrateDates : undefined],
-    ['migratePkg', typeof migratePkg !== 'undefined' ? migratePkg : undefined],
-    ['loadFulfillmentConfig', typeof loadFulfillmentConfig !== 'undefined' ? loadFulfillmentConfig : undefined],
-    ['renderFulfillmentUI', typeof renderFulfillmentUI !== 'undefined' ? renderFulfillmentUI : undefined],
-    ['selectFailoverPolicy', typeof selectFailoverPolicy !== 'undefined' ? selectFailoverPolicy : undefined],
-    ['updateFailoverPolicyUI', typeof updateFailoverPolicyUI !== 'undefined' ? updateFailoverPolicyUI : undefined],
-    ['saveFulfillmentMapping', typeof saveFulfillmentMapping !== 'undefined' ? saveFulfillmentMapping : undefined],
-    ['saveFailoverPolicy', typeof saveFailoverPolicy !== 'undefined' ? saveFailoverPolicy : undefined],
-    ['startApp', typeof startApp !== 'undefined' ? startApp : undefined],
-    ['restoreAdminScroll', typeof restoreAdminScroll !== 'undefined' ? restoreAdminScroll : undefined],
-    ['updateTestModeUI', typeof updateTestModeUI !== 'undefined' ? updateTestModeUI : undefined],
-    ['testPingProd', typeof testPingProd !== 'undefined' ? testPingProd : undefined],
-    ['testTelegramBot', typeof testTelegramBot !== 'undefined' ? testTelegramBot : undefined],
-    ['triggerTelegramKvBackupNow', typeof triggerTelegramKvBackupNow !== 'undefined' ? triggerTelegramKvBackupNow : undefined],
-    ['resetTelegramStt', typeof resetTelegramStt !== 'undefined' ? resetTelegramStt : undefined],
-    ['triggerTelegramBackupNow', typeof triggerTelegramBackupNow !== 'undefined' ? triggerTelegramBackupNow : undefined],
-    ['SITE_KEY', typeof SITE_KEY !== 'undefined' ? SITE_KEY : undefined],
-    ['API', typeof API !== 'undefined' ? API : undefined],
-    ['PDS', typeof PDS !== 'undefined' ? PDS : undefined],
-    ['PD', typeof PD !== 'undefined' ? PD : undefined],
-    ['GH_REPO', typeof GH_REPO !== 'undefined' ? GH_REPO : undefined],
-    ['PKG_LIST', typeof PKG_LIST !== 'undefined' ? PKG_LIST : undefined],
-    ['TABS', typeof TABS !== 'undefined' ? TABS : undefined],
-    ['PKG_DB', typeof PKG_DB !== 'undefined' ? PKG_DB : undefined],
-    ['$', typeof $ !== 'undefined' ? $ : undefined],
-    ['arr', typeof arr !== 'undefined' ? arr : undefined],
-    ['esc', typeof esc !== 'undefined' ? esc : undefined],
-    ['q', typeof q !== 'undefined' ? q : undefined],
-    ['cm', typeof cm !== 'undefined' ? cm : undefined],
-    ['genId', typeof genId !== 'undefined' ? genId : undefined],
-    ['genHex', typeof genHex !== 'undefined' ? genHex : undefined],
-    ['normId', typeof normId !== 'undefined' ? normId : undefined],
-    ['isLife', typeof isLife !== 'undefined' ? isLife : undefined],
-    ['normSt', typeof normSt !== 'undefined' ? normSt : undefined],
-    ['getT', typeof getT !== 'undefined' ? getT : undefined],
-    ['trimNum', typeof trimNum !== 'undefined' ? trimNum : undefined],
-    ['VND_SEP', typeof VND_SEP !== 'undefined' ? VND_SEP : undefined],
-    ['fmtVnd', typeof fmtVnd !== 'undefined' ? fmtVnd : undefined],
-    ['Toast', typeof Toast !== 'undefined' ? Toast : undefined],
-    ['cp', typeof cp !== 'undefined' ? cp : undefined],
-    ['sleep', typeof sleep !== 'undefined' ? sleep : undefined],
-    ['off', typeof off !== 'undefined' ? off : undefined],
-    ['TZN', typeof TZN !== 'undefined' ? TZN : undefined],
-    ['nowMs', typeof nowMs !== 'undefined' ? nowMs : undefined],
-    ['fmtBank', typeof fmtBank !== 'undefined' ? fmtBank : undefined],
-    ['oTs', typeof oTs !== 'undefined' ? oTs : undefined],
-    ['dmyOf', typeof dmyOf !== 'undefined' ? dmyOf : undefined],
-    ['parseDmy', typeof parseDmy !== 'undefined' ? parseDmy : undefined],
-    ['expEnd', typeof expEnd !== 'undefined' ? expEnd : undefined],
-    ['monthInfo', typeof monthInfo !== 'undefined' ? monthInfo : undefined],
-    ['fmtFull', typeof fmtFull !== 'undefined' ? fmtFull : undefined],
-    ['OLD_BY_DATA', typeof OLD_BY_DATA !== 'undefined' ? OLD_BY_DATA : undefined],
-    ['pkgLabel', typeof pkgLabel !== 'undefined' ? pkgLabel : undefined],
-    ['fmtMonths', typeof fmtMonths !== 'undefined' ? fmtMonths : undefined],
-    ['myWebIndex', typeof myWebIndex !== 'undefined' ? myWebIndex : undefined],
-    ['payOf', typeof payOf !== 'undefined' ? payOf : undefined],
-    ['TOKEN', typeof TOKEN !== 'undefined' ? TOKEN : undefined],
-    ['myDev', typeof myDev !== 'undefined' ? myDev : undefined],
-    ['aj', typeof aj !== 'undefined' ? aj : undefined],
-    ['logEvent', typeof logEvent !== 'undefined' ? logEvent : undefined],
-    ['ordersDb', typeof ordersDb !== 'undefined' ? ordersDb : undefined],
-    ['curOrdTab', typeof curOrdTab !== 'undefined' ? curOrdTab : undefined],
-    ['isMailMaster', typeof isMailMaster !== 'undefined' ? isMailMaster : undefined],
-    ['expLocked', typeof expLocked !== 'undefined' ? expLocked : undefined],
-    ['lockFulfillOn', typeof lockFulfillOn !== 'undefined' ? lockFulfillOn : undefined],
-    ['mailOnSaveOn', typeof mailOnSaveOn !== 'undefined' ? mailOnSaveOn : undefined],
-    ['manualEditOn', typeof manualEditOn !== 'undefined' ? manualEditOn : undefined],
-    ['tombGet', typeof tombGet !== 'undefined' ? tombGet : undefined],
-    ['tombSet', typeof tombSet !== 'undefined' ? tombSet : undefined],
-    ['addTomb', typeof addTomb !== 'undefined' ? addTomb : undefined],
-    ['rmTomb', typeof rmTomb !== 'undefined' ? rmTomb : undefined],
-    ['isDeleted', typeof isDeleted !== 'undefined' ? isDeleted : undefined],
-    ['isLockedPoolUrl', typeof isLockedPoolUrl !== 'undefined' ? isLockedPoolUrl : undefined],
-    ['ordAmountTxt', typeof ordAmountTxt !== 'undefined' ? ordAmountTxt : undefined],
-    ['curUpg', typeof curUpg !== 'undefined' ? curUpg : undefined],
-    ['healAllMissing', typeof healAllMissing !== 'undefined' ? healAllMissing : undefined],
-    ['htmlEscape', typeof htmlEscape !== 'undefined' ? htmlEscape : undefined],
-    ['sendMailClient', typeof sendMailClient !== 'undefined' ? sendMailClient : undefined],
-    ['mailGrad', typeof mailGrad !== 'undefined' ? mailGrad : undefined],
-    ['mailShell', typeof mailShell !== 'undefined' ? mailShell : undefined],
-    ['mailIdBox', typeof mailIdBox !== 'undefined' ? mailIdBox : undefined],
-    ['mailPortal', typeof mailPortal !== 'undefined' ? mailPortal : undefined],
-    ['mailBtn', typeof mailBtn !== 'undefined' ? mailBtn : undefined],
-    ['mailSupport', typeof mailSupport !== 'undefined' ? mailSupport : undefined],
-    ['TPL_THEME', typeof TPL_THEME !== 'undefined' ? TPL_THEME : undefined],
-    ['P0', typeof P0 !== 'undefined' ? P0 : undefined],
-    ['SYS_TPL', typeof SYS_TPL !== 'undefined' ? SYS_TPL : undefined],
-    ['getTpl', typeof getTpl !== 'undefined' ? getTpl : undefined],
-    ['subjVars', typeof subjVars !== 'undefined' ? subjVars : undefined],
-    ['mailKeyOf', typeof mailKeyOf !== 'undefined' ? mailKeyOf : undefined],
-    ['mailSuccess', typeof mailSuccess !== 'undefined' ? mailSuccess : undefined],
-    ['mailFailed', typeof mailFailed !== 'undefined' ? mailFailed : undefined],
-    ['mailExp', typeof mailExp !== 'undefined' ? mailExp : undefined],
-    ['mailZalo', typeof mailZalo !== 'undefined' ? mailZalo : undefined],
-    ['dataVars', typeof dataVars !== 'undefined' ? dataVars : undefined],
-    ['mailData', typeof mailData !== 'undefined' ? mailData : undefined],
-    ['revTab', typeof revTab !== 'undefined' ? revTab : undefined],
-    ['REV_TABS', typeof REV_TABS !== 'undefined' ? REV_TABS : undefined],
-    ['setRevTab', typeof setRevTab !== 'undefined' ? setRevTab : undefined],
-    ['setRevPayView', typeof setRevPayView !== 'undefined' ? setRevPayView : undefined],
-    ['setRevMonth', typeof setRevMonth !== 'undefined' ? setRevMonth : undefined],
-    ['mcToHtml', typeof mcToHtml !== 'undefined' ? mcToHtml : undefined],
-    ['addFaqRow', typeof addFaqRow !== 'undefined' ? addFaqRow : undefined],
-    ['saveFaqAdmin', typeof saveFaqAdmin !== 'undefined' ? saveFaqAdmin : undefined],
-    ['addFooterColumn', typeof addFooterColumn !== 'undefined' ? addFooterColumn : undefined],
-    ['ftAddCol', typeof ftAddCol !== 'undefined' ? ftAddCol : undefined],
-    ['ftDelCol', typeof ftDelCol !== 'undefined' ? ftDelCol : undefined],
-    ['ftMoveCol', typeof ftMoveCol !== 'undefined' ? ftMoveCol : undefined],
-    ['ftAddLink', typeof ftAddLink !== 'undefined' ? ftAddLink : undefined],
-    ['ftDelLink', typeof ftDelLink !== 'undefined' ? ftDelLink : undefined],
-    ['ftLoadTemplate', typeof ftLoadTemplate !== 'undefined' ? ftLoadTemplate : undefined],
-    ['customCmsImageHandler', typeof customCmsImageHandler !== 'undefined' ? customCmsImageHandler : undefined],
-    ['customCmsVideoHandler', typeof customCmsVideoHandler !== 'undefined' ? customCmsVideoHandler : undefined],
-    ['recordAdminNav', typeof recordAdminNav !== 'undefined' ? recordAdminNav : undefined],
-    ['closeCmsEditor', typeof closeCmsEditor !== 'undefined' ? closeCmsEditor : undefined],
-
-    ['cnyRate', typeof cnyRate !== 'undefined' ? cnyRate : undefined],
-    ['curVal', typeof curVal !== 'undefined' ? curVal : undefined],
-    ['shortN', typeof shortN !== 'undefined' ? shortN : undefined],
-    ['monthLbl', typeof monthLbl !== 'undefined' ? monthLbl : undefined],
-    ['kpi', typeof kpi !== 'undefined' ? kpi : undefined],
-    ['box', typeof box !== 'undefined' ? box : undefined],
-    ['chartRevStacked', typeof chartRevStacked !== 'undefined' ? chartRevStacked : undefined],
-    ['gridPkgTable', typeof gridPkgTable !== 'undefined' ? gridPkgTable : undefined],
-    ['PAYLBL', typeof PAYLBL !== 'undefined' ? PAYLBL : undefined],
-    ['MC_COLORS', typeof MC_COLORS !== 'undefined' ? MC_COLORS : undefined],
-    ['MC_BT', typeof MC_BT !== 'undefined' ? MC_BT : undefined],
-    ['MC_VARS_BASE', typeof MC_VARS_BASE !== 'undefined' ? MC_VARS_BASE : undefined],
-    ['MC_VARS_SYS', typeof MC_VARS_SYS !== 'undefined' ? MC_VARS_SYS : undefined],
-    ['MC_SYS_KEYS', typeof MC_SYS_KEYS !== 'undefined' ? MC_SYS_KEYS : undefined],
-    ['MC_SYS_NAMES', typeof MC_SYS_NAMES !== 'undefined' ? MC_SYS_NAMES : undefined],
-    ['MC_PRESETS', typeof MC_PRESETS !== 'undefined' ? MC_PRESETS : undefined],
-    ['mc', typeof mc !== 'undefined' ? mc : undefined],
-    ['mcColorName', typeof mcColorName !== 'undefined' ? mcColorName : undefined],
-    ['mcClone', typeof mcClone !== 'undefined' ? mcClone : undefined],
-    ['mcToTpl', typeof mcToTpl !== 'undefined' ? mcToTpl : undefined],
-    ['extractOrder', typeof extractOrder !== 'undefined' ? extractOrder : undefined],
-    ['kindBadge', typeof kindBadge !== 'undefined' ? kindBadge : undefined],
-    ['delBtn', typeof delBtn !== 'undefined' ? delBtn : undefined],
-    ['saveLinks', typeof saveLinks !== 'undefined' ? saveLinks : undefined],
-    ['savePool', typeof savePool !== 'undefined' ? savePool : undefined],
-    ['FIXED_PKG_IDS', typeof FIXED_PKG_IDS !== 'undefined' ? FIXED_PKG_IDS : undefined],
-    ['adminPkgsList', typeof adminPkgsList !== 'undefined' ? adminPkgsList : undefined],
-    ['sortablePkgsInstance', typeof sortablePkgsInstance !== 'undefined' ? sortablePkgsInstance : undefined],
-    ['delCustomPkg', typeof delCustomPkg !== 'undefined' ? delCustomPkg : undefined],
-    ['rsItems', typeof rsItems !== 'undefined' ? rsItems : undefined],
-    ['rlPicks', typeof rlPicks !== 'undefined' ? rlPicks : undefined],
-    ['rlAll', typeof rlAll !== 'undefined' ? rlAll : undefined],
-    ['curDeadTab', typeof curDeadTab !== 'undefined' ? curDeadTab : undefined],
-    ['deadLive', typeof deadLive !== 'undefined' ? deadLive : undefined],
-    ['DEF_TABS', typeof DEF_TABS !== 'undefined' ? DEF_TABS : undefined],
-    ['toSlug', typeof toSlug !== 'undefined' ? toSlug : undefined],
-    ['curArtsReady', typeof curArtsReady !== 'undefined' ? curArtsReady : undefined],
-    ['guideTabList', typeof guideTabList !== 'undefined' ? guideTabList : undefined],
-    ['artsOf', typeof artsOf !== 'undefined' ? artsOf : undefined],
-    ['curArtHtml', typeof curArtHtml !== 'undefined' ? curArtHtml : undefined],
-    ['quillInst', typeof quillInst !== 'undefined' ? quillInst : undefined],
-    ['sortableCmsTabs', typeof sortableCmsTabs !== 'undefined' ? sortableCmsTabs : undefined],
-    ['safeUrl', typeof safeUrl !== 'undefined' ? safeUrl : undefined],
-    ['bAlign', typeof bAlign !== 'undefined' ? bAlign : undefined],
-    ['dAlign', typeof dAlign !== 'undefined' ? dAlign : undefined],
-    ['SZ', typeof SZ !== 'undefined' ? SZ : undefined],
-    ['bText', typeof bText !== 'undefined' ? bText : undefined],
-    ['findTarget', typeof findTarget !== 'undefined' ? findTarget : undefined],
-    ['saveCmsDb', typeof saveCmsDb !== 'undefined' ? saveCmsDb : undefined],
-    ['curCheckSubTab', typeof curCheckSubTab !== 'undefined' ? curCheckSubTab : undefined],
-    ['BLUR_RULES', typeof BLUR_RULES !== 'undefined' ? BLUR_RULES : undefined],
-    ['DEFAULT_FAQS', typeof DEFAULT_FAQS !== 'undefined' ? DEFAULT_FAQS : undefined],
-    ['adminFaqsList', typeof adminFaqsList !== 'undefined' ? adminFaqsList : undefined],
-    ['DEFAULT_SYS_ROUTES', typeof DEFAULT_SYS_ROUTES !== 'undefined' ? DEFAULT_SYS_ROUTES : undefined],
-    ['ftCols', typeof ftCols !== 'undefined' ? ftCols : undefined],
-    ['FT_TEMPLATE', typeof FT_TEMPLATE !== 'undefined' ? FT_TEMPLATE : undefined],
-    ['ftClone', typeof ftClone !== 'undefined' ? ftClone : undefined],
-    ['yn', typeof yn !== 'undefined' ? yn : undefined],
-    ['QL', typeof QL !== 'undefined' ? QL : undefined],
-    ['MAIL_PROV_META', typeof MAIL_PROV_META !== 'undefined' ? MAIL_PROV_META : undefined],
-    ['mailProvQuota', typeof mailProvQuota !== 'undefined' ? mailProvQuota : undefined],
-    ['pickMailProvider', typeof pickMailProvider !== 'undefined' ? pickMailProvider : undefined],
-    ['currentFulfillmentConfig', typeof currentFulfillmentConfig !== 'undefined' ? currentFulfillmentConfig : undefined],
-    ['started', typeof started !== 'undefined' ? started : undefined],
-    ['adminScrollTimer', typeof adminScrollTimer !== 'undefined' ? adminScrollTimer : undefined],
-    ['isTestModeActive', typeof isTestModeActive !== 'undefined' ? isTestModeActive : undefined],
-    ['toggleTestMode', typeof toggleTestMode !== 'undefined' ? toggleTestMode : undefined],
-    ['testPingTest', typeof testPingTest !== 'undefined' ? testPingTest : undefined],
-    ['createFakeTestOrder', typeof createFakeTestOrder !== 'undefined' ? createFakeTestOrder : undefined],
-    ['cloneProdOrdersToTest', typeof cloneProdOrdersToTest !== 'undefined' ? cloneProdOrdersToTest : undefined],
-    ['clearTestOrders', typeof clearTestOrders !== 'undefined' ? clearTestOrders : undefined],
-    ['lastTxError', typeof lastTxError !== 'undefined' ? lastTxError : undefined],
-  ];
+  const _exposed = [['renderFlashSaleAdmin', typeof renderFlashSaleAdmin !== 'undefined' ? renderFlashSaleAdmin : undefined], ['saveFlashSaleConfig', typeof saveFlashSaleConfig !== 'undefined' ? saveFlashSaleConfig : undefined], ['renderCouponAdmin', typeof renderCouponAdmin !== 'undefined' ? renderCouponAdmin : undefined], ['toggleCouponStatus', typeof toggleCouponStatus !== 'undefined' ? toggleCouponStatus : undefined], ['deleteCouponItem', typeof deleteCouponItem !== 'undefined' ? deleteCouponItem : undefined], ['openAddCouponModal', typeof openAddCouponModal !== 'undefined' ? openAddCouponModal : undefined], ['closeCouponModal', typeof closeCouponModal !== 'undefined' ? closeCouponModal : undefined], ['saveCouponModal', typeof saveCouponModal !== 'undefined' ? saveCouponModal : undefined], ['saveRevRates', typeof saveRevRates !== 'undefined' ? saveRevRates : undefined], ['savePkgRates', typeof savePkgRates !== 'undefined' ? savePkgRates : undefined], ['syncRatesToPackages', typeof syncRatesToPackages !== 'undefined' ? syncRatesToPackages : undefined], ['syncPublicPackagesPayload', typeof syncPublicPackagesPayload !== 'undefined' ? syncPublicPackagesPayload : undefined], ['toggleCouponCheckoutInput', typeof toggleCouponCheckoutInput !== 'undefined' ? toggleCouponCheckoutInput : undefined], ['renderExceptionsTab', typeof renderExceptionsTab !== 'undefined' ? renderExceptionsTab : undefined], ['manualMatchTx', typeof manualMatchTx !== 'undefined' ? manualMatchTx : undefined], ['rejectTxItem', typeof rejectTxItem !== 'undefined' ? rejectTxItem : undefined], ['toast', typeof toast !== 'undefined' ? toast : undefined], ['autoGrow', typeof autoGrow !== 'undefined' ? autoGrow : undefined], ['parseAny', typeof parseAny !== 'undefined' ? parseAny : undefined], ['tickClocks', typeof tickClocks !== 'undefined' ? tickClocks : undefined], ['paintTimeUI', typeof paintTimeUI !== 'undefined' ? paintTimeUI : undefined], ['pickTz', typeof pickTz !== 'undefined' ? pickTz : undefined], ['applySim', typeof applySim !== 'undefined' ? applySim : undefined], ['clearSim', typeof clearSim !== 'undefined' ? clearSim : undefined], ['pkgOf', typeof pkgOf !== 'undefined' ? pkgOf : undefined], ['ordMonths', typeof ordMonths !== 'undefined' ? ordMonths : undefined], ['webLabel', typeof webLabel !== 'undefined' ? webLabel : undefined], ['getMe', typeof getMe !== 'undefined' ? getMe : undefined], ['linkBottom', typeof linkBottom !== 'undefined' ? linkBottom : undefined], ['api', typeof api !== 'undefined' ? api : undefined], ['toLogin', typeof toLogin !== 'undefined' ? toLogin : undefined], ['doLogin', typeof doLogin !== 'undefined' ? doLogin : undefined], ['doLogout', typeof doLogout !== 'undefined' ? doLogout : undefined], ['resetAndHardReload', typeof resetAndHardReload !== 'undefined' ? resetAndHardReload : undefined], ['setManualEdit', typeof setManualEdit !== 'undefined' ? setManualEdit : undefined], ['healLinks', typeof healLinks !== 'undefined' ? healLinks : undefined], ['applyPoll', typeof applyPoll !== 'undefined' ? applyPoll : undefined], ['fetchAll', typeof fetchAll !== 'undefined' ? fetchAll : undefined], ['pollMain', typeof pollMain !== 'undefined' ? pollMain : undefined], ['switchPkgSubTab', typeof switchPkgSubTab !== 'undefined' ? switchPkgSubTab : undefined], ['buildTabs', typeof buildTabs !== 'undefined' ? buildTabs : undefined], ['go', typeof go !== 'undefined' ? go : undefined], ['switchOrdTab', typeof switchOrdTab !== 'undefined' ? switchOrdTab : undefined], ['ordCard', typeof ordCard !== 'undefined' ? ordCard : undefined], ['renderOrd', typeof renderOrd !== 'undefined' ? renderOrd : undefined], ['updateOrderTogglesUI', typeof updateOrderTogglesUI !== 'undefined' ? updateOrderTogglesUI : undefined], ['toggleLockFulfillBtn', typeof toggleLockFulfillBtn !== 'undefined' ? toggleLockFulfillBtn : undefined], ['toggleMailOnSaveBtn', typeof toggleMailOnSaveBtn !== 'undefined' ? toggleMailOnSaveBtn : undefined], ['toggleManualEditBtn', typeof toggleManualEditBtn !== 'undefined' ? toggleManualEditBtn : undefined], ['autoFillNickname', typeof autoFillNickname !== 'undefined' ? autoFillNickname : undefined], ['updMonths', typeof updMonths !== 'undefined' ? updMonths : undefined], ['updAmountUi', typeof updAmountUi !== 'undefined' ? updAmountUi : undefined], ['fillAmount', typeof fillAmount !== 'undefined' ? fillAmount : undefined], ['getOrderAnchorTs', typeof getOrderAnchorTs !== 'undefined' ? getOrderAnchorTs : undefined], ['autoFillDays', typeof autoFillDays !== 'undefined' ? autoFillDays : undefined], ['onPkgChange', typeof onPkgChange !== 'undefined' ? onPkgChange : undefined], ['onMethodChange', typeof onMethodChange !== 'undefined' ? onMethodChange : undefined], ['recalcExpFromDays', typeof recalcExpFromDays !== 'undefined' ? recalcExpFromDays : undefined], ['recalcDaysFromExp', typeof recalcDaysFromExp !== 'undefined' ? recalcDaysFromExp : undefined], ['togSF', typeof togSF !== 'undefined' ? togSF : undefined], ['syncUpg', typeof syncUpg !== 'undefined' ? syncUpg : undefined], ['readModal', typeof readModal !== 'undefined' ? readModal : undefined], ['openOrdModal', typeof openOrdModal !== 'undefined' ? openOrdModal : undefined], ['saveOrd', typeof saveOrd !== 'undefined' ? saveOrd : undefined], ['delOrd', typeof delOrd !== 'undefined' ? delOrd : undefined], ['getMissingOrders', typeof getMissingOrders !== 'undefined' ? getMissingOrders : undefined], ['updateCheckBadge', typeof updateCheckBadge !== 'undefined' ? updateCheckBadge : undefined], ['renderCheckTab', typeof renderCheckTab !== 'undefined' ? renderCheckTab : undefined], ['saveCheckManual', typeof saveCheckManual !== 'undefined' ? saveCheckManual : undefined], ['healSingleOrder', typeof healSingleOrder !== 'undefined' ? healSingleOrder : undefined], ['healAllMissingWithProgress', typeof healAllMissingWithProgress !== 'undefined' ? healAllMissingWithProgress : undefined], ['mailRender', typeof mailRender !== 'undefined' ? mailRender : undefined], ['orderVars', typeof orderVars !== 'undefined' ? orderVars : undefined], ['sendExpMail', typeof sendExpMail !== 'undefined' ? sendExpMail : undefined], ['sendZaloMail', typeof sendZaloMail !== 'undefined' ? sendZaloMail : undefined], ['getCentralRates', typeof getCentralRates !== 'undefined' ? getCentralRates : undefined], ['revList', typeof revList !== 'undefined' ? revList : undefined], ['costSum', typeof costSum !== 'undefined' ? costSum : undefined], ['monthTotals', typeof monthTotals !== 'undefined' ? monthTotals : undefined], ['renderRevenue', typeof renderRevenue !== 'undefined' ? renderRevenue : undefined], ['revOver', typeof revOver !== 'undefined' ? revOver : undefined], ['revPay', typeof revPay !== 'undefined' ? revPay : undefined], ['saveCentralRates', typeof saveCentralRates !== 'undefined' ? saveCentralRates : undefined], ['revPayDetail', typeof revPayDetail !== 'undefined' ? revPayDetail : undefined], ['revCost', typeof revCost !== 'undefined' ? revCost : undefined], ['addCost', typeof addCost !== 'undefined' ? addCost : undefined], ['delCost', typeof delCost !== 'undefined' ? delCost : undefined], ['tplToMc', typeof tplToMc !== 'undefined' ? tplToMc : undefined], ['mcSampleVars', typeof mcSampleVars !== 'undefined' ? mcSampleVars : undefined], ['mcRenderTabs', typeof mcRenderTabs !== 'undefined' ? mcRenderTabs : undefined], ['mcRenderPresetOptions', typeof mcRenderPresetOptions !== 'undefined' ? mcRenderPresetOptions : undefined], ['mcLoadPreset', typeof mcLoadPreset !== 'undefined' ? mcLoadPreset : undefined], ['mcSwitchTab', typeof mcSwitchTab !== 'undefined' ? mcSwitchTab : undefined], ['renderMailComposer', typeof renderMailComposer !== 'undefined' ? renderMailComposer : undefined], ['mcInsertVar', typeof mcInsertVar !== 'undefined' ? mcInsertVar : undefined], ['mcRenderEditor', typeof mcRenderEditor !== 'undefined' ? mcRenderEditor : undefined], ['mcPreview', typeof mcPreview !== 'undefined' ? mcPreview : undefined], ['mcSet', typeof mcSet !== 'undefined' ? mcSet : undefined], ['mcAdd', typeof mcAdd !== 'undefined' ? mcAdd : undefined], ['mcMove', typeof mcMove !== 'undefined' ? mcMove : undefined], ['mcDel', typeof mcDel !== 'undefined' ? mcDel : undefined], ['mcPickColor', typeof mcPickColor !== 'undefined' ? mcPickColor : undefined], ['mcColorInput', typeof mcColorInput !== 'undefined' ? mcColorInput : undefined], ['mcGrad', typeof mcGrad !== 'undefined' ? mcGrad : undefined], ['mcSaveTemplate', typeof mcSaveTemplate !== 'undefined' ? mcSaveTemplate : undefined], ['mcExtraAction', typeof mcExtraAction !== 'undefined' ? mcExtraAction : undefined], ['mcScan', typeof mcScan !== 'undefined' ? mcScan : undefined], ['mcRenderRecs', typeof mcRenderRecs !== 'undefined' ? mcRenderRecs : undefined], ['mcSend', typeof mcSend !== 'undefined' ? mcSend : undefined], ['dataPriceLabel', typeof dataPriceLabel !== 'undefined' ? dataPriceLabel : undefined], ['renderDataRequests', typeof renderDataRequests !== 'undefined' ? renderDataRequests : undefined], ['sendDataReport', typeof sendDataReport !== 'undefined' ? sendDataReport : undefined], ['delDataRequest', typeof delDataRequest !== 'undefined' ? delDataRequest : undefined], ['clearDataRequests', typeof clearDataRequests !== 'undefined' ? clearDataRequests : undefined], ['toggleDataRequestSeen', typeof toggleDataRequestSeen !== 'undefined' ? toggleDataRequestSeen : undefined], ['markAllDataRequestsSeen', typeof markAllDataRequestsSeen !== 'undefined' ? markAllDataRequestsSeen : undefined], ['switchTxTab', typeof switchTxTab !== 'undefined' ? switchTxTab : undefined], ['mergeTx', typeof mergeTx !== 'undefined' ? mergeTx : undefined], ['loadTx', typeof loadTx !== 'undefined' ? loadTx : undefined], ['deleteTx', typeof deleteTx !== 'undefined' ? deleteTx : undefined], ['renderTransactions', typeof renderTransactions !== 'undefined' ? renderTransactions : undefined], ['approveTransaction', typeof approveTransaction !== 'undefined' ? approveTransaction : undefined], ['detectProvider', typeof detectProvider !== 'undefined' ? detectProvider : undefined], ['buildMasked', typeof buildMasked !== 'undefined' ? buildMasked : undefined], ['openRootEditModal', typeof openRootEditModal !== 'undefined' ? openRootEditModal : undefined], ['toggleClusterSpecs', typeof toggleClusterSpecs !== 'undefined' ? toggleClusterSpecs : undefined], ['renderLinks', typeof renderLinks !== 'undefined' ? renderLinks : undefined], ['saveRootEdit', typeof saveRootEdit !== 'undefined' ? saveRootEdit : undefined], ['createLink', typeof createLink !== 'undefined' ? createLink : undefined], ['openLnkModal', typeof openLnkModal !== 'undefined' ? openLnkModal : undefined], ['saveLnkEdit', typeof saveLnkEdit !== 'undefined' ? saveLnkEdit : undefined], ['toggleLock', typeof toggleLock !== 'undefined' ? toggleLock : undefined], ['delLink', typeof delLink !== 'undefined' ? delLink : undefined], ['sortAllLinks', typeof sortAllLinks !== 'undefined' ? sortAllLinks : undefined], ['triggerGitHub', typeof triggerGitHub !== 'undefined' ? triggerGitHub : undefined], ['runGC', typeof runGC !== 'undefined' ? runGC : undefined], ['rebuildAllMAP', typeof rebuildAllMAP !== 'undefined' ? rebuildAllMAP : undefined], ['getDefaultAdminPkgs', typeof getDefaultAdminPkgs !== 'undefined' ? getDefaultAdminPkgs : undefined], ['loadDrawerSettingsUI', typeof loadDrawerSettingsUI !== 'undefined' ? loadDrawerSettingsUI : undefined], ['updateHeaderDrawerPreview', typeof updateHeaderDrawerPreview !== 'undefined' ? updateHeaderDrawerPreview : undefined], ['toggleHeaderDrawer', typeof toggleHeaderDrawer !== 'undefined' ? toggleHeaderDrawer : undefined], ['saveHeaderDrawer', typeof saveHeaderDrawer !== 'undefined' ? saveHeaderDrawer : undefined], ['loadAdminPkgs', typeof loadAdminPkgs !== 'undefined' ? loadAdminPkgs : undefined], ['toggleHidePkg', typeof toggleHidePkg !== 'undefined' ? toggleHidePkg : undefined], ['renderPkgAdmin', typeof renderPkgAdmin !== 'undefined' ? renderPkgAdmin : undefined], ['toggleLifetimePkg', typeof toggleLifetimePkg !== 'undefined' ? toggleLifetimePkg : undefined], ['togglePkgCat', typeof togglePkgCat !== 'undefined' ? togglePkgCat : undefined], ['addNewCustomPkg', typeof addNewCustomPkg !== 'undefined' ? addNewCustomPkg : undefined], ['delPkg', typeof delPkg !== 'undefined' ? delPkg : undefined], ['saveAllPkgs', typeof saveAllPkgs !== 'undefined' ? saveAllPkgs : undefined], ['relinkScanRun', typeof relinkScanRun !== 'undefined' ? relinkScanRun : undefined], ['relinkMapRun', typeof relinkMapRun !== 'undefined' ? relinkMapRun : undefined], ['relinkApply', typeof relinkApply !== 'undefined' ? relinkApply : undefined], ['switchDeadSubTab', typeof switchDeadSubTab !== 'undefined' ? switchDeadSubTab : undefined], ['renderDead', typeof renderDead !== 'undefined' ? renderDead : undefined], ['renderDeadSources', typeof renderDeadSources !== 'undefined' ? renderDeadSources : undefined], ['hardDeleteSource', typeof hardDeleteSource !== 'undefined' ? hardDeleteSource : undefined], ['cleanUnusedSources', typeof cleanUnusedSources !== 'undefined' ? cleanUnusedSources : undefined], ['restoreLink', typeof restoreLink !== 'undefined' ? restoreLink : undefined], ['clearDeadLinks', typeof clearDeadLinks !== 'undefined' ? clearDeadLinks : undefined], ['cmsEnsureTabs', typeof cmsEnsureTabs !== 'undefined' ? cmsEnsureTabs : undefined], ['ensureArts', typeof ensureArts !== 'undefined' ? ensureArts : undefined], ['initGuides', typeof initGuides !== 'undefined' ? initGuides : undefined], ['renderGuideAll', typeof renderGuideAll !== 'undefined' ? renderGuideAll : undefined], ['copyArtDeepLink', typeof copyArtDeepLink !== 'undefined' ? copyArtDeepLink : undefined], ['getEditorHtml', typeof getEditorHtml !== 'undefined' ? getEditorHtml : undefined], ['commitCms', typeof commitCms !== 'undefined' ? commitCms : undefined], ['setCms', typeof setCms !== 'undefined' ? setCms : undefined], ['openArt', typeof openArt !== 'undefined' ? openArt : undefined], ['artAdd', typeof artAdd !== 'undefined' ? artAdd : undefined], ['artDel', typeof artDel !== 'undefined' ? artDel : undefined], ['renderArtList', typeof renderArtList !== 'undefined' ? renderArtList : undefined], ['renderCmsTabBtns', typeof renderCmsTabBtns !== 'undefined' ? renderCmsTabBtns : undefined], ['setupSortableCmsTabs', typeof setupSortableCmsTabs !== 'undefined' ? setupSortableCmsTabs : undefined], ['renderCmsTabEdit', typeof renderCmsTabEdit !== 'undefined' ? renderCmsTabEdit : undefined], ['cmsTabSet', typeof cmsTabSet !== 'undefined' ? cmsTabSet : undefined], ['cmsAddTab', typeof cmsAddTab !== 'undefined' ? cmsAddTab : undefined], ['cmsDelTab', typeof cmsDelTab !== 'undefined' ? cmsDelTab : undefined], ['bStyle', typeof bStyle !== 'undefined' ? bStyle : undefined], ['guideScroll', typeof guideScroll !== 'undefined' ? guideScroll : undefined], ['openLightbox', typeof openLightbox !== 'undefined' ? openLightbox : undefined], ['videoEmbed', typeof videoEmbed !== 'undefined' ? videoEmbed : undefined], ['renderBlocks', typeof renderBlocks !== 'undefined' ? renderBlocks : undefined], ['cmsGoto', typeof cmsGoto !== 'undefined' ? cmsGoto : undefined], ['cmsGotoArt', typeof cmsGotoArt !== 'undefined' ? cmsGotoArt : undefined], ['buildRichArticleView', typeof buildRichArticleView !== 'undefined' ? buildRichArticleView : undefined], ['scrollToHeadingText', typeof scrollToHeadingText !== 'undefined' ? scrollToHeadingText : undefined], ['cmsPrev', typeof cmsPrev !== 'undefined' ? cmsPrev : undefined], ['addArtFaqRow', typeof addArtFaqRow !== 'undefined' ? addArtFaqRow : undefined], ['delArtFaqRow', typeof delArtFaqRow !== 'undefined' ? delArtFaqRow : undefined], ['renderArtFaqsUI', typeof renderArtFaqsUI !== 'undefined' ? renderArtFaqsUI : undefined], ['toggleRelatedArtPick', typeof toggleRelatedArtPick !== 'undefined' ? toggleRelatedArtPick : undefined], ['renderCmsEditor', typeof renderCmsEditor !== 'undefined' ? renderCmsEditor : undefined], ['saveArtFaqsOnly', typeof saveArtFaqsOnly !== 'undefined' ? saveArtFaqsOnly : undefined], ['saveCms', typeof saveCms !== 'undefined' ? saveCms : undefined], ['closeCmsEditor', typeof closeCmsEditor !== 'undefined' ? closeCmsEditor : undefined], ['openCmsEditorForArt', typeof openCmsEditorForArt !== 'undefined' ? openCmsEditorForArt : undefined], ['addArticleToCategory', typeof addArticleToCategory !== 'undefined' ? addArticleToCategory : undefined], ['renderGuideCategoriesTree', typeof renderGuideCategoriesTree !== 'undefined' ? renderGuideCategoriesTree : undefined], ['switchCheckSubTab', typeof switchCheckSubTab !== 'undefined' ? switchCheckSubTab : undefined], ['switchSettingsTab', typeof switchSettingsTab !== 'undefined' ? switchSettingsTab : undefined], ['showCronLog', typeof showCronLog !== 'undefined' ? showCronLog : undefined], ['renderRouteRows', typeof renderRouteRows !== 'undefined' ? renderRouteRows : undefined], ['saveRouting', typeof saveRouting !== 'undefined' ? saveRouting : undefined], ['checkBlurValidity', typeof checkBlurValidity !== 'undefined' ? checkBlurValidity : undefined], ['renderBlurRows', typeof renderBlurRows !== 'undefined' ? renderBlurRows : undefined], ['saveBlur', typeof saveBlur !== 'undefined' ? saveBlur : undefined], ['renderDockRows', typeof renderDockRows !== 'undefined' ? renderDockRows : undefined], ['dockPv', typeof dockPv !== 'undefined' ? dockPv : undefined], ['readDockRows', typeof readDockRows !== 'undefined' ? readDockRows : undefined], ['addDockIcon', typeof addDockIcon !== 'undefined' ? addDockIcon : undefined], ['removeDockIcon', typeof removeDockIcon !== 'undefined' ? removeDockIcon : undefined], ['saveDock', typeof saveDock !== 'undefined' ? saveDock : undefined], ['loadAdminFaqs', typeof loadAdminFaqs !== 'undefined' ? loadAdminFaqs : undefined], ['renderFaqAdmin', typeof renderFaqAdmin !== 'undefined' ? renderFaqAdmin : undefined], ['addNewFaq', typeof addNewFaq !== 'undefined' ? addNewFaq : undefined], ['delFaq', typeof delFaq !== 'undefined' ? delFaq : undefined], ['moveFaq', typeof moveFaq !== 'undefined' ? moveFaq : undefined], ['saveFaqs', typeof saveFaqs !== 'undefined' ? saveFaqs : undefined], ['switchFaqSubTab', typeof switchFaqSubTab !== 'undefined' ? switchFaqSubTab : undefined], ['normRouteInput', typeof normRouteInput !== 'undefined' ? normRouteInput : undefined], ['loadRoutesConfigUI', typeof loadRoutesConfigUI !== 'undefined' ? loadRoutesConfigUI : undefined], ['saveRoutesConfig', typeof saveRoutesConfig !== 'undefined' ? saveRoutesConfig : undefined], ['ftColsFromDb', typeof ftColsFromDb !== 'undefined' ? ftColsFromDb : undefined], ['renderFtCols', typeof renderFtCols !== 'undefined' ? renderFtCols : undefined], ['ftAddCol', typeof ftAddCol !== 'undefined' ? ftAddCol : undefined], ['ftDelCol', typeof ftDelCol !== 'undefined' ? ftDelCol : undefined], ['ftMoveCol', typeof ftMoveCol !== 'undefined' ? ftMoveCol : undefined], ['ftAddLink', typeof ftAddLink !== 'undefined' ? ftAddLink : undefined], ['ftDelLink', typeof ftDelLink !== 'undefined' ? ftDelLink : undefined], ['ftLoadTemplate', typeof ftLoadTemplate !== 'undefined' ? ftLoadTemplate : undefined], ['loadFooterConfigUI', typeof loadFooterConfigUI !== 'undefined' ? loadFooterConfigUI : undefined], ['saveFooterConfig', typeof saveFooterConfig !== 'undefined' ? saveFooterConfig : undefined], ['saveQrExpireSeconds', typeof saveQrExpireSeconds !== 'undefined' ? saveQrExpireSeconds : undefined], ['switchWebAdminTab', typeof switchWebAdminTab !== 'undefined' ? switchWebAdminTab : undefined], ['loadWebAdminUI', typeof loadWebAdminUI !== 'undefined' ? loadWebAdminUI : undefined], ['loadSettingsUI', typeof loadSettingsUI !== 'undefined' ? loadSettingsUI : undefined], ['saveEmailPerm', typeof saveEmailPerm !== 'undefined' ? saveEmailPerm : undefined], ['initAdminNotifyUI', typeof initAdminNotifyUI !== 'undefined' ? initAdminNotifyUI : undefined], ['updateAdminNotifyStatusUI', typeof updateAdminNotifyStatusUI !== 'undefined' ? updateAdminNotifyStatusUI : undefined], ['saveAdminNotifyPerm', typeof saveAdminNotifyPerm !== 'undefined' ? saveAdminNotifyPerm : undefined], ['saveCronCfg', typeof saveCronCfg !== 'undefined' ? saveCronCfg : undefined], ['saveLockExpiry', typeof saveLockExpiry !== 'undefined' ? saveLockExpiry : undefined], ['runCronNow', typeof runCronNow !== 'undefined' ? runCronNow : undefined], ['loadStatus', typeof loadStatus !== 'undefined' ? loadStatus : undefined], ['qBar', typeof qBar !== 'undefined' ? qBar : undefined], ['mailProvCard', typeof mailProvCard !== 'undefined' ? mailProvCard : undefined], ['selectMailProvider', typeof selectMailProvider !== 'undefined' ? selectMailProvider : undefined], ['saveMailProvider', typeof saveMailProvider !== 'undefined' ? saveMailProvider : undefined], ['renderMailProvCards', typeof renderMailProvCards !== 'undefined' ? renderMailProvCards : undefined], ['loadQuota', typeof loadQuota !== 'undefined' ? loadQuota : undefined], ['loadLogs', typeof loadLogs !== 'undefined' ? loadLogs : undefined], ['renderLogs', typeof renderLogs !== 'undefined' ? renderLogs : undefined], ['renderDev', typeof renderDev !== 'undefined' ? renderDev : undefined], ['delDev', typeof delDev !== 'undefined' ? delDev : undefined], ['migrateDates', typeof migrateDates !== 'undefined' ? migrateDates : undefined], ['migratePkg', typeof migratePkg !== 'undefined' ? migratePkg : undefined], ['loadFulfillmentConfig', typeof loadFulfillmentConfig !== 'undefined' ? loadFulfillmentConfig : undefined], ['renderFulfillmentUI', typeof renderFulfillmentUI !== 'undefined' ? renderFulfillmentUI : undefined], ['selectFailoverPolicy', typeof selectFailoverPolicy !== 'undefined' ? selectFailoverPolicy : undefined], ['updateFailoverPolicyUI', typeof updateFailoverPolicyUI !== 'undefined' ? updateFailoverPolicyUI : undefined], ['saveFulfillmentMapping', typeof saveFulfillmentMapping !== 'undefined' ? saveFulfillmentMapping : undefined], ['saveFailoverPolicy', typeof saveFailoverPolicy !== 'undefined' ? saveFailoverPolicy : undefined], ['startApp', typeof startApp !== 'undefined' ? startApp : undefined], ['restoreAdminScroll', typeof restoreAdminScroll !== 'undefined' ? restoreAdminScroll : undefined], ['updateTestModeUI', typeof updateTestModeUI !== 'undefined' ? updateTestModeUI : undefined], ['testPingProd', typeof testPingProd !== 'undefined' ? testPingProd : undefined], ['testTelegramBot', typeof testTelegramBot !== 'undefined' ? testTelegramBot : undefined], ['triggerTelegramKvBackupNow', typeof triggerTelegramKvBackupNow !== 'undefined' ? triggerTelegramKvBackupNow : undefined], ['resetTelegramStt', typeof resetTelegramStt !== 'undefined' ? resetTelegramStt : undefined], ['triggerTelegramBackupNow', typeof triggerTelegramBackupNow !== 'undefined' ? triggerTelegramBackupNow : undefined], ['SITE_KEY', typeof SITE_KEY !== 'undefined' ? SITE_KEY : undefined], ['API', typeof API !== 'undefined' ? API : undefined], ['PDS', typeof PDS !== 'undefined' ? PDS : undefined], ['PD', typeof PD !== 'undefined' ? PD : undefined], ['GH_REPO', typeof GH_REPO !== 'undefined' ? GH_REPO : undefined], ['PKG_LIST', typeof PKG_LIST !== 'undefined' ? PKG_LIST : undefined], ['TABS', typeof TABS !== 'undefined' ? TABS : undefined], ['PKG_DB', typeof PKG_DB !== 'undefined' ? PKG_DB : undefined], ['$', typeof $ !== 'undefined' ? $ : undefined], ['arr', typeof arr !== 'undefined' ? arr : undefined], ['esc', typeof esc !== 'undefined' ? esc : undefined], ['q', typeof q !== 'undefined' ? q : undefined], ['cm', typeof cm !== 'undefined' ? cm : undefined], ['genId', typeof genId !== 'undefined' ? genId : undefined], ['genHex', typeof genHex !== 'undefined' ? genHex : undefined], ['normId', typeof normId !== 'undefined' ? normId : undefined], ['isLife', typeof isLife !== 'undefined' ? isLife : undefined], ['normSt', typeof normSt !== 'undefined' ? normSt : undefined], ['getT', typeof getT !== 'undefined' ? getT : undefined], ['trimNum', typeof trimNum !== 'undefined' ? trimNum : undefined], ['VND_SEP', typeof VND_SEP !== 'undefined' ? VND_SEP : undefined], ['fmtVnd', typeof fmtVnd !== 'undefined' ? fmtVnd : undefined], ['Toast', typeof Toast !== 'undefined' ? Toast : undefined], ['cp', typeof cp !== 'undefined' ? cp : undefined], ['sleep', typeof sleep !== 'undefined' ? sleep : undefined], ['off', typeof off !== 'undefined' ? off : undefined], ['TZN', typeof TZN !== 'undefined' ? TZN : undefined], ['nowMs', typeof nowMs !== 'undefined' ? nowMs : undefined], ['fmtBank', typeof fmtBank !== 'undefined' ? fmtBank : undefined], ['oTs', typeof oTs !== 'undefined' ? oTs : undefined], ['dmyOf', typeof dmyOf !== 'undefined' ? dmyOf : undefined], ['parseDmy', typeof parseDmy !== 'undefined' ? parseDmy : undefined], ['expEnd', typeof expEnd !== 'undefined' ? expEnd : undefined], ['monthInfo', typeof monthInfo !== 'undefined' ? monthInfo : undefined], ['fmtFull', typeof fmtFull !== 'undefined' ? fmtFull : undefined], ['OLD_BY_DATA', typeof OLD_BY_DATA !== 'undefined' ? OLD_BY_DATA : undefined], ['pkgLabel', typeof pkgLabel !== 'undefined' ? pkgLabel : undefined], ['fmtMonths', typeof fmtMonths !== 'undefined' ? fmtMonths : undefined], ['myWebIndex', typeof myWebIndex !== 'undefined' ? myWebIndex : undefined], ['payOf', typeof payOf !== 'undefined' ? payOf : undefined], ['TOKEN', typeof TOKEN !== 'undefined' ? TOKEN : undefined], ['myDev', typeof myDev !== 'undefined' ? myDev : undefined], ['aj', typeof aj !== 'undefined' ? aj : undefined], ['logEvent', typeof logEvent !== 'undefined' ? logEvent : undefined], ['ordersDb', typeof ordersDb !== 'undefined' ? ordersDb : undefined], ['curOrdTab', typeof curOrdTab !== 'undefined' ? curOrdTab : undefined], ['isMailMaster', typeof isMailMaster !== 'undefined' ? isMailMaster : undefined], ['expLocked', typeof expLocked !== 'undefined' ? expLocked : undefined], ['lockFulfillOn', typeof lockFulfillOn !== 'undefined' ? lockFulfillOn : undefined], ['mailOnSaveOn', typeof mailOnSaveOn !== 'undefined' ? mailOnSaveOn : undefined], ['manualEditOn', typeof manualEditOn !== 'undefined' ? manualEditOn : undefined], ['tombGet', typeof tombGet !== 'undefined' ? tombGet : undefined], ['tombSet', typeof tombSet !== 'undefined' ? tombSet : undefined], ['addTomb', typeof addTomb !== 'undefined' ? addTomb : undefined], ['rmTomb', typeof rmTomb !== 'undefined' ? rmTomb : undefined], ['isDeleted', typeof isDeleted !== 'undefined' ? isDeleted : undefined], ['isLockedPoolUrl', typeof isLockedPoolUrl !== 'undefined' ? isLockedPoolUrl : undefined], ['ordAmountTxt', typeof ordAmountTxt !== 'undefined' ? ordAmountTxt : undefined], ['curUpg', typeof curUpg !== 'undefined' ? curUpg : undefined], ['healAllMissing', typeof healAllMissing !== 'undefined' ? healAllMissing : undefined], ['htmlEscape', typeof htmlEscape !== 'undefined' ? htmlEscape : undefined], ['sendMailClient', typeof sendMailClient !== 'undefined' ? sendMailClient : undefined], ['mailGrad', typeof mailGrad !== 'undefined' ? mailGrad : undefined], ['mailShell', typeof mailShell !== 'undefined' ? mailShell : undefined], ['mailIdBox', typeof mailIdBox !== 'undefined' ? mailIdBox : undefined], ['mailPortal', typeof mailPortal !== 'undefined' ? mailPortal : undefined], ['mailBtn', typeof mailBtn !== 'undefined' ? mailBtn : undefined], ['mailSupport', typeof mailSupport !== 'undefined' ? mailSupport : undefined], ['TPL_THEME', typeof TPL_THEME !== 'undefined' ? TPL_THEME : undefined], ['P0', typeof P0 !== 'undefined' ? P0 : undefined], ['SYS_TPL', typeof SYS_TPL !== 'undefined' ? SYS_TPL : undefined], ['getTpl', typeof getTpl !== 'undefined' ? getTpl : undefined], ['subjVars', typeof subjVars !== 'undefined' ? subjVars : undefined], ['mailKeyOf', typeof mailKeyOf !== 'undefined' ? mailKeyOf : undefined], ['mailSuccess', typeof mailSuccess !== 'undefined' ? mailSuccess : undefined], ['mailFailed', typeof mailFailed !== 'undefined' ? mailFailed : undefined], ['mailExp', typeof mailExp !== 'undefined' ? mailExp : undefined], ['mailZalo', typeof mailZalo !== 'undefined' ? mailZalo : undefined], ['dataVars', typeof dataVars !== 'undefined' ? dataVars : undefined], ['mailData', typeof mailData !== 'undefined' ? mailData : undefined], ['revTab', typeof revTab !== 'undefined' ? revTab : undefined], ['REV_TABS', typeof REV_TABS !== 'undefined' ? REV_TABS : undefined], ['setRevTab', typeof setRevTab !== 'undefined' ? setRevTab : undefined], ['setRevPayView', typeof setRevPayView !== 'undefined' ? setRevPayView : undefined], ['setRevMonth', typeof setRevMonth !== 'undefined' ? setRevMonth : undefined], ['mcToHtml', typeof mcToHtml !== 'undefined' ? mcToHtml : undefined], ['addFaqRow', typeof addFaqRow !== 'undefined' ? addFaqRow : undefined], ['saveFaqAdmin', typeof saveFaqAdmin !== 'undefined' ? saveFaqAdmin : undefined], ['addFooterColumn', typeof addFooterColumn !== 'undefined' ? addFooterColumn : undefined], ['ftAddCol', typeof ftAddCol !== 'undefined' ? ftAddCol : undefined], ['ftDelCol', typeof ftDelCol !== 'undefined' ? ftDelCol : undefined], ['ftMoveCol', typeof ftMoveCol !== 'undefined' ? ftMoveCol : undefined], ['ftAddLink', typeof ftAddLink !== 'undefined' ? ftAddLink : undefined], ['ftDelLink', typeof ftDelLink !== 'undefined' ? ftDelLink : undefined], ['ftLoadTemplate', typeof ftLoadTemplate !== 'undefined' ? ftLoadTemplate : undefined], ['customCmsImageHandler', typeof customCmsImageHandler !== 'undefined' ? customCmsImageHandler : undefined], ['customCmsVideoHandler', typeof customCmsVideoHandler !== 'undefined' ? customCmsVideoHandler : undefined], ['recordAdminNav', typeof recordAdminNav !== 'undefined' ? recordAdminNav : undefined], ['closeCmsEditor', typeof closeCmsEditor !== 'undefined' ? closeCmsEditor : undefined], ['cnyRate', typeof cnyRate !== 'undefined' ? cnyRate : undefined], ['curVal', typeof curVal !== 'undefined' ? curVal : undefined], ['shortN', typeof shortN !== 'undefined' ? shortN : undefined], ['monthLbl', typeof monthLbl !== 'undefined' ? monthLbl : undefined], ['kpi', typeof kpi !== 'undefined' ? kpi : undefined], ['box', typeof box !== 'undefined' ? box : undefined], ['chartRevStacked', typeof chartRevStacked !== 'undefined' ? chartRevStacked : undefined], ['gridPkgTable', typeof gridPkgTable !== 'undefined' ? gridPkgTable : undefined], ['PAYLBL', typeof PAYLBL !== 'undefined' ? PAYLBL : undefined], ['MC_COLORS', typeof MC_COLORS !== 'undefined' ? MC_COLORS : undefined], ['MC_BT', typeof MC_BT !== 'undefined' ? MC_BT : undefined], ['MC_VARS_BASE', typeof MC_VARS_BASE !== 'undefined' ? MC_VARS_BASE : undefined], ['MC_VARS_SYS', typeof MC_VARS_SYS !== 'undefined' ? MC_VARS_SYS : undefined], ['MC_SYS_KEYS', typeof MC_SYS_KEYS !== 'undefined' ? MC_SYS_KEYS : undefined], ['MC_SYS_NAMES', typeof MC_SYS_NAMES !== 'undefined' ? MC_SYS_NAMES : undefined], ['MC_PRESETS', typeof MC_PRESETS !== 'undefined' ? MC_PRESETS : undefined], ['mc', typeof mc !== 'undefined' ? mc : undefined], ['mcColorName', typeof mcColorName !== 'undefined' ? mcColorName : undefined], ['mcClone', typeof mcClone !== 'undefined' ? mcClone : undefined], ['mcToTpl', typeof mcToTpl !== 'undefined' ? mcToTpl : undefined], ['extractOrder', typeof extractOrder !== 'undefined' ? extractOrder : undefined], ['kindBadge', typeof kindBadge !== 'undefined' ? kindBadge : undefined], ['delBtn', typeof delBtn !== 'undefined' ? delBtn : undefined], ['saveLinks', typeof saveLinks !== 'undefined' ? saveLinks : undefined], ['savePool', typeof savePool !== 'undefined' ? savePool : undefined], ['FIXED_PKG_IDS', typeof FIXED_PKG_IDS !== 'undefined' ? FIXED_PKG_IDS : undefined], ['adminPkgsList', typeof adminPkgsList !== 'undefined' ? adminPkgsList : undefined], ['sortablePkgsInstance', typeof sortablePkgsInstance !== 'undefined' ? sortablePkgsInstance : undefined], ['delCustomPkg', typeof delCustomPkg !== 'undefined' ? delCustomPkg : undefined], ['rsItems', typeof rsItems !== 'undefined' ? rsItems : undefined], ['rlPicks', typeof rlPicks !== 'undefined' ? rlPicks : undefined], ['rlAll', typeof rlAll !== 'undefined' ? rlAll : undefined], ['curDeadTab', typeof curDeadTab !== 'undefined' ? curDeadTab : undefined], ['deadLive', typeof deadLive !== 'undefined' ? deadLive : undefined], ['DEF_TABS', typeof DEF_TABS !== 'undefined' ? DEF_TABS : undefined], ['toSlug', typeof toSlug !== 'undefined' ? toSlug : undefined], ['curArtsReady', typeof curArtsReady !== 'undefined' ? curArtsReady : undefined], ['guideTabList', typeof guideTabList !== 'undefined' ? guideTabList : undefined], ['artsOf', typeof artsOf !== 'undefined' ? artsOf : undefined], ['curArtHtml', typeof curArtHtml !== 'undefined' ? curArtHtml : undefined], ['quillInst', typeof quillInst !== 'undefined' ? quillInst : undefined], ['sortableCmsTabs', typeof sortableCmsTabs !== 'undefined' ? sortableCmsTabs : undefined], ['safeUrl', typeof safeUrl !== 'undefined' ? safeUrl : undefined], ['bAlign', typeof bAlign !== 'undefined' ? bAlign : undefined], ['dAlign', typeof dAlign !== 'undefined' ? dAlign : undefined], ['SZ', typeof SZ !== 'undefined' ? SZ : undefined], ['bText', typeof bText !== 'undefined' ? bText : undefined], ['findTarget', typeof findTarget !== 'undefined' ? findTarget : undefined], ['saveCmsDb', typeof saveCmsDb !== 'undefined' ? saveCmsDb : undefined], ['curCheckSubTab', typeof curCheckSubTab !== 'undefined' ? curCheckSubTab : undefined], ['BLUR_RULES', typeof BLUR_RULES !== 'undefined' ? BLUR_RULES : undefined], ['DEFAULT_FAQS', typeof DEFAULT_FAQS !== 'undefined' ? DEFAULT_FAQS : undefined], ['adminFaqsList', typeof adminFaqsList !== 'undefined' ? adminFaqsList : undefined], ['DEFAULT_SYS_ROUTES', typeof DEFAULT_SYS_ROUTES !== 'undefined' ? DEFAULT_SYS_ROUTES : undefined], ['ftCols', typeof ftCols !== 'undefined' ? ftCols : undefined], ['FT_TEMPLATE', typeof FT_TEMPLATE !== 'undefined' ? FT_TEMPLATE : undefined], ['ftClone', typeof ftClone !== 'undefined' ? ftClone : undefined], ['yn', typeof yn !== 'undefined' ? yn : undefined], ['QL', typeof QL !== 'undefined' ? QL : undefined], ['MAIL_PROV_META', typeof MAIL_PROV_META !== 'undefined' ? MAIL_PROV_META : undefined], ['mailProvQuota', typeof mailProvQuota !== 'undefined' ? mailProvQuota : undefined], ['pickMailProvider', typeof pickMailProvider !== 'undefined' ? pickMailProvider : undefined], ['currentFulfillmentConfig', typeof currentFulfillmentConfig !== 'undefined' ? currentFulfillmentConfig : undefined], ['started', typeof started !== 'undefined' ? started : undefined], ['adminScrollTimer', typeof adminScrollTimer !== 'undefined' ? adminScrollTimer : undefined], ['isTestModeActive', typeof isTestModeActive !== 'undefined' ? isTestModeActive : undefined], ['toggleTestMode', typeof toggleTestMode !== 'undefined' ? toggleTestMode : undefined], ['testPingTest', typeof testPingTest !== 'undefined' ? testPingTest : undefined], ['createFakeTestOrder', typeof createFakeTestOrder !== 'undefined' ? createFakeTestOrder : undefined], ['cloneProdOrdersToTest', typeof cloneProdOrdersToTest !== 'undefined' ? cloneProdOrdersToTest : undefined], ['clearTestOrders', typeof clearTestOrders !== 'undefined' ? clearTestOrders : undefined], ['lastTxError', typeof lastTxError !== 'undefined' ? lastTxError : undefined],];
   _exposed.forEach(([k, v]) => {
     if (v !== undefined) window[k] = v;
   });
