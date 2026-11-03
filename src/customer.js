@@ -115,6 +115,7 @@ function updateAppRoutes(customRoutes) {
 let currentTotalVnd = 0, currentTotalCny = 0, currentTotalUsd = 0, currentDurationMode = 1;
 let isUpgradeMode = false, isRenewMode = false, upgradeConfirmed = false, baseOrderPriceVnd = 0, baseOrderPriceUsd = 0, baseOrderPriceCny = 0;
 let lastScrollY = 0, pollT = null, tickT = null, skew = 0, lastSig = '';
+let currentSubDecision = '', existingCustomerLinks = [], detectedRenewOf = '';
 // $ imported from ./shared.js
 // esc imported from ./shared.js
 
@@ -1988,6 +1989,33 @@ function openCheckout(id) {
   if ($('couponInput')) $('couponInput').value = '';
   if ($('couponAppliedMsg')) $('couponAppliedMsg').classList.add('hidden');
 
+  // Reset và thiết lập trạng thái khối lựa chọn vòng đời link sub
+  currentSubDecision = '';
+  detectedRenewOf = (isRenewMode && oCache) ? oCache.id : '';
+  existingCustomerLinks = [];
+  document.querySelectorAll('input[name="subLinkDecisionRadio"]').forEach(r => {
+    r.checked = false;
+  });
+  updateSubDecisionUI('');
+  const subWrap = $('subLinkLifecycleWrap');
+  if (subWrap) {
+    if (isRenewMode && oCache) {
+      subWrap.classList.remove('hidden');
+      const links = [];
+      [1, 2, 3].forEach(i => {
+        if (oCache['info' + i] && !oCache['blur' + i]) {
+          links.push({ index: i, url: oCache['info' + i], name: `Link Sub ${i}` });
+        }
+      });
+      existingCustomerLinks = links;
+      populateTargetLinks(links);
+    } else {
+      subWrap.classList.add('hidden');
+      const multiWrap = $('multiLinkSelectorWrap');
+      if (multiWrap) multiWrap.classList.add('hidden');
+    }
+  }
+
   // Bật/Tắt ô nhập mã giảm giá theo cài đặt từ admin
   const couponEnabled = (cfgCache && (cfgCache.couponEnabled !== undefined ? cfgCache.couponEnabled : (cfgCache.cms && cfgCache.cms.settings && cfgCache.cms.settings.couponEnabled))) !== false;
   const cWrap = $('couponBlockWrap');
@@ -2463,9 +2491,103 @@ function renderPaymentBox() {
   <div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div></div>${memo('text-2xl','uppercase')}</div>${paidBtnHtml}</div>`;
   }
 }
+
+function updateSubDecisionUI(val) {
+  const lblKeep = $('lblSubKeep');
+  const lblNew = $('lblSubNew');
+  if (lblKeep) {
+    lblKeep.classList.toggle('border-indigo-600', val === 'KEEP_EXISTING');
+    lblKeep.classList.toggle('bg-indigo-50/50', val === 'KEEP_EXISTING');
+    lblKeep.classList.toggle('dark:bg-indigo-950/20', val === 'KEEP_EXISTING');
+    lblKeep.classList.toggle('border-slate-200', val !== 'KEEP_EXISTING');
+  }
+  if (lblNew) {
+    lblNew.classList.toggle('border-indigo-600', val === 'CREATE_NEW');
+    lblNew.classList.toggle('bg-indigo-50/50', val === 'CREATE_NEW');
+    lblNew.classList.toggle('dark:bg-indigo-950/20', val === 'CREATE_NEW');
+    lblNew.classList.toggle('border-slate-200', val !== 'CREATE_NEW');
+  }
+}
+
+function populateTargetLinks(links) {
+  const sel = $('targetLinkSubSelect');
+  if (!sel) return;
+  sel.innerHTML = '';
+  links.forEach((l, idx) => {
+    const opt = document.createElement('option');
+    opt.value = l.url;
+    const shortUrl = l.url.length > 40 ? l.url.slice(0, 35) + '...' : l.url;
+    opt.textContent = `${l.name || ('Link ' + (idx + 1))}: ${shortUrl}`;
+    sel.appendChild(opt);
+  });
+  const multiWrap = $('multiLinkSelectorWrap');
+  if (multiWrap) {
+    multiWrap.classList.toggle('hidden', currentSubDecision !== 'KEEP_EXISTING' || links.length <= 1);
+  }
+}
+
+function onSubDecisionChange(val) {
+  currentSubDecision = val;
+  updateSubDecisionUI(val);
+  const multiWrap = $('multiLinkSelectorWrap');
+  if (multiWrap) {
+    const sel = $('targetLinkSubSelect');
+    const hasMultiple = sel && sel.options.length > 1;
+    multiWrap.classList.toggle('hidden', val !== 'KEEP_EXISTING' || !hasMultiple);
+  }
+  renderPaymentBox();
+}
+
+async function checkEmailExistingLinks(email) {
+  if (isUpgradeMode || isRenewMode || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+  try {
+    const res = await wpost('/api/public/lookup', { q: email });
+    if (res && res.ok && res.data && res.data.order && res.data.order.status === 'success') {
+      const ord = res.data.order;
+      detectedRenewOf = ord.id;
+      const links = [];
+      [1, 2, 3].forEach(i => {
+        if (ord['info' + i] && !ord['blur' + i]) {
+          links.push({ index: i, url: ord['info' + i], name: `Link Sub ${i}` });
+        }
+      });
+      if (res.data.existingLinks && Array.isArray(res.data.existingLinks)) {
+        res.data.existingLinks.forEach((el, idx) => {
+          if (!links.some(l => l.url === el.url)) {
+            links.push({
+              index: idx + 1,
+              url: el.url,
+              name: `Link (${el.pkgName || 'VPN'})`
+            });
+          }
+        });
+      }
+      if (links.length > 0) {
+        existingCustomerLinks = links;
+        populateTargetLinks(links);
+        $('subLinkLifecycleWrap')?.classList.remove('hidden');
+        renderPaymentBox();
+        return;
+      }
+    }
+  } catch (e) {}
+  $('subLinkLifecycleWrap')?.classList.add('hidden');
+  renderPaymentBox();
+}
+
 function submitOrder(e) {
   e.preventDefault();
   if (!currentPackage) return;
+  const subWrap = $('subLinkLifecycleWrap');
+  if (subWrap && !subWrap.classList.contains('hidden')) {
+    const checkedRadio = document.querySelector('input[name="subLinkDecisionRadio"]:checked');
+    if (!checkedRadio) {
+      showToast(lang === 'vi' ? 'Vui lòng chọn Giữ link cũ hoặc Cấp link mới trước khi tạo đơn!' : 'Please select Keep existing link or Create new link before creating order!', 'error');
+      subWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    currentSubDecision = checkedRadio.value;
+  }
   if (isUpgradeMode) {
     upgradeConfirmed = true;
   }
@@ -2485,6 +2607,12 @@ async function confirmPaid() {
   btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>${l.sending}`;
   btn.disabled = true;
   const mn = $('payMethod').value, mname = mn === 'bank' ? 'Ngân hàng VN' : mn === 'alipay' ? 'Alipay' : 'Weixin';
+  const subWrap = $('subLinkLifecycleWrap');
+  const isSubWrapVisible = subWrap && !subWrap.classList.contains('hidden');
+  const decision = isSubWrapVisible ? (document.querySelector('input[name="subLinkDecisionRadio"]:checked')?.value || currentSubDecision) : undefined;
+  const targetLink = (decision === 'KEEP_EXISTING' && $('targetLinkSubSelect')) ? $('targetLinkSubSelect').value : undefined;
+  const effectiveRenewOf = (isRenewMode && oCache) ? oCache.id : (detectedRenewOf && decision === 'KEEP_EXISTING' ? detectedRenewOf : undefined);
+
   let res;
   if (isUpgradeMode) res = await wpostRetry('/api/public/upgrade', {
     orderId: oCache.id,
@@ -2501,7 +2629,9 @@ async function confirmPaid() {
     method: mname,
     needSupport: $('needSupport').checked,
     sourceWeb: currentTargetWeb,
-    renewOf: isRenewMode && oCache ? oCache.id : undefined,
+    renewOf: effectiveRenewOf,
+    subLinkDecision: decision,
+    targetLink: targetLink,
     coupon: currentAppliedCoupon ? currentAppliedCoupon.code : undefined,
     couponCode: currentAppliedCoupon ? currentAppliedCoupon.code : undefined
   });
@@ -2521,6 +2651,10 @@ async function confirmPaid() {
   isRenewMode = false;
   upgradeConfirmed = false;
   currentOrderId = '';
+  currentSubDecision = '';
+  detectedRenewOf = '';
+  existingCustomerLinks = [];
+  if ($('subLinkLifecycleWrap')) $('subLinkLifecycleWrap').classList.add('hidden');
   localStorage.setItem(SESSION_KEY, JSON.stringify({ id: o.id, time: Date.now() }));
   localStorage.setItem(CACHE_KEY, JSON.stringify(o));
   enterPortal(o, false);
@@ -3180,6 +3314,19 @@ window.onload = async function () {
   }
   await Promise.all(tasks);
 
+  const emInput = $('cusEmail');
+  if (emInput) {
+    let emailDebounce = null;
+    emInput.addEventListener('input', () => {
+      clearTimeout(emailDebounce);
+      emailDebounce = setTimeout(() => {
+        checkEmailExistingLinks(emInput.value.trim());
+      }, 500);
+    });
+    emInput.addEventListener('blur', () => {
+      checkEmailExistingLinks(emInput.value.trim());
+    });
+  }
 };
 
 async function requestDataCheck() {
@@ -3243,6 +3390,7 @@ const EXPOSED_FNS = {
   login: typeof login !== 'undefined' ? login : undefined,
   logout: typeof logout !== 'undefined' ? logout : undefined,
   navigate: typeof navigate !== 'undefined' ? navigate : undefined,
+  onSubDecisionChange: typeof onSubDecisionChange !== 'undefined' ? onSubDecisionChange : undefined,
   openCheckout: typeof openCheckout !== 'undefined' ? openCheckout : undefined,
   openGuideArticle: typeof openGuideArticle !== 'undefined' ? openGuideArticle : undefined,
   openLightbox: typeof openLightbox !== 'undefined' ? openLightbox : undefined,
