@@ -532,6 +532,11 @@ function applyPoll(j) {
   healLinks();
   linkPoolDb = arr(j.pool);
   dataReqDb = arr(j.data_requests);
+  if (j.isTest !== undefined && typeof isTestModeActive !== "undefined") {
+    isTestModeActive = !!j.isTest;
+    if ($("toggleTestMode")) $("toggleTestMode").checked = isTestModeActive;
+    updateTestModeUI();
+  }
 }
 async function fetchAll(msg) {
   try {
@@ -7407,23 +7412,29 @@ function updateTestModeUI() {
 
 async function toggleTestMode(checked) {
   const toggleEl = $("toggleTestMode");
+  if (toggleEl) toggleEl.disabled = true;
   try {
     const res = await aj("/api/admin/test/toggle", { method: "POST", body: { active: checked } });
-    if (res && res.ok !== false) {
-      isTestModeActive = checked;
-      try {
-        localStorage.setItem(SITE_KEY + "_testMode", checked ? "1" : "0");
-      } catch (e) {}
-      updateTestModeUI();
-      toast(checked ? "Đã BẬT Chế độ Test (ALL_ORDERS_TEST)" : "Đã chuyển về Kho Thật (ALL_ORDERS)");
-      fetchAll(true);
-    } else {
+    if (!res || res.ok === false) {
       throw new Error(res?.error || "Không nhận được phản hồi hợp lệ từ server");
     }
-  } catch (e) {
-    if (toggleEl) toggleEl.checked = isTestModeActive;
+    const statusRes = await aj("/api/admin/test/status");
+    const confirmedActive = !!statusRes?.active;
+    if (confirmedActive !== checked) {
+      throw new Error("Trạng thái trên server chưa đồng bộ (mong muốn: " + checked + ", thực tế: " + confirmedActive + ")");
+    }
+    await fetchAll(true);
+    isTestModeActive = checked;
+    try {
+      localStorage.setItem(SITE_KEY + "_testMode", checked ? "1" : "0");
+    } catch (e) {}
     updateTestModeUI();
+    toast(checked ? "Đã BẬT Chế độ Test (ALL_ORDERS_TEST) và nạp dữ liệu thành công" : "Đã chuyển về Kho Thật (ALL_ORDERS) và nạp dữ liệu thành công");
+  } catch (e) {
+    await checkTestModeStatus();
     toast("Lỗi chuyển chế độ: " + e.message, "err");
+  } finally {
+    if (toggleEl) toggleEl.disabled = false;
   }
 }
 
