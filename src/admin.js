@@ -533,7 +533,7 @@ function renderOrd(){
  for(const key of Object.keys(groups).sort((a,b)=>b.localeCompare(a))){
   const g=groups[key];
   g.orders.sort((a,b)=>oTs(b)-oTs(a));
-  html+=`<div class="month-header flex items-center justify-between py-2 border-b border-slate-200 mb-3"><div class="flex items-center gap-2 text-xs md:text-sm font-bold text-slate-700"><i class="far fa-calendar-alt text-indigo-500"></i><span>${g.label}</span></div><span class="bg-purple-100 text-purple-700 border border-purple-200 text-[10px] font-black px-2.5 py-0.5 rounded-full">${g.orders.length} đơn</span></div><div class="space-y-3 mb-5">${g.orders.map(o=>ordCard(o,false)).join("")}</div>`;}
+  html+=`<div class="month-header"><i class="far fa-calendar-alt text-indigo-500"></i><span>${g.label}</span><span class="month-count">${g.orders.length} đơn</span></div><div class="space-y-3 mb-5">${g.orders.map(o=>ordCard(o,false)).join("")}</div>`;}
  tb.innerHTML=html;}
 function updateOrderTogglesUI(){
   const lf = lockFulfillOn(), ms = mailOnSaveOn(), me = manualEditOn();
@@ -1044,20 +1044,42 @@ function revList(all){
   }).filter(x => all || revMonth === "all" || x.key === revMonth);
 }
 
-function costSum(all){
+function costSum(selectedMonth = "all"){
   const revR = getRevRates();
-  const pkgR = getPkgRates();
   const r = revR;
-  let total = 0; const by = {};
+  let totalPoolCost = 0; const by = {};
   (cmsDb.costs || []).forEach(c => {
     let v = Number(c.total) || 0;
     if (c.cur === "CNY") v = v * r.vndCny;
     else if (c.cur === "USD") v = v * r.vndUsd;
-    total += v;
+    totalPoolCost += v;
     const k = c.src || "Khác";
     by[k] = (by[k] || 0) + v;
   });
-  return { total, by };
+
+  if (selectedMonth === "all") {
+    return { total: totalPoolCost, by };
+  }
+
+  // MÔ HÌNH PHÂN BỔ SERVICE UNIT (ĐƠN VỊ THÁNG PHỤC VỤ)
+  // Quy đổi: 1 tháng = 1 unit, 12 tháng = 12 unit, Vĩnh viễn = 24 unit
+  const getOrderUnits = (o) => {
+    const pk = pkgOf(o);
+    if (!pk) return 1;
+    if (pk.m === 0) return 24;
+    return Math.max(1, Number(pk.m) || 1) * (Number(o.qty) || 1);
+  };
+
+  const succOrders = ordersDb.filter(o => normSt(o.status) === "success");
+  const totalUnits = succOrders.reduce((acc, o) => acc + getOrderUnits(o), 0);
+  if (totalUnits <= 0) return { total: 0, by };
+
+  const unitCost = totalPoolCost / totalUnits;
+  const monthOrders = succOrders.filter(o => monthInfo(oTs(o)).key === selectedMonth);
+  const monthUnits = monthOrders.reduce((acc, o) => acc + getOrderUnits(o), 0);
+  const allocatedCost = Math.round(monthUnits * unitCost);
+
+  return { total: allocatedCost, by };
 }
 function monthTotals(){
   const m = {};
@@ -1110,7 +1132,7 @@ let gridPkgTable = null, gridRankTable = null, gridPayDetail = null, gridCostTab
 // SUB-TAB 1: TỔNG QUAN KPI & 3 BIỂU ĐỒ (ZERO GRID.JS)
 function revOver(R, b){
   const sum = R.reduce((a, x) => a + x.vnd, 0);
-  const cost = costSum().total;
+  const cost = costSum(revMonth).total;
   const profit = sum - cost;
   const margin = sum ? Math.round((profit / sum) * 100) : 0;
   const mt = monthTotals(), keys = Object.keys(mt).sort().slice(-12);
@@ -2780,22 +2802,26 @@ function renderPkgAdmin() {
     
     return `
     <div data-pkg-id="${esc(p.id)}" class="pkg-sort-item bg-white border-2 ${isHidden ? 'border-amber-300 bg-amber-50/20' : 'border-slate-200'} rounded-2xl p-4 shadow-sm flex flex-col gap-3 transition hover:border-indigo-300">
-      <!-- HÀNG 1: TIÊU ĐỀ, MÃ GÓI & THAO TÁC -->
-      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 flex-wrap gap-2">
-        <div class="flex items-center gap-2">
-          <span class="grip-pkg cursor-grab text-slate-400 hover:text-indigo-600 px-1" title="Kéo để đổi thứ tự hiển thị"><i class="fas fa-grip-vertical text-lg"></i></span>
-          <span class="text-xs font-black bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg border border-slate-200">#${idx + 1}</span>
-          <span class="bg-indigo-100 text-indigo-700 font-mono font-black text-xs px-2.5 py-0.5 rounded-lg border border-indigo-200">
-            ${esc(p.id)} ${isFixed ? '(Cố định)' : '(Tùy chỉnh)'}
+      <!-- HÀNG 1: TÊN GÓI & GRIP KÉO THẢ (FULL CHIỀU RỘNG TRÊN MOBILE) -->
+      <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
+        <span class="grip-pkg cursor-grab text-slate-400 hover:text-indigo-600 px-1" title="Kéo để đổi thứ tự hiển thị"><i class="fas fa-grip-vertical text-base"></i></span>
+        <input type="text" value="${esc(p.name || '')}" oninput="updatePkgField(${idx}, 'name', this.value)" placeholder="Tên gói cước..." class="p-1.5 text-xs font-extrabold text-slate-800 border border-slate-200 rounded-lg outline-none focus:border-indigo-500 bg-white flex-1 min-w-0">
+      </div>
+
+      <!-- HÀNG 2: BADGE MÃ GÓI, THẺ ẨN & NÚT THAO TÁC TIỆN DỤNG -->
+      <div class="flex items-center justify-between flex-wrap gap-1.5">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <span class="text-[10px] font-black bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200">#${idx + 1}</span>
+          <span class="bg-indigo-100 text-indigo-700 font-mono font-black text-[10px] px-2 py-0.5 rounded border border-indigo-200">
+            ${esc(p.id)}
           </span>
-          <input type="text" value="${esc(p.name || '')}" oninput="updatePkgField(${idx}, 'name', this.value)" placeholder="Tên gói cước..." class="p-1 text-xs font-extrabold text-slate-800 border border-slate-200 rounded-lg outline-none focus:border-indigo-500 bg-white flex-1 min-w-[110px]">
-          ${isHidden ? '<span class="bg-amber-100 text-amber-800 border border-amber-300 text-[9.5px] font-black px-1.5 py-0.5 rounded uppercase shrink-0">ĐÃ ẨN INDEX</span>' : ''}
+          ${isHidden ? '<span class="bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">ĐÃ ẨN INDEX</span>' : ''}
         </div>
-        <div class="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
-          <button type="button" onclick="toggleHidePkg(${idx})" class="font-bold text-xs px-2.5 py-1 rounded-lg border transition ${isHidden ? 'bg-amber-500 text-white border-amber-500 hover:bg-amber-600' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'}">
+        <div class="flex items-center gap-1.5 ml-auto">
+          <button type="button" onclick="toggleHidePkg(${idx})" class="font-bold text-[11px] px-2.5 py-1 rounded-lg border transition ${isHidden ? 'bg-amber-500 text-white border-amber-500 hover:bg-amber-600' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'}">
             <i class="fas ${isHidden ? 'fa-eye' : 'fa-eye-slash'} mr-1"></i>${isHidden ? 'Hiện gói' : 'Ẩn gói'}
           </button>
-          <button type="button" onclick="delPkg(${idx})" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg border border-red-200 transition">
+          <button type="button" onclick="delPkg(${idx})" class="text-red-500 hover:text-red-700 font-bold text-[11px] bg-red-50 hover:bg-red-100 px-2 py-1 rounded-lg border border-red-200 transition">
             <i class="fas fa-trash mr-1"></i>Xóa
           </button>
         </div>
@@ -4322,6 +4348,7 @@ window.switchCheckSubTab = switchCheckSubTab;
 
 // Điều hướng đúng chuẩn 5 Sub-tab trong Cài đặt - Khớp 100% ID HTML, triệt tiêu lỗi TypeError classList of null
 function switchSettingsTab(t){
+ try { localStorage.setItem(SITE_KEY + "_subTab_t-settings", t); } catch(e) {}
  const tabs = ["webadmin", "setweb", "log", "dev", "time"];
  tabs.forEach(x => {
    const view = $("settings-view-" + x);
