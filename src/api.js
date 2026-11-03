@@ -42,10 +42,11 @@ export function isTestMode() {
 /**
  * Universal Request Helper
  */
+
 export async function request(path, options = {}) {
   const isAbs = /^https?:\/\//i.test(path);
   let urlStr = isAbs ? path : `${WORKER_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-  
+
   if (isTestMode()) {
     urlStr += (urlStr.includes('?') ? '&' : '?') + 'test=1';
   }
@@ -104,18 +105,21 @@ export async function request(path, options = {}) {
  * Customer wpost Helper
  * Trả về đúng object contract cũ: { ok: boolean, status: number, data: object }
  */
+
 export async function wpost(path, body) {
   try {
-    const res = await request(path, {
-      method: 'POST',
-      body,
-      noRedirect: true
-    });
+    const res = await request(path, { method: 'POST', body, noRedirect: true });
     let data = {};
-    try { data = await res.json(); } catch {}
+    try {
+      data = await res.json();
+    } catch {}
     return { ok: res.ok, status: res.status, data };
   } catch (err) {
-    return { ok: false, status: 0, data: { error: err.message || String(err) } };
+    return {
+      ok: false,
+      status: 0,
+      data: { error: err.message || String(err) }
+    };
   }
 }
 
@@ -124,6 +128,7 @@ export async function wpost(path, body) {
  * QUY TẮC AN TOÀN 41 & 8.3: Không tự động retry mù quáng cho POST tạo đơn hoặc nâng cấp
  * để tránh phát sinh giao dịch thứ hai khi mạng rớt sau khi backend đã xử lý xong.
  */
+
 export async function wpostRetry(path, body, n = 3) {
   const isOrderCreation = path.includes('/api/public/order') || path.includes('/api/public/upgrade');
   const attempts = isOrderCreation ? 1 : n;
@@ -149,6 +154,7 @@ export async function wpostRetry(path, body, n = 3) {
  * Admin api() Helper
  * Giữ nguyên 100% hợp đồng với admin.html cũ
  */
+
 export async function api(path, opts = {}) {
   return request(path, opts);
 }
@@ -157,10 +163,13 @@ export async function api(path, opts = {}) {
  * Admin aj() Helper
  * JSON API caller kèm xử lý lỗi và soft-fail flag
  */
+
 export async function aj(path, opts = {}) {
   const res = await api(path, opts);
   let json = null;
-  try { json = await res.json(); } catch {}
+  try {
+    json = await res.json();
+  } catch {}
   if (!res.ok && !opts.soft) {
     const errMsg = (json && (json.error || json.message)) || (`HTTP ${res.status}`);
     throw new Error(errMsg);
