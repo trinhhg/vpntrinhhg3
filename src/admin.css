@@ -144,39 +144,36 @@ body{font-weight:600;background:#f8fafc;color:#0f172a;margin:0;overflow-x:hidden
 .ord-tabs-wrap {
   width: 100%;
   max-width: 100%;
-  overflow-x: auto;
   margin-bottom: 1rem;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
 }
-.ord-tabs-wrap::-webkit-scrollbar { display: none; }
 .ord-tabs {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px;
-  width: max-content;
-  min-width: 100%;
+  gap: 3px;
+  padding: 3px;
+  width: 100%;
   background: #e2e8f0;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
+  box-sizing: border-box;
 }
 .ord-sub-tab {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  min-height: 36px;
-  padding: 6px 12px;
+  gap: 4px;
+  min-height: 32px;
+  padding: 4px 6px;
   border: 1px solid transparent;
   border-radius: 8px;
   color: #64748b;
   background: transparent;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   line-height: 1.2;
   white-space: nowrap;
-  flex: 1 0 auto;
+  flex: 1 1 0;
+  min-width: 0;
   cursor: pointer;
   transition: background .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease;
 }
@@ -187,18 +184,21 @@ body{font-weight:600;background:#f8fafc;color:#0f172a;margin:0;overflow-x:hidden
   box-shadow: 0 1px 3px rgba(15, 23, 42, .10);
 }
 .ord-sub-tab .mac-dot {
-  width: 8px;
-  height: 8px;
-  flex: 0 0 8px;
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
 }
-.ord-tab-label { display: inline-block; }
+.ord-tab-label {
+  display: inline-block;
+  white-space: nowrap;
+}
 .ord-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 22px;
-  min-height: 20px;
-  padding: 2px 6px;
+  min-width: 18px;
+  min-height: 18px;
+  padding: 1px 5px;
   border-radius: 999px;
   font-size: 10px;
   font-weight: 900;
@@ -211,8 +211,10 @@ body{font-weight:600;background:#f8fafc;color:#0f172a;margin:0;overflow-x:hidden
 .ord-count-failed { color: #b91c1c; background: #fee2e2; }
 @media (min-width: 640px) {
   .ord-tabs-wrap { width: fit-content; max-width: 100%; }
-  .ord-tabs { min-width: 0; }
-  .ord-sub-tab { padding: 6px 14px; font-size: 12px; gap: 8px; }
+  .ord-tabs { width: auto; gap: 4px; padding: 4px; }
+  .ord-sub-tab { flex: 0 0 auto; padding: 6px 14px; font-size: 12px; gap: 8px; min-height: 36px; }
+  .ord-sub-tab .mac-dot { width: 8px; height: 8px; flex: 0 0 8px; }
+  .ord-count { min-width: 22px; min-height: 20px; padding: 2px 6px; }
 }
 
 /* ===== TOGGLE SWITCH ===== */
@@ -487,7 +489,6 @@ hr.guide-hr, .ql-editor hr {
 }
 
 .month-count {
-  margin-left: auto;
   font-size: 11px;
   font-weight: 900;
   background: #4f46e5;
@@ -497,4 +498,7 @@ hr.guide-hr, .ql-editor hr {
   min-height: 20px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
