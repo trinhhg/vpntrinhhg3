@@ -92,14 +92,14 @@ html.dark #guideText a.word-link{color:#60a5fa!important;}
 /* ===== UI UX PRO MAX: ERGONOMIC DARK THEME (Công thái học chống mỏi mắt) ===== */
 *{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 
-/* Touch Targets >= 48px chuẩn M3/iOS & tactile active scale */
-button:not(.swal2-close):not(#headerDrawerChevronBtn):not(#headerDrawerCloseBtn):not(.p-0\.5):not(.p-1),
+/* Touch Targets >= 48px chuẩn M3/iOS (Loại trừ nút Footer, Header, và nút nhỏ gọn) */
+button:not(.swal2-close):not(#headerDrawerChevronBtn):not(#headerDrawerCloseBtn):not(#footerArea button):not(.p-0\.5):not(.p-1):not(.footer-social-btn),
 a[role="button"],
 .pay-btn,
 .dur-btn,
 .tab-btn,
 .guide-cta-btn {
-  min-height:48px;
+  min-height:44px;
   touch-action:manipulation;
   transition:transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -111,7 +111,7 @@ a[role="button"]:active,
   transform:scale(0.97) !important;
 }
 
-/* ===== SIGNATURE PURPLE CHARCOAL GLASS ===== */
+/* ===== MONOCHROME OBSIDIAN DARK THEME (CHUẨN INDEX.HTML CŨ) ===== */
 :root {
   --color-primary: #4f46e5;
   --color-primary-hover: #4338ca;
@@ -124,36 +124,31 @@ a[role="button"]:active,
 
 html.dark {
   color-scheme: dark;
-  scrollbar-color: #4c1d95 #0d0e12;
+  scrollbar-color: #3a3c42 #0d0e12;
 
-  --g-card: rgba(20, 21, 26, 0.78);
-  --g-sub: rgba(26, 29, 36, 0.65);
-  --bd: rgba(168, 85, 247, 0.18);
-  --bd2: rgba(168, 85, 247, 0.25);
+  --g-card: rgba(20, 21, 26, 0.72);
+  --g-sub: rgba(0, 0, 0, 0.42);
+  --bd: rgba(255, 255, 255, 0.08);
+  --bd2: rgba(255, 255, 255, 0.18);
 
   --t1: #F5F5F5;
-  --t2: #CBD5E1;
-  --t3: #94A3B8;
-  --t4: #64748B;
+  --t2: #B5B7BC;
+  --t3: #858891;
+  --t4: #5F626A;
 
-  --blur: blur(16px);
-  --shadow: 0 15px 35px -10px rgba(0,0,0,0.65),
-            inset 0 1px 1px 0 rgba(255,255,255,0.12);
+  --blur: blur(20px) saturate(150%);
+  --shadow: 0 15px 35px -10px rgba(0,0,0,0.6), inset 0 1px 1px 0 rgba(255,255,255,0.14);
 }
 
-/* Background ánh tím Signature Purple Charcoal Glass */
+/* Nền đen thuần khiết chuẩn index cũ */
 html.dark body {
-  background-color: #0b0f19 !important;
-  background-image:
-    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.15) 0px, transparent 50%),
-    radial-gradient(at 50% 100%, rgba(79, 70, 229, 0.1) 0px, transparent 50%) !important;
-  background-attachment: fixed;
+  background-color: #000000 !important;
+  background-image: none !important;
   color: #E2E8F0 !important;
   min-height: 100vh;
 }
 
-/* Tầng 1: Card kính mờ than chì */
+/* Tầng 1: Card kính mờ than chì — LOẠI TRỪ TUYỆT ĐỐI body, nav, header, floatingSocials */
 html.dark :is([class*="dark:bg-[#0a0a0a]"],[class*="dark:bg-black"],[class*="dark:bg-[#1a1d24]"],[class*="dark:bg-[#1E293B]"]):not(body):not(nav):not(#mainNav):not(#floatingSocials):not(input):not(select):not(textarea):not(button):not(.dock-icon){
   background:var(--g-card) !important;
   border-color:var(--bd) !important;
@@ -165,56 +160,56 @@ html.dark :is([class*="dark:bg-[#0a0a0a]"],[class*="dark:bg-black"],[class*="dar
 /* Tầng 2: Ô con, chip thông số, input chìm sâu vào kính */
 html.dark :is([class*="dark:bg-slate-"],[class*="dark:bg-[#111111]"],[class*="dark:bg-[#334155]"]):not(#floatingSocials){
   background:var(--g-sub) !important;
-  border-color:rgba(255,255,255,0.08) !important;
+  border-color:rgba(255,255,255,0.06) !important;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,0.3) !important;
 }
-html.dark [class*="dark:bg-indigo"]{background:rgba(99,102,241,0.18) !important;border-color:var(--bd2) !important;}
-html.dark :is([class*="dark:border-white"],[class*="dark:border-slate"],[class*="dark:border-indigo"],[class*="dark:border-amber-500/30"],[class*="dark:border-emerald-500/30"]){border-color:rgba(255,255,255,0.09) !important;}
+html.dark [class*="dark:bg-indigo"]{background:rgba(255,255,255,0.08) !important;border-color:var(--bd2) !important;}
+html.dark :is([class*="dark:border-white"],[class*="dark:border-slate"],[class*="dark:border-indigo"],[class*="dark:border-amber-500/30"],[class*="dark:border-emerald-500/30"]){border-color:var(--bd) !important;}
+html.dark .sticky.bottom-0{background:rgba(13,14,18,0.85);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);}
 
-/* Nút CTA Chính (Tím/Indigo rực rỡ tương phản cao, không đen tuyền) */
+/* Nút primary = ĐEN TUYỀN + viền kính tinh tế (Chuẩn index cũ) */
 html.dark :is(button,a).bg-indigo-600,
-html.dark :is(button,a)[class*="to-indigo-"]:not(.bg-clip-text),
-html.dark button[class*="dark:bg-indigo"],
-html.dark .guide-cta-btn.cta-indigo{
-  background:linear-gradient(135deg, #6366F1, #7C3AED) !important;
-  color:#FFFFFF !important;
-  border:1px solid rgba(196, 181, 253, 0.3) !important;
-  box-shadow:0 4px 16px rgba(124, 58, 237, 0.4) !important;
+html.dark button[class*="dark:bg-indigo"]{
+  background:#000000 !important;
+  color:#ffffff !important;
+  border:1px solid rgba(255,255,255,0.20) !important;
+  box-shadow:0 4px 12px rgba(0,0,0,0.4) !important;
 }
-html.dark :is(button,a).bg-indigo-600:hover,
-html.dark button[class*="dark:bg-indigo"]:hover{
-  background:linear-gradient(135deg, #4F46E5, #6D28D9) !important;
-  box-shadow:0 6px 22px rgba(124, 58, 237, 0.5) !important;
+html.dark button:is(.bg-indigo-600,[class*="dark:bg-indigo"]):not(.active):hover{
+  background:#18191e !important;
+  border-color:rgba(255,255,255,0.35) !important;
 }
+html.dark :is([class*="dark:hover:bg-slate"],[class*="dark:hover:bg-[#111111]"]):hover{background:rgba(255,255,255,0.06) !important;}
 
 /* Nút đăng ký gói cước trên card */
 html.dark .neon-animated-card button[onclick*="openCheckout"]{
-  background:rgba(124, 58, 237, 0.18) !important;
-  color:#C4B5FD !important;
-  border:1px solid rgba(168, 85, 247, 0.4) !important;
-  min-height:44px !important;
+  background:rgba(255, 255, 255, 0.08) !important;
+  color:#ffffff !important;
+  border:1px solid rgba(255, 255, 255, 0.15) !important;
 }
 html.dark .neon-animated-card button[onclick*="openCheckout"]:hover{
-  background:linear-gradient(135deg, #6366F1, #7C3AED) !important;
-  color:#FFFFFF !important;
-  box-shadow:0 4px 20px rgba(124, 58, 237, 0.45) !important;
+  background:#4f46e5 !important;
+  color:#ffffff !important;
+  border-color:#4f46e5 !important;
+  box-shadow:0 4px 15px rgba(79, 70, 229, 0.4) !important;
 }
 
 /* Nav & Footer */
-html.dark #mainNav{background:rgba(13, 14, 18, 0.90) !important;border-color:rgba(255, 255, 255, 0.08) !important;-webkit-backdrop-filter:blur(16px) !important;backdrop-filter:blur(16px) !important;}
-html.dark #footerArea{background:#0d0e12 !important;border-color:rgba(255, 255, 255, 0.08) !important;}
+html.dark #mainNav{background:rgba(13, 14, 18, 0.85) !important;border-color:var(--bd) !important;-webkit-backdrop-filter:var(--blur) !important;backdrop-filter:var(--blur) !important;}
+html.dark #footerArea{background:#000000 !important;border-color:var(--bd) !important;}
 html.dark #wechatModal{background:rgba(0,0,0,0.8);}
-html.dark #wechatModal>div{background:rgba(20, 21, 26, 0.95);border-color:rgba(255, 255, 255, 0.12);}
+html.dark #wechatModal>div{background:rgba(20, 21, 26, 0.95);border-color:var(--bd);}
 
 /* Input Dark Theme */
-html.dark :is(input:not([type=checkbox]):not([type=hidden]),select,textarea){background:rgba(0, 0, 0, 0.5) !important;border-color:rgba(255, 255, 255, 0.12) !important;color:#F8FAFC !important;}
-html.dark :is(input,select):focus{border-color:#8B5CF6 !important;box-shadow:0 0 0 3px rgba(139, 92, 246, 0.25) !important;}
-html.dark ::placeholder{color:#64748B !important;}
+html.dark :is(input:not([type=checkbox]):not([type=hidden]),select,textarea){background:rgba(0, 0, 0, 0.4) !important;border-color:var(--bd) !important;box-shadow:inset 0 1px 2px rgba(0,0,0,0.3);color:#F5F5F5 !important;}
+html.dark :is(input,select):focus{border-color:rgba(255,255,255,0.25) !important;box-shadow:0 0 0 3px rgba(255,255,255,0.06) !important;}
+html.dark ::placeholder{color:var(--t3) !important;}
 
 /* Tab và nút chọn đang Active */
-html.dark :is(.desktop-tab-btn,.dur-btn).active{background:#6366F1 !important;color:#fff !important;border-color:#6366F1 !important;box-shadow:0 4px 15px rgba(99, 102, 241, 0.35) !important;}
-html.dark .pay-btn.active{background:rgba(99,102,241,0.2) !important;border-color:#818CF8 !important;}
+html.dark :is(.desktop-tab-btn,.dur-btn).active{background:rgba(255,255,255,0.12) !important;color:#fff !important;border-color:var(--bd2) !important;box-shadow:inset 0 1px 0 rgba(255,255,255,0.08) !important;}
+html.dark .pay-btn.active{background:rgba(99,102,241,0.15) !important;border-color:rgba(129,140,248,0.35) !important;}
 
-/* Tab lọc gói: Xóa viền ngoài, hiển thị nền tím liền mạch khi active */
+/* Tab lọc gói cước */
 .pkg-filters .tab-btn.active{
   background:#4f46e5 !important;
   color:#ffffff !important;
@@ -222,10 +217,10 @@ html.dark .pay-btn.active{background:rgba(99,102,241,0.2) !important;border-colo
   box-shadow:0 2px 8px rgba(79, 70, 229, 0.3) !important;
 }
 html.dark .pkg-filters .tab-btn.active{
-  background:#7C3AED !important;
+  background:rgba(255,255,255,0.15) !important;
   color:#ffffff !important;
   border:none !important;
-  box-shadow:0 2px 10px rgba(124, 58, 237, 0.4) !important;
+  box-shadow:0 2px 8px rgba(0, 0, 0, 0.4) !important;
 }
 
 /* Ẩn hoàn toàn Footer trên mobile khi ở trong Portal */
