@@ -794,9 +794,8 @@ function updateMoreBadge() {
   const bm = $("moreBadgeMobile");
   if (!bm) return;
   let count = 0;
-  // Tính tổng số lượng cần xử lý từ các tab con nằm trong mục Thêm
-  const deadCount = (deadDb && deadDb.length) || 0;
-  count += deadCount;
+  // Chỉ đếm các thông báo/yêu cầu thực sự chưa xử lý từ các tab con nằm trong mục Thêm
+  // Tuyệt đối không đếm deadDb.length (danh sách link trong thùng rác không phải thông báo chưa đọc)
   if (count > 0) {
     bm.textContent = count > 99 ? "99+" : count;
     bm.classList.remove("hidden");
@@ -4335,9 +4334,13 @@ function prepareCmsDbSync() {
     cmsDb.packages = adminPkgsList;
   }
 }
-const saveCmsDb = () => {
+const saveCmsDb = async () => {
   prepareCmsDbSync();
-  return aj("/api/cms", { method: "POST", body: cmsDb });
+  const res = await aj("/api/cms", { method: "POST", body: cmsDb });
+  try {
+    broadcastAdminSync('cms_update', { ts: Date.now() });
+  } catch(e) {}
+  return res;
 };
 // Điều hướng 2 sub-tab bên trong Tab Kiểm tra (Kiểm tra bù link vs Rà quét & Map lại)
 let curCheckSubTab = 'data';
@@ -5841,6 +5844,7 @@ async function toggleCouponCheckout(checked) {
   if ($("couponCheckoutStatusLabel")) $("couponCheckoutStatusLabel").textContent = checked ? "BẬT" : "TẮT";
   try {
     await saveCmsDb();
+    await syncPublicPackagesPayload();
     broadcastAdminSync('coupon_toggle', { couponEnabled: checked });
     toast(checked ? "Đã BẬT ô nhập mã giảm giá tại trang thanh toán" : "Đã TẮT ô nhập mã giảm giá tại trang thanh toán");
   } catch(e) {
