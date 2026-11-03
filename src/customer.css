@@ -134,21 +134,21 @@ html.dark {
   color-scheme: dark;
   scrollbar-color: #3a3c42 #0d0e12;
 
-  --g-card: rgba(20, 21, 26, 0.72);
-  --g-sub: rgba(0, 0, 0, 0.42);
+  --g-card: rgba(16, 17, 22, 0.82);
+  --g-sub: rgba(0, 0, 0, 0.45);
   --bd: rgba(255, 255, 255, 0.08);
   --bd2: rgba(255, 255, 255, 0.18);
 
-  --t1: #F5F5F5;
-  --t2: #B5B7BC;
-  --t3: #858891;
-  --t4: #5F626A;
+  --t1: #F8FAFC;
+  --t2: #CBD5E1;
+  --t3: #94A3B8;
+  --t4: #64748B;
 
-  --blur: blur(20px) saturate(150%);
-  --shadow: 0 15px 35px -10px rgba(0,0,0,0.6), inset 0 1px 1px 0 rgba(255,255,255,0.14);
+  --blur: blur(16px) saturate(150%);
+  --shadow: 0 16px 36px -10px rgba(0,0,0,0.65), inset 0 1px 1px 0 rgba(255,255,255,0.12);
 }
 
-/* Nền đen thuần khiết chuẩn index cũ */
+/* Nền đen thuần khiết chuẩn index cũ - Không ám tím/hồng */
 html.dark body {
   background-color: #000000 !important;
   background-image: none !important;
@@ -156,7 +156,17 @@ html.dark body {
   min-height: 100vh;
 }
 
-/* Tầng 1: Card kính mờ than chì — LOẠI TRỪ TUYỆT ĐỐI body, nav, header, floatingSocials */
+/* Chữ Dark Theme: Trắng sáng & phân cấp chuẩn index cũ */
+html.dark :is([class*="dark:text-indigo"],[class*="dark:text-purple"],[class*="dark:text-white"],[class*="dark:text-slate-100"],[class*="dark:text-slate-200"]){color:var(--t1);}
+html.dark [class*="dark:text-slate-300"]{color:#D7D8DC;}
+html.dark [class*="dark:text-slate-400"]{color:var(--t2);}
+html.dark [class*="dark:text-slate-500"]{color:var(--t3);}
+html.dark :is([class*="dark:text-amber-3"],[class*="dark:text-amber-4"]){color:#E6C078;}
+html.dark :is([class*="dark:text-red-3"],[class*="dark:text-red-4"]){color:#F19A9A;}
+html.dark .dots{color:var(--t3);}
+html.dark .price-glow{color:#ffffff !important; text-shadow:0 0 14px rgba(255,255,255,0.32);}
+
+/* Tầng 1: Liquid Obsidian Glass Card */
 html.dark :is([class*="dark:bg-[#0a0a0a]"],[class*="dark:bg-black"],[class*="dark:bg-[#1a1d24]"],[class*="dark:bg-[#1E293B]"]):not(body):not(nav):not(#mainNav):not(#floatingSocials):not(input):not(select):not(textarea):not(button):not(.dock-icon){
   background:var(--g-card) !important;
   border-color:var(--bd) !important;
@@ -165,7 +175,7 @@ html.dark :is([class*="dark:bg-[#0a0a0a]"],[class*="dark:bg-black"],[class*="dar
   box-shadow:var(--shadow) !important;
 }
 
-/* Tầng 2: Ô con, chip thông số, input chìm sâu vào kính */
+/* Tầng 2: Ô con, chip thông số, input */
 html.dark :is([class*="dark:bg-slate-"],[class*="dark:bg-[#111111]"],[class*="dark:bg-[#334155]"]):not(#floatingSocials){
   background:var(--g-sub) !important;
   border-color:rgba(255,255,255,0.06) !important;
@@ -175,7 +185,7 @@ html.dark [class*="dark:bg-indigo"]{background:rgba(255,255,255,0.08) !important
 html.dark :is([class*="dark:border-white"],[class*="dark:border-slate"],[class*="dark:border-indigo"],[class*="dark:border-amber-500/30"],[class*="dark:border-emerald-500/30"]){border-color:var(--bd) !important;}
 html.dark .sticky.bottom-0{background:rgba(13,14,18,0.85);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);}
 
-/* Nút primary = ĐEN TUYỀN + viền kính tinh tế (Chuẩn index cũ) — LOẠI TRỪ các nút nghiệp vụ: QR, Copy, Gia hạn, Nâng gói, Dung lượng, Search */
+/* Nút primary = ĐEN TUYỀN + viền kính tinh tế (Chuẩn index cũ) */
 html.dark :is(button,a).bg-indigo-600:not(#linkBoxes button):not(#btnRequestData):not(#loginSearchBtn):not(.guide-cta-btn),
 html.dark button[class*="dark:bg-indigo"]:not(#linkBoxes button):not(#btnRequestData):not(#loginSearchBtn){
   background:#000000 !important;
@@ -189,21 +199,26 @@ html.dark button:is(.bg-indigo-600,[class*="dark:bg-indigo"]):not(#linkBoxes but
 }
 html.dark :is([class*="dark:hover:bg-slate"],[class*="dark:hover:bg-[#111111]"]):hover{background:rgba(255,255,255,0.06) !important;}
 
-/* Nút đăng ký gói cước trên card */
+/* Nút đăng ký gói cước trên card (Chuẩn index cũ: Đen viền kính, hover sáng) */
 html.dark .neon-animated-card button[onclick*="openCheckout"]{
-  background:rgba(255, 255, 255, 0.08) !important;
+  background:#000000 !important;
   color:#ffffff !important;
-  border:1px solid rgba(255, 255, 255, 0.15) !important;
+  border:1px solid rgba(255, 255, 255, 0.20) !important;
+  border-radius:0.75rem !important;
 }
 html.dark .neon-animated-card button[onclick*="openCheckout"]:hover{
-  background:#4f46e5 !important;
-  color:#ffffff !important;
-  border-color:#4f46e5 !important;
-  box-shadow:0 4px 15px rgba(79, 70, 229, 0.4) !important;
+  background:#18191e !important;
+  border-color:rgba(255, 255, 255, 0.35) !important;
+  box-shadow:0 4px 15px rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Nav & Footer */
-html.dark #mainNav{background:rgba(13, 14, 18, 0.85) !important;border-color:var(--bd) !important;-webkit-backdrop-filter:var(--blur) !important;backdrop-filter:var(--blur) !important;}
+/* Header & Modals Liquid Glass */
+html.dark #mainNav{
+  background:rgba(10, 10, 12, 0.85) !important;
+  border-bottom:1px solid rgba(255,255,255,0.08) !important;
+  -webkit-backdrop-filter:var(--blur) !important;
+  backdrop-filter:var(--blur) !important;
+}
 html.dark #footerArea{background:#000000 !important;border-color:var(--bd) !important;}
 html.dark #wechatModal{background:rgba(0,0,0,0.8);}
 html.dark #wechatModal>div{background:rgba(20, 21, 26, 0.95);border-color:var(--bd);}
@@ -217,7 +232,22 @@ html.dark ::placeholder{color:var(--t3) !important;}
 html.dark :is(.desktop-tab-btn,.dur-btn).active{background:rgba(255,255,255,0.12) !important;color:#fff !important;border-color:var(--bd2) !important;box-shadow:inset 0 1px 0 rgba(255,255,255,0.08) !important;}
 html.dark .pay-btn.active{background:rgba(99,102,241,0.15) !important;border-color:rgba(129,140,248,0.35) !important;}
 
-/* Tab lọc gói cước */
+/* Tab lọc gói cước: Có block background chung, tab active có background riêng phân biệt rõ ràng, không card lồng card */
+.pkg-filters-wrap{
+  background:rgba(241, 245, 249, 0.9);
+  border:1px solid rgba(226, 232, 240, 0.8);
+  box-shadow:0 2px 8px rgba(0, 0, 0, 0.04);
+}
+html.dark .pkg-filters-wrap{
+  background:rgba(18, 19, 24, 0.85) !important;
+  border:1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow:0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+.pkg-filters .tab-btn{
+  transition:all .2s ease;
+  border-radius:0.625rem;
+  border:1px solid transparent;
+}
 .pkg-filters .tab-btn.active{
   background:#4f46e5 !important;
   color:#ffffff !important;
@@ -225,10 +255,43 @@ html.dark .pay-btn.active{background:rgba(99,102,241,0.15) !important;border-col
   box-shadow:0 2px 8px rgba(79, 70, 229, 0.3) !important;
 }
 html.dark .pkg-filters .tab-btn.active{
-  background:rgba(255,255,255,0.15) !important;
+  background:rgba(255,255,255,0.16) !important;
   color:#ffffff !important;
   border:none !important;
-  box-shadow:0 2px 8px rgba(0, 0, 0, 0.4) !important;
+  box-shadow:0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.1) !important;
+}
+html.dark .pkg-filters .tab-btn:not(.active){
+  color:#94a3b8 !important;
+  background:transparent !important;
+}
+html.dark .pkg-filters .tab-btn:not(.active):hover{
+  color:#f8fafc !important;
+  background:rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Căn chỉnh cụm Navigation Bar và Nút Hỗ trợ trên Mobile:
+   - Trong Portal hoặc khi có session: Căn giữa toàn bộ cụm gồm [Navbar pill] + [Nút Hỗ trợ FAB]
+   - Trong Landing page ngoài: Đẩy Nút Hỗ trợ sang góc phải */
+#mobileBottomGroup{
+  justify-content:flex-end;
+  padding-right:1rem;
+}
+body:has(#view-portal.active) #mobileBottomGroup,
+body.has-user-session #mobileBottomGroup,
+#view-portal.active ~ #mobileBottomGroup{
+  justify-content:center !important;
+  padding-right:0 !important;
+}
+
+/* Liquid Glass Mobile Navbar & FAB */
+#mobileNavWrapper{
+  -webkit-backdrop-filter:blur(20px) saturate(160%) !important;
+  backdrop-filter:blur(20px) saturate(160%) !important;
+}
+html.dark #mobileNavWrapper{
+  background:rgba(16,17,22,0.85) !important;
+  border-color:rgba(255,255,255,0.1) !important;
+  box-shadow:0 12px 30px -5px rgba(0,0,0,0.6), inset 0 1px 1px 0 rgba(255,255,255,0.12) !important;
 }
 
 /* Ẩn hoàn toàn Footer trên mobile khi ở trong Portal */
