@@ -28,7 +28,14 @@ function getConfig(env) {
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, DELETE", "Access-Control-Allow-Headers": "Content-Type, Authorization" };
 const JH = { "Content-Type": "application/json; charset=UTF-8", "Cache-Control": "no-store", ...CORS };
 const json = (d, s = 200) => new Response(JSON.stringify(d), { status: s, headers: JH });
-const authed = (req, secret) => !!secret && req.headers.get("Authorization") === `Bearer ${secret}`;
+function authed(req, secret, bodyObj, url) {
+  if (!secret) return false;
+  const h = req.headers.get("Authorization") || "";
+  if (h === `Bearer ${secret}` || h === secret || h.trim() === `Bearer ${secret}`.trim()) return true;
+  if (url && url.searchParams && url.searchParams.get("secret") === secret) return true;
+  if (bodyObj && bodyObj.secret === secret) return true;
+  return false;
+}
 
 // ------------------------------------------------------------ bank parser
 function parseAmount(str) {
@@ -65,6 +72,7 @@ async function ensureSchema(env) {
     try { await run(`CREATE INDEX IF NOT EXISTS idx_tx_order_id ON transactions(order_id)`); } catch {}
     try { await run(`CREATE INDEX IF NOT EXISTS idx_tx_status ON transactions(status)`); } catch {}
     try { await run(`CREATE INDEX IF NOT EXISTS idx_upgrades_order ON order_upgrades(order_id, status)`); } catch {}
+    try { await run(`CREATE INDEX IF NOT EXISTS idx_tx_updated_at ON transactions(updated_at, id)`); } catch {}
     // bù cột cho DB cũ
     const addCol = async (t, c, d) => {
       try {
@@ -346,7 +354,8 @@ export default {
         let candidateOrders = [];
         if (r.status === "review_required" || r.status === "success_review") {
           try {
-            candidateOrders = (await env.DB.prepare(`SELECT order_id, total_vnd, status, created_at FROM orders WHERE status = 'pending' AND ABS(total_vnd - ?) <= 1 ORDER BY id DESC`).bind(r.amount).all()).results || [];
+            // Tối ưu hóa: Dùng BETWEEN để tận dụng index idx_orders_pending_amt, giới hạn 5 ứng viên gần nhất
+            candidateOrders = (await env.DB.prepare(`SELECT order_id, total_vnd, status, created_at FROM orders WHERE status = 'pending' AND total_vnd BETWEEN ? - 1 AND ? + 1 ORDER BY id DESC LIMIT 5`).bind(r.amount, r.amount).all()).results || [];
           } catch {}
         }
         const tx = { id: r.id, order_id: r.order_id, amount: r.amount, payment_method: r.payment_method, content: r.content, notification: r.notification, status: r.status, kind: r.kind || "new", created_at: r.created_at, updated_at: r.updated_at, reviewed_at: r.reviewed_at, review_note: r.review_note };
@@ -381,10 +390,17 @@ export default {
     if (m === "POST" && p === "/api/admin/transactions/delete") {
       if (!A()) return json({ ok: false, error: "Unauthorized" }, 401);
       const b = (await body()) || {}, ids = (Array.isArray(b.ids) ? b.ids : [b.id]).map(Number).filter((x) => Number.isSafeInteger(x) && x > 0);
-      if (!ids.length || ids.length > 200) return json({ ok: false, error: "ids pháº£i lÃ  máº£ng 1-200 sá»" }, 400);
+      if (!ids.length || ids.length > 200) return json({ ok: false, error: "ids phải là mảng 1-200 số" }, 400);
       const r = await env.DB.prepare(`DELETE FROM transactions WHERE id IN (${ids.map(() => "?").join(",")})`).bind(...ids).run();
-      await logSys(env, "warn", "Admin xÃ³a giao dá»ch", `${ids.join(",")} (${r.meta.changes} dÃ²ng)`);
+      await logSys(env, "warn", "Admin xóa giao dịch", `${ids.join(",")} (${r.meta.changes} dòng)`);
       return json({ ok: true, requested: ids.length, deleted: r.meta.changes });
+    }
+    if (m === "POST" && p === "/api/admin/transactions/clear") {
+      if (!A()) return json({ ok: false, error: "Unauthorized" }, 401);
+      // Chỉ xóa toàn bộ bảng transactions phục vụ đối soát, tuyệt đối không chạm vào bảng orders
+      const r = await env.DB.prepare(`DELETE FROM transactions`).run();
+      await logSys(env, "warn", "Admin làm sạch giao dịch D1", `Đã xóa sạch ${r.meta.changes} dòng giao dịch`);
+      return json({ ok: true, deleted: r.meta.changes });
     }
     if (m === "POST" && p === "/api/admin/transactions/delete_batch") {
       if (!authed(request, CONFIG.ADMIN_DELETE_SECRET)) return json({ ok: false, error: "Unauthorized" }, 401);
@@ -402,9 +418,10 @@ export default {
 
     // ---- POST /api/mbbank (MacroDroid)
     if (m === "POST" && p === "/api/mbbank") {
-      if (!CONFIG.MB_WEBHOOK_SECRET) return json({ ok: false, error: "Thiếu biến môi trường MB_WEBHOOK_SECRET" }, 500);
-      if (!authed(request, CONFIG.MB_WEBHOOK_SECRET)) return json({ ok: false, error: "Unauthorized" }, 401);
-      const b = await body(); if (!b) return json({ ok: false, error: "Invalid JSON" }, 400);
+      if (!CONFIG.MB_WEBHOOK_SECRET) return json({ ok: false, error: "Thiếu biến môi trường MB_WEBHOOK_SECRET trong payment-webhook worker" }, 500);
+      const b = await body();
+      if (!authed(request, CONFIG.MB_WEBHOOK_SECRET, b, url)) return json({ ok: false, error: "Unauthorized" }, 401);
+      if (!b) return json({ ok: false, error: "Invalid JSON" }, 400);
       const notification = String(b.notification || "").trim();
       if (!notification) return json({ ok: false, error: "Missing notification" }, 400);
       const { amount, content, orderId } = parseBankNotification(notification), paymentMethod = String(b.paymentMethod || "MBBank").trim();
