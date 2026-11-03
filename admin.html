@@ -254,6 +254,9 @@
    <button onclick="loadTx(true)" class="shrink-0 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs md:text-sm shadow-sm flex items-center gap-1 transition active:scale-95">
     <i class="fas fa-sync mr-1"></i>Tải lại
    </button>
+   <button type="button" onclick="clearAllTransactions()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-bold text-xs shadow-sm flex items-center gap-1.5 transition active:scale-95">
+     <i class="fas fa-trash-alt"></i><span class="whitespace-nowrap">Làm sạch</span>
+    </button>
   </div>
   <div class="w-full overflow-x-auto pb-1 scrollbar-none"><div class="inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 shrink-0 whitespace-nowrap mb-2">
    <button onclick="switchTxTab('giamsat')" id="tx-giamsat" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 active"><i class="fas fa-list-check mr-1.5"></i>Đối Soát D1</button>
@@ -663,7 +666,7 @@
       <label class="block font-bold text-slate-700 mb-1">Trạng thái kích hoạt:</label>
       <div class="flex items-center gap-2 pt-1.5">
        <div class="toggle-wrap">
-        <input type="checkbox" id="saleCampaignActive">
+        <input type="checkbox" id="saleCampaignActive" onchange="toggleFlashSale(this.checked)">
         <span class="toggle-slider"></span>
        </div>
        <span class="text-xs font-bold text-slate-600">Bật Flash Sale</span>
@@ -739,16 +742,15 @@
  <div id="t-settings" class="hidden w-full min-w-0">
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
    <h2 class="text-lg md:text-2xl font-bold text-slate-800 shrink-0">Cài đặt hệ thống</h2>
-   <div class="flex justify-start sm:justify-end w-full sm:w-auto overflow-x-auto scroll-hide">
-    <div class="bg-slate-200/80 p-1 rounded-xl inline-flex items-center gap-1 w-fit shrink-0 ml-auto">
-     <button type="button" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 py-1.5 font-bold text-xs" id="stab-time" onclick="switchSettingsTab('time')"><i class="fas fa-clock mr-1 hidden sm:inline"></i>Thời gian</button>
-     <button type="button" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 py-1.5 font-bold text-xs" id="stab-dev" onclick="switchSettingsTab('dev')"><i class="fas fa-laptop mr-1 hidden sm:inline"></i>Thiết bị</button>
-     <button type="button" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 py-1.5 font-bold text-xs" id="stab-log" onclick="switchSettingsTab('log')"><i class="fas fa-list-alt mr-1 hidden sm:inline"></i>Nhật ký</button>
-     <button type="button" class="settings-sub-tab whitespace-nowrap shrink-0 active text-center !px-3 py-1.5 font-bold text-xs" id="stab-webadmin" onclick="switchSettingsTab('webadmin')"><i class="fas fa-globe mr-1 hidden sm:inline"></i>Quản trị Web</button>
+   <div class="flex justify-end w-full sm:w-auto overflow-x-auto scroll-hide">
      <button type="button" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 py-1.5 font-bold text-xs" id="stab-setweb" onclick="switchSettingsTab('setweb')"><i class="fas fa-sliders mr-1 hidden sm:inline"></i>Set Web</button>
+     <button type="button" class="settings-sub-tab whitespace-nowrap shrink-0 active text-center !px-3 py-1.5 font-bold text-xs" id="stab-webadmin" onclick="switchSettingsTab('webadmin')"><i class="fas fa-globe mr-1 hidden sm:inline"></i>Quản trị Web</button>
+     <button type="button" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 py-1.5 font-bold text-xs" id="stab-log" onclick="switchSettingsTab('log')"><i class="fas fa-list-alt mr-1 hidden sm:inline"></i>Nhật ký</button>
+     <button type="button" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 py-1.5 font-bold text-xs" id="stab-dev" onclick="switchSettingsTab('dev')"><i class="fas fa-laptop mr-1 hidden sm:inline"></i>Thiết bị</button>
+     <button type="button" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 py-1.5 font-bold text-xs" id="stab-time" onclick="switchSettingsTab('time')"><i class="fas fa-clock mr-1 hidden sm:inline"></i>Thời gian</button>
     </div>
-   </div>
   </div>
+</div>
 
   <!-- 1. SUB-TAB QUẢN TRỊ WEB (GIAO DIỆN & TIỆN ÍCH TRANG CHỦ) -->
   <div id="settings-view-webadmin" class="space-y-4">
@@ -1230,6 +1232,18 @@
     <span class="text-xs text-slate-400 font-bold">6 mục bổ sung</span>
    </div>
    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs divide-y divide-slate-100 overflow-hidden">
+    <div onclick="go('t-pkg')" class="p-3.5 flex items-center justify-between hover:bg-slate-50 active:bg-slate-100 cursor-pointer transition select-none">
+     <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 border border-purple-100 shadow-xs">
+       <i class="fas fa-tags text-lg"></i>
+      </div>
+      <div class="min-w-0">
+       <div class="text-sm font-extrabold text-slate-800 truncate">Bán hàng &amp; Gói cước</div>
+       <div class="text-[11px] text-slate-400 truncate">Quản lý giá gói, Flash Sale, Coupon</div>
+      </div>
+     </div>
+     <i class="fas fa-chevron-right text-xs text-slate-300"></i>
+    </div>
     <div onclick="go('t-rev')" class="p-3.5 flex items-center justify-between hover:bg-slate-50 active:bg-slate-100 cursor-pointer transition select-none">
      <div class="flex items-center gap-3 min-w-0">
       <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100 shadow-xs">
@@ -1238,18 +1252,6 @@
       <div class="min-w-0">
        <div class="text-sm font-extrabold text-slate-800 truncate">Doanh thu &amp; Thống kê</div>
        <div class="text-[11px] text-slate-400 truncate">Xem báo cáo Alipay, Weixin, Ngân hàng</div>
-      </div>
-     </div>
-     <i class="fas fa-chevron-right text-xs text-slate-300"></i>
-    </div>
-    <div onclick="go('t-check')" class="p-3.5 flex items-center justify-between hover:bg-slate-50 active:bg-slate-100 cursor-pointer transition select-none">
-     <div class="flex items-center gap-3 min-w-0">
-      <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100 shadow-xs">
-       <i class="fas fa-clipboard-check text-lg"></i>
-      </div>
-      <div class="min-w-0">
-       <div class="text-sm font-extrabold text-slate-800 truncate">Kiểm tra &amp; Rà quét</div>
-       <div class="text-[11px] text-slate-400 truncate">Quét đơn thiếu link, map lại và dọn dẹp</div>
       </div>
      </div>
      <i class="fas fa-chevron-right text-xs text-slate-300"></i>
@@ -1524,10 +1526,11 @@
       <i class="fas fa-link text-base"></i>
       <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Link Sub</span>
     </button>
-    <!-- Slot 3: Bán hàng -->
-    <button type="button" id="bnav-t-pkg" onclick="go('t-pkg')" class="flex flex-col items-center justify-center text-slate-400 transition-colors py-1 min-h-[44px]">
-      <i class="fas fa-tags text-base"></i>
-      <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Bán hàng</span>
+    <!-- Slot 3: Kiểm tra (Thay thế Bán hàng) -->
+    <button type="button" id="bnav-t-check" onclick="go('t-check')" class="flex flex-col items-center justify-center text-slate-400 transition-colors py-1 min-h-[44px] relative">
+      <i class="fas fa-clipboard-check text-base"></i>
+      <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Kiểm tra</span>
+      <span id="checkBadgeMobile" class="hidden absolute top-1 right-3 bg-purple-600 text-white text-[9px] min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center font-black">0</span>
     </button>
     <!-- Slot 4: Đối soát -->
     <button type="button" id="bnav-t-trans" onclick="go('t-trans')" class="flex flex-col items-center justify-center text-slate-400 transition-colors py-1 min-h-[44px] relative">
@@ -1539,7 +1542,7 @@
     <button type="button" id="bnav-t-more" onclick="go('t-more')" class="flex flex-col items-center justify-center text-slate-400 transition-colors py-1 min-h-[44px] relative">
       <i class="fas fa-ellipsis-h text-base"></i>
       <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Thêm</span>
-      <span id="checkBadgeMobile" class="hidden absolute top-1 right-3 bg-purple-600 text-white text-[9px] min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center font-black">0</span>
+      <span id="moreBadgeMobile" class="hidden absolute top-1 right-3 bg-amber-500 text-white text-[9px] min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center font-black">!</span>
     </button>
   </div>
 </nav>
