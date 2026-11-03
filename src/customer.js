@@ -1910,8 +1910,13 @@ function fillDashboard(o){
  if(o.pendingUpgrade){ut=L.upg_pending;uc='bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400';}else if(o.upgradeStatus==='failed'){ut=L.upg_failed;uc='bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400';}else if(o.isUpgrade){ut=L.upg_ok;uc='bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400';}
  $('displayUpgradeStatus').innerText=ut;$('displayUpgradeStatus').className='text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap '+uc;
     const titles=['Subscription URL 1:','Subscription URL 2:','Subscription URL 3:'];
-    $('linkBoxes').innerHTML=[1,2,3].map(i=>`<div class="w-full ${i>1?'mt-2 border-t border-green-200/50 dark:border-green-800/50 pt-3':''}"><h3 class="text-green-700 dark:text-green-500 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>${titles[i-1]}</h3><div class="flex flex-col sm:flex-row gap-2 w-full items-stretch"><div class="relative w-full sm:flex-1 flex items-center overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]"><input type="text" id="subLink${i}" readonly class="w-full bg-transparent text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()"><div id="subBlurOverlay${i}" onclick="copyToClipboard('subLink${i}')" class="hidden absolute inset-0 z-10 flex items-center justify-start pl-3.5 pr-3 bg-white/25 dark:bg-black/30 backdrop-blur-[2px] cursor-pointer select-none"><span class="text-red-600 dark:text-amber-300 font-extrabold text-[11px] md:text-xs text-left leading-tight">Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!</span></div></div><div class="flex gap-2 shrink-0 w-full sm:w-auto"><button type="button" onclick="copyToClipboard('subLink${i}')" class="flex-1 sm:flex-none sm:w-[105px] bg-green-600 hover:bg-green-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-copy mr-1"></i>COPY</button><button type="button" onclick="openQrModal('subLink${i}', ${i})" class="flex-1 sm:flex-none sm:w-[105px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-qrcode mr-1"></i>LẤY QR</button></div></div></div>`).join('')+
-     `<div class="mt-4 grid grid-cols-2 gap-3 border-t border-green-300 dark:border-green-800 pt-4"><button onclick="startUpgrade()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-3 rounded-xl text-xs md:text-sm transition flex items-center justify-center shadow-md active:scale-95"><i class="fas fa-arrow-up mr-1.5"></i> NÂNG GÓI</button><button onclick="startRenew()" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-extrabold py-3 rounded-xl text-xs md:text-sm transition flex items-center justify-center shadow-md active:scale-95"><i class="fas fa-redo-alt mr-1.5"></i> ${L.btn_renew||'GIA HẠN'}</button></div>`;
+    $('linkBoxes').innerHTML=[1,2,3].map(i=>`<div class="w-full ${i>1?'mt-2 border-t border-green-200/50 dark:border-green-800/50 pt-3':''}"><h3 class="text-green-700 dark:text-green-500 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>${titles[i-1]}</h3><div class="flex flex-col sm:flex-row gap-2 w-full items-stretch"><div class="relative w-full sm:flex-1 flex items-center overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]"><input type="text" id="subLink${i}" readonly class="w-full bg-transparent text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()"><div id="subBlurOverlay${i}" onclick="copyToClipboard('subLink${i}')" class="hidden absolute inset-0 z-10 flex items-center justify-start pl-3.5 pr-3 bg-white/25 dark:bg-black/30 backdrop-blur-[2px] cursor-pointer select-none"><span class="text-red-600 dark:text-amber-300 font-extrabold text-[11px] md:text-xs text-left leading-tight">Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!</span></div></div><div class="flex gap-2 shrink-0 w-full sm:w-auto"><button type="button" onclick="copyToClipboard('subLink${i}')" class="flex-1 sm:flex-none sm:w-[105px] bg-green-600 hover:bg-green-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-copy mr-1"></i>COPY</button><button type="button" onclick="openQrModal('subLink${i}', ${i})" class="flex-1 sm:flex-none sm:w-[105px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-qrcode mr-1"></i>LẤY QR</button></div></div></div>`).join('');
+
+    // Đưa 2 nút Nâng gói và Gia hạn ra ngoài khối linkBoxes
+    const actBtns = $('portalActionButtons');
+    if (actBtns) {
+      actBtns.innerHTML = `<button onclick="startUpgrade()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-3 rounded-xl text-xs md:text-sm transition flex items-center justify-center shadow-md active:scale-95"><i class="fas fa-arrow-up mr-1.5"></i> NÂNG GÓI</button><button onclick="startRenew()" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-extrabold py-3 rounded-xl text-xs md:text-sm transition flex items-center justify-center shadow-md active:scale-95"><i class="fas fa-redo-alt mr-1.5"></i> ${L.btn_renew||'GIA HẠN'}</button>`;
+    }
   [1,2,3].forEach(i=>{
    const inp = $('subLink' + i), ov = $('subBlurOverlay' + i), v = o['info' + i];
    if (o['blur' + i]) {
@@ -1943,7 +1948,13 @@ function stopTick(){if(tickT){clearInterval(tickT);tickT=null;}}
 async function refreshOrder(){
  if(!oCache)return;
  try{const r=await wpost('/api/public/lookup',{q:oCache.id});
-  if(r.status===404){showToast(i18n[lang].not_found,'error');logout();return;}
+  if(r.status===404){
+    // Nếu đơn mới tạo trong vòng 10 phút, không logout tức thì (cho phép retry tiếp tục)
+    if (oCache.createdTs && Date.now() - oCache.createdTs < 600000) return;
+    showToast(i18n[lang].not_found,'error');
+    logout();
+    return;
+  }
   if(!r.ok)return;const o=r.data.order,sig=JSON.stringify({...o,serverTime:0});
   localStorage.setItem(CACHE_KEY,JSON.stringify(o));skew=(o.serverTime||Date.now())-Date.now();
   if(sig!==lastSig){lastSig=sig;const wasP=oCache.status==='pending',up=!!oCache.pendingUpgrade;updatePortalInfo(o);
@@ -2222,8 +2233,15 @@ window.addEventListener('popstate', () => {
 // KHAI BÁO CÁC ROUTE ĐỘNG TRÊN NAVIGO (NẠP ĐƯỜNG DẪN TỪ KV HOẶC FALLBACK MẶC ĐỊNH)
 function setupAppRoutes(){
   router.on('/', () => {
-    showLandingPage();
-    restoreIndexScroll();
+    let s = null;
+    try { s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){}
+    const valid = !!(s && Date.now() - s.time < 864e5 && oCache);
+    if (valid) {
+      enterPortal(oCache, true);
+    } else {
+      showLandingPage();
+      restoreIndexScroll();
+    }
   });
 
   // Tuyệt đối không dùng /packages lẻ bên ngoài -> Tự động chuyển về trang chủ /
@@ -2422,3 +2440,59 @@ if (typeof window !== 'undefined') {
     if (typeof fn === 'function') window[name] = fn;
   });
 }
+
+// ==================== SITE ANNOUNCEMENT BANNER ====================
+function renderAnnouncementBanner() {
+  const d = cfgCache.headerDrawer || {};
+  const banner = $('siteAnnouncementBanner');
+  if (!banner) return;
+  if (!d.enabled) { banner.classList.add('hidden'); return; }
+
+  const bannerKey = 'dismiss_ann_' + (d.title || d.text || 'default');
+  if (sessionStorage.getItem(bannerKey) === '1') { banner.classList.add('hidden'); return; }
+
+  const type = d.type || 'promo';
+  const typeStyles = {
+    promo: 'bg-gradient-to-r from-indigo-900 via-purple-900 to-indigo-950 text-white border-purple-800/50',
+    info: 'bg-sky-50 dark:bg-sky-950/40 text-sky-900 dark:text-sky-200 border-sky-200 dark:border-sky-800/50',
+    warning: 'bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-amber-200 dark:border-amber-800/50',
+    alert: 'bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 border-rose-200 dark:border-rose-800/50'
+  };
+  const typeIcons = {
+    promo: '🔥',
+    info: 'ℹ️',
+    warning: '⚠️',
+    alert: '🚨'
+  };
+
+  banner.className = `fixed top-0 inset-x-0 z-[75] transition-all duration-300 shadow-sm border-b ${typeStyles[type] || typeStyles.promo}`;
+  if ($('announcementIcon')) $('announcementIcon').textContent = typeIcons[type] || '📢';
+  if ($('announcementText')) $('announcementText').innerHTML = (d.title ? `<strong>${esc(d.title)}:</strong> ` : '') + esc(d.text || '');
+
+  const cta = $('announcementCta');
+  if (cta) {
+    if (d.showCta !== false && d.link) {
+      cta.classList.remove('hidden');
+      cta.href = esc(d.link);
+      cta.textContent = d.btnText || 'Xem ngay';
+      cta.className = type === 'promo' ? 'bg-white text-indigo-900 font-bold px-3 py-1 rounded-lg text-xs hover:bg-slate-100 shadow-xs' : 'bg-indigo-600 text-white font-bold px-3 py-1 rounded-lg text-xs hover:bg-indigo-700 shadow-xs';
+    } else {
+      cta.classList.add('hidden');
+    }
+  }
+
+  banner.classList.remove('hidden');
+  const mainNav = $('mainNav');
+  if (mainNav) mainNav.style.top = banner.offsetHeight + 'px';
+}
+
+function dismissAnnouncement() {
+  const d = cfgCache.headerDrawer || {};
+  const bannerKey = 'dismiss_ann_' + (d.title || d.text || 'default');
+  sessionStorage.setItem(bannerKey, '1');
+  const banner = $('siteAnnouncementBanner');
+  if (banner) banner.classList.add('hidden');
+  const mainNav = $('mainNav');
+  if (mainNav) mainNav.style.top = '0px';
+}
+window.dismissAnnouncement = dismissAnnouncement;
