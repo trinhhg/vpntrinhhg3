@@ -819,6 +819,12 @@ async function loadConfig(){
       if (!Array.isArray(cfgCache.coupons)) cfgCache.coupons = [];
       if (cfgCache.couponEnabled === undefined) cfgCache.couponEnabled = true;
       renderDock();
+
+      // Đồng bộ trạng thái hiển thị coupon ngay khi loadConfig() hoàn thành
+      const cWrap = $('couponBlockWrap');
+      if (cWrap) {
+       cWrap.classList.toggle('hidden', cfgCache.couponEnabled === false);
+      }
       // Nếu có danh sách gói động do Admin cấu hình từ tab Giá gói, thay thế mảng pkgs tĩnh
       if(Array.isArray(cfgCache.packages) && cfgCache.packages.length){
         pkgs = cfgCache.packages.map(p => {
@@ -1457,9 +1463,11 @@ function openCheckout(id){
    }
  }
 
- const hideEmail=isUpgradeMode||isRenewMode;$('emailBlock').classList.toggle('hidden',hideEmail);$('cusEmail').required=!hideEmail;
- $('checkoutTitle').innerText=isUpgradeMode?i18n[lang].upgrade_confirm_title:i18n[lang].checkout_title;
- $('upgradePriceNote').classList.toggle('hidden',!isUpgradeMode);
+const hideEmail=isUpgradeMode||isRenewMode;$('emailBlock').classList.toggle('hidden',hideEmail);$('cusEmail').required=!hideEmail;
+$('checkoutTitle').innerText=isUpgradeMode
+  ? i18n[lang].upgrade_confirm_title
+  : (isRenewMode ? (i18n[lang].renew_confirm_title || 'Xác nhận gia hạn') : i18n[lang].checkout_title);
+$('upgradePriceNote').classList.toggle('hidden',!isUpgradeMode);
  currentOrderId='';upgradeConfirmed=false;currentAppliedCoupon=null;if($('couponInput'))$('couponInput').value='';if($('couponAppliedMsg'))$('couponAppliedMsg').classList.add('hidden');
  
  // Bật/Tắt ô nhập mã giảm giá theo cài đặt từ admin
@@ -1848,9 +1856,24 @@ function closeQrModal(fromPop){
 function renderPaymentBox(){
  const col=$('checkoutRightCol'),m=$('payMethod').value,btn=$('btnConfirm'),l=i18n[lang];
  const fp=m==='bank'?`${currentTotalVnd.toLocaleString('en-US')}VND`:m==='alipay'||m==='wechat'||m==='weixin'?`¥${currentTotalCny}`:`$${currentTotalUsd}`;
- btn.innerHTML=l.btn_create_order;let guideHtml=l.guide_desc+(isUpgradeMode?"<br><br>"+l.guide_desc_upgrade:"");
- if(!currentOrderId&&!isUpgradeMode){col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 dark:text-indigo-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4><p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${guideHtml}</p></div>`;return;}
- if(isUpgradeMode&&!upgradeConfirmed){col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-purple-700 dark:text-purple-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-arrow-up mr-2"></i>${l.upgrade_confirm_title}</h4><p class="text-sm text-slate-600 dark:text-slate-300 mb-4">${l.upgrade_confirm_desc}</p><h4 class="font-extrabold text-base mb-2 text-indigo-700 dark:text-indigo-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4><p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${guideHtml}</p></div>`;return;}
+btn.innerHTML=l.btn_create_order;
+
+const subLinkWrap = $('subLinkLifecycleWrap');
+const showSubLinkGuide = !!subLinkWrap && !subLinkWrap.classList.contains('hidden');
+
+const subLinkGuideHtml = showSubLinkGuide
+  ? `<br><br>
+     <div class="mt-3 pt-3 border-t border-slate-200 dark:border-white/10 space-y-2">
+       <p><b class="text-red-600">Giữ link cũ:</b> Bạn sẽ tiếp tục dùng link sub đã thêm từ gói trước đó. Sau khi thanh toán và kích hoạt thành công, bạn chỉ cần cập nhật lại gói đăng ký trong app VPN tương ứng.</p>
+       <p><b class="text-red-600">Cấp link mới:</b> Sau khi thanh toán và kích hoạt thành công, bạn cần copy hoặc quét QR để thêm link sub mới vào app VPN tương ứng để sử dụng.</p>
+     </div>`
+  : '';
+
+let guideHtml = l.guide_desc
+  + (isUpgradeMode ? "<br><br>" + l.guide_desc_upgrade : "")
+  + subLinkGuideHtml;
+
+if(!currentOrderId&&!isUpgradeMode){col.innerHTML=`<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 dark:text-indigo-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4><p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${guideHtml}</p></div>`;return;}
  const dispId=isUpgradeMode?oCache.id:currentOrderId;
  const paidBtnHtml=`<div class="mt-auto pt-4 w-full"><button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center btn-heartbeat"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button></div>`;
  const memo=(cls,extra)=>`<div class="highlight-copy py-4 px-3 rounded-xl text-center cursor-pointer" onclick="copyText('${dispId}')"><span class="block text-[11px] font-black mb-2 uppercase text-[#854d0e] dark:text-indigo-200">${l.copy_memo}</span><strong class="block bg-white dark:bg-black font-mono ${cls} py-3 rounded-xl shadow-inner border-2 border-yellow-400 dark:border-indigo-500 text-[#854d0e] dark:text-indigo-100 flex items-center justify-center gap-2">${dispId} <i class="far fa-copy opacity-50"></i></strong><p class="text-[10px] mt-2 italic font-bold opacity-80 ${extra} text-[#854d0e] dark:text-indigo-300">${extra?l.input_manual:l.click_copy}</p></div>`;
@@ -1879,7 +1902,9 @@ async function confirmPaid(){
  else res=await wpostRetry('/api/public/order',{id:currentOrderId,email:$('cusEmail').value.trim(),zalo:$('cusZalo').value.trim(),pkgId:currentPackage.id,qty:currentMultiplier,method:mname,needSupport:$('needSupport').checked,sourceWeb:currentTargetWeb,renewOf:isRenewMode&&oCache?oCache.id:undefined,coupon:currentAppliedCoupon?currentAppliedCoupon.code:undefined,couponCode:currentAppliedCoupon?currentAppliedCoupon.code:undefined});
  if(!res||!res.ok){showToast((res&&res.data&&res.data.error)||l.req_err,'error');btn.innerHTML=orig;btn.disabled=false;return;}
  const o=res.data.order;
- showToast(lang==='vi'?'Thành công!':'Success!');
+ showToast(lang==='vi'
+   ? 'Đã ghi nhận thanh toán! Vui lòng chờ hệ thống kiểm tra và kích hoạt tự động.'
+   : 'Payment recorded! Waiting for automatic activation.');
  $('checkoutSection').classList.add('hidden');$('orderForm').reset();$('loginInput').value=o.id;document.body.classList.remove('checkout-active');
  isUpgradeMode=false;isRenewMode=false;upgradeConfirmed=false;currentOrderId='';
  localStorage.setItem(SESSION_KEY,JSON.stringify({id:o.id,time:Date.now()}));localStorage.setItem(CACHE_KEY,JSON.stringify(o));
