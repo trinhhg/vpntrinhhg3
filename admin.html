@@ -75,11 +75,25 @@
    </button>
   </div>
 
-  <!-- iOS Segmented Control cho Bộ lọc trạng thái đơn -->
-  <div class="grid grid-cols-3 sm:inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 mb-4 w-full sm:w-fit">
-   <div class="ord-sub-tab active justify-center" id="otab-success" onclick="switchOrdTab('success')"><div class="mac-dot mac-green"></div>Thành công<span id="cnt-success" class="bg-green-100 text-green-700 text-[10px] font-black px-1.5 py-0.2 rounded-full ml-1">0</span></div>
-   <div class="ord-sub-tab justify-center" id="otab-pending" onclick="switchOrdTab('pending')"><div class="mac-dot mac-yellow"></div>Chờ duyệt<span id="cnt-pending" class="bg-yellow-100 text-yellow-700 text-[10px] font-black px-1.5 py-0.2 rounded-full ml-1">0</span></div>
-   <div class="ord-sub-tab justify-center" id="otab-failed" onclick="switchOrdTab('failed')"><div class="mac-dot mac-red"></div>Thất bại<span id="cnt-failed" class="bg-red-100 text-red-700 text-[10px] font-black px-1.5 py-0.2 rounded-full ml-1">0</span></div>
+  <!-- Order status segmented tabs -->
+  <div class="ord-tabs-wrap">
+    <div class="ord-tabs">
+      <div class="ord-sub-tab active" id="otab-success" onclick="switchOrdTab('success')">
+        <span class="mac-dot mac-green"></span>
+        <span class="ord-tab-label">Thành công</span>
+        <span id="cnt-success" class="ord-count ord-count-success">0</span>
+      </div>
+      <div class="ord-sub-tab" id="otab-pending" onclick="switchOrdTab('pending')">
+        <span class="mac-dot mac-yellow"></span>
+        <span class="ord-tab-label">Chờ duyệt</span>
+        <span id="cnt-pending" class="ord-count ord-count-pending">0</span>
+      </div>
+      <div class="ord-sub-tab" id="otab-failed" onclick="switchOrdTab('failed')">
+        <span class="mac-dot mac-red"></span>
+        <span class="ord-tab-label">Thất bại</span>
+        <span id="cnt-failed" class="ord-count ord-count-failed">0</span>
+      </div>
+    </div>
   </div>
 
   <!-- Container Danh sách đơn hàng dạng Inset Grouped Cards -->
