@@ -121,7 +121,7 @@ const i18n={
   pending_wait:"Hệ thống xử lý tự động, vui lòng đợi trong ít phút.",pending_timeout:"Chưa nhận được thanh toán",pending_timeout_desc:"Đã quá thời gian tự động duyệt. Bạn đã chuyển khoản chưa?",pending_support_text:"Cần hỗ trợ? Hãy nhắn cho Admin.",pending_zalo_btn:"Nhắn Zalo Admin",pending_manual_wait_title:"Đợi Admin duyệt",pending_manual_title:"Đơn hàng đang chờ Admin duyệt",pending_manual_desc:"Vui lòng nhắn tin cho Admin cùng với biên lai để được kích hoạt sớm nhất.",failed_title:"Đơn hàng bị từ chối",
   bank_owner:"Chủ TK:",bank_name:"Ngân hàng:",bank_num:"Số TK:",click_copy:"(NHẤP VÀO MÃ ĐỂ COPY - BẮT BUỘC)",input_manual:"Vui lòng tự nhập nội dung chuyển khoản!",upgrade_confirm_title:"Xác nhận nâng gói",upgrade_confirm_desc:"Vui lòng kiểm tra số tiền chênh lệch và thông tin gói mới. Bấm <b>TẠO MÃ QR CHUYỂN KHOẢN</b> để tạo mã.",
   req_wait:"Yêu cầu đang chờ xử lý. Vui lòng quay lại sau!",req_sent:"Đã gửi yêu cầu! Vui lòng chờ Email báo cáo.",req_err:"Có lỗi xảy ra, vui lòng thử lại!",select_higher:"Vui lòng chọn gói cao hơn gói hiện tại để nâng cấp",copy_success:"Đã Copy!",not_found:"Không tìm thấy Đơn hàng/Email!",login_success:"Vào cổng thành công!",sending:"Đang gửi...",
-  checking_upgrade:"ĐANG KIỂM TRA GIAO DỊCH NÂNG GÓI...",checking_tx:"ĐANG KIỂM TRA GIAO DỊCH...",admin_rejected:"Admin từ chối giao dịch",unknown:"Chưa xác định",active:"Đã kích hoạt",web3_maintenance:"Link dự phòng sẽ được Admin mở khi web bảo trì",badge_upgrade_success:"🎉 NÂNG GÓI THÀNH CÔNG",select_renew_pkg:"Vui lòng chọn gói để gia hạn",dev_label_suffix:"Thiết bị",dev_custom:"Tùy chọn",link_generating:"Đang tạo link, vui lòng chờ...",unavailable:"Không khả dụng",upg_none:"Không",upg_pending:"Đang xác minh nâng gói",upg_failed:"Từ chối nâng gói",upg_ok:"Nâng gói thành công",req_sent_btn:"Đã gửi yêu cầu"}
+  checking_upgrade:"ĐANG KIỂM TRA GIAO DỊCH NÂNG GÓI...",checking_tx:"ĐANG KIỂM TRA GIAO DỊCH...",admin_rejected:"Admin từ chối giao dịch",unknown:"Chưa xác định",active:"Đã kích hoạt",web3_maintenance:"Link dự phòng sẽ được Admin mở khi web bảo trì",badge_upgrade_success:"🎉 NÂNG GÓI THÀNH CÔNG",select_renew_pkg:"Vui lòng chọn gói để gia hạn",dev_label_suffix:"Thiết bị",dev_custom:"Tùy chọn",link_generating:"Đang tạo link, vui lòng chờ...",unavailable:"Không khả dụng",upg_none:"Không",upg_pending:"Đang xác minh nâng gói",upg_failed:"Từ chối nâng gói",upg_ok:"Nâng gói thành công",req_sent_btn:"Đã gửi yêu cầu",btn_renew:"GIA HẠN"}
 };
 
 i18n.en=i18n.vi;i18n.zh=i18n.vi; // JS luôn sinh chữ Việt, engine bên dưới tự dịch DOM
@@ -1068,8 +1068,18 @@ window.addEventListener('DOMContentLoaded', () => {
 
 window.addEventListener('scroll',()=>{
   const nav=$('mainNav'), sc=window.scrollY;
-  if(sc>lastScrollY && sc>80) nav.classList.add('nav-hidden');
-  else nav.classList.remove('nav-hidden');
+  const co=$('checkoutSection'), fs=$('floatingSocials'), mnw=$('mobileNavWrapper');
+
+  // Header & Navigation CỐ ĐỊNH khi cuộn trang thông thường; CHỈ ẩn khi cuộn tới khu vực Thanh toán (#checkoutSection)
+  let inCheckout = false;
+  if(co && !co.classList.contains('hidden')){
+    const r=co.getBoundingClientRect();
+    if(r.top < window.innerHeight - 80 && r.bottom > 120) inCheckout = true;
+  }
+  if(nav){
+    if(inCheckout) nav.classList.add('nav-hidden');
+    else nav.classList.remove('nav-hidden');
+  }
   lastScrollY=sc;
 
   clearTimeout(indexScrollTimer);
@@ -1078,28 +1088,19 @@ window.addEventListener('scroll',()=>{
     try { sessionStorage.setItem('idx_scroll_' + curActiveIndexTab, String(window.scrollY)); } catch(e){}
   }, 120);
 
-  const co=$('checkoutSection'), fs=$('floatingSocials'), mnw=$('mobileNavWrapper');
   if(window.innerWidth<768){
-    let hideSocialFab = false;
-    if(co && !co.classList.contains('hidden')){
-      const r=co.getBoundingClientRect();
-      if(r.top < window.innerHeight - 80 && r.bottom > 120) hideSocialFab = true;
-    }
+    let hideBottomWidgets = inCheckout;
     const ft=$('footerArea');
     if(ft){
       const fr=ft.getBoundingClientRect();
-      if(fr.top < window.innerHeight) hideSocialFab = true;
+      if(fr.top < window.innerHeight) hideBottomWidgets = true;
     }
-    // Thanh Mobile Navigation LUÔN LUÔN CỐ ĐỊNH, không bị ẩn khi cuộn
-    if(mnw){
-      mnw.style.opacity='1';
-      mnw.style.pointerEvents='auto';
-      mnw.style.transform='translate(-50%, 0)';
-    }
-    if(hideSocialFab){
+    if(hideBottomWidgets){
       if(fs){fs.style.opacity='0'; fs.style.pointerEvents='none'; fs.style.transform='translateY(20px)';}
+      if(mnw){mnw.style.opacity='0'; mnw.style.pointerEvents='none'; mnw.style.transform='translate(-50%, 20px)';}
     }else{
       if(fs && !fs.dataset.footerHidden){fs.style.opacity='1'; fs.style.pointerEvents='auto'; fs.style.transform='translateY(0)';}
+      if(mnw){mnw.style.opacity='1'; mnw.style.pointerEvents='auto'; mnw.style.transform='translate(-50%, 0)';}
     }
   }
 });
@@ -1901,8 +1902,8 @@ function fillDashboard(o){
  if(o.pendingUpgrade){ut=L.upg_pending;uc='bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400';}else if(o.upgradeStatus==='failed'){ut=L.upg_failed;uc='bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400';}else if(o.isUpgrade){ut=L.upg_ok;uc='bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400';}
  $('displayUpgradeStatus').innerText=ut;$('displayUpgradeStatus').className='text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap '+uc;
     const titles=['Subscription URL 1:','Subscription URL 2:','Subscription URL 3:'];
-    $('linkBoxes').innerHTML=[1,2,3].map(i=>`<div class="w-full ${i>1?'mt-2 border-t border-green-200/50 dark:border-green-800/50 pt-3':''}"><h3 class="text-green-700 dark:text-green-500 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>${titles[i-1]}</h3><div class="flex flex-col sm:flex-row gap-2 w-full items-stretch"><div class="relative w-full sm:flex-1 flex items-center overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]"><input type="text" id="subLink${i}" readonly class="w-full bg-transparent text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()"><div id="subBlurOverlay${i}" onclick="copyToClipboard('subLink${i}')" class="hidden absolute inset-0 z-10 flex items-center justify-start pl-3.5 pr-3 bg-white/25 dark:bg-black/30 backdrop-blur-[2px] cursor-pointer select-none"><span class="text-red-600 dark:text-amber-300 font-extrabold text-[11px] md:text-xs text-left leading-tight">Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!</span></div></div><div class="flex gap-2 shrink-0 w-full sm:w-auto"><button type="button" onclick="copyToClipboard('subLink${i}')" class="flex-1 sm:flex-none sm:w-[105px] bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-copy mr-1"></i>COPY</button><button type="button" onclick="openQrModal('subLink${i}', ${i})" class="flex-1 sm:flex-none sm:w-[105px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-2.5 rounded-xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-qrcode mr-1"></i>LẤY QR</button></div></div></div>`).join('')+
-     `<div class="mt-4 grid grid-cols-2 gap-3 border-t border-green-300 dark:border-green-800 pt-4"><button onclick="startUpgrade()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl text-xs md:text-sm transition flex items-center justify-center shadow-md active:scale-95"><i class="fas fa-arrow-up mr-1.5"></i> NÂNG GÓI</button><button onclick="startRenew()" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 rounded-xl text-xs md:text-sm transition flex items-center justify-center shadow-md active:scale-95"><i class="fas fa-redo-alt mr-1.5"></i> ${L.btn_renew}</button></div>`;
+    $('linkBoxes').innerHTML=[1,2,3].map(i=>`<div class="w-full ${i>1?'mt-2 border-t border-green-200/50 dark:border-green-800/50 pt-3':''}"><h3 class="text-green-700 dark:text-green-500 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>${titles[i-1]}</h3><div class="flex flex-col sm:flex-row gap-2 w-full items-stretch"><div class="relative w-full sm:flex-1 flex items-center overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]"><input type="text" id="subLink${i}" readonly class="w-full bg-transparent text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()"><div id="subBlurOverlay${i}" onclick="copyToClipboard('subLink${i}')" class="hidden absolute inset-0 z-10 flex items-center justify-start pl-3.5 pr-3 bg-white/25 dark:bg-black/30 backdrop-blur-[2px] cursor-pointer select-none"><span class="text-red-600 dark:text-amber-300 font-extrabold text-[11px] md:text-xs text-left leading-tight">Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!</span></div></div><div class="flex gap-2 shrink-0 w-full sm:w-auto"><button type="button" onclick="copyToClipboard('subLink${i}')" class="flex-1 sm:flex-none sm:w-[105px] bg-green-600 hover:bg-green-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-copy mr-1"></i>COPY</button><button type="button" onclick="openQrModal('subLink${i}', ${i})" class="flex-1 sm:flex-none sm:w-[105px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-qrcode mr-1"></i>LẤY QR</button></div></div></div>`).join('')+
+     `<div class="mt-4 grid grid-cols-2 gap-3 border-t border-green-300 dark:border-green-800 pt-4"><button onclick="startUpgrade()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-3 rounded-xl text-xs md:text-sm transition flex items-center justify-center shadow-md active:scale-95"><i class="fas fa-arrow-up mr-1.5"></i> NÂNG GÓI</button><button onclick="startRenew()" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-extrabold py-3 rounded-xl text-xs md:text-sm transition flex items-center justify-center shadow-md active:scale-95"><i class="fas fa-redo-alt mr-1.5"></i> ${L.btn_renew||'GIA HẠN'}</button></div>`;
   [1,2,3].forEach(i=>{
    const inp = $('subLink' + i), ov = $('subBlurOverlay' + i), v = o['info' + i];
    if (o['blur' + i]) {
