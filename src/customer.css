@@ -92,9 +92,9 @@ html.dark #guideText a.word-link{color:#60a5fa!important;}
 /* ===== UI UX PRO MAX: ERGONOMIC DARK THEME (Công thái học chống mỏi mắt) ===== */
 *{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
 
-/* Touch Targets >= 48px chuẩn M3/iOS (Loại trừ nút Footer, Header, và nút nhỏ gọn) */
-button:not(.swal2-close):not(#headerDrawerChevronBtn):not(#headerDrawerCloseBtn):not(#footerArea button):not(.p-0\.5):not(.p-1):not(.footer-social-btn),
-a[role="button"],
+/* Touch Targets >= 44px chuẩn M3/iOS (Loại trừ tuyệt đối nút Header, nút Footer, và các nút icon tròn/cố định w- h-) */
+button:not(.swal2-close):not(#mainNav button):not(#loginSearchBtn):not(#headerDrawerChevronBtn):not(#headerDrawerCloseBtn):not(#footerArea button):not(.p-0\.5):not(.p-1):not(.footer-social-btn):not([class*="w-"]):not([class*="h-"]),
+a[role="button"]:not(#footerArea a):not([class*="h-"]),
 .pay-btn,
 .dur-btn,
 .tab-btn,
@@ -109,6 +109,14 @@ a[role="button"]:active,
 .dur-btn:active,
 .tab-btn:active {
   transform:scale(0.97) !important;
+}
+
+/* Khóa cứng đồng nhất 100% chiều cao 36px cho cả 4 nút hỗ trợ ở Footer (Zalo, Mess, WeChat, Telegram) */
+#footerArea button,
+#footerArea a {
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
 }
 
 /* ===== MONOCHROME OBSIDIAN DARK THEME (CHUẨN INDEX.HTML CŨ) ===== */
@@ -167,15 +175,15 @@ html.dark [class*="dark:bg-indigo"]{background:rgba(255,255,255,0.08) !important
 html.dark :is([class*="dark:border-white"],[class*="dark:border-slate"],[class*="dark:border-indigo"],[class*="dark:border-amber-500/30"],[class*="dark:border-emerald-500/30"]){border-color:var(--bd) !important;}
 html.dark .sticky.bottom-0{background:rgba(13,14,18,0.85);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);}
 
-/* Nút primary = ĐEN TUYỀN + viền kính tinh tế (Chuẩn index cũ) */
-html.dark :is(button,a).bg-indigo-600,
-html.dark button[class*="dark:bg-indigo"]{
+/* Nút primary = ĐEN TUYỀN + viền kính tinh tế (Chuẩn index cũ) — LOẠI TRỪ các nút nghiệp vụ: QR, Copy, Gia hạn, Nâng gói, Dung lượng, Search */
+html.dark :is(button,a).bg-indigo-600:not(#linkBoxes button):not(#btnRequestData):not(#loginSearchBtn):not(.guide-cta-btn),
+html.dark button[class*="dark:bg-indigo"]:not(#linkBoxes button):not(#btnRequestData):not(#loginSearchBtn){
   background:#000000 !important;
   color:#ffffff !important;
   border:1px solid rgba(255,255,255,0.20) !important;
   box-shadow:0 4px 12px rgba(0,0,0,0.4) !important;
 }
-html.dark button:is(.bg-indigo-600,[class*="dark:bg-indigo"]):not(.active):hover{
+html.dark button:is(.bg-indigo-600,[class*="dark:bg-indigo"]):not(#linkBoxes button):not(#btnRequestData):not(#loginSearchBtn):not(.active):hover{
   background:#18191e !important;
   border-color:rgba(255,255,255,0.35) !important;
 }
