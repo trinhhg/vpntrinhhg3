@@ -560,6 +560,37 @@
               </table>
             </div>
           </div>
+          <!-- KHỐI 3: QUY TẮC QUÀ TẶNG THEO GÓI (GIFT RULES) -->
+          <div class="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div>
+                <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2"><i class="fas fa-gift text-rose-500"></i>Quản lý Quy Tắc Quà Tặng Theo Gói (Tặng Ngày &amp; Tem Quà)</h2>
+                <p class="text-[11px] text-slate-500 mt-0.5">Tạo quy tắc quà tặng linh hoạt áp dụng cho một hoặc nhiều gói cước. Tự động kiểm tra xung đột gói.</p>
+              </div>
+              <button onclick="openAddGiftRuleModal()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center gap-1.5 shrink-0"> <i class="fas fa-plus"></i>TẠO QUY TẮC QUÀ TẶNG </button>
+            </div>
+            <!-- Danh sách Quy tắc Quà tặng -->
+            <div class="overflow-x-auto rounded-xl border border-slate-200">
+              <table class="w-full text-xs text-left">
+                <thead class="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] border-b border-slate-200">
+                  <tr>
+                    <th class="px-3 py-2.5">Tên / Tem Quà</th>
+                    <th class="px-3 py-2.5">Chữ cạnh HSD</th>
+                    <th class="px-3 py-2.5 text-center">Ngày tặng</th>
+                    <th class="px-3 py-2.5">Gói cước áp dụng</th>
+                    <th class="px-3 py-2.5 text-center">Thời gian</th>
+                    <th class="px-3 py-2.5 text-center">Trạng thái</th>
+                    <th class="px-3 py-2.5 text-right">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="giftRuleListTbody" class="divide-y divide-slate-100">
+                  <tr>
+                    <td colspan="7" class="text-center py-4 text-slate-400 italic">Đang tải danh sách quy tắc quà tặng...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
       <!-- ===== CÀI ĐẶT (CHUẨN 5 SUB-TAB) ===== -->
@@ -1186,6 +1217,40 @@
               <div class="pt-1 flex items-center justify-between bg-slate-50 dark:bg-black/40 p-2.5 rounded-xl border border-slate-100 dark:border-white/5"><span class="font-bold text-slate-700 dark:text-slate-300">Trạng thái mã:</span> <label class="flex items-center gap-2 cursor-pointer font-bold text-emerald-600"> <input type="checkbox" id="couponModalEnabled" checked class="w-4 h-4 accent-emerald-600"> Hoạt động </label></div>
             </div>
             <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-white/10"><button type="button" onclick="closeCouponModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition min-h-[44px]">Hủy</button> <button type="button" onclick="saveCouponModal()" class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs shadow-md transition active:scale-95 flex items-center gap-1.5 min-h-[44px]"><i class="fas fa-check"></i>LƯU MÃ COUPON</button></div>
+          </div>
+        </div>
+      </div>
+      <!-- MODAL QUẢN LÝ QUY TẮC QUÀ TẶNG (GIFT RULE MODAL) -->
+      <div id="mGiftRuleModal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-3 bg-black/60 backdrop-blur-xs transition-opacity duration-300">
+        <div class="fixed inset-0" onclick="closeGiftRuleModal()"></div>
+        <div class="relative bg-white dark:bg-[#18181b] w-full sm:max-w-xl max-h-[92vh] sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col z-10 transition-transform duration-300">
+          <div class="w-full py-2.5 flex justify-center cursor-grab active:cursor-grabbing touch-none shrink-0 sm:hidden" id="mGiftRuleModalHandle">
+            <div class="w-10 h-1 bg-slate-300 dark:bg-white/20 rounded-full"></div>
+          </div>
+          <div class="p-4 sm:p-6 space-y-4 overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
+              <h3 class="font-black text-base text-slate-800 dark:text-white flex items-center gap-2"><i class="fas fa-gift text-rose-500"></i><span id="giftRuleModalTitle">Tạo Quy Tắc Quà Tặng Mới</span></h3>
+              <button type="button" onclick="closeGiftRuleModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 flex items-center justify-center min-h-[32px] min-w-[32px]"><i class="fas fa-times text-xs"></i></button>
+            </div>
+            <input type="hidden" id="giftRuleModalEditIdx" value="">
+            <div class="space-y-3 text-xs">
+              <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Tên / Tem quà tặng (Bắt buộc):</label> <input type="text" id="giftRuleModalName" placeholder="VD: +3 NGÀY hoặc KHUYẾN MÃI ĐẶC BIỆT" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-black text-rose-600 outline-none focus:border-rose-500"></div>
+              <div class="grid grid-cols-2 gap-2.5">
+                <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Số ngày tặng (+ vào HSD):</label> <input type="number" id="giftRuleModalBonusDays" min="0" max="365" placeholder="VD: 3" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-purple-700 outline-none focus:border-purple-500" oninput="updateGiftRulePkgCheckboxes()"></div>
+                <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Chữ cạnh HSD (Tùy chọn):</label> <input type="text" id="giftRuleModalBonusText" placeholder="VD: +3 ngày hoặc (Tặng 3 ngày)" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-indigo-700 outline-none focus:border-indigo-500"></div>
+              </div>
+              <!-- Danh sách chọn gói cước áp dụng -->
+              <div>
+                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1 flex items-center justify-between"> <span>Áp dụng cho các gói cước:</span> <span class="text-[10px] text-slate-400 font-normal">Mỗi gói chỉ áp dụng tối đa 1 quy tắc</span> </label>
+                <div id="giftRuleModalPkgs" class="p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-black/40 space-y-2 max-h-48 overflow-y-auto"><!-- Checkbox danh sách gói cước được render động --></div>
+              </div>
+              <div class="grid grid-cols-2 gap-2.5">
+                <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Bắt đầu từ (Tùy chọn):</label> <input type="datetime-local" id="giftRuleModalStart" class="w-full p-2 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black text-slate-800 dark:text-white outline-none focus:border-rose-500 text-xs"></div>
+                <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Kết thúc vào (Tùy chọn):</label> <input type="datetime-local" id="giftRuleModalEnd" class="w-full p-2 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black text-slate-800 dark:text-white outline-none focus:border-rose-500 text-xs"></div>
+              </div>
+              <div class="pt-1 flex items-center justify-between bg-slate-50 dark:bg-black/40 p-2.5 rounded-xl border border-slate-100 dark:border-white/5"><span class="font-bold text-slate-700 dark:text-slate-300">Trạng thái quy tắc:</span> <label class="flex items-center gap-2 cursor-pointer font-bold text-emerald-600"> <input type="checkbox" id="giftRuleModalEnabled" checked class="w-4 h-4 accent-emerald-600" onchange="updateGiftRulePkgCheckboxes()"> Hoạt động </label></div>
+            </div>
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-white/10"><button type="button" onclick="closeGiftRuleModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition min-h-[44px]">Hủy</button> <button type="button" onclick="saveGiftRuleModal()" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md transition active:scale-95 flex items-center gap-1.5 min-h-[44px]"><i class="fas fa-check"></i>LƯU QUY TẮC QUÀ TẶNG</button></div>
           </div>
         </div>
       </div>
