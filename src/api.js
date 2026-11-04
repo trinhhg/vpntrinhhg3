@@ -36,7 +36,18 @@ export function clearAdminToken() {
 
 export function isTestMode() {
   if (typeof location === "undefined") return false;
-  return new URLSearchParams(location.search).get("test") === "1";
+  const urlParam = new URLSearchParams(location.search).get("test");
+  if (urlParam === "1") return true;
+  if (urlParam === "0") return false;
+  if (typeof localStorage !== "undefined") {
+    try {
+      const siteKey = getSiteKey();
+      const adminTest = localStorage.getItem(siteKey + "_testMode");
+      if (adminTest === "1") return true;
+      if (adminTest === "0") return false;
+    } catch {}
+  }
+  return false;
 }
 
 /**
@@ -47,7 +58,8 @@ export async function request(path, options = {}) {
   const isAbs = /^https?:\/\//i.test(path);
   let urlStr = isAbs ? path : `${WORKER_URL}${path.startsWith('/') ? '' : '/'}${path}`;
 
-  if (isTestMode()) {
+  const testActive = options.isTest !== undefined ? !!options.isTest : isTestMode();
+  if (testActive) {
     urlStr += (urlStr.includes('?') ? '&' : '?') + 'test=1';
   }
 
@@ -56,7 +68,7 @@ export async function request(path, options = {}) {
     ...(options.headers || {})
   };
 
-  if (isTestMode()) {
+  if (testActive) {
     headers['X-Test-Mode'] = '1';
   }
 
