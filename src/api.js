@@ -124,15 +124,36 @@ export async function wpost(path, body) {
   try {
     const res = await request(path, { method: 'POST', body, noRedirect: true });
     let data = {};
+    let isJson = true;
     try {
       data = await res.json();
-    } catch {}
+    } catch {
+      isJson = false;
+    }
+
+    if (!isJson) {
+      console.warn(`[API Parse Error] Phản hồi từ ${path} không phải JSON hợp lệ (HTTP ${res.status})`);
+      return {
+        ok: false,
+        status: res.status,
+        data: { error: 'Phản hồi từ máy chủ không đúng định dạng JSON', isJson: false }
+      };
+    }
+
+    if (!res.ok) {
+      const errDetail = data && (data.error || data.message) ? String(data.error || data.message) : `HTTP ${res.status}`;
+      console.warn(`[API Server Error] ${path} trả về mã ${res.status}: ${errDetail}`);
+    }
+
     return { ok: res.ok, status: res.status, data };
   } catch (err) {
+    const isTimeout = err.name === 'AbortError' || String(err.message || '').includes('quá thời gian');
+    const errType = isTimeout ? 'Timeout' : 'Network/CORS';
+    console.warn(`[API ${errType} Error] Không thể kết nối tới ${path}: ${err.message || String(err)}`);
     return {
       ok: false,
       status: 0,
-      data: { error: err.message || String(err) }
+      data: { error: err.message || String(err), isNetworkError: true, isTimeout }
     };
   }
 }
