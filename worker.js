@@ -1,4 +1,4 @@
-// v4 — 2026-11-04 20:00 (UTC+7)
+// v4 — 2026-11-04 21:00 (UTC+7)
 const getKV = (env) => env && (env.VPN_KV3 || env.VPN_KV || env.KV);
 
 // ====================================================================
@@ -66,8 +66,8 @@ function getSupabase(env, isTest = false) {
 
       return await res.json();
     },
-    async getOrdersByEmail(email, limit = 50) {
-      const safeLimit = Math.max(1, Math.min(Number(limit) || 50, 100));
+    async getOrdersByEmail(email, limit = 100) {
+      const safeLimit = Math.max(1, Math.min(Number(limit) || 100, 200));
       const em = encodeURIComponent(String(email || "").trim());
       const res = await fetch(`${url}/${table}?select=*&email=ilike.${em}&order=createdTs.desc&limit=${safeLimit}`, { headers });
 
@@ -2031,36 +2031,37 @@ export default {
       let matchedOrders = [];
       let o = null;
 
+      // Quy tắc môi trường chuẩn hóa:
+      // Trong kho TEST (ALL_ORDERS_TEST), mọi bản ghi lấy ra đều là đơn test hợp lệ.
+      // Trong kho PROD (ALL_ORDERS), loại bỏ đơn có cờ test hoặc tiền tố DH_TEST_ để bảo vệ dữ liệu thật.
+      const isMatchingEnv = (ord, isTest) => {
+        if (!ord) return false;
+        if (isTest) return true;
+        return !isTestOrderRecord(ord);
+      };
+
       if (sb) {
         try {
           if (isEmailQuery) {
-            const emQuery = rawQ.toLowerCase();
-            const resOrders = await sb.getOrdersByEmail(emQuery, 50);
+            const emQuery = rawQ.toLowerCase().trim();
+            const resOrders = await sb.getOrdersByEmail(emQuery, 100);
             matchedOrders = Array.isArray(resOrders) ? resOrders : [];
-            matchedOrders = matchedOrders.filter(ord => {
-              if (!ord || String(ord.email || "").toLowerCase() !== emQuery) return false;
-              const isTestOrd = ord.isTest === true || String(ord.id).startsWith("DH_TEST_");
-              return isTestReq === isTestOrd;
-            });
+            matchedOrders = matchedOrders.filter(ord => ord && String(ord.email || "").toLowerCase() === emQuery);
             matchedOrders.sort((a, b) => (b.createdTs || 0) - (a.createdTs || 0));
             o = matchedOrders.find(ord => normStatus(ord.status) === "success") || matchedOrders[0] || null;
           } else {
             const singleOrd = await sb.getOrder(normId(rawQ));
             if (singleOrd) {
-              const isTestOrd = singleOrd.isTest === true || String(singleOrd.id).startsWith("DH_TEST_");
-              if (isTestReq === isTestOrd) {
-                o = singleOrd;
-                matchedOrders = [singleOrd];
-                if (singleOrd.email) {
-                  const related = await sb.getOrdersByEmail(singleOrd.email, 50).catch(() => []);
-                  if (Array.isArray(related)) {
-                    related.forEach(ro => {
-                      if (ro && !matchedOrders.some(x => normId(x.id) === normId(ro.id))) {
-                        const roTest = ro.isTest === true || String(ro.id).startsWith("DH_TEST_");
-                        if (isTestReq === roTest) matchedOrders.push(ro);
-                      }
-                    });
-                  }
+              o = singleOrd;
+              matchedOrders = [singleOrd];
+              if (singleOrd.email) {
+                const related = await sb.getOrdersByEmail(singleOrd.email, 50).catch(() => []);
+                if (Array.isArray(related)) {
+                  related.forEach(ro => {
+                    if (ro && !matchedOrders.some(x => normId(x.id) === normId(ro.id))) {
+                      matchedOrders.push(ro);
+                    }
+                  });
                 }
               }
             }
@@ -2079,37 +2080,26 @@ export default {
 
         if (isEmailQuery) {
           const emQuery = rawQ.toLowerCase();
-          matchedOrders = allOrders.filter(ord => {
-            if (!ord || String(ord.email || "").toLowerCase() !== emQuery) return false;
-            const isTestOrd = ord.isTest === true || String(ord.id).startsWith("DH_TEST_");
-            return isTestReq === isTestOrd;
-          });
+          matchedOrders = allOrders.filter(ord => ord && String(ord.email || "").toLowerCase() === emQuery);
           matchedOrders.sort((a, b) => (b.createdTs || 0) - (a.createdTs || 0));
           o = matchedOrders.find(ord => normStatus(ord.status) === "success") || matchedOrders[0] || null;
         } else {
           const byId = allOrders.find(ord => ord && normId(ord.id) === normId(rawQ));
           if (byId) {
-            const isTestOrd = byId.isTest === true || String(byId.id).startsWith("DH_TEST_");
-            if (isTestReq === isTestOrd) {
-              o = byId;
-              const em = String(byId.email || "").toLowerCase();
-              matchedOrders = em ? allOrders.filter(x => String(x.email || "").toLowerCase() === em) : [byId];
-            }
+            o = byId;
+            const em = String(byId.email || "").toLowerCase();
+            matchedOrders = em ? allOrders.filter(x => String(x.email || "").toLowerCase() === em) : [byId];
           }
         }
-      }
 
       // Fallback kiểm tra bộ nhớ đệm đơn hàng chờ (KV Pending Cache)
       if (!o && rawQ) {
         const rawPending = await KV.get("PENDING_ORD_" + normId(rawQ));
         if (rawPending) {
           const pOrd = safeJson(rawPending, null);
-          if (pOrd) {
-            const isTestOrd = pOrd.isTest === true || String(pOrd.id).startsWith("DH_TEST_");
-            if (isTestReq === isTestOrd) {
-              o = pOrd;
-              if (!matchedOrders.some(x => normId(x.id) === normId(pOrd.id))) matchedOrders.push(pOrd);
-            }
+          if (pOrd && isMatchingEnv(pOrd, isTestReq)) {
+            o = pOrd;
+            if (!matchedOrders.some(x => normId(x.id) === normId(pOrd.id))) matchedOrders.push(pOrd);
           }
         }
       }
@@ -2160,13 +2150,11 @@ export default {
       }
       const isTombId = (idOrUrl) => idOrUrl ? tombSet.has(idOrUrl) : false;
 
-      // 3. Lọc danh sách đơn thành công của email từ matchedOrders (đảm bảo đúng môi trường Test/Prod)
+      // 3. Lọc danh sách đơn thành công của email từ matchedOrders
       const em = String(o.email || (isEmailQuery ? rawQ : "")).toLowerCase();
       const userOrders = matchedOrders.filter(ord => {
         if (!ord || String(ord.email || "").toLowerCase() !== em) return false;
-        if (normStatus(ord.status) !== "success") return false;
-        const isTestOrd = ord.isTest === true || String(ord.id).startsWith("DH_TEST_");
-        return isTestReq === isTestOrd;
+        return normStatus(ord.status) === "success";
       });
 
       // 4. Xác định các đơn còn hạn (chuẩn hóa mốc đầu ngày 00:00:00 UTC+7 để so khớp chính xác với parseDmy)
@@ -2279,8 +2267,6 @@ export default {
         for (const ord of st.orders) {
           if (!ord || String(ord.email || "").toLowerCase() !== emLower) continue;
           if (normStatus(ord.status) !== "success") continue;
-          const isTestOrd = ord.isTest === true || String(ord.id).startsWith("DH_TEST_");
-          if (isTestReq !== isTestOrd) continue;
           const lk = ord[f];
           if (lk && !seenUrls.has(lk)) {
             seenUrls.add(lk);
