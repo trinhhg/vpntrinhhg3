@@ -1823,25 +1823,34 @@ function genHTML(rawPkg) {
   // Badge Flash Sale: Hiệu ứng heartbeat xung quanh, không nhấp nháy mờ rõ
   const flashSaleBadge = pkg.isFlashSale ? `<div class="inline-flex items-center gap-1 bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-black text-[10px] md:text-[11px] px-2.5 py-0.5 rounded-full shadow-md btn-heartbeat shrink-0"><i class="fas fa-bolt text-[9px] text-yellow-300"></i><span>${esc(pkg.flashSaleTitle || 'Flash Sale')} -${pkg.flashSalePercent}%</span></div>` : '';
 
-  // Tem sticker quà tặng (VD: +3 NGÀY)
-  const promoStickerBadge = pkg.promo_sticker ? `<div class="inline-flex items-center gap-1 bg-gradient-to-r from-rose-500 to-pink-500 text-white font-black text-[10px] md:text-[11px] px-2.5 py-0.5 rounded-full shadow-sm shrink-0"><i class="fas fa-gift text-[9px]"></i><span>${esc(pkg.promo_sticker)}</span></div>` : '';
+  // Tra cứu Gift Rule đang có hiệu lực cho gói này từ cfgCache
+  const giftRules = Array.isArray(cfgCache?.giftRules) ? cfgCache.giftRules : [];
+  const nowMs = Date.now();
+  const matchedGift = giftRules.find(r => {
+    if (!r || r.enabled === false) return false;
+    if (!Array.isArray(r.packageIds) || !r.packageIds.includes(pkg.id)) return false;
+    const s = r.startDate ? new Date(r.startDate).getTime() : 0;
+    const e = r.endDate ? new Date(r.endDate).getTime() : Infinity;
+    return nowMs >= s && nowMs <= e;
+  });
+
+  // Tem sticker quà tặng (Ưu tiên Gift Rule -> fallback dữ liệu cũ nếu có)
+  const promoStickerText = matchedGift ? (matchedGift.sticker || matchedGift.name) : (pkg.promo_sticker || '');
+  const promoStickerBadge = promoStickerText ? `<div class="inline-flex items-center gap-1 bg-gradient-to-r from-rose-500 to-pink-500 text-white font-black text-[10px] md:text-[11px] px-2.5 py-0.5 rounded-full shadow-sm shrink-0"><i class="fas fa-gift text-[9px]"></i><span>${esc(promoStickerText)}</span></div>` : '';
 
   const inlineBadges = (flashSaleBadge || promoStickerBadge) ? `<div class="flex items-center gap-1.5 flex-wrap justify-end mb-1">${flashSaleBadge}${promoStickerBadge}</div>` : '';
 
   const priceHTML = pkg.isCustom ? `<div class="text-xl font-black text-red-600 dark:text-red-400 mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${p.price || ''}</div>` : `<div class="mb-4 border-b border-slate-100 dark:border-white/10 pb-3 mt-1.5 flex flex-wrap items-baseline"><span class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-white price-glow">${realPriceDisplay}</span>${origPriceStr}</div>`;
 
-  const btn = isDisabled ? `<button disabled class="w-full bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 font-bold py-3 rounded-xl text-sm cursor-not-allowed">Không khả dụng</button>` : pkg.isCustom ? `<a href="#footerArea" class="w-full block text-center bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-bold py-3 rounded-xl text-sm hover:bg-red-600 hover:text-white transition">Liên hệ Admin</a>` : `<button onclick="openCheckout('${pkg.id}')" class="w-full bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-bold py-3 rounded-xl text-sm hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white dark:hover:shadow-[0_0_15px_rgba(99,102,241,0.5)] transition">Đăng ký Gói Này</button>`;
-
-  // Bố cục các Tag góc thẻ: Góc Trái và Góc Phải độc lập, không bị chồng đè
-  const leftBadges = [pkg.tag2 ? `<span class="bg-blue-500 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag2[lang] || pkg.tag2.vi || pkg.tag2)}</span>` : '', pkg.tag4 ? `<span class="bg-purple-600 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag4[lang] || pkg.tag4.vi || pkg.tag4)}</span>` : ''].filter(Boolean).join('');
-
-  const rightBadges = [pkg.tag1 ? `<span class="bg-red-500 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag1[lang] || pkg.tag1.vi || pkg.tag1)}</span>` : '', pkg.tag3 ? `<span class="bg-amber-500 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag3[lang] || pkg.tag3.vi || pkg.tag3)}</span>` : ''].filter(Boolean).join('');
-
-  const hasCornerBadges = leftBadges || rightBadges;
-
-  // Chữ hiển thị cạnh thời hạn: Dùng bonus_text của admin, không hardcode "+3 ngày tặng"
+  // Chữ hiển thị cạnh thời hạn: Ưu tiên Gift Rule
   let bonusLabel = '';
-  if (pkg.bonus_text) {
+  if (matchedGift) {
+    if (matchedGift.bonusText) {
+      bonusLabel = ` <span class="text-rose-500 font-extrabold text-xs">(${esc(matchedGift.bonusText)})</span>`;
+    } else if (Number(matchedGift.bonusDays) > 0) {
+      bonusLabel = ` <span class="text-rose-500 font-extrabold text-xs">(+${matchedGift.bonusDays} ngày)</span>`;
+    }
+  } else if (pkg.bonus_text) {
     bonusLabel = ` <span class="text-rose-500 font-extrabold text-xs">(${esc(pkg.bonus_text)})</span>`;
   } else if (Number(pkg.bonus_days) > 0 && !pkg.promo_sticker) {
     bonusLabel = ` <span class="text-rose-500 font-extrabold text-xs">(+${pkg.bonus_days} ngày)</span>`;
@@ -2011,8 +2020,13 @@ function openCheckout(id) {
       });
       existingCustomerLinks = links;
       populateTargetLinks(links);
+      lockSubDecisionUI('KEEP_EXISTING', 'Gia hạn chính gói cước và link sub này trong portal (Tự động giữ link cũ)');
+    } else if (isUpgradeMode && oCache) {
+      subWrap.classList.remove('hidden');
+      lockSubDecisionUI('KEEP_EXISTING', 'Nâng cấp dung lượng trên cùng link sub hiện tại (Không đổi link)');
     } else {
       subWrap.classList.add('hidden');
+      unlockSubDecisionUI();
       const multiWrap = $('multiLinkSelectorWrap');
       if (multiWrap) multiWrap.classList.add('hidden');
     }
@@ -2532,6 +2546,58 @@ function updateSubDecisionUI(val) {
   }
 }
 
+function lockSubDecisionUI(selectedVal, reasonNotice = '') {
+  currentSubDecision = selectedVal;
+  document.querySelectorAll('input[name="subLinkDecisionRadio"]').forEach(r => {
+    r.checked = (r.value === selectedVal);
+    r.disabled = true;
+  });
+  updateSubDecisionUI(selectedVal);
+  const lblKeep = $('lblSubKeep');
+  const lblNew = $('lblSubNew');
+  if (lblKeep) {
+    lblKeep.classList.add('pointer-events-none', 'opacity-70');
+    if (!lblKeep.querySelector('.sub-lock-icon')) {
+      const sp = lblKeep.querySelector('span');
+      if (sp) sp.insertAdjacentHTML('beforeend', ' <i class="fas fa-lock text-slate-400 text-xs ml-1 sub-lock-icon"></i>');
+    }
+  }
+  if (lblNew) {
+    lblNew.classList.add('pointer-events-none', 'opacity-70');
+    if (!lblNew.querySelector('.sub-lock-icon')) {
+      const sp = lblNew.querySelector('span');
+      if (sp) sp.insertAdjacentHTML('beforeend', ' <i class="fas fa-lock text-slate-400 text-xs ml-1 sub-lock-icon"></i>');
+    }
+  }
+  let noticeEl = $('subDecisionLockNotice');
+  if (!noticeEl) {
+    noticeEl = document.createElement('div');
+    noticeEl.id = 'subDecisionLockNotice';
+    noticeEl.className = 'text-[11px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/30 p-2 rounded-lg border border-indigo-200 dark:border-indigo-900/40 mt-2 flex items-center gap-1.5';
+    $('subLinkLifecycleWrap')?.appendChild(noticeEl);
+  }
+  noticeEl.innerHTML = `<i class="fas fa-info-circle text-indigo-500"></i><span>${esc(reasonNotice)}</span>`;
+  noticeEl.classList.toggle('hidden', !reasonNotice);
+}
+
+function unlockSubDecisionUI() {
+  document.querySelectorAll('input[name="subLinkDecisionRadio"]').forEach(r => {
+    r.disabled = false;
+  });
+  const lblKeep = $('lblSubKeep');
+  const lblNew = $('lblSubNew');
+  if (lblKeep) {
+    lblKeep.classList.remove('pointer-events-none', 'opacity-70');
+    lblKeep.querySelectorAll('.sub-lock-icon').forEach(el => el.remove());
+  }
+  if (lblNew) {
+    lblNew.classList.remove('pointer-events-none', 'opacity-70');
+    lblNew.querySelectorAll('.sub-lock-icon').forEach(el => el.remove());
+  }
+  const noticeEl = $('subDecisionLockNotice');
+  if (noticeEl) noticeEl.classList.add('hidden');
+}
+
 function populateTargetLinks(links) {
   const sel = $('targetLinkSubSelect');
   if (!sel) return;
@@ -2627,24 +2693,42 @@ async function checkEmailExistingLinks(email) {
       if (ord && ord.status === 'success') {
         [1, 2, 3].forEach(i => {
           if (ord['info' + i] && !ord['blur' + i] && !links.some(l => l.url === ord['info' + i])) {
-            links.push({ index: links.length + 1, url: ord['info' + i], name: `Link Sub ${i}` });
+            links.push({
+              index: links.length + 1,
+              url: ord['info' + i],
+              name: `Link Sub ${i}`
+            });
           }
         });
       }
 
-      if (links.length > 0) {
+      const scenario = res.data.linkScenario || (links.length > 1 ? 'multi_active' : (links.length === 1 ? 'single_link' : 'none'));
+
+      if (scenario === 'multi_active') {
+        // B6: Email có 2 đơn hoạt động -> Vẫn hiển thị 2 lựa chọn nhưng KHÓA, backend cấp mới
+        existingCustomerLinks = links;
+        detectedRenewOf = '';
+        emailLookupState = 'found';
+        $('subLinkLifecycleWrap')?.classList.remove('hidden');
+        lockSubDecisionUI('CREATE_NEW', 'Email có nhiều gói cước đang hoạt động cùng lúc. Hệ thống tự động cấp link mới độc lập để không ảnh hưởng các link hiện tại.');
+        renderPaymentBox();
+        return;
+      } else if (scenario === 'single_link' && links.length === 1) {
+        // B5: Có đúng 1 link cũ phù hợp -> Mở khóa cho khách hàng chủ động chọn
         existingCustomerLinks = links;
         detectedRenewOf = ord.id || '';
         emailLookupState = 'found';
+        unlockSubDecisionUI();
         populateTargetLinks(links);
         $('subLinkLifecycleWrap')?.classList.remove('hidden');
         renderPaymentBox();
         return;
       } else {
-        // Tra cứu thành công nhưng email không có link cũ: coi là khách mua mới
+        // B4: Email mới chưa từng tồn tại -> Tự động cấp link mới, không yêu cầu chọn
         existingCustomerLinks = [];
         detectedRenewOf = '';
         emailLookupState = 'none';
+        currentSubDecision = 'CREATE_NEW';
         $('subLinkLifecycleWrap')?.classList.add('hidden');
         $('multiLinkSelectorWrap')?.classList.add('hidden');
         renderPaymentBox();
@@ -2902,7 +2986,13 @@ function fillDashboard(o) {
   $('displayUpgradeStatus').innerText = ut;
   $('displayUpgradeStatus').className = 'text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap ' + uc;
   const titles = ['Subscription URL 1:', 'Subscription URL 2:', 'Subscription URL 3:'];
-  $('linkBoxes').innerHTML = [1, 2, 3].map(i => `<div class="w-full ${i>1?'mt-2 border-t border-green-200/50 dark:border-green-800/50 pt-3':''}"><h3 class="text-green-700 dark:text-green-500 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>${titles[i-1]}</h3><div class="flex flex-col sm:flex-row gap-2 w-full items-stretch"><div class="relative w-full sm:flex-1 flex items-center overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]"><input type="text" id="subLink${i}" readonly class="w-full bg-transparent text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()"><div id="subBlurOverlay${i}" onclick="copyToClipboard('subLink${i}')" class="hidden absolute inset-0 z-10 flex items-center justify-start pl-3.5 pr-3 bg-white/25 dark:bg-black/30 backdrop-blur-[2px] cursor-pointer select-none"><span class="text-red-600 dark:text-amber-300 font-extrabold text-[11px] md:text-xs text-left leading-tight">Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!</span></div></div><div class="flex gap-2 shrink-0 w-full sm:w-auto"><button type="button" onclick="copyToClipboard('subLink${i}')" class="flex-1 sm:flex-none sm:w-[105px] bg-green-600 hover:bg-green-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-copy mr-1"></i>COPY</button><button type="button" onclick="openQrModal('subLink${i}', ${i})" class="flex-1 sm:flex-none sm:w-[105px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-qrcode mr-1"></i>LẤY QR</button></div></div></div>`).join('');
+  let fallbackNoticeHtml = '';
+  if (o.fulfillResult === 'fallback_new' || o.fallbackNew) {
+    fallbackNoticeHtml = `<div class="mb-3 p-3 bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-300 dark:border-amber-700/50 rounded-xl text-amber-900 dark:text-amber-200 text-xs font-bold leading-relaxed flex items-start gap-2.5"><i class="fas fa-triangle-exclamation text-amber-500 text-sm mt-0.5 shrink-0"></i><div><div class="font-black text-amber-800 dark:text-amber-300">Thông báo đổi Link Sub:</div><div>Không thể giữ link cũ theo yêu cầu do link cũ đã hết hiệu lực hoặc đã bị xóa. Hệ thống đã tự động cấp link sub mới.</div><div class="mt-1 font-semibold text-rose-600 dark:text-rose-400">👉 Quý khách vui lòng COPY hoặc quét mã QR bên dưới để thêm lại link mới vào ứng dụng VPN để tiếp tục sử dụng.</div></div></div>`;
+  } else if (o.fulfillResult === 'multi_active_new') {
+    fallbackNoticeHtml = `<div class="mb-3 p-2.5 bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/40 rounded-xl text-sky-800 dark:text-sky-300 text-xs font-bold flex items-center gap-2"><i class="fas fa-info-circle text-sky-500"></i><span>Email có nhiều đơn hàng cùng hoạt động. Hệ thống đã cấp một Link Sub mới độc lập.</span></div>`;
+  }
+  $('linkBoxes').innerHTML = fallbackNoticeHtml + [1, 2, 3].map(i => `<div class="w-full ${i>1?'mt-2 border-t border-green-200/50 dark:border-green-800/50 pt-3':''}"><h3 class="text-green-700 dark:text-green-500 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>${titles[i-1]}</h3><div class="flex flex-col sm:flex-row gap-2 w-full items-stretch"><div class="relative w-full sm:flex-1 flex items-center overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]"><input type="text" id="subLink${i}" readonly class="w-full bg-transparent text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()"><div id="subBlurOverlay${i}" onclick="copyToClipboard('subLink${i}')" class="hidden absolute inset-0 z-10 flex items-center justify-start pl-3.5 pr-3 bg-white/25 dark:bg-black/30 backdrop-blur-[2px] cursor-pointer select-none"><span class="text-red-600 dark:text-amber-300 font-extrabold text-[11px] md:text-xs text-left leading-tight">Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!</span></div></div><div class="flex gap-2 shrink-0 w-full sm:w-auto"><button type="button" onclick="copyToClipboard('subLink${i}')" class="flex-1 sm:flex-none sm:w-[105px] bg-green-600 hover:bg-green-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-copy mr-1"></i>COPY</button><button type="button" onclick="openQrModal('subLink${i}', ${i})" class="flex-1 sm:flex-none sm:w-[105px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-qrcode mr-1"></i>LẤY QR</button></div></div></div>`).join('');
 
   // Đưa 2 nút Nâng gói và Gia hạn ra ngoài khối linkBoxes
   const actBtns = $('portalActionButtons');
