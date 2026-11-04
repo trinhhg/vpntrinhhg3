@@ -1473,7 +1473,7 @@ export default {
     const CORS = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET,HEAD,POST,OPTIONS,DELETE",
-      "Access-Control-Allow-Headers": "Content-Type,Authorization"
+      "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Test-Mode"
     };
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
     const url = new URL(request.url), p = url.pathname, m = request.method;
