@@ -2655,12 +2655,17 @@ async function checkEmailExistingLinks(email) {
     }
     if (res && res.ok && res.data && typeof res.data === 'object' && res.data.isJson !== false) {
       lastCheckedEmail = targetEmail.toLowerCase();
-      if (res.data.found === false || !res.data.order) {
+      const activeCount = Number(res.data.activeOrdersCount !== undefined ? res.data.activeOrdersCount : 0);
+      const totalCount = Number(res.data.totalOrdersCount !== undefined ? res.data.totalOrdersCount : (res.data.found ? 1 : 0));
+
+      if (res.data.found === false || totalCount === 0 || !res.data.order) {
+        // Tình huống 1: Email chưa từng tồn tại trong hệ thống -> Hiện cả 2 lựa chọn nhưng KHÓA cả 2, tự chọn CREATE_NEW
         existingCustomerLinks = [];
         detectedRenewOf = '';
         emailLookupState = 'none';
-        $('subLinkLifecycleWrap')?.classList.add('hidden');
+        $('subLinkLifecycleWrap')?.classList.remove('hidden');
         $('multiLinkSelectorWrap')?.classList.add('hidden');
+        lockSubDecisionUI('CREATE_NEW', 'Email mới chưa từng có đơn hàng trên hệ thống. Tự động chọn Cấp link mới.');
         renderPaymentBox();
         return;
       }
@@ -2671,12 +2676,14 @@ async function checkEmailExistingLinks(email) {
         existingCustomerLinks = [];
         detectedRenewOf = '';
         emailLookupState = 'none';
-        $('subLinkLifecycleWrap')?.classList.add('hidden');
+        $('subLinkLifecycleWrap')?.classList.remove('hidden');
         $('multiLinkSelectorWrap')?.classList.add('hidden');
+        lockSubDecisionUI('CREATE_NEW', 'Email mới trên môi trường này. Tự động chọn Cấp link mới.');
         renderPaymentBox();
         return;
       }
 
+      // Chỉ nạp link thuộc schema tương ứng của web này
       const links = [];
       if (res.data.existingLinks && Array.isArray(res.data.existingLinks)) {
         res.data.existingLinks.forEach((el, idx) => {
@@ -2689,47 +2696,45 @@ async function checkEmailExistingLinks(email) {
           }
         });
       }
-      if (ord && ord.status === 'success') {
-        [1, 2, 3].forEach(i => {
-          if (ord['info' + i] && !ord['blur' + i] && !links.some(l => l.url === ord['info' + i])) {
-            links.push({
-              index: links.length + 1,
-              url: ord['info' + i],
-              name: `Link Sub ${i}`
-            });
-          }
+      const currentSchemaField = res.data.schemaField || 'info3';
+      if (ord && ord.status === 'success' && ord[currentSchemaField] && !ord['blur' + currentSchemaField.replace('info', '')] && !links.some(l => l.url === ord[currentSchemaField])) {
+        links.push({
+          index: links.length + 1,
+          url: ord[currentSchemaField],
+          name: `Link Sub (${ord.pkgName || 'VPN'})`
         });
       }
 
-      const scenario = res.data.linkScenario || (links.length > 1 ? 'multi_active' : (links.length === 1 ? 'single_link' : 'none'));
+      const scenario = res.data.linkScenario || (activeCount >= 2 ? 'multi_active' : (activeCount === 1 ? 'single_link' : 'expired'));
 
-      if (scenario === 'multi_active') {
-        // B6: Email có 2 đơn hoạt động -> Vẫn hiển thị 2 lựa chọn nhưng KHÓA, backend cấp mới
+      if (scenario === 'multi_active' || activeCount >= 2) {
+        // Tình huống 3: Email có nhiều đơn còn hoạt động -> Hiện cả 2 lựa chọn nhưng KHÓA cả 2, tự chọn CREATE_NEW
         existingCustomerLinks = links;
         detectedRenewOf = '';
         emailLookupState = 'found';
         $('subLinkLifecycleWrap')?.classList.remove('hidden');
+        $('multiLinkSelectorWrap')?.classList.add('hidden');
         lockSubDecisionUI('CREATE_NEW', 'Email có nhiều gói cước đang hoạt động cùng lúc. Hệ thống tự động cấp link mới độc lập để không ảnh hưởng các link hiện tại.');
         renderPaymentBox();
         return;
-      } else if (scenario === 'single_link' && links.length === 1) {
-        // B5: Có đúng 1 link cũ phù hợp -> Mở khóa cho khách hàng chủ động chọn
+      } else if (scenario === 'single_link' || activeCount === 1) {
+        // Tình huống 2: Email có đúng 1 đơn còn hoạt động -> Hiện cả 2 lựa chọn, MỞ KHÓA cho phép khách tự chọn
         existingCustomerLinks = links;
-        detectedRenewOf = ord.id || '';
+        detectedRenewOf = ord.id || (links[0] ? links[0].orderId : '');
         emailLookupState = 'found';
+        $('subLinkLifecycleWrap')?.classList.remove('hidden');
         unlockSubDecisionUI();
         populateTargetLinks(links);
-        $('subLinkLifecycleWrap')?.classList.remove('hidden');
         renderPaymentBox();
         return;
       } else {
-        // B4: Email mới chưa từng tồn tại -> Tự động cấp link mới, không yêu cầu chọn
-        existingCustomerLinks = [];
+        // Tình huống: Có lịch sử đơn nhưng tất cả đã hết hạn -> Hiện cả 2 lựa chọn nhưng KHÓA cả 2, tự chọn CREATE_NEW
+        existingCustomerLinks = links;
         detectedRenewOf = '';
-        emailLookupState = 'none';
-        currentSubDecision = 'CREATE_NEW';
-        $('subLinkLifecycleWrap')?.classList.add('hidden');
+        emailLookupState = 'found';
+        $('subLinkLifecycleWrap')?.classList.remove('hidden');
         $('multiLinkSelectorWrap')?.classList.add('hidden');
+        lockSubDecisionUI('CREATE_NEW', 'Tất cả gói cước trước đây của email này đã hết hạn. Hệ thống tự động cấp link mới.');
         renderPaymentBox();
         return;
       }
@@ -2740,12 +2745,14 @@ async function checkEmailExistingLinks(email) {
       existingCustomerLinks = [];
       detectedRenewOf = '';
       emailLookupState = 'none';
-      $('subLinkLifecycleWrap')?.classList.add('hidden');
+      $('subLinkLifecycleWrap')?.classList.remove('hidden');
       $('multiLinkSelectorWrap')?.classList.add('hidden');
+      lockSubDecisionUI('CREATE_NEW', 'Email mới chưa từng có đơn hàng trên hệ thống. Tự động chọn Cấp link mới.');
       renderPaymentBox();
       return;
     }
     // Lỗi mạng hoặc server không phản hồi hợp lệ (status 500, 503, status 0, 404 HTML rác)
+    // TUYỆT ĐỐI không coi là email mới; giữ trạng thái lỗi rõ ràng và yêu cầu thử lại
     existingCustomerLinks = [];
     detectedRenewOf = '';
     emailLookupState = 'error';
