@@ -1,4 +1,4 @@
-// v2 by claude - Nâng cấp Worker khớp admin.html v2 (24/09/2026): schema totalVnd/totalCny/days, đổi Mã đơn (newId) + đồng bộ vệ tinh, Khóa fulfillment (lockAuto), Khóa thông tin hết hạn (lockExpiry), unlockInfo,
+// v3 — 2026-11-04 10:45 (UTC+7) — Phân tách độc lập kho Test/Production & sửa luồng tra cứu link cũ
 //   link lifecycle chống "link đã xóa quay lại" (tombstone DELETED_LINKS + /api/admin/link/delete atomic + Cron persist sớm), Rà quét & Map lại (fields, email+hạn, cả 3 Info qua vệ tinh), quota mail trả lỗi rõ (không còn Unexpected token '<'), dock ảnh.
 // CÁCH DÁN: trong file worker hiện tại, XÓA toàn bộ từ dòng đầu tiên đến ngay TRƯỚC dòng chú thích "// YAML"
 // (gồm cả dòng "// =====" nằm liền trên chữ "// YAML"), rồi dán toàn bộ file này vào chỗ đó. GIỮ NGUYÊN mọi thứ từ "// YAML" trở xuống.
@@ -1018,36 +1018,35 @@ const isTestOrderRecord = (o) => !o || !o.id || String(o.id).startsWith("DH_TEST
 
 async function loadAll(KV, env, isTestOverride = null) {
   const g = async (k, d) => safeJson(await KV.get(k), d);
-  let isTest = isTestOverride;
-  if (isTest === null) {
-    isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
-  }
+  // Mặc định luôn là Production; không tự ý dùng TEST_MODE_ACTIVE toàn cục nếu request không yêu cầu
+  const isTest = isTestOverride === null ? false : !!isTestOverride;
   const sb = env ? getSupabase(env, isTest) : null;
   let sbOk = false;
   let sbError = null;
-  let ordersPromise = Promise.resolve([]);
+  let orders = [];
   if (sb) {
-    ordersPromise = sb.getAll().then((res) => {
-      sbOk = Array.isArray(res);
-      return res;
-    }).catch((err) => {
+    try {
+      const res = await sb.getAll();
+      if (Array.isArray(res)) {
+        sbOk = true;
+        orders = res;
+      } else {
+        sbOk = false;
+        sbError = "Dữ liệu Supabase trả về không phải mảng";
+      }
+    } catch (err) {
       sbOk = false;
       sbError = err.message || String(err);
-      return [];
-    });
+      orders = [];
+    }
   } else {
     sbError = "Chưa cấu hình SUPABASE_KEY / SUPABASE_URL";
+    // Chỉ đọc KV khi hoàn toàn không có kết nối Supabase
+    const kvOrders = arr(await g(isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS", []));
+    orders = isTest ? kvOrders : kvOrders.filter(o => !isTestOrderRecord(o));
+    sbOk = true;
   }
-  const [sbOrders, links, pool, cms] = await Promise.all([ordersPromise, g("ALL_LINKS", []), g("LINK_POOL", []), g("ALL_CMS", {})]);
-  let orders = arr(sbOrders);
-  // Fallback đọc ALL_ORDERS từ KV nếu production và Supabase chưa trả về dữ liệu (bảo toàn 224 đơn cũ)
-  if (!isTest && (!sbOk || orders.length === 0)) {
-    const kvOrders = arr(await g("ALL_ORDERS", []));
-    if (kvOrders.length > 0) orders = kvOrders.filter(o => !isTestOrderRecord(o));
-  } else if (isTest && (!sbOk || orders.length === 0)) {
-    const kvTestOrders = arr(await g("ALL_ORDERS_TEST", []));
-    if (kvTestOrders.length > 0) orders = kvTestOrders;
-  }
+  const [links, pool, cms] = await Promise.all([g("ALL_LINKS", []), g("LINK_POOL", []), g("ALL_CMS", {})]);
   const st = {
     orders,
     links: arr(links),
@@ -1477,6 +1476,8 @@ export default {
     };
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
     const url = new URL(request.url), p = url.pathname, m = request.method;
+    // Chuẩn hóa xác định môi trường Test Mode cho request hiện tại:
+    const reqIsTest = url.searchParams.has("test") ? (url.searchParams.get("test") === "1") : (request.headers.has("X-Test-Mode") ? (request.headers.get("X-Test-Mode") === "1") : false);
     const KV = getKV(env);
     if (!KV) return new Response("LỖI: Chưa kết nối kho KV", { status: 500, headers: CORS });
     const J = (d, s = 200) => new Response(JSON.stringify(d), {
@@ -1915,23 +1916,53 @@ export default {
       return RAW(t || '{"version":"","vi":{},"en":{},"zh":{}}');
     }
     if (p === "/api/public/lookup" && m === "POST") {
-      const isTestReq = url.searchParams.get("test") === "1" || request.headers.get("X-Test-Mode") === "1";
+      const isTestReq = reqIsTest;
       const b = await body(), st = await loadAll(KV, env, isTestReq);
-      let o = findOrder(st.orders, b.q);
+      // Nếu kết nối Supabase bị lỗi, phản hồi 503 để UI báo lỗi rõ ràng, không coi email là mới
+      if (!st.sbOk && st.sbError) {
+        return J({
+          ok: false,
+          error: "Lỗi kết nối cơ sở dữ liệu tra cứu: " + st.sbError
+        }, 503);
+      }
+      let o = null;
+      const isEmailQuery = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(b.q || "").trim());
+      if (isEmailQuery) {
+        const emQuery = String(b.q).trim().toLowerCase();
+        const userOrders = st.orders.filter(ord => {
+          if (!ord || String(ord.email || "").toLowerCase() !== emQuery) return false;
+          const isTestOrd = ord.isTest === true || String(ord.id).startsWith("DH_TEST_");
+          return isTestReq === isTestOrd;
+        });
+        userOrders.sort((a, b) => (b.createdTs || 0) - (a.createdTs || 0));
+        o = userOrders.find(ord => normStatus(ord.status) === "success") || userOrders[0] || null;
+      } else {
+        const byId = st.orders.find(ord => ord && normId(ord.id) === normId(b.q));
+        if (byId) {
+          const isTestOrd = byId.isTest === true || String(byId.id).startsWith("DH_TEST_");
+          if (isTestReq === isTestOrd) o = byId;
+        }
+      }
       // Fallback kiểm tra bộ nhớ đệm đơn hàng chờ (KV Pending Cache)
       if (!o && b.q) {
         const rawPending = await KV.get("PENDING_ORD_" + normId(b.q));
-        if (rawPending) o = safeJson(rawPending, null);
+        if (rawPending) {
+          const pOrd = safeJson(rawPending, null);
+          if (pOrd) {
+            const isTestOrd = pOrd.isTest === true || String(pOrd.id).startsWith("DH_TEST_");
+            if (isTestReq === isTestOrd) o = pOrd;
+          }
+        }
       }
-      if (!o) return J({ ok: false, error: "not_found" }, 404);
-      if (o.isTest && !isTestReq) return J({ ok: false, error: "not_found" }, 404);
-      const em = String(o.email || b.q || "").toLowerCase();
+      if (!o) return J({ ok: false, error: "not_found", existingLinks: [] }, 404);
+      const em = String(o.email || (isEmailQuery ? b.q : "")).toLowerCase();
       const existingLinks = [];
       const seenMasked = new Set();
       for (const ord of st.orders) {
         if (!ord || String(ord.email || "").toLowerCase() !== em) continue;
-        if (ord.isTest && !isTestReq) continue;
-        if (String(ord.id).startsWith("DH_TEST_") && !isTestReq) continue;
+        if (normStatus(ord.status) !== "success") continue;
+        const isTestOrd = ord.isTest === true || String(ord.id).startsWith("DH_TEST_");
+        if (isTestReq !== isTestOrd) continue;
         for (const f of ["info1", "info2", "info3"]) {
           const lk = ord[f];
           if (lk && !seenMasked.has(lk)) {
@@ -1948,7 +1979,7 @@ export default {
       return J({ ok: true, order: pub(o, st), existingLinks });
     }
     if (p === "/api/public/order" && m === "POST") {
-      const isTestReq = url.searchParams.get("test") === "1" || request.headers.get("X-Test-Mode") === "1";
+      const isTestReq = reqIsTest;
       const b = await body(), id = normId(b.id), pk = PKGS[b.pkgId], qty = Math.max(1, Math.min(120, parseInt(b.qty) || 1));
       if (!/^DH[A-Z0-9]{10}$/.test(id) || !pk || pk.old) return J({ ok: false, error: "Dữ liệu đơn hàng không hợp lệ" }, 400);
       const st = await loadAll(KV, env, isTestReq), now = NOW();
@@ -1972,8 +2003,9 @@ export default {
       if (emLower) {
         for (const ord of st.orders) {
           if (!ord || String(ord.email || "").toLowerCase() !== emLower) continue;
-          if (ord.isTest && !isTestReq) continue;
-          if (String(ord.id).startsWith("DH_TEST_") && !isTestReq) continue;
+          if (normStatus(ord.status) !== "success") continue;
+          const isTestOrd = ord.isTest === true || String(ord.id).startsWith("DH_TEST_");
+          if (isTestReq !== isTestOrd) continue;
           for (const f of ["info1", "info2", "info3"]) {
             const lk = ord[f];
             if (lk && !seenUrls.has(lk)) {
@@ -2086,6 +2118,7 @@ export default {
         lockInfo: {},
         sourceWeb: String(b.sourceWeb || "").slice(0, 80),
         orderType: isRenew ? "renew" : "new",
+        isTest: !!isTestReq,
         subLinkDecision,
         targetLink,
         renewOf: renewSrc ? renewSrc.id : (b.renewOf ? String(b.renewOf) : "")
@@ -2116,7 +2149,7 @@ export default {
       return J({ ok: true, order: pub(o, st) });
     }
     if (p === "/api/public/upgrade" && m === "POST") {
-      const b = await body(), st = await loadAll(KV, env), o = st.orders.find((x) => x && normId(x.id) === normId(b.orderId));
+      const b = await body(), st = await loadAll(KV, env, reqIsTest), o = st.orders.find((x) => x && normId(x.id) === normId(b.orderId));
       const tg = PKGS[b.pkgId], qty = Math.max(1, Math.min(120, parseInt(b.qty) || 1));
       if (!o || !tg || tg.old) return J({ ok: false, error: "Không tìm thấy đơn hoặc gói" }, 404);
       if (normStatus(o.status) !== "success") return J({ ok: false, error: "Đơn chưa kích hoạt" }, 409);
@@ -2169,7 +2202,7 @@ export default {
       return J({ ok: true, order: pub(o, st) });
     }
     if (p === "/api/public/data_request" && m === "POST") {
-      const b = await body(), st = await loadAll(KV, env), o = st.orders.find((x) => x && normId(x.id) === normId(b.orderId));
+      const b = await body(), st = await loadAll(KV, env, reqIsTest), o = st.orders.find((x) => x && normId(x.id) === normId(b.orderId));
       if (!o) return J({ ok: false, error: "not_found" }, 404);
       let reqs = arr(safeJson(await KV.get("ALL_DATA_REQUESTS"), []));
       const old = reqs.find((r) => r.orderId === o.id && r.status === "pending");
@@ -2254,6 +2287,7 @@ export default {
     if (p === "/api/admin/test/clear" && m === "POST") {
       const sb = getSupabase(env, true);
       if (sb) await sb.clearTest();
+      await KV.put("ALL_ORDERS_TEST", "[]");
       return J({ ok: true });
     }
 
@@ -2531,7 +2565,7 @@ export default {
     if (p.startsWith("/api/admin/") || ["/api/orders", "/api/deadlinks", "/api/cms", "/api/devices", "/api/data_requests", "/api/link_pool", "/api/guides", "/api/gc", "/api/trigger_github"].includes(p)) {
       const bad = need(admin);
       if (bad) return bad;
-      const st0 = () => loadAll(KV, env);
+      const st0 = () => loadAll(KV, env, reqIsTest);
       // Xóa triệt để 1 link nguồn khỏi KV (LINK_POOL, GLOBAL_SUBS, ALL_LINKS neo #1, GLOBAL_ROUTER)
       if (p === "/api/admin/source/delete" && m === "POST") {
         const b = await body();
@@ -2648,54 +2682,34 @@ export default {
         return J({ ok: true, cleared: touchedOrders.length });
       }
       if (p === "/api/admin/poll") {
-        const isTest = url.searchParams.has("test") ? (url.searchParams.get("test") === "1") : (request.headers.has("X-Test-Mode") ? request.headers.get("X-Test-Mode") === "1" : ((await KV.get("TEST_MODE_ACTIVE")) === "1"));
+        const isTest = reqIsTest;
         const sb = getSupabase(env, isTest);
         let ordersList = [];
+        let sbOk = false;
         let sbError = null;
         if (sb) {
           try {
             const sbOrders = await sb.getAll();
             if (Array.isArray(sbOrders)) {
               ordersList = sbOrders;
+              sbOk = true;
+            } else {
+              sbError = "Dữ liệu Supabase trả về không phải mảng";
             }
           } catch (e) {
             sbError = e.message || String(e);
           }
         } else {
           sbError = "Chưa cấu hình SUPABASE_KEY / SUPABASE_URL";
-        }
-        if (!isTest && ordersList.length === 0) {
-          const kvOrders = safeJson(await KV.get("ALL_ORDERS"), []);
-          if (Array.isArray(kvOrders) && kvOrders.length > 0) {
-            ordersList = kvOrders.filter(o => !isTestOrderRecord(o));
-          }
-        } else if (isTest && ordersList.length === 0) {
-          const kvOrders = safeJson(await KV.get("ALL_ORDERS_TEST"), []);
-          if (Array.isArray(kvOrders) && kvOrders.length > 0) {
-            ordersList = kvOrders;
-          }
-        }
-        // Hợp nhất bổ sung các đơn mới từ KV ALL_ORDERS nếu Supabase chưa kịp hiển thị
-        // Bảo vệ production: Chỉ hợp nhất đơn thật gần đây (< 48h), tuyệt đối không để đơn test hoặc đơn cũ đã xóa lọt vào
-        if (!isTest && ordersList.length > 0) {
-          const kvOrders = safeJson(await KV.get("ALL_ORDERS"), []);
-          if (Array.isArray(kvOrders) && kvOrders.length > 0) {
-            const knownIds = new Set(ordersList.map(o => o && normId(o.id)));
-            const nowMs = NOW();
-            for (const ko of kvOrders) {
-              if (ko && ko.id && !knownIds.has(normId(ko.id)) && !isTestOrderRecord(ko)) {
-                const age = nowMs - (Number(ko.createdTs) || 0);
-                if (age >= 0 && age < 48 * 3600 * 1000) {
-                  ordersList.unshift(ko);
-                  knownIds.add(normId(ko.id));
-                }
-              }
-            }
+          const kvOrders = safeJson(await KV.get(isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS"), []);
+          if (Array.isArray(kvOrders)) {
+            ordersList = isTest ? kvOrders : kvOrders.filter(o => !isTestOrderRecord(o));
+            sbOk = true;
           }
         }
         const ordersData = JSON.stringify(ordersList);
         const [l, pl, dr] = await Promise.all(["ALL_LINKS", "LINK_POOL", "ALL_DATA_REQUESTS"].map((k) => KV.get(k)));
-        return RAW(`{"orders":${ordersData},"links":${l || "[]"},"pool":${pl || "[]"},"data_requests":${dr || "[]"}${sbError ? `,"sbError":${JSON.stringify(sbError)}` : ""},"isTest":${isTest}}`);
+        return RAW(`{"orders":${ordersData},"links":${l || "[]"},"pool":${pl || "[]"},"data_requests":${dr || "[]"}${sbError ? `,"sbError":${JSON.stringify(sbError)}` : ""},"sbOk":${sbOk},"isTest":${isTest}}`);
       }
       if (p === "/api/admin/status") {
         const cron = safeJson(await KV.get("CRON_LAST_RUN"), null), r = await d1(env, "/api/admin/logs?limit=1");
@@ -2768,7 +2782,7 @@ export default {
         const st = await st0();
         const me = getMe(url, env, st.cms);
         if (ids.length) {
-          const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
+          const isTest = reqIsTest;
           const sb = getSupabase(env, isTest);
           const idsSet = new Set(ids);
           const ordersToProcess = st.orders.filter((x) => x && idsSet.has(normId(x.id)) && normStatus(x.status) === "success");
@@ -2876,7 +2890,7 @@ export default {
           if (!apply) return J({ ok: true, items, remoteOk: true });
           let n = 0;
           const appliedItems = [];
-          const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
+          const isTest = reqIsTest;
           const sb = getSupabase(env, isTest);
           for (const it of items) {
             if (!picks.has(it.id + "|" + it.field)) continue;
@@ -2908,7 +2922,7 @@ export default {
         if (!apply) return J({ ok: true, items, remoteOk: true });
         let n = 0;
         const appliedItems = [];
-        const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
+        const isTest = reqIsTest;
         const sb = getSupabase(env, isTest);
         for (const it of items) {
           if (!picks.has(it.id + "|" + it.field)) continue;
@@ -2964,7 +2978,7 @@ export default {
 
       // ===== Đơn hàng: API danh sách phân trang, tìm kiếm & chi tiết
       if (p === "/api/admin/orders" && m === "GET") {
-        const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
+        const isTest = reqIsTest;
         const sb = getSupabase(env, isTest);
         const status = url.searchParams.get("status") || "all";
         const search = url.searchParams.get("q") || url.searchParams.get("search") || "";
@@ -3026,7 +3040,7 @@ export default {
       const ordDetailMatch = p.match(/^\/api\/admin\/orders\/([A-Za-z0-9_-]+)$/);
       if (ordDetailMatch && m === "GET") {
         const oid = normId(ordDetailMatch[1]);
-        const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
+        const isTest = reqIsTest;
         const sb = getSupabase(env, isTest);
         if (sb) {
           try {
@@ -3242,7 +3256,7 @@ export default {
         await persist(KV, st);
 
         // Xóa đơn trên Supabase đồng bộ trước khi phản hồi (xóa cả id chuẩn lẫn rawId)
-        const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
+        const isTest = reqIsTest;
         const sb = getSupabase(env, isTest);
         if (sb) {
           try {
