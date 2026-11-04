@@ -3840,7 +3840,6 @@ function getDefaultAdminPkgs() {
     id: "t1",
     name: "Gói 1 tháng",
     time: 1,
-    original_vnd: 80000,
     vnd: 60000,
     cny: 15.5,
     usd: 2.5,
@@ -3862,7 +3861,6 @@ function getDefaultAdminPkgs() {
     id: "t2",
     name: "Gói 1 tháng",
     time: 1,
-    original_vnd: 0,
     vnd: 70000,
     cny: 18.0,
     usd: 3.0,
@@ -3884,7 +3882,6 @@ function getDefaultAdminPkgs() {
     id: "c1",
     name: "Gói 1 tháng",
     time: 1,
-    original_vnd: 0,
     vnd: 80000,
     cny: 20.5,
     usd: 3.5,
@@ -3906,7 +3903,6 @@ function getDefaultAdminPkgs() {
     id: "c2",
     name: "Gói Cao Cấp",
     time: 1,
-    original_vnd: 0,
     vnd: 200000,
     cny: 50.0,
     usd: 8.0,
@@ -3928,7 +3924,6 @@ function getDefaultAdminPkgs() {
     id: "c3",
     name: "Gói 1 Năm",
     time: 12,
-    original_vnd: 0,
     vnd: 799000,
     cny: 199.0,
     usd: 30.0,
@@ -3950,7 +3945,6 @@ function getDefaultAdminPkgs() {
     id: "d1",
     name: "Không Giới Hạn",
     time: "lifetime",
-    original_vnd: 0,
     vnd: 200000,
     cny: 52.0,
     usd: 8.0,
@@ -3972,7 +3966,6 @@ function getDefaultAdminPkgs() {
     id: "d2",
     name: "Không Giới Hạn",
     time: "lifetime",
-    original_vnd: 0,
     vnd: 399000,
     cny: 102.0,
     usd: 16.0,
@@ -3994,7 +3987,6 @@ function getDefaultAdminPkgs() {
     id: "d3",
     name: "Không Giới Hạn",
     time: "lifetime",
-    original_vnd: 0,
     vnd: 999000,
     cny: 256.0,
     usd: 40.0,
@@ -4016,7 +4008,6 @@ function getDefaultAdminPkgs() {
     id: "custom",
     name: "Gói Tùy Chọn",
     time: 1,
-    original_vnd: 0,
     vnd: 0,
     cny: 0,
     usd: 0,
@@ -4250,44 +4241,24 @@ function renderPkgAdmin() {
         </div>
       </div>
 
-      <!-- HÀNG 2: SO SÁNH GIÁ GỐC VÀ GIÁ THỰC THU (2 CỘT TƯỜNG MINH) -->
+      <!-- HÀNG 2: BẢNG GIÁ BÁN THỰC THU -->
       <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2 text-xs">
         <div class="font-extrabold text-[11px] text-slate-700 flex items-center justify-between border-b border-slate-200/60 pb-1.5">
-          <span><i class="fas fa-scale-balanced text-indigo-600 mr-1.5"></i>Bảng Giá Bán (So Sánh Giá Gốc &amp; Thực Thu):</span>
-          <span class="text-[10px] text-slate-400 font-normal">Nhập Giá Gốc = 0 nếu không áp dụng giảm giá</span>
+          <span><i class="fas fa-tag text-emerald-600 mr-1.5"></i>Bảng Giá Bán Thực Thu:</span>
+          <span class="text-[10px] text-slate-400 font-normal">Giá gói chính thức áp dụng thanh toán</span>
         </div>
-        <div class="grid grid-cols-2 gap-2.5">
-          <!-- CỘT 1: GIÁ GỐC GẠCH NGANG -->
-          <div class="space-y-2 bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs">
-            <span class="block text-[10px] font-black text-slate-400 uppercase tracking-wider">1. Giá Gốc (Gạch ngang):</span>
-            <div>
-              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">VND (Gạch đ)</label>
-              <input type="number" step="1000" value="${p.original_vnd !== undefined ? p.original_vnd : 0}" class="inp-orig-vnd w-full p-1.5 border rounded-lg bg-slate-50 font-mono text-slate-400 text-xs" oninput="adminPkgsList[${idx}].original_vnd = Number(this.value)||0" placeholder="0">
-            </div>
-            <div>
-              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">CNY (Gạch ¥)</label>
-              <input type="number" step="0.5" value="${p.original_cny !== undefined ? p.original_cny : 0}" class="inp-orig-cny w-full p-1.5 border rounded-lg bg-slate-50 font-mono text-slate-400 text-xs" oninput="adminPkgsList[${idx}].original_cny = Number(this.value)||0" placeholder="0">
-            </div>
-            <div>
-              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">USD (Gạch $)</label>
-              <input type="number" step="0.5" value="${p.original_usd !== undefined ? p.original_usd : 0}" class="inp-orig-usd w-full p-1.5 border rounded-lg bg-slate-50 font-mono text-slate-400 text-xs" oninput="adminPkgsList[${idx}].original_usd = Number(this.value)||0" placeholder="0">
-            </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div class="bg-white p-2.5 rounded-xl border border-emerald-300 shadow-xs">
+            <label class="block text-[10px] font-bold text-emerald-700 mb-0.5">VND Thực Thu</label>
+            <input type="number" step="1000" value="${p.vnd || 0}" ${p.isCustom ? 'disabled' : ''} class="inp-vnd w-full p-1.5 border border-emerald-300 rounded-lg font-black text-emerald-700 bg-emerald-50/40 text-xs" oninput="adminPkgsList[${idx}].vnd = Number(this.value)||0">
           </div>
-          <!-- CỘT 2: GIÁ BÁN THỰC THU -->
-          <div class="space-y-2 bg-white p-2.5 rounded-xl border border-emerald-300 shadow-xs">
-            <span class="block text-[10px] font-black text-emerald-700 uppercase tracking-wider">2. Giá Bán Thực Thu:</span>
-            <div>
-              <label class="block text-[10px] font-bold text-emerald-700 mb-0.5">VND Thực Thu</label>
-              <input type="number" step="1000" value="${p.vnd || 0}" ${p.isCustom ? 'disabled' : ''} class="inp-vnd w-full p-1.5 border border-emerald-300 rounded-lg font-black text-emerald-700 bg-emerald-50/40 text-xs" oninput="adminPkgsList[${idx}].vnd = Number(this.value)||0">
-            </div>
-            <div>
-              <label class="block text-[10px] font-bold text-blue-700 mb-0.5">CNY (¥)</label>
-              <input type="number" step="0.5" value="${p.cny || 0}" ${p.isCustom ? 'disabled' : ''} class="inp-cny w-full p-1.5 border border-blue-300 rounded-lg font-black text-blue-700 bg-blue-50/40 text-xs" oninput="adminPkgsList[${idx}].cny = Number(this.value)||0">
-            </div>
-            <div>
-              <label class="block text-[10px] font-bold text-indigo-700 mb-0.5">USD ($)</label>
-              <input type="number" step="0.5" value="${p.usd || 0}" ${p.isCustom ? 'disabled' : ''} class="inp-usd w-full p-1.5 border border-indigo-300 rounded-lg font-black text-indigo-700 bg-indigo-50/40 text-xs" oninput="adminPkgsList[${idx}].usd = Number(this.value)||0">
-            </div>
+          <div class="bg-white p-2.5 rounded-xl border border-blue-300 shadow-xs">
+            <label class="block text-[10px] font-bold text-blue-700 mb-0.5">CNY (¥)</label>
+            <input type="number" step="0.5" value="${p.cny || 0}" ${p.isCustom ? 'disabled' : ''} class="inp-cny w-full p-1.5 border border-blue-300 rounded-lg font-black text-blue-700 bg-blue-50/40 text-xs" oninput="adminPkgsList[${idx}].cny = Number(this.value)||0">
+          </div>
+          <div class="bg-white p-2.5 rounded-xl border border-indigo-300 shadow-xs">
+            <label class="block text-[10px] font-bold text-indigo-700 mb-0.5">USD ($)</label>
+            <input type="number" step="0.5" value="${p.usd || 0}" ${p.isCustom ? 'disabled' : ''} class="inp-usd w-full p-1.5 border border-indigo-300 rounded-lg font-black text-indigo-700 bg-indigo-50/40 text-xs" oninput="adminPkgsList[${idx}].usd = Number(this.value)||0">
           </div>
         </div>
       </div>
@@ -4403,9 +4374,6 @@ function addCustomPkg() {
     id: newId,
     name: "Gói Mới",
     time: 1,
-    original_vnd: 0,
-    original_cny: 0,
-    original_usd: 0,
     vnd: 50000,
     cny: 15,
     usd: 2,
@@ -4443,16 +4411,13 @@ async function saveAllPkgs() {
     if (!targetPkg) return;
     const nameInp = card.querySelector("input[placeholder='Tên gói cước...']");
     if (nameInp) targetPkg.name = nameInp.value.trim();
-    const origVndInp = card.querySelector(".inp-orig-vnd");
-    if (origVndInp) targetPkg.original_vnd = Number(origVndInp.value) || 0;
+    delete targetPkg.original_vnd;
+    delete targetPkg.original_cny;
+    delete targetPkg.original_usd;
     const vndInp = card.querySelector(".inp-vnd");
     if (vndInp) targetPkg.vnd = Number(vndInp.value) || 0;
-    const origCnyInp = card.querySelector(".inp-orig-cny");
-    if (origCnyInp) targetPkg.original_cny = Number(origCnyInp.value) || 0;
     const cnyInp = card.querySelector(".inp-cny");
     if (cnyInp) targetPkg.cny = Number(cnyInp.value) || 0;
-    const origUsdInp = card.querySelector(".inp-orig-usd");
-    if (origUsdInp) targetPkg.original_usd = Number(origUsdInp.value) || 0;
     const usdInp = card.querySelector(".inp-usd");
     if (usdInp) targetPkg.usd = Number(usdInp.value) || 0;
     // Không đọc promo_sticker / bonus_days / bonus_text từ card gói nữa (đã chuyển sang Gift Rules)
