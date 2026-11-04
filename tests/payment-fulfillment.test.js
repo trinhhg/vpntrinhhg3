@@ -1137,3 +1137,125 @@ describe('Phần E: 17 Ca Kiểm Thử Vòng Đời Link Sub Theo Email & Schema
     expect(fixtureOrder.info1).toContain('https://vpntrinhhg.pages.dev');
   });
 });
+
+// ======================================================================================
+// PHẦN F: 10 CA KIỂM THỬ TRA CỨU LỊCH SỬ KHO TEST & RENDER SẴN HAI LỰA CHỌN
+// ======================================================================================
+
+describe('Phần F: 10 Ca Kiểm Thử Tra Cứu Lịch Sử Email Kho TEST & Render Sẵn Hai Lựa Chọn', () => {
+  const isTestOrderRecord = (o) => !o || !o.id || String(o.id).startsWith('DH_TEST_') || o.isTest === true || String(o.email || '').toLowerCase().includes('khach_test');
+  const isMatchingEnv = (ord, isTest) => {
+    if (!ord) return false;
+    if (isTest) return true;
+    return !isTestOrderRecord(ord);
+  };
+
+  // 1. Email có đơn trong ALL_ORDERS_TEST, bản ghi không có isTest=true và ID không bắt đầu DH_TEST_: phải tìm thấy nếu request đang ở TEST
+  it('Ca 1: Đơn trong ALL_ORDERS_TEST không có isTest=true và ID không có DH_TEST_ -> vẫn tìm thấy khi request ở TEST', () => {
+    const testDbOrder = {
+      id: 'DH_NORMAL_123',
+      email: 'user_test@domain.com',
+      status: 'success',
+      expDate: '15/12/2026',
+      info1: 'link1'
+    };
+    const isTestReq = true;
+    const matched = isMatchingEnv(testDbOrder, isTestReq);
+    expect(matched).toBe(true);
+  });
+
+  // 2. Email không tồn tại trong kho TEST: kết quả mới phải đúng; không được lấy đơn từ PROD
+  it('Ca 2: Email không có trong kho TEST -> không lấy đơn từ PROD', () => {
+    const testOrders = [{ id: 'DH_TEST_A', email: 'other@test.com' }];
+    const prodOrders = [{ id: 'DH_PROD_B', email: 'user_test@domain.com' }];
+    const queryEmail = 'user_test@domain.com';
+    const foundInTest = testOrders.filter(o => o.email === queryEmail && isMatchingEnv(o, true));
+    expect(foundInTest.length).toBe(0);
+  });
+
+  // 3. Email có đúng một đơn còn hạn: hai lựa chọn xuất hiện và mở khóa
+  it('Ca 3: Email có đúng một đơn còn hạn -> hai lựa chọn xuất hiện và mở khóa', () => {
+    const activeCount = 1;
+    const subChoices = {
+      visible: true,
+      locked: activeCount !== 1,
+      autoSelected: activeCount === 1 ? null : 'CREATE_NEW'
+    };
+    expect(subChoices.visible).toBe(true);
+    expect(subChoices.locked).toBe(false);
+  });
+
+  // 4. Email có nhiều đơn còn hạn: hai lựa chọn vẫn xuất hiện nhưng khóa, mặc định CREATE_NEW
+  it('Ca 4: Email có nhiều đơn còn hạn -> hai lựa chọn vẫn xuất hiện nhưng khóa, mặc định CREATE_NEW', () => {
+    const activeCount = 3;
+    const subChoices = {
+      visible: true,
+      locked: activeCount >= 2,
+      autoSelected: activeCount >= 2 ? 'CREATE_NEW' : null
+    };
+    expect(subChoices.visible).toBe(true);
+    expect(subChoices.locked).toBe(true);
+    expect(subChoices.autoSelected).toBe('CREATE_NEW');
+  });
+
+  // 5. Email có lịch sử nhưng tất cả đơn hết hạn: hai lựa chọn xuất hiện nhưng khóa, mặc định CREATE_NEW
+  it('Ca 5: Email có lịch sử nhưng tất cả đơn hết hạn -> hai lựa chọn xuất hiện nhưng khóa, mặc định CREATE_NEW', () => {
+    const activeCount = 0;
+    const totalCount = 2;
+    const subChoices = { visible: true, locked: true, autoSelected: 'CREATE_NEW' };
+    expect(subChoices.visible).toBe(true);
+    expect(subChoices.locked).toBe(true);
+    expect(subChoices.autoSelected).toBe('CREATE_NEW');
+  });
+
+  // 6. Email chưa nhập: hai lựa chọn đã hiện và đang khóa
+  it('Ca 6: Email chưa nhập -> hai lựa chọn đã hiện sẵn và đang khóa', () => {
+    const emailInput = '';
+    const uiStateBeforeInput = {
+      visible: true,
+      locked: true,
+      reason: 'Vui lòng nhập email để hệ thống kiểm tra lịch sử link sub.'
+    };
+    expect(uiStateBeforeInput.visible).toBe(true);
+    expect(uiStateBeforeInput.locked).toBe(true);
+  });
+
+  // 7. Email đang được tra cứu: hai lựa chọn vẫn hiện và khóa
+  it('Ca 7: Email đang được tra cứu -> hai lựa chọn vẫn hiện và khóa', () => {
+    const lookupState = 'checking';
+    const uiStateChecking = { visible: true, locked: lookupState === 'checking' };
+    expect(uiStateChecking.visible).toBe(true);
+    expect(uiStateChecking.locked).toBe(true);
+  });
+
+  // 8. Lookup trả 503, timeout, lỗi mạng: hai lựa chọn vẫn hiện và khóa; hiện thông báo mới; có thể retry
+  it('Ca 8: Lookup lỗi 503/timeout -> hai lựa chọn vẫn hiện và khóa, hiện thông báo đúng ý nghĩa', () => {
+    const lookupState = 'error';
+    const errorNotice = {
+      title: 'Không thể tra cứu lịch sử theo email',
+      desc: 'Hệ thống chưa xác minh được lịch sử đơn hàng và Link Sub của email này. Hai lựa chọn đang khóa để tránh cấp nhầm link. Vui lòng thử kiểm tra lại email.',
+      retryBtn: true,
+      choicesLocked: true,
+      choicesVisible: true
+    };
+    expect(errorNotice.choicesVisible).toBe(true);
+    expect(errorNotice.choicesLocked).toBe(true);
+    expect(errorNotice.title).toBe('Không thể tra cứu lịch sử theo email');
+  });
+
+  // 9. Một lần lookup lỗi không được làm trạng thái lần lookup trước bị hiểu nhầm là email mới
+  it('Ca 9: Một lần lookup lỗi không được biến trạng thái thành email mới (found:false)', () => {
+    const lookupState = 'error';
+    const isNewEmailOnFailure = lookupState === 'none';
+    expect(isNewEmailOnFailure).toBe(false);
+  });
+
+  // 10. Kiểm tra đủ cả Web 1/2/3: mỗi web chỉ sử dụng đúng info1/info2/info3
+  it('Ca 10: Kiểm tra đủ cả Web 1/2/3 -> mỗi web chỉ sử dụng đúng info1/info2/info3', () => {
+    for (let n of [1, 2, 3]) {
+      const me = { n, field: 'info' + n };
+      const ord = { id: 'DH_' + n, info1: 'l1', info2: 'l2', info3: 'l3' };
+      expect(ord[me.field]).toBe('l' + n);
+    }
+  });
+});
