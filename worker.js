@@ -1,10 +1,4 @@
-// v4 — 2026-11-04 17:50 (UTC+7) — Quản lý Gift Rules quà tặng theo gói, đồng bộ snapshot HSD & hoàn thiện vòng đời Link Sub đa đơn
-//   link lifecycle chống "link đã xóa quay lại" (tombstone DELETED_LINKS + /api/admin/link/delete atomic + Cron persist sớm), Rà quét & Map lại (fields, email+hạn, cả 3 Info qua vệ tinh), quota mail trả lỗi rõ (không còn Unexpected token '<'), dock ảnh.
-// CÁCH DÁN: trong file worker hiện tại, XÓA toàn bộ từ dòng đầu tiên đến ngay TRƯỚC dòng chú thích "// YAML"
-// (gồm cả dòng "// =====" nằm liền trên chữ "// YAML"), rồi dán toàn bộ file này vào chỗ đó. GIỮ NGUYÊN mọi thứ từ "// YAML" trở xuống.
-// Biến môi trường (Settings > Variables > Secret): ADMIN_PASSWORD, WEB_API_SECRET2, D1_URL, D1_SECRET, GH_PAT, CF_API_TOKEN
-// Biến thường: WEB_INDEX = 1 | 2 | 3, ADMIN_EMAIL (không bắt buộc), PUBLIC_WORKER_URL, CF_ACCOUNT_ID, KV_NAMESPACE_ID, WORKER_SCRIPT_NAME, D1_DATABASE_ID
-// Cron Trigger: */15 * * * *
+// v4.1 — 2026-11-04 19:00 (UTC+7)
 const getKV = (env) => env && (env.VPN_KV3 || env.VPN_KV || env.KV);
 
 // ====================================================================
@@ -635,8 +629,9 @@ async function getActivePkgs(KV) {
     const map = { ...DEFAULT_PKGS };
     for (const p of raw) {
       if (p && p.id) {
+        const { original_vnd, original_cny, original_usd, ...rest } = p;
         map[p.id] = {
-          ...p,
+          ...rest,
           n: p.name || p.n || "",
           d: p.data || p.d || "",
           m: p.m !== undefined ? Number(p.m) : (p.time === "lifetime" ? 0 : Number(p.time) || 1),
@@ -1931,7 +1926,11 @@ export default {
         const bad = need(admin);
         if (bad) return bad;
         const b = await body();
-        const list = Array.isArray(b.packages) ? b.packages : [];
+        const list = (Array.isArray(b.packages) ? b.packages : []).map(p => {
+          if (!p || typeof p !== "object") return p;
+          const { original_vnd, original_cny, original_usd, ...clean } = p;
+          return clean;
+        });
         await KV.put("ALL_PACKAGES", JSON.stringify(list));
         CACHED_PKGS = null; // Xóa cache in-memory
         await getActivePkgs(KV); // Cập nhật ngay lập tức vào DYNAMIC_PKGS
