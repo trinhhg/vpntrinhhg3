@@ -1320,7 +1320,6 @@ async function loadConfig() {
             usd: Number(p.usd) || 0,
             vnd: Number(p.vnd) || 0,
             cny: Number(p.cny) || 0,
-            original_vnd: Number(p.original_vnd) || 0,
             promo_sticker: p.promo_sticker || '',
             bonus_days: Number(p.bonus_days) || 0,
             bonus_text: p.bonus_text || '',
@@ -1765,7 +1764,6 @@ function getEffectivePkg(pkg) {
   if (!doesFlashSaleApply(pkg, sale)) return pkg;
   const pct = sale.percent;
   const factor = (100 - pct) / 100;
-  const origVnd = Number(pkg.original_vnd) > Number(pkg.vnd) ? Number(pkg.original_vnd) : Number(pkg.vnd || 0);
   const discountedVnd = Math.max(1000, Math.round((Number(pkg.vnd || 0) * factor) / 1000) * 1000);
   const discountedCny = Math.round((Number(pkg.cny || 0) * factor) * 10) / 10;
   const discountedUsd = Math.round((Number(pkg.usd || 0) * factor) * 10) / 10;
@@ -1774,7 +1772,6 @@ function getEffectivePkg(pkg) {
     isFlashSale: true,
     flashSaleTitle: sale.title,
     flashSalePercent: pct,
-    original_vnd: origVnd,
     vnd: discountedVnd,
     cny: discountedCny,
     usd: discountedUsd
@@ -1802,23 +1799,25 @@ function genHTML(rawPkg) {
   }
 
   const isDisabled = isUpgradeMode && (pkg.vnd <= baseOrderPriceVnd || (oCache && pkg.id === oCache.pkgId)) && !pkg.isCustom;
-  const hasSale = !pkg.isCustom && (Number(pkg.original_vnd) > Number(pkg.vnd) || !!pkg.isFlashSale);
-  const ratio = hasSale && pkg.vnd > 0 ? (Number(pkg.original_vnd) / Number(pkg.vnd)) : 1;
 
   let realPriceDisplay = '';
-  let origPriceDisplay = '';
   if (lang === 'zh') {
     realPriceDisplay = `¥${pkg.cny || 0}`;
-    if (hasSale) origPriceDisplay = `¥${(Math.round(pkg.cny * ratio * 10) / 10).toFixed(1)}`;
   } else if (lang === 'en') {
     realPriceDisplay = `$${pkg.usd || 0}`;
-    if (hasSale) origPriceDisplay = `$${(Math.round(pkg.usd * ratio * 10) / 10).toFixed(1)}`;
   } else {
     realPriceDisplay = `${Number(pkg.vnd || 0).toLocaleString('en-US')}<span class="text-sm md:text-base font-bold ml-0.5">VND</span>`;
-    if (hasSale) origPriceDisplay = `${Number(pkg.original_vnd).toLocaleString('en-US')}VND`;
   }
 
-  const origPriceStr = hasSale ? `<span class="line-through text-slate-400 dark:text-slate-500 font-bold text-xs md:text-sm ml-2">${origPriceDisplay}</span>` : '';
+  // Nút hành động đăng ký / liên hệ
+  const btn = isDisabled ? `<button disabled class="w-full bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 font-bold py-3 rounded-xl text-sm cursor-not-allowed">Không khả dụng</button>` : pkg.isCustom ? `<a href="#footerArea" class="w-full block text-center bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-bold py-3 rounded-xl text-sm hover:bg-red-600 hover:text-white transition">Liên hệ Admin</a>` : `<button onclick="openCheckout('${pkg.id}')" class="w-full bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-bold py-3 rounded-xl text-sm hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white dark:hover:shadow-[0_0_15px_rgba(99,102,241,0.5)] transition">Đăng ký Gói Này</button>`;
+
+  // Bố cục các Tag góc thẻ: Góc Trái và Góc Phải độc lập
+  const leftBadges = [pkg.tag2 ? `<span class="bg-blue-500 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag2[lang] || pkg.tag2.vi || pkg.tag2)}</span>` : '', pkg.tag4 ? `<span class="bg-purple-600 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag4[lang] || pkg.tag4.vi || pkg.tag4)}</span>` : ''].filter(Boolean).join('');
+
+  const rightBadges = [pkg.tag1 ? `<span class="bg-red-500 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag1[lang] || pkg.tag1.vi || pkg.tag1)}</span>` : '', pkg.tag3 ? `<span class="bg-amber-500 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag3[lang] || pkg.tag3.vi || pkg.tag3)}</span>` : ''].filter(Boolean).join('');
+
+  const hasCornerBadges = leftBadges || rightBadges;
 
   // Badge Flash Sale: Hiệu ứng heartbeat xung quanh, không nhấp nháy mờ rõ
   const flashSaleBadge = pkg.isFlashSale ? `<div class="inline-flex items-center gap-1 bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-black text-[10px] md:text-[11px] px-2.5 py-0.5 rounded-full shadow-md btn-heartbeat shrink-0"><i class="fas fa-bolt text-[9px] text-yellow-300"></i><span>${esc(pkg.flashSaleTitle || 'Flash Sale')} -${pkg.flashSalePercent}%</span></div>` : '';
@@ -1840,7 +1839,7 @@ function genHTML(rawPkg) {
 
   const inlineBadges = (flashSaleBadge || promoStickerBadge) ? `<div class="flex items-center gap-1.5 flex-wrap justify-end mb-1">${flashSaleBadge}${promoStickerBadge}</div>` : '';
 
-  const priceHTML = pkg.isCustom ? `<div class="text-xl font-black text-red-600 dark:text-red-400 mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${p.price || ''}</div>` : `<div class="mb-4 border-b border-slate-100 dark:border-white/10 pb-3 mt-1.5 flex flex-wrap items-baseline"><span class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-white price-glow">${realPriceDisplay}</span>${origPriceStr}</div>`;
+  const priceHTML = pkg.isCustom ? `<div class="text-xl font-black text-red-600 dark:text-red-400 mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${p.price || ''}</div>` : `<div class="mb-4 border-b border-slate-100 dark:border-white/10 pb-3 mt-1.5 flex flex-wrap items-baseline"><span class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-white price-glow">${realPriceDisplay}</span></div>`;
 
   // Chữ hiển thị cạnh thời hạn: Ưu tiên Gift Rule
   let bonusLabel = '';
@@ -1948,9 +1947,9 @@ function openCheckout(id) {
   co.scrollIntoView({ behavior: 'smooth' });
   const pkgName = currentPackage[lang]?.name || currentPackage.name || 'Gói VPN';
   const pkgData = currentPackage.data || '';
-  const hasSale = !!currentPackage.isFlashSale || (Number(currentPackage.original_vnd) > Number(currentPackage.vnd));
+  const hasSale = !!currentPackage.isFlashSale;
   const currVnd = `${Number(currentPackage.vnd || 0).toLocaleString('en-US')}VND`;
-  const origVnd = `${Number(raw?.vnd || currentPackage.original_vnd || 0).toLocaleString('en-US')}VND`;
+  const origVnd = `${Number(raw?.vnd || 0).toLocaleString('en-US')}VND`;
 
   const summaryEl = $('checkoutPackageCardSummary');
   if (summaryEl) {
