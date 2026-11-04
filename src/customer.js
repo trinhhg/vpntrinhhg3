@@ -2009,8 +2009,8 @@ function openCheckout(id) {
   updateSubDecisionUI('');
   const subWrap = $('subLinkLifecycleWrap');
   if (subWrap) {
+    subWrap.classList.remove('hidden');
     if (isRenewMode && oCache) {
-      subWrap.classList.remove('hidden');
       const links = [];
       [1, 2, 3].forEach(i => {
         if (oCache['info' + i] && !oCache['blur' + i]) {
@@ -2021,11 +2021,10 @@ function openCheckout(id) {
       populateTargetLinks(links);
       lockSubDecisionUI('KEEP_EXISTING', 'Gia hạn chính gói cước và link sub này trong portal (Tự động giữ link cũ)');
     } else if (isUpgradeMode && oCache) {
-      subWrap.classList.remove('hidden');
       lockSubDecisionUI('KEEP_EXISTING', 'Nâng cấp dung lượng trên cùng link sub hiện tại (Không đổi link)');
     } else {
-      subWrap.classList.add('hidden');
-      unlockSubDecisionUI();
+      // Mặc định luôn hiện sẵn cả hai lựa chọn ở trạng thái KHÓA khi mới mở checkout
+      lockSubDecisionUI('CREATE_NEW', 'Vui lòng nhập email để hệ thống kiểm tra lịch sử link sub.');
       const multiWrap = $('multiLinkSelectorWrap');
       if (multiWrap) multiWrap.classList.add('hidden');
     }
@@ -2489,8 +2488,8 @@ function renderPaymentBox() {
   } else if (emailLookupState === 'error') {
     subLinkGuideHtml = `<br><br>
       <div class="mt-3 pt-3 border-t border-rose-200 dark:border-rose-800/40 text-rose-600 dark:text-rose-400 text-xs space-y-1.5">
-        <div class="font-bold flex items-center gap-1.5"><i class="fas fa-triangle-exclamation"></i> Không thể kiểm tra lịch sử link sub cũ</div>
-        <p class="text-[11px] leading-tight text-slate-500 dark:text-slate-400">Hệ thống chưa kết nối được máy chủ tra cứu. Vui lòng thử lại để đảm bảo không bị cấp nhầm link.</p>
+        <div class="font-bold flex items-center gap-1.5"><i class="fas fa-triangle-exclamation"></i> Không thể tra cứu lịch sử theo email</div>
+        <p class="text-[11px] leading-tight text-slate-500 dark:text-slate-400">Hệ thống chưa xác minh được lịch sử đơn hàng và Link Sub của email này. Hai lựa chọn đang khóa để tránh cấp nhầm link. Vui lòng thử kiểm tra lại email.</p>
         <button type="button" onclick="retryEmailCheck()" class="mt-1 px-2.5 py-1 text-[11px] font-bold bg-rose-100 hover:bg-rose-200 text-rose-800 dark:bg-rose-950/60 dark:hover:bg-rose-900/80 dark:text-rose-300 rounded-lg transition"><i class="fas fa-rotate-right mr-1"></i>Thử lại kiểm tra email</button>
       </div>`;
   } else if (showSubLinkGuide || emailLookupState === 'found') {
@@ -2635,16 +2634,19 @@ async function checkEmailExistingLinks(email) {
     emailLookupState = 'idle';
     lastCheckedEmail = '';
     existingCustomerLinks = [];
-    currentSubDecision = '';
+    currentSubDecision = 'CREATE_NEW';
     detectedRenewOf = '';
-    $('subLinkLifecycleWrap')?.classList.add('hidden');
+    $('subLinkLifecycleWrap')?.classList.remove('hidden');
     $('multiLinkSelectorWrap')?.classList.add('hidden');
+    lockSubDecisionUI('CREATE_NEW', 'Vui lòng nhập email để hệ thống kiểm tra lịch sử link sub.');
     renderPaymentBox();
     return;
   }
   const targetEmail = email.trim();
   const seq = ++emailLookupSeq;
   emailLookupState = 'checking';
+  $('subLinkLifecycleWrap')?.classList.remove('hidden');
+  lockSubDecisionUI('CREATE_NEW', 'Đang kiểm tra lịch sử đơn hàng và link sub của email...');
   renderPaymentBox();
   try {
     const res = await wpost('/api/public/lookup', { q: targetEmail });
@@ -2752,19 +2754,21 @@ async function checkEmailExistingLinks(email) {
       return;
     }
     // Lỗi mạng hoặc server không phản hồi hợp lệ (status 500, 503, status 0, 404 HTML rác)
-    // TUYỆT ĐỐI không coi là email mới; giữ trạng thái lỗi rõ ràng và yêu cầu thử lại
+    // TUYỆT ĐỐI không coi là email mới; giữ 2 lựa chọn HIỆN VÀ KHÓA, yêu cầu thử lại
     existingCustomerLinks = [];
     detectedRenewOf = '';
     emailLookupState = 'error';
-    $('subLinkLifecycleWrap')?.classList.add('hidden');
+    $('subLinkLifecycleWrap')?.classList.remove('hidden');
     $('multiLinkSelectorWrap')?.classList.add('hidden');
+    lockSubDecisionUI('', 'Không thể xác minh lịch sử đơn hàng và Link Sub của email này. Hai lựa chọn đang khóa để tránh cấp nhầm link.');
     renderPaymentBox();
   } catch (e) {
     existingCustomerLinks = [];
     detectedRenewOf = '';
     emailLookupState = 'error';
-    $('subLinkLifecycleWrap')?.classList.add('hidden');
+    $('subLinkLifecycleWrap')?.classList.remove('hidden');
     $('multiLinkSelectorWrap')?.classList.add('hidden');
+    lockSubDecisionUI('', 'Không thể xác minh lịch sử đơn hàng và Link Sub của email này. Hai lựa chọn đang khóa để tránh cấp nhầm link.');
     renderPaymentBox();
   }
 }
@@ -2899,7 +2903,7 @@ async function confirmPaid() {
   detectedRenewOf = '';
   existingCustomerLinks = [];
   emailLookupState = 'idle';
-  if ($('subLinkLifecycleWrap')) $('subLinkLifecycleWrap').classList.add('hidden');
+  if ($('subLinkLifecycleWrap')) lockSubDecisionUI('CREATE_NEW', 'Vui lòng nhập email để hệ thống kiểm tra lịch sử link sub.');
   localStorage.setItem(SESSION_KEY, JSON.stringify({ id: o.id, time: Date.now() }));
   localStorage.setItem(CACHE_KEY, JSON.stringify(o));
   enterPortal(o, false);
@@ -3569,15 +3573,12 @@ window.onload = async function () {
   if (emInput) {
     let emailDebounce = null;
     emInput.addEventListener('input', () => {
-      currentSubDecision = '';
+      currentSubDecision = 'CREATE_NEW';
       detectedRenewOf = '';
       existingCustomerLinks = [];
-      document.querySelectorAll('input[name="subLinkDecisionRadio"]').forEach(r => {
-        r.checked = false;
-      });
-      updateSubDecisionUI('');
-      $('subLinkLifecycleWrap')?.classList.add('hidden');
+      $('subLinkLifecycleWrap')?.classList.remove('hidden');
       $('multiLinkSelectorWrap')?.classList.add('hidden');
+      lockSubDecisionUI('CREATE_NEW', 'Đang nhập email...');
 
       const email = emInput.value.trim();
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
