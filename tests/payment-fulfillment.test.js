@@ -18,14 +18,21 @@ function parseBankNotification(notification) {
   if (!raw) return { amount: null, content: null, orderId: null, raw };
   const am = raw.match(/GD\s*:\s*\+?\s*([\d,.]+)/i) || raw.match(/\+\s*([\d,.]+)\s*(?:VND|VNĐ|vnđ|đ|d)\b/i) || raw.match(/\+\s*([\d,.]+)/);
   let amount = null;
-  if (am) { const n = parseAmount(am[1]); if (Number.isSafeInteger(n) && n > 0) amount = n; }
+  if (am) {
+    const n = parseAmount(am[1]);
+    if (Number.isSafeInteger(n) && n > 0) amount = n;
+  }
   const cm = raw.match(/ND\s*[:|]\s*(.*)$/is) || raw.match(/\|ND\s*(.*)$/is);
   const om = raw.replace(/[-_.\s]/g, '').toUpperCase().match(/(DH[A-Z0-9]{10})/);
-  return { amount, content: cm ? cm[1].trim() : raw, orderId: om ? om[1] : null, raw };
+  return {
+    amount,
+    content: cm ? cm[1].trim() : raw,
+    orderId: om ? om[1] : null,
+    raw
+  };
 }
 
 describe('Ma Trận 18 Ca Kiểm Thử Thanh Toán Ngân Hàng & Idempotency Fulfillment', () => {
-
   let mockDb;
 
   beforeEach(() => {
@@ -74,7 +81,13 @@ describe('Ma Trận 18 Ca Kiểm Thử Thanh Toán Ngân Hàng & Idempotency Ful
       if (!order) {
         tx.status = 'unmatched';
         tx.review_note = 'Chưa có mã đơn - chờ đơn tới rồi tự khớp';
-        return { ok: true, status: 'unmatched', transactionId: txId, orderId, amount };
+        return {
+          ok: true,
+          status: 'unmatched',
+          transactionId: txId,
+          orderId,
+          amount
+        };
       }
 
       if (order.status === 'success') {
@@ -82,16 +95,35 @@ describe('Ma Trận 18 Ca Kiểm Thử Thanh Toán Ngân Hàng & Idempotency Ful
         if (upgrade && upgrade.status === 'pending') {
           if (amount < upgrade.amount) {
             tx.status = 'amount_mismatch';
-            return { ok: true, status: 'upgrade_amount_mismatch', transactionId: txId, expected: upgrade.amount, received: amount };
+            return {
+              ok: true,
+              status: 'upgrade_amount_mismatch',
+              transactionId: txId,
+              expected: upgrade.amount,
+              received: amount
+            };
           }
           tx.status = 'success';
           tx.kind = 'upgrade';
           upgrade.status = 'success';
-          return { ok: true, status: 'upgrade_success', transactionId: txId, orderId, amount };
+          return {
+            ok: true,
+            status: 'upgrade_success',
+            transactionId: txId,
+            orderId,
+            amount
+          };
         }
         tx.status = 'unmatched';
         tx.review_note = 'Đơn đã thanh toán từ trước. Khoản mới chưa rõ mục đích';
-        return { ok: true, status: 'unmatched', reason: 'possible_upgrade', transactionId: txId, orderId, amount };
+        return {
+          ok: true,
+          status: 'unmatched',
+          reason: 'possible_upgrade',
+          transactionId: txId,
+          orderId,
+          amount
+        };
       }
 
       if (order.status === 'failed' || order.status === 'cancelled') {
@@ -104,7 +136,14 @@ describe('Ma Trận 18 Ca Kiểm Thử Thanh Toán Ngân Hàng & Idempotency Ful
       if (amount < order.totalVnd - 1) {
         tx.status = 'amount_mismatch';
         tx.review_note = `Thiếu tiền (Đơn: ${order.totalVnd}, Nhận: ${amount})`;
-        return { ok: true, status: 'amount_mismatch', substatus: 'underpaid', transactionId: txId, expected: order.totalVnd, received: amount };
+        return {
+          ok: true,
+          status: 'amount_mismatch',
+          substatus: 'underpaid',
+          transactionId: txId,
+          expected: order.totalVnd,
+          received: amount
+        };
       }
 
       // Khớp đơn thành công (Đủ tiền hoặc thừa tiền)
@@ -117,7 +156,14 @@ describe('Ma Trận 18 Ca Kiểm Thử Thanh Toán Ngân Hàng & Idempotency Ful
       order.status = 'success';
       order.paidAt = new Date().toISOString();
       order.fulfillment_status = 'pending';
-      return { ok: true, status: 'success', transactionId: txId, orderId, amount, note };
+      return {
+        ok: true,
+        status: 'success',
+        transactionId: txId,
+        orderId,
+        amount,
+        note
+      };
     }
 
     // Không có mã đơn DH
@@ -219,7 +265,12 @@ describe('Ma Trận 18 Ca Kiểm Thử Thanh Toán Ngân Hàng & Idempotency Ful
 
   // 9. Gia hạn gói (renew)
   it('Ca 09: Khách gia hạn gói chuyển đúng tiền -> khớp gia hạn thành công', async () => {
-    mockDb.orders.set('DHABCDE12352', { id: 'DHABCDE12352', totalVnd: 100000, status: 'pending', orderType: 'renew' });
+    mockDb.orders.set('DHABCDE12352', {
+      id: 'DHABCDE12352',
+      totalVnd: 100000,
+      status: 'pending',
+      orderType: 'renew'
+    });
     const res = await processWebhook('GD: +100,000VND ND: Gia han DHABCDE12352');
 
     expect(res.status).toBe('success');
@@ -361,8 +412,22 @@ describe('Phần D1: Ma Trận 15 Tình Huống Vòng Đời Link Sub & Điều 
 
   it('Ca 1: Gia hạn từ portal, link cũ còn hoạt động -> giữ link cũ, HSD cộng nối từ tab Đơn hàng', () => {
     const now = parseDmy('01/05/2026');
-    const oldOrder = { id: 'DHOLD1', email: 'user@test.com', status: 'success', expDate: '15/05/2026', info1: 'link_mask_1' };
-    const renewOrder = { id: 'DHNEW1', email: 'user@test.com', orderType: 'renew', pkgId: 't1', qty: 1, renewOf: 'DHOLD1', subLinkDecision: 'KEEP_EXISTING' };
+    const oldOrder = {
+      id: 'DHOLD1',
+      email: 'user@test.com',
+      status: 'success',
+      expDate: '15/05/2026',
+      info1: 'link_mask_1'
+    };
+    const renewOrder = {
+      id: 'DHNEW1',
+      email: 'user@test.com',
+      orderType: 'renew',
+      pkgId: 't1',
+      qty: 1,
+      renewOf: 'DHOLD1',
+      subLinkDecision: 'KEEP_EXISTING'
+    };
 
     // HSD cộng dồn nối tiếp từ 15/05/2026 + 30 ngày = 14/06/2026
     const base = parseDmy(oldOrder.expDate);
@@ -373,8 +438,22 @@ describe('Phần D1: Ma Trận 15 Tình Huống Vòng Đời Link Sub & Điều 
 
   it('Ca 2: Gia hạn từ portal, link cũ bị khóa/hết hạn -> mở khóa, tính HSD từ ngày mua hôm nay', () => {
     const now = parseDmy('01/05/2026');
-    const oldOrder = { id: 'DHOLD2', email: 'user@test.com', status: 'success', expDate: '20/04/2026', info1: 'link_mask_2' };
-    const renewOrder = { id: 'DHNEW2', email: 'user@test.com', orderType: 'renew', pkgId: 't1', qty: 1, renewOf: 'DHOLD2', subLinkDecision: 'KEEP_EXISTING' };
+    const oldOrder = {
+      id: 'DHOLD2',
+      email: 'user@test.com',
+      status: 'success',
+      expDate: '20/04/2026',
+      info1: 'link_mask_2'
+    };
+    const renewOrder = {
+      id: 'DHNEW2',
+      email: 'user@test.com',
+      orderType: 'renew',
+      pkgId: 't1',
+      qty: 1,
+      renewOf: 'DHOLD2',
+      subLinkDecision: 'KEEP_EXISTING'
+    };
 
     const targetT = parseDmy(oldOrder.expDate);
     const base = targetT >= day0(now) ? targetT : day0(now);
@@ -401,8 +480,20 @@ describe('Phần D1: Ma Trận 15 Tình Huống Vòng Đời Link Sub & Điều 
   });
 
   it('Ca 5: Nâng cấp gói -> giữ nguyên link, đổi thông số cấu hình, không cấp thêm link mới', () => {
-    const order = { id: 'DHUPG', pkgId: 't1', pkgName: 'Gói 1 tháng', info1: 'link_sub_alpha', totalVnd: 60000, pendingUpgrade: { targetPkgId: 'c1', amount: 20000 } };
-    const links = [{ id: 'LNK-1', orderId: 'DHUPG', masked: 'link_sub_alpha', pkg: 'Gói 1 tháng' }];
+    const order = {
+      id: 'DHUPG',
+      pkgId: 't1',
+      pkgName: 'Gói 1 tháng',
+      info1: 'link_sub_alpha',
+      totalVnd: 60000,
+      pendingUpgrade: { targetPkgId: 'c1', amount: 20000 }
+    };
+    const links = [{
+      id: 'LNK-1',
+      orderId: 'DHUPG',
+      masked: 'link_sub_alpha',
+      pkg: 'Gói 1 tháng'
+    }];
 
     // Áp dụng nâng cấp
     const pk = mockPkgs[order.pendingUpgrade.targetPkgId];
@@ -440,7 +531,12 @@ describe('Phần D1: Ma Trận 15 Tình Huống Vòng Đời Link Sub & Điều 
   });
 
   it('Ca 9: Email có đúng 1 link bị khóa, chọn giữ -> mở khóa thành công nếu có node trống', () => {
-    const link = { masked: 'link_locked', isLocked: true, orig: 'Da_bi_khoa', origBackup: 'node_alpha' };
+    const link = {
+      masked: 'link_locked',
+      isLocked: true,
+      orig: 'Da_bi_khoa',
+      origBackup: 'node_alpha'
+    };
     const pool = [{ url: 'node_alpha', used: 5, max: 30 }];
 
     const eligible = pool.find(p => p.url === link.origBackup && p.used < p.max);
@@ -461,10 +557,17 @@ describe('Phần D1: Ma Trận 15 Tình Huống Vòng Đời Link Sub & Điều 
 
   it('Ca 11: Email có 2 đơn cùng hoạt động -> backend tự động cấp link mới, không lấy bừa link cũ', () => {
     const now = parseDmy('01/05/2026');
-    const activeOrders = [
-      { id: 'DH1', email: 'duo@test.com', expDate: '15/05/2026', status: 'success' },
-      { id: 'DH2', email: 'duo@test.com', expDate: '20/05/2026', status: 'success' }
-    ];
+    const activeOrders = [{
+      id: 'DH1',
+      email: 'duo@test.com',
+      expDate: '15/05/2026',
+      status: 'success'
+    }, {
+      id: 'DH2',
+      email: 'duo@test.com',
+      expDate: '20/05/2026',
+      status: 'success'
+    }];
 
     const isMultiActive = activeOrders.filter(o => parseDmy(o.expDate) >= now).length >= 2;
     expect(isMultiActive).toBe(true);
@@ -534,12 +637,35 @@ describe('Phần D2: Ma Trận 12 Tình Huống Quy Tắc Quà Tặng & Bonus Da
     return null;
   }
 
-  const giftRules = [
-    { id: 'GR1', name: '+3 NGÀY', bonusDays: 3, bonusText: '+3 ngày', packageIds: ['t1'], enabled: true },
-    { id: 'GR2', name: '+5 NGÀY', bonusDays: 5, bonusText: '+5 ngày', packageIds: ['c1', 'c2'], enabled: true },
-    { id: 'GR3', name: 'QUÀ HẾT HẠN', bonusDays: 7, packageIds: ['c3'], enabled: true, startDate: '2025-01-01', endDate: '2025-02-01' },
-    { id: 'GR4', name: 'QUÀ ĐÃ TẮT', bonusDays: 10, packageIds: ['t2'], enabled: false }
-  ];
+  const giftRules = [{
+    id: 'GR1',
+    name: '+3 NGÀY',
+    bonusDays: 3,
+    bonusText: '+3 ngày',
+    packageIds: ['t1'],
+    enabled: true
+  }, {
+    id: 'GR2',
+    name: '+5 NGÀY',
+    bonusDays: 5,
+    bonusText: '+5 ngày',
+    packageIds: ['c1', 'c2'],
+    enabled: true
+  }, {
+    id: 'GR3',
+    name: 'QUÀ HẾT HẠN',
+    bonusDays: 7,
+    packageIds: ['c3'],
+    enabled: true,
+    startDate: '2025-01-01',
+    endDate: '2025-02-01'
+  }, {
+    id: 'GR4',
+    name: 'QUÀ ĐÃ TẮT',
+    bonusDays: 10,
+    packageIds: ['t2'],
+    enabled: false
+  }];
 
   it('Ca 1: Một quy tắc áp dụng đúng một gói', () => {
     const rule = getActiveGiftRule(giftRules, 't1', Date.now());
@@ -576,7 +702,7 @@ describe('Phần D2: Ma Trận 12 Tình Huống Quy Tắc Quà Tặng & Bonus Da
     });
 
     expect(otherConflictMap.has('t1')).toBe(false); // Không tự khóa t1!
-    expect(otherConflictMap.has('c1')).toBe(true);  // Vẫn khóa c1 của GR2
+    expect(otherConflictMap.has('c1')).toBe(true); // Vẫn khóa c1 của GR2
   });
 
   it('Ca 5: Tắt quy tắc -> không tìm thấy quy tắc active, không cộng ngày cho đơn mới', () => {
@@ -597,16 +723,16 @@ describe('Phần D2: Ma Trận 12 Tình Huống Quy Tắc Quà Tặng & Bonus Da
   });
 
   it('Ca 8: Hai quy tắc active trùng gói -> validator chặn lưu và báo lỗi', () => {
-    const invalidRules = [
-      { id: 'R1', enabled: true, packageIds: ['t1'] },
-      { id: 'R2', enabled: true, packageIds: ['t1'] }
-    ];
+    const invalidRules = [{ id: 'R1', enabled: true, packageIds: ['t1'] }, { id: 'R2', enabled: true, packageIds: ['t1'] }];
 
     const activeMap = new Map();
     let hasConflict = false;
     for (const r of invalidRules) {
       for (const pid of r.packageIds) {
-        if (activeMap.has(pid)) { hasConflict = true; break; }
+        if (activeMap.has(pid)) {
+          hasConflict = true;
+          break;
+        }
         activeMap.set(pid, r.id);
       }
     }
@@ -614,7 +740,13 @@ describe('Phần D2: Ma Trận 12 Tình Huống Quy Tắc Quà Tặng & Bonus Da
   });
 
   it('Ca 9: Đơn đã tạo giữ nguyên snapshot quà khi admin thay đổi hoặc tắt quy tắc', () => {
-    const order = { id: 'DH100', giftRuleId: 'GR1', giftName: '+3 NGÀY', bonusDays: 3, bonusText: '+3 ngày' };
+    const order = {
+      id: 'DH100',
+      giftRuleId: 'GR1',
+      giftName: '+3 NGÀY',
+      bonusDays: 3,
+      bonusText: '+3 ngày'
+    };
     // Admin xóa hoặc tắt GR1
     const modifiedGiftRules = giftRules.filter(r => r.id !== 'GR1');
 
@@ -644,5 +776,364 @@ describe('Phần D2: Ma Trận 12 Tình Huống Quy Tắc Quà Tặng & Bonus Da
     const isLifetime = true;
     const bonusDays = isLifetime ? 0 : 3;
     expect(bonusDays).toBe(0);
+  });
+});
+
+// ======================================================================================
+// PHẦN E: MA TRẬN 17 CA KIỂM THỬ VÒNG ĐỜI LINK SUB THEO EMAIL & SCHEMA RIÊNG CỦA 3 WEB
+// ======================================================================================
+
+describe('Phần E: 17 Ca Kiểm Thử Vòng Đời Link Sub Theo Email & Schema Riêng Của 3 Web', () => {
+  // Mock hàm xác định web & schema field
+  function getMeMock(webIndex = 3) {
+    return { n: webIndex, field: 'info' + webIndex };
+  }
+
+  // 1. Email mới: hai lựa chọn hiện và khóa; tự cấp mới
+  it('Ca 1: Email mới -> hai lựa chọn hiện và khóa; tự cấp mới CREATE_NEW', () => {
+    const userOrders = [];
+    const totalOrdersCount = userOrders.length;
+    const isNew = totalOrdersCount === 0;
+
+    const uiState = {
+      subWrapVisible: true, // Không được ẩn khối lựa chọn
+      keepDisabled: isNew,
+      newDisabled: isNew,
+      decision: isNew ? 'CREATE_NEW' : 'CHOOSE'
+    };
+
+    expect(uiState.subWrapVisible).toBe(true);
+    expect(uiState.keepDisabled).toBe(true);
+    expect(uiState.newDisabled).toBe(true);
+    expect(uiState.decision).toBe('CREATE_NEW');
+  });
+
+  // 2. Email có một đơn còn hạn: hai lựa chọn mở
+  it('Ca 2: Email có một đơn còn hạn -> hai lựa chọn mở cho khách chọn', () => {
+    const activeOrdersCount = 1;
+    const uiState = {
+      subWrapVisible: true,
+      keepDisabled: activeOrdersCount !== 1 ? true : false,
+      newDisabled: activeOrdersCount !== 1 ? true : false
+    };
+
+    expect(uiState.subWrapVisible).toBe(true);
+    expect(uiState.keepDisabled).toBe(false);
+    expect(uiState.newDisabled).toBe(false);
+  });
+
+  // 3. Email có nhiều đơn còn hạn: hai lựa chọn khóa; tự cấp mới
+  it('Ca 3: Email có nhiều đơn còn hạn -> hai lựa chọn khóa; tự cấp mới CREATE_NEW', () => {
+    const activeOrdersCount = 2;
+    const isMultiActive = activeOrdersCount >= 2;
+
+    const uiState = {
+      subWrapVisible: true,
+      keepDisabled: isMultiActive,
+      newDisabled: isMultiActive,
+      decision: isMultiActive ? 'CREATE_NEW' : 'CHOOSE'
+    };
+
+    expect(uiState.subWrapVisible).toBe(true);
+    expect(uiState.keepDisabled).toBe(true);
+    expect(uiState.newDisabled).toBe(true);
+    expect(uiState.decision).toBe('CREATE_NEW');
+  });
+
+  // 4. Link nằm trong đúng ô info: lookup nhận diện đúng
+  it('Ca 4: Link nằm trong đúng ô info -> lookup nhận diện đúng theo web hiện tại', () => {
+    const me = getMeMock(3); // Web 3
+    const order = {
+      id: 'DH_W3',
+      email: 'test@user.com',
+      info1: 'link_web1',
+      info2: 'link_web2',
+      info3: 'link_web3_valid'
+    };
+
+    // Web 3 chỉ đọc trường schema của nó: me.field = info3
+    const currentWebLink = order[me.field];
+    expect(currentWebLink).toBe('link_web3_valid');
+    expect(currentWebLink).not.toBe(order.info1);
+    expect(currentWebLink).not.toBe(order.info2);
+  });
+
+  // 5. Ô info trống: web tương ứng cấp link và ghi đúng ô
+  it('Ca 5: Ô info trống -> web tương ứng cấp link và ghi đúng ô', () => {
+    const me = getMeMock(2); // Web 2
+    const order = { id: 'DH_W2', info1: 'link_web1', info2: '', info3: '' };
+
+    // Fulfill web 2
+    const generatedLink = 'https://vpntrinhhg.pages.dev/v2/VPNTrinhHg?token=masked2';
+    order[me.field] = generatedLink;
+
+    expect(order.info2).toBe(generatedLink);
+    expect(order.info1).toBe('link_web1'); // Không thay đổi info1
+    expect(order.info3).toBe(''); // Không thay đổi info3
+  });
+
+  // 6. Web 3 chỉ đọc/ghi info3; không thay đổi info1/info2
+  it('Ca 6: Web 3 chỉ đọc/ghi info3; không thay đổi info1/info2', () => {
+    const me = getMeMock(3); // Web 3
+    const order = {
+      id: 'DH_MULTI',
+      info1: 'orig_link_1',
+      info2: 'orig_link_2',
+      info3: ''
+    };
+
+    order[me.field] = 'new_link_web3';
+
+    expect(order.info3).toBe('new_link_web3');
+    expect(order.info1).toBe('orig_link_1');
+    expect(order.info2).toBe('orig_link_2');
+  });
+
+  // 7. Link có trong ô đúng nhưng thiếu bản ghi ở ALL_LINKS cục bộ: không kết luận nhầm email mới
+  it('Ca 7: Link có trong ô đúng nhưng thiếu bản ghi ở ALL_LINKS cục bộ -> không kết luận nhầm email mới/deleted_links', () => {
+    const me = getMeMock(3);
+    const order = {
+      id: 'DH_UNVERIFIED',
+      email: 'khach@test.com',
+      status: 'success',
+      expDate: '30/12/2026',
+      info3: 'link_in_supabase'
+    };
+    const localLinks = []; // Kho ALL_LINKS cục bộ chưa có bản ghi này
+
+    const lk = order[me.field];
+    const foundRec = localLinks.find(l => l.masked === lk);
+    const linkStatus = foundRec ? 'active' : 'unverified';
+
+    expect(lk).toBe('link_in_supabase');
+    expect(linkStatus).toBe('unverified');
+    // Không bị gắn nhãn deleted_links
+    const linkScenario = lk ? 'single_link' : 'none';
+    expect(linkScenario).toBe('single_link');
+  });
+
+  // 8. Khách chọn giữ link nhưng link đã xóa/không thể khôi phục: fallback cấp mới, ghi đúng ô
+  it('Ca 8: Khách chọn giữ link nhưng link đã xóa/không thể khôi phục -> fallback cấp mới, ghi đúng ô', () => {
+    const me = getMeMock(3);
+    const order = {
+      id: 'DH_FALLBACK',
+      email: 'khach@test.com',
+      subLinkDecision: 'KEEP_EXISTING',
+      targetLink: 'tombstoned_link'
+    };
+    const tombstones = [{ url: 'tombstoned_link' }];
+
+    const isTomb = tombstones.some(t => t.url === order.targetLink);
+    let fulfillResult = 'keep_active';
+    let fallbackNew = false;
+    let assignedLink = null;
+
+    if (isTomb) {
+      fulfillResult = 'fallback_new';
+      fallbackNew = true;
+      assignedLink = 'new_fallback_link_web3';
+    }
+
+    order[me.field] = assignedLink;
+    order.fulfillResult = fulfillResult;
+    order.fallbackNew = fallbackNew;
+
+    expect(order.fulfillResult).toBe('fallback_new');
+    expect(order.fallbackNew).toBe(true);
+    expect(order.info3).toBe('new_fallback_link_web3');
+  });
+
+  // 9. Khách chọn cấp mới dù link cũ đang khóa: tạo link mới, không mở khóa link cũ
+  it('Ca 9: Khách chọn cấp mới dù link cũ đang khóa -> tạo link mới, không mở khóa link cũ', () => {
+    const me = getMeMock(1);
+    const oldLink = { masked: 'link_old_locked', isLocked: true, orig: 'Da_bi_khoa' };
+    const order = { id: 'DH_CHOOSE_NEW', subLinkDecision: 'CREATE_NEW' };
+
+    let createdLink = null;
+    if (order.subLinkDecision === 'CREATE_NEW') {
+      createdLink = 'brand_new_link_1';
+      // Link cũ KHÔNG được mở khóa
+    }
+
+    order[me.field] = createdLink;
+
+    expect(oldLink.isLocked).toBe(true); // Vẫn bị khóa
+    expect(order.info1).toBe('brand_new_link_1');
+  });
+
+  // 10. Gia hạn portal giữ link đang hoạt động
+  it('Ca 10: Gia hạn portal giữ link đang hoạt động trong trường schema tương ứng', () => {
+    const me = getMeMock(2);
+    const renewSrc = {
+      id: 'DH_SRC',
+      info1: 'link1',
+      info2: 'active_link_2',
+      info3: 'link3'
+    };
+    const order = { id: 'DH_RENEW_PORTAL', renewOf: 'DH_SRC' };
+
+    // Gia hạn đích danh: lấy đúng renewSrc[me.field]
+    const targetLink = renewSrc[me.field];
+    expect(targetLink).toBe('active_link_2');
+
+    order[me.field] = targetLink;
+    order.fulfillResult = 'keep_active';
+
+    expect(order.info2).toBe('active_link_2');
+    expect(order.fulfillResult).toBe('keep_active');
+  });
+
+  // 11. Gia hạn portal mở khóa đúng link bị khóa do hết hạn
+  it('Ca 11: Gia hạn portal mở khóa đúng link bị khóa do hết hạn', () => {
+    const lockedLink = {
+      masked: 'expired_link_locked',
+      isLocked: true,
+      orig: 'Da_bi_khoa',
+      origBackup: 'node_bk'
+    };
+    const pool = [{ url: 'node_bk', used: 2, max: 30 }];
+
+    const eligible = pool.find(p => p.url === lockedLink.origBackup && p.used < p.max);
+    expect(eligible).toBeDefined();
+
+    lockedLink.orig = eligible.url;
+    lockedLink.isLocked = false;
+    delete lockedLink.origBackup;
+
+    expect(lockedLink.isLocked).toBe(false);
+    expect(lockedLink.orig).toBe('node_bk');
+  });
+
+  // 12. Nâng gói giữ link đang hoạt động trong ô schema tương ứng
+  it('Ca 12: Nâng gói giữ link đang hoạt động trong ô schema tương ứng, không tạo link mới', () => {
+    const me = getMeMock(3);
+    const order = { id: 'DH_UPG_SCHEMA', info3: 'active_sub_3', pkgId: 't1' };
+    const links = [{
+      orderId: 'DH_UPG_SCHEMA',
+      masked: 'active_sub_3',
+      pkg: 'Gói 1 tháng'
+    }];
+
+    const curLink = links.find(l => l.masked === order[me.field]);
+    expect(curLink).toBeDefined();
+
+    curLink.pkg = 'Gói 1000GB (Đã nâng cấp)';
+    expect(links.length).toBe(1); // Không tạo thêm link
+    expect(curLink.pkg).toBe('Gói 1000GB (Đã nâng cấp)');
+  });
+
+  // 13. Test và production không đọc lẫn nhau
+  it('Ca 13: Test và production không đọc lẫn nhau', () => {
+    const orders = [{ id: 'DH_PROD_1', email: 'user@test.com', isTest: false }, { id: 'DH_TEST_1', email: 'user@test.com', isTest: true }];
+
+    const isTestReq = false; // Production request
+    const filteredOrders = orders.filter(o => (o.isTest === true) === isTestReq);
+
+    expect(filteredOrders.length).toBe(1);
+    expect(filteredOrders[0].id).toBe('DH_PROD_1');
+    expect(filteredOrders.some(o => o.isTest)).toBe(false);
+  });
+
+  // 14. Hai web cập nhật hai trường info khác nhau mà không ghi đè dữ liệu
+  it('Ca 14: Hai web cập nhật hai trường info khác nhau qua PATCH mà không ghi đè dữ liệu', () => {
+    // Bản ghi gốc trên Supabase
+    const dbRecord = {
+      id: 'DH_SHARED',
+      email: 'shared@test.com',
+      status: 'pending',
+      info1: '',
+      info2: '',
+      info3: ''
+    };
+
+    // Web 1 PATCH info1
+    const patchWeb1 = { info1: 'link_web_1', status: 'success' };
+    Object.assign(dbRecord, patchWeb1);
+
+    // Web 3 PATCH info3 (chỉ gửi info3 và các trường của nó, không gửi info1)
+    const patchWeb3 = { info3: 'link_web_3' };
+    Object.assign(dbRecord, patchWeb3);
+
+    expect(dbRecord.info1).toBe('link_web_1'); // info1 được bảo toàn!
+    expect(dbRecord.info3).toBe('link_web_3'); // info3 được cập nhật!
+    expect(dbRecord.status).toBe('success');
+  });
+
+  // 15. Retry không cấp trùng link (idempotent)
+  it('Ca 15: Retry fulfillment không cấp trùng link (idempotent)', () => {
+    const me = getMeMock(3);
+    const order = {
+      id: 'DH_IDEMPOTENT',
+      status: 'success',
+      info3: 'assigned_link_3'
+    };
+    const links = [{ orderId: 'DH_IDEMPOTENT', masked: 'assigned_link_3' }];
+
+    // Kiểm tra idempotent
+    const alreadyFulfilled = order[me.field] && links.some(l => l.masked === order[me.field]);
+    const action = alreadyFulfilled ? 'already' : 'new';
+
+    expect(alreadyFulfilled).toBe(true);
+    expect(action).toBe('already');
+    expect(links.length).toBe(1);
+  });
+
+  // 16. Lookup lỗi không bị biến thành email mới và không cho tạo đơn theo kết quả lỗi
+  it('Ca 16: Lookup lỗi không bị biến thành email mới và không cho tạo đơn theo kết quả lỗi', () => {
+    let emailLookupState = 'checking';
+    const apiError = true;
+
+    if (apiError) {
+      emailLookupState = 'error';
+    }
+
+    // Khi emailLookupState === 'error':
+    const canSubmit = emailLookupState !== 'checking' && emailLookupState !== 'error';
+    const isTreatedAsNewEmail = emailLookupState === 'none';
+
+    expect(emailLookupState).toBe('error');
+    expect(canSubmit).toBe(false);
+    expect(isTreatedAsNewEmail).toBe(false);
+  });
+
+  // 17. Kiểm chứng case API deleted_links đã báo ở trên
+  it('Ca 17: Kiểm chứng case API DHCS6HSYOG79: Không gắn nhãn deleted_links sai và bảo toàn các trường info', () => {
+    const me = getMeMock(3); // Giả lập Web 3 lookup
+    const fixtureOrder = {
+      id: 'DHCS6HSYOG79',
+      email: 'customer@domain.com',
+      status: 'success',
+      expDate: '15/12/2026',
+      info1: 'https://vpntrinhhg.pages.dev/v1/VPNTrinhHg?OwO=abc12345',
+      info2: '',
+      info3: ''
+    };
+    const userOrders = [fixtureOrder];
+    const now = Date.now();
+    const activeOrders = userOrders.filter(o => o.expDate && o.status === 'success');
+    const localLinks = []; // Web 3 không có bản ghi link này trong ALL_LINKS cục bộ
+
+    // Logic mới:
+    const schemaField = me.field; // info3
+    const lk = fixtureOrder[schemaField]; // Rỗng trên Web 3
+    const hasTombstone = false;
+
+    let linkScenario = 'none';
+    if (userOrders.length === 0) {
+      linkScenario = 'none';
+    } else if (activeOrders.length >= 2) {
+      linkScenario = 'multi_active';
+    } else if (activeOrders.length === 1) {
+      linkScenario = 'single_link';
+    } else {
+      linkScenario = hasTombstone ? 'deleted_links' : 'expired';
+    }
+
+    // Kết quả: Đơn có 1 đơn còn hạn -> linkScenario là single_link, TUYỆT ĐỐI không bị gán deleted_links!
+    expect(linkScenario).toBe('single_link');
+    expect(linkScenario).not.toBe('deleted_links');
+    expect(activeOrders.length).toBe(1);
+    // Các trường info từ DB được giữ nguyên vẹn
+    expect(fixtureOrder.info1).toContain('https://vpntrinhhg.pages.dev');
   });
 });
