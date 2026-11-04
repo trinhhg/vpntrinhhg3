@@ -115,7 +115,7 @@ function updateAppRoutes(customRoutes) {
 let currentTotalVnd = 0, currentTotalCny = 0, currentTotalUsd = 0, currentDurationMode = 1;
 let isUpgradeMode = false, isRenewMode = false, upgradeConfirmed = false, baseOrderPriceVnd = 0, baseOrderPriceUsd = 0, baseOrderPriceCny = 0;
 let lastScrollY = 0, pollT = null, tickT = null, skew = 0, lastSig = '';
-let currentSubDecision = '', existingCustomerLinks = [], detectedRenewOf = '';
+let emailLookupState = 'idle', currentSubDecision = '', existingCustomerLinks = [], detectedRenewOf = '';
 // $ imported from ./shared.js
 // esc imported from ./shared.js
 
