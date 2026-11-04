@@ -32,7 +32,7 @@ function getConfig(env) {
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, DELETE",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization"
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Test-Mode"
 };
 const JH = {
   "Content-Type": "application/json; charset=UTF-8",
