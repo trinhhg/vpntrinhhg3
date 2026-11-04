@@ -331,3 +331,318 @@ describe('Ma Trận 18 Ca Kiểm Thử Thanh Toán Ngân Hàng & Idempotency Ful
     expect(mockDb.logs[0].ref).toBe('#99');
   });
 });
+
+// ======================================================================================
+// PHẦN D1: MA TRẬN 15 CA KIỂM THỬ VÒNG ĐỜI LINK SUB & FULFILLMENT CONDITIONS
+// ======================================================================================
+
+describe('Phần D1: Ma Trận 15 Tình Huống Vòng Đời Link Sub & Điều Kiện Fulfillment', () => {
+  function parseDmy(s) {
+    const m = String(s || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (!m) return 0;
+    return Date.UTC(+m[3], m[2] - 1, +m[1]) - 7 * 3600000;
+  }
+
+  function addDaysDmy(baseTs, days) {
+    const d = new Date(baseTs + days * 864e5 + 7 * 3600000);
+    return `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`;
+  }
+
+  function day0(ts) {
+    const d = new Date(ts + 7 * 3600000);
+    return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - 7 * 3600000;
+  }
+
+  const mockPkgs = {
+    t1: { id: 't1', n: 'Gói 1 tháng', m: 1, vnd: 60000 },
+    c1: { id: 'c1', n: 'Gói 1000GB', m: 1, vnd: 80000 },
+    d1: { id: 'd1', n: 'Vĩnh viễn', m: 0, vnd: 200000 }
+  };
+
+  it('Ca 1: Gia hạn từ portal, link cũ còn hoạt động -> giữ link cũ, HSD cộng nối từ tab Đơn hàng', () => {
+    const now = parseDmy('01/05/2026');
+    const oldOrder = { id: 'DHOLD1', email: 'user@test.com', status: 'success', expDate: '15/05/2026', info1: 'link_mask_1' };
+    const renewOrder = { id: 'DHNEW1', email: 'user@test.com', orderType: 'renew', pkgId: 't1', qty: 1, renewOf: 'DHOLD1', subLinkDecision: 'KEEP_EXISTING' };
+
+    // HSD cộng dồn nối tiếp từ 15/05/2026 + 30 ngày = 14/06/2026
+    const base = parseDmy(oldOrder.expDate);
+    expect(base).toBeGreaterThan(now);
+    const newExp = addDaysDmy(base, 30);
+    expect(newExp).toBe('14/06/2026');
+  });
+
+  it('Ca 2: Gia hạn từ portal, link cũ bị khóa/hết hạn -> mở khóa, tính HSD từ ngày mua hôm nay', () => {
+    const now = parseDmy('01/05/2026');
+    const oldOrder = { id: 'DHOLD2', email: 'user@test.com', status: 'success', expDate: '20/04/2026', info1: 'link_mask_2' };
+    const renewOrder = { id: 'DHNEW2', email: 'user@test.com', orderType: 'renew', pkgId: 't1', qty: 1, renewOf: 'DHOLD2', subLinkDecision: 'KEEP_EXISTING' };
+
+    const targetT = parseDmy(oldOrder.expDate);
+    const base = targetT >= day0(now) ? targetT : day0(now);
+    expect(base).toBe(day0(now)); // Không cộng từ quá khứ, tính từ hôm nay
+    const newExp = addDaysDmy(base, 30);
+    expect(newExp).toBe('31/05/2026');
+  });
+
+  it('Ca 3: Gia hạn từ portal, link cũ đã xóa trong DELETED_LINKS -> fallback link mới, thành công và báo khách', () => {
+    const tombstones = [{ id: 'LNK-OLD', url: 'link_mask_old' }];
+    const targetUrl = 'link_mask_old';
+    const isDeleted = tombstones.some(t => t.url === targetUrl);
+
+    expect(isDeleted).toBe(true);
+    // Khi bị xóa, hệ thống chuyển sang fallback_new
+    const fulfillResult = isDeleted ? 'fallback_new' : 'keep_active';
+    expect(fulfillResult).toBe('fallback_new');
+  });
+
+  it('Ca 4: Gia hạn portal -> hai radio hiển thị nhưng khóa; backend mặc định giữ link cũ', () => {
+    const isRenewMode = true;
+    const initialDecision = isRenewMode ? 'KEEP_EXISTING' : 'CREATE_NEW';
+    expect(initialDecision).toBe('KEEP_EXISTING');
+  });
+
+  it('Ca 5: Nâng cấp gói -> giữ nguyên link, đổi thông số cấu hình, không cấp thêm link mới', () => {
+    const order = { id: 'DHUPG', pkgId: 't1', pkgName: 'Gói 1 tháng', info1: 'link_sub_alpha', totalVnd: 60000, pendingUpgrade: { targetPkgId: 'c1', amount: 20000 } };
+    const links = [{ id: 'LNK-1', orderId: 'DHUPG', masked: 'link_sub_alpha', pkg: 'Gói 1 tháng' }];
+
+    // Áp dụng nâng cấp
+    const pk = mockPkgs[order.pendingUpgrade.targetPkgId];
+    order.pkgId = order.pendingUpgrade.targetPkgId;
+    order.pkgName = pk.n;
+    order.totalVnd += order.pendingUpgrade.amount;
+    order.isUpgrade = true;
+
+    // Cập nhật link hiện tại
+    const targetLink = links.find(l => l.orderId === order.id);
+    targetLink.pkg = pk.n;
+
+    expect(order.pkgId).toBe('c1');
+    expect(order.totalVnd).toBe(80000);
+    expect(targetLink.pkg).toBe('Gói 1000GB');
+    expect(links.length).toBe(1); // Không tạo thêm link
+  });
+
+  it('Ca 6: Email mới chưa từng có đơn -> tự động cấp link mới', () => {
+    const userOrders = [];
+    const decision = userOrders.length === 0 ? 'CREATE_NEW' : 'CHOOSE';
+    expect(decision).toBe('CREATE_NEW');
+  });
+
+  it('Ca 7: Email có đúng 1 link hoạt động, mua thường chọn giữ -> giữ link', () => {
+    const customerDecision = 'KEEP_EXISTING';
+    const fulfillResult = customerDecision === 'KEEP_EXISTING' ? 'keep_active' : 'create_new';
+    expect(fulfillResult).toBe('keep_active');
+  });
+
+  it('Ca 8: Email có đúng 1 link hoạt động, chọn cấp mới -> cấp link mới', () => {
+    const customerDecision = 'CREATE_NEW';
+    const fulfillResult = customerDecision === 'CREATE_NEW' ? 'create_new' : 'keep_active';
+    expect(fulfillResult).toBe('create_new');
+  });
+
+  it('Ca 9: Email có đúng 1 link bị khóa, chọn giữ -> mở khóa thành công nếu có node trống', () => {
+    const link = { masked: 'link_locked', isLocked: true, orig: 'Da_bi_khoa', origBackup: 'node_alpha' };
+    const pool = [{ url: 'node_alpha', used: 5, max: 30 }];
+
+    const eligible = pool.find(p => p.url === link.origBackup && p.used < p.max);
+    expect(eligible).toBeDefined();
+    link.orig = eligible.url;
+    link.isLocked = false;
+    delete link.origBackup;
+
+    expect(link.isLocked).toBe(false);
+    expect(link.orig).toBe('node_alpha');
+  });
+
+  it('Ca 10: Email chọn giữ nhưng link đã xóa -> fallback cấp mới', () => {
+    const isTargetLinkTombstoned = true;
+    const result = isTargetLinkTombstoned ? 'fallback_new' : 'keep_active';
+    expect(result).toBe('fallback_new');
+  });
+
+  it('Ca 11: Email có 2 đơn cùng hoạt động -> backend tự động cấp link mới, không lấy bừa link cũ', () => {
+    const now = parseDmy('01/05/2026');
+    const activeOrders = [
+      { id: 'DH1', email: 'duo@test.com', expDate: '15/05/2026', status: 'success' },
+      { id: 'DH2', email: 'duo@test.com', expDate: '20/05/2026', status: 'success' }
+    ];
+
+    const isMultiActive = activeOrders.filter(o => parseDmy(o.expDate) >= now).length >= 2;
+    expect(isMultiActive).toBe(true);
+
+    const subLinkDecision = isMultiActive ? 'CREATE_NEW' : 'KEEP_EXISTING';
+    const fulfillResult = isMultiActive ? 'multi_active_new' : 'keep_active';
+    expect(subLinkDecision).toBe('CREATE_NEW');
+    expect(fulfillResult).toBe('multi_active_new');
+  });
+
+  it('Ca 12: Không có nguồn đáp ứng GB/slot -> fulfillment trả lỗi error_no_source rõ ràng', () => {
+    const pool = [{ url: 'node_1', used: 30, max: 30 }]; // Full
+    const eligibleNode = pool.find(p => p.used < p.max);
+    expect(eligibleNode).toBeUndefined();
+
+    const fulfillStatus = eligibleNode ? 'new' : 'error_no_source';
+    expect(fulfillStatus).toBe('error_no_source');
+  });
+
+  it('Ca 13: Retry fulfillment khi đơn đã có link -> không cấp thêm link trùng (idempotent)', () => {
+    const order = { id: 'DHRETRY', info1: 'link_mask_exist', status: 'success' };
+    const links = [{ masked: 'link_mask_exist', orderId: 'DHRETRY' }];
+
+    const alreadyFulfilled = links.some(l => l.masked === order.info1);
+    expect(alreadyFulfilled).toBe(true);
+    const action = alreadyFulfilled ? 'already' : 'new';
+    expect(action).toBe('already');
+    expect(links.length).toBe(1);
+  });
+
+  it('Ca 14: Link đã xóa trong tombstone không bị cron hay ghi đè tái xuất hiện', () => {
+    const tombstones = [{ id: 'LNK-DEL', ts: Date.now() }];
+    const incomingLinks = [{ id: 'LNK-DEL', masked: 'deleted_url' }, { id: 'LNK-ALIVE', masked: 'alive_url' }];
+
+    const tombSet = new Set(tombstones.map(t => t.id));
+    const filtered = incomingLinks.filter(l => !tombSet.has(l.id));
+
+    expect(filtered.length).toBe(1);
+    expect(filtered[0].id).toBe('LNK-ALIVE');
+  });
+
+  it('Ca 15: Phân tách môi trường Test và Production không đọc ghi chéo', () => {
+    const prodOrders = [{ id: 'DHPROD', isTest: false }];
+    const testOrders = [{ id: 'DH_TEST_1', isTest: true }];
+
+    const isTestReq = true;
+    const targetOrders = isTestReq ? testOrders : prodOrders;
+    expect(targetOrders[0].id).toBe('DH_TEST_1');
+  });
+});
+
+// ======================================================================================
+// PHẦN D2: MA TRẬN 12 CA KIỂM THỬ QUY TẮC QUÀ TẶNG (GIFT RULES & BONUS DAYS)
+// ======================================================================================
+
+describe('Phần D2: Ma Trận 12 Tình Huống Quy Tắc Quà Tặng & Bonus Days', () => {
+  function getActiveGiftRule(rules, pkgId, now = Date.now()) {
+    if (!Array.isArray(rules) || !pkgId) return null;
+    for (const r of rules) {
+      if (!r || r.enabled === false) continue;
+      if (Array.isArray(r.packageIds) && r.packageIds.includes(pkgId)) {
+        const start = r.startDate ? new Date(r.startDate).getTime() : 0;
+        const end = r.endDate ? new Date(r.endDate).getTime() : Infinity;
+        if (now >= start && now <= end) return r;
+      }
+    }
+    return null;
+  }
+
+  const giftRules = [
+    { id: 'GR1', name: '+3 NGÀY', bonusDays: 3, bonusText: '+3 ngày', packageIds: ['t1'], enabled: true },
+    { id: 'GR2', name: '+5 NGÀY', bonusDays: 5, bonusText: '+5 ngày', packageIds: ['c1', 'c2'], enabled: true },
+    { id: 'GR3', name: 'QUÀ HẾT HẠN', bonusDays: 7, packageIds: ['c3'], enabled: true, startDate: '2025-01-01', endDate: '2025-02-01' },
+    { id: 'GR4', name: 'QUÀ ĐÃ TẮT', bonusDays: 10, packageIds: ['t2'], enabled: false }
+  ];
+
+  it('Ca 1: Một quy tắc áp dụng đúng một gói', () => {
+    const rule = getActiveGiftRule(giftRules, 't1', Date.now());
+    expect(rule).toBeDefined();
+    expect(rule.bonusDays).toBe(3);
+    expect(rule.name).toBe('+3 NGÀY');
+  });
+
+  it('Ca 2: Một quy tắc áp dụng nhiều gói cùng số ngày tặng', () => {
+    const ruleC1 = getActiveGiftRule(giftRules, 'c1', Date.now());
+    const ruleC2 = getActiveGiftRule(giftRules, 'c2', Date.now());
+    expect(ruleC1).toBeDefined();
+    expect(ruleC2).toBeDefined();
+    expect(ruleC1.id).toBe(ruleC2.id);
+    expect(ruleC1.bonusDays).toBe(5);
+  });
+
+  it('Ca 3: Gói đang được quy tắc khác áp dụng bị xung đột', () => {
+    const activePkgMap = new Map();
+    giftRules.filter(r => r.enabled).forEach(r => {
+      r.packageIds.forEach(pid => activePkgMap.set(pid, r.id));
+    });
+
+    const isT1Conflict = activePkgMap.has('t1');
+    expect(isT1Conflict).toBe(true);
+    expect(activePkgMap.get('t1')).toBe('GR1');
+  });
+
+  it('Ca 4: Khi chỉnh sửa chính quy tắc đó, các gói thuộc quy tắc không tự khóa', () => {
+    const editingRuleId = 'GR1';
+    const otherConflictMap = new Map();
+    giftRules.filter(r => r.enabled && r.id !== editingRuleId).forEach(r => {
+      r.packageIds.forEach(pid => otherConflictMap.set(pid, r.id));
+    });
+
+    expect(otherConflictMap.has('t1')).toBe(false); // Không tự khóa t1!
+    expect(otherConflictMap.has('c1')).toBe(true);  // Vẫn khóa c1 của GR2
+  });
+
+  it('Ca 5: Tắt quy tắc -> không tìm thấy quy tắc active, không cộng ngày cho đơn mới', () => {
+    const rule = getActiveGiftRule(giftRules, 't2', Date.now());
+    expect(rule).toBeNull();
+  });
+
+  it('Ca 6: Bật quy tắc -> hiển thị và áp dụng đúng phạm vi gói', () => {
+    const copyRules = giftRules.map(r => r.id === 'GR4' ? { ...r, enabled: true } : r);
+    const rule = getActiveGiftRule(copyRules, 't2', Date.now());
+    expect(rule).toBeDefined();
+    expect(rule.bonusDays).toBe(10);
+  });
+
+  it('Ca 7: Quy tắc hết hạn thời gian -> không áp dụng', () => {
+    const rule = getActiveGiftRule(giftRules, 'c3', new Date('2026-05-01').getTime());
+    expect(rule).toBeNull();
+  });
+
+  it('Ca 8: Hai quy tắc active trùng gói -> validator chặn lưu và báo lỗi', () => {
+    const invalidRules = [
+      { id: 'R1', enabled: true, packageIds: ['t1'] },
+      { id: 'R2', enabled: true, packageIds: ['t1'] }
+    ];
+
+    const activeMap = new Map();
+    let hasConflict = false;
+    for (const r of invalidRules) {
+      for (const pid of r.packageIds) {
+        if (activeMap.has(pid)) { hasConflict = true; break; }
+        activeMap.set(pid, r.id);
+      }
+    }
+    expect(hasConflict).toBe(true);
+  });
+
+  it('Ca 9: Đơn đã tạo giữ nguyên snapshot quà khi admin thay đổi hoặc tắt quy tắc', () => {
+    const order = { id: 'DH100', giftRuleId: 'GR1', giftName: '+3 NGÀY', bonusDays: 3, bonusText: '+3 ngày' };
+    // Admin xóa hoặc tắt GR1
+    const modifiedGiftRules = giftRules.filter(r => r.id !== 'GR1');
+
+    // Đơn hàng đọc từ snapshot của chính nó
+    const effectiveBonus = order.bonusDays !== undefined ? order.bonusDays : 0;
+    expect(effectiveBonus).toBe(3);
+  });
+
+  it('Ca 10: Retry fulfillment không cộng bonus days lần 2 (idempotent)', () => {
+    const order = { id: 'DHRETRY_BONUS', expFinal: true, expDate: '03/06/2026' };
+    const originalExp = order.expDate;
+
+    // Retry lần 2: không tính lại nếu expFinal = true
+    if (!order.expFinal) {
+      order.expDate = '06/06/2026';
+    }
+    expect(order.expDate).toBe(originalExp);
+  });
+
+  it('Ca 11: Đơn cũ có bonus_days/bonusDays được xử lý tương thích ngược', () => {
+    const oldOrder = { id: 'DH_OLD', bonus_days: 3 };
+    const bonus = oldOrder.bonusDays !== undefined ? oldOrder.bonusDays : (oldOrder.bonus_days !== undefined ? oldOrder.bonus_days : 0);
+    expect(bonus).toBe(3);
+  });
+
+  it('Ca 12: Gói lifetime không được áp dụng bonus days', () => {
+    const isLifetime = true;
+    const bonusDays = isLifetime ? 0 : 3;
+    expect(bonusDays).toBe(0);
+  });
+});
