@@ -1,4 +1,4 @@
-// v4 — 2026-11-04 21:00 (UTC+7)
+// v4 — 2026-11-04 22:00 (UTC+7)
 const getKV = (env) => env && (env.VPN_KV3 || env.VPN_KV || env.KV);
 
 // ====================================================================
@@ -1248,12 +1248,13 @@ function publicOrder(o, cms, links, field) {
   for (const i of [1, 2, 3]) {
     const f = "info" + i;
     const isBlur = blurMap[i];
-    const linkVal = String(o[f] || (i === 1 ? o.info : "") || "");
+    const linkVal = String(o[f] || (i === 1 ? (o.info || o.link) : (f === field ? (o.info || o.link) : "")) || "");
     let v = isBlur ? "" : linkVal;
     // Bảo toàn giá trị link từ đơn hàng: không xóa rỗng link chỉ vì thiếu bản ghi ở ALL_LINKS cục bộ
     out["blur" + i] = isBlur;
     out["info" + i] = v;
   }
+  out["schemaField"] = field || "info3";
   return out;
 }
 function findOrder(orders, q) {
@@ -2175,7 +2176,7 @@ export default {
       let hasTombstonedLink = false;
 
       for (const ord of userOrders) {
-        const lk = String(ord[schemaField] || (schemaField === "info1" ? ord.info : "") || "").trim();
+        const lk = String(ord[schemaField] || (schemaField === "info1" ? (ord.info || ord.link) : "") || (ord.field === schemaField ? (ord.info || ord.link) : "") || "").trim();
         if (lk && !seenMasked.has(lk)) {
           seenMasked.add(lk);
           const foundRec = links.find(l => l && (l.masked === lk || l.id === lk));
@@ -2226,10 +2227,19 @@ export default {
         }
       }
 
+      // Chuẩn hóa đơn hàng đại diện 'o' khi tra cứu bằng email:
+      // Ưu tiên đơn hàng thành công còn hạn sở hữu chính Link Sub hợp lệ của schemaField này
+      if (isEmailQuery && matchedOrders.length > 0) {
+        const primaryOrder = (existingLinks.length > 0 && matchedOrders.find(x => normId(x.id) === normId(existingLinks[0].orderId))) ||
+          matchedOrders.find(ord => normStatus(ord.status) === "success" && isOrderActive(ord) && (ord[schemaField] || (schemaField === "info1" ? (ord.info || ord.link) : ""))) ||
+          matchedOrders.find(ord => normStatus(ord.status) === "success" && (ord[schemaField] || (schemaField === "info1" ? (ord.info || ord.link) : "")));
+        if (primaryOrder) o = primaryOrder;
+      }
+
       return J({
         ok: true,
         found: true,
-        order: pub(o, stMini),
+        order: { ...pub(o, stMini), schemaField },
         existingLinks,
         linkScenario,
         schemaField,
