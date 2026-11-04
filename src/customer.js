@@ -1990,6 +1990,7 @@ function openCheckout(id) {
   if ($('couponAppliedMsg')) $('couponAppliedMsg').classList.add('hidden');
 
   // Reset và thiết lập trạng thái khối lựa chọn vòng đời link sub
+  emailLookupState = isRenewMode ? 'found' : 'idle';
   currentSubDecision = '';
   detectedRenewOf = (isRenewMode && oCache) ? oCache.id : '';
   existingCustomerLinks = [];
@@ -2464,11 +2465,31 @@ function renderPaymentBox() {
   const subLinkWrap = $('subLinkLifecycleWrap');
   const showSubLinkGuide = !!subLinkWrap && !subLinkWrap.classList.contains('hidden');
 
-  const subLinkGuideHtml = showSubLinkGuide ? `<br><br>
-     <div class="mt-3 pt-3 border-t border-slate-200 dark:border-white/10 space-y-2">
-       <p><b class="text-red-600">Giữ link cũ:</b> Bạn sẽ tiếp tục dùng link sub đã thêm từ gói trước đó. Sau khi thanh toán và kích hoạt thành công, bạn chỉ cần cập nhật lại gói đăng ký trong app VPN tương ứng.</p>
-       <p><b class="text-red-600">Cấp link mới:</b> Sau khi thanh toán và kích hoạt thành công, bạn cần copy hoặc quét QR để thêm link sub mới vào app VPN tương ứng để sử dụng.</p>
-     </div>` : '';
+  let subLinkGuideHtml = '';
+  if (emailLookupState === 'checking') {
+    subLinkGuideHtml = `<br><br>
+      <div class="mt-3 pt-3 border-t border-amber-200 dark:border-amber-800/40 text-amber-700 dark:text-amber-300 text-xs flex items-center gap-2">
+        <i class="fas fa-spinner fa-spin"></i>
+        <span>Đang kiểm tra lịch sử link sub của email...</span>
+      </div>`;
+  } else if (emailLookupState === 'error') {
+    subLinkGuideHtml = `<br><br>
+      <div class="mt-3 pt-3 border-t border-rose-200 dark:border-rose-800/40 text-rose-600 dark:text-rose-400 text-xs space-y-1.5">
+        <div class="font-bold flex items-center gap-1.5"><i class="fas fa-triangle-exclamation"></i> Không thể kiểm tra lịch sử link sub cũ</div>
+        <p class="text-[11px] leading-tight text-slate-500 dark:text-slate-400">Hệ thống chưa kết nối được máy chủ tra cứu. Vui lòng thử lại để đảm bảo không bị cấp nhầm link.</p>
+        <button type="button" onclick="retryEmailCheck()" class="mt-1 px-2.5 py-1 text-[11px] font-bold bg-rose-100 hover:bg-rose-200 text-rose-800 dark:bg-rose-950/60 dark:hover:bg-rose-900/80 dark:text-rose-300 rounded-lg transition"><i class="fas fa-rotate-right mr-1"></i>Thử lại kiểm tra email</button>
+      </div>`;
+  } else if (showSubLinkGuide || emailLookupState === 'found') {
+    subLinkGuideHtml = `<br><br>
+      <div class="mt-3 pt-3 border-t border-slate-200 dark:border-white/10 space-y-2">
+        <div class="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-700/40 text-amber-800 dark:text-amber-300 text-xs font-bold flex items-center gap-2">
+          <i class="fas fa-hand-point-right text-amber-600"></i>
+          <span>Lưu ý: Email đã có Link Sub cũ. Bạn cần chọn Giữ link cũ hoặc Cấp link mới ở cột bên trái trước khi tạo đơn!</span>
+        </div>
+        <p><b class="text-indigo-600 dark:text-indigo-400">Giữ link cũ:</b> Tiếp tục dùng link sub đã thêm từ gói trước đó. Sau khi thanh toán và kích hoạt thành công, bạn chỉ cần cập nhật lại gói đăng ký trong app VPN tương ứng.</p>
+        <p><b class="text-indigo-600 dark:text-indigo-400">Cấp link mới:</b> Sau khi thanh toán và kích hoạt thành công, bạn sẽ cần copy hoặc quét QR để thêm link sub mới vào app VPN tương ứng.</p>
+      </div>`;
+  }
 
   let guideHtml = l.guide_desc
     + (isUpgradeMode ? "<br><br>" + l.guide_desc_upgrade : "")
@@ -2479,7 +2500,8 @@ function renderPaymentBox() {
     return;
   }
   const dispId = isUpgradeMode ? oCache.id : currentOrderId;
-  const paidBtnHtml = `<div class="mt-auto pt-4 w-full"><button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center btn-heartbeat"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button></div>`;
+  const decisionBadgeHtml = currentSubDecision ? `<div class="mt-2 text-center text-xs font-bold text-slate-600 dark:text-slate-300"><i class="fas fa-info-circle mr-1 text-indigo-500"></i>Phương án link: <span class="text-indigo-600 dark:text-indigo-400 font-extrabold">${currentSubDecision === 'KEEP_EXISTING' ? 'Gia hạn Link cũ' : 'Cấp Link mới'}</span></div>` : '';
+  const paidBtnHtml = `<div class="mt-auto pt-4 w-full">${decisionBadgeHtml}<button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full mt-2 bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center btn-heartbeat"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button></div>`;
   const memo = (cls, extra) => `<div class="highlight-copy py-4 px-3 rounded-xl text-center cursor-pointer" onclick="copyText('${dispId}')"><span class="block text-[11px] font-black mb-2 uppercase text-[#854d0e] dark:text-indigo-200">${l.copy_memo}</span><strong class="block bg-white dark:bg-black font-mono ${cls} py-3 rounded-xl shadow-inner border-2 border-yellow-400 dark:border-indigo-500 text-[#854d0e] dark:text-indigo-100 flex items-center justify-center gap-2">${dispId} <i class="far fa-copy opacity-50"></i></strong><p class="text-[10px] mt-2 italic font-bold opacity-80 ${extra} text-[#854d0e] dark:text-indigo-300">${extra?l.input_manual:l.click_copy}</p></div>`;
   if (m === 'bank') {
     col.innerHTML = `<div class="text-center w-full flex flex-col flex-1 justify-between h-full"><div><div class="bg-indigo-50 dark:bg-white p-2 rounded-xl inline-block mb-4 border border-transparent dark:border-indigo-500 shadow-sm dark:shadow-[0_0_15px_rgba(99,102,241,0.5)]"><img src="https://img.vietqr.io/image/mbbank-0917678211-compact.png?amount=${currentTotalVnd}&addInfo=${dispId}&accountName=TRINH THI XUAN HUONG" class="w-40 h-40 md:w-56 md:h-56 rounded-xl mx-auto object-contain mix-blend-multiply dark:mix-blend-normal"></div>
@@ -2520,6 +2542,9 @@ function populateTargetLinks(links) {
     opt.textContent = `${l.name || ('Link ' + (idx + 1))}: ${shortUrl}`;
     sel.appendChild(opt);
   });
+  if (links.length > 0 && !sel.value) {
+    sel.value = links[0].url;
+  }
   const multiWrap = $('multiLinkSelectorWrap');
   if (multiWrap) {
     multiWrap.classList.toggle('hidden', currentSubDecision !== 'KEEP_EXISTING' || links.length <= 1);
@@ -2539,11 +2564,31 @@ function onSubDecisionChange(val) {
 }
 
 async function checkEmailExistingLinks(email) {
-  if (isUpgradeMode || isRenewMode || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+  if (isUpgradeMode || isRenewMode) return;
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    emailLookupState = 'idle';
+    $('subLinkLifecycleWrap')?.classList.add('hidden');
+    $('multiLinkSelectorWrap')?.classList.add('hidden');
+    renderPaymentBox();
+    return;
+  }
+  emailLookupState = 'checking';
+  renderPaymentBox();
   try {
     const res = await wpost('/api/public/lookup', { q: email });
+    const currentTypedEmail = $('cusEmail')?.value.trim();
+    if (currentTypedEmail && currentTypedEmail.toLowerCase() !== email.toLowerCase()) {
+      return;
+    }
     if (res && res.ok && res.data && res.data.order && res.data.order.status === 'success') {
       const ord = res.data.order;
+      const isTestReq = isTestMode();
+      if (ord.isTest && !isTestReq) {
+        emailLookupState = 'none';
+        $('subLinkLifecycleWrap')?.classList.add('hidden');
+        renderPaymentBox();
+        return;
+      }
       detectedRenewOf = ord.id;
       const links = [];
       [1, 2, 3].forEach(i => {
@@ -2565,28 +2610,69 @@ async function checkEmailExistingLinks(email) {
       if (links.length > 0) {
         existingCustomerLinks = links;
         populateTargetLinks(links);
+        emailLookupState = 'found';
         $('subLinkLifecycleWrap')?.classList.remove('hidden');
         renderPaymentBox();
         return;
       }
     }
-  } catch (e) {}
-  $('subLinkLifecycleWrap')?.classList.add('hidden');
-  renderPaymentBox();
+    if (res && (res.status === 404 || (res.data && res.data.error === 'not_found'))) {
+      emailLookupState = 'none';
+      $('subLinkLifecycleWrap')?.classList.add('hidden');
+      $('multiLinkSelectorWrap')?.classList.add('hidden');
+      renderPaymentBox();
+      return;
+    }
+    emailLookupState = 'error';
+    $('subLinkLifecycleWrap')?.classList.add('hidden');
+    $('multiLinkSelectorWrap')?.classList.add('hidden');
+    renderPaymentBox();
+  } catch (e) {
+    emailLookupState = 'error';
+    $('subLinkLifecycleWrap')?.classList.add('hidden');
+    $('multiLinkSelectorWrap')?.classList.add('hidden');
+    renderPaymentBox();
+  }
+}
+
+function retryEmailCheck() {
+  const emInput = $('cusEmail');
+  if (emInput && emInput.value) {
+    checkEmailExistingLinks(emInput.value.trim());
+  }
 }
 
 function submitOrder(e) {
   e.preventDefault();
   if (!currentPackage) return;
+
+  if (emailLookupState === 'checking') {
+    showToast(lang === 'vi' ? 'Đang kiểm tra lịch sử link của email, vui lòng đợi trong giây lát...' : 'Checking email link history, please wait a moment...', 'warn');
+    return;
+  }
+  if (emailLookupState === 'error') {
+    showToast(lang === 'vi' ? 'Không thể kiểm tra lịch sử email. Vui lòng bấm Thử lại để đảm bảo không bị cấp nhầm link!' : 'Cannot verify email link history. Please click Retry!', 'error');
+    return;
+  }
+
   const subWrap = $('subLinkLifecycleWrap');
-  if (subWrap && !subWrap.classList.contains('hidden')) {
+  const isSubWrapVisible = subWrap && !subWrap.classList.contains('hidden');
+  if (isSubWrapVisible) {
     const checkedRadio = document.querySelector('input[name="subLinkDecisionRadio"]:checked');
-    if (!checkedRadio) {
+    if (!checkedRadio || !checkedRadio.value) {
       showToast(lang === 'vi' ? 'Vui lòng chọn Giữ link cũ hoặc Cấp link mới trước khi tạo đơn!' : 'Please select Keep existing link or Create new link before creating order!', 'error');
       subWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
     currentSubDecision = checkedRadio.value;
+    if (currentSubDecision === 'KEEP_EXISTING' && existingCustomerLinks.length > 1) {
+      const targetSel = $('targetLinkSubSelect');
+      if (!targetSel || !targetSel.value) {
+        showToast(lang === 'vi' ? 'Vui lòng chọn link sub cần giữ từ danh sách!' : 'Please select the subscription link to keep!', 'error');
+        $('multiLinkSelectorWrap')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+    }
   }
   if (isUpgradeMode) {
     upgradeConfirmed = true;
@@ -2603,15 +2689,38 @@ async function confirmPaid() {
   const btn = $('btnPaidConfirm');
   if (!btn || btn.disabled) return;
   const l = i18n[lang];
+
+  const subWrap = $('subLinkLifecycleWrap');
+  const isSubWrapVisible = subWrap && !subWrap.classList.contains('hidden');
+  const checkedRadio = document.querySelector('input[name="subLinkDecisionRadio"]:checked');
+  const decision = isSubWrapVisible ? (checkedRadio?.value || currentSubDecision) : undefined;
+
+  if (isSubWrapVisible) {
+    if (!decision || (decision !== 'KEEP_EXISTING' && decision !== 'CREATE_NEW')) {
+      showToast(lang === 'vi' ? 'Vui lòng chọn Giữ link cũ hoặc Cấp link mới trước khi thanh toán!' : 'Please select Keep existing link or Create new link before paying!', 'error');
+      subWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    if (decision === 'KEEP_EXISTING' && existingCustomerLinks.length > 1) {
+      const targetSel = $('targetLinkSubSelect');
+      if (!targetSel || !targetSel.value) {
+        showToast(lang === 'vi' ? 'Vui lòng chọn link sub cần giữ từ danh sách!' : 'Please select the subscription link to keep!', 'error');
+        $('multiLinkSelectorWrap')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+    }
+  }
+
+  let targetLink = undefined;
+  if (decision === 'KEEP_EXISTING') {
+    targetLink = $('targetLinkSubSelect')?.value || (existingCustomerLinks.length === 1 ? existingCustomerLinks[0].url : undefined);
+  }
+  const effectiveRenewOf = (isRenewMode && oCache) ? oCache.id : (detectedRenewOf && decision === 'KEEP_EXISTING' ? detectedRenewOf : undefined);
+
   const orig = btn.innerHTML;
   btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>${l.sending}`;
   btn.disabled = true;
   const mn = $('payMethod').value, mname = mn === 'bank' ? 'Ngân hàng VN' : mn === 'alipay' ? 'Alipay' : 'Weixin';
-  const subWrap = $('subLinkLifecycleWrap');
-  const isSubWrapVisible = subWrap && !subWrap.classList.contains('hidden');
-  const decision = isSubWrapVisible ? (document.querySelector('input[name="subLinkDecisionRadio"]:checked')?.value || currentSubDecision) : undefined;
-  const targetLink = (decision === 'KEEP_EXISTING' && $('targetLinkSubSelect')) ? $('targetLinkSubSelect').value : undefined;
-  const effectiveRenewOf = (isRenewMode && oCache) ? oCache.id : (detectedRenewOf && decision === 'KEEP_EXISTING' ? detectedRenewOf : undefined);
 
   let res;
   if (isUpgradeMode) res = await wpostRetry('/api/public/upgrade', {
@@ -2654,6 +2763,7 @@ async function confirmPaid() {
   currentSubDecision = '';
   detectedRenewOf = '';
   existingCustomerLinks = [];
+  emailLookupState = 'idle';
   if ($('subLinkLifecycleWrap')) $('subLinkLifecycleWrap').classList.add('hidden');
   localStorage.setItem(SESSION_KEY, JSON.stringify({ id: o.id, time: Date.now() }));
   localStorage.setItem(CACHE_KEY, JSON.stringify(o));
@@ -3318,13 +3428,35 @@ window.onload = async function () {
   if (emInput) {
     let emailDebounce = null;
     emInput.addEventListener('input', () => {
+      currentSubDecision = '';
+      detectedRenewOf = '';
+      existingCustomerLinks = [];
+      document.querySelectorAll('input[name="subLinkDecisionRadio"]').forEach(r => {
+        r.checked = false;
+      });
+      updateSubDecisionUI('');
+      $('subLinkLifecycleWrap')?.classList.add('hidden');
+      $('multiLinkSelectorWrap')?.classList.add('hidden');
+
+      const email = emInput.value.trim();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        emailLookupState = 'idle';
+        clearTimeout(emailDebounce);
+        renderPaymentBox();
+        return;
+      }
+      emailLookupState = 'checking';
+      renderPaymentBox();
       clearTimeout(emailDebounce);
       emailDebounce = setTimeout(() => {
-        checkEmailExistingLinks(emInput.value.trim());
-      }, 500);
+        checkEmailExistingLinks(email);
+      }, 400);
     });
     emInput.addEventListener('blur', () => {
-      checkEmailExistingLinks(emInput.value.trim());
+      const email = emInput.value.trim();
+      if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        checkEmailExistingLinks(email);
+      }
     });
   }
 };
@@ -3391,6 +3523,7 @@ const EXPOSED_FNS = {
   logout: typeof logout !== 'undefined' ? logout : undefined,
   navigate: typeof navigate !== 'undefined' ? navigate : undefined,
   onSubDecisionChange: typeof onSubDecisionChange !== 'undefined' ? onSubDecisionChange : undefined,
+  retryEmailCheck: typeof retryEmailCheck !== 'undefined' ? retryEmailCheck : undefined,
   openCheckout: typeof openCheckout !== 'undefined' ? openCheckout : undefined,
   openGuideArticle: typeof openGuideArticle !== 'undefined' ? openGuideArticle : undefined,
   openLightbox: typeof openLightbox !== 'undefined' ? openLightbox : undefined,
