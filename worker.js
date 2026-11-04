@@ -1954,7 +1954,12 @@ export default {
           }
         }
       }
-      if (!o) return J({ ok: false, error: "not_found", existingLinks: [] }, 404);
+      if (!o) {
+        if (isEmailQuery) {
+          return J({ ok: true, found: false, order: null, existingLinks: [] }, 200);
+        }
+        return J({ ok: false, found: false, error: "not_found", existingLinks: [] }, 404);
+      }
       const em = String(o.email || (isEmailQuery ? b.q : "")).toLowerCase();
       const existingLinks = [];
       const seenMasked = new Set();
@@ -1976,7 +1981,7 @@ export default {
           }
         }
       }
-      return J({ ok: true, order: pub(o, st), existingLinks });
+      return J({ ok: true, found: true, order: pub(o, st), existingLinks });
     }
     if (p === "/api/public/order" && m === "POST") {
       const isTestReq = reqIsTest;
