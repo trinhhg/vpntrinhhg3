@@ -7,9 +7,8 @@
 // Cron Trigger: */15 * * * *
 const getKV = (env) => env && (env.VPN_KV3 || env.VPN_KV || env.KV);
 
- 
 // ====================================================================
-// SUPABASE CLIENT ĐẦY ĐỦ TÍNH NĂNG (RPC QUOTA & DATABASE) 
+// SUPABASE CLIENT ĐẦY ĐỦ TÍNH NĂNG (RPC QUOTA & DATABASE)
 // ====================================================================
 function cleanOrderForSupabase(o) {
   if (!o || typeof o !== "object") return o;
@@ -40,12 +39,7 @@ function cleanOrderForSupabase(o) {
 
 function getSupabase(env, isTest = false) {
   // Chuẩn hóa URL: chấp nhận cả URL gốc lẫn URL đã có /rest/v1
-  const rawUrl =
-    env.SUPABASE_URL ||
-    env.NEXT_PUBLIC_SUPABASE_URL ||
-    (env.SUPABASE_PROJECT_REF
-      ? `https://${env.SUPABASE_PROJECT_REF}.supabase.co`
-      : "");
+  const rawUrl = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || (env.SUPABASE_PROJECT_REF ? `https://${env.SUPABASE_PROJECT_REF}.supabase.co` : "");
 
   const baseUrl = String(rawUrl)
     .trim()
@@ -54,22 +48,14 @@ function getSupabase(env, isTest = false) {
 
   const url = baseUrl ? `${baseUrl}/rest/v1` : "";
 
-  const key =
-    env.SUPABASE_SERVICE_ROLE_KEY ||
-    env.SUPABASE_SERVICE_KEY ||
-    env.SUPABASE_KEY ||
-    env.SUPABASE_ANON_KEY ||
-    "";
+  const key = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_KEY || env.SUPABASE_KEY || env.SUPABASE_ANON_KEY || "";
 
   if (!url || !key) return null;
 
   // isTest=true chỉ thao tác bảng test
   const table = isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS";
 
-  const headers = {
-    apikey: key,
-    Authorization: `Bearer ${key}`
-  };
+  const headers = { apikey: key, Authorization: `Bearer ${key}` };
 
   async function readError(res, fallback = "Supabase request failed") {
     const body = await res.text().catch(() => "");
@@ -78,27 +64,19 @@ function getSupabase(env, isTest = false) {
 
   return {
     async getAll() {
-      const res = await fetch(
-        `${url}/${table}?select=*&order=createdTs.desc&limit=5000`,
-        { headers }
-      );
+      const res = await fetch(`${url}/${table}?select=*&order=createdTs.desc&limit=5000`, { headers });
 
       if (!res.ok) {
-        throw new Error(
-          `Supabase getAll: ${await readError(res, "Không lấy được dữ liệu")}`
-        );
+        throw new Error(`Supabase getAll: ${await readError(res, "Không lấy được dữ liệu")}`);
       }
 
       return await res.json();
     },
-
     async listOrders({ status, search, limit = 50, offset = 0 } = {}) {
       const safeLimit = Math.max(1, Math.min(Number(limit) || 50, 500));
       const safeOffset = Math.max(0, Number(offset) || 0);
 
-      let query =
-        `${url}/${table}?select=*&order=createdTs.desc` +
-        `&limit=${safeLimit}&offset=${safeOffset}`;
+      let query = `${url}/${table}?select=*&order=createdTs.desc` + `&limit=${safeLimit}&offset=${safeOffset}`;
 
       if (status && status !== "all") {
         query += `&status=eq.${encodeURIComponent(status)}`;
@@ -109,25 +87,15 @@ function getSupabase(env, isTest = false) {
         query += `&or=(id.ilike.${s},email.ilike.${s},nickname.ilike.${s},zalo.ilike.${s})`;
       }
 
-      const res = await fetch(query, {
-        headers: {
-          ...headers,
-          Prefer: "count=exact"
-        }
-      });
+      const res = await fetch(query, { headers: { ...headers, Prefer: "count=exact" } });
 
       if (!res.ok) {
-        throw new Error(
-          `Supabase listOrders: ${await readError(res, "Không lấy được danh sách đơn")}`
-        );
+        throw new Error(`Supabase listOrders: ${await readError(res, "Không lấy được danh sách đơn")}`);
       }
 
       const contentRange = res.headers.get("content-range") || "";
       const totalPart = contentRange.split("/")[1];
-      const count =
-        totalPart && totalPart !== "*"
-          ? Number(totalPart)
-          : null;
+      const count = totalPart && totalPart !== "*" ? Number(totalPart) : null;
 
       return {
         data: await res.json(),
@@ -136,23 +104,16 @@ function getSupabase(env, isTest = false) {
         offset: safeOffset
       };
     },
-
     async getOrder(id) {
-      const res = await fetch(
-        `${url}/${table}?id=eq.${encodeURIComponent(id)}&limit=1`,
-        { headers }
-      );
+      const res = await fetch(`${url}/${table}?id=eq.${encodeURIComponent(id)}&limit=1`, { headers });
 
       if (!res.ok) {
-        throw new Error(
-          `Supabase getOrder: ${await readError(res, "Không tìm được đơn")}`
-        );
+        throw new Error(`Supabase getOrder: ${await readError(res, "Không tìm được đơn")}`);
       }
 
       const items = await res.json();
       return Array.isArray(items) && items.length ? items[0] : null;
     },
-
     async upsert(order) {
       const cleaned = cleanOrderForSupabase(order);
 
@@ -169,43 +130,28 @@ function getSupabase(env, isTest = false) {
       // Không được trả null khi ghi thất bại:
       // lỗi phải được ném ra để giao diện không báo thành công giả.
       if (!res.ok) {
-        throw new Error(
-          `Supabase upsert: ${await readError(res, "Ghi dữ liệu thất bại")}`
-        );
+        throw new Error(`Supabase upsert: ${await readError(res, "Ghi dữ liệu thất bại")}`);
       }
 
       const result = await res.json().catch(() => []);
       return Array.isArray(result) ? (result[0] || cleaned) : cleaned;
     },
+    async delete (id, rawId) {
+      const query = rawId && rawId !== id ? `or=(id.eq.${encodeURIComponent(rawId)},id.eq.${encodeURIComponent(id)})` : `id=eq.${encodeURIComponent(id)}`;
 
-    async delete(id, rawId) {
-      const query =
-        rawId && rawId !== id
-          ? `or=(id.eq.${encodeURIComponent(rawId)},id.eq.${encodeURIComponent(id)})`
-          : `id=eq.${encodeURIComponent(id)}`;
-
-      const res = await fetch(`${url}/${table}?${query}`, {
-        method: "DELETE",
-        headers
-      });
+      const res = await fetch(`${url}/${table}?${query}`, { method: "DELETE", headers });
 
       if (!res.ok) {
-        throw new Error(
-          `Supabase delete: ${await readError(res, "Xóa dữ liệu thất bại")}`
-        );
+        throw new Error(`Supabase delete: ${await readError(res, "Xóa dữ liệu thất bại")}`);
       }
 
       return true;
     },
-
     async ping() {
       const startedAt = Date.now();
 
       try {
-        const res = await fetch(
-          `${url}/${table}?select=id&limit=1`,
-          { headers }
-        );
+        const res = await fetch(`${url}/${table}?select=id&limit=1`, { headers });
 
         if (!res.ok) {
           return {
@@ -215,21 +161,12 @@ function getSupabase(env, isTest = false) {
           };
         }
 
-        const countRes = await fetch(
-          `${url}/${table}?select=count`,
-          {
-            headers: {
-              ...headers,
-              Prefer: "count=exact"
-            }
-          }
-        );
+        const countRes = await fetch(`${url}/${table}?select=count`, { headers: { ...headers, Prefer: "count=exact" } });
 
         let count = null;
 
         if (countRes.ok) {
-          const contentRange =
-            countRes.headers.get("content-range") || "";
+          const contentRange = countRes.headers.get("content-range") || "";
           const totalPart = contentRange.split("/")[1];
 
           if (totalPart && totalPart !== "*") {
@@ -245,62 +182,38 @@ function getSupabase(env, isTest = false) {
           url: `${url}/${table}`
         };
       } catch (e) {
-        return {
-          ok: false,
-          status: 0,
-          error: e?.message || String(e)
-        };
+        return { ok: false, status: 0, error: e?.message || String(e) };
       }
     },
-
     async getRpcQuota() {
       const res = await fetch(`${url}/rpc/get_db_quota`, {
         method: "POST",
-        headers: {
-          ...headers,
-          "Content-Type": "application/json"
-        }
+        headers: { ...headers, "Content-Type": "application/json" }
       });
 
       if (!res.ok) {
-        throw new Error(
-          `Supabase getRpcQuota: ${await readError(res, "RPC quota thất bại")}`
-        );
+        throw new Error(`Supabase getRpcQuota: ${await readError(res, "RPC quota thất bại")}`);
       }
 
       return await res.json();
     },
-
     async cloneProdToTest() {
       // Chỉ xóa dữ liệu trong bảng TEST.
-      const clearRes = await fetch(
-        `${url}/ALL_ORDERS_TEST?id=not.is.null`,
-        {
-          method: "DELETE",
-          headers
-        }
-      );
+      const clearRes = await fetch(`${url}/ALL_ORDERS_TEST?id=not.is.null`, { method: "DELETE", headers });
 
       if (!clearRes.ok) {
-        throw new Error(
-          `Clone: không xóa được kho TEST: ${
+        throw new Error(`Clone: không xóa được kho TEST: ${
             await readError(clearRes, "Xóa kho test thất bại")
-          }`
-        );
+          }`);
       }
 
       // Đọc dữ liệu từ kho PROD.
-      const prodRes = await fetch(
-        `${url}/ALL_ORDERS?select=*&limit=5000`,
-        { headers }
-      );
+      const prodRes = await fetch(`${url}/ALL_ORDERS?select=*&limit=5000`, { headers });
 
       if (!prodRes.ok) {
-        throw new Error(
-          `Clone: không đọc được kho PROD: ${
+        throw new Error(`Clone: không đọc được kho PROD: ${
             await readError(prodRes, "Đọc kho thật thất bại")
-          }`
-        );
+          }`);
       }
 
       const prod = await prodRes.json();
@@ -328,63 +241,36 @@ function getSupabase(env, isTest = false) {
         });
 
         if (!writeRes.ok) {
-          throw new Error(
-            `Clone: ghi kho TEST thất bại ở nhóm ${i + 1}–${i + batch.length}: ${
+          throw new Error(`Clone: ghi kho TEST thất bại ở nhóm ${i + 1}–${i + batch.length}: ${
               await readError(writeRes, "Ghi kho test thất bại")
-            }`
-          );
+            }`);
         }
       }
 
       // Kiểm tra số dòng thực tế sau khi ghi.
-      const verifyRes = await fetch(
-        `${url}/ALL_ORDERS_TEST?select=id`,
-        {
-          headers: {
-            ...headers,
-            Prefer: "count=exact"
-          }
-        }
-      );
+      const verifyRes = await fetch(`${url}/ALL_ORDERS_TEST?select=id`, { headers: { ...headers, Prefer: "count=exact" } });
 
       if (!verifyRes.ok) {
-        throw new Error(
-          `Clone: không xác minh được kho TEST: ${
+        throw new Error(`Clone: không xác minh được kho TEST: ${
             await readError(verifyRes, "Xác minh kho test thất bại")
-          }`
-        );
+          }`);
       }
 
-      const contentRange =
-        verifyRes.headers.get("content-range") || "";
+      const contentRange = verifyRes.headers.get("content-range") || "";
       const totalPart = contentRange.split("/")[1];
-      const actualCount =
-        totalPart && totalPart !== "*"
-          ? Number(totalPart)
-          : null;
+      const actualCount = totalPart && totalPart !== "*" ? Number(totalPart) : null;
 
       if (actualCount !== null && actualCount < prod.length) {
-        throw new Error(
-          `Clone chưa đủ dữ liệu: PROD=${prod.length}, TEST=${actualCount}`
-        );
+        throw new Error(`Clone chưa đủ dữ liệu: PROD=${prod.length}, TEST=${actualCount}`);
       }
 
       return prod.length;
     },
-
     async clearTest() {
-      const res = await fetch(
-        `${url}/ALL_ORDERS_TEST?id=not.is.null`,
-        {
-          method: "DELETE",
-          headers
-        }
-      );
+      const res = await fetch(`${url}/ALL_ORDERS_TEST?id=not.is.null`, { method: "DELETE", headers });
 
       if (!res.ok) {
-        throw new Error(
-          `Supabase clearTest: ${await readError(res, "Xóa kho test thất bại")}`
-        );
+        throw new Error(`Supabase clearTest: ${await readError(res, "Xóa kho test thất bại")}`);
       }
 
       return true;
@@ -410,18 +296,28 @@ async function pingSupabase(env, isTest = false) {
 // TELEGRAM BOT BACKUP & TEST MODULE
 // ====================================================================
 async function sendTelegramMessage(env, text) {
-  if (!(env.TELEGRAM_BOT_TOKEN || env.TG_BOT_TOKEN) || !(env.TELEGRAM_CHAT_ID || env.TG_CHAT_ID)) return { ok: false, error: "Chưa cấu hình TELEGRAM_BOT_TOKEN hoặc TELEGRAM_CHAT_ID" };
+  if (!(env.TELEGRAM_BOT_TOKEN || env.TG_BOT_TOKEN) || !(env.TELEGRAM_CHAT_ID || env.TG_CHAT_ID)) return {
+    ok: false,
+    error: "Chưa cấu hình TELEGRAM_BOT_TOKEN hoặc TELEGRAM_CHAT_ID"
+  };
   const res = await fetch(`https://api.telegram.org/bot${(env.TELEGRAM_BOT_TOKEN || env.TG_BOT_TOKEN)}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: (env.TELEGRAM_CHAT_ID || env.TG_CHAT_ID), text, parse_mode: "HTML" })
+    body: JSON.stringify({
+      chat_id: (env.TELEGRAM_CHAT_ID || env.TG_CHAT_ID),
+      text,
+      parse_mode: "HTML"
+    })
   });
   return res.json().catch(() => ({ ok: false }));
 }
 
 // Gửi nhiều file gộp chung 1 bong bóng tin nhắn duy nhất bằng sendMediaGroup
 async function sendTelegramMediaGroup(env, filesWithCaption) {
-  if (!(env.TELEGRAM_BOT_TOKEN || env.TG_BOT_TOKEN) || !(env.TELEGRAM_CHAT_ID || env.TG_CHAT_ID)) return { ok: false, error: "Chưa cấu hình TELEGRAM_BOT_TOKEN hoặc TELEGRAM_CHAT_ID" };
+  if (!(env.TELEGRAM_BOT_TOKEN || env.TG_BOT_TOKEN) || !(env.TELEGRAM_CHAT_ID || env.TG_CHAT_ID)) return {
+    ok: false,
+    error: "Chưa cấu hình TELEGRAM_BOT_TOKEN hoặc TELEGRAM_CHAT_ID"
+  };
   const formData = new FormData();
   formData.append("chat_id", (env.TELEGRAM_CHAT_ID || env.TG_CHAT_ID));
 
@@ -438,10 +334,7 @@ async function sendTelegramMediaGroup(env, filesWithCaption) {
   });
 
   formData.append("media", JSON.stringify(mediaList));
-  const res = await fetch(`https://api.telegram.org/bot${(env.TELEGRAM_BOT_TOKEN || env.TG_BOT_TOKEN)}/sendMediaGroup`, {
-    method: "POST",
-    body: formData
-  });
+  const res = await fetch(`https://api.telegram.org/bot${(env.TELEGRAM_BOT_TOKEN || env.TG_BOT_TOKEN)}/sendMediaGroup`, { method: "POST", body: formData });
   return res.json().catch(() => ({ ok: false }));
 }
 
@@ -451,16 +344,18 @@ async function runTelegramBackup(env, actionReason = "Admin gửi thủ công", 
   const sb = getSupabase(env, isTest);
   let orders = [];
   if (sb) {
-    try { orders = await sb.getAll(); } catch {}
+    try {
+      orders = await sb.getAll();
+    } catch {}
   }
-  
+
   const now = new Date(Date.now() + 7 * 36e5);
   const y = now.getUTCFullYear();
   const m = String(now.getUTCMonth() + 1).padStart(2, "0");
   const d = String(now.getUTCDate()).padStart(2, "0");
   const dateStr = `${y}_${m}_${d}`;
   const dayKey = `${d}_${m}_${y}`;
-  
+
   let stt = 1;
   let prevCount = null;
   const prefix = isTest ? "TG_BACKUP_TEST" : "TG_BACKUP_PROD";
@@ -493,13 +388,7 @@ async function runTelegramBackup(env, actionReason = "Admin gửi thủ công", 
     }
   }
 
-  const caption = [
-    `<b>${keyTitle}</b> ${isTest ? '🧪 [KHO TEST]' : '✅ [KHO THẬT]'}`,
-    `📌 <b>Hành động:</b> ${actionReason}`,
-    `📊 <b>Số lượng:</b> ${orders.length} đơn hàng`,
-    `📝 <b>Chi tiết/Điểm mới:</b> ${diffNote}`,
-    `⏰ <b>Thời gian:</b> ${fmtBank(Date.now())} (UTC+7)`
-  ].join("\n");
+  const caption = [`<b>${keyTitle}</b> ${isTest ? '🧪 [KHO TEST]' : '✅ [KHO THẬT]'}`, `📌 <b>Hành động:</b> ${actionReason}`, `📊 <b>Số lượng:</b> ${orders.length} đơn hàng`, `📝 <b>Chi tiết/Điểm mới:</b> ${diffNote}`, `⏰ <b>Thời gian:</b> ${fmtBank(Date.now())} (UTC+7)`].join("\n");
 
   const jsonContent = JSON.stringify(orders, null, 2);
 
@@ -514,11 +403,17 @@ async function runTelegramBackup(env, actionReason = "Admin gửi thủ công", 
   }
   const csvContent = "\uFEFF" + csvRows.join("\r\n");
 
-  const resGroup = await sendTelegramMediaGroup(env, [
-    { filename: `Backup_Orders_${envTag}_${dateStr}.json`, content: jsonContent, mimeType: "application/json" },
-    { filename: `Backup_Orders_${envTag}_${dateStr}.csv`, content: csvContent, mimeType: "text/csv", caption: caption }
-  ]);
-  
+  const resGroup = await sendTelegramMediaGroup(env, [{
+    filename: `Backup_Orders_${envTag}_${dateStr}.json`,
+    content: jsonContent,
+    mimeType: "application/json"
+  }, {
+    filename: `Backup_Orders_${envTag}_${dateStr}.csv`,
+    content: csvContent,
+    mimeType: "text/csv",
+    caption: caption
+  }]);
+
   const ok = !!(resGroup && resGroup.ok);
   return { ok, count: orders.length, dateStr, keyTitle };
 }
@@ -541,7 +436,9 @@ async function runTelegramKvBackup(env) {
     const val = await KV.get(kn);
     if (val !== null) {
       let pretty = val;
-      try { pretty = JSON.stringify(JSON.parse(val), null, 2); } catch {}
+      try {
+        pretty = JSON.stringify(JSON.parse(val), null, 2);
+      } catch {}
       mediaFiles.push({
         filename: `${kn}_${dateStr}.json`,
         content: pretty,
@@ -550,37 +447,172 @@ async function runTelegramKvBackup(env) {
     }
   }
 
-  const caption = [
-    `<b>${keyTitle}</b>`,
-    `📦 <b>Loại:</b> Sao lưu từng Key riêng biệt của KV Space`,
-    `📊 <b>Gồm các file:</b> ${keyNames.join(", ")}`,
-    `⏰ <b>Thời gian:</b> ${fmtBank(Date.now())} (UTC+7)`
-  ].join("\n");
+  const caption = [`<b>${keyTitle}</b>`, `📦 <b>Loại:</b> Sao lưu từng Key riêng biệt của KV Space`, `📊 <b>Gồm các file:</b> ${keyNames.join(", ")}`, `⏰ <b>Thời gian:</b> ${fmtBank(Date.now())} (UTC+7)`].join("\n");
 
   if (mediaFiles.length > 0) {
     mediaFiles[0].caption = caption;
   }
 
   const res = await sendTelegramMediaGroup(env, mediaFiles);
-  return { ok: !!(res && res.ok), keysCount: mediaFiles.length, dateStr, keyTitle };
+  return {
+    ok: !!(res && res.ok),
+    keysCount: mediaFiles.length,
+    dateStr,
+    keyTitle
+  };
 }
 
-const PDS = { 1: "https://vpntrinhhg.pages.dev", 2: "https://vpntrinhhg2.pages.dev", 3: "https://vpntrinhhg3.pages.dev" };
+const PDS = {
+  1: "https://vpntrinhhg.pages.dev",
+  2: "https://vpntrinhhg2.pages.dev",
+  3: "https://vpntrinhhg3.pages.dev"
+};
 // Danh sách 9 gói mặc định của hệ thống (làm căn cứ fallback)
 const DEFAULT_PKGS = {
-  t1: { id: "t1", n: "Gói 1 tháng", d: "100GB", vnd: 60000, cny: 15.5, usd: 2.5, m: 1, dev: 1, tag1: "🔥 BÁN CHẠY", tag2: "✈️ Du lịch", category: ["cycle", "travel"], features: ["Băng thông lên đến 3Gbps"] },
-  t2: { id: "t2", n: "Gói 1 tháng", d: "500GB", vnd: 70000, cny: 18, usd: 3.0, m: 1, dev: 3, tag1: "🔥 BÁN CHẠY", tag2: "✈️ Du lịch", category: ["cycle", "travel"], features: ["Băng thông lên đến 3Gbps"] },
-  c1: { id: "c1", n: "Gói 1 tháng", d: "1000GB", vnd: 80000, cny: 20.5, usd: 3.5, m: 1, dev: "unlimited", tag1: "🔥 BÁN CHẠY", tag2: "✈️ Du lịch", category: ["cycle", "travel"], features: ["Băng thông lên đến 3Gbps"] },
-  c2: { id: "c2", n: "Gói Cao Cấp", d: "3000GB", vnd: 200000, cny: 50, usd: 8.0, m: 1, dev: "unlimited", category: ["cycle"], features: ["Băng thông lên đến 3Gbps"] },
-  c3: { id: "c3", n: "Gói 1 Năm", d: "300GB/tháng", vnd: 799000, cny: 199, usd: 30.0, m: 12, dev: "unlimited", tag3: "Khuyên dùng", category: ["cycle"], features: ["Băng thông lên đến 3Gbps"] },
-  d1: { id: "d1", n: "Không Giới Hạn", d: "200GB", vnd: 200000, cny: 52, usd: 8.0, m: 0, dev: "unlimited", category: ["usage"], features: ["Băng thông lên đến 3Gbps"] },
-  d2: { id: "d2", n: "Không Giới Hạn", d: "1000GB", vnd: 399000, cny: 102, usd: 16.0, m: 0, dev: "unlimited", category: ["usage"], features: ["Băng thông lên đến 3Gbps"] },
-  d3: { id: "d3", n: "Không Giới Hạn", d: "5000GB", vnd: 999000, cny: 256, usd: 40.0, m: 0, dev: "unlimited", category: ["usage"], features: ["Băng thông lên đến 3Gbps"] },
-  custom: { id: "custom", n: "Gói Tùy Chọn", d: "100GB - 100,000GB", vnd: 0, cny: 0, usd: 0, m: 1, dev: "custom", isCustom: true, category: ["travel", "cycle", "usage"], features: ["Băng thông lên đến 3Gbps"] },
+  t1: {
+    id: "t1",
+    n: "Gói 1 tháng",
+    d: "100GB",
+    vnd: 60000,
+    cny: 15.5,
+    usd: 2.5,
+    m: 1,
+    dev: 1,
+    tag1: "🔥 BÁN CHẠY",
+    tag2: "✈️ Du lịch",
+    category: ["cycle", "travel"],
+    features: ["Băng thông lên đến 3Gbps"]
+  },
+  t2: {
+    id: "t2",
+    n: "Gói 1 tháng",
+    d: "500GB",
+    vnd: 70000,
+    cny: 18,
+    usd: 3.0,
+    m: 1,
+    dev: 3,
+    tag1: "🔥 BÁN CHẠY",
+    tag2: "✈️ Du lịch",
+    category: ["cycle", "travel"],
+    features: ["Băng thông lên đến 3Gbps"]
+  },
+  c1: {
+    id: "c1",
+    n: "Gói 1 tháng",
+    d: "1000GB",
+    vnd: 80000,
+    cny: 20.5,
+    usd: 3.5,
+    m: 1,
+    dev: "unlimited",
+    tag1: "🔥 BÁN CHẠY",
+    tag2: "✈️ Du lịch",
+    category: ["cycle", "travel"],
+    features: ["Băng thông lên đến 3Gbps"]
+  },
+  c2: {
+    id: "c2",
+    n: "Gói Cao Cấp",
+    d: "3000GB",
+    vnd: 200000,
+    cny: 50,
+    usd: 8.0,
+    m: 1,
+    dev: "unlimited",
+    category: ["cycle"],
+    features: ["Băng thông lên đến 3Gbps"]
+  },
+  c3: {
+    id: "c3",
+    n: "Gói 1 Năm",
+    d: "300GB/tháng",
+    vnd: 799000,
+    cny: 199,
+    usd: 30.0,
+    m: 12,
+    dev: "unlimited",
+    tag3: "Khuyên dùng",
+    category: ["cycle"],
+    features: ["Băng thông lên đến 3Gbps"]
+  },
+  d1: {
+    id: "d1",
+    n: "Không Giới Hạn",
+    d: "200GB",
+    vnd: 200000,
+    cny: 52,
+    usd: 8.0,
+    m: 0,
+    dev: "unlimited",
+    category: ["usage"],
+    features: ["Băng thông lên đến 3Gbps"]
+  },
+  d2: {
+    id: "d2",
+    n: "Không Giới Hạn",
+    d: "1000GB",
+    vnd: 399000,
+    cny: 102,
+    usd: 16.0,
+    m: 0,
+    dev: "unlimited",
+    category: ["usage"],
+    features: ["Băng thông lên đến 3Gbps"]
+  },
+  d3: {
+    id: "d3",
+    n: "Không Giới Hạn",
+    d: "5000GB",
+    vnd: 999000,
+    cny: 256,
+    usd: 40.0,
+    m: 0,
+    dev: "unlimited",
+    category: ["usage"],
+    features: ["Băng thông lên đến 3Gbps"]
+  },
+  custom: {
+    id: "custom",
+    n: "Gói Tùy Chọn",
+    d: "100GB - 100,000GB",
+    vnd: 0,
+    cny: 0,
+    usd: 0,
+    m: 1,
+    dev: "custom",
+    isCustom: true,
+    category: ["travel", "cycle", "usage"],
+    features: ["Băng thông lên đến 3Gbps"]
+  },
   // GÓI GIÁ CŨ: chỉ để thống kê đơn cũ, không bán
-  o1: { id: "o1", n: "Gói 1 tháng", d: "100GB", vnd: 50000, cny: 12.5, m: 1, old: true },
-  o2: { id: "o2", n: "Gói 1 tháng", d: "500GB", vnd: 60000, cny: 15, m: 1, old: true },
-  o3: { id: "o3", n: "Gói 1 tháng", d: "1000GB", vnd: 70000, cny: 17.5, m: 1, old: true }
+  o1: {
+    id: "o1",
+    n: "Gói 1 tháng",
+    d: "100GB",
+    vnd: 50000,
+    cny: 12.5,
+    m: 1,
+    old: true
+  },
+  o2: {
+    id: "o2",
+    n: "Gói 1 tháng",
+    d: "500GB",
+    vnd: 60000,
+    cny: 15,
+    m: 1,
+    old: true
+  },
+  o3: {
+    id: "o3",
+    n: "Gói 1 tháng",
+    d: "1000GB",
+    vnd: 70000,
+    cny: 17.5,
+    m: 1,
+    old: true
+  }
 };
 
 let CACHED_PKGS = null;
@@ -592,7 +624,15 @@ async function getActivePkgs(KV) {
     const map = { ...DEFAULT_PKGS };
     for (const p of raw) {
       if (p && p.id) {
-        map[p.id] = { ...p, n: p.name || p.n || "", d: p.data || p.d || "", m: p.m !== undefined ? Number(p.m) : (p.time === "lifetime" ? 0 : Number(p.time) || 1), vnd: Number(p.vnd) || 0, cny: Number(p.cny) || 0, usd: Number(p.usd) || 0 };
+        map[p.id] = {
+          ...p,
+          n: p.name || p.n || "",
+          d: p.data || p.d || "",
+          m: p.m !== undefined ? Number(p.m) : (p.time === "lifetime" ? 0 : Number(p.time) || 1),
+          vnd: Number(p.vnd) || 0,
+          cny: Number(p.cny) || 0,
+          usd: Number(p.usd) || 0
+        };
       }
     }
     CACHED_PKGS = map;
@@ -615,14 +655,25 @@ const PKGS = new Proxy(DEFAULT_PKGS, {
     return Array.from(new Set([...Reflect.ownKeys(DEFAULT_PKGS), ...Reflect.ownKeys(DYNAMIC_PKGS || {})]));
   },
   getOwnPropertyDescriptor(target, prop) {
-    return { enumerable: true, configurable: true, value: this.get(target, prop) };
+    return {
+      enumerable: true,
+      configurable: true,
+      value: this.get(target, prop)
+    };
   }
 });
 const LOCK_ORIG = "Da_bi_khoa";
-const MONTHLY = { "100GB": ["t1", "o1"], "500GB": ["t2", "o2"], "1000GB": ["c1", "o3"] };
+const MONTHLY = {
+  "100GB": ["t1", "o1"],
+  "500GB": ["t2", "o2"],
+  "1000GB": ["c1", "o3"]
+};
 const VND = (n) => String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 const pkgStr = (pk) => `${pk.n} - ${VND(pk.vnd)}VND${pk.old ? " (giá cũ)" : ""}`;
-const monthsOf = (o) => { const pk = PKGS[o.pkgId]; return pk && pk.m === 0 ? "Vĩnh viễn" : ((pk ? pk.m : 1) * (Number(o.qty) || 1)) + " tháng"; };
+const monthsOf = (o) => {
+  const pk = PKGS[o.pkgId];
+  return pk && pk.m === 0 ? "Vĩnh viễn" : ((pk ? pk.m : 1) * (Number(o.qty) || 1)) + " tháng";
+};
 const daysOfPkg = (pk, qty) => (pk.m === 0 ? "" : (pk.m === 12 ? 365 : 30 * pk.m) * (Number(qty) || 1));
 const linkDate = (exp, cts) => isLifetime(exp) ? "Vĩnh viễn" : exp;
 // Nhận diện gói của 1 đơn (kể cả đơn cũ): ưu tiên số tiền đã thu + dung lượng -> tách giá cũ / giá mới. KHÔNG bao giờ đổi totalVnd.
@@ -633,14 +684,27 @@ function detectPkg(o) {
   const data = String(o.pkgData || (gm && gm[1]) || "").toUpperCase(), price = pm ? Number(pm[1].replace(/[.,]/g, "")) : 0, total = Number(o.totalVnd) || 0;
   const name = String(o.pkgName || s.split(" - ")[0] || ""), cand = MONTHLY[data];
   if (cand && (!name || /1 tháng/i.test(name))) {
-    if (total > 0) for (const id of cand) { const u = PKGS[id].vnd; if (total % u === 0 && total / u <= 36) return { id, qty: total / u }; }
-    if (price) { const id = cand.find((k) => PKGS[k].vnd === price); if (id) return { id, qty: null }; }
+    if (total > 0) for (const id of cand) {
+      const u = PKGS[id].vnd;
+      if (total % u === 0 && total / u <= 36) return { id, qty: total / u };
+    }
+    if (price) {
+      const id = cand.find((k) => PKGS[k].vnd === price);
+      if (id) return { id, qty: null };
+    }
     return { id: cand[0], qty: null };
   }
   const id = Object.keys(PKGS).find((k) => !PKGS[k].old && PKGS[k].n === name && PKGS[k].d.toUpperCase() === data) || (price ? Object.keys(PKGS).find((k) => !PKGS[k].old && PKGS[k].vnd === price) : null);
-  return id ? { id, qty: total > 0 ? Math.round(total / PKGS[id].vnd) || null : null } : { id: null, qty: null };
+  return id ? {
+    id,
+    qty: total > 0 ? Math.round(total / PKGS[id].vnd) || null : null
+  } : { id: null, qty: null };
 }
-const isExpiredOrder = (o, now) => { if (!o.expDate || isLifetime(o.expDate)) return false; const t = parseDmy(o.expDate); return !!t && t + 864e5 <= now; };
+const isExpiredOrder = (o, now) => {
+  if (!o.expDate || isLifetime(o.expDate)) return false;
+  const t = parseDmy(o.expDate);
+  return !!t && t + 864e5 <= now;
+};
 
 // ---------------------------------------------------------------- helpers
 
@@ -667,22 +731,68 @@ const isLifetime = (s) => /(v[i\u00EC\u00ED\u0129\u0128]nh\s*vi[e\u00EA\u1EC5\u1
 const arr = (v) => (Array.isArray(v) ? v : []);
 const normStatus = (s) => (s === "paid" ? "success" : s === "rejected" ? "failed" : s || "pending");
 const isBankMethod = (m) => !/alipay|wechat|weixin/i.test(String(m || ""));
-const numOrEmpty = (v) => { if (v === "" || v === null || v === undefined) return ""; const n = Number(String(v).replace(/[,\s]/g, "")); return isFinite(n) ? n : ""; };
-function safeJson(value, fallback) { try { if (value === null || value === undefined || value === "") return fallback; return JSON.parse(value); } catch { return fallback; } }
-function safeEq(a, b) { a = String(a); b = String(b); if (a.length !== b.length) return false; let r = 0; for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i); return r === 0; }
-function hex(len) { const b = new Uint8Array(Math.ceil(len / 2)); crypto.getRandomValues(b); return [...b].map((x) => x.toString(16).padStart(2, "0")).join("").slice(0, len); }
-function genOrderId() { const c = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", b = new Uint8Array(10); crypto.getRandomValues(b); return "DH" + [...b].map((x) => c[x % 36]).join(""); }
-function vn(ts) { const d = new Date(ts + 7 * 36e5); return { d: d.getUTCDate(), m: d.getUTCMonth() + 1, y: d.getUTCFullYear(), h: d.getUTCHours(), mi: d.getUTCMinutes() }; }
-const dmy = (ts) => { const t = vn(ts); return `${pad(t.d)}/${pad(t.m)}/${t.y}`; };
-const fmtBank = (ts) => { const t = vn(ts); return `${pad(t.d)}/${pad(t.m)}/${t.y} ${pad(t.h)}:${pad(t.mi)}`; };
-const parseDmy = (s) => { const m = String(s || "").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? Date.UTC(+m[3], m[2] - 1, +m[1]) - 7 * 36e5 : 0; }; // 00:00 giờ VN
+const numOrEmpty = (v) => {
+  if (v === "" || v === null || v === undefined) return "";
+  const n = Number(String(v).replace(/[,\s]/g, ""));
+  return isFinite(n) ? n : "";
+};
+function safeJson(value, fallback) {
+  try {
+    if (value === null || value === undefined || value === "") return fallback;
+    return JSON.parse(value);
+  } catch { return fallback;
+  }
+}
+function safeEq(a, b) {
+  a = String(a);
+  b = String(b);
+  if (a.length !== b.length) return false;
+  let r = 0;
+  for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return r === 0;
+}
+function hex(len) {
+  const b = new Uint8Array(Math.ceil(len / 2));
+  crypto.getRandomValues(b);
+  return [...b].map((x) => x.toString(16).padStart(2, "0")).join("").slice(0, len);
+}
+function genOrderId() {
+  const c = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", b = new Uint8Array(10);
+  crypto.getRandomValues(b);
+  return "DH" + [...b].map((x) => c[x % 36]).join("");
+}
+function vn(ts) {
+  const d = new Date(ts + 7 * 36e5);
+  return {
+    d: d.getUTCDate(),
+    m: d.getUTCMonth() + 1,
+    y: d.getUTCFullYear(),
+    h: d.getUTCHours(),
+    mi: d.getUTCMinutes()
+  };
+}
+const dmy = (ts) => {
+  const t = vn(ts);
+  return `${pad(t.d)}/${pad(t.m)}/${t.y}`;
+};
+const fmtBank = (ts) => {
+  const t = vn(ts);
+  return `${pad(t.d)}/${pad(t.m)}/${t.y} ${pad(t.h)}:${pad(t.mi)}`;
+};
+const parseDmy = (s) => {
+  const m = String(s || "").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  return m ? Date.UTC(+m[3], m[2] - 1, +m[1]) - 7 * 36e5 : 0;
+}; // 00:00 giờ VN
 const day0 = (ts) => parseDmy(dmy(ts));
 // Chuẩn hóa quy ước cứng: 1 tháng = 30 ngày (xóa bỏ hàm cộng theo tháng dương lịch)
 function addDaysDmy(ts0, days) {
   return dmy(ts0 + (Number(days) || 0) * 864e5);
 }
 // Mốc khóa chuẩn: Đúng 00:00:00 giờ Việt Nam (UTC+7) của ngày hết hạn là khóa link sub ẩn
-const lockAt = (exp) => { const t0 = parseDmy(exp); return t0 || Infinity; };
+const lockAt = (exp) => {
+  const t0 = parseDmy(exp);
+  return t0 || Infinity;
+};
 // origBackup: URL gốc thật được cất khi link bị khóa (orig -> "Da_bi_khoa"); gia hạn/mở khóa sẽ khôi phục từ đây.
 function lockLink(l) {
   l.isLocked = true;
@@ -701,14 +811,24 @@ const expKey = (e) => (isLifetime(e) ? "life" : parseDmy(e) || 0);
 // Parse mọi định dạng thời gian cũ -> epoch ms (dữ liệu cũ đều là giờ VN)
 function parseAny(v) {
   if (typeof v === "number") return v;
-  const s = String(v || "").trim(); if (!s) return 0;
+  const s = String(v || "").trim();
+  if (!s) return 0;
   let m = s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*-?\s*(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
-  if (m) { let y = +m[6]; if (y < 100) y += 2000; return Date.UTC(y, m[5] - 1, +m[4], m[1] - 7, +m[2], +(m[3] || 0)); }
+  if (m) {
+    let y = +m[6];
+    if (y < 100) y += 2000;
+    return Date.UTC(y, m[5] - 1, +m[4], m[1] - 7, +m[2], +(m[3] || 0));
+  }
   m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
-  if (m) { let y = +m[3]; if (y < 100) y += 2000; return Date.UTC(y, m[2] - 1, +m[1], m[4] - 7, +m[5], +(m[6] || 0)); }
+  if (m) {
+    let y = +m[3];
+    if (y < 100) y += 2000;
+    return Date.UTC(y, m[2] - 1, +m[1], m[4] - 7, +m[5], +(m[6] || 0));
+  }
   m = s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/);
   if (m) return Date.UTC(+m[1], m[2] - 1, +m[3], m[4] - 7, +m[5], +(m[6] || 0));
-  const t = Date.parse(s); return isNaN(t) ? 0 : t;
+  const t = Date.parse(s);
+  return isNaN(t) ? 0 : t;
 }
 
 function computeExp(o, orders, now) {
@@ -721,7 +841,8 @@ function computeExp(o, orders, now) {
   if (o.orderType === "renew" && em && o.subLinkDecision !== "CREATE_NEW") {
     for (const x of orders) {
       if (!x || x === o || normStatus(x.status) !== "success" || String(x.email || "").toLowerCase() !== em || isLifetime(x.expDate)) continue;
-      const t = parseDmy(x.expDate); if (t > base) base = t;
+      const t = parseDmy(x.expDate);
+      if (t > base) base = t;
     }
   }
   // Quy ước cứng: 1 năm = 365 ngày; còn lại = (30 ngày * số tháng + số ngày tặng khuyến mãi) * số lượng
@@ -753,7 +874,9 @@ function pickNode(pool, exclude) {
     const sa = (Number(a.max) || 30) - (Number(a.used) || 0), sb = (Number(b.max) || 30) - (Number(b.used) || 0);
     if (sa !== sb) return sa - sb;
     const la = !a.exp || isLifetime(a.exp), lb = !b.exp || isLifetime(b.exp);
-    if (la && !lb) return 1; if (!la && lb) return -1; if (la && lb) return 0;
+    if (la && !lb) return 1;
+    if (!la && lb) return -1;
+    if (la && lb) return 0;
     return parseDmy(a.exp) - parseDmy(b.exp);
   });
   return c[0];
@@ -762,7 +885,13 @@ function pickNode(pool, exclude) {
 function getMe(url, env, cms) {
   let n = Number(env.WEB_INDEX) || 0;
   const s = (cms && cms.settings) || {}, h = (url && url.hostname) || "";
-  if (!n) for (const i of [1, 2, 3]) { const r = String(s["routeWeb" + i] || "").trim(); if (r && h.includes(r)) { n = i; break; } }
+  if (!n) for (const i of [1, 2, 3]) {
+    const r = String(s["routeWeb" + i] || "").trim();
+    if (r && h.includes(r)) {
+      n = i;
+      break;
+    }
+  }
   if (!n) n = h.includes("doicucden") ? 1 : h.includes("onepiece") ? 2 : 3;
   return { n, field: "info" + n, PD: PDS[n] };
 }
@@ -773,7 +902,10 @@ async function hmac(key, msg) {
   const k = await crypto.subtle.importKey("raw", enc(key), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   return [...new Uint8Array(await crypto.subtle.sign("HMAC", k, enc(msg)))].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
-async function makeToken(env) { const exp = Date.now() + 30 * 864e5; return exp + "." + (await hmac(env.ADMIN_PASSWORD, "adm|" + exp)); }
+async function makeToken(env) {
+  const exp = Date.now() + 30 * 864e5;
+  return exp + "." + (await hmac(env.ADMIN_PASSWORD, "adm|" + exp));
+}
 async function isAdmin(request, env) {
   const a = request.headers.get("Authorization") || "";
   if (!a.startsWith("Bearer ") || !env.ADMIN_PASSWORD) return false;
@@ -785,7 +917,19 @@ const isInternal = (request, env) => !!env.WEB_API_SECRET2 && safeEq(request.hea
 
 // ---------------------------------------------------------------- log (lưu giữ 7 ngày, tự dọn bản ghi quá 7 ngày)
 const LOG_TTL = 7 * 864e5; // 7 ngày = 7 * 24 * 60 * 60 * 1000 ms
-function mkLog() { const q = []; const f = (lvl, src, act, msg, ref) => q.push({ ts: NOW(), lvl, src, act, msg: String(msg || "").slice(0, 300), ref: ref || "" }); f.q = q; return f; }
+function mkLog() {
+  const q = [];
+  const f = (lvl, src, act, msg, ref) => q.push({
+    ts: NOW(),
+    lvl,
+    src,
+    act,
+    msg: String(msg || "").slice(0, 300),
+    ref: ref || ""
+  });
+  f.q = q;
+  return f;
+}
 async function flushLog(KV, log) {
   if (!log.q.length) return;
   const now = NOW();
@@ -797,12 +941,19 @@ async function flushLog(KV, log) {
 
 // ---------------------------------------------------------------- D1 (gọi phía server, secret nằm trong env)
 async function d1(env, path, opt = {}) {
-  if (!env.D1_URL || !env.D1_SECRET) return { ok: false, status: 0, data: { error: "Chưa cấu hình D1_URL / D1_SECRET" } };
+  if (!env.D1_URL || !env.D1_SECRET) return {
+    ok: false,
+    status: 0,
+    data: { error: "Chưa cấu hình D1_URL / D1_SECRET" }
+  };
   try {
     const fullUrl = env.D1_URL.replace(/\/$/, "") + path;
     const r = await fetch(fullUrl, {
       method: opt.method || "GET",
-      headers: { Authorization: "Bearer " + env.D1_SECRET, "Content-Type": "application/json" },
+      headers: {
+        Authorization: "Bearer " + env.D1_SECRET,
+        "Content-Type": "application/json"
+      },
       body: opt.body ? JSON.stringify(opt.body) : undefined
     });
     let data = null;
@@ -810,24 +961,57 @@ async function d1(env, path, opt = {}) {
     try {
       data = JSON.parse(rawText);
     } catch {
-      data = { error: rawText.replace(/<[^>]*>/g, " ").trim().slice(0, 300) || `Downstream HTTP ${r.status}` };
+      data = {
+        error: rawText.replace(/<[^>]*>/g, " ").trim().slice(0, 300) || `Downstream HTTP ${r.status}`
+      };
     }
     return { ok: r.ok, status: r.status, data, url: fullUrl };
-  } catch (e) { return { ok: false, status: 0, data: { error: String(e && e.message || e) } }; }
+  } catch (e) {
+    return {
+      ok: false,
+      status: 0,
+      data: { error: String(e && e.message || e) }
+    };
+  }
 }
-const d1Register = (env, url, o, kind) => isBankMethod(o.method)
-  ? d1(env, "/api/orders", { method: "POST", body: { orderId: o.id, totalVnd: o.totalVnd, email: o.email, targetWeb: o.sourceWeb || "", workerUrl: env.PUBLIC_WORKER_URL || url.origin, orderType: kind, pkgId: o.pkgId || null } })
-  : Promise.resolve({ ok: true });
-const d1Upgrade = (env, url, o, up) => isBankMethod(up.method || o.method)
-  ? d1(env, "/api/upgrades", { method: "POST", body: { orderId: o.id, targetPackageId: up.targetPkgId, amount: up.amount, baseOrder: { email: o.email, totalVnd: o.totalVnd, workerUrl: o.workerUrl || env.PUBLIC_WORKER_URL || (url && url.origin) || "", targetWeb: o.sourceWeb || "", orderType: o.orderType || "new" } } })
-  : Promise.resolve({ ok: true });
+const d1Register = (env, url, o, kind) => isBankMethod(o.method) ? d1(env, "/api/orders", {
+  method: "POST",
+  body: {
+    orderId: o.id,
+    totalVnd: o.totalVnd,
+    email: o.email,
+    targetWeb: o.sourceWeb || "",
+    workerUrl: env.PUBLIC_WORKER_URL || url.origin,
+    orderType: kind,
+    pkgId: o.pkgId || null
+  }
+}) : Promise.resolve({ ok: true });
+const d1Upgrade = (env, url, o, up) => isBankMethod(up.method || o.method) ? d1(env, "/api/upgrades", {
+  method: "POST",
+  body: {
+    orderId: o.id,
+    targetPackageId: up.targetPkgId,
+    amount: up.amount,
+    baseOrder: {
+      email: o.email,
+      totalVnd: o.totalVnd,
+      workerUrl: o.workerUrl || env.PUBLIC_WORKER_URL || (url && url.origin) || "",
+      targetWeb: o.sourceWeb || "",
+      orderType: o.orderType || "new"
+    }
+  }
+}) : Promise.resolve({ ok: true });
 
 // ---------------------------------------------------------------- tombstone: link đã xóa KHÔNG được quay lại
 // KV "DELETED_LINKS" = [{id, ts}] giữ 60 ngày. Mọi đường ghi ALL_LINKS (persist, POST /api/links, cron, update_sub.py) đều lọc theo danh sách này.
 const TOMB_TTL = 60 * 864e5;
 const loadTombs = async (KV) => arr(safeJson(await KV.get("DELETED_LINKS"), []));
 const saveTombs = (KV, a) => KV.put("DELETED_LINKS", JSON.stringify(arr(a).filter((t) => t && t.id && Date.now() - (t.ts || 0) < TOMB_TTL).slice(-2000)));
-const notTomb = (links, tb) => { if (!tb.length) return links; const s = new Set(tb.map((t) => t.id)); return links.filter((l) => l && !s.has(l.id)); };
+const notTomb = (links, tb) => {
+  if (!tb.length) return links;
+  const s = new Set(tb.map((t) => t.id));
+  return links.filter((l) => l && !s.has(l.id));
+};
 
 // ---------------------------------------------------------------- state
 async function loadAll(KV, env) {
@@ -838,7 +1022,14 @@ async function loadAll(KV, env) {
   let sbError = null;
   let ordersPromise = Promise.resolve([]);
   if (sb) {
-    ordersPromise = sb.getAll().then((res) => { sbOk = Array.isArray(res); return res; }).catch((err) => { sbOk = false; sbError = err.message || String(err); return []; });
+    ordersPromise = sb.getAll().then((res) => {
+      sbOk = Array.isArray(res);
+      return res;
+    }).catch((err) => {
+      sbOk = false;
+      sbError = err.message || String(err);
+      return [];
+    });
   } else {
     sbError = "Chưa cấu hình SUPABASE_KEY / SUPABASE_URL";
   }
@@ -849,22 +1040,40 @@ async function loadAll(KV, env) {
     const kvOrders = arr(await g("ALL_ORDERS", []));
     if (kvOrders.length > 0) orders = kvOrders;
   }
-  const st = { orders, links: arr(links), pool: arr(pool), cms: cms && typeof cms === "object" && !Array.isArray(cms) ? cms : {}, dO: false, dL: false, dP: false, isTest, sbOk, sbError };
+  const st = {
+    orders,
+    links: arr(links),
+    pool: arr(pool),
+    cms: cms && typeof cms === "object" && !Array.isArray(cms) ? cms : {},
+    dO: false,
+    dL: false,
+    dP: false,
+    isTest,
+    sbOk,
+    sbError
+  };
   for (const p of st.pool) p.used = st.links.filter((l) => l && (l.orig === p.url || l.orig2 === p.url)).length;
   return st;
 }
 async function persist(KV, st) {
-  if (st.dL) { const tb = await loadTombs(KV); if (tb.length) st.links = notTomb(st.links, tb); }
+  if (st.dL) {
+    const tb = await loadTombs(KV);
+    if (tb.length) st.links = notTomb(st.links, tb);
+  }
   for (const p of st.pool) p.used = st.links.filter((l) => l && (l.orig === p.url || l.orig2 === p.url)).length;
   const w = [];
   // Tuyệt đối không ghi ALL_ORDERS vào Cloudflare KV nữa - 100% dùng Supabase
   if (st.dL) w.push(KV.put("ALL_LINKS", JSON.stringify(st.links)), KV.put("GLOBAL_ROUTER", JSON.stringify(buildGlobalRouter(st.links, st.orders))));
   if (st.dP) w.push(KV.put("LINK_POOL", JSON.stringify(st.pool)));
-  await Promise.all(w); st.dO = st.dL = st.dP = false;
+  await Promise.all(w);
+  st.dO = st.dL = st.dP = false;
 }
 async function acquire(KV) {
   for (let i = 0; i < 8; i++) {
-    if (!(await KV.get("GLOBAL_FULFILL_LOCK"))) { await KV.put("GLOBAL_FULFILL_LOCK", String(Date.now()), { expirationTtl: 60 }); return true; }
+    if (!(await KV.get("GLOBAL_FULFILL_LOCK"))) {
+      await KV.put("GLOBAL_FULFILL_LOCK", String(Date.now()), { expirationTtl: 60 });
+      return true;
+    }
     await new Promise((r) => setTimeout(r, 500));
   }
   return false;
@@ -872,25 +1081,61 @@ async function acquire(KV) {
 // Đổi Mã đơn của CHÍNH đơn đó (không tạo đơn trùng): cập nhật id, link.orderId, yêu cầu dung lượng. Trả về 1 (ok) / 0 (không thấy) / -1 (trùng id đích)
 async function applyRename(KV, st, from, to) {
   const f = normId(from), t = normId(to);
-  const o = st.orders.find((x) => x && normId(x.id) === f); if (!o) return 0;
+  const o = st.orders.find((x) => x && normId(x.id) === f);
+  if (!o) return 0;
   if (st.orders.some((x) => x && x !== o && normId(x.id) === t)) return -1;
-  o.id = t; st.dO = true;
-  for (const l of st.links) if (l && l.orderId && normId(l.orderId) === f) { l.orderId = t; st.dL = true; }
-  const drs = arr(safeJson(await KV.get("ALL_DATA_REQUESTS"), [])); let ch = false;
-  for (const r of drs) if (r && normId(r.orderId) === f) { r.orderId = t; ch = true; }
+  o.id = t;
+  st.dO = true;
+  for (const l of st.links) if (l && l.orderId && normId(l.orderId) === f) {
+    l.orderId = t;
+    st.dL = true;
+  }
+  const drs = arr(safeJson(await KV.get("ALL_DATA_REQUESTS"), []));
+  let ch = false;
+  for (const r of drs) if (r && normId(r.orderId) === f) {
+    r.orderId = t;
+    ch = true;
+  }
   if (ch) await KV.put("ALL_DATA_REQUESTS", JSON.stringify(drs));
   return 1;
 }
 
 // ---------------------------------------------------------------- order helpers
-function maskEmail(e) { e = String(e || ""); const [a, b] = e.split("@"); if (!b) return e; if (a.length <= 3) return a[0] + "***@" + b; const k = Math.min(a.length - 2, 4); return a.slice(0, a.length - k) + "****@" + b; }
+function maskEmail(e) {
+  e = String(e || "");
+  const [a, b] = e.split("@");
+  if (!b) return e;
+  if (a.length <= 3) return a[0] + "***@" + b;
+  const k = Math.min(a.length - 2, 4);
+  return a.slice(0, a.length - k) + "****@" + b;
+}
 function publicOrder(o, cms, links, field) {
   const s = (cms && cms.settings) || {};
   const out = {
-    id: o.id, email: maskEmail(o.email), status: normStatus(o.status), method: o.method || "", pkgId: detectPkg(o).id || o.pkgId || "", pkgName: o.pkgName || "", pkgData: o.pkgData || "",
-    pkg: o.pkg || "", totalVnd: o.totalVnd || 0, totalCny: o.totalCny || 0, days: o.days || "", expDate: o.expDate || "", createdTs: o.createdTs || 0, reason: o.reason || "", isUpgrade: !!o.isUpgrade,
-    upgradeStatus: o.upgradeStatus || null, upgradedAt: o.upgradedAt || 0, serverTime: NOW(),
-    pendingUpgrade: o.pendingUpgrade ? { ts: o.pendingUpgrade.ts || 0, amount: o.pendingUpgrade.amount || 0, targetPkg: o.pendingUpgrade.targetPkg || "", method: o.pendingUpgrade.method || o.method || "" } : null
+    id: o.id,
+    email: maskEmail(o.email),
+    status: normStatus(o.status),
+    method: o.method || "",
+    pkgId: detectPkg(o).id || o.pkgId || "",
+    pkgName: o.pkgName || "",
+    pkgData: o.pkgData || "",
+    pkg: o.pkg || "",
+    totalVnd: o.totalVnd || 0,
+    totalCny: o.totalCny || 0,
+    days: o.days || "",
+    expDate: o.expDate || "",
+    createdTs: o.createdTs || 0,
+    reason: o.reason || "",
+    isUpgrade: !!o.isUpgrade,
+    upgradeStatus: o.upgradeStatus || null,
+    upgradedAt: o.upgradedAt || 0,
+    serverTime: NOW(),
+    pendingUpgrade: o.pendingUpgrade ? {
+      ts: o.pendingUpgrade.ts || 0,
+      amount: o.pendingUpgrade.amount || 0,
+      targetPkg: o.pendingUpgrade.targetPkg || "",
+      method: o.pendingUpgrade.method || o.method || ""
+    } : null
   };
 
   // QUY ĐỊNH ĐỊNH TUYẾN LÀM MỜ (CHỈ TRÊN WEB NÀY):
@@ -915,7 +1160,8 @@ function publicOrder(o, cms, links, field) {
   return out;
 }
 function findOrder(orders, q) {
-  q = String(q || "").trim(); if (!q) return null;
+  q = String(q || "").trim();
+  if (!q) return null;
   const id = normId(q), em = q.toLowerCase();
   const byId = orders.find((o) => o && normId(o.id) === id);
   if (byId) return byId;
@@ -924,17 +1170,32 @@ function findOrder(orders, q) {
 }
 function applyUpgrade(o) {
   const pu = o.pendingUpgrade || {}, pk = PKGS[pu.targetPkgId], cur = PKGS[o.pkgId];
-  if (pk) Object.assign(o, { pkgId: pu.targetPkgId, pkgName: pk.n, pkgData: pk.d, pkg: pkgStr(pk) });
+  if (pk) Object.assign(o, {
+    pkgId: pu.targetPkgId,
+    pkgName: pk.n,
+    pkgData: pk.d,
+    pkg: pkgStr(pk)
+  });
   if (isBankMethod(pu.method || o.method)) o.totalVnd = (Number(o.totalVnd) || 0) + (Number(pu.amount) || 0);
-  else { const c = Number(pu.amountCny) || (pk && cur ? Math.max(0, (pk.cny - cur.cny) * (Number(pu.qty) || 1)) : 0); if (c) o.totalCny = (Number(o.totalCny) || 0) + c; }
-  o.pendingUpgrade = null; o.upgradeStatus = "success"; o.isUpgrade = true; o.upgradedAt = NOW();
+  else {
+    const c = Number(pu.amountCny) || (pk && cur ? Math.max(0, (pk.cny - cur.cny) * (Number(pu.qty) || 1)) : 0);
+    if (c) o.totalCny = (Number(o.totalCny) || 0) + c;
+  }
+  o.pendingUpgrade = null;
+  o.upgradeStatus = "success";
+  o.isUpgrade = true;
+  o.upgradedAt = NOW();
 }
 
 // Cấp link cho 1 đơn (đã success) trên web này. Trả về: new | renew | already | error | skip
 function fulfillOrder(st, o, me, log) {
   const f = me.field, now = NOW();
   if (normStatus(o.status) !== "success") return "skip";
-  if (!o.expFinal) { if (o.orderType || !o.expDate) o.expDate = computeExp(o, st.orders, now); o.expFinal = true; st.dO = true; } // đơn cũ (không có orderType): giữ nguyên HSD
+  if (!o.expFinal) {
+    if (o.orderType || !o.expDate) o.expDate = computeExp(o, st.orders, now);
+    o.expFinal = true;
+    st.dO = true;
+  } // đơn cũ (không có orderType): giữ nguyên HSD
   if (o.lockInfo && o.lockInfo[f]) return "already"; // admin đã sửa tay ô này: web không tự sửa lại
   if (o[f] && st.links.some((l) => l && l.masked === o[f])) return "already";
   const life = isLifetime(o.expDate), em = String(o.email || "").toLowerCase(), cts = o.createdTs || now;
@@ -944,84 +1205,122 @@ function fulfillOrder(st, o, me, log) {
   // 1. Chống retry tạo trùng link: Nếu đơn đã có link hợp lệ được cấp trên web này, trả về ngay
   if (o[f] && st.links.some(l => l && l.masked === o[f])) return "already";
 
-  // 2. Tìm link theo chính orderId của đơn hiện tại
+  // 1. Tìm link theo chính orderId của đơn hiện tại
   link = st.links.find((l) => l && l.orderId && normId(l.orderId) === normId(o.id));
 
-  // 3. Đọc quyết định vòng đời link sub tạm thời từ Cloudflare KV (Phần E, F & G)
-  let decisionObj = null;
-  if (st._kvDecisions && st._kvDecisions[normId(o.id)]) {
-    decisionObj = st._kvDecisions[normId(o.id)];
-  }
-
-  let finalDecision = decisionObj?.decision || (o.orderType === "renew" ? "KEEP_EXISTING" : "AUTO");
-  let targetLink = null;
-
-  if (finalDecision === "CREATE_NEW") {
-    link = null; // Bắt buộc cấp link mới theo lựa chọn của khách
-    log("ok", "fulfill", "Quyết định vòng đời: Cấp link mới theo lựa chọn của khách", o.id, o.id);
+  // 2. Logic phân nhánh cấp link sub: Ưu tiên lựa chọn rõ ràng của khách (KEEP_EXISTING / CREATE_NEW)
+  if (!link && o.subLinkDecision === "CREATE_NEW") {
+    link = null; // Khách chủ động yêu cầu cấp link mới độc lập
+  } else if (!link && o.subLinkDecision === "KEEP_EXISTING") {
+    if (o.targetLink) {
+      link = st.links.find(l => l && (l.masked === o.targetLink || l.id === o.targetLink));
+      if (!link) {
+        const srcOrd = st.orders.find(x => x && (x.info1 === o.targetLink || x.info2 === o.targetLink || x.info3 === o.targetLink));
+        if (srcOrd && srcOrd[f]) link = st.links.find(l => l && l.masked === srcOrd[f]);
+      }
+    }
+    if (!link && o.renewOf) {
+      const srcOrd = st.orders.find(x => x && normId(x.id) === normId(o.renewOf));
+      if (srcOrd) {
+        if (srcOrd[f]) link = st.links.find(l => l && l.masked === srcOrd[f]);
+        if (!link) link = st.links.find(l => l && l.orderId && normId(l.orderId) === normId(srcOrd.id));
+      }
+    }
+    if (!link && em) {
+      for (const x of st.orders) {
+        if (!x || x === o || normStatus(x.status) !== "success" || String(x.email || "").toLowerCase() !== em) continue;
+        if (x[f]) {
+          const found = st.links.find(l => l && l.masked === x[f]);
+          if (found) {
+            link = found;
+            break;
+          }
+        }
+      }
+    }
   } else if (!link && em) {
     const prevOrders = st.orders
       .filter((x) => x && x !== o && normStatus(x.status) === "success" && String(x.email || "").toLowerCase() === em)
       .sort((a, b) => (b.createdTs || 0) - (a.createdTs || 0));
 
-    // Nếu có targetLinkSubId cụ thể (khách chọn giữ link đích hoặc gia hạn từ portal)
-    if (decisionObj?.targetLinkSubId) {
-      targetLink = st.links.find(l => l && (l.id === decisionObj.targetLinkSubId || l.masked === decisionObj.targetLinkSubId || (l.orderId && normId(l.orderId) === normId(decisionObj.targetLinkSubId))));
-    }
-    if (!targetLink && o.renewOf) {
-      const srcOrd = st.orders.find(x => x && normId(x.id) === normId(o.renewOf));
-      if (srcOrd && srcOrd[f]) targetLink = st.links.find(l => l && l.masked === srcOrd[f]);
-    }
+    // Lọc các đơn còn hạn đang hoạt động
+    const activeOrders = prevOrders.filter(x => isLifetime(x.expDate) || (parseDmy(x.expDate) >= now));
 
-    // Quy tắc 10 ngày (Phần E): Nếu đơn cũ nhất đã hết hạn từ 10 ngày trở lên và không tìm thấy link khả dụng -> cấp mới
-    const newestExpiredOrd = prevOrders.find(x => !isLifetime(x.expDate) && parseDmy(x.expDate) < now);
-    const expiredOver10Days = newestExpiredOrd && (now - parseDmy(newestExpiredOrd.expDate) >= 10 * 864e5);
+    if (activeOrders.length >= 2) {
+      // Trường hợp 1: Email có >= 2 đơn còn hạn đang hoạt động -> BẮT BUỘC AUTO CẤP LINK MỚI ĐỘC LẬP
+      link = null;
+    } else if (activeOrders.length === 1) {
+      // Trường hợp 2: Email có đúng 1 đơn đang hoạt động
+      const oldOrd = activeOrders[0];
+      const isLifeOrd = isLifetime(oldOrd.expDate);
+      const daysLeft = isLifeOrd ? 999 : Math.floor((parseDmy(oldOrd.expDate) - now) / 864e5);
 
-    if (targetLink) {
-      link = targetLink;
-    } else if (expiredOver10Days && !targetLink) {
-      link = null; // Quá 10 ngày hết hạn: tự động cấp link mới
-      log("info", "fulfill", "Đơn cũ đã hết hạn trên 10 ngày → Cấp link mới", o.id, o.id);
+      if (daysLeft < 7) {
+        // Đơn cũ sát ngày hết hạn (< 7 ngày) -> Tái sử dụng link cũ, cộng dồn hạn dùng, mở khóa
+        if (oldOrd[f]) link = st.links.find(l => l && l.masked === oldOrd[f]);
+        if (!link) link = st.links.find(l => l && l.orderId && normId(l.orderId) === normId(oldOrd.id));
+      } else {
+        // Đơn cũ còn hạn dài (> 7 ngày) -> Ưu tiên CẤP LINK MỚI
+        link = null;
+      }
     } else {
-      // Ưu tiên tái sử dụng link của đơn gần nhất nếu gói chưa hết hạn hoặc hết hạn < 7 ngày
-      const oldOrd = prevOrders[0];
-      if (oldOrd) {
-        const isLifeOrd = isLifetime(oldOrd.expDate);
-        const expTime = isLifeOrd ? Infinity : parseDmy(oldOrd.expDate);
-        const daysFromExpiry = (now - expTime) / 864e5;
-        // Còn hạn, đúng ngày hết hạn hoặc hết hạn dưới 7 ngày -> tái sử dụng
-        if (isLifeOrd || daysFromExpiry <= 7) {
-          if (oldOrd[f]) link = st.links.find(l => l && l.masked === oldOrd[f]);
-          if (!link) link = st.links.find(l => l && l.orderId && normId(l.orderId) === normId(oldOrd.id));
+      // Tất cả đơn cũ đã hết hạn -> khôi phục link cũ nếu còn trong kho, không có thì auto cấp link mới
+      for (const x of prevOrders) {
+        if (x[f]) {
+          const found = st.links.find((l) => l && l.masked === x[f]);
+          if (found) {
+            link = found;
+            break;
+          }
         }
+      }
+      if (!link) {
+        link = st.links.find((l) => l && String(l.email || "").toLowerCase() === em);
       }
     }
   }
-
-  if (link) { // TÁI SỬ DỤNG & MỞ KHÓA LINK CŨ (Giữ nguyên ID link sub ẩn cho khách)
+  if (link) {
     if (link.orig === LOCK_ORIG && link.origBackup) link.orig = link.origBackup;
     if (link.origBackup2 && !link.orig2) link.orig2 = link.origBackup2;
     delete link.origBackup;
     delete link.origBackup2;
+
     if (!st.pool.some((p) => p.url === link.orig)) {
       const n = pickNode(st.pool);
-      if (!n) { log("error", "fulfill", "Hết node trống", o.id, o.id); return "error"; }
-      link.orig = n.url; n.used = (n.used || 0) + 1;
+      if (!n) {
+        log("error", "fulfill", "Hết node trống", o.id, o.id);
+        return "error";
+      }
+      link.orig = n.url;
+      n.used = (n.used || 0) + 1;
     }
-    Object.assign(link, { expDate: life ? "Vĩnh viễn" : o.expDate, createdTs: cts, date: linkDate(life ? "Vĩnh viễn" : o.expDate, cts), isLocked: false, orderId: o.id, pkg: o.pkgName || "", email: o.email || link.email });
-    o[f] = link.masked; o.fulfilledAt = now; st.dL = st.dO = true;
+
+    Object.assign(link, {
+      expDate: life ? "Vĩnh viễn" : o.expDate,
+      createdTs: cts,
+      date: linkDate(life ? "Vĩnh viễn" : o.expDate, cts),
+      isLocked: false,
+      orderId: o.id,
+      pkg: o.pkgName || "",
+      email: o.email || link.email
+    });
+
+    o[f] = link.masked;
+    o.fulfilledAt = now;
+    st.dL = st.dO = true;
+
     log("ok", "fulfill", `Quyết định: Giữ link cũ → Kết quả: Mở khóa & giữ nguyên link sub ẩn (${link.masked})`, o.id, o.id);
     return "renew";
   }
 
-  if (finalDecision === "KEEP_EXISTING") {
+  if (o.subLinkDecision === "KEEP_EXISTING") {
     log("warn", "fulfill", "Khách chọn giữ link cũ nhưng link cũ không thể khôi phục → Buộc phải cấp link mới", o.id, o.id);
   }
   // Đọc cấu hình Mapping Fulfillment động (đã nạp sẵn trong st, mặc định luôn là single_lx)
   const fulfillData = st.fulfillment_config || safeJson(st.cms?.fulfillment_config, {}) || {};
   const fulfillCfg = fulfillData.mapping || fulfillData;
   const pkgTargetType = fulfillCfg[o.pkgId] || "single_lx"; // Chuẩn hóa mặc định: single_lx
- 
+
   const isKittyUrl = u => String(u || "").includes("tohno-1.top") || String(u || "").includes("oosaka") || String(u || "").includes("kitty");
 
   if (pkgTargetType === "combo" || pkgTargetType.startsWith("combo_")) {
@@ -1029,21 +1328,30 @@ function fulfillOrder(st, o, me, log) {
     if (pkgTargetType === "combo_liki") {
       pool1 = st.pool.filter(p => poolOk(p) && String(p.url).includes("liangxin"));
       pool2 = st.pool.filter(p => poolOk(p) && isKittyUrl(p.url));
-      cVer = "v4"; cParam = "liki"; cName = "Liangxin + Kitty";
+      cVer = "v4";
+      cParam = "liki";
+      cName = "Liangxin + Kitty";
     } else if (pkgTargetType === "combo_kidj") {
       pool1 = st.pool.filter(p => poolOk(p) && isKittyUrl(p.url));
       pool2 = st.pool.filter(p => poolOk(p) && String(p.url).includes("djjc"));
-      cVer = "v6"; cParam = "kidj"; cName = "Kitty + DJJC";
+      cVer = "v6";
+      cParam = "kidj";
+      cName = "Kitty + DJJC";
     } else {
       pool1 = st.pool.filter(p => poolOk(p) && String(p.url).includes("liangxin"));
       pool2 = st.pool.filter(p => poolOk(p) && String(p.url).includes("djjc"));
-      cVer = "v5"; cParam = "lidj"; cName = "Liangxin + DJJC";
+      cVer = "v5";
+      cParam = "lidj";
+      cName = "Liangxin + DJJC";
     }
 
     const node1 = pool1[0] || pickNode(st.pool);
     const node2 = pool2[0] || pickNode(st.pool, node1 ? node1.url : "");
 
-    if (!node1 || !node2) { log("error", "fulfill", `Hết nguồn trống để ghép ${cName}`, o.id, o.id); return "error"; }
+    if (!node1 || !node2) {
+      log("error", "fulfill", `Hết nguồn trống để ghép ${cName}`, o.id, o.id);
+      return "error";
+    }
 
     const masked = `${me.PD}/${cVer}/VPNTrinhHg?${cParam}=${hex(32)}#VPNTrinhHg`;
     node1.used = (Number(node1.used) || 0) + 1;
@@ -1052,13 +1360,23 @@ function fulfillOrder(st, o, me, log) {
     const idx = (existingComboIndices.length ? Math.max(...existingComboIndices) : 0) + 1;
 
     st.links.unshift({
-      id: "LNK-" + now + "-" + hex(4), orderId: o.id, pkg: o.pkgName || "",
-      isCombo: true, orig: node1.url, orig2: node2.url, masked,
-      email: o.email || "Khach", expDate: life ? "Vĩnh viễn" : o.expDate,
-      linkIndex: String(idx), isLocked: false, createdTs: cts,
+      id: "LNK-" + now + "-" + hex(4),
+      orderId: o.id,
+      pkg: o.pkgName || "",
+      isCombo: true,
+      orig: node1.url,
+      orig2: node2.url,
+      masked,
+      email: o.email || "Khach",
+      expDate: life ? "Vĩnh viễn" : o.expDate,
+      linkIndex: String(idx),
+      isLocked: false,
+      createdTs: cts,
       date: linkDate(life ? "Vĩnh viễn" : o.expDate, cts)
     });
-    o[f] = masked; o.fulfilledAt = now; st.dL = st.dO = true;
+    o[f] = masked;
+    o.fulfilledAt = now;
+    st.dL = st.dO = true;
     log("ok", "fulfill", `Cấp Combo Trộn mới ${cName}`, `${o.id} → #${idx}`, o.id);
     return "new";
   }
@@ -1068,9 +1386,12 @@ function fulfillOrder(st, o, me, log) {
   if (pkgTargetType === "single_kt") candidatePool = st.pool.filter(p => isKittyUrl(p.url));
   else if (pkgTargetType === "single_dj") candidatePool = st.pool.filter(p => String(p.url).includes("djjc"));
   else candidatePool = st.pool.filter(p => String(p.url).includes("liangxin"));
-  
+
   const node = pickNode(candidatePool) || pickNode(st.pool);
-  if (!node) { log("error", "fulfill", "Hết node trống", o.id, o.id); return "error"; }
+  if (!node) {
+    log("error", "fulfill", "Hết node trống", o.id, o.id);
+    return "error";
+  }
   const lx = String(node.url).includes("liangxin");
   const kt = isKittyUrl(node.url);
   const vNum = kt ? "v3" : (lx ? "v1" : "v2");
@@ -1079,8 +1400,22 @@ function fulfillOrder(st, o, me, log) {
   const existingNodeIndices = st.links.filter((x) => x && x.orig === node.url).map(x => parseInt(x.linkIndex) || 0);
   const idx = (existingNodeIndices.length ? Math.max(...existingNodeIndices) : 0) + 1;
   node.used = (node.used || 0) + 1;
-  st.links.unshift({ id: "LNK-" + now + "-" + hex(4), orderId: o.id, pkg: o.pkgName || "", orig: node.url, masked, email: o.email || "Khach", expDate: life ? "Vĩnh viễn" : o.expDate, linkIndex: String(idx), isLocked: false, createdTs: cts, date: linkDate(life ? "Vĩnh viễn" : o.expDate, cts) });
-  o[f] = masked; o.fulfilledAt = now; st.dL = st.dO = true;
+  st.links.unshift({
+    id: "LNK-" + now + "-" + hex(4),
+    orderId: o.id,
+    pkg: o.pkgName || "",
+    orig: node.url,
+    masked,
+    email: o.email || "Khach",
+    expDate: life ? "Vĩnh viễn" : o.expDate,
+    linkIndex: String(idx),
+    isLocked: false,
+    createdTs: cts,
+    date: linkDate(life ? "Vĩnh viễn" : o.expDate, cts)
+  });
+  o[f] = masked;
+  o.fulfilledAt = now;
+  st.dL = st.dO = true;
   log("ok", "fulfill", "Cấp link mới", `${o.id} → node #${idx}`, o.id);
   return "new";
 }
@@ -1102,17 +1437,51 @@ function shouldNotifyAdmin(cms, eventKey) {
 // ---------------------------------------------------------------- main
 export default {
   async fetch(request, env, ctx) {
-    const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET,HEAD,POST,OPTIONS,DELETE", "Access-Control-Allow-Headers": "Content-Type,Authorization" };
+    const CORS = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET,HEAD,POST,OPTIONS,DELETE",
+      "Access-Control-Allow-Headers": "Content-Type,Authorization"
+    };
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
     const url = new URL(request.url), p = url.pathname, m = request.method;
     const KV = getKV(env);
     if (!KV) return new Response("LỖI: Chưa kết nối kho KV", { status: 500, headers: CORS });
-    const J = (d, s = 200) => new Response(JSON.stringify(d), { status: s, headers: { ...CORS, "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" } });
+    const J = (d, s = 200) => new Response(JSON.stringify(d), {
+      status: s,
+      headers: {
+        ...CORS,
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": "no-store"
+      }
+    });
     const OK = () => new Response("OK", { status: 200, headers: CORS });
-    const RAW = (txt) => new Response(txt, { status: 200, headers: { ...CORS, "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" } });
-    const body = async () => { try { return await request.json(); } catch { return {}; } };
-    const getP = (u, ...keys) => { for (const k of keys) { const v = u.searchParams.get(k); if (v) return v; } return null; };
-    const b64e = (str) => { const bytes = new TextEncoder().encode(str); let bin = ""; for (const b of bytes) bin += String.fromCharCode(b); return btoa(bin); };
+    const RAW = (txt) => new Response(txt, {
+      status: 200,
+      headers: {
+        ...CORS,
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": "no-store"
+      }
+    });
+    const body = async () => {
+      try {
+        return await request.json();
+      } catch { return {};
+      }
+    };
+    const getP = (u, ...keys) => {
+      for (const k of keys) {
+        const v = u.searchParams.get(k);
+        if (v) return v;
+      }
+      return null;
+    };
+    const b64e = (str) => {
+      const bytes = new TextEncoder().encode(str);
+      let bin = "";
+      for (const b of bytes) bin += String.fromCharCode(b);
+      return btoa(bin);
+    };
 
     // ================================================================ QR TICKET GATEWAY (/qr/...)
     if (p.startsWith("/qr/")) {
@@ -1125,12 +1494,7 @@ export default {
       const VP = "vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1?type=tcp#";
       if (!tktData || !tktData.url || Date.now() > Number(tktData.exp || 0)) {
         const expSecCfg = (tktData && tktData.sec) || 30;
-        const EXP_QR_NODES = [
-          "⛔ Mã QR đã tự hủy",
-          `⏳ Hết hạn sau ${expSecCfg}s`,
-          "🔄 Hãy bấm Lấy QR mới",
-          "📞 Zalo: 0917678211"
-        ];
+        const EXP_QR_NODES = ["⛔ Mã QR đã tự hủy", `⏳ Hết hạn sau ${expSecCfg}s`, "🔄 Hãy bấm Lấy QR mới", "📞 Zalo: 0917678211"];
         const rh = new Headers({
           ...CORS,
           "profile-title": "VPNTrinhHg",
@@ -1172,21 +1536,13 @@ export default {
       const VP = "vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1?type=tcp#";
 
       // C. Node ảo khi ĐƠN BỊ KHÓA hoặc HẾT HẠN (Admin khóa tay hoặc Cron quét 00h00)
-      const LOCKED_NODES = [
-        "⛔ Gói cước đã hết hạn",
-        "🌐 Gia hạn tại: vpntrinhhg.pages.dev",
-        "📞 Zalo hỗ trợ: 0917678211"
-      ];
+      const LOCKED_NODES = ["⛔ Gói cước đã hết hạn", "🌐 Gia hạn tại: vpntrinhhg.pages.dev", "📞 Zalo hỗ trợ: 0917678211"];
       const LOCKED_B64 = b64e(LOCKED_NODES.map(n => VP + encodeURIComponent(n)).join("\n"));
       const LOCKED_YAML = makeSimpleYaml(LOCKED_NODES);
       const LOCKED_SB = makeSimpleSingbox(LOCKED_NODES);
 
       // D. Node ảo khi LINK BỊ XÓA khỏi Link Sub / Không tồn tại
-      const DEAD_NODES = [
-        "❌ Gói cước không tồn tại",
-        "🌐 Mua hàng tại: vpntrinhhg.pages.dev",
-        "📞 Zalo hỗ trợ: 0917678211"
-      ];
+      const DEAD_NODES = ["❌ Gói cước không tồn tại", "🌐 Mua hàng tại: vpntrinhhg.pages.dev", "📞 Zalo hỗ trợ: 0917678211"];
       const DEAD_B64 = b64e(DEAD_NODES.map(n => VP + encodeURIComponent(n)).join("\n"));
       const DEAD_YAML = makeSimpleYaml(DEAD_NODES);
       const DEAD_SB = makeSimpleSingbox(DEAD_NODES);
@@ -1196,14 +1552,29 @@ export default {
         if (expireSec !== null && expireSec !== undefined) {
           rh.set("subscription-userinfo", `expire=${expireSec}`);
         }
-        if (fmt === "yaml") { rh.set("Content-Disposition", 'attachment; filename="VPNTrinhHg.yaml"'); rh.set("Content-Type", "text/yaml; charset=utf-8"); }
-        else if (fmt === "singbox") { rh.set("Content-Disposition", 'attachment; filename="VPNTrinhHg"'); rh.set("Content-Type", "application/json; charset=utf-8"); }
-        else { rh.set("Content-Disposition", 'attachment; filename="VPNTrinhHg"'); rh.set("Content-Type", "text/plain; charset=utf-8"); }
+        if (fmt === "yaml") {
+          rh.set("Content-Disposition", 'attachment; filename="VPNTrinhHg.yaml"');
+          rh.set("Content-Type", "text/yaml; charset=utf-8");
+        }
+        else if (fmt === "singbox") {
+          rh.set("Content-Disposition", 'attachment; filename="VPNTrinhHg"');
+          rh.set("Content-Type", "application/json; charset=utf-8");
+        }
+        else {
+          rh.set("Content-Disposition", 'attachment; filename="VPNTrinhHg"');
+          rh.set("Content-Type", "text/plain; charset=utf-8");
+        }
         return new Response(b, { status: 200, headers: rh });
       };
       const getFmt = () => (isSingbox ? "singbox" : isClash ? "yaml" : "b64");
-      const getDead = () => { const f = getFmt(); return respond(f === "singbox" ? DEAD_SB : f === "yaml" ? DEAD_YAML : DEAD_B64, f, 0); };
-      const getLocked = (expSec = 0) => { const f = getFmt(); return respond(f === "singbox" ? LOCKED_SB : f === "yaml" ? LOCKED_YAML : LOCKED_B64, f, expSec); };
+      const getDead = () => {
+        const f = getFmt();
+        return respond(f === "singbox" ? DEAD_SB : f === "yaml" ? DEAD_YAML : DEAD_B64, f, 0);
+      };
+      const getLocked = (expSec = 0) => {
+        const f = getFmt();
+        return respond(f === "singbox" ? LOCKED_SB : f === "yaml" ? LOCKED_YAML : LOCKED_B64, f, expSec);
+      };
       if (!reqToken) return getDead();
       try {
         let routerObj = safeJson(await KV.get("GLOBAL_ROUTER"), {});
@@ -1233,11 +1604,7 @@ export default {
         }
         // Danh sách 3 Node thông tin chuẩn: Node 1 chỉ hiện HSD (thời gian còn lại app tự hiện ở thanh VPN), Website, Zalo
         const hsdNodeTitle = isLife ? "♾️ HSD: Vĩnh viễn" : `⏰ HSD: ${mapping.expDate || "Đang hoạt động"}`;
-        const ACTIVE_INFO_NAMES = [
-          hsdNodeTitle,
-          "🌐 Website: vpntrinhhg.pages.dev",
-          "📞 Zalo hỗ trợ: 0917678211"
-        ];
+        const ACTIVE_INFO_NAMES = [hsdNodeTitle, "🌐 Website: vpntrinhhg.pages.dev", "📞 Zalo hỗ trợ: 0917678211"];
         let subsObj = safeJson(await KV.get("GLOBAL_SUBS"), {});
         if (!subsObj || typeof subsObj !== "object") subsObj = {};
 
@@ -1340,12 +1707,20 @@ export default {
         }
 
         if (!cd && origUrl) {
-          const r = await fetch(origUrl, { headers: { "User-Agent": "v2rayN/6.23" }, cf: { cacheTtl: 0, cacheEverything: false } });
+          const r = await fetch(origUrl, {
+            headers: { "User-Agent": "v2rayN/6.23" },
+            cf: { cacheTtl: 0, cacheEverything: false }
+          });
           if (r.ok) {
             const rawB64 = (await r.text()).replace(/\s+/g, ""), ui = r.headers.get("subscription-userinfo") || "";
             if (rawB64 && rawB64.length >= 20) {
               const { newB64, yamlStr, singboxStr } = processB64(rawB64, ACTIVE_INFO_NAMES, VP, singleMode);
-              cd = { body_b64: newB64, body_yaml: yamlStr, body_singbox: singboxStr, info: ui };
+              cd = {
+                body_b64: newB64,
+                body_yaml: yamlStr,
+                body_singbox: singboxStr,
+                info: ui
+              };
               subsObj[originToken] = cd;
               ctx.waitUntil(KV.put("GLOBAL_SUBS", JSON.stringify(subsObj)));
               if (isSingbox) return singboxStr && singboxStr.length > 500 ? respond(singboxStr, "singbox", expireSec) : getDead();
@@ -1355,7 +1730,10 @@ export default {
           }
         }
         return getDead();
-      } catch (e) { console.error("Sub error:", e && e.message || e); return getDead(); }
+      } catch (e) {
+        console.error("Sub error:", e && e.message || e);
+        return getDead();
+      }
     }
 
     await syncClock(KV);
@@ -1368,16 +1746,25 @@ export default {
     if (p === "/api/public/config" && m === "GET") {
       const cms = safeJson(await KV.get("ALL_CMS"), {}), s = cms.settings || {};
       let g = safeJson(await KV.get("GUIDES"), null);
-      if (!g || !Object.keys(g).length) { g = {}; for (const k of ["android", "windows", "macos", "ios"]) if (typeof cms[k] === "string" && cms[k]) g[k] = cms[k]; }
-      
+      if (!g || !Object.keys(g).length) {
+        g = {};
+        for (const k of ["android", "windows", "macos", "ios"]) if (typeof cms[k] === "string" && cms[k]) g[k] = cms[k];
+      }
+
       const blur1 = !!(s.blurOn1 && /doicucden/i.test(String(s.blurRoute1 || "")));
       const blur2 = !!(s.blurOn2 && /onepiecechapter/i.test(String(s.blurRoute2 || "")));
       const blur3 = !!(s.blurOn3 && /lucastanora/i.test(String(s.blurRoute3 || "")));
       const blur = [blur1, blur2, blur3];
 
       const httpOnly = (v) => (/^https?:\/\//i.test(String(v || "")) ? String(v) : "");
-      const dock = Array.isArray(s.dock) ? s.dock.filter((d) => d && (httpOnly(d.img) || d.icon)).map((d) => ({ name: String(d.name || "").slice(0, 40), img: httpOnly(d.img), url: httpOnly(d.url), icon: d.icon || "", bg: d.bg || "" })) : [];
-      
+      const dock = Array.isArray(s.dock) ? s.dock.filter((d) => d && (httpOnly(d.img) || d.icon)).map((d) => ({
+        name: String(d.name || "").slice(0, 40),
+        img: httpOnly(d.img),
+        url: httpOnly(d.url),
+        icon: d.icon || "",
+        bg: d.bg || ""
+      })) : [];
+
       // Trả về danh sách gói động, FAQ, cấu hình routes động, footer và headerDrawer đã lưu trong KV
       const dynamicPkgs = safeJson(await KV.get("ALL_PACKAGES"), null);
       const dynamicFaqs = Array.isArray(cms.faqs) && cms.faqs.length ? cms.faqs : null;
@@ -1388,7 +1775,21 @@ export default {
       const couponEnabled = s.couponEnabled !== false;
       const coupons = Array.isArray(cms.coupons) ? cms.coupons.filter(c => c && c.enabled !== false) : [];
       const flashSale = (cms.sales && cms.sales.campaign) || s.flashSale || null;
-      return J({ ok: true, guides: g, blur, dock: dock.length ? dock : null, packages: dynamicPkgs, faqs: dynamicFaqs, qrExpireSeconds, routes, footer, headerDrawer, couponEnabled, coupons, flashSale });
+      return J({
+        ok: true,
+        guides: g,
+        blur,
+        dock: dock.length ? dock : null,
+        packages: dynamicPkgs,
+        faqs: dynamicFaqs,
+        qrExpireSeconds,
+        routes,
+        footer,
+        headerDrawer,
+        couponEnabled,
+        coupons,
+        flashSale
+      });
     }
 
     // Endpoint tạo Vé QR tạm thời (Tự hủy sau qrExpireSeconds giây)
@@ -1402,7 +1803,13 @@ export default {
       const exp = Date.now() + sec * 1000;
       await KV.put("QR_TKT_" + ticket, JSON.stringify({ url: targetUrl, exp, sec }), { expirationTtl: Math.max(60, sec + 30) });
       const workerBase = (env.PUBLIC_WORKER_URL || url.origin).replace(/\/$/, "");
-      return J({ ok: true, ticket, qrUrl: `${workerBase}/qr/${ticket}#VPNTrinhHg`, expireSeconds: sec, exp });
+      return J({
+        ok: true,
+        ticket,
+        qrUrl: `${workerBase}/qr/${ticket}#VPNTrinhHg`,
+        expireSeconds: sec,
+        exp
+      });
     }
 
     // Endpoint hủy vé QR ngay lập tức khi đóng x modal
@@ -1419,16 +1826,17 @@ export default {
         const pkgs = safeJson(await KV.get("ALL_PACKAGES"), null);
         const cms = safeJson(await KV.get("ALL_CMS"), {});
         const s = cms.settings || {};
-        return J({ 
-          ok: true, 
-          packages: pkgs, 
+        return J({
+          ok: true,
+          packages: pkgs,
           couponEnabled: s.couponEnabled !== false,
           coupons: Array.isArray(cms.coupons) ? cms.coupons : [],
           flashSale: (cms.sales && cms.sales.campaign) || s.flashSale || null
         });
       }
       if (m === "POST") {
-        const bad = need(admin); if (bad) return bad;
+        const bad = need(admin);
+        if (bad) return bad;
         const b = await body();
         const list = Array.isArray(b.packages) ? b.packages : [];
         await KV.put("ALL_PACKAGES", JSON.stringify(list));
@@ -1459,7 +1867,8 @@ export default {
         return J({ ok: true, config: cfg });
       }
       if (m === "POST") {
-        const bad = need(admin); if (bad) return bad;
+        const bad = need(admin);
+        if (bad) return bad;
         const b = await body();
         await KV.put("FULFILLMENT_CONFIG", JSON.stringify(b.config || {}));
         log("ok", "admin", "Lưu cấu hình", "Fulfillment Mapping & Failover Policy");
@@ -1563,15 +1972,37 @@ export default {
       }
 
       const o = {
-        id, email, zalo, method, pkgId: b.pkgId, qty, pkgName: pk.n, pkgData: pk.d, pkg: pkgStr(pk),
+        id,
+        email,
+        zalo,
+        method,
+        pkgId: b.pkgId,
+        qty,
+        pkgName: pk.n,
+        pkgData: pk.d,
+        pkg: pkgStr(pk),
         // Schema tiền chuẩn hóa (không rỗng): Bank VN lưu totalVnd, Cổng CNY lưu totalCny
-        totalVnd: bank ? finalVnd : 0, 
-        totalCny: bank ? 0 : Math.round(pk.cny * qty * 100) / 100, 
+        totalVnd: bank ? finalVnd : 0,
+        totalCny: bank ? 0 : Math.round(pk.cny * qty * 100) / 100,
         originalVnd: baseVnd,
         discountVnd,
         couponCode: appliedCouponCode,
         days: daysOfPkg(pk, qty),
-        needSupport: !!b.needSupport, status: "pending", createdTs: now, date: fmtBank(now), dateCreated: dmy(now), expFinal: false, workerUrl: env.PUBLIC_WORKER_URL || url.origin, nickname: "", reason: "", info1: "", info2: "", info3: "", lockInfo: {}, sourceWeb: String(b.sourceWeb || "").slice(0, 80), orderType: isRenew ? "renew" : "new",
+        needSupport: !!b.needSupport,
+        status: "pending",
+        createdTs: now,
+        date: fmtBank(now),
+        dateCreated: dmy(now),
+        expFinal: false,
+        workerUrl: env.PUBLIC_WORKER_URL || url.origin,
+        nickname: "",
+        reason: "",
+        info1: "",
+        info2: "",
+        info3: "",
+        lockInfo: {},
+        sourceWeb: String(b.sourceWeb || "").slice(0, 80),
+        orderType: isRenew ? "renew" : "new",
         subLinkDecision: String(b.subLinkDecision || (isRenew ? "KEEP_EXISTING" : "CREATE_NEW")).trim(),
         targetLink: String(b.targetLink || "").trim(),
         renewOf: renewSrc ? renewSrc.id : (b.renewOf ? String(b.renewOf) : "")
@@ -1624,8 +2055,18 @@ export default {
 
       const diff = targetVnd - (cur ? cur.vnd : 0);
       if (!cur || diff <= 0) return J({ ok: false, error: "Vui lòng chọn gói cao hơn gói hiện tại" }, 400);
-      o.pendingUpgrade = { ts: NOW(), targetPkg: tg.n, targetPkgData: tg.d, targetPkgId: b.pkgId, amount: diff * qty, amountCny: Math.round(Math.max(0, tg.cny - cur.cny) * qty * 100) / 100, qty, method: String(b.method || "Ngân hàng VN") };
-      o.upgradeStatus = "pending"; o.isUpgrade = true;
+      o.pendingUpgrade = {
+        ts: NOW(),
+        targetPkg: tg.n,
+        targetPkgData: tg.d,
+        targetPkgId: b.pkgId,
+        amount: diff * qty,
+        amountCny: Math.round(Math.max(0, tg.cny - cur.cny) * qty * 100) / 100,
+        qty,
+        method: String(b.method || "Ngân hàng VN")
+      };
+      o.upgradeStatus = "pending";
+      o.isUpgrade = true;
       const sb = getSupabase(env, st.isTest);
       if (sb) await sb.upsert(o).catch(() => {});
       ctx.waitUntil((async () => {
@@ -1650,7 +2091,14 @@ export default {
       let reqs = arr(safeJson(await KV.get("ALL_DATA_REQUESTS"), []));
       const old = reqs.find((r) => r.orderId === o.id && r.status === "pending");
       if (old) return J({ ok: true, existed: true });
-      reqs.unshift({ orderId: o.id, email: o.email, pkgName: o.pkgName || "Gói VPN", status: "pending", ts: NOW(), date: fmtBank(NOW()) });
+      reqs.unshift({
+        orderId: o.id,
+        email: o.email,
+        pkgName: o.pkgName || "Gói VPN",
+        status: "pending",
+        ts: NOW(),
+        date: fmtBank(NOW())
+      });
       await KV.put("ALL_DATA_REQUESTS", JSON.stringify(reqs.slice(0, 200)));
       if (shouldNotifyAdmin(st.cms, "data")) {
         ctx.waitUntil((async () => {
@@ -1673,11 +2121,17 @@ export default {
     }
     if (p === "/api/admin/test/status" && m === "GET") {
       const active = (await KV.get("TEST_MODE_ACTIVE")) === "1";
-      const [ping_prod, ping_test] = await Promise.all([
-        pingSupabase(env, false),
-        pingSupabase(env, true)
-      ]);
-      return J({ ok: true, active, isTest: active, ping: active ? ping_test : ping_prod, ping_prod, ping_test, pingProd: ping_prod, pingTest: ping_test });
+      const [ping_prod, ping_test] = await Promise.all([pingSupabase(env, false), pingSupabase(env, true)]);
+      return J({
+        ok: true,
+        active,
+        isTest: active,
+        ping: active ? ping_test : ping_prod,
+        ping_prod,
+        ping_test,
+        pingProd: ping_prod,
+        pingTest: ping_test
+      });
     }
     if (p === "/api/admin/test/fake_order" && m === "POST") {
       const sb = getSupabase(env, true);
@@ -1725,7 +2179,10 @@ export default {
       if (!env.ADMIN_PASSWORD) return J({ ok: false, error: "Worker chưa có biến ADMIN_PASSWORD" }, 500);
       const ip = request.headers.get("CF-Connecting-IP") || "x";
       if (await KV.get("LOCKED_IP_" + ip)) {
-        return J({ ok: false, error: "Bạn đã nhập sai quá 10 lần. Tài khoản bị tạm khóa 30 phút!" }, 429);
+        return J({
+          ok: false,
+          error: "Bạn đã nhập sai quá 10 lần. Tài khoản bị tạm khóa 30 phút!"
+        }, 429);
       }
       const b = await body();
       if (!safeEq(String(b.password || ""), env.ADMIN_PASSWORD)) {
@@ -1734,23 +2191,38 @@ export default {
         if (newFails >= 10) {
           await KV.put("LOCKED_IP_" + ip, "1", { expirationTtl: 1800 });
           await KV.delete("FAIL_IP_" + ip);
-          return J({ ok: false, error: "Bạn đã nhập sai 10 lần. IP bị tạm khóa 30 phút!" }, 429);
+          return J({
+            ok: false,
+            error: "Bạn đã nhập sai 10 lần. IP bị tạm khóa 30 phút!"
+          }, 429);
         }
         await KV.put("FAIL_IP_" + ip, String(newFails), { expirationTtl: 1800 });
-        return J({ ok: false, error: `Sai mật khẩu! Bạn còn ${10 - newFails} lần thử.` }, 401);
+        return J({
+          ok: false,
+          error: `Sai mật khẩu! Bạn còn ${10 - newFails} lần thử.`
+        }, 401);
       }
       await Promise.all([KV.delete("FAIL_IP_" + ip), KV.delete("LOCKED_IP_" + ip)]);
       if (b.dev && b.dev.id) {
         const devs = arr(safeJson(await KV.get("ADMIN_DEVICES"), []));
-        if (!devs.find((d) => d.id === b.dev.id)) { devs.push({ id: String(b.dev.id).slice(0, 40), ua: String(b.dev.ua || "").slice(0, 80), ts: NOW() }); await KV.put("ADMIN_DEVICES", JSON.stringify(devs)); }
+        if (!devs.find((d) => d.id === b.dev.id)) {
+          devs.push({
+            id: String(b.dev.id).slice(0, 40),
+            ua: String(b.dev.ua || "").slice(0, 80),
+            ts: NOW()
+          });
+          await KV.put("ADMIN_DEVICES", JSON.stringify(devs));
+        }
       }
-      log("info", "auth", "Admin đăng nhập", String(b.dev && b.dev.id || "")); await flushLog(KV, log);
+      log("info", "auth", "Admin đăng nhập", String(b.dev && b.dev.id || ""));
+      await flushLog(KV, log);
       return J({ ok: true, token: await makeToken(env) });
     }
 
     // ================================================================ INTERNAL (D1 / web khác / cron ngoài)
     if (p === "/api/internal/order" && m === "GET") {
-      const bad = need(internal); if (bad) return bad;
+      const bad = need(internal);
+      if (bad) return bad;
       const targetId = normId(url.searchParams.get("id"));
       const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
       const sb = getSupabase(env, isTest);
@@ -1761,25 +2233,56 @@ export default {
           o = orders.find(x => x && normId(x.id) === targetId);
         } catch {}
       }
-      return o ? J({ ok: true, order: { id: o.id, email: o.email, totalVnd: o.totalVnd, totalCny: o.totalCny, method: o.method, pkgId: o.pkgId || "", pkgName: o.pkgName || "", createdTs: o.createdTs, orderType: o.orderType || "new", status: normStatus(o.status), workerUrl: o.workerUrl || "", pendingUpgrade: o.pendingUpgrade ? { amount: o.pendingUpgrade.amount, targetPkgId: o.pendingUpgrade.targetPkgId, method: o.pendingUpgrade.method || "" } : null } }) : J({ ok: false }, 404);
+      return o ? J({
+        ok: true,
+        order: {
+          id: o.id,
+          email: o.email,
+          totalVnd: o.totalVnd,
+          totalCny: o.totalCny,
+          method: o.method,
+          pkgId: o.pkgId || "",
+          pkgName: o.pkgName || "",
+          createdTs: o.createdTs,
+          orderType: o.orderType || "new",
+          status: normStatus(o.status),
+          workerUrl: o.workerUrl || "",
+          pendingUpgrade: o.pendingUpgrade ? {
+            amount: o.pendingUpgrade.amount,
+            targetPkgId: o.pendingUpgrade.targetPkgId,
+            method: o.pendingUpgrade.method || ""
+          } : null
+        }
+      }) : J({ ok: false }, 404);
     }
     if (p === "/api/internal/rename_order" && m === "POST") {
-      const bad = need(internal); if (bad) return bad;
+      const bad = need(internal);
+      if (bad) return bad;
       const b = await body(), st = await loadAll(KV, env), r = await applyRename(KV, st, b.from, b.to);
       if (r > 0) await persist(KV, st);
       return J({ ok: true, renamed: r });
     }
-    if (p === "/api/internal/cron" && m === "POST") { const bad = need(internal); if (bad) return bad; return J({ ok: true, details: await runCron(env, ctx, {}) }); }
+    if (p === "/api/internal/cron" && m === "POST") {
+      const bad = need(internal);
+      if (bad) return bad;
+      return J({ ok: true, details: await runCron(env, ctx, {}) });
+    }
 
     if (p === "/api/internal/auto_fulfill" && m === "POST") {
-      const bad = need(internal); if (bad) return bad;
+      const bad = need(internal);
+      if (bad) return bad;
       if (!(await acquire(KV))) return J({ ok: false, error: "Hệ thống đang bận", status: "locked" }, 429);
       try {
         const b = await body(), st = await loadAll(KV, env), me = getMe(url, env, st.cms);
         const sb = getSupabase(env, st.isTest);
         const ids = [...new Set(arr(b.orderIds).map(normId).filter(Boolean))];
         const upOrders = new Set(arr(b.upgrades).map((u) => normId(u.orderId)));
-        const results = { fulfilled: [], already_fulfilled: [], missing: [], errors: [] };
+        const results = {
+          fulfilled: [],
+          already_fulfilled: [],
+          missing: [],
+          errors: []
+        };
         if (!ids.length) return J({ ok: true, skipped: true });
         for (const oid of ids) {
           let o = st.orders.find((x) => x && normId(x.id) === oid);
@@ -1801,7 +2304,13 @@ export default {
               const d1Res = await d1(env, `/api/orders/${oid}`);
               if (d1Res.ok && d1Res.data && d1Res.data.order) {
                 const d1o = d1Res.data.order;
-                const d1Pk = PKGS[d1o.pkg_id] || PKGS.d1 || { n: "Gói VPN", d: "100GB", vnd: d1o.total_vnd, cny: 0, m: 1 };
+                const d1Pk = PKGS[d1o.pkg_id] || PKGS.d1 || {
+                  n: "Gói VPN",
+                  d: "100GB",
+                  vnd: d1o.total_vnd,
+                  cny: 0,
+                  m: 1
+                };
                 o = {
                   id: oid,
                   email: d1o.email || "",
@@ -1824,7 +2333,9 @@ export default {
                   workerUrl: d1o.worker_url || env.PUBLIC_WORKER_URL || url.origin,
                   nickname: "",
                   reason: "",
-                  info1: "", info2: "", info3: "",
+                  info1: "",
+                  info2: "",
+                  info3: "",
                   lockInfo: {},
                   sourceWeb: d1o.target_web || "Web 3",
                   orderType: d1o.order_type || "new"
@@ -1835,27 +2346,51 @@ export default {
               }
             } catch (errD1) {}
           }
-          if (!o) { results.missing.push(oid); log("warn", "fulfill", "D1 báo đã thanh toán nhưng không tìm thấy thông tin đơn", oid, oid); continue; }
+          if (!o) {
+            results.missing.push(oid);
+            log("warn", "fulfill", "D1 báo đã thanh toán nhưng không tìm thấy thông tin đơn", oid, oid);
+            continue;
+          }
           let kind = null;
-          if (normStatus(o.status) !== "success") { o.status = "success"; o.paidAt = NOW(); o.reason = ""; st.dO = true; }
+          if (normStatus(o.status) !== "success") {
+            o.status = "success";
+            o.paidAt = NOW();
+            o.reason = "";
+            st.dO = true;
+          }
           if (upOrders.has(oid)) {
-            if (o.pendingUpgrade) { applyUpgrade(o); st.dO = true; kind = "upgrade"; log("ok", "upgrade", "Nâng gói thành công", `${oid} → ${o.pkgName} ${o.pkgData}`, oid); }
+            if (o.pendingUpgrade) {
+              applyUpgrade(o);
+              st.dO = true;
+              kind = "upgrade";
+              log("ok", "upgrade", "Nâng gói thành công", `${oid} → ${o.pkgName} ${o.pkgData}`, oid);
+            }
             else log("warn", "upgrade", "D1 báo nâng gói nhưng không có yêu cầu chờ", oid, oid);
           }
           const r = fulfillOrder(st, o, me, log);
-          if (r === "error") { results.errors.push(oid); continue; }
+          if (r === "error") {
+            results.errors.push(oid);
+            continue;
+          }
           if (sb) await sb.upsert(o).catch(() => {});
           // Lưu trạng thái thành công và link VPN vào KV cache để Index tra cứu ra ngay
           await KV.put("PENDING_ORD_" + o.id, JSON.stringify(o), { expirationTtl: 86400 });
           // Đồng bộ vào ALL_ORDERS dự phòng của KV
           const kvAll = arr(safeJson(await KV.get("ALL_ORDERS"), []));
           const idxAll = kvAll.findIndex(x => x && normId(x.id) === normId(o.id));
-          if (idxAll >= 0) kvAll[idxAll] = o; else kvAll.unshift(o);
+          if (idxAll >= 0) kvAll[idxAll] = o;
+          else kvAll.unshift(o);
           await KV.put("ALL_ORDERS", JSON.stringify(kvAll.slice(0, 3000)));
 
           const mailKind = o.orderType === "renew" ? "renew" : "new";
-          if (r === "new" || r === "renew") { results.fulfilled.push(oid); mailFor(ctx, env, st, o, mailKind, me); }
-          else { results.already_fulfilled.push(oid); if (kind === "upgrade") mailFor(ctx, env, st, o, "upgrade", me); }
+          if (r === "new" || r === "renew") {
+            results.fulfilled.push(oid);
+            mailFor(ctx, env, st, o, mailKind, me);
+          }
+          else {
+            results.already_fulfilled.push(oid);
+            if (kind === "upgrade") mailFor(ctx, env, st, o, "upgrade", me);
+          }
         }
         if (st.dL || st.dP) await persist(KV, st);
         await flushLog(KV, log);
@@ -1864,13 +2399,21 @@ export default {
           ctx.waitUntil(runTelegramBackup(env, `Đơn hàng #${done[0]} thanh toán tự động thành công (Auto Fulfill)`));
         }
         return J({ ok: true, results });
-      } catch (e) { return J({ ok: false, error: (e && e.message) || "Auto fulfillment error" }, 500); }
-      finally { await KV.delete("GLOBAL_FULFILL_LOCK"); }
+      } catch (e) {
+        return J({
+          ok: false,
+          error: (e && e.message) || "Auto fulfillment error"
+        }, 500);
+      }
+      finally {
+        await KV.delete("GLOBAL_FULFILL_LOCK");
+      }
     }
 
     // link + push_data_batch: admin hoặc internal (update_sub.py gửi kèm Bearer WEB_API_SECRET2)
     if (p === "/api/links") {
-      const bad = need(admin || internal); if (bad) return bad;
+      const bad = need(admin || internal);
+      if (bad) return bad;
       if (m === "GET") return RAW((await KV.get("ALL_LINKS")) || "[]");
       if (m === "POST") {
         try {
@@ -1880,18 +2423,30 @@ export default {
           await KV.put("ALL_LINKS", JSON.stringify(links));
           await KV.put("GLOBAL_ROUTER", JSON.stringify(buildGlobalRouter(links, [])));
           return OK();
-        } catch (e) { return J({ error: (e && e.message) || "Links error" }, 400); }
+        } catch (e) {
+          return J({ error: (e && e.message) || "Links error" }, 400);
+        }
       }
     }
     if (p === "/api/push_data_batch" && m === "POST") {
-      const bad = need(admin || internal); if (bad) return bad;
-      try { const t = await request.text(); if (!t) return J({ error: "Empty" }, 400); JSON.parse(t); await KV.put("GLOBAL_SUBS", t); return OK(); }
-      catch (e) { return J({ error: (e && e.message) || "Push error" }, 500); }
+      const bad = need(admin || internal);
+      if (bad) return bad;
+      try {
+        const t = await request.text();
+        if (!t) return J({ error: "Empty" }, 400);
+        JSON.parse(t);
+        await KV.put("GLOBAL_SUBS", t);
+        return OK();
+      }
+      catch (e) {
+        return J({ error: (e && e.message) || "Push error" }, 500);
+      }
     }
 
-// ================================================================ ADMIN
+    // ================================================================ ADMIN
     if (p.startsWith("/api/admin/") || ["/api/orders", "/api/deadlinks", "/api/cms", "/api/devices", "/api/data_requests", "/api/link_pool", "/api/guides", "/api/gc", "/api/trigger_github"].includes(p)) {
-      const bad = need(admin); if (bad) return bad;
+      const bad = need(admin);
+      if (bad) return bad;
       const st0 = () => loadAll(KV, env);
       // Xóa triệt để 1 link nguồn khỏi KV (LINK_POOL, GLOBAL_SUBS, ALL_LINKS neo #1, GLOBAL_ROUTER)
       if (p === "/api/admin/source/delete" && m === "POST") {
@@ -1913,7 +2468,12 @@ export default {
 
         // Xóa token trong GLOBAL_SUBS
         let subsObj = safeJson(await KV.get("GLOBAL_SUBS"), {});
-        const getTokSafe = (u) => { try { return u ? getParam(new URL(u), "OwO", "token") : null; } catch { return null; } };
+        const getTokSafe = (u) => {
+          try {
+            return u ? getParam(new URL(u), "OwO", "token") : null;
+          } catch { return null;
+          }
+        };
         const tok1 = getTokSafe(pUrl1);
         const tok2 = getTokSafe(pUrl2);
         if (tok1 && subsObj[tok1]) delete subsObj[tok1];
@@ -1935,7 +2495,12 @@ export default {
         let subsObj = safeJson(await KV.get("GLOBAL_SUBS"), {});
         let deletedCount = 0;
 
-        const getTokSafe = (u) => { try { return u ? getParam(new URL(u), "OwO", "token") : null; } catch { return null; } };
+        const getTokSafe = (u) => {
+          try {
+            return u ? getParam(new URL(u), "OwO", "token") : null;
+          } catch { return null;
+          }
+        };
         const unusedPool = st.pool.filter(p => {
           if (!p || !p.url) return false;
           const activeLinks = st.links.filter(l => l && String(l.linkIndex) !== "1" && (l.orig === p.url || l.orig2 === p.url));
@@ -1970,8 +2535,13 @@ export default {
         const idx = st.links.findIndex((l) => l && ((b.id && l.id === b.id) || (!b.id && b.masked && l.masked === b.masked)));
         const link = idx >= 0 ? st.links[idx] : (b.link && typeof b.link === "object" ? b.link : null), lid = (link && link.id) || b.id;
         if (!link || !lid) return J({ ok: false, error: "Không tìm thấy link" }, 404);
-        const tb = await loadTombs(KV); if (!tb.some((t) => t.id === lid)) tb.push({ id: lid, ts: Date.now() }); await saveTombs(KV, tb);
-        if (idx >= 0) { st.links.splice(idx, 1); st.dL = true; }
+        const tb = await loadTombs(KV);
+        if (!tb.some((t) => t.id === lid)) tb.push({ id: lid, ts: Date.now() });
+        await saveTombs(KV, tb);
+        if (idx >= 0) {
+          st.links.splice(idx, 1);
+          st.dL = true;
+        }
         const masked = link.masked || b.masked;
         const touchedOrders = masked ? clearMasked(st, [masked]) : [];
         if (touchedOrders.length) {
@@ -1982,9 +2552,15 @@ export default {
         }
         await persist(KV, st);
         let dead = arr(safeJson(await KV.get("DEAD_LINKS"), [])).filter((d) => d && d.id !== lid);
-        dead.unshift({ ...(b.link || {}), ...link, deadTs: NOW(), deadDate: new Date(NOW()).toISOString() });
+        dead.unshift({
+          ...(b.link || {}),
+          ...link,
+          deadTs: NOW(),
+          deadDate: new Date(NOW()).toISOString()
+        });
         await KV.put("DEAD_LINKS", JSON.stringify(dead));
-        log("info", "admin", "Xóa link (cục bộ)", `${link.email || ""} · gỡ ${touchedOrders.length} đơn`, lid); await flushLog(KV, log);
+        log("info", "admin", "Xóa link (cục bộ)", `${link.email || ""} · gỡ ${touchedOrders.length} đơn`, lid);
+        await flushLog(KV, log);
         return J({ ok: true, cleared: touchedOrders.length });
       }
       if (p === "/api/admin/poll") {
@@ -2027,9 +2603,23 @@ export default {
       }
       if (p === "/api/admin/status") {
         const cron = safeJson(await KV.get("CRON_LAST_RUN"), null), r = await d1(env, "/api/admin/logs?limit=1");
-        return J({ ok: true, cron, d1: r.ok, d1Error: r.ok ? "" : (r.data && r.data.error) || "HTTP " + r.status, web: getMe(url, env, {}).n, hasPassword: !!env.ADMIN_PASSWORD, hasSecret2: !!env.WEB_API_SECRET2, cronEveryMin: 15 });
+        return J({
+          ok: true,
+          cron,
+          d1: r.ok,
+          d1Error: r.ok ? "" : (r.data && r.data.error) || "HTTP " + r.status,
+          web: getMe(url, env, {}).n,
+          hasPassword: !!env.ADMIN_PASSWORD,
+          hasSecret2: !!env.WEB_API_SECRET2,
+          cronEveryMin: 15
+        });
       }
-      if (p === "/api/admin/log" && m === "POST") { const b = await body(); log(["ok", "warn", "error"].includes(b.lvl) ? b.lvl : "info", /^Gửi mail/.test(String(b.act || "")) ? "mail" : "admin", String(b.act || "").slice(0, 80), b.msg, b.ref); await flushLog(KV, log); return OK(); }
+      if (p === "/api/admin/log" && m === "POST") {
+        const b = await body();
+        log(["ok", "warn", "error"].includes(b.lvl) ? b.lvl : "info", /^Gửi mail/.test(String(b.act || "")) ? "mail" : "admin", String(b.act || "").slice(0, 80), b.msg, b.ref);
+        await flushLog(KV, log);
+        return OK();
+      }
       // Endpoint ghi nhật ký gom khối (Batching 1 lần ghi KV) từ Admin UI
       if (p === "/api/admin/log_batch" && m === "POST") {
         const b = await body();
@@ -2047,23 +2637,27 @@ export default {
         links = notTomb(links, tb);
         const pool = arr(b.pool);
         for (const pl of pool) pl.used = links.filter((l) => l && (l.orig === pl.url || l.orig2 === pl.url)).length;
-        await Promise.all([
-          KV.put("ALL_LINKS", JSON.stringify(links)),
-          KV.put("LINK_POOL", JSON.stringify(pool)),
-          KV.put("GLOBAL_ROUTER", JSON.stringify(buildGlobalRouter(links, [])))
-        ]);
+        await Promise.all([KV.put("ALL_LINKS", JSON.stringify(links)), KV.put("LINK_POOL", JSON.stringify(pool)), KV.put("GLOBAL_ROUTER", JSON.stringify(buildGlobalRouter(links, [])))]);
         return OK();
       }
 
       if (p === "/api/admin/logs") {
         const [w, r] = await Promise.all([KV.get("SYS_LOG"), d1(env, "/api/admin/logs?limit=200")]);
-        return J({ ok: true, worker: arr(safeJson(w, [])), d1: r.ok ? arr(r.data && r.data.logs) : [] });
+        return J({
+          ok: true,
+          worker: arr(safeJson(w, [])),
+          d1: r.ok ? arr(r.data && r.data.logs) : []
+        });
       }
 
       if (p === "/api/admin/cron" && m === "POST") {
         try {
           const b = await body();
-          const details = await runCron(env, ctx, { force: !!b.force, sim: b.simMode === undefined ? undefined : !!b.simMode, simOffset: b.simOffset });
+          const details = await runCron(env, ctx, {
+            force: !!b.force,
+            sim: b.simMode === undefined ? undefined : !!b.simMode,
+            simOffset: b.simOffset
+          });
           return J({ ok: true, details });
         } catch (e) {
           return J({ ok: false, error: e.message || String(e) }, 500);
@@ -2110,7 +2704,7 @@ export default {
         }
         return J({ ok: true, field: me.field, count: ids.length, details });
       }
-      
+
       // Endpoint nhận lệnh bắn mail từ Admin UI (nút thủ công, nút nhắc Zalo, nút gửi dung lượng...)
       if (p === "/api/admin/send_mail" && m === "POST") {
         const b = await body();
@@ -2142,10 +2736,7 @@ export default {
         return J(res);
       }
       if (p === "/api/admin/telegram/reset_stt" && m === "POST") {
-        await Promise.all([
-          KV.delete("TG_BACKUP_PROD_LAST_STT"),
-          KV.delete("TG_BACKUP_TEST_LAST_STT")
-        ]);
+        await Promise.all([KV.delete("TG_BACKUP_PROD_LAST_STT"), KV.delete("TG_BACKUP_TEST_LAST_STT")]);
         log("warn", "admin", "Reset STT Telegram Backup về 01");
         await flushLog(KV, log);
         return J({ ok: true });
@@ -2158,12 +2749,14 @@ export default {
       if (delTxM && m === "POST") {
         const id = Number(delTxM[1]);
         const r = await d1(env, "/api/admin/transactions/delete", { method: "POST", body: { ids: [id] } });
-        log(r.ok ? "warn" : "error", "admin", "Xóa giao dịch D1", `#${id} ${r.ok ? "" : (r.data && r.data.error) || r.status}`); await flushLog(KV, log);
+        log(r.ok ? "warn" : "error", "admin", "Xóa giao dịch D1", `#${id} ${r.ok ? "" : (r.data && r.data.error) || r.status}`);
+        await flushLog(KV, log);
         return J(r.data || { ok: false }, r.ok ? 200 : r.status || 502);
       }
       if (p === "/api/admin/tx/delete" && m === "POST") {
         const b = await body(), r = await d1(env, "/api/admin/transactions/delete", { method: "POST", body: { ids: b.ids } });
-        log(r.ok ? "warn" : "error", "admin", "Xóa giao dịch D1", `${arr(b.ids).join(",")} ${r.ok ? "" : (r.data && r.data.error) || r.status}`); await flushLog(KV, log);
+        log(r.ok ? "warn" : "error", "admin", "Xóa giao dịch D1", `${arr(b.ids).join(",")} ${r.ok ? "" : (r.data && r.data.error) || r.status}`);
+        await flushLog(KV, log);
         return J(r.data || { ok: false }, r.ok ? 200 : r.status || 502);
       }
 
@@ -2171,7 +2764,12 @@ export default {
       if (p === "/api/admin/relink" && m === "POST") {
         const b = await body(), st = await st0(), me = getMe(url, env, st.cms);
         const myNum = Number(me.field.slice(4));
-        const opts = { fields: [myNum], scope: b.scope === "all" ? "all" : "dead", expired: b.expired || "all", includeManual: !!b.includeManual };
+        const opts = {
+          fields: [myNum],
+          scope: b.scope === "all" ? "all" : "dead",
+          expired: b.expired || "all",
+          includeManual: !!b.includeManual
+        };
         const picks = new Set(arr(b.picks).map((x) => x.id + "|" + x.field)), apply = b.mode === "apply";
         if (apply) {
           const actionReason = b.action === "remap" ? "Áp dụng Map lại link" : "Áp dụng Làm sạch ô Info";
@@ -2186,8 +2784,11 @@ export default {
           const sb = getSupabase(env, isTest);
           for (const it of items) {
             if (!picks.has(it.id + "|" + it.field)) continue;
-            const od = st.orders.find((x) => x && normId(x.id) === normId(it.id)); if (!od) continue;
-            od[it.field] = it.to; if (od.lockInfo) delete od.lockInfo[it.field]; n++;
+            const od = st.orders.find((x) => x && normId(x.id) === normId(it.id));
+            if (!od) continue;
+            od[it.field] = it.to;
+            if (od.lockInfo) delete od.lockInfo[it.field];
+            n++;
             appliedItems.push({ id: od.id, field: it.field, to: it.to });
             const lTarget = st.links.find(l => l && l.masked === it.to);
             if (lTarget) {
@@ -2203,7 +2804,8 @@ export default {
             if (sb) await sb.upsert(od);
           }
           if (st.dL) await persist(KV, st);
-          log("ok", "admin", "Map lại link vào đơn hàng (cục bộ)", `${n} ô`); await flushLog(KV, log);
+          log("ok", "admin", "Map lại link vào đơn hàng (cục bộ)", `${n} ô`);
+          await flushLog(KV, log);
           return J({ ok: true, applied: n, field: me.field, items: appliedItems });
         }
         const { items } = await relinkScan(env, url, st, opts);
@@ -2212,24 +2814,33 @@ export default {
         const appliedItems = [];
         const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
         const sb = getSupabase(env, isTest);
-        for (const it of items) { 
-          if (!picks.has(it.id + "|" + it.field)) continue; 
-          const od = st.orders.find((x) => x && normId(x.id) === normId(it.id)); if (!od) continue; 
-          od[it.field] = ""; if (od.lockInfo) delete od.lockInfo[it.field]; n++; 
+        for (const it of items) {
+          if (!picks.has(it.id + "|" + it.field)) continue;
+          const od = st.orders.find((x) => x && normId(x.id) === normId(it.id));
+          if (!od) continue;
+          od[it.field] = "";
+          if (od.lockInfo) delete od.lockInfo[it.field];
+          n++;
           appliedItems.push({ id: od.id, field: it.field, to: "" });
           if (sb) await sb.upsert(od);
         }
-        log("ok", "admin", "Làm sạch URL trong ô info của đơn (cục bộ)", `${n} ô`); await flushLog(KV, log);
+        log("ok", "admin", "Làm sạch URL trong ô info của đơn (cục bộ)", `${n} ô`);
+        await flushLog(KV, log);
         return J({ ok: true, applied: n, field: me.field, items: appliedItems });
       }
 
-      // Giao dịch D1 (worker giữ secret, trình duyệt không cần biết) 
+      // Giao dịch D1 (worker giữ secret, trình duyệt không cần biết)
       if (p === "/api/admin/tx" && m === "GET") {
         const r = await d1(env, "/api/admin/transactions" + url.search);
         if (!r.ok) {
           const detail = (r.data && (r.data.details || r.data.error)) || (r.status === 0 ? "Không thể kết nối đến D1 Payment Webhook" : `D1 trả về lỗi HTTP ${r.status}`);
           const errMsg = `[D1 /api/admin/transactions] ${detail}`;
-          return J({ ok: false, error: errMsg, transactions: [], status: r.status }, r.status >= 400 && r.status < 600 ? r.status : 502);
+          return J({
+            ok: false,
+            error: errMsg,
+            transactions: [],
+            status: r.status
+          }, r.status >= 400 && r.status < 600 ? r.status : 502);
         }
         return J(r.data || { ok: true, transactions: [] }, 200);
       }
@@ -2255,7 +2866,7 @@ export default {
         return J(r.data || { ok: false }, r.ok ? 200 : r.status || 502);
       }
 
-            // ===== Đơn hàng: API danh sách phân trang, tìm kiếm & chi tiết
+      // ===== Đơn hàng: API danh sách phân trang, tìm kiếm & chi tiết
       if (p === "/api/admin/orders" && m === "GET") {
         const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
         const sb = getSupabase(env, isTest);
@@ -2266,7 +2877,14 @@ export default {
         if (sb) {
           try {
             const res = await sb.listOrders({ status, search, limit, offset });
-            return J({ ok: true, orders: res.data, count: res.count, limit, offset, source: isTest ? "supabase_test" : "supabase_prod" });
+            return J({
+              ok: true,
+              orders: res.data,
+              count: res.count,
+              limit,
+              offset,
+              source: isTest ? "supabase_test" : "supabase_prod"
+            });
           } catch (e) {
             if (!isTest) {
               const all = arr(safeJson(await KV.get("ALL_ORDERS"), []));
@@ -2277,7 +2895,15 @@ export default {
                 filtered = filtered.filter(o => (o.id && o.id.toLowerCase().includes(s)) || (o.email && o.email.toLowerCase().includes(s)) || (o.nickname && o.nickname.toLowerCase().includes(s)));
               }
               const paged = filtered.slice(offset, offset + limit);
-              return J({ ok: true, orders: paged, count: filtered.length, limit, offset, source: "kv_fallback", sbError: e.message || String(e) });
+              return J({
+                ok: true,
+                orders: paged,
+                count: filtered.length,
+                limit,
+                offset,
+                source: "kv_fallback",
+                sbError: e.message || String(e)
+              });
             }
             return J({ ok: false, error: e.message || String(e) }, 500);
           }
@@ -2290,7 +2916,15 @@ export default {
           filtered = filtered.filter(o => (o.id && o.id.toLowerCase().includes(s)) || (o.email && o.email.toLowerCase().includes(s)) || (o.nickname && o.nickname.toLowerCase().includes(s)));
         }
         const paged = filtered.slice(offset, offset + limit);
-        return J({ ok: true, orders: paged, count: filtered.length, limit, offset, source: "kv", sbError: "Chưa cấu hình SUPABASE_KEY / SUPABASE_URL" });
+        return J({
+          ok: true,
+          orders: paged,
+          count: filtered.length,
+          limit,
+          offset,
+          source: "kv",
+          sbError: "Chưa cấu hình SUPABASE_KEY / SUPABASE_URL"
+        });
       }
 
       const ordDetailMatch = p.match(/^\/api\/admin\/orders\/([A-Za-z0-9_-]+)$/);
@@ -2301,7 +2935,11 @@ export default {
         if (sb) {
           try {
             const order = await sb.getOrder(oid);
-            if (order) return J({ ok: true, order, source: isTest ? "supabase_test" : "supabase_prod" });
+            if (order) return J({
+              ok: true,
+              order,
+              source: isTest ? "supabase_test" : "supabase_prod"
+            });
           } catch (e) {}
         }
         const st = await loadAll(KV, env);
@@ -2317,7 +2955,8 @@ export default {
       if (p === "/api/admin/order" && m === "POST") {
         const b = await body(), id = normId(b.id);
         const st = await st0(), me = getMe(url, env, st.cms), s = st.cms.settings || {};
-        let o = st.orders.find((x) => x && normId(x.id) === id); const isNew = !o;
+        let o = st.orders.find((x) => x && normId(x.id) === id);
+        const isNew = !o;
         if (isNew && !/^DH[A-Z0-9]{10}$/.test(id)) return J({ ok: false, error: "Mã đơn phải dạng DH + 10 ký tự" }, 400);
         const lockAuto = b.lockAuto === true, lockExp = !isNew && (b.lockExpiry === true || !!s.lockExpiry);
         let renamedFrom = "", nid = id;
@@ -2326,12 +2965,37 @@ export default {
           if (!/^DH[A-Z0-9]{10}$/.test(nid)) return J({ ok: false, error: "Mã đơn mới phải dạng DH + 10 ký tự" }, 400);
           const r = await applyRename(KV, st, id, nid);
           if (r < 0) return J({ ok: false, error: "Mã đơn mới đã tồn tại" }, 409);
-          renamedFrom = id; o = st.orders.find((x) => x && normId(x.id) === nid);
+          renamedFrom = id;
+          o = st.orders.find((x) => x && normId(x.id) === nid);
           log("warn", "admin", "Đổi mã đơn", `${id} → ${nid}`, nid);
         }
         if (isNew) {
           const now = NOW();
-          o = { id, createdTs: now, date: fmtBank(now), dateCreated: dmy(now), orderType: "new", email: "", nickname: "", zalo: "", method: "Ngân hàng VN", pkg: "", pkgName: "", pkgData: "", totalVnd: "", totalCny: "", days: "", expDate: "", status: "pending", info1: "", info2: "", info3: "", reason: "", needSupport: false, lockInfo: {} };
+          o = {
+            id,
+            createdTs: now,
+            date: fmtBank(now),
+            dateCreated: dmy(now),
+            orderType: "new",
+            email: "",
+            nickname: "",
+            zalo: "",
+            method: "Ngân hàng VN",
+            pkg: "",
+            pkgName: "",
+            pkgData: "",
+            totalVnd: "",
+            totalCny: "",
+            days: "",
+            expDate: "",
+            status: "pending",
+            info1: "",
+            info2: "",
+            info3: "",
+            reason: "",
+            needSupport: false,
+            lockInfo: {}
+          };
           st.orders.unshift(o);
         }
         const prevExp = o.expDate, prevDays = o.days, hadPrevDays = "days" in o;
@@ -2339,8 +3003,8 @@ export default {
         for (const k of ["email", "nickname", "zalo", "method", "status", "expDate", "days", "reason", "info1", "info2", "info3", "totalVnd", "totalCny", "qty"]) {
           if (b[k] === undefined) continue;
           if (lockExp && (k === "expDate" || k === "days")) continue;
-          if (k.startsWith("info")) { 
-            o[k] = String(b[k]); 
+          if (k.startsWith("info")) {
+            o[k] = String(b[k]);
             // Nếu bật Sửa tay: bất kỳ ô link nào có giá trị được nhập tay đều tự động khóa lockInfo để hệ thống không ghi đè
             if (isManualEdit && o[k]) {
               (o.lockInfo = o.lockInfo || {})[k] = true;
@@ -2348,20 +3012,60 @@ export default {
               // Nếu admin chủ động xóa trắng ô đó thì mở khóa ô đó
               delete o.lockInfo[k];
             }
-            continue; 
+            continue;
           }
-          if (k === "totalVnd" || k === "totalCny" || k === "days" || k === "qty") { o[k] = numOrEmpty(b[k]); continue; }
+          if (k === "totalVnd" || k === "totalCny" || k === "days" || k === "qty") {
+            o[k] = numOrEmpty(b[k]);
+            continue;
+          }
           o[k] = b[k];
         }
         for (const k of arr(b.unlockInfo)) if (/^info[123]$/.test(k) && o.lockInfo) delete o.lockInfo[k];
-        if (b.pkgId && PKGS[b.pkgId]) { const pk = PKGS[b.pkgId]; Object.assign(o, { pkgId: b.pkgId, pkgName: pk.n, pkgData: pk.d, pkg: pkgStr(pk) }); }
+        if (b.pkgId && PKGS[b.pkgId]) {
+          const pk = PKGS[b.pkgId];
+          Object.assign(o, {
+            pkgId: b.pkgId,
+            pkgName: pk.n,
+            pkgData: pk.d,
+            pkg: pkgStr(pk)
+          });
+        }
         if (b.expDate && !lockExp) o.expFinal = true;
         const u = b.upg;
-        if (u === "verify") { o.isUpgrade = true; o.pendingUpgrade = o.pendingUpgrade || { ts: NOW(), amount: 0 }; o.upgradeStatus = "pending"; }
-        else if (u === "success") { if (o.pendingUpgrade) { applyUpgrade(o); ctx.waitUntil(d1(env, "/api/admin/upgrades/resolve", { method: "POST", body: { orderId: o.id, status: "success" } })); } else { o.isUpgrade = true; o.upgradeStatus = "success"; } }
-        else if (u === "reject") { o.isUpgrade = true; o.pendingUpgrade = null; o.upgradeStatus = "failed"; ctx.waitUntil(d1(env, "/api/admin/upgrades/resolve", { method: "POST", body: { orderId: o.id, status: "cancelled" } })); }
-        else if (u === "none") { o.isUpgrade = false; o.pendingUpgrade = null; o.upgradeStatus = null; }
-        if (lockExp) { o.expDate = prevExp; if (hadPrevDays) o.days = prevDays; else delete o.days; o.expFinal = true; }
+        if (u === "verify") {
+          o.isUpgrade = true;
+          o.pendingUpgrade = o.pendingUpgrade || { ts: NOW(), amount: 0 };
+          o.upgradeStatus = "pending";
+        }
+        else if (u === "success") {
+          if (o.pendingUpgrade) {
+            applyUpgrade(o);
+            ctx.waitUntil(d1(env, "/api/admin/upgrades/resolve", { method: "POST", body: { orderId: o.id, status: "success" } }));
+          } else {
+            o.isUpgrade = true;
+            o.upgradeStatus = "success";
+          }
+        }
+        else if (u === "reject") {
+          o.isUpgrade = true;
+          o.pendingUpgrade = null;
+          o.upgradeStatus = "failed";
+          ctx.waitUntil(d1(env, "/api/admin/upgrades/resolve", {
+            method: "POST",
+            body: { orderId: o.id, status: "cancelled" }
+          }));
+        }
+        else if (u === "none") {
+          o.isUpgrade = false;
+          o.pendingUpgrade = null;
+          o.upgradeStatus = null;
+        }
+        if (lockExp) {
+          o.expDate = prevExp;
+          if (hadPrevDays) o.days = prevDays;
+          else delete o.days;
+          o.expFinal = true;
+        }
         let kind = null;
         if (normStatus(o.status) === "success") {
           o.status = "success";
@@ -2380,7 +3084,10 @@ export default {
         const stNorm = normStatus(o.status);
         if (stNorm === "pending") {
           for (const l of st.links) {
-            if (l && normId(l.orderId) === normId(o.id) && !l.isLocked) { lockLink(l); st.dL = true; }
+            if (l && normId(l.orderId) === normId(o.id) && !l.isLocked) {
+              lockLink(l);
+              st.dL = true;
+            }
           }
         } else if (stNorm === "failed") {
           const before = st.links.length;
@@ -2393,19 +3100,25 @@ export default {
           if (renamedFrom) await sb.delete(renamedFrom, renamedFrom).catch(() => {});
           await sb.upsert(o).catch(() => {});
         }
-        log("info", "admin", "Lưu đơn", `${o.id} → ${o.status}${kind ? " / " + kind : ""}${lockAuto ? " [khóa fulfillment]" : ""}${isManualEdit ? " [sửa tay]" : ""}${lockExp ? " [khóa hạn]" : ""}`, o.id); await flushLog(KV, log);
+        log("info", "admin", "Lưu đơn", `${o.id} → ${o.status}${kind ? " / " + kind : ""}${lockAuto ? " [khóa fulfillment]" : ""}${isManualEdit ? " [sửa tay]" : ""}${lockExp ? " [khóa hạn]" : ""}`, o.id);
+        await flushLog(KV, log);
         if (stNorm === "success" && b.sendMail === true) mailFor(ctx, env, st, o, "new", me);
         if (renamedFrom) {
           if (stNorm === "pending" && isBankMethod(o.method)) ctx.waitUntil(d1Register(env, url, o, o.orderType || "new"));
         }
-        return J({ ok: true, order: o, kind, renamedFrom: renamedFrom || undefined });
+        return J({
+          ok: true,
+          order: o,
+          kind,
+          renamedFrom: renamedFrom || undefined
+        });
       }
       if (p === "/api/admin/order" && m === "DELETE") {
         const rawParamId = String(url.searchParams.get("id") || "").trim();
         const id = normId(rawParamId), st = await st0();
         const oTarget = st.orders.find((x) => x && (normId(x.id) === id || x.id === rawParamId));
         const rawId = oTarget ? oTarget.id : rawParamId;
-        
+
         // Thu hồi và chuyển tất cả link sub của đơn này sang DEAD_LINKS
         const orderLinks = st.links.filter((l) => l && (normId(l.orderId) === id || (oTarget && [oTarget.info1, oTarget.info2, oTarget.info3].includes(l.masked))));
         if (orderLinks.length) {
@@ -2415,7 +3128,11 @@ export default {
             lockLink(l);
             if (l.id && !tb.some((t) => t.id === l.id)) tb.push({ id: l.id, ts: Date.now() });
             dead = dead.filter((d) => d && d.id !== l.id);
-            dead.unshift({ ...l, deadTs: NOW(), deadDate: new Date(NOW()).toISOString() });
+            dead.unshift({
+              ...l,
+              deadTs: NOW(),
+              deadDate: new Date(NOW()).toISOString()
+            });
           }
           await saveTombs(KV, tb);
           await KV.put("DEAD_LINKS", JSON.stringify(dead));
@@ -2432,7 +3149,9 @@ export default {
         const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
         const sb = getSupabase(env, isTest);
         if (sb) {
-          try { await sb.delete(id, rawId); } catch {}
+          try {
+            await sb.delete(id, rawId);
+          } catch {}
         }
 
         log("warn", "admin", "Xóa đơn & Thu hồi Link", `${rawId} (${id}) · Thu hồi ${orderLinks.length} link sub`, id);
@@ -2454,13 +3173,16 @@ export default {
             if (!rawTs) continue;
             const finalTs = parsedTs || rawTs;
             const wantStr = fmt ? fmt(x, finalTs) : null;
-            
+
             const textMismatch = wantStr && x[field] !== wantStr;
             const tsMismatch = tsField && (!x[tsField] || Math.abs(Number(x[tsField]) - finalTs) > 60000);
-            
+
             if (textMismatch || tsMismatch) {
               if (sample.length < 3) sample.push(`${src ?? "—"}  →  ${wantStr || finalTs}`);
-              if (apply) { if (tsField) x[tsField] = finalTs; if (wantStr) x[field] = wantStr; }
+              if (apply) {
+                if (tsField) x[tsField] = finalTs;
+                if (wantStr) x[field] = wantStr;
+              }
               n++;
             }
           }
@@ -2486,30 +3208,42 @@ export default {
         }
         rep["Link sub (HSD + giờ tạo)"] = { changed: lChanged, total: st.links.length, sample: lSample };
 
-        const dead = arr(safeJson(await KV.get("DEAD_LINKS"), [])); fix(dead, "Đã xóa", "deadDate", "deadTs", false);
-        const devs = arr(safeJson(await KV.get("ADMIN_DEVICES"), [])); fix(devs, "Thiết bị", "date", "ts", fDate);
-        const drs = arr(safeJson(await KV.get("ALL_DATA_REQUESTS"), [])); fix(drs, "Yêu cầu dung lượng", "date", "ts", fDate);
+        const dead = arr(safeJson(await KV.get("DEAD_LINKS"), []));
+        fix(dead, "Đã xóa", "deadDate", "deadTs", false);
+        const devs = arr(safeJson(await KV.get("ADMIN_DEVICES"), []));
+        fix(devs, "Thiết bị", "date", "ts", fDate);
+        const drs = arr(safeJson(await KV.get("ALL_DATA_REQUESTS"), []));
+        fix(drs, "Yêu cầu dung lượng", "date", "ts", fDate);
         if (apply) {
-          const tb = await loadTombs(KV); const links = notTomb(st.links, tb);
+          const tb = await loadTombs(KV);
+          const links = notTomb(st.links, tb);
           await Promise.all([KV.put("ALL_LINKS", JSON.stringify(links)), KV.put("DEAD_LINKS", JSON.stringify(dead)), KV.put("ADMIN_DEVICES", JSON.stringify(devs)), KV.put("ALL_DATA_REQUESTS", JSON.stringify(drs))]);
           await KV.put("GLOBAL_ROUTER", JSON.stringify(buildGlobalRouter(links, st.orders)));
-          log("ok", "admin", "Chuẩn hóa định dạng thời gian", JSON.stringify(Object.fromEntries(Object.entries(rep).map(([k, v]) => [k, v.changed])))); await flushLog(KV, log);
+          log("ok", "admin", "Chuẩn hóa định dạng thời gian", JSON.stringify(Object.fromEntries(Object.entries(rep).map(([k, v]) => [k, v.changed]))));
+          await flushLog(KV, log);
         }
         return J({ ok: true, applied: apply, report: rep });
       }
 
       if (p === "/api/admin/migrate_pkg" && m === "POST") {
-        const b = await body(), apply = !!b.apply, st = await st0(); let n = 0, old = 0; const sample = [];
+        const b = await body(), apply = !!b.apply, st = await st0();
+        let n = 0, old = 0;
+        const sample = [];
         const modifiedOrders = [];
         for (const o of st.orders) {
           if (!o) continue;
-          const d = detectPkg(o); if (!d.id) continue;
+          const d = detectPkg(o);
+          if (!d.id) continue;
           const pk = PKGS[d.id], want = pkgStr(pk), qty = Number(o.qty) || d.qty || (Number(o.days) > 0 ? Math.max(1, Math.round(Number(o.days) / 30)) : 1);
           if (pk.old) old++;
           if (o.pkg !== want || o.pkgId !== d.id || !o.qty) {
             if (sample.length < 5) sample.push(`${o.pkg || "—"}  →  ${want}${o.qty ? "" : " · x" + qty}`);
             if (apply) {
-              o.pkgId = d.id; o.pkg = want; o.pkgName = pk.n; o.pkgData = pk.d; if (!o.qty) o.qty = qty;
+              o.pkgId = d.id;
+              o.pkg = want;
+              o.pkgName = pk.n;
+              o.pkgData = pk.d;
+              if (!o.qty) o.qty = qty;
               modifiedOrders.push(o);
             }
             n++;
@@ -2526,7 +3260,14 @@ export default {
           log("ok", "admin", "Chuẩn hóa hiển thị gói", `Đã lưu ${modifiedOrders.length} đơn vào Supabase`);
           await flushLog(KV, log);
         }
-        return J({ ok: true, applied: apply, changed: n, total: st.orders.length, oldPrice: old, sample });
+        return J({
+          ok: true,
+          applied: apply,
+          changed: n,
+          total: st.orders.length,
+          oldPrice: old,
+          sample
+        });
       }
 
       if (p === "/api/trigger_github" && m === "POST") {
@@ -2534,62 +3275,108 @@ export default {
           const { repo, workflow } = await body();
           if (!env.GH_PAT) return J({ error: "Chưa cấu hình GH_PAT!" }, 500);
           if (!repo || !workflow) return J({ error: "Thiếu repo hoặc workflow!" }, 400);
-          const r = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/${workflow}/dispatches`, { method: "POST", headers: { Accept: "application/vnd.github+json", Authorization: `Bearer ${env.GH_PAT}`, "User-Agent": "VPN-TrinhHg-Cloudflare-Worker", "Content-Type": "application/json" }, body: JSON.stringify({ ref: "main" }) });
+          const r = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/${workflow}/dispatches`, {
+            method: "POST",
+            headers: {
+              Accept: "application/vnd.github+json",
+              Authorization: `Bearer ${env.GH_PAT}`,
+              "User-Agent": "VPN-TrinhHg-Cloudflare-Worker",
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ ref: "main" })
+          });
           if (!r.ok) return J({ error: await r.text() }, r.status);
           return OK();
-        } catch (e) { return J({ error: (e && e.message) || "GitHub error" }, 500); }
+        } catch (e) {
+          return J({ error: (e && e.message) || "GitHub error" }, 500);
+        }
       }
       if (p === "/api/gc" && m === "POST") {
         try {
-          const legacy = ["MAP_", "SUB_DATA_", "ORIG_URL_", "LOCK_"], del = []; let cursor = "";
-          do { const list = await KV.list({ cursor: cursor || undefined }); for (const k of list.keys) if (legacy.some((x) => k.name.startsWith(x))) del.push(k.name); cursor = list.list_complete ? "" : list.cursor || ""; } while (cursor);
+          const legacy = ["MAP_", "SUB_DATA_", "ORIG_URL_", "LOCK_"], del = [];
+          let cursor = "";
+          do {
+            const list = await KV.list({ cursor: cursor || undefined });
+            for (const k of list.keys) if (legacy.some((x) => k.name.startsWith(x))) del.push(k.name);
+            cursor = list.list_complete ? "" : list.cursor || "";
+          } while (cursor);
           for (let i = 0; i < del.length; i += 50) await Promise.all(del.slice(i, i + 50).map((k) => KV.delete(k)));
-          log("ok", "admin", "Dọn KV", `${del.length} key rác`); await flushLog(KV, log);
+          log("ok", "admin", "Dọn KV", `${del.length} key rác`);
+          await flushLog(KV, log);
           return J({ deleted: del.length });
-        } catch (e) { return J({ error: (e && e.message) || "GC error" }, 500); }
+        } catch (e) {
+          return J({ error: (e && e.message) || "GC error" }, 500);
+        }
       }
 
       // ----- Link đã xóa (tab "Đã xóa"): ghi/khôi phục đồng bộ với tombstone
       if (p === "/api/deadlinks" && m === "POST") {
-        const text = await request.text(); let list;
-        try { list = JSON.parse(text); if (!Array.isArray(list)) throw 0; } catch { return J({ error: "JSON không hợp lệ" }, 400); }
+        const text = await request.text();
+        let list;
+        try {
+          list = JSON.parse(text);
+          if (!Array.isArray(list)) throw 0;
+        } catch { return J({ error: "JSON không hợp lệ" }, 400);
+        }
         const prev = arr(safeJson(await KV.get("DEAD_LINKS"), [])), prevIds = new Set(prev.map((d) => d && d.id)), newIds = new Set(list.map((d) => d && d.id));
-        let tb = await loadTombs(KV); const have = new Set(tb.map((t) => t.id));
-        for (const id of newIds) if (id && !have.has(id)) tb.push({ id, ts: Date.now() });   // vừa bị xóa -> tombstone
-        tb = tb.filter((t) => !(prevIds.has(t.id) && !newIds.has(t.id)));                   // bị gỡ khỏi "Đã xóa" (Khôi phục) -> bỏ tombstone
-        await saveTombs(KV, tb); await KV.put("DEAD_LINKS", text);
+        let tb = await loadTombs(KV);
+        const have = new Set(tb.map((t) => t.id));
+        for (const id of newIds) if (id && !have.has(id)) tb.push({ id, ts: Date.now() }); // vừa bị xóa -> tombstone
+        tb = tb.filter((t) => !(prevIds.has(t.id) && !newIds.has(t.id))); // bị gỡ khỏi "Đã xóa" (Khôi phục) -> bỏ tombstone
+        await saveTombs(KV, tb);
+        await KV.put("DEAD_LINKS", text);
         return OK();
       }
       if (p === "/api/deadlinks" && m === "DELETE") { // Xóa hết lịch sử: vẫn GIỮ tombstone để link không sống lại
         const prev = arr(safeJson(await KV.get("DEAD_LINKS"), [])), tb = await loadTombs(KV), have = new Set(tb.map((t) => t.id));
         for (const d of prev) if (d && d.id && !have.has(d.id)) tb.push({ id: d.id, ts: Date.now() });
-        await saveTombs(KV, tb); await KV.delete("DEAD_LINKS"); return OK();
+        await saveTombs(KV, tb);
+        await KV.delete("DEAD_LINKS");
+        return OK();
       }
 
-      const MAP = { "/api/deadlinks": ["DEAD_LINKS", "[]"], "/api/cms": ["ALL_CMS", "{}"], "/api/devices": ["ADMIN_DEVICES", "[]"], "/api/data_requests": ["ALL_DATA_REQUESTS", "[]"], "/api/link_pool": ["LINK_POOL", "[]"], "/api/guides": ["GUIDES", "{}"] };
+      const MAP = {
+        "/api/deadlinks": ["DEAD_LINKS", "[]"],
+        "/api/cms": ["ALL_CMS", "{}"],
+        "/api/devices": ["ADMIN_DEVICES", "[]"],
+        "/api/data_requests": ["ALL_DATA_REQUESTS", "[]"],
+        "/api/link_pool": ["LINK_POOL", "[]"],
+        "/api/guides": ["GUIDES", "{}"]
+      };
       if (MAP[p]) {
         const [key, def] = MAP[p];
         if (m === "GET") return RAW((await KV.get(key)) || def);
         if (m === "POST") {
           const text = await request.text();
-          try { JSON.parse(text); } catch { return J({ error: "JSON không hợp lệ" }, 400); }
+          try {
+            JSON.parse(text);
+          } catch { return J({ error: "JSON không hợp lệ" }, 400);
+          }
           await KV.put(key, text);
           if (p === "/api/cms") applySimFromSettingsText(text);
           return OK();
         }
-        if (m === "DELETE") { await KV.delete(key); return OK(); }
+        if (m === "DELETE") {
+          await KV.delete(key);
+          return OK();
+        }
       }
 
       return J({ ok: false, error: "Not found", path: p }, 404);
     }
 
     // ================================================================ FRONTEND ASSETS
-    try { if (env.ASSETS && typeof env.ASSETS.fetch === "function") return await env.ASSETS.fetch(request); }
-    catch (e) { console.error("ASSETS error:", e && e.message || e); }
+    try {
+      if (env.ASSETS && typeof env.ASSETS.fetch === "function") return await env.ASSETS.fetch(request);
+    }
+    catch (e) {
+      console.error("ASSETS error:", e && e.message || e);
+    }
     return new Response("API Online - " + p, { status: 200, headers: CORS });
   },
-
-  async scheduled(event, env, ctx) { ctx.waitUntil(runCron(env, ctx, {})); }
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runCron(env, ctx, {}));
+  }
 };
 
 // ====================================================================
@@ -2598,7 +3385,13 @@ export default {
 // ====================================================================
 async function runCron(env, ctx, opt) {
   const KV = getKV(env), log = mkLog();
-  if (opt.sim !== undefined) { SIM_OFF = opt.sim ? Number(opt.simOffset) || 0 : 0; SIM_T = Date.now(); } else { SIM_T = 0; await syncClock(KV); }
+  if (opt.sim !== undefined) {
+    SIM_OFF = opt.sim ? Number(opt.simOffset) || 0 : 0;
+    SIM_T = Date.now();
+  } else {
+    SIM_T = 0;
+    await syncClock(KV);
+  }
   const now = NOW();
   const st = await loadAll(KV, env), s = st.cms.settings || {}, me = getMe(null, env, st.cms);
   const hr = vn(now).h, today = dmy(now);
@@ -2623,7 +3416,12 @@ async function runCron(env, ctx, opt) {
   // 1. Khóa link: đúng 00:00:00 UTC+7 ngày hết hạn là khóa link sub ẩn và đổi nguồn Da_bi_khoa
   for (const l of st.links) {
     if (!l || l.isLocked || !l.expDate || isLifetime(l.expDate)) continue;
-    if (now >= lockAt(l.expDate)) { lockLink(l); locked++; st.dL = true; log("warn", "cron", "Khóa link hết hạn", `${l.email} · HSD ${l.expDate}`, l.orderId); }
+    if (now >= lockAt(l.expDate)) {
+      lockLink(l);
+      locked++;
+      st.dL = true;
+      log("warn", "cron", "Khóa link hết hạn", `${l.email} · HSD ${l.expDate}`, l.orderId);
+    }
   }
 
   if (opt.force || SIM_OFF !== 0) {
@@ -2690,39 +3488,58 @@ async function runCron(env, ctx, opt) {
       if (!o || normStatus(o.status) !== "success" || !o.email || !o.expDate || isLifetime(o.expDate)) continue;
       const dl = Math.round((parseDmy(o.expDate) - t0) / 864e5);
       if (dl !== 1 && dl !== 2) continue;
-      const key = `${dl}D_${today}`; if (o.lastMailTrack === key) continue;
+      const key = `${dl}D_${today}`;
+      if (o.lastMailTrack === key) continue;
       const msg = dl === 1 ? "**ngày mai hết hạn**" : `còn **${dl} ngày** (hết hạn **${o.expDate}**)`;
       ctx.waitUntil(sendMail(o.email, sysSubject(st.cms, "exp", o, { expText: msg.replace(/\*\*/g, "") }), buildExpMailHtml(o, msg, me.PD, st.cms), env, st.cms));
       o.lastMailTrack = key;
       if (sb) await sb.upsert(o).catch(() => {});
-      mails++; log("ok", "mail", "Gửi mail nhắc hết hạn", `${o.email} (D-${dl})`, o.id);
+      mails++;
+      log("ok", "mail", "Gửi mail nhắc hết hạn", `${o.email} (D-${dl})`, o.id);
     }
   }
 
   // 4. Dọn tab "Đã xóa" quá 48h (giữ tombstone dài hơn — xem TOMB_TTL)
   let dead = arr(safeJson(await KV.get("DEAD_LINKS"), []));
   const keep = dead.filter((d) => now - (Number(d.deadTs) || parseAny(d.deadDate) || now) <= 48 * 36e5);
-  if (keep.length !== dead.length) { deadDel = dead.length - keep.length; await KV.put("DEAD_LINKS", JSON.stringify(keep)); log("info", "cron", "Dọn link đã xóa quá 48h", `${deadDel} link`); }
+  if (keep.length !== dead.length) {
+    deadDel = dead.length - keep.length;
+    await KV.put("DEAD_LINKS", JSON.stringify(keep));
+    log("info", "cron", "Dọn link đã xóa quá 48h", `${deadDel} link`);
+  }
 
   // 5. Thử lại đăng ký D1 cho đơn chuyển khoản còn chờ (24h gần nhất) và yêu cầu nâng gói chờ
   const pend = st.orders.filter((o) => o && normStatus(o.status) === "pending" && isBankMethod(o.method) && now - (o.createdTs || 0) < 864e5).slice(0, 12);
-  for (const o of pend) { const r = await d1Register(env, { origin: o.workerUrl || env.PUBLIC_WORKER_URL || "" }, o, o.orderType || "new"); if (r.ok) d1Retry++; }
+  for (const o of pend) {
+    const r = await d1Register(env, { origin: o.workerUrl || env.PUBLIC_WORKER_URL || "" }, o, o.orderType || "new");
+    if (r.ok) d1Retry++;
+  }
   for (const o of st.orders.filter((x) => x && x.pendingUpgrade && isBankMethod(x.pendingUpgrade.method || x.method) && x.pendingUpgrade.amount).slice(0, 6)) await d1Upgrade(env, null, o, o.pendingUpgrade);
 
   // Chỉ persist vào KV khi st.dL hoặc st.dP thực sự có thay đổi
   if (st.dL || st.dP) {
     await persist(KV, st);
   }
-  
+
   const hasEvents = !!(locked || migrated || delNodes || mails || deadDel || opt.force || SIM_OFF !== 0);
-  const sum = { ts: now, real: Date.now(), sim: SIM_OFF !== 0, locked, migrated, delNodes, mails, deadDel, d1Retry };
-  
+  const sum = {
+    ts: now,
+    real: Date.now(),
+    sim: SIM_OFF !== 0,
+    locked,
+    migrated,
+    delNodes,
+    mails,
+    deadDel,
+    d1Retry
+  };
+
   // Chỉ ghi CRON_LAST_RUN khi có sự kiện HOẶC mỗi 60 phút/lần (giảm từ 96 xuống 24 writes/ngày/web)
   const prevCron = safeJson(await KV.get("CRON_LAST_RUN"), null);
   if (hasEvents || !prevCron || (Date.now() - (Number(prevCron.real || prevCron.ts) || 0) >= 55 * 60000)) {
     await KV.put("CRON_LAST_RUN", JSON.stringify(sum));
   }
-  
+
   // Chỉ ghi SYS_LOG khi thực sự có sự kiện (tiết kiệm 100% lượt ghi log khi hệ thống đứng yên)
   if (hasEvents) {
     log("ok", "cron", "Cron chạy có sự kiện", `khóa ${locked} · luân chuyển ${migrated} · xóa node ${delNodes} · mail ${mails} · dọn ${deadDel} · thử lại D1 ${d1Retry}`);
@@ -2748,7 +3565,8 @@ function buildGlobalRouter(links, orders = []) {
       const mKt = String(u).match(/\/oosaka\/([a-zA-Z0-9]+)/);
       if (mKt) return mKt[1];
       return getParam(new URL(u), "top", "liki", "lidj", "kidj", "OwO", "token", "oos") || "";
-    } catch { return ""; }
+    } catch { return "";
+    }
   };
 
   for (const l of links) {
@@ -2773,7 +3591,15 @@ function buildGlobalRouter(links, orders = []) {
 
       if (l.isCombo) {
         if (isLocked || l.orig === LOCK_ORIG) {
-          r[mt] = { isCombo: true, tokens: [], origUrls: [LOCK_ORIG], isLocked: true, expDate: effectiveExp || (isLife ? "Vĩnh viễn" : ""), lockTs, isLife };
+          r[mt] = {
+            isCombo: true,
+            tokens: [],
+            origUrls: [LOCK_ORIG],
+            isLocked: true,
+            expDate: effectiveExp || (isLife ? "Vĩnh viễn" : ""),
+            lockTs,
+            isLife
+          };
           continue;
         }
         const ot1 = l.orig && l.orig !== LOCK_ORIG ? extractOriginToken(l.orig) : "";
@@ -2791,7 +3617,15 @@ function buildGlobalRouter(links, orders = []) {
       }
       if (!l.orig) continue;
       if (isLocked || l.orig === LOCK_ORIG) {
-        r[mt] = { origTok: "", origUrl: LOCK_ORIG, isLocked: true, isCombo: false, expDate: effectiveExp || (isLife ? "Vĩnh viễn" : ""), lockTs, isLife };
+        r[mt] = {
+          origTok: "",
+          origUrl: LOCK_ORIG,
+          isLocked: true,
+          isCombo: false,
+          expDate: effectiveExp || (isLife ? "Vĩnh viễn" : ""),
+          lockTs,
+          isLife
+        };
         continue;
       }
       const ot = extractOriginToken(l.orig);
@@ -2804,11 +3638,19 @@ function buildGlobalRouter(links, orders = []) {
         lockTs,
         isLife
       };
-    } catch { /* bỏ qua link lỗi */ }
+    } catch {
+      /* bỏ qua link lỗi */
+    }
   }
   return r;
 }
-function getParam(url, ...keys) { for (const k of keys) { const v = url.searchParams.get(k); if (v) return v; } return null; }
+function getParam(url, ...keys) {
+  for (const k of keys) {
+    const v = url.searchParams.get(k);
+    if (v) return v;
+  }
+  return null;
+}
 
 // ====================================================================
 // Rà quét / map lại link trong ô info của đơn hàng
@@ -2842,14 +3684,25 @@ async function relinkScan(env, url, st, o) {
     if (o.expired === "expired" && !expired) continue;
     if (o.expired === "active" && expired) continue;
     for (const i of fields) {
-      const f = "info" + i, v = String(od[f] || "").trim(); if (!v) continue;
-      const manual = !!(od.lockInfo && od.lockInfo[f]); if (manual && !o.includeManual) continue;
+      const f = "info" + i, v = String(od[f] || "").trim();
+      if (!v) continue;
+      const manual = !!(od.lockInfo && od.lockInfo[f]);
+      if (manual && !o.includeManual) continue;
       const isUrl = /^https?:\/\//i.test(v);
       const ownLink = st.links.find((l) => l && l.masked === v);
       // Link coi là chết nếu: sai cú pháp URL, hoặc thuộc web này nhưng không có trong ALL_LINKS hoặc link đã bị khóa
       const isDead = !isUrl || (f === me.field && (!ownLink || ownLink.isLocked));
       if (o.scope === "dead" && !isDead) continue;
-      items.push({ id: od.id, email: od.email || "", field: f, link: v, expired, dead: isDead, manual, isLocked: !!(ownLink && ownLink.isLocked) });
+      items.push({
+        id: od.id,
+        email: od.email || "",
+        field: f,
+        link: v,
+        expired,
+        dead: isDead,
+        manual,
+        isLocked: !!(ownLink && ownLink.isLocked)
+      });
     }
   }
   return { items, remoteOk: true };
@@ -2858,9 +3711,7 @@ async function relinkScan(env, url, st, o) {
 // Tìm link còn sống khớp nhất cho 1 đơn: ưu tiên orderId trùng, rồi cùng email + hạn giống hệt (kể cả Vĩnh viễn), rồi cùng email.
 function matchLink(links, od) {
   const em = String(od.email || "").toLowerCase();
-  return links.find((x) => x && x.orderId && normId(x.orderId) === normId(od.id))
-    || links.find((x) => x && String(x.email || "").toLowerCase() === em)
-    || null;
+  return links.find((x) => x && x.orderId && normId(x.orderId) === normId(od.id)) || links.find((x) => x && String(x.email || "").toLowerCase() === em) || null;
 }
 
 // Map lại độc lập 100%: Tự động map lại nếu ô hiện tại bị rỗng hoặc link hiện tại đã bị khóa/chết
@@ -2878,7 +3729,13 @@ async function relinkMap(env, url, st, me, o) {
     if (cur && st.links.some((l) => l && l.masked === cur && !l.isLocked)) continue;
     const l = matchLink(st.links, od);
     if (l && l.masked !== cur) {
-      items.push({ id: od.id, email: od.email, field: f, link: cur || "", to: l.masked });
+      items.push({
+        id: od.id,
+        email: od.email,
+        field: f,
+        link: cur || "",
+        to: l.masked
+      });
     }
   }
   return { items, remoteOk: true };
@@ -2911,24 +3768,15 @@ async function cfGql(env, query, variables, token) {
 }
 
 async function quotaReport(env) {
-  const now = new Date(),
-    day = now.toISOString().slice(0, 10),
-    from = day + "T00:00:00Z",
-    to = now.toISOString(),
-    acc = env.CF_ACCOUNT_ID,
-    // Dynamic fallback: Không có D1_ACCOUNT_ID -> dùng chung acc; Không có D1_CF_API_TOKEN -> dùng chung CF_API_TOKEN
-    d1Acc = env.D1_ACCOUNT_ID || acc,
-    d1Token = env.D1_CF_API_TOKEN || env.CF_API_TOKEN;
+  const now = new Date(), day = now.toISOString().slice(0, 10), from = day + "T00:00:00Z", to = now.toISOString(), acc = env.CF_ACCOUNT_ID,
+  // Dynamic fallback: Không có D1_ACCOUNT_ID -> dùng chung acc; Không có D1_CF_API_TOKEN -> dùng chung CF_API_TOKEN
+  d1Acc = env.D1_ACCOUNT_ID || acc, d1Token = env.D1_CF_API_TOKEN || env.CF_API_TOKEN;
 
   const out = {
     ok: true,
     ts: Date.now(),
     day,
-    nextReset: Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate() + 1
-    ),
+    nextReset: Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1),
     cfg: {
       token: !!env.CF_API_TOKEN,
       account: !!acc,
@@ -2953,39 +3801,20 @@ async function quotaReport(env) {
   const T = [];
 
   if (!env.CF_API_TOKEN || !acc) {
-    out.err.kv =
-      out.err.worker =
-      out.err.d1 =
-        "Worker chưa cấu hình CF_API_TOKEN / CF_ACCOUNT_ID";
+    out.err.kv = out.err.worker = out.err.d1 = "Worker chưa cấu hình CF_API_TOKEN / CF_ACCOUNT_ID";
   } else {
-
     // ================================================================
     // KV
     // ================================================================
     if (env.KV_NAMESPACE_ID) {
       T.push((async () => {
         try {
-          const a = await cfGql(
-            env,
-            "query($a:String!,$ns:String!,$d:Date!){viewer{accounts(filter:{accountTag:$a}){kvOperationsAdaptiveGroups(limit:20,filter:{namespaceId:$ns,date_geq:$d,date_leq:$d}){sum{requests} dimensions{actionType}}}}}",
-            {
-              a: acc,
-              ns: env.KV_NAMESPACE_ID,
-              d: day
-            }
-          );
+          const a = await cfGql(env, "query($a:String!,$ns:String!,$d:Date!){viewer{accounts(filter:{accountTag:$a}){kvOperationsAdaptiveGroups(limit:20,filter:{namespaceId:$ns,date_geq:$d,date_leq:$d}){sum{requests} dimensions{actionType}}}}}", { a: acc, ns: env.KV_NAMESPACE_ID, d: day });
 
-          const k = {
-            read: 0,
-            write: 0,
-            delete: 0,
-            list: 0
-          };
+          const k = { read: 0, write: 0, delete: 0, list: 0 };
 
           for (const g of arr(a.kvOperationsAdaptiveGroups)) {
-            const t = String(
-              g.dimensions && g.dimensions.actionType || ""
-            ).toLowerCase();
+            const t = String(g.dimensions && g.dimensions.actionType || "").toLowerCase();
 
             if (t in k) {
               k[t] += (g.sum && g.sum.requests) || 0;
@@ -3007,22 +3836,9 @@ async function quotaReport(env) {
     if (env.WORKER_SCRIPT_NAME) {
       T.push((async () => {
         try {
-          const a = await cfGql(
-            env,
-            "query($a:String!,$s:String!,$f:Time!,$t:Time!){viewer{accounts(filter:{accountTag:$a}){workersInvocationsAdaptive(limit:50,filter:{scriptName:$s,datetime_geq:$f,datetime_leq:$t}){sum{requests errors subrequests}}}}}",
-            {
-              a: acc,
-              s: env.WORKER_SCRIPT_NAME,
-              f: from,
-              t: to
-            }
-          );
+          const a = await cfGql(env, "query($a:String!,$s:String!,$f:Time!,$t:Time!){viewer{accounts(filter:{accountTag:$a}){workersInvocationsAdaptive(limit:50,filter:{scriptName:$s,datetime_geq:$f,datetime_leq:$t}){sum{requests errors subrequests}}}}}", { a: acc, s: env.WORKER_SCRIPT_NAME, f: from, t: to });
 
-          const w = {
-            requests: 0,
-            errors: 0,
-            subrequests: 0
-          };
+          const w = { requests: 0, errors: 0, subrequests: 0 };
 
           for (const g of arr(a.workersInvocationsAdaptive)) {
             for (const k of Object.keys(w)) {
@@ -3036,8 +3852,7 @@ async function quotaReport(env) {
         }
       })());
     } else {
-      out.err.worker =
-        "Worker chưa cấu hình WORKER_SCRIPT_NAME";
+      out.err.worker = "Worker chưa cấu hình WORKER_SCRIPT_NAME";
     }
 
     // ================================================================
@@ -3046,23 +3861,9 @@ async function quotaReport(env) {
     if (env.D1_DATABASE_ID && d1Acc && d1Token) {
       T.push((async () => {
         try {
-          const a = await cfGql(
-            env,
-            "query($a:String!,$db:String!,$d:Date!){viewer{accounts(filter:{accountTag:$a}){d1AnalyticsAdaptiveGroups(limit:50,filter:{databaseId:$db,date_geq:$d,date_leq:$d}){sum{readQueries writeQueries rowsRead rowsWritten}}}}}",
-            {
-              a: d1Acc,
-              db: env.D1_DATABASE_ID,
-              d: day
-            },
-            d1Token
-          );
+          const a = await cfGql(env, "query($a:String!,$db:String!,$d:Date!){viewer{accounts(filter:{accountTag:$a}){d1AnalyticsAdaptiveGroups(limit:50,filter:{databaseId:$db,date_geq:$d,date_leq:$d}){sum{readQueries writeQueries rowsRead rowsWritten}}}}}", { a: d1Acc, db: env.D1_DATABASE_ID, d: day }, d1Token);
 
-          const d = {
-            readQueries: 0,
-            writeQueries: 0,
-            rowsRead: 0,
-            rowsWritten: 0
-          };
+          const d = { readQueries: 0, writeQueries: 0, rowsRead: 0, rowsWritten: 0 };
 
           for (const g of arr(a.d1AnalyticsAdaptiveGroups)) {
             for (const k of Object.keys(d)) {
@@ -3092,17 +3893,10 @@ async function quotaReport(env) {
         let mgmtData = null;
         const hasMgmt = !!(env.SUPABASE_MGMT_TOKEN && env.SUPABASE_PROJECT_REF);
         if (hasMgmt) {
-          const mgmtRes = await fetch(`https://api.supabase.com/v1/projects/${env.SUPABASE_PROJECT_REF}/usage`, {
-            headers: { Authorization: `Bearer ${env.SUPABASE_MGMT_TOKEN}` }
-          });
+          const mgmtRes = await fetch(`https://api.supabase.com/v1/projects/${env.SUPABASE_PROJECT_REF}/usage`, { headers: { Authorization: `Bearer ${env.SUPABASE_MGMT_TOKEN}` } });
           if (mgmtRes.ok) mgmtData = await mgmtRes.json();
         }
-        out.supabase = {
-          rpc: rpcData,
-          mgmt: mgmtData,
-          hasMgmt,
-          connected: !!rpcData
-        };
+        out.supabase = { rpc: rpcData, mgmt: mgmtData, hasMgmt, connected: !!rpcData };
       } catch (e) {
         out.err.supabase = String(e.message || e);
       }
@@ -3115,13 +3909,24 @@ async function quotaReport(env) {
   if (env.BREVO_API_KEY) {
     T.push((async () => {
       try {
-        const r = await fetch("https://api.brevo.com/v3/account", { headers: { Accept: "application/json", "api-key": env.BREVO_API_KEY } });
+        const r = await fetch("https://api.brevo.com/v3/account", {
+          headers: { Accept: "application/json", "api-key": env.BREVO_API_KEY }
+        });
         const j = await r.json().catch(() => null);
-        if (!r.ok || !j) { out.err.brevo = "HTTP " + r.status; return; }
+        if (!r.ok || !j) {
+          out.err.brevo = "HTTP " + r.status;
+          return;
+        }
         const plans = arr(j.plan);
         const plan = plans.find(p => p.creditsType === "sendLimit") || plans[0];
-        out.brevo = plan ? { credits: plan.credits ?? null, creditsType: plan.creditsType || "", planType: plan.type || "" } : { credits: null };
-      } catch (e) { out.err.brevo = String(e.message || e); }
+        out.brevo = plan ? {
+          credits: plan.credits ?? null,
+          creditsType: plan.creditsType || "",
+          planType: plan.type || ""
+        } : { credits: null };
+      } catch (e) {
+        out.err.brevo = String(e.message || e);
+      }
     })());
   } else out.err.brevo = "Worker chưa cấu hình BREVO_API_KEY";
 
@@ -3130,14 +3935,14 @@ async function quotaReport(env) {
     T.push((async () => {
       try {
         const tok = await spToken(env);
-        const [rBal, rTotal] = await Promise.all([
-          fetch("https://api.sendpulse.com/user/balance/detail", { headers: { Authorization: "Bearer " + tok } }),
-          fetch("https://api.sendpulse.com/smtp/emails/total", { headers: { Authorization: "Bearer " + tok } })
-        ]);
+        const [rBal, rTotal] = await Promise.all([fetch("https://api.sendpulse.com/user/balance/detail", { headers: { Authorization: "Bearer " + tok } }), fetch("https://api.sendpulse.com/smtp/emails/total", { headers: { Authorization: "Bearer " + tok } })]);
         const jBal = await rBal.json().catch(() => ({}));
         const jTotal = await rTotal.json().catch(() => ({}));
 
-        if (!rBal.ok) { out.err.sendpulse = "HTTP " + rBal.status + " " + (jBal.message || ""); return; }
+        if (!rBal.ok) {
+          out.err.sendpulse = "HTTP " + rBal.status + " " + (jBal.message || "");
+          return;
+        }
 
         const tariffName = (jBal.smtp && jBal.smtp.tariff_name) || (jBal.email && jBal.email.tariff_name) || "SMTP Free";
         const isFree = /free/i.test(tariffName);
@@ -3175,7 +3980,9 @@ async function quotaReport(env) {
           balance: (jBal.balance && jBal.balance.main) ?? "0",
           currency: (jBal.balance && jBal.balance.currency) || "USD"
         };
-      } catch (e) { out.err.sendpulse = String(e.message || e); }
+      } catch (e) {
+        out.err.sendpulse = String(e.message || e);
+      }
     })());
   } else out.err.sendpulse = "Worker chưa cấu hình SENDPULSE_API_ID / SENDPULSE_API_SECRET";
 
@@ -3183,11 +3990,16 @@ async function quotaReport(env) {
   T.push((async () => {
     try {
       const r = await fetch(MAIL_URL + "?quota=1", { redirect: "follow" }), ct = r.headers.get("content-type") || "";
-      if (!ct.includes("json")) { out.err.mail = "Apps Script trả về " + (ct || "không rõ định dạng") + " thay vì JSON — kiểm tra doGet(e) đã xử lý ?quota=1 và đã Deploy bản mới (quyền Anyone) chưa"; return; }
+      if (!ct.includes("json")) {
+        out.err.mail = "Apps Script trả về " + (ct || "không rõ định dạng") + " thay vì JSON — kiểm tra doGet(e) đã xử lý ?quota=1 và đã Deploy bản mới (quyền Anyone) chưa";
+        return;
+      }
       const j = await r.json();
       if (j && typeof j.remaining === "number") out.mail = { remaining: j.remaining, limit: j.limit || 100 };
       else out.err.mail = "Apps Script chưa trả trường 'remaining'";
-    } catch (e) { out.err.mail = String(e.message || e); }
+    } catch (e) {
+      out.err.mail = String(e.message || e);
+    }
   })());
   await Promise.all(T);
   return out;
@@ -3196,25 +4008,61 @@ async function quotaReport(env) {
 // ====================================================================
 // EMAIL
 // ====================================================================
-function htmlEscape(v) { return String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
+function htmlEscape(v) {
+  return String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
 const MAIL_URL = "https://script.google.com/macros/s/AKfycbyTwS_udF6JbVXkE-PRYf1keRA00DqHMC2-lcH6dU2rvD8KVLBX99Yl_4HpxODDnMrU/exec"; // Google Apps Script — mặc định/dự phòng
 
 // ---- Gửi mail đa nhà cung cấp. Chọn ở Admin > Cài đặt > Set Web > "Nhà cung cấp gửi mail" (lưu vào cms.settings.mailProvider: google|brevo|sendpulse)
 let SP_TOKEN = "", SP_TOKEN_EXP = 0;
 async function spToken(env) {
   if (SP_TOKEN && Date.now() < SP_TOKEN_EXP) return SP_TOKEN;
-  const r = await fetch("https://api.sendpulse.com/oauth/access_token", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ grant_type: "client_credentials", client_id: env.SENDPULSE_API_ID, client_secret: env.SENDPULSE_API_SECRET }) });
+  const r = await fetch("https://api.sendpulse.com/oauth/access_token", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      grant_type: "client_credentials",
+      client_id: env.SENDPULSE_API_ID,
+      client_secret: env.SENDPULSE_API_SECRET
+    })
+  });
   const j = await r.json().catch(() => null);
   if (!j || !j.access_token) throw new Error("SendPulse: không lấy được access_token — kiểm tra SENDPULSE_API_ID/SECRET");
-  SP_TOKEN = j.access_token; SP_TOKEN_EXP = Date.now() + 55 * 60000;
+  SP_TOKEN = j.access_token;
+  SP_TOKEN_EXP = Date.now() + 55 * 60000;
   return SP_TOKEN;
 }
-function b64eUtf8(s) { const bytes = new TextEncoder().encode(String(s ?? "")); let bin = ""; for (const b of bytes) bin += String.fromCharCode(b); return btoa(bin); }
+function b64eUtf8(s) {
+  const bytes = new TextEncoder().encode(String(s ?? ""));
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
 async function sendMailGoogle(to, subject, html) {
-  await fetch(MAIL_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ to, subject, html }) });
+  await fetch(MAIL_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ to, subject, html })
+  });
 }
 async function sendMailBrevo(env, to, subject, html) {
-  const r = await fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json", "api-key": env.BREVO_API_KEY }, body: JSON.stringify({ sender: { name: env.BREVO_SENDER_NAME || "VPN Trinh Hg", email: env.BREVO_SENDER_EMAIL }, to: [{ email: to }], subject, htmlContent: html }) });
+  const r = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "api-key": env.BREVO_API_KEY
+    },
+    body: JSON.stringify({
+      sender: {
+        name: env.BREVO_SENDER_NAME || "VPN Trinh Hg",
+        email: env.BREVO_SENDER_EMAIL
+      },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html
+    })
+  });
   if (!r.ok) throw new Error("Brevo HTTP " + r.status + " " + (await r.text().catch(() => "")));
 }
 // Ghi nhận mốc thời gian gửi mail của SendPulse vào KV SP_HOUR_TRACKER và tự dọn dẹp các mốc quá 60 phút
@@ -3231,8 +4079,25 @@ async function recordSendPulseSent(KV) {
 
 async function sendMailSendpulse(env, to, subject, html, KV) {
   const tok = await spToken(env);
-  const body = { email: { html: b64eUtf8(html), subject, from: { name: env.SENDPULSE_SENDER_NAME || "VPN Trinh Hg", email: env.SENDPULSE_SENDER_EMAIL }, to: [{ email: to }] } };
-  const r = await fetch("https://api.sendpulse.com/smtp/emails", { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok }, body: JSON.stringify(body) });
+  const body = {
+    email: {
+      html: b64eUtf8(html),
+      subject,
+      from: {
+        name: env.SENDPULSE_SENDER_NAME || "VPN Trinh Hg",
+        email: env.SENDPULSE_SENDER_EMAIL
+      },
+      to: [{ email: to }]
+    }
+  };
+  const r = await fetch("https://api.sendpulse.com/smtp/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + tok
+    },
+    body: JSON.stringify(body)
+  });
   if (!r.ok) throw new Error("SendPulse HTTP " + r.status + " " + (await r.text().catch(() => "")));
   if (KV) await recordSendPulseSent(KV);
 }
@@ -3242,7 +4107,9 @@ async function sendMail(to, subject, html, env, cms, KV) {
     if (prov === "brevo" && env.BREVO_API_KEY) await sendMailBrevo(env, to, subject, html);
     else if (prov === "sendpulse" && env.SENDPULSE_API_ID && env.SENDPULSE_API_SECRET) await sendMailSendpulse(env, to, subject, html, KV);
     else await sendMailGoogle(to, subject, html);
-  } catch (e) { console.error("Mail error (" + prov + ")", e && e.message || e); }
+  } catch (e) {
+    console.error("Mail error (" + prov + ")", e && e.message || e);
+  }
 }
 
 // ---- Lõi mail dùng chung Admin + Worker (khớp 100% hàm mailRender phía admin.html để "xem trước" = "gửi thật")
@@ -3252,18 +4119,139 @@ const mailIdBox = (label, id, color) => `<div style="background:#f1f5f9;border-l
 const mailPortal = (PD, label) => `<div style="text-align:center;margin:24px 0 6px"><a href="${htmlEscape(PD)}" style="display:block;background:#1e293b;color:#ffffff;padding:13px 15px;border-radius:10px;text-decoration:none;font-weight:900;font-size:14px">${label}</a></div><p style="margin:10px 0 0;font-size:12px;color:#64748b;text-align:center;line-height:1.5">👉 <i>Dùng <b>Mã Đơn Hàng</b> hoặc <b>Email</b> để tra cứu thông tin đơn hàng</i></p>`;
 const mailBtn = (href, bg, label) => `<td width="50%" style="padding:4px"><a href="${htmlEscape(href)}" style="display:block;background:${bg};color:#ffffff;padding:10px 0;border-radius:8px;text-decoration:none;font-weight:bold;font-size:12px;text-align:center">${label}</a></td>`;
 const mailSupport = (PD) => `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-top:22px;text-align:center"><p style="margin:0 0 12px;color:#475569;font-size:13px;line-height:1.5">Cần hỗ trợ? Đội ngũ của chúng tôi luôn sẵn sàng 24/7 để hỗ trợ bạn ❤️</p><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse"><tr>${mailBtn("https://zalo.me/0917678211", "#0068ff", "Chat Zalo")}${mailBtn("https://www.facebook.com/trinh.hg.57", "#0668E1", "Messenger")}</tr><tr>${mailBtn("https://t.me/hoaian57", "#0088cc", "Telegram")}${mailBtn(String(PD).replace(/\/$/, "") + "/#wechat", "#07C160", "WeChat")}</tr></table></div>`;
-const TPL_THEME = { red: ["#fef2f2", "#fca5a5", "#991b1b", "#b91c1c"], amber: ["#fefce8", "#facc15", "#a16207", "#ca8a04"], purple: ["#f5f3ff", "#a78bfa", "#6d28d9", "#7c3aed"], blue: ["#eff6ff", "#93c5fd", "#1e40af", "#2563eb"], green: ["#f0fdf4", "#86efac", "#166534", "#16a34a"] };
+const TPL_THEME = {
+  red: ["#fef2f2", "#fca5a5", "#991b1b", "#b91c1c"],
+  amber: ["#fefce8", "#facc15", "#a16207", "#ca8a04"],
+  purple: ["#f5f3ff", "#a78bfa", "#6d28d9", "#7c3aed"],
+  blue: ["#eff6ff", "#93c5fd", "#1e40af", "#2563eb"],
+  green: ["#f0fdf4", "#86efac", "#166534", "#16a34a"]
+};
 const P0 = { t: "portal", x: "TRUY CẬP CỔNG KHÁCH HÀNG" }, S0 = { t: "support" };
 const SYS_TPL = {
-  success: { name: "Kích hoạt thành công", subject: "VPN Trinh Hg - Kích hoạt thành công", title: "KÍCH HOẠT THÀNH CÔNG", c1: "#4f46e5", c2: "#8b5cf6", ang: 135, stop: 100, blocks: [{ t: "text", x: "Xin chào, Gói VPN **{pkgName}** của bạn đã sẵn sàng." }, { t: "orderid", label: "MÃ ĐƠN HÀNG CỦA BẠN" }, P0, S0] },
-  renew: { name: "Gia hạn thành công", subject: "VPN Trinh Hg - Gia hạn thành công", title: "GIA HẠN THÀNH CÔNG", c1: "#4f46e5", c2: "#8b5cf6", ang: 135, stop: 100, blocks: [{ t: "text", x: "Xin chào, Gói VPN **{pkgName}** của bạn đã được gia hạn thành công." }, { t: "orderid", label: "MÃ ĐƠN HÀNG CỦA BẠN" }, P0, S0] },
-  upgrade: { name: "Nâng cấp thành công", subject: "VPN Trinh Hg - Nâng cấp thành công", title: "NÂNG CẤP THÀNH CÔNG", c1: "#4f46e5", c2: "#8b5cf6", ang: 135, stop: 100, blocks: [{ t: "text", x: "Xin chào, Gói VPN **{pkgName}** của bạn đã được nâng cấp thành công." }, { t: "orderid", label: "MÃ ĐƠN HÀNG CỦA BẠN" }, P0, S0] },
-  failed: { name: "Kích hoạt thất bại", subject: "VPN Trinh Hg - Kích hoạt thất bại", title: "KÍCH HOẠT THẤT BẠI", c1: "#ef4444", c2: "#b91c1c", ang: 135, stop: 100, blocks: [{ t: "text", x: "Xin chào, Gói VPN **{pkgName}** của bạn không thể kích hoạt." }, { t: "orderid", label: "MÃ ĐƠN HÀNG CỦA BẠN", color: "#4f46e5" }, { t: "box", label: "LÝ DO TỪ CHỐI", x: "{reason}", theme: "red" }, P0, S0] },
-  exp: { name: "Gói VPN sắp hết hạn", subject: "VPN Trinh Hg - Gói VPN sắp hết hạn", title: "GÓI VPN SẮP HẾT HẠN", c1: "#f59e0b", c2: "#d97706", ang: 135, stop: 100, blocks: [{ t: "text", x: "Xin chào, Gói VPN **{pkgName}** của bạn {expText}.", al: "c" }, { t: "orderid", label: "MÃ ĐƠN HÀNG HIỆN TẠI", color: "#d97706" }, { t: "text", x: "Gia hạn ngay để không bị gián đoạn dịch vụ.", al: "c", sz: "m" }, { t: "portal", x: "GIA HẠN NGAY TẠI WEBSITE" }, S0] },
-  support: { name: "Hỗ trợ cài đặt", subject: "VPN Trinh Hg - Hỗ trợ cài đặt", title: "HỖ TRỢ CÀI ĐẶT", c1: "#2563eb", c2: "#1d4ed8", ang: 135, stop: 100, blocks: [{ t: "text", x: "Vui lòng liên hệ Admin qua Zalo để được hỗ trợ gói VPN mã đơn **{orderId}** nhé!", al: "c" }, { t: "box", label: "ZALO ADMIN", x: "0917678211", theme: "amber" }, P0, S0] },
-  data: { name: "Báo cáo dung lượng", subject: "VPN Trinh Hg - Báo cáo dung lượng {orderId}", title: "KẾT QUẢ TRA CỨU\nDUNG LƯỢNG", c1: "#8b5cf6", c2: "#6d28d9", ang: 135, stop: 100, blocks: [{ t: "text", x: "Đây là dung lượng của đơn hàng **{orderId}**.", al: "c" }, { t: "box", label: "DUNG LƯỢNG CÒN LẠI", x: "{gb} GB", theme: "purple" }, { t: "text", x: "Nếu tốc độ chậm, có thể gói đã dùng hết dung lượng.", al: "c", sz: "m" }, P0, S0] }
+  success: {
+    name: "Kích hoạt thành công",
+    subject: "VPN Trinh Hg - Kích hoạt thành công",
+    title: "KÍCH HOẠT THÀNH CÔNG",
+    c1: "#4f46e5",
+    c2: "#8b5cf6",
+    ang: 135,
+    stop: 100,
+    blocks: [{
+      t: "text",
+      x: "Xin chào, Gói VPN **{pkgName}** của bạn đã sẵn sàng."
+    }, { t: "orderid", label: "MÃ ĐƠN HÀNG CỦA BẠN" }, P0, S0]
+  },
+  renew: {
+    name: "Gia hạn thành công",
+    subject: "VPN Trinh Hg - Gia hạn thành công",
+    title: "GIA HẠN THÀNH CÔNG",
+    c1: "#4f46e5",
+    c2: "#8b5cf6",
+    ang: 135,
+    stop: 100,
+    blocks: [{
+      t: "text",
+      x: "Xin chào, Gói VPN **{pkgName}** của bạn đã được gia hạn thành công."
+    }, { t: "orderid", label: "MÃ ĐƠN HÀNG CỦA BẠN" }, P0, S0]
+  },
+  upgrade: {
+    name: "Nâng cấp thành công",
+    subject: "VPN Trinh Hg - Nâng cấp thành công",
+    title: "NÂNG CẤP THÀNH CÔNG",
+    c1: "#4f46e5",
+    c2: "#8b5cf6",
+    ang: 135,
+    stop: 100,
+    blocks: [{
+      t: "text",
+      x: "Xin chào, Gói VPN **{pkgName}** của bạn đã được nâng cấp thành công."
+    }, { t: "orderid", label: "MÃ ĐƠN HÀNG CỦA BẠN" }, P0, S0]
+  },
+  failed: {
+    name: "Kích hoạt thất bại",
+    subject: "VPN Trinh Hg - Kích hoạt thất bại",
+    title: "KÍCH HOẠT THẤT BẠI",
+    c1: "#ef4444",
+    c2: "#b91c1c",
+    ang: 135,
+    stop: 100,
+    blocks: [{
+      t: "text",
+      x: "Xin chào, Gói VPN **{pkgName}** của bạn không thể kích hoạt."
+    }, { t: "orderid", label: "MÃ ĐƠN HÀNG CỦA BẠN", color: "#4f46e5" }, {
+      t: "box",
+      label: "LÝ DO TỪ CHỐI",
+      x: "{reason}",
+      theme: "red"
+    }, P0, S0]
+  },
+  exp: {
+    name: "Gói VPN sắp hết hạn",
+    subject: "VPN Trinh Hg - Gói VPN sắp hết hạn",
+    title: "GÓI VPN SẮP HẾT HẠN",
+    c1: "#f59e0b",
+    c2: "#d97706",
+    ang: 135,
+    stop: 100,
+    blocks: [{
+      t: "text",
+      x: "Xin chào, Gói VPN **{pkgName}** của bạn {expText}.",
+      al: "c"
+    }, { t: "orderid", label: "MÃ ĐƠN HÀNG HIỆN TẠI", color: "#d97706" }, {
+      t: "text",
+      x: "Gia hạn ngay để không bị gián đoạn dịch vụ.",
+      al: "c",
+      sz: "m"
+    }, { t: "portal", x: "GIA HẠN NGAY TẠI WEBSITE" }, S0]
+  },
+  support: {
+    name: "Hỗ trợ cài đặt",
+    subject: "VPN Trinh Hg - Hỗ trợ cài đặt",
+    title: "HỖ TRỢ CÀI ĐẶT",
+    c1: "#2563eb",
+    c2: "#1d4ed8",
+    ang: 135,
+    stop: 100,
+    blocks: [{
+      t: "text",
+      x: "Vui lòng liên hệ Admin qua Zalo để được hỗ trợ gói VPN mã đơn **{orderId}** nhé!",
+      al: "c"
+    }, {
+      t: "box",
+      label: "ZALO ADMIN",
+      x: "0917678211",
+      theme: "amber"
+    }, P0, S0]
+  },
+  data: {
+    name: "Báo cáo dung lượng",
+    subject: "VPN Trinh Hg - Báo cáo dung lượng {orderId}",
+    title: "KẾT QUẢ TRA CỨU\nDUNG LƯỢNG",
+    c1: "#8b5cf6",
+    c2: "#6d28d9",
+    ang: 135,
+    stop: 100,
+    blocks: [{
+      t: "text",
+      x: "Đây là dung lượng của đơn hàng **{orderId}**.",
+      al: "c"
+    }, {
+      t: "box",
+      label: "DUNG LƯỢNG CÒN LẠI",
+      x: "{gb} GB",
+      theme: "purple"
+    }, {
+      t: "text",
+      x: "Nếu tốc độ chậm, có thể gói đã dùng hết dung lượng.",
+      al: "c",
+      sz: "m"
+    }, P0, S0]
+  }
 };
-const getTpl = (cms, key) => ({ ...SYS_TPL[key], ...((((cms && cms.mailSys) || {})[key]) || {}) });
+const getTpl = (cms, key) => ({
+  ...SYS_TPL[key],
+  ...((((cms && cms.mailSys) || {})[key]) || {})
+});
 const subjVars = (t, v) => String(t ?? "").replace(/\{(\w+)\}/g, (m, k) => (v[k] !== undefined && v[k] !== null ? String(v[k]) : m));
 function mailRender(tpl, v, PD) {
   const rp = (t) => subjVars(t, v);
@@ -3272,7 +4260,10 @@ function mailRender(tpl, v, PD) {
   const inner = arr(tpl.blocks).map((b) => {
     if (b.t === "text") return `<p style="margin:0 0 12px;font-size:${fs[b.sz] || "15px"};line-height:1.6;color:#334155;text-align:${al(b)};white-space:pre-wrap;${b.b ? "font-weight:bold;" : ""}${b.i ? "font-style:italic;" : ""}${b.ul ? "text-decoration:underline;" : ""}">${tx(b.x)}</p>`;
     if (b.t === "orderid") return mailIdBox(htmlEscape(rp(b.label || "MÃ ĐƠN HÀNG CỦA BẠN")), v.orderId || "", b.color || tpl.c1);
-    if (b.t === "box") { const t = TPL_THEME[b.theme] || TPL_THEME.amber; return `<div style="background:${t[0]};border:2px dashed ${t[1]};padding:18px;border-radius:12px;text-align:center;margin:14px 0"><p style="margin:0;font-size:12px;color:${t[2]};font-weight:bold;text-transform:uppercase">${htmlEscape(rp(b.label))}</p><p style="margin:10px 0 0;font-size:${fs[b.sz] || "26px"};font-weight:900;color:${t[3]};word-break:break-word">${tx(b.x)}</p></div>`; }
+    if (b.t === "box") {
+      const t = TPL_THEME[b.theme] || TPL_THEME.amber;
+      return `<div style="background:${t[0]};border:2px dashed ${t[1]};padding:18px;border-radius:12px;text-align:center;margin:14px 0"><p style="margin:0;font-size:12px;color:${t[2]};font-weight:bold;text-transform:uppercase">${htmlEscape(rp(b.label))}</p><p style="margin:10px 0 0;font-size:${fs[b.sz] || "26px"};font-weight:900;color:${t[3]};word-break:break-word">${tx(b.x)}</p></div>`;
+    }
     if (b.t === "info") return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:10px 0">${[["✉️", "Email", v.email], ["#️⃣", "Mã đơn", v.orderId], ["📦", "Gói VPN", v.pkg], ["⏰", "HSD", v.exp]].map(([ic, lb, val]) => `<tr><td style="padding:9px 6px;border-bottom:1px solid #f1f5f9;width:34%;font-size:13px;color:#64748b">${ic} ${lb}</td><td style="padding:9px 6px;border-bottom:1px solid #f1f5f9;font-size:14px;font-weight:bold;color:#0f172a;word-break:break-word">${htmlEscape(val || "—")}</td></tr>`).join("")}</table>`;
     if (b.t === "portal") return mailPortal(PD, htmlEscape(rp(b.x || "TRUY CẬP CỔNG KHÁCH HÀNG")));
     if (b.t === "support") return mailSupport(PD);
@@ -3285,12 +4276,29 @@ function mailRender(tpl, v, PD) {
 }
 function orderVars(o, extra) {
   const pk = PKGS[o.pkgId] || PKGS[detectPkg(o).id], dl = o.expDate && !isLifetime(o.expDate) ? Math.ceil((parseDmy(o.expDate) + 864e5 - NOW()) / 864e5) : "";
-  return { email: o.email || "", orderId: o.id || "", pkgName: o.pkgName || "", pkg: pk ? pkgStr(pk) : (o.pkgName || ""), exp: o.expDate || "", daysLeft: dl, nickname: o.nickname || "", zalo: o.zalo || "", reason: o.reason || "Vui lòng liên hệ Admin", ...(extra || {}) };
+  return {
+    email: o.email || "",
+    orderId: o.id || "",
+    pkgName: o.pkgName || "",
+    pkg: pk ? pkgStr(pk) : (o.pkgName || ""),
+    exp: o.expDate || "",
+    daysLeft: dl,
+    nickname: o.nickname || "",
+    zalo: o.zalo || "",
+    reason: o.reason || "Vui lòng liên hệ Admin",
+    ...(extra || {})
+  };
 }
 const kindKey = (kind) => (kind === "upgrade" ? "upgrade" : kind === "renew" ? "renew" : "success");
-function buildSuccessMailHtml(o, PD, kind, cms) { return mailRender(getTpl(cms, kindKey(kind)), orderVars(o), PD); }
-function buildFailedMailHtml(o, PD, cms) { return mailRender(getTpl(cms, "failed"), orderVars(o), PD); }
-function buildExpMailHtml(o, expText, PD, cms) { return mailRender(getTpl(cms, "exp"), orderVars(o, { expText }), PD); }
+function buildSuccessMailHtml(o, PD, kind, cms) {
+  return mailRender(getTpl(cms, kindKey(kind)), orderVars(o), PD);
+}
+function buildFailedMailHtml(o, PD, cms) {
+  return mailRender(getTpl(cms, "failed"), orderVars(o), PD);
+}
+function buildExpMailHtml(o, expText, PD, cms) {
+  return mailRender(getTpl(cms, "exp"), orderVars(o, { expText }), PD);
+}
 const sysSubject = (cms, key, o, extra) => subjVars(getTpl(cms, key).subject, orderVars(o, extra));
 
 // ---- Mail báo cho Admin
@@ -3311,18 +4319,15 @@ function buildAdminMail(kind, o, x) {
 // YAML
 // ====================================================================
 
-function yamlQuote(value) { return JSON.stringify(String(value ?? "")); }
+function yamlQuote(value) {
+  return JSON.stringify(String(value ?? ""));
+}
 
 function makeSimpleYaml(names) {
   const proxies = names.map(name => {
     return `    - ${JSON.stringify({ name, type: "vless", server: "127.0.0.1", port: 1, uuid: "00000000-0000-0000-0000-000000000000", udp: false })}`;
   });
-  return [
-    "mixed-port: 7890", "allow-lan: false", "bind-address: '*'", "mode: rule", "log-level: info",
-    "proxies:", ...proxies, "proxy-groups:",
-    `    - { name: "VPN Trinh Hg", type: select, proxies: [${names.map(yamlQuote).join(", ")}] }`,
-    "rules:", '    - "MATCH,VPN Trinh Hg"'
-  ].join("\n");
+  return ["mixed-port: 7890", "allow-lan: false", "bind-address: '*'", "mode: rule", "log-level: info", "proxies:", ...proxies, "proxy-groups:", `    - { name: "VPN Trinh Hg", type: select, proxies: [${names.map(yamlQuote).join(", ")}] }`, "rules:", '    - "MATCH,VPN Trinh Hg"'].join("\n");
 }
 
 // ====================================================================
@@ -3330,18 +4335,34 @@ function makeSimpleYaml(names) {
 // ====================================================================
 
 function makeSimpleSingbox(names) {
-  const outbounds = [
-    { type: "selector", tag: "VPN Trinh Hg", outbounds: names },
-    { type: "direct", tag: "direct" }, { type: "block", tag: "block" }, { type: "dns", tag: "dns-out" }
-  ];
+  const outbounds = [{ type: "selector", tag: "VPN Trinh Hg", outbounds: names }, { type: "direct", tag: "direct" }, { type: "block", tag: "block" }, { type: "dns", tag: "dns-out" }];
   for (const name of names) {
-    outbounds.push({ type: "vless", tag: name, server: "127.0.0.1", server_port: 1, uuid: "00000000-0000-0000-0000-000000000000" });
+    outbounds.push({
+      type: "vless",
+      tag: name,
+      server: "127.0.0.1",
+      server_port: 1,
+      uuid: "00000000-0000-0000-0000-000000000000"
+    });
   }
   return JSON.stringify({
     log: { level: "info" },
-    dns: { servers: [{ tag: "dns-direct", address: "223.5.5.5", detour: "direct" }], final: "dns-direct" },
-    inbounds: [{ type: "mixed", tag: "mixed-in", listen: "127.0.0.1", listen_port: 2080 }],
-    outbounds, route: { auto_detect_interface: true, rules: [{ protocol: "dns", outbound: "dns-out" }], final: "VPN Trinh Hg" }
+    dns: {
+      servers: [{ tag: "dns-direct", address: "223.5.5.5", detour: "direct" }],
+      final: "dns-direct"
+    },
+    inbounds: [{
+      type: "mixed",
+      tag: "mixed-in",
+      listen: "127.0.0.1",
+      listen_port: 2080
+    }],
+    outbounds,
+    route: {
+      auto_detect_interface: true,
+      rules: [{ protocol: "dns", outbound: "dns-out" }],
+      final: "VPN Trinh Hg"
+    }
   }, null, 2);
 }
 
@@ -3358,7 +4379,8 @@ function decB64(str) {
     const bytes = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
     return new TextDecoder("utf-8").decode(bytes);
-  } catch { return ""; }
+  } catch { return "";
+  }
 }
 
 function encB64(str) {
@@ -3372,10 +4394,7 @@ function encB64(str) {
 // SUB PROCESS & CHUẨN HÓA NODE ĐỘC LẬP
 // ====================================================================
 
-const INFO_SKIP = [
-  "剩余流量", "已用流量", "套餐总量", "距离下次重置", "套餐到期", "认准官网", "官网地址", "官网", "kitty.fo",
-  "SKYLUMO", "如果现在只能看到", "立即更新教程", "群", "频道", "公告"
-];
+const INFO_SKIP = ["剩余流量", "已用流量", "套餐总量", "距离下次重置", "套餐到期", "认准官网", "官网地址", "官网", "kitty.fo", "SKYLUMO", "如果现在只能看到", "立即更新教程", "群", "频道", "公告"];
 const ISP_DROP_KEYWORDS = new Set(["CUCM", "CMCU", "CTCUCM", "CTCU"]);
 function cleanLiangxinNode(rawName) {
   if (!rawName) return "Liangxin - VPNTrinhHg";
@@ -3406,19 +4425,7 @@ function cleanDjjcNode(rawName) {
   }
 }
 
-const KITTY_COUNTRY_MAP = [
-  ["United States", "美国", "🇺🇸"],
-  ["Malaysia", "马来西亚", "🇲🇾"],
-  ["Singapore", "新加坡", "🇸🇬"],
-  ["Japan", "日本", "🇯🇵"],
-  ["Korea", "韩国", "🇰🇷"],
-  ["Netherlands", "荷兰", "🇳🇱"],
-  ["United Kingdom", "英国", "🇬🇧"],
-  ["Hong Kong", "香港", "🇭🇰"],
-  ["Hongkong", "香港", "🇭🇰"],
-  ["Taiwan", "台湾", "🇹🇼"],
-  ["Germany", "德国", "🇩🇪"]
-];
+const KITTY_COUNTRY_MAP = [["United States", "美国", "🇺🇸"], ["Malaysia", "马来西亚", "🇲🇾"], ["Singapore", "新加坡", "🇸🇬"], ["Japan", "日本", "🇯🇵"], ["Korea", "韩国", "🇰🇷"], ["Netherlands", "荷兰", "🇳🇱"], ["United Kingdom", "英国", "🇬🇧"], ["Hong Kong", "香港", "🇭🇰"], ["Hongkong", "香港", "🇭🇰"], ["Taiwan", "台湾", "🇹🇼"], ["Germany", "德国", "🇩🇪"]];
 
 function cleanKittyNode(rawName) {
   if (!rawName) return "Kitty - VPNTrinhHg";
@@ -3458,7 +4465,7 @@ function formatNodeName(rawName, prov = "liangxin") {
 function processB64(rawB64, infoNames, vp, isLiangxin) {
   const decoded = decB64(rawB64);
   if (!decoded) return { newB64: rawB64, yamlStr: "", singboxStr: "" };
-  
+
   const newB64Lines = infoNames.map(n => vp + encodeURIComponent(n));
   const proxies = [];
   const seenNames = {};
@@ -3484,8 +4491,12 @@ function processB64(rawB64, infoNames, vp, isLiangxin) {
           const trObj = ob.transport || {};
           const roObj = tlsObj.reality || {};
           const px = {
-            name: newName, type: "vless", server: ob.server, port: Number(ob.server_port) || 443,
-            uuid: ob.uuid, udp: true
+            name: newName,
+            type: "vless",
+            server: ob.server,
+            port: Number(ob.server_port) || 443,
+            uuid: ob.uuid,
+            udp: true
           };
           if (ob.flow) px.flow = ob.flow;
           if (tlsObj.utls && tlsObj.utls.fingerprint) px["client-fingerprint"] = tlsObj.utls.fingerprint;
@@ -3495,7 +4506,10 @@ function processB64(rawB64, infoNames, vp, isLiangxin) {
             px.tls = true;
             if (roObj.enabled || roObj.public_key) {
               secType = "reality";
-              px["reality-opts"] = { "public-key": roObj.public_key || "", "short-id": roObj.short_id || "" };
+              px["reality-opts"] = {
+                "public-key": roObj.public_key || "",
+                "short-id": roObj.short_id || ""
+              };
             } else {
               secType = "tls";
             }
@@ -3503,7 +4517,12 @@ function processB64(rawB64, infoNames, vp, isLiangxin) {
           }
           if (trObj.type === "ws") {
             px.network = "ws";
-            px["ws-opts"] = { path: trObj.path || "/", headers: { Host: (trObj.headers && trObj.headers.Host) || px.servername || px.server } };
+            px["ws-opts"] = {
+              path: trObj.path || "/",
+              headers: {
+                Host: (trObj.headers && trObj.headers.Host) || px.servername || px.server
+              }
+            };
           } else if (trObj.type === "grpc") {
             px.network = "grpc";
             px["grpc-opts"] = { "grpc-service-name": trObj.service_name || "" };
@@ -3534,19 +4553,27 @@ function processB64(rawB64, infoNames, vp, isLiangxin) {
           newB64Lines.push(`vless://${px.uuid}@${px.server}:${px.port}?${params.join("&")}#${encodeURIComponent(newName)}`);
         } else if (pType === "hysteria2" || pType === "hy2") {
           const px = {
-            name: newName, type: "hysteria2", server: ob.server, port: Number(ob.server_port) || 443,
-            password: ob.password || "", udp: true, "skip-cert-verify": true
+            name: newName,
+            type: "hysteria2",
+            server: ob.server,
+            port: Number(ob.server_port) || 443,
+            password: ob.password || "",
+            udp: true,
+            "skip-cert-verify": true
           };
           if (ob.tls && ob.tls.server_name) px.sni = ob.tls.server_name;
           const mport = ob.mport || ob.ports;
-          if (mport) { px.mport = String(mport); px.ports = String(mport); }
+          if (mport) {
+            px.mport = String(mport);
+            px.ports = String(mport);
+          }
           proxies.push(px);
           const sniP = px.sni ? `&sni=${px.sni}` : "";
           const mpP = px.mport ? `&mport=${px.mport}` : "";
           newB64Lines.push(`hysteria2://${px.password}@${px.server}:${px.port}?insecure=1${sniP}${mpP}#${encodeURIComponent(newName)}`);
         }
       }
-    } catch(e) {}
+    } catch (e) {}
   } else {
     const lines = decoded.split(/\r?\n/).map(l => l.trim()).filter(l => l.includes("://"));
     for (const line of lines) {
@@ -3571,11 +4598,11 @@ function processB64(rawB64, infoNames, vp, isLiangxin) {
       if (proxy && proxy.server && proxy.name) proxies.push(proxy);
     }
   }
-  
+
   const newB64 = encB64(newB64Lines.join("\n"));
   const yamlStr = proxies.length ? buildYaml(proxies, infoNames, isLiangxin) : "";
   const singboxStr = proxies.length ? buildSingboxFull(proxies, infoNames, isLiangxin) : "";
-  
+
   return { newB64, yamlStr, singboxStr };
 }
 
@@ -3583,7 +4610,12 @@ function processB64(rawB64, infoNames, vp, isLiangxin) {
 // URI PARSER
 // ====================================================================
 
-function safeDecode(value) { try { return decodeURIComponent(value); } catch { return value; } }
+function safeDecode(value) {
+  try {
+    return decodeURIComponent(value);
+  } catch { return value;
+  }
+}
 
 function parseURI(line) {
   try {
@@ -3592,13 +4624,19 @@ function parseURI(line) {
     const base = hi >= 0 ? line.slice(0, hi) : line;
     const u = new URL(base);
     const p = {};
-    u.searchParams.forEach((v, k) => { p[k] = v; });
+    u.searchParams.forEach((v, k) => {
+      p[k] = v;
+    });
     const proto = u.protocol.replace(":", "").toLowerCase();
 
     if (proto === "hysteria2" || proto === "hy2") {
-      const proxy = { 
-        name, type: "hysteria2", server: u.hostname, port: parseInt(u.port) || 443, 
-        password: safeDecode(u.username || ""), udp: true,
+      const proxy = {
+        name,
+        type: "hysteria2",
+        server: u.hostname,
+        port: parseInt(u.port) || 443,
+        password: safeDecode(u.username || ""),
+        udp: true,
         "skip-cert-verify": true // Bắt buộc true để tránh lỗi TLS Handshake
       };
       if (p.sni) proxy.sni = p.sni;
@@ -3611,7 +4649,14 @@ function parseURI(line) {
     if (proto === "vless") {
       const sec = (p.security || "none").toLowerCase();
       const net = (p.type || "tcp").toLowerCase();
-      const proxy = { name, type: "vless", server: u.hostname, port: parseInt(u.port) || 443, uuid: safeDecode(u.username || ""), udp: true };
+      const proxy = {
+        name,
+        type: "vless",
+        server: u.hostname,
+        port: parseInt(u.port) || 443,
+        uuid: safeDecode(u.username || ""),
+        udp: true
+      };
 
       proxy.tls = sec === "tls" || sec === "reality";
       if (p.insecure === "1") proxy["skip-cert-verify"] = true;
@@ -3628,7 +4673,10 @@ function parseURI(line) {
 
       if (net === "ws") {
         proxy.network = "ws";
-        proxy["ws-opts"] = { path: safeDecode(p.path || "/"), headers: { Host: p.host || u.hostname } };
+        proxy["ws-opts"] = {
+          path: safeDecode(p.path || "/"),
+          headers: { Host: p.host || u.hostname }
+        };
       } else if (net === "grpc") {
         proxy.network = "grpc";
         proxy["grpc-opts"] = { "grpc-service-name": p.serviceName || "" };
@@ -3638,20 +4686,32 @@ function parseURI(line) {
 
     if (proto === "trojan") {
       return {
-        name, type: "trojan", server: u.hostname, port: parseInt(u.port) || 443, password: safeDecode(u.username || ""), udp: true,
-        ...(p.sni ? { sni: p.sni } : {}), ...(p.allowInsecure === "1" ? { "skip-cert-verify": true } : {})
+        name,
+        type: "trojan",
+        server: u.hostname,
+        port: parseInt(u.port) || 443,
+        password: safeDecode(u.username || ""),
+        udp: true,
+        ...(p.sni ? { sni: p.sni } : {}),
+        ...(p.allowInsecure === "1" ? { "skip-cert-verify": true } : {})
       };
     }
     if (proto === "anytls") {
       return {
-        name, type: "anytls", server: u.hostname, port: parseInt(u.port) || 443, password: safeDecode(u.username || ""), udp: true,
+        name,
+        type: "anytls",
+        server: u.hostname,
+        port: parseInt(u.port) || 443,
+        password: safeDecode(u.username || ""),
+        udp: true,
         "skip-cert-verify": true,
         ...(p.sni ? { sni: p.sni } : {}),
         ...(p.fp ? { "client-fingerprint": p.fp } : {}),
         ...(p.alpn ? { alpn: p.alpn.split(",") } : {})
       };
     }
-  } catch { return null; }
+  } catch { return null;
+  }
   return null;
 }
 
@@ -4556,9 +5616,15 @@ const DJJC_RULES = parseRules(DJJC_RULES_RAW);
 const COMBO_RULES = Array.from(new Set([...LIANGXIN_RULES, ...DJJC_RULES]));
 
 function proxyToInline(p) {
-  const out = { name: p.name, type: p.type, server: p.server, port: Number(p.port) };
+  const out = {
+    name: p.name,
+    type: p.type,
+    server: p.server,
+    port: Number(p.port)
+  };
   if (p.type === "vless") {
-    out.uuid = p.uuid; out.udp = p.udp !== false;
+    out.uuid = p.uuid;
+    out.udp = p.udp !== false;
     if (p.tls) out.tls = true;
     if (p["skip-cert-verify"]) out["skip-cert-verify"] = true;
     if (p.flow) out.flow = p.flow;
@@ -4569,18 +5635,21 @@ function proxyToInline(p) {
     if (p["ws-opts"]) out["ws-opts"] = p["ws-opts"];
     if (p["grpc-opts"]) out["grpc-opts"] = p["grpc-opts"];
   } else if (p.type === "hysteria2") {
-    out.password = p.password; out.udp = p.udp !== false;
+    out.password = p.password;
+    out.udp = p.udp !== false;
     if (p.sni) out.sni = p.sni;
     if (p["skip-cert-verify"]) out["skip-cert-verify"] = true;
     if (p.obfs) out.obfs = p.obfs;
     if (p["obfs-password"]) out["obfs-password"] = p["obfs-password"];
     if (p.mport) out.mport = p.mport;
   } else if (p.type === "trojan") {
-    out.password = p.password; out.udp = p.udp !== false;
+    out.password = p.password;
+    out.udp = p.udp !== false;
     if (p.sni) out.sni = p.sni;
     if (p["skip-cert-verify"]) out["skip-cert-verify"] = true;
   } else if (p.type === "anytls") {
-    out.password = p.password; out.udp = p.udp !== false;
+    out.password = p.password;
+    out.udp = p.udp !== false;
     if (p.sni) out.sni = p.sni;
     if (p["skip-cert-verify"]) out["skip-cert-verify"] = true;
     if (p.alpn) out.alpn = p.alpn;
@@ -4601,7 +5670,7 @@ function buildYaml(proxies, infoNames, mode = "liangxin") {
 
   const mLow = String(mode).toLowerCase();
   let dnsStr = LIANGXIN_DNS_STR, rules = LIANGXIN_RULES;
-  
+
   if (mLow === "kitty" || mLow === "single_kt") {
     dnsStr = KITTY_DNS_STR;
     rules = KITTY_RULES;
@@ -4616,11 +5685,8 @@ function buildYaml(proxies, infoNames, mode = "liangxin") {
     dnsStr = DJJC_DNS_STR;
     rules = DJJC_RULES;
   }
-  
-  const lines = [
-    "mixed-port: 7890", "allow-lan: false", "bind-address: '*'", "mode: rule", "log-level: info",
-    "external-controller: '127.0.0.1:9090'", "unified-delay: true", "tcp-concurrent: true"
-  ];
+
+  const lines = ["mixed-port: 7890", "allow-lan: false", "bind-address: '*'", "mode: rule", "log-level: info", "external-controller: '127.0.0.1:9090'", "unified-delay: true", "tcp-concurrent: true"];
 
   lines.push(dnsStr);
   lines.push("proxies:");
@@ -4661,56 +5727,60 @@ function buildSingboxFull(proxies, infoNames, mode = "liangxin") {
   }
 
   const dns = {
-    servers: [
-      { tag: "proxy-dns", address: "https://8.8.8.8/dns-query", detour: "节点选择" },
-      { tag: "direct-dns", address: "https://223.5.5.5/dns-query", detour: "direct" },
-      { tag: "block-dns", address: "rcode://success" }
-    ],
-    rules: [
-      { outbound: "any", server: "direct-dns" },
-      { clash_mode: "Direct", server: "direct-dns" },
-      { clash_mode: "Global", server: "proxy-dns" }
-    ],
+    servers: [{
+      tag: "proxy-dns",
+      address: "https://8.8.8.8/dns-query",
+      detour: "节点选择"
+    }, {
+      tag: "direct-dns",
+      address: "https://223.5.5.5/dns-query",
+      detour: "direct"
+    }, { tag: "block-dns", address: "rcode://success" }],
+    rules: [{ outbound: "any", server: "direct-dns" }, { clash_mode: "Direct", server: "direct-dns" }, { clash_mode: "Global", server: "proxy-dns" }],
     final: "proxy-dns",
     independent_cache: true
   };
 
-  const inbounds = [
-    {
-      type: "mixed", tag: "mixed-in",
-      listen: "127.0.0.1", listen_port: 2080,
-      sniff: true, sniff_override_destination: true
-    },
-    {
-      type: "tun", tag: "tun-in",
-      inet4_address: "172.19.0.1/30",
-      inet6_address: "fdfe:dcba:9876::1/126",
-      mtu: 9000, auto_route: true, strict_route: true,
-      sniff: true, sniff_override_destination: true,
-      domain_strategy: "prefer_ipv4"
-    }
-  ];
+  const inbounds = [{
+    type: "mixed",
+    tag: "mixed-in",
+    listen: "127.0.0.1",
+    listen_port: 2080,
+    sniff: true,
+    sniff_override_destination: true
+  }, {
+    type: "tun",
+    tag: "tun-in",
+    inet4_address: "172.19.0.1/30",
+    inet6_address: "fdfe:dcba:9876::1/126",
+    mtu: 9000,
+    auto_route: true,
+    strict_route: true,
+    sniff: true,
+    sniff_override_destination: true,
+    domain_strategy: "prefer_ipv4"
+  }];
 
-  const outbounds = [
-    {
-      type: "selector", tag: "节点选择",
-      outbounds: ["自动选择", ...realNames],
-      default: "自动选择"
-    },
-    {
-      type: "urltest", tag: "自动选择",
-      outbounds: realNames,
-      url: "https://www.gstatic.com/generate_204",
-      interval: "1m", tolerance: 50, idle_timeout: "30m"
-    },
-    { type: "direct", tag: "direct" },
-    { type: "block",  tag: "block" },
-    { type: "dns",    tag: "dns-out" }
-  ];
+  const outbounds = [{
+    type: "selector",
+    tag: "节点选择",
+    outbounds: ["自动选择", ...realNames],
+    default: "自动选择"
+  }, {
+    type: "urltest",
+    tag: "自动选择",
+    outbounds: realNames,
+    url: "https://www.gstatic.com/generate_204",
+    interval: "1m",
+    tolerance: 50,
+    idle_timeout: "30m"
+  }, { type: "direct", tag: "direct" }, { type: "block", tag: "block" }, { type: "dns", tag: "dns-out" }];
 
   infoNames.forEach((n, i) => outbounds.push({
-    type: "vless", tag: `${n} § ${i}`,
-    server: "127.0.0.1", server_port: 1,
+    type: "vless",
+    tag: `${n} § ${i}`,
+    server: "127.0.0.1",
+    server_port: 1,
     uuid: "00000000-0000-0000-0000-000000000000",
     packet_encoding: "xudp"
   }));
@@ -4721,15 +5791,15 @@ function buildSingboxFull(proxies, infoNames, mode = "liangxin") {
   }
 
   const direct_domain = [], direct_suffix = [], direct_kw = [], direct_ip = [], direct_geoip = [];
-  const proxy_domain  = [], proxy_suffix  = [], proxy_kw  = [], proxy_ip  = [];
-  const block_domain  = [], block_suffix  = [], block_kw  = [];
+  const proxy_domain = [], proxy_suffix = [], proxy_kw = [], proxy_ip = [];
+  const block_domain = [], block_suffix = [], block_kw = [];
 
   for (const rule_str of activeRules) {
     const parts = rule_str.split(",");
     if (parts.length < 3) continue;
     const [rtype, value, target] = [parts[0], parts[1], parts[2]];
     const isDirect = target === "DIRECT";
-    const isBlock  = target === "REJECT" || target === "REJECT-DROP";
+    const isBlock = target === "REJECT" || target === "REJECT-DROP";
 
     if (rtype === "DOMAIN") {
       if (isDirect) direct_domain.push(value);
@@ -4754,25 +5824,25 @@ function buildSingboxFull(proxies, infoNames, mode = "liangxin") {
   const routeRules = [{ protocol: "dns", outbound: "dns-out" }];
   if (block_domain.length || block_suffix.length || block_kw.length) {
     const r = { outbound: "block" };
-    if (block_domain.length)  r.domain         = block_domain;
-    if (block_suffix.length)  r.domain_suffix   = block_suffix;
-    if (block_kw.length)      r.domain_keyword  = block_kw;
+    if (block_domain.length) r.domain = block_domain;
+    if (block_suffix.length) r.domain_suffix = block_suffix;
+    if (block_kw.length) r.domain_keyword = block_kw;
     routeRules.push(r);
   }
   if (direct_domain.length || direct_suffix.length || direct_kw.length) {
     const r = { outbound: "direct" };
-    if (direct_domain.length) r.domain         = direct_domain;
-    if (direct_suffix.length) r.domain_suffix  = direct_suffix;
-    if (direct_kw.length)     r.domain_keyword  = direct_kw;
+    if (direct_domain.length) r.domain = direct_domain;
+    if (direct_suffix.length) r.domain_suffix = direct_suffix;
+    if (direct_kw.length) r.domain_keyword = direct_kw;
     routeRules.push(r);
   }
-  if (direct_ip.length)    routeRules.push({ ip_cidr: direct_ip, outbound: "direct" });
+  if (direct_ip.length) routeRules.push({ ip_cidr: direct_ip, outbound: "direct" });
   if (direct_geoip.length) routeRules.push({ geoip: direct_geoip, outbound: "direct" });
   if (proxy_domain.length || proxy_suffix.length || proxy_kw.length) {
     const r = { outbound: "节点选择" };
-    if (proxy_domain.length) r.domain        = proxy_domain;
-    if (proxy_suffix.length) r.domain_suffix  = proxy_suffix;
-    if (proxy_kw.length)     r.domain_keyword = proxy_kw;
+    if (proxy_domain.length) r.domain = proxy_domain;
+    if (proxy_suffix.length) r.domain_suffix = proxy_suffix;
+    if (proxy_kw.length) r.domain_keyword = proxy_kw;
     routeRules.push(r);
   }
   if (proxy_ip.length) routeRules.push({ ip_cidr: proxy_ip, outbound: "节点选择" });
@@ -4780,11 +5850,22 @@ function buildSingboxFull(proxies, infoNames, mode = "liangxin") {
 
   return JSON.stringify({
     log: { level: "info", timestamp: true },
-    dns, inbounds, outbounds,
-    route: { rules: routeRules, final: "节点选择", auto_detect_interface: true, override_android_vpn: true },
+    dns,
+    inbounds,
+    outbounds,
+    route: {
+      rules: routeRules,
+      final: "节点选择",
+      auto_detect_interface: true,
+      override_android_vpn: true
+    },
     experimental: {
       cache_file: { enabled: true, path: "cache.db", store_fakeip: true },
-      clash_api: { external_controller: "127.0.0.1:9090", external_ui: "ui", secret: "" }
+      clash_api: {
+        external_controller: "127.0.0.1:9090",
+        external_ui: "ui",
+        secret: ""
+      }
     }
   }, null, 2);
 }
@@ -4792,30 +5873,65 @@ function buildSingboxFull(proxies, infoNames, mode = "liangxin") {
 function proxyToSingbox(p) {
   if (!p || !p.type) return null;
   if (p.type === "vless") {
-    const out = { type: "vless", tag: p.name, server: p.server, server_port: Number(p.port) || 443, uuid: p.uuid };
+    const out = {
+      type: "vless",
+      tag: p.name,
+      server: p.server,
+      server_port: Number(p.port) || 443,
+      uuid: p.uuid
+    };
     out.packet_encoding = "xudp";
     if (p.flow) out.flow = p.flow;
-    if (p.network === "ws" && p["ws-opts"]) out.transport = { type: "ws", path: p["ws-opts"].path || "/", headers: p["ws-opts"].headers || {}, max_early_data: 2048, early_data_header_name: "Sec-WebSocket-Protocol" };
-    else if (p.network === "grpc" && p["grpc-opts"]) out.transport = { type: "grpc", service_name: p["grpc-opts"]["grpc-service-name"] || "" };
+    if (p.network === "ws" && p["ws-opts"]) out.transport = {
+      type: "ws",
+      path: p["ws-opts"].path || "/",
+      headers: p["ws-opts"].headers || {},
+      max_early_data: 2048,
+      early_data_header_name: "Sec-WebSocket-Protocol"
+    };
+    else if (p.network === "grpc" && p["grpc-opts"]) out.transport = {
+      type: "grpc",
+      service_name: p["grpc-opts"]["grpc-service-name"] || ""
+    };
     if (p.tls) {
       const tls = { enabled: true };
       if (p.servername) tls.server_name = p.servername;
       if (p["skip-cert-verify"]) tls.insecure = true;
       if (p["client-fingerprint"]) tls.utls = { enabled: true, fingerprint: p["client-fingerprint"] };
-      if (p["reality-opts"]) tls.reality = { enabled: true, public_key: p["reality-opts"]["public-key"] || "", short_id: p["reality-opts"]["short-id"] || "" };
+      if (p["reality-opts"]) tls.reality = {
+        enabled: true,
+        public_key: p["reality-opts"]["public-key"] || "",
+        short_id: p["reality-opts"]["short-id"] || ""
+      };
       out.tls = tls;
     }
     return out;
   }
   if (p.type === "hysteria2") {
-    const out = { type: "hysteria2", tag: p.name, server: p.server, server_port: Number(p.port) || 443, password: p.password || "" };
+    const out = {
+      type: "hysteria2",
+      tag: p.name,
+      server: p.server,
+      server_port: Number(p.port) || 443,
+      password: p.password || ""
+    };
     out.tls = { enabled: true, server_name: p.sni || "", insecure: true }; // Luôn insecure: true
     if (p.obfs) out.obfs = { type: p.obfs, password: p["obfs-password"] || "" };
     return out;
   }
   if (p.type === "trojan") {
-    const out = { type: "trojan", tag: p.name, server: p.server, server_port: Number(p.port) || 443, password: p.password || "" };
-    out.tls = { enabled: true, server_name: p.sni || "", insecure: !!p["skip-cert-verify"] };
+    const out = {
+      type: "trojan",
+      tag: p.name,
+      server: p.server,
+      server_port: Number(p.port) || 443,
+      password: p.password || ""
+    };
+    out.tls = {
+      enabled: true,
+      server_name: p.sni || "",
+      insecure: !!p["skip-cert-verify"]
+    };
     return out;
   }
   return null;
