@@ -39,7 +39,9 @@ export function isTestMode() {
   const urlParam = new URLSearchParams(location.search).get("test");
   if (urlParam === "1") return true;
   if (urlParam === "0") return false;
-  if (typeof localStorage !== "undefined") {
+  // localStorage testMode chỉ áp dụng cho trang quản trị Admin, tuyệt đối không ô nhiễm trang khách
+  const isAdmin = typeof location !== "undefined" && (location.pathname.includes("admin") || location.pathname.startsWith("/admin"));
+  if (isAdmin && typeof localStorage !== "undefined") {
     try {
       const siteKey = getSiteKey();
       const adminTest = localStorage.getItem(siteKey + "_testMode");
