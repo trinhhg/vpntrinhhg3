@@ -1014,9 +1014,14 @@ const notTomb = (links, tb) => {
 };
 
 // ---------------------------------------------------------------- state
-async function loadAll(KV, env) {
+const isTestOrderRecord = (o) => !o || !o.id || String(o.id).startsWith("DH_TEST_") || o.isTest === true || String(o.email || "").toLowerCase().includes("khach_test");
+
+async function loadAll(KV, env, isTestOverride = null) {
   const g = async (k, d) => safeJson(await KV.get(k), d);
-  const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
+  let isTest = isTestOverride;
+  if (isTest === null) {
+    isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
+  }
   const sb = env ? getSupabase(env, isTest) : null;
   let sbOk = false;
   let sbError = null;
@@ -1038,7 +1043,10 @@ async function loadAll(KV, env) {
   // Fallback đọc ALL_ORDERS từ KV nếu production và Supabase chưa trả về dữ liệu (bảo toàn 224 đơn cũ)
   if (!isTest && (!sbOk || orders.length === 0)) {
     const kvOrders = arr(await g("ALL_ORDERS", []));
-    if (kvOrders.length > 0) orders = kvOrders;
+    if (kvOrders.length > 0) orders = kvOrders.filter(o => !isTestOrderRecord(o));
+  } else if (isTest && (!sbOk || orders.length === 0)) {
+    const kvTestOrders = arr(await g("ALL_ORDERS_TEST", []));
+    if (kvTestOrders.length > 0) orders = kvTestOrders;
   }
   const st = {
     orders,
@@ -1213,27 +1221,52 @@ function fulfillOrder(st, o, me, log) {
     link = null; // Khách chủ động yêu cầu cấp link mới độc lập
   } else if (!link && o.subLinkDecision === "KEEP_EXISTING") {
     if (o.targetLink) {
-      link = st.links.find(l => l && (l.masked === o.targetLink || l.id === o.targetLink));
+      // Khách đã chọn link cụ thể: chỉ được phép dùng đúng link đó
+      link = st.links.find((l) => l && (l.masked === o.targetLink || l.id === o.targetLink));
+
+      // targetLink có thể là mã/link nằm trong thông tin của đơn cũ
       if (!link) {
-        const srcOrd = st.orders.find(x => x && (x.info1 === o.targetLink || x.info2 === o.targetLink || x.info3 === o.targetLink));
-        if (srcOrd && srcOrd[f]) link = st.links.find(l => l && l.masked === srcOrd[f]);
+        const srcOrd = st.orders.find((x) => x && (x.info1 === o.targetLink || x.info2 === o.targetLink || x.info3 === o.targetLink));
+
+        if (srcOrd && srcOrd[f]) {
+          link = st.links.find((l) => l && l.masked === srcOrd[f]);
+        }
       }
-    }
-    if (!link && o.renewOf) {
-      const srcOrd = st.orders.find(x => x && normId(x.id) === normId(o.renewOf));
-      if (srcOrd) {
-        if (srcOrd[f]) link = st.links.find(l => l && l.masked === srcOrd[f]);
-        if (!link) link = st.links.find(l => l && l.orderId && normId(l.orderId) === normId(srcOrd.id));
+
+      // Không tìm được đúng link khách chọn thì dừng, không lấy nhầm link khác
+      if (!link) {
+        log("error", "fulfill", "Không tìm thấy link khách đã chọn", o.id, o.targetLink);
+        return "error";
       }
-    }
-    if (!link && em) {
-      for (const x of st.orders) {
-        if (!x || x === o || normStatus(x.status) !== "success" || String(x.email || "").toLowerCase() !== em) continue;
-        if (x[f]) {
-          const found = st.links.find(l => l && l.masked === x[f]);
-          if (found) {
-            link = found;
-            break;
+    } else {
+      // Đơn cũ không có targetLink: giữ fallback tương thích dữ liệu cũ
+      if (o.renewOf) {
+        const srcOrd = st.orders.find((x) => x && normId(x.id) === normId(o.renewOf));
+
+        if (srcOrd) {
+          if (srcOrd[f]) {
+            link = st.links.find((l) => l && l.masked === srcOrd[f]);
+          }
+
+          if (!link) {
+            link = st.links.find((l) => l && l.orderId && normId(l.orderId) === normId(srcOrd.id));
+          }
+        }
+      }
+
+      if (!link && em) {
+        for (const x of st.orders) {
+          if (!x || x === o || normStatus(x.status) !== "success" || String(x.email || "").toLowerCase() !== em) {
+            continue;
+          }
+
+          if (x[f]) {
+            const found = st.links.find((l) => l && l.masked === x[f]);
+
+            if (found) {
+              link = found;
+              break;
+            }
           }
         }
       }
@@ -1882,7 +1915,8 @@ export default {
       return RAW(t || '{"version":"","vi":{},"en":{},"zh":{}}');
     }
     if (p === "/api/public/lookup" && m === "POST") {
-      const b = await body(), st = await loadAll(KV, env);
+      const isTestReq = url.searchParams.get("test") === "1" || request.headers.get("X-Test-Mode") === "1";
+      const b = await body(), st = await loadAll(KV, env, isTestReq);
       let o = findOrder(st.orders, b.q);
       // Fallback kiểm tra bộ nhớ đệm đơn hàng chờ (KV Pending Cache)
       if (!o && b.q) {
@@ -1890,11 +1924,14 @@ export default {
         if (rawPending) o = safeJson(rawPending, null);
       }
       if (!o) return J({ ok: false, error: "not_found" }, 404);
+      if (o.isTest && !isTestReq) return J({ ok: false, error: "not_found" }, 404);
       const em = String(o.email || b.q || "").toLowerCase();
       const existingLinks = [];
       const seenMasked = new Set();
       for (const ord of st.orders) {
         if (!ord || String(ord.email || "").toLowerCase() !== em) continue;
+        if (ord.isTest && !isTestReq) continue;
+        if (String(ord.id).startsWith("DH_TEST_") && !isTestReq) continue;
         for (const f of ["info1", "info2", "info3"]) {
           const lk = ord[f];
           if (lk && !seenMasked.has(lk)) {
@@ -1911,9 +1948,10 @@ export default {
       return J({ ok: true, order: pub(o, st), existingLinks });
     }
     if (p === "/api/public/order" && m === "POST") {
+      const isTestReq = url.searchParams.get("test") === "1" || request.headers.get("X-Test-Mode") === "1";
       const b = await body(), id = normId(b.id), pk = PKGS[b.pkgId], qty = Math.max(1, Math.min(120, parseInt(b.qty) || 1));
       if (!/^DH[A-Z0-9]{10}$/.test(id) || !pk || pk.old) return J({ ok: false, error: "Dữ liệu đơn hàng không hợp lệ" }, 400);
-      const st = await loadAll(KV, env), now = NOW();
+      const st = await loadAll(KV, env, isTestReq), now = NOW();
       const dup = st.orders.find((o) => o && normId(o.id) === id);
       if (dup) return J({ ok: true, order: pub(dup, st), existed: true });
       let email = String(b.email || "").trim(), zalo = String(b.zalo || "").trim();
@@ -1926,6 +1964,51 @@ export default {
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return J({ ok: false, error: "Email không hợp lệ" }, 400);
       const isRenew = !!renewSrc;
       const method = String(b.method || "Ngân hàng VN"), bank = isBankMethod(method);
+
+      // Tra cứu tất cả link sub hiện hữu của email này trong kho dữ liệu phù hợp
+      const emLower = email.toLowerCase();
+      const existingSubLinks = [];
+      const seenUrls = new Set();
+      if (emLower) {
+        for (const ord of st.orders) {
+          if (!ord || String(ord.email || "").toLowerCase() !== emLower) continue;
+          if (ord.isTest && !isTestReq) continue;
+          if (String(ord.id).startsWith("DH_TEST_") && !isTestReq) continue;
+          for (const f of ["info1", "info2", "info3"]) {
+            const lk = ord[f];
+            if (lk && !seenUrls.has(lk)) {
+              seenUrls.add(lk);
+              existingSubLinks.push({ url: lk, orderId: ord.id });
+            }
+          }
+        }
+      }
+
+      // XÁC THỰC BẮT BUỘC VÒNG ĐỜI LINK SUB TRÊN SERVER
+      let subLinkDecision = String(b.subLinkDecision || "").trim();
+      let targetLink = String(b.targetLink || "").trim();
+
+      if (existingSubLinks.length > 0) {
+        if (!subLinkDecision || (subLinkDecision !== "KEEP_EXISTING" && subLinkDecision !== "CREATE_NEW")) {
+          return J({ ok: false, error: "Vui lòng chọn Giữ link cũ hoặc Cấp link mới" }, 400);
+        }
+        if (subLinkDecision === "KEEP_EXISTING") {
+          if (existingSubLinks.length > 1) {
+            if (!targetLink || !existingSubLinks.some(l => l.url === targetLink || l.orderId === targetLink)) {
+              return J({ ok: false, error: "Vui lòng chọn đúng link cần gia hạn" }, 400);
+            }
+          } else if (!targetLink) {
+            targetLink = existingSubLinks[0].url;
+          }
+        } else {
+          // CREATE_NEW: Tuyệt đối không giữ targetLink để tránh vô tình gia hạn nhầm
+          targetLink = "";
+        }
+      } else {
+        // Khách mua mới không có link cũ: Mặc định cấp link mới bình thường
+        subLinkDecision = "CREATE_NEW";
+        targetLink = "";
+      }
 
       // TÍNH TOÁN GIÁ TIỀN AUTHORITATIVE PHÍA SERVER (HỖ TRỢ FLASH SALE & COUPON)
       let baseVnd = pk.vnd * qty;
@@ -2003,8 +2086,8 @@ export default {
         lockInfo: {},
         sourceWeb: String(b.sourceWeb || "").slice(0, 80),
         orderType: isRenew ? "renew" : "new",
-        subLinkDecision: String(b.subLinkDecision || (isRenew ? "KEEP_EXISTING" : "CREATE_NEW")).trim(),
-        targetLink: String(b.targetLink || "").trim(),
+        subLinkDecision,
+        targetLink,
         renewOf: renewSrc ? renewSrc.id : (b.renewOf ? String(b.renewOf) : "")
       };
       o.expDate = computeExp(o, st.orders, now);
@@ -2375,12 +2458,13 @@ export default {
           if (sb) await sb.upsert(o).catch(() => {});
           // Lưu trạng thái thành công và link VPN vào KV cache để Index tra cứu ra ngay
           await KV.put("PENDING_ORD_" + o.id, JSON.stringify(o), { expirationTtl: 86400 });
-          // Đồng bộ vào ALL_ORDERS dự phòng của KV
-          const kvAll = arr(safeJson(await KV.get("ALL_ORDERS"), []));
+          // Đồng bộ vào bảng dự phòng tương ứng của KV (Kho Thật hoặc Kho Test)
+          const targetKvTable = st.isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS";
+          const kvAll = arr(safeJson(await KV.get(targetKvTable), []));
           const idxAll = kvAll.findIndex(x => x && normId(x.id) === normId(o.id));
           if (idxAll >= 0) kvAll[idxAll] = o;
           else kvAll.unshift(o);
-          await KV.put("ALL_ORDERS", JSON.stringify(kvAll.slice(0, 3000)));
+          await KV.put(targetKvTable, JSON.stringify(kvAll.slice(0, 3000)));
 
           const mailKind = o.orderType === "renew" ? "renew" : "new";
           if (r === "new" || r === "renew") {
@@ -2564,7 +2648,7 @@ export default {
         return J({ ok: true, cleared: touchedOrders.length });
       }
       if (p === "/api/admin/poll") {
-        const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
+        const isTest = url.searchParams.has("test") ? (url.searchParams.get("test") === "1") : (request.headers.has("X-Test-Mode") ? request.headers.get("X-Test-Mode") === "1" : ((await KV.get("TEST_MODE_ACTIVE")) === "1"));
         const sb = getSupabase(env, isTest);
         let ordersList = [];
         let sbError = null;
@@ -2582,17 +2666,29 @@ export default {
         }
         if (!isTest && ordersList.length === 0) {
           const kvOrders = safeJson(await KV.get("ALL_ORDERS"), []);
-          if (Array.isArray(kvOrders) && kvOrders.length > 0) ordersList = kvOrders;
+          if (Array.isArray(kvOrders) && kvOrders.length > 0) {
+            ordersList = kvOrders.filter(o => !isTestOrderRecord(o));
+          }
+        } else if (isTest && ordersList.length === 0) {
+          const kvOrders = safeJson(await KV.get("ALL_ORDERS_TEST"), []);
+          if (Array.isArray(kvOrders) && kvOrders.length > 0) {
+            ordersList = kvOrders;
+          }
         }
         // Hợp nhất bổ sung các đơn mới từ KV ALL_ORDERS nếu Supabase chưa kịp hiển thị
+        // Bảo vệ production: Chỉ hợp nhất đơn thật gần đây (< 48h), tuyệt đối không để đơn test hoặc đơn cũ đã xóa lọt vào
         if (!isTest && ordersList.length > 0) {
           const kvOrders = safeJson(await KV.get("ALL_ORDERS"), []);
           if (Array.isArray(kvOrders) && kvOrders.length > 0) {
             const knownIds = new Set(ordersList.map(o => o && normId(o.id)));
+            const nowMs = NOW();
             for (const ko of kvOrders) {
-              if (ko && ko.id && !knownIds.has(normId(ko.id))) {
-                ordersList.unshift(ko);
-                knownIds.add(normId(ko.id));
+              if (ko && ko.id && !knownIds.has(normId(ko.id)) && !isTestOrderRecord(ko)) {
+                const age = nowMs - (Number(ko.createdTs) || 0);
+                if (age >= 0 && age < 48 * 3600 * 1000) {
+                  ordersList.unshift(ko);
+                  knownIds.add(normId(ko.id));
+                }
               }
             }
           }
