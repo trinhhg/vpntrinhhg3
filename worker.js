@@ -1,4 +1,4 @@
-// v3 — 2026-11-04 10:45 (UTC+7) — Phân tách độc lập kho Test/Production & sửa luồng tra cứu link cũ
+// v4 — 2026-11-04 17:50 (UTC+7) — Quản lý Gift Rules quà tặng theo gói, đồng bộ snapshot HSD & hoàn thiện vòng đời Link Sub đa đơn
 //   link lifecycle chống "link đã xóa quay lại" (tombstone DELETED_LINKS + /api/admin/link/delete atomic + Cron persist sớm), Rà quét & Map lại (fields, email+hạn, cả 3 Info qua vệ tinh), quota mail trả lỗi rõ (không còn Unexpected token '<'), dock ảnh.
 // CÁCH DÁN: trong file worker hiện tại, XÓA toàn bộ từ dòng đầu tiên đến ngay TRƯỚC dòng chú thích "// YAML"
 // (gồm cả dòng "// =====" nằm liền trên chữ "// YAML"), rồi dán toàn bộ file này vào chỗ đó. GIỮ NGUYÊN mọi thứ từ "// YAML" trở xuống.
@@ -68,6 +68,17 @@ function getSupabase(env, isTest = false) {
 
       if (!res.ok) {
         throw new Error(`Supabase getAll: ${await readError(res, "Không lấy được dữ liệu")}`);
+      }
+
+      return await res.json();
+    },
+    async getOrdersByEmail(email, limit = 50) {
+      const safeLimit = Math.max(1, Math.min(Number(limit) || 50, 100));
+      const em = encodeURIComponent(String(email || "").trim());
+      const res = await fetch(`${url}/${table}?select=*&email=ilike.${em}&order=createdTs.desc&limit=${safeLimit}`, { headers });
+
+      if (!res.ok) {
+        throw new Error(`Supabase getOrdersByEmail: ${await readError(res, "Không lấy được đơn theo email")}`);
       }
 
       return await res.json();
@@ -831,22 +842,72 @@ function parseAny(v) {
   return isNaN(t) ? 0 : t;
 }
 
-function computeExp(o, orders, now) {
-  const pk = PKGS[o.pkgId];
-  if (!pk) return o.expDate || addDaysDmy(day0(now), 30);
-  if (pk.m === 0) return "Vĩnh viễn";
-  const em = String(o.email || "").toLowerCase();
-  let base = day0(now);
-  // CHỈ đơn gia hạn (orderType === "renew") mới cộng dồn nối tiếp vào HSD cũ; đơn mua mới ("new") hoặc chọn cấp link mới luôn tính từ hôm nay
-  if (o.orderType === "renew" && em && o.subLinkDecision !== "CREATE_NEW") {
-    for (const x of orders) {
-      if (!x || x === o || normStatus(x.status) !== "success" || String(x.email || "").toLowerCase() !== em || isLifetime(x.expDate)) continue;
-      const t = parseDmy(x.expDate);
-      if (t > base) base = t;
+function getActiveGiftRule(rules, pkgId, now = Date.now()) {
+  if (!Array.isArray(rules) || !pkgId) return null;
+  for (const r of rules) {
+    if (!r || r.enabled === false) continue;
+    if (Array.isArray(r.packageIds) && r.packageIds.includes(pkgId)) {
+      const start = r.startDate ? new Date(r.startDate).getTime() : 0;
+      const end = r.endDate ? new Date(r.endDate).getTime() : Infinity;
+      if (now >= start && now <= end) {
+        return r;
+      }
     }
   }
+  return null;
+}
+
+function computeExp(o, orders, now, giftRules = []) {
+  const pk = PKGS[o.pkgId];
+  if (!pk) return o.expDate || addDaysDmy(day0(now), 30);
+  if (pk.m === 0 || pk.time === "lifetime") return "Vĩnh viễn";
+  const em = String(o.email || "").toLowerCase();
+  let base = day0(now);
+
+  // CHỈ đơn gia hạn (orderType === "renew") VÀ khách không chọn cấp link mới VÀ link không phải fallback new
+  if (o.orderType === "renew" && em && o.subLinkDecision !== "CREATE_NEW" && !o.fallbackNew) {
+    let targetOrd = null;
+    if (o.renewOf) {
+      targetOrd = orders.find(x => x && normId(x.id) === normId(o.renewOf));
+    }
+    if (!targetOrd && o.targetLink) {
+      targetOrd = orders.find(x => x && (x.info1 === o.targetLink || x.info2 === o.targetLink || x.info3 === o.targetLink));
+    }
+    if (targetOrd && targetOrd.expDate && !isLifetime(targetOrd.expDate)) {
+      const targetT = parseDmy(targetOrd.expDate);
+      // Nếu link/đơn cũ còn hạn (targetT >= day0(now)): cộng dồn từ HSD chuẩn trong tab Đơn hàng
+      if (targetT >= day0(now)) {
+        base = targetT;
+      } else {
+        // Link cũ đã hết hạn/bị khóa: tính từ ngày mua hôm nay
+        base = day0(now);
+      }
+    } else {
+      // Heuristic fallback: tìm đơn thành công còn hạn dài nhất
+      for (const x of orders) {
+        if (!x || x === o || normStatus(x.status) !== "success" || String(x.email || "").toLowerCase() !== em || isLifetime(x.expDate)) continue;
+        const t = parseDmy(x.expDate);
+        if (t > base) base = t;
+      }
+    }
+  }
+
+  // Bonus days: Ưu tiên snapshot của chính đơn hàng -> Gift Rule đang hiệu lực -> fallback dữ liệu cũ
+  let bonus = 0;
+  if (o.bonusDays !== undefined) {
+    bonus = Number(o.bonusDays) || 0;
+  } else if (o.bonus_days !== undefined) {
+    bonus = Number(o.bonus_days) || 0;
+  } else {
+    const activeRule = getActiveGiftRule(giftRules, o.pkgId, now);
+    if (activeRule) {
+      bonus = Number(activeRule.bonusDays) || 0;
+    } else {
+      bonus = Number(pk.bonus_days || pk.bonusDays || 0);
+    }
+  }
+
   // Quy ước cứng: 1 năm = 365 ngày; còn lại = (30 ngày * số tháng + số ngày tặng khuyến mãi) * số lượng
-  const bonus = Number(pk.bonus_days || pk.bonusDays || 0);
   const totalDays = ((pk.m === 12 ? 365 : 30 * pk.m) + bonus) * (Number(o.qty) || 1);
   return addDaysDmy(base, totalDays);
 }
@@ -1142,7 +1203,12 @@ function publicOrder(o, cms, links, field) {
       amount: o.pendingUpgrade.amount || 0,
       targetPkg: o.pendingUpgrade.targetPkg || "",
       method: o.pendingUpgrade.method || o.method || ""
-    } : null
+    } : null,
+    fulfillResult: o.fulfillResult || (o.subLinkDecision === "CREATE_NEW" ? "create_new" : (o.orderType === "renew" ? "keep_active" : null)),
+    subLinkDecision: o.subLinkDecision || "",
+    fallbackNew: !!o.fallbackNew,
+    bonusDays: Number(o.bonusDays || o.bonus_days || 0),
+    giftName: o.giftName || o.promo_sticker || ""
   };
 
   // QUY ĐỊNH ĐỊNH TUYẾN LÀM MỜ (CHỈ TRÊN WEB NÀY):
@@ -1175,9 +1241,10 @@ function findOrder(orders, q) {
   const list = orders.filter((o) => o && o.email && String(o.email).toLowerCase() === em).sort((a, b) => (b.createdTs || 0) - (a.createdTs || 0));
   return list.find((o) => normStatus(o.status) !== "failed") || list[0] || null;
 }
-function applyUpgrade(o) {
+function applyUpgrade(o, st = null) {
   const pu = o.pendingUpgrade || {}, pk = PKGS[pu.targetPkgId], cur = PKGS[o.pkgId];
-  if (pk) Object.assign(o, {
+  if (!pk) return false;
+  Object.assign(o, {
     pkgId: pu.targetPkgId,
     pkgName: pk.n,
     pkgData: pk.d,
@@ -1185,13 +1252,27 @@ function applyUpgrade(o) {
   });
   if (isBankMethod(pu.method || o.method)) o.totalVnd = (Number(o.totalVnd) || 0) + (Number(pu.amount) || 0);
   else {
-    const c = Number(pu.amountCny) || (pk && cur ? Math.max(0, (pk.cny - cur.cny) * (Number(pu.qty) || 1)) : 0);
+    const c = Number(pu.amountCny) || (cur ? Math.max(0, (pk.cny - cur.cny) * (Number(pu.qty) || 1)) : 0);
     if (c) o.totalCny = (Number(o.totalCny) || 0) + c;
   }
   o.pendingUpgrade = null;
   o.upgradeStatus = "success";
   o.isUpgrade = true;
   o.upgradedAt = NOW();
+
+  // Đồng bộ nâng cấp cấu hình ngay trên chính Link Sub hiện tại (không tạo link mới)
+  if (st && Array.isArray(st.links)) {
+    const curLink = st.links.find(l => l && (normId(l.orderId) === normId(o.id) || l.masked === o.info1 || l.masked === o.info2 || l.masked === o.info3));
+    if (curLink) {
+      curLink.pkg = o.pkgName || pk.n || "";
+      if (curLink.isLocked) {
+        curLink.isLocked = false;
+        if (curLink.orig === LOCK_ORIG && curLink.origBackup) curLink.orig = curLink.origBackup;
+      }
+      st.dL = true;
+    }
+  }
+  return true;
 }
 
 // Cấp link cho 1 đơn (đã success) trên web này. Trả về: new | renew | already | error | skip
@@ -1199,139 +1280,117 @@ function fulfillOrder(st, o, me, log) {
   const f = me.field, now = NOW();
   if (normStatus(o.status) !== "success") return "skip";
   if (!o.expFinal) {
-    if (o.orderType || !o.expDate) o.expDate = computeExp(o, st.orders, now);
+    if (o.orderType || !o.expDate) o.expDate = computeExp(o, st.orders, now, st.cms?.giftRules);
     o.expFinal = true;
     st.dO = true;
   } // đơn cũ (không có orderType): giữ nguyên HSD
   if (o.lockInfo && o.lockInfo[f]) return "already"; // admin đã sửa tay ô này: web không tự sửa lại
   if (o[f] && st.links.some((l) => l && l.masked === o[f])) return "already";
   const life = isLifetime(o.expDate), em = String(o.email || "").toLowerCase(), cts = o.createdTs || now;
-  const targetExpKey = expKey(o.expDate);
   let link = null;
 
-  // 1. Chống retry tạo trùng link: Nếu đơn đã có link hợp lệ được cấp trên web này, trả về ngay
-  if (o[f] && st.links.some(l => l && l.masked === o[f])) return "already";
+  // Lọc các đơn đang hoạt động theo HSD của email này
+  const activeOrders = st.orders.filter(x => x && x !== o && normStatus(x.status) === "success" && String(x.email || "").toLowerCase() === em && (isLifetime(x.expDate) || parseDmy(x.expDate) >= now));
 
-  // 1. Tìm link theo chính orderId của đơn hiện tại
+  // Kiểm tra case B6: Email có >= 2 đơn đang hoạt động cùng lúc VÀ không phải luồng gia hạn đích danh từ portal
+  const isMultiActive = activeOrders.length >= 2 && !o.renewOf;
+
+  // 1. Tìm link theo chính orderId của đơn hiện tại (chống retry)
   link = st.links.find((l) => l && l.orderId && normId(l.orderId) === normId(o.id));
 
-  // 2. Logic phân nhánh cấp link sub: Ưu tiên lựa chọn rõ ràng của khách (KEEP_EXISTING / CREATE_NEW)
-  if (!link && o.subLinkDecision === "CREATE_NEW") {
-    link = null; // Khách chủ động yêu cầu cấp link mới độc lập
-  } else if (!link && o.subLinkDecision === "KEEP_EXISTING") {
+  if (!link && isMultiActive) {
+    // B6: Email có >= 2 đơn đang cùng hoạt động -> Backend tự động cấp link mới độc lập
+    link = null;
+    o.subLinkDecision = "CREATE_NEW";
+    o.fulfillResult = "multi_active_new";
+    log("ok", "fulfill", `Email có ${activeOrders.length} đơn đang hoạt động -> Tự động cấp Link mới độc lập`, o.id, o.id);
+  } else if (!link && o.subLinkDecision === "CREATE_NEW") {
+    link = null;
+    o.fulfillResult = "create_new";
+  } else if (!link && (o.subLinkDecision === "KEEP_EXISTING" || o.orderType === "renew")) {
+    let candidate = null;
     if (o.targetLink) {
-      // Khách đã chọn link cụ thể: chỉ được phép dùng đúng link đó
-      link = st.links.find((l) => l && (l.masked === o.targetLink || l.id === o.targetLink));
-
-      // targetLink có thể là mã/link nằm trong thông tin của đơn cũ
-      if (!link) {
-        const srcOrd = st.orders.find((x) => x && (x.info1 === o.targetLink || x.info2 === o.targetLink || x.info3 === o.targetLink));
-
-        if (srcOrd && srcOrd[f]) {
-          link = st.links.find((l) => l && l.masked === srcOrd[f]);
-        }
-      }
-
-      // Không tìm được đúng link khách chọn thì dừng, không lấy nhầm link khác
-      if (!link) {
-        log("error", "fulfill", "Không tìm thấy link khách đã chọn", o.id, o.targetLink);
-        return "error";
-      }
-    } else {
-      // Đơn cũ không có targetLink: giữ fallback tương thích dữ liệu cũ
-      if (o.renewOf) {
-        const srcOrd = st.orders.find((x) => x && normId(x.id) === normId(o.renewOf));
-
-        if (srcOrd) {
-          if (srcOrd[f]) {
-            link = st.links.find((l) => l && l.masked === srcOrd[f]);
-          }
-
-          if (!link) {
-            link = st.links.find((l) => l && l.orderId && normId(l.orderId) === normId(srcOrd.id));
-          }
-        }
-      }
-
-      if (!link && em) {
-        for (const x of st.orders) {
-          if (!x || x === o || normStatus(x.status) !== "success" || String(x.email || "").toLowerCase() !== em) {
-            continue;
-          }
-
-          if (x[f]) {
-            const found = st.links.find((l) => l && l.masked === x[f]);
-
-            if (found) {
-              link = found;
-              break;
-            }
-          }
-        }
+      candidate = st.links.find(l => l && (l.masked === o.targetLink || l.id === o.targetLink));
+      if (!candidate) {
+        const srcOrd = st.orders.find(x => x && (x.info1 === o.targetLink || x.info2 === o.targetLink || x.info3 === o.targetLink));
+        if (srcOrd && srcOrd[f]) candidate = st.links.find(l => l && l.masked === srcOrd[f]);
       }
     }
-  } else if (!link && em) {
-    const prevOrders = st.orders
-      .filter((x) => x && x !== o && normStatus(x.status) === "success" && String(x.email || "").toLowerCase() === em)
-      .sort((a, b) => (b.createdTs || 0) - (a.createdTs || 0));
-
-    // Lọc các đơn còn hạn đang hoạt động
-    const activeOrders = prevOrders.filter(x => isLifetime(x.expDate) || (parseDmy(x.expDate) >= now));
-
-    if (activeOrders.length >= 2) {
-      // Trường hợp 1: Email có >= 2 đơn còn hạn đang hoạt động -> BẮT BUỘC AUTO CẤP LINK MỚI ĐỘC LẬP
-      link = null;
-    } else if (activeOrders.length === 1) {
-      // Trường hợp 2: Email có đúng 1 đơn đang hoạt động
-      const oldOrd = activeOrders[0];
-      const isLifeOrd = isLifetime(oldOrd.expDate);
-      const daysLeft = isLifeOrd ? 999 : Math.floor((parseDmy(oldOrd.expDate) - now) / 864e5);
-
-      if (daysLeft < 7) {
-        // Đơn cũ sát ngày hết hạn (< 7 ngày) -> Tái sử dụng link cũ, cộng dồn hạn dùng, mở khóa
-        if (oldOrd[f]) link = st.links.find(l => l && l.masked === oldOrd[f]);
-        if (!link) link = st.links.find(l => l && l.orderId && normId(l.orderId) === normId(oldOrd.id));
-      } else {
-        // Đơn cũ còn hạn dài (> 7 ngày) -> Ưu tiên CẤP LINK MỚI
-        link = null;
+    if (!candidate && o.renewOf) {
+      const srcOrd = st.orders.find(x => x && normId(x.id) === normId(o.renewOf));
+      if (srcOrd) {
+        if (srcOrd[f]) candidate = st.links.find(l => l && l.masked === srcOrd[f]);
+        if (!candidate) candidate = st.links.find(l => l && l.orderId && normId(l.orderId) === normId(srcOrd.id));
       }
-    } else {
-      // Tất cả đơn cũ đã hết hạn -> khôi phục link cũ nếu còn trong kho, không có thì auto cấp link mới
-      for (const x of prevOrders) {
+    }
+    if (!candidate && em && activeOrders.length === 1) {
+      const singleOrd = activeOrders[0];
+      if (singleOrd[f]) candidate = st.links.find(l => l && l.masked === singleOrd[f]);
+      if (!candidate) candidate = st.links.find(l => l && l.orderId && normId(l.orderId) === normId(singleOrd.id));
+    }
+    if (!candidate && em) {
+      for (const x of st.orders) {
+        if (!x || x === o || normStatus(x.status) !== "success" || String(x.email || "").toLowerCase() !== em) continue;
         if (x[f]) {
-          const found = st.links.find((l) => l && l.masked === x[f]);
+          const found = st.links.find(l => l && l.masked === x[f]);
           if (found) {
-            link = found;
+            candidate = found;
             break;
           }
         }
       }
-      if (!link) {
-        link = st.links.find((l) => l && String(l.email || "").toLowerCase() === em);
-      }
+    }
+
+    if (candidate) {
+      link = candidate;
+    } else {
+      // Fallback B2 / B5: Khách chọn giữ link cũ nhưng link cũ không tồn tại hoặc đã bị xóa -> Fallback cấp link mới
+      log("warn", "fulfill", "Khách chọn giữ link cũ nhưng link cũ không tồn tại hoặc đã bị xóa -> Fallback cấp link mới", o.id, o.id);
+      o.fallbackNew = true;
+      o.fulfillResult = "fallback_new";
+      link = null;
     }
   }
-  if (link) {
-    if (link.orig === LOCK_ORIG && link.origBackup) link.orig = link.origBackup;
-    if (link.origBackup2 && !link.orig2) link.orig2 = link.origBackup2;
-    delete link.origBackup;
-    delete link.origBackup2;
 
-    if (!st.pool.some((p) => p.url === link.orig)) {
-      const n = pickNode(st.pool);
-      if (!n) {
-        log("error", "fulfill", "Hết node trống", o.id, o.id);
+  if (link) {
+    const isLocked = link.isLocked || link.orig === LOCK_ORIG;
+    if (isLocked) {
+      // B8: Mở khóa link -> kiểm tra node nguồn đủ GB và slot
+      let eligibleNode = null;
+      if (link.origBackup && link.origBackup !== LOCK_ORIG) {
+        eligibleNode = st.pool.find(p => p && p.url === link.origBackup && poolOk(p));
+      }
+      if (!eligibleNode) {
+        eligibleNode = pickNode(st.pool);
+      }
+      if (!eligibleNode) {
+        log("error", "fulfill", "Không tìm thấy link nguồn đáp ứng điều kiện GB/slot để mở khóa", o.id, o.id);
+        o.fulfillResult = "error_no_source";
         return "error";
       }
-      link.orig = n.url;
-      n.used = (n.used || 0) + 1;
+
+      link.orig = eligibleNode.url;
+      eligibleNode.used = (Number(eligibleNode.used) || 0) + 1;
+      delete link.origBackup;
+      delete link.origBackup2;
+      link.isLocked = false;
+      o.fulfillResult = "restore_locked";
+    } else {
+      // Link đang hoạt động bình thường
+      if (!st.pool.some(p => p && p.url === link.orig)) {
+        const eligibleNode = pickNode(st.pool);
+        if (eligibleNode) {
+          link.orig = eligibleNode.url;
+          eligibleNode.used = (Number(eligibleNode.used) || 0) + 1;
+        }
+      }
+      o.fulfillResult = "keep_active";
     }
 
     Object.assign(link, {
       expDate: life ? "Vĩnh viễn" : o.expDate,
       createdTs: cts,
       date: linkDate(life ? "Vĩnh viễn" : o.expDate, cts),
-      isLocked: false,
       orderId: o.id,
       pkg: o.pkgName || "",
       email: o.email || link.email
@@ -1341,12 +1400,8 @@ function fulfillOrder(st, o, me, log) {
     o.fulfilledAt = now;
     st.dL = st.dO = true;
 
-    log("ok", "fulfill", `Quyết định: Giữ link cũ → Kết quả: Mở khóa & giữ nguyên link sub ẩn (${link.masked})`, o.id, o.id);
+    log("ok", "fulfill", `Fulfillment thành công [${o.fulfillResult}]: Link sub ${link.masked}`, o.id, o.id);
     return "renew";
-  }
-
-  if (o.subLinkDecision === "KEEP_EXISTING") {
-    log("warn", "fulfill", "Khách chọn giữ link cũ nhưng link cũ không thể khôi phục → Buộc phải cấp link mới", o.id, o.id);
   }
   // Đọc cấu hình Mapping Fulfillment động (đã nạp sẵn trong st, mặc định luôn là single_lx)
   const fulfillData = st.fulfillment_config || safeJson(st.cms?.fulfillment_config, {}) || {};
@@ -1472,7 +1527,8 @@ export default {
     const CORS = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET,HEAD,POST,OPTIONS,DELETE",
-      "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Test-Mode"
+      "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Test-Mode,Cache-Control,Pragma,Accept",
+      "Access-Control-Max-Age": "86400"
     };
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
     const url = new URL(request.url), p = url.pathname, m = request.method;
@@ -1809,6 +1865,7 @@ export default {
       const couponEnabled = s.couponEnabled !== false;
       const coupons = Array.isArray(cms.coupons) ? cms.coupons.filter(c => c && c.enabled !== false) : [];
       const flashSale = (cms.sales && cms.sales.campaign) || s.flashSale || null;
+      const giftRules = Array.isArray(cms.giftRules) ? cms.giftRules.filter(r => r && r.enabled !== false) : [];
       return J({
         ok: true,
         guides: g,
@@ -1822,7 +1879,8 @@ export default {
         headerDrawer,
         couponEnabled,
         coupons,
-        flashSale
+        flashSale,
+        giftRules
       });
     }
 
@@ -1865,7 +1923,8 @@ export default {
           packages: pkgs,
           couponEnabled: s.couponEnabled !== false,
           coupons: Array.isArray(cms.coupons) ? cms.coupons : [],
-          flashSale: (cms.sales && cms.sales.campaign) || s.flashSale || null
+          flashSale: (cms.sales && cms.sales.campaign) || s.flashSale || null,
+          giftRules: Array.isArray(cms.giftRules) ? cms.giftRules : []
         });
       }
       if (m === "POST") {
@@ -1877,7 +1936,7 @@ export default {
         CACHED_PKGS = null; // Xóa cache in-memory
         await getActivePkgs(KV); // Cập nhật ngay lập tức vào DYNAMIC_PKGS
 
-        // Đồng bộ lưu couponEnabled, flashSale & coupons vào ALL_CMS
+        // Đồng bộ lưu couponEnabled, flashSale, coupons & giftRules vào ALL_CMS
         const cms = safeJson(await KV.get("ALL_CMS"), {});
         cms.settings = cms.settings || {};
         if (b.couponEnabled !== undefined) cms.settings.couponEnabled = !!b.couponEnabled;
@@ -1887,9 +1946,27 @@ export default {
           cms.settings.flashSale = b.flashSale;
         }
         if (Array.isArray(b.coupons)) cms.coupons = b.coupons;
+        if (b.giftRules !== undefined) {
+          // Validate chống 2 quy tắc quà tặng cùng active trên 1 package
+          const gList = Array.isArray(b.giftRules) ? b.giftRules : [];
+          const activePkgMap = new Map();
+          for (const r of gList) {
+            if (!r || r.enabled === false) continue;
+            for (const pid of (r.packageIds || [])) {
+              if (activePkgMap.has(pid)) {
+                return J({
+                  ok: false,
+                  error: `Gói ${pid} đang bị áp dụng bởi nhiều hơn 1 quy tắc quà tặng đang hoạt động!`
+                }, 400);
+              }
+              activePkgMap.set(pid, r.id || r.name);
+            }
+          }
+          cms.giftRules = gList;
+        }
         await KV.put("ALL_CMS", JSON.stringify(cms));
 
-        log("ok", "admin", "Lưu cấu hình Giá gói & Sale", `${list.length} gói cước`);
+        log("ok", "admin", "Lưu cấu hình Giá gói, Sale & Quà tặng", `${list.length} gói cước`);
         await flushLog(KV, log);
         return J({ ok: true, count: list.length });
       }
@@ -1917,71 +1994,202 @@ export default {
     }
     if (p === "/api/public/lookup" && m === "POST") {
       const isTestReq = reqIsTest;
-      const b = await body(), st = await loadAll(KV, env, isTestReq);
-      // Nếu kết nối Supabase bị lỗi, phản hồi 503 để UI báo lỗi rõ ràng, không coi email là mới
-      if (!st.sbOk && st.sbError) {
-        return J({
-          ok: false,
-          error: "Lỗi kết nối cơ sở dữ liệu tra cứu: " + st.sbError
-        }, 503);
-      }
+      const b = await body();
+      const rawQ = String(b.q || "").trim();
+      const isEmailQuery = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawQ);
+      const sb = env ? getSupabase(env, isTestReq) : null;
+
+      let matchedOrders = [];
       let o = null;
-      const isEmailQuery = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(b.q || "").trim());
-      if (isEmailQuery) {
-        const emQuery = String(b.q).trim().toLowerCase();
-        const userOrders = st.orders.filter(ord => {
-          if (!ord || String(ord.email || "").toLowerCase() !== emQuery) return false;
-          const isTestOrd = ord.isTest === true || String(ord.id).startsWith("DH_TEST_");
-          return isTestReq === isTestOrd;
-        });
-        userOrders.sort((a, b) => (b.createdTs || 0) - (a.createdTs || 0));
-        o = userOrders.find(ord => normStatus(ord.status) === "success") || userOrders[0] || null;
+
+      if (sb) {
+        try {
+          if (isEmailQuery) {
+            const emQuery = rawQ.toLowerCase();
+            const resOrders = await sb.getOrdersByEmail(emQuery, 50);
+            matchedOrders = Array.isArray(resOrders) ? resOrders : [];
+            matchedOrders = matchedOrders.filter(ord => {
+              if (!ord || String(ord.email || "").toLowerCase() !== emQuery) return false;
+              const isTestOrd = ord.isTest === true || String(ord.id).startsWith("DH_TEST_");
+              return isTestReq === isTestOrd;
+            });
+            matchedOrders.sort((a, b) => (b.createdTs || 0) - (a.createdTs || 0));
+            o = matchedOrders.find(ord => normStatus(ord.status) === "success") || matchedOrders[0] || null;
+          } else {
+            const singleOrd = await sb.getOrder(normId(rawQ));
+            if (singleOrd) {
+              const isTestOrd = singleOrd.isTest === true || String(singleOrd.id).startsWith("DH_TEST_");
+              if (isTestReq === isTestOrd) {
+                o = singleOrd;
+                matchedOrders = [singleOrd];
+                if (singleOrd.email) {
+                  const related = await sb.getOrdersByEmail(singleOrd.email, 50).catch(() => []);
+                  if (Array.isArray(related)) {
+                    related.forEach(ro => {
+                      if (ro && !matchedOrders.some(x => normId(x.id) === normId(ro.id))) {
+                        const roTest = ro.isTest === true || String(ro.id).startsWith("DH_TEST_");
+                        if (isTestReq === roTest) matchedOrders.push(ro);
+                      }
+                    });
+                  }
+                }
+              }
+            }
+          }
+        } catch (err) {
+          return J({
+            ok: false,
+            error: "Lỗi kết nối cơ sở dữ liệu tra cứu: " + (err.message || String(err))
+          }, 503);
+        }
       } else {
-        const byId = st.orders.find(ord => ord && normId(ord.id) === normId(b.q));
-        if (byId) {
-          const isTestOrd = byId.isTest === true || String(byId.id).startsWith("DH_TEST_");
-          if (isTestReq === isTestOrd) o = byId;
+        // Fallback đọc KV khi không cấu hình Supabase
+        const g = async (k, d) => safeJson(await KV.get(k), d);
+        const kvOrders = arr(await g(isTestReq ? "ALL_ORDERS_TEST" : "ALL_ORDERS", []));
+        const allOrders = isTestReq ? kvOrders : kvOrders.filter(x => !isTestOrderRecord(x));
+
+        if (isEmailQuery) {
+          const emQuery = rawQ.toLowerCase();
+          matchedOrders = allOrders.filter(ord => {
+            if (!ord || String(ord.email || "").toLowerCase() !== emQuery) return false;
+            const isTestOrd = ord.isTest === true || String(ord.id).startsWith("DH_TEST_");
+            return isTestReq === isTestOrd;
+          });
+          matchedOrders.sort((a, b) => (b.createdTs || 0) - (a.createdTs || 0));
+          o = matchedOrders.find(ord => normStatus(ord.status) === "success") || matchedOrders[0] || null;
+        } else {
+          const byId = allOrders.find(ord => ord && normId(ord.id) === normId(rawQ));
+          if (byId) {
+            const isTestOrd = byId.isTest === true || String(byId.id).startsWith("DH_TEST_");
+            if (isTestReq === isTestOrd) {
+              o = byId;
+              const em = String(byId.email || "").toLowerCase();
+              matchedOrders = em ? allOrders.filter(x => String(x.email || "").toLowerCase() === em) : [byId];
+            }
+          }
         }
       }
+
       // Fallback kiểm tra bộ nhớ đệm đơn hàng chờ (KV Pending Cache)
-      if (!o && b.q) {
-        const rawPending = await KV.get("PENDING_ORD_" + normId(b.q));
+      if (!o && rawQ) {
+        const rawPending = await KV.get("PENDING_ORD_" + normId(rawQ));
         if (rawPending) {
           const pOrd = safeJson(rawPending, null);
           if (pOrd) {
             const isTestOrd = pOrd.isTest === true || String(pOrd.id).startsWith("DH_TEST_");
-            if (isTestReq === isTestOrd) o = pOrd;
+            if (isTestReq === isTestOrd) {
+              o = pOrd;
+              if (!matchedOrders.some(x => normId(x.id) === normId(pOrd.id))) matchedOrders.push(pOrd);
+            }
           }
         }
       }
+
       if (!o) {
         if (isEmailQuery) {
           return J({ ok: true, found: false, order: null, existingLinks: [] }, 200);
         }
-        return J({ ok: false, found: false, error: "not_found", existingLinks: [] }, 404);
+        return J({
+          ok: false,
+          found: false,
+          error: "not_found",
+          existingLinks: []
+        }, 404);
       }
-      const em = String(o.email || (isEmailQuery ? b.q : "")).toLowerCase();
+
+      // 1. Đọc đồng thời ALL_CMS, ALL_LINKS và DELETED_LINKS (tombstone) từ KV trước khi xử lý link
+      const [cms, rawLinks, tb] = await Promise.all([safeJson(await KV.get("ALL_CMS"), {}), safeJson(await KV.get("ALL_LINKS"), []), loadTombs(KV)]);
+      const links = arr(rawLinks);
+      const stMini = {
+        cms: cms && typeof cms === "object" && !Array.isArray(cms) ? cms : {},
+        links
+      };
+
+      // 2. Chuẩn hóa Set tra cứu tombstone theo đúng schema (hỗ trợ cả t.id, t.url hoặc chuỗi ID)
+      const tombSet = new Set();
+      for (const t of tb) {
+        if (!t) continue;
+        if (typeof t === "string") tombSet.add(t);
+        else {
+          if (t.id) tombSet.add(t.id);
+          if (t.url) tombSet.add(t.url);
+        }
+      }
+      const isTombId = (idOrUrl) => idOrUrl ? tombSet.has(idOrUrl) : false;
+
+      // 3. Lọc danh sách đơn thành công của email từ matchedOrders (đảm bảo đúng môi trường Test/Prod)
+      const em = String(o.email || (isEmailQuery ? rawQ : "")).toLowerCase();
+      const userOrders = matchedOrders.filter(ord => {
+        if (!ord || String(ord.email || "").toLowerCase() !== em) return false;
+        if (normStatus(ord.status) !== "success") return false;
+        const isTestOrd = ord.isTest === true || String(ord.id).startsWith("DH_TEST_");
+        return isTestReq === isTestOrd;
+      });
+
+      // 4. Xác định các đơn còn hạn (chuẩn hóa mốc đầu ngày 00:00:00 UTC+7 để so khớp chính xác với parseDmy)
+      const now = NOW();
+      const todayStart = day0(now);
+      const isOrderActive = (ord) => {
+        if (!ord || !ord.expDate) return false;
+        if (isLifetime(ord.expDate)) return true;
+        const expT = parseDmy(ord.expDate);
+        return expT ? expT >= todayStart : false;
+      };
+      const activeOrders = userOrders.filter(isOrderActive);
+
+      // 5. Kiểm tra thực tế trong kho ALL_LINKS và loại bỏ link tombstone đã xóa
       const existingLinks = [];
       const seenMasked = new Set();
-      for (const ord of st.orders) {
-        if (!ord || String(ord.email || "").toLowerCase() !== em) continue;
-        if (normStatus(ord.status) !== "success") continue;
-        const isTestOrd = ord.isTest === true || String(ord.id).startsWith("DH_TEST_");
-        if (isTestReq !== isTestOrd) continue;
+      for (const ord of userOrders) {
         for (const f of ["info1", "info2", "info3"]) {
           const lk = ord[f];
           if (lk && !seenMasked.has(lk)) {
             seenMasked.add(lk);
+            // Kiểm tra trạng thái thực tế của link trong kho link sub
+            const foundRec = links.find(l => l && (l.masked === lk || l.id === lk));
+            const isTomb = isTombId(lk) || (foundRec && isTombId(foundRec.id));
+            if (isTomb || !foundRec) {
+              // Link đã bị xóa hoặc không còn tồn tại trong kho -> bỏ qua
+              continue;
+            }
+            const isLocked = !!(foundRec.isLocked || foundRec.orig === LOCK_ORIG || (!isLifetime(ord.expDate) && parseDmy(ord.expDate) ? parseDmy(ord.expDate) < todayStart : false));
             existingLinks.push({
               url: lk,
               orderId: ord.id,
               pkgName: ord.pkgName || ord.pkg || "",
-              expDate: ord.expDate || ""
+              expDate: ord.expDate || "",
+              status: isLocked ? "locked" : "active"
             });
           }
         }
       }
-      return J({ ok: true, found: true, order: pub(o, st), existingLinks });
+
+      // 6. Xác định số link thực sự phân biệt đang hoạt động
+      const activeDistinctLinks = existingLinks.filter(l => l.status === "active");
+
+      // 7. Phân loại luồng linkScenario chính xác
+      let linkScenario = "none";
+      if (userOrders.length === 0) {
+        linkScenario = "none"; // B4: Email mới tinh, chưa từng có đơn thành công
+      } else if (existingLinks.length === 0) {
+        linkScenario = "deleted_links"; // Email có lịch sử nhưng tất cả link cũ đã bị xóa / tombstone
+      } else if (activeDistinctLinks.length >= 2) {
+        linkScenario = "multi_active"; // B6: Có >= 2 link đang cùng hoạt động riêng biệt
+      } else if (existingLinks.length === 1) {
+        linkScenario = "single_link"; // B5: Có đúng 1 link cũ phù hợp (dù đang active hay locked)
+      } else {
+        // Có > 1 link trong kho (ví dụ: 1 link active + 1 link locked, hoặc nhiều link locked)
+        linkScenario = activeDistinctLinks.length > 0 ? "multi_active" : "single_link";
+      }
+
+      return J({
+        ok: true,
+        found: true,
+        order: pub(o, stMini),
+        existingLinks,
+        linkScenario,
+        activeOrdersCount: activeOrders.length
+      });
     }
     if (p === "/api/public/order" && m === "POST") {
       const isTestReq = reqIsTest;
@@ -2025,26 +2233,51 @@ export default {
       let subLinkDecision = String(b.subLinkDecision || "").trim();
       let targetLink = String(b.targetLink || "").trim();
 
-      if (existingSubLinks.length > 0) {
+      // Lọc các đơn đang còn hạn hoạt động của email này
+      const activeUserOrders = st.orders.filter(x => x && normStatus(x.status) === "success" && String(x.email || "").toLowerCase() === emLower && (isLifetime(x.expDate) || parseDmy(x.expDate) >= now));
+
+      if (renewSrc) {
+        // B2: Gia hạn bắt đầu từ nút gia hạn portal -> 100% giữ link cũ đích danh
+        subLinkDecision = "KEEP_EXISTING";
+        targetLink = renewSrc.info1 || renewSrc.info2 || renewSrc.info3 || "";
+      } else if (activeUserOrders.length >= 2) {
+        // B6: Email có 2 đơn hoạt động -> Backend tự động quyết định CẤP LINK MỚI ĐỘC LẬP
+        subLinkDecision = "CREATE_NEW";
+        targetLink = "";
+      } else if (existingSubLinks.length === 1) {
+        // B5: Có đúng 1 link cũ phù hợp trong luồng mua thông thường
         if (!subLinkDecision || (subLinkDecision !== "KEEP_EXISTING" && subLinkDecision !== "CREATE_NEW")) {
           return J({ ok: false, error: "Vui lòng chọn Giữ link cũ hoặc Cấp link mới" }, 400);
         }
         if (subLinkDecision === "KEEP_EXISTING") {
-          if (existingSubLinks.length > 1) {
-            if (!targetLink || !existingSubLinks.some(l => l.url === targetLink || l.orderId === targetLink)) {
-              return J({ ok: false, error: "Vui lòng chọn đúng link cần gia hạn" }, 400);
-            }
-          } else if (!targetLink) {
-            targetLink = existingSubLinks[0].url;
-          }
+          targetLink = existingSubLinks[0].url;
         } else {
-          // CREATE_NEW: Tuyệt đối không giữ targetLink để tránh vô tình gia hạn nhầm
           targetLink = "";
         }
       } else {
-        // Khách mua mới không có link cũ: Mặc định cấp link mới bình thường
+        // B4: Email mới chưa từng tồn tại hoặc không còn link cũ -> Tự động cấp link mới
         subLinkDecision = "CREATE_NEW";
         targetLink = "";
+      }
+
+      // Snapshot Gift Rule đang có hiệu lực
+      const giftRules = Array.isArray(st.cms?.giftRules) ? st.cms.giftRules : [];
+      const activeGift = getActiveGiftRule(giftRules, b.pkgId, now);
+      let giftRuleId = "";
+      let giftName = "";
+      let bonusDays = 0;
+      let bonusText = "";
+
+      if (activeGift && pk.m !== 0 && pk.time !== "lifetime") {
+        giftRuleId = activeGift.id || "";
+        giftName = activeGift.name || activeGift.sticker || "";
+        bonusDays = Number(activeGift.bonusDays) || 0;
+        bonusText = activeGift.bonusText || "";
+      } else if (pk.m !== 0 && pk.time !== "lifetime") {
+        // Fallback đơn cũ
+        bonusDays = Number(pk.bonus_days || pk.bonusDays || 0);
+        bonusText = pk.bonus_text || "";
+        giftName = pk.promo_sticker || "";
       }
 
       // TÍNH TOÁN GIÁ TIỀN AUTHORITATIVE PHÍA SERVER (HỖ TRỢ FLASH SALE & COUPON)
@@ -2126,9 +2359,13 @@ export default {
         isTest: !!isTestReq,
         subLinkDecision,
         targetLink,
-        renewOf: renewSrc ? renewSrc.id : (b.renewOf ? String(b.renewOf) : "")
+        renewOf: renewSrc ? renewSrc.id : (b.renewOf ? String(b.renewOf) : ""),
+        giftRuleId,
+        giftName,
+        bonusDays,
+        bonusText
       };
-      o.expDate = computeExp(o, st.orders, now);
+      o.expDate = computeExp(o, st.orders, now, giftRules);
       st.orders.unshift(o);
 
       // Lưu bộ đệm dự phòng vào KV với TTL 24h để tra cứu không bao giờ 404
