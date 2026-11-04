@@ -2567,6 +2567,8 @@ async function checkEmailExistingLinks(email) {
   if (isUpgradeMode || isRenewMode) return;
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     emailLookupState = 'idle';
+    existingCustomerLinks = [];
+    currentSubDecision = '';
     $('subLinkLifecycleWrap')?.classList.add('hidden');
     $('multiLinkSelectorWrap')?.classList.add('hidden');
     renderPaymentBox();
@@ -2580,22 +2582,29 @@ async function checkEmailExistingLinks(email) {
     if (currentTypedEmail && currentTypedEmail.toLowerCase() !== email.toLowerCase()) {
       return;
     }
-    if (res && res.ok && res.data && res.data.order && res.data.order.status === 'success') {
+    if (res && res.ok && res.data) {
       const ord = res.data.order;
       const isTestReq = isTestMode();
-      if (ord.isTest && !isTestReq) {
+      // Phân tách kho: Không xử lý đơn thuộc môi trường khác
+      if (ord && ((ord.isTest && !isTestReq) || (!ord.isTest && isTestReq))) {
+        existingCustomerLinks = [];
         emailLookupState = 'none';
         $('subLinkLifecycleWrap')?.classList.add('hidden');
+        $('multiLinkSelectorWrap')?.classList.add('hidden');
         renderPaymentBox();
         return;
       }
-      detectedRenewOf = ord.id;
+      if (ord) {
+        detectedRenewOf = ord.id;
+      }
       const links = [];
-      [1, 2, 3].forEach(i => {
-        if (ord['info' + i] && !ord['blur' + i]) {
-          links.push({ index: i, url: ord['info' + i], name: `Link Sub ${i}` });
-        }
-      });
+      if (ord && ord.status === 'success') {
+        [1, 2, 3].forEach(i => {
+          if (ord['info' + i] && !ord['blur' + i]) {
+            links.push({ index: i, url: ord['info' + i], name: `Link Sub ${i}` });
+          }
+        });
+      }
       if (res.data.existingLinks && Array.isArray(res.data.existingLinks)) {
         res.data.existingLinks.forEach((el, idx) => {
           if (!links.some(l => l.url === el.url)) {
@@ -2614,20 +2623,32 @@ async function checkEmailExistingLinks(email) {
         $('subLinkLifecycleWrap')?.classList.remove('hidden');
         renderPaymentBox();
         return;
+      } else {
+        // Tra cứu thành công nhưng email không có link cũ: coi là khách mua mới
+        existingCustomerLinks = [];
+        emailLookupState = 'none';
+        $('subLinkLifecycleWrap')?.classList.add('hidden');
+        $('multiLinkSelectorWrap')?.classList.add('hidden');
+        renderPaymentBox();
+        return;
       }
     }
     if (res && (res.status === 404 || (res.data && res.data.error === 'not_found'))) {
+      existingCustomerLinks = [];
       emailLookupState = 'none';
       $('subLinkLifecycleWrap')?.classList.add('hidden');
       $('multiLinkSelectorWrap')?.classList.add('hidden');
       renderPaymentBox();
       return;
     }
+    // Lỗi mạng hoặc server không phản hồi hợp lệ (status 500, 503, status 0)
+    existingCustomerLinks = [];
     emailLookupState = 'error';
     $('subLinkLifecycleWrap')?.classList.add('hidden');
     $('multiLinkSelectorWrap')?.classList.add('hidden');
     renderPaymentBox();
   } catch (e) {
+    existingCustomerLinks = [];
     emailLookupState = 'error';
     $('subLinkLifecycleWrap')?.classList.add('hidden');
     $('multiLinkSelectorWrap')?.classList.add('hidden');
