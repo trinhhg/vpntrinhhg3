@@ -115,7 +115,7 @@ function updateAppRoutes(customRoutes) {
 let currentTotalVnd = 0, currentTotalCny = 0, currentTotalUsd = 0, currentDurationMode = 1;
 let isUpgradeMode = false, isRenewMode = false, upgradeConfirmed = false, baseOrderPriceVnd = 0, baseOrderPriceUsd = 0, baseOrderPriceCny = 0;
 let lastScrollY = 0, pollT = null, tickT = null, skew = 0, lastSig = '';
-let emailLookupState = 'idle', currentSubDecision = '', existingCustomerLinks = [], detectedRenewOf = '';
+let emailLookupState = 'idle', emailLookupSeq = 0, currentSubDecision = '', existingCustomerLinks = [], detectedRenewOf = '';
 // $ imported from ./shared.js
 // esc imported from ./shared.js
 
@@ -2574,15 +2574,25 @@ async function checkEmailExistingLinks(email) {
     renderPaymentBox();
     return;
   }
+  const seq = ++emailLookupSeq;
   emailLookupState = 'checking';
   renderPaymentBox();
   try {
     const res = await wpost('/api/public/lookup', { q: email });
+    if (seq !== emailLookupSeq) return;
     const currentTypedEmail = $('cusEmail')?.value.trim();
     if (currentTypedEmail && currentTypedEmail.toLowerCase() !== email.toLowerCase()) {
       return;
     }
     if (res && res.ok && res.data) {
+      if (res.data.found === false || !res.data.order) {
+        existingCustomerLinks = [];
+        emailLookupState = 'none';
+        $('subLinkLifecycleWrap')?.classList.add('hidden');
+        $('multiLinkSelectorWrap')?.classList.add('hidden');
+        renderPaymentBox();
+        return;
+      }
       const ord = res.data.order;
       const isTestReq = isTestMode();
       // Phân tách kho: Không xử lý đơn thuộc môi trường khác
@@ -2633,7 +2643,8 @@ async function checkEmailExistingLinks(email) {
         return;
       }
     }
-    if (res && (res.status === 404 || (res.data && res.data.error === 'not_found'))) {
+    // Tương thích ngược: chỉ coi là khách mới khi 404 trả JSON not_found chuẩn từ Worker
+    if (res && res.status === 404 && res.data && res.data.error === 'not_found') {
       existingCustomerLinks = [];
       emailLookupState = 'none';
       $('subLinkLifecycleWrap')?.classList.add('hidden');
@@ -2641,7 +2652,7 @@ async function checkEmailExistingLinks(email) {
       renderPaymentBox();
       return;
     }
-    // Lỗi mạng hoặc server không phản hồi hợp lệ (status 500, 503, status 0)
+    // Lỗi mạng hoặc server không phản hồi hợp lệ (status 500, 503, status 0, 404 HTML rác)
     existingCustomerLinks = [];
     emailLookupState = 'error';
     $('subLinkLifecycleWrap')?.classList.add('hidden');
@@ -3034,7 +3045,7 @@ async function login(auto = false) {
   } catch (e) {
     res = null;
   }
-  if (res && res.status === 404) {
+  if ((res && res.status === 404) || (res && res.ok && res.data && res.data.found === false && !res.data.order)) {
     showToast(i18n[lang].not_found, 'error');
     logout();
     return;
@@ -3474,6 +3485,7 @@ window.onload = async function () {
       }, 400);
     });
     emInput.addEventListener('blur', () => {
+      clearTimeout(emailDebounce);
       const email = emInput.value.trim();
       if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         checkEmailExistingLinks(email);
