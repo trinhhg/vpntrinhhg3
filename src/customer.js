@@ -2475,9 +2475,6 @@ function renderPaymentBox() {
   const fp = m === 'bank' ? `${currentTotalVnd.toLocaleString('en-US')}VND` : m === 'alipay' || m === 'wechat' || m === 'weixin' ? `¥${currentTotalCny}` : `$${currentTotalUsd}`;
   btn.innerHTML = l.btn_create_order;
 
-  const subLinkWrap = $('subLinkLifecycleWrap');
-  const showSubLinkGuide = !!subLinkWrap && !subLinkWrap.classList.contains('hidden');
-
   let subLinkGuideHtml = '';
   if (emailLookupState === 'checking') {
     subLinkGuideHtml = `<br><br>
@@ -2492,7 +2489,7 @@ function renderPaymentBox() {
         <p class="text-[11px] leading-tight text-slate-500 dark:text-slate-400">Hệ thống chưa xác minh được lịch sử đơn hàng và Link Sub của email này. Hai lựa chọn đang khóa để tránh cấp nhầm link. Vui lòng thử kiểm tra lại email.</p>
         <button type="button" onclick="retryEmailCheck()" class="mt-1 px-2.5 py-1 text-[11px] font-bold bg-rose-100 hover:bg-rose-200 text-rose-800 dark:bg-rose-950/60 dark:hover:bg-rose-900/80 dark:text-rose-300 rounded-lg transition"><i class="fas fa-rotate-right mr-1"></i>Thử lại kiểm tra email</button>
       </div>`;
-  } else if (showSubLinkGuide || emailLookupState === 'found') {
+  } else if (emailLookupState === 'found') {
     subLinkGuideHtml = `<br><br>
       <div class="mt-3 pt-3 border-t border-slate-200 dark:border-white/10 space-y-2">
         <div class="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-700/40 text-amber-800 dark:text-amber-300 text-xs font-bold flex items-center gap-2">
@@ -2672,18 +2669,6 @@ async function checkEmailExistingLinks(email) {
         return;
       }
       const ord = res.data.order;
-      const isTestReq = isTestMode();
-      // Phân tách kho: Không xử lý đơn thuộc môi trường khác
-      if (ord && ((ord.isTest && !isTestReq) || (!ord.isTest && isTestReq))) {
-        existingCustomerLinks = [];
-        detectedRenewOf = '';
-        emailLookupState = 'none';
-        $('subLinkLifecycleWrap')?.classList.remove('hidden');
-        $('multiLinkSelectorWrap')?.classList.add('hidden');
-        lockSubDecisionUI('CREATE_NEW', 'Email mới trên môi trường này. Tự động chọn Cấp link mới.');
-        renderPaymentBox();
-        return;
-      }
 
       // Chỉ nạp link thuộc schema tương ứng của web này
       const links = [];
