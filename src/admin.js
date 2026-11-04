@@ -534,11 +534,18 @@ function applyPoll(j) {
   dataReqDb = arr(j.data_requests);
   if (j.isTest !== undefined && typeof isTestModeActive !== "undefined") {
     isTestModeActive = !!j.isTest;
+    try {
+      localStorage.setItem(SITE_KEY + "_testMode", isTestModeActive ? "1" : "0");
+      const url = new URL(window.location.href);
+      if (isTestModeActive) url.searchParams.set("test", "1");
+      else url.searchParams.delete("test");
+      window.history.replaceState({}, "", url.toString());
+    } catch (e) {}
     if ($("toggleTestMode")) $("toggleTestMode").checked = isTestModeActive;
     updateTestModeUI();
   }
 }
-async function fetchAll(msg) {
+async function fetchAll(msg, throwOnError = false) {
   try {
     const [poll, cms, dead, devs, g] = await Promise.all([aj("/api/admin/poll"), aj("/api/cms"), aj("/api/deadlinks"), aj("/api/devices"), aj("/api/guides")]);
     deadDb = arr(dead);
@@ -580,8 +587,11 @@ async function fetchAll(msg) {
     if (!curArtsReady) initGuides();
     loadStatus();
     if (msg) toast("Đã làm mới dữ liệu!");
+    return poll;
   } catch (e) {
     if (e.message !== "401") toast("Lỗi tải dữ liệu: " + e.message, "err");
+    if (throwOnError) throw e;
+    return null;
   }
 }
 const isLockedPoolUrl = u => u === "Da_bi_khoa";
@@ -7393,6 +7403,10 @@ async function checkTestModeStatus() {
       isTestModeActive = !!res.active;
       try {
         localStorage.setItem(SITE_KEY + "_testMode", isTestModeActive ? "1" : "0");
+        const url = new URL(window.location.href);
+        if (isTestModeActive) url.searchParams.set("test", "1");
+        else url.searchParams.delete("test");
+        window.history.replaceState({}, "", url.toString());
       } catch (e) {}
       if ($("toggleTestMode")) $("toggleTestMode").checked = isTestModeActive;
       updateTestModeUI();
@@ -7423,11 +7437,23 @@ async function toggleTestMode(checked) {
     if (confirmedActive !== checked) {
       throw new Error("Trạng thái trên server chưa đồng bộ (mong muốn: " + checked + ", thực tế: " + confirmedActive + ")");
     }
-    await fetchAll(true);
     isTestModeActive = checked;
     try {
       localStorage.setItem(SITE_KEY + "_testMode", checked ? "1" : "0");
+      const url = new URL(window.location.href);
+      if (checked) url.searchParams.set("test", "1");
+      else url.searchParams.delete("test");
+      window.history.replaceState({}, "", url.toString());
     } catch (e) {}
+
+    const poll = await fetchAll(false, true);
+    if (!poll) {
+      throw new Error("Không thể nạp dữ liệu từ server sau khi đổi chế độ");
+    }
+    if (poll.isTest !== undefined && !!poll.isTest !== checked) {
+      throw new Error("Dữ liệu nạp từ server không khớp chế độ (mong muốn: " + (checked ? "Kho Test" : "Kho Thật") + ", thực tế nhận: " + (poll.isTest ? "Kho Test" : "Kho Thật") + ")");
+    }
+
     updateTestModeUI();
     toast(checked ? "Đã BẬT Chế độ Test (ALL_ORDERS_TEST) và nạp dữ liệu thành công" : "Đã chuyển về Kho Thật (ALL_ORDERS) và nạp dữ liệu thành công");
   } catch (e) {
