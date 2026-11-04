@@ -1,4 +1,4 @@
-// v4.1 — 2026-11-04 19:00 (UTC+7)
+// v4 — 2026-11-04 20:00 (UTC+7)
 const getKV = (env) => env && (env.VPN_KV3 || env.VPN_KV || env.KV);
 
 // ====================================================================
@@ -138,6 +138,23 @@ function getSupabase(env, isTest = false) {
         throw new Error(`Supabase upsert: ${await readError(res, "Ghi dữ liệu thất bại")}`);
       }
 
+      const result = await res.json().catch(() => []);
+      return Array.isArray(result) ? (result[0] || cleaned) : cleaned;
+    },
+    async updateOrder(id, fields) {
+      const cleaned = cleanOrderForSupabase(fields);
+      const res = await fetch(`${url}/${table}?id=eq.${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        headers: {
+          ...headers,
+          "Content-Type": "application/json",
+          Prefer: "return=representation"
+        },
+        body: JSON.stringify(cleaned)
+      });
+      if (!res.ok) {
+        throw new Error(`Supabase updateOrder: ${await readError(res, "Cập nhật đơn thất bại")}`);
+      }
       const result = await res.json().catch(() => []);
       return Array.isArray(result) ? (result[0] || cleaned) : cleaned;
     },
@@ -938,8 +955,20 @@ function pickNode(pool, exclude) {
   return c[0];
 }
 
-function getMe(url, env, cms) {
-  let n = Number(env.WEB_INDEX) || 0;
+function getMe(url, env, cms, request = null) {
+  let n = Number(env && env.WEB_INDEX) || 0;
+  if (!n && url && url.searchParams) {
+    const w = url.searchParams.get("web") || url.searchParams.get("schema");
+    if (w && [1, 2, 3].includes(Number(w))) n = Number(w);
+    const f = url.searchParams.get("field");
+    if (f && /^info[1-3]$/.test(f)) n = Number(f.replace("info", ""));
+  }
+  if (!n && request && request.headers) {
+    const hField = request.headers.get("X-Schema-Field");
+    if (hField && /^info[1-3]$/.test(hField)) n = Number(hField.replace("info", ""));
+    const hWeb = request.headers.get("X-Web-Index");
+    if (hWeb && [1, 2, 3].includes(Number(hWeb))) n = Number(hWeb);
+  }
   const s = (cms && cms.settings) || {}, h = (url && url.hostname) || "";
   if (!n) for (const i of [1, 2, 3]) {
     const r = String(s["routeWeb" + i] || "").trim();
@@ -1221,7 +1250,7 @@ function publicOrder(o, cms, links, field) {
     const isBlur = blurMap[i];
     const linkVal = String(o[f] || (i === 1 ? o.info : "") || "");
     let v = isBlur ? "" : linkVal;
-    if (v && links && field === f && !(o.lockInfo && o.lockInfo[field]) && !links.some((l) => l && l.masked === v)) v = "";
+    // Bảo toàn giá trị link từ đơn hàng: không xóa rỗng link chỉ vì thiếu bản ghi ở ALL_LINKS cục bộ
     out["blur" + i] = isBlur;
     out["info" + i] = v;
   }
@@ -1257,7 +1286,7 @@ function applyUpgrade(o, st = null) {
 
   // Đồng bộ nâng cấp cấu hình ngay trên chính Link Sub hiện tại (không tạo link mới)
   if (st && Array.isArray(st.links)) {
-    const curLink = st.links.find(l => l && (normId(l.orderId) === normId(o.id) || l.masked === o.info1 || l.masked === o.info2 || l.masked === o.info3));
+    const curLink = st.links.find(l => l && (normId(l.orderId) === normId(o.id) || (o.targetLink && l.masked === o.targetLink)));
     if (curLink) {
       curLink.pkg = o.pkgName || pk.n || "";
       if (curLink.isLocked) {
@@ -1307,7 +1336,8 @@ function fulfillOrder(st, o, me, log) {
     if (o.targetLink) {
       candidate = st.links.find(l => l && (l.masked === o.targetLink || l.id === o.targetLink));
       if (!candidate) {
-        const srcOrd = st.orders.find(x => x && (x.info1 === o.targetLink || x.info2 === o.targetLink || x.info3 === o.targetLink));
+        // Chỉ tìm trong đơn có trường schema tương ứng của web này, không lấy link từ web khác
+        const srcOrd = st.orders.find(x => x && x[f] === o.targetLink);
         if (srcOrd && srcOrd[f]) candidate = st.links.find(l => l && l.masked === srcOrd[f]);
       }
     }
@@ -2084,25 +2114,39 @@ export default {
         }
       }
 
-      if (!o) {
-        if (isEmailQuery) {
-          return J({ ok: true, found: false, order: null, existingLinks: [] }, 200);
-        }
-        return J({
-          ok: false,
-          found: false,
-          error: "not_found",
-          existingLinks: []
-        }, 404);
-      }
-
-      // 1. Đọc đồng thời ALL_CMS, ALL_LINKS và DELETED_LINKS (tombstone) từ KV trước khi xử lý link
+      // 1. Xác định Web và trường schema tương ứng (Web 1 -> info1, Web 2 -> info2, Web 3 -> info3)
       const [cms, rawLinks, tb] = await Promise.all([safeJson(await KV.get("ALL_CMS"), {}), safeJson(await KV.get("ALL_LINKS"), []), loadTombs(KV)]);
       const links = arr(rawLinks);
       const stMini = {
         cms: cms && typeof cms === "object" && !Array.isArray(cms) ? cms : {},
         links
       };
+      const me = getMe(url, env, stMini.cms, request);
+      const schemaField = me.field;
+
+      if (!o) {
+        if (isEmailQuery) {
+          return J({
+            ok: true,
+            found: false,
+            order: null,
+            existingLinks: [],
+            linkScenario: "none",
+            schemaField,
+            activeOrdersCount: 0,
+            totalOrdersCount: 0
+          }, 200);
+        }
+        return J({
+          ok: false,
+          found: false,
+          error: "not_found",
+          existingLinks: [],
+          schemaField,
+          activeOrdersCount: 0,
+          totalOrdersCount: 0
+        }, 404);
+      }
 
       // 2. Chuẩn hóa Set tra cứu tombstone theo đúng schema (hỗ trợ cả t.id, t.url hoặc chuỗi ID)
       const tombSet = new Set();
@@ -2136,49 +2180,62 @@ export default {
       };
       const activeOrders = userOrders.filter(isOrderActive);
 
-      // 5. Kiểm tra thực tế trong kho ALL_LINKS và loại bỏ link tombstone đã xóa
+      // 5. CHỈ ĐỌC TRƯỜNG INFO TƯƠNG ỨNG CỦA WEB NÀY (schemaField)
+      // Nguồn ưu tiên số 1 là ô info trong đơn hàng; không gán deleted_links chỉ vì thiếu bản ghi ở ALL_LINKS cục bộ
       const existingLinks = [];
       const seenMasked = new Set();
+      let hasTombstonedLink = false;
+
       for (const ord of userOrders) {
-        for (const f of ["info1", "info2", "info3"]) {
-          const lk = ord[f];
-          if (lk && !seenMasked.has(lk)) {
-            seenMasked.add(lk);
-            // Kiểm tra trạng thái thực tế của link trong kho link sub
-            const foundRec = links.find(l => l && (l.masked === lk || l.id === lk));
-            const isTomb = isTombId(lk) || (foundRec && isTombId(foundRec.id));
-            if (isTomb || !foundRec) {
-              // Link đã bị xóa hoặc không còn tồn tại trong kho -> bỏ qua
-              continue;
-            }
-            const isLocked = !!(foundRec.isLocked || foundRec.orig === LOCK_ORIG || (!isLifetime(ord.expDate) && parseDmy(ord.expDate) ? parseDmy(ord.expDate) < todayStart : false));
-            existingLinks.push({
-              url: lk,
-              orderId: ord.id,
-              pkgName: ord.pkgName || ord.pkg || "",
-              expDate: ord.expDate || "",
-              status: isLocked ? "locked" : "active"
-            });
+        const lk = String(ord[schemaField] || (schemaField === "info1" ? ord.info : "") || "").trim();
+        if (lk && !seenMasked.has(lk)) {
+          seenMasked.add(lk);
+          const foundRec = links.find(l => l && (l.masked === lk || l.id === lk));
+          const isTomb = isTombId(lk) || (foundRec && isTombId(foundRec.id));
+          if (isTomb) {
+            hasTombstonedLink = true;
+            continue; // Link đã bị xóa thật sự qua tombstone
           }
+          const ordActive = isOrderActive(ord);
+          let isLocked = false;
+          let linkStatus = "active";
+          if (foundRec) {
+            isLocked = !!(foundRec.isLocked || foundRec.orig === LOCK_ORIG || (!isLifetime(ord.expDate) && parseDmy(ord.expDate) ? parseDmy(ord.expDate) < todayStart : false));
+            linkStatus = isLocked ? "locked" : "active";
+          } else {
+            // Có giá trị trong schema đơn hàng nhưng chưa có bản ghi xác minh ở kho cục bộ
+            linkStatus = "unverified";
+            isLocked = !ordActive;
+          }
+          existingLinks.push({
+            url: lk,
+            orderId: ord.id,
+            pkgName: ord.pkgName || ord.pkg || "",
+            expDate: ord.expDate || "",
+            status: isLocked ? "locked" : "active",
+            linkStatus
+          });
         }
       }
 
-      // 6. Xác định số link thực sự phân biệt đang hoạt động
+      // 6. Xác định link đang hoạt động
       const activeDistinctLinks = existingLinks.filter(l => l.status === "active");
 
-      // 7. Phân loại luồng linkScenario chính xác
+      // 7. Quyết định linkScenario dựa trên số đơn còn hạn & lịch sử đơn
       let linkScenario = "none";
       if (userOrders.length === 0) {
-        linkScenario = "none"; // B4: Email mới tinh, chưa từng có đơn thành công
-      } else if (existingLinks.length === 0) {
-        linkScenario = "deleted_links"; // Email có lịch sử nhưng tất cả link cũ đã bị xóa / tombstone
-      } else if (activeDistinctLinks.length >= 2) {
-        linkScenario = "multi_active"; // B6: Có >= 2 link đang cùng hoạt động riêng biệt
-      } else if (existingLinks.length === 1) {
-        linkScenario = "single_link"; // B5: Có đúng 1 link cũ phù hợp (dù đang active hay locked)
+        linkScenario = "none"; // Email mới tinh, chưa từng có đơn thành công
+      } else if (activeOrders.length >= 2) {
+        linkScenario = "multi_active"; // Có >= 2 đơn đang hoạt động
+      } else if (activeOrders.length === 1) {
+        linkScenario = "single_link"; // Đúng 1 đơn hoạt động, cho phép chọn Giữ hoặc Cấp mới
       } else {
-        // Có > 1 link trong kho (ví dụ: 1 link active + 1 link locked, hoặc nhiều link locked)
-        linkScenario = activeDistinctLinks.length > 0 ? "multi_active" : "single_link";
+        // Tất cả đơn cũ đã hết hạn
+        if (hasTombstonedLink && existingLinks.length === 0) {
+          linkScenario = "deleted_links"; // Chỉ gán khi có tombstone xác thực
+        } else {
+          linkScenario = "expired";
+        }
       }
 
       return J({
@@ -2187,7 +2244,9 @@ export default {
         order: pub(o, stMini),
         existingLinks,
         linkScenario,
-        activeOrdersCount: activeOrders.length
+        schemaField,
+        activeOrdersCount: activeOrders.length,
+        totalOrdersCount: userOrders.length
       });
     }
     if (p === "/api/public/order" && m === "POST") {
@@ -2208,7 +2267,11 @@ export default {
       const isRenew = !!renewSrc;
       const method = String(b.method || "Ngân hàng VN"), bank = isBankMethod(method);
 
-      // Tra cứu tất cả link sub hiện hữu của email này trong kho dữ liệu phù hợp
+      // Xác định web và trường schema tương ứng của web này
+      const me = getMe(url, env, st.cms, request);
+      const f = me.field;
+
+      // Tra cứu tất cả link sub hiện hữu của email này trong đúng ô schema của web này
       const emLower = email.toLowerCase();
       const existingSubLinks = [];
       const seenUrls = new Set();
@@ -2218,12 +2281,10 @@ export default {
           if (normStatus(ord.status) !== "success") continue;
           const isTestOrd = ord.isTest === true || String(ord.id).startsWith("DH_TEST_");
           if (isTestReq !== isTestOrd) continue;
-          for (const f of ["info1", "info2", "info3"]) {
-            const lk = ord[f];
-            if (lk && !seenUrls.has(lk)) {
-              seenUrls.add(lk);
-              existingSubLinks.push({ url: lk, orderId: ord.id });
-            }
+          const lk = ord[f];
+          if (lk && !seenUrls.has(lk)) {
+            seenUrls.add(lk);
+            existingSubLinks.push({ url: lk, orderId: ord.id });
           }
         }
       }
@@ -2236,25 +2297,25 @@ export default {
       const activeUserOrders = st.orders.filter(x => x && normStatus(x.status) === "success" && String(x.email || "").toLowerCase() === emLower && (isLifetime(x.expDate) || parseDmy(x.expDate) >= now));
 
       if (renewSrc) {
-        // B2: Gia hạn bắt đầu từ nút gia hạn portal -> 100% giữ link cũ đích danh
+        // Gia hạn bắt đầu từ nút gia hạn portal -> 100% giữ link cũ đích danh của web này
         subLinkDecision = "KEEP_EXISTING";
-        targetLink = renewSrc.info1 || renewSrc.info2 || renewSrc.info3 || "";
+        targetLink = renewSrc[f] || "";
       } else if (activeUserOrders.length >= 2) {
-        // B6: Email có 2 đơn hoạt động -> Backend tự động quyết định CẤP LINK MỚI ĐỘC LẬP
+        // Email có >= 2 đơn hoạt động -> Backend tự động quyết định CẤP LINK MỚI ĐỘC LẬP
         subLinkDecision = "CREATE_NEW";
         targetLink = "";
-      } else if (existingSubLinks.length === 1) {
-        // B5: Có đúng 1 link cũ phù hợp trong luồng mua thông thường
+      } else if (activeUserOrders.length === 1) {
+        // Có đúng 1 đơn còn hạn trong luồng mua thông thường -> xác thực lựa chọn của khách
         if (!subLinkDecision || (subLinkDecision !== "KEEP_EXISTING" && subLinkDecision !== "CREATE_NEW")) {
           return J({ ok: false, error: "Vui lòng chọn Giữ link cũ hoặc Cấp link mới" }, 400);
         }
         if (subLinkDecision === "KEEP_EXISTING") {
-          targetLink = existingSubLinks[0].url;
+          targetLink = targetLink && existingSubLinks.some(l => l.url === targetLink) ? targetLink : (activeUserOrders[0][f] || (existingSubLinks[0] ? existingSubLinks[0].url : ""));
         } else {
           targetLink = "";
         }
       } else {
-        // B4: Email mới chưa từng tồn tại hoặc không còn link cũ -> Tự động cấp link mới
+        // Email mới chưa từng tồn tại hoặc tất cả đơn đã hết hạn -> Tự động cấp link mới
         subLinkDecision = "CREATE_NEW";
         targetLink = "";
       }
@@ -2730,7 +2791,38 @@ export default {
             results.errors.push(oid);
             continue;
           }
-          if (sb) await sb.upsert(o).catch(() => {});
+          if (sb) {
+            // Cập nhật an toàn qua PATCH: chỉ cập nhật trường info của web này, không đè info web khác
+            const patchPayload = {
+              [me.field]: o[me.field],
+              status: o.status,
+              paidAt: o.paidAt,
+              expDate: o.expDate,
+              expFinal: o.expFinal,
+              fulfilledAt: o.fulfilledAt,
+              fulfillResult: o.fulfillResult,
+              subLinkDecision: o.subLinkDecision,
+              fallbackNew: !!o.fallbackNew
+            };
+            if (o.isUpgrade) {
+              patchPayload.isUpgrade = true;
+              patchPayload.upgradeStatus = o.upgradeStatus;
+              patchPayload.upgradedAt = o.upgradedAt;
+              patchPayload.pkgId = o.pkgId;
+              patchPayload.pkgName = o.pkgName;
+              patchPayload.pkgData = o.pkgData;
+              patchPayload.pkg = o.pkg;
+              patchPayload.totalVnd = o.totalVnd;
+              patchPayload.totalCny = o.totalCny;
+            }
+            if (typeof sb.updateOrder === "function") {
+              await sb.updateOrder(o.id, patchPayload).catch(async () => {
+                await sb.upsert(o).catch(() => {});
+              });
+            } else {
+              await sb.upsert(o).catch(() => {});
+            }
+          }
           // Lưu trạng thái thành công và link VPN vào KV cache để Index tra cứu ra ngay
           await KV.put("PENDING_ORD_" + o.id, JSON.stringify(o), { expirationTtl: 86400 });
           // Đồng bộ vào bảng dự phòng tương ứng của KV (Kho Thật hoặc Kho Test)
