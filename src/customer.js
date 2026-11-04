@@ -2325,7 +2325,11 @@ async function copyText(t) {
   showToast(i18n[lang].copy_success);
 }
 async function copyToClipboard(id) {
-  const e = $(id);
+  let e = $(id);
+  if (!e && oCache) {
+    const eff = getEffectiveSubLink(oCache);
+    e = $('subLink' + eff.index);
+  }
   if (!e) return;
   if (e.dataset.blurred === '1') {
     showToast("Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!", "error");
@@ -2381,7 +2385,12 @@ function drawQrCenterLogo(box) {
 }
 
 async function openQrModal(id, idx) {
-  const e = $(id);
+  let e = $(id);
+  if (!e && oCache) {
+    const eff = getEffectiveSubLink(oCache);
+    e = $('subLink' + eff.index);
+    if (!idx) idx = eff.index;
+  }
   if (!e) return;
   if (e.dataset.blurred === '1') {
     showToast("Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!", "error");
@@ -2475,38 +2484,32 @@ function renderPaymentBox() {
   const fp = m === 'bank' ? `${currentTotalVnd.toLocaleString('en-US')}VND` : m === 'alipay' || m === 'wechat' || m === 'weixin' ? `¥${currentTotalCny}` : `$${currentTotalUsd}`;
   btn.innerHTML = l.btn_create_order;
 
-  let subLinkGuideHtml = '';
-  if (emailLookupState === 'checking') {
-    subLinkGuideHtml = `<br><br>
-      <div class="mt-3 pt-3 border-t border-amber-200 dark:border-amber-800/40 text-amber-700 dark:text-amber-300 text-xs flex items-center gap-2">
-        <i class="fas fa-spinner fa-spin"></i>
-        <span>Đang kiểm tra lịch sử link sub của email...</span>
-      </div>`;
-  } else if (emailLookupState === 'error') {
-    subLinkGuideHtml = `<br><br>
-      <div class="mt-3 pt-3 border-t border-rose-200 dark:border-rose-800/40 text-rose-600 dark:text-rose-400 text-xs space-y-1.5">
-        <div class="font-bold flex items-center gap-1.5"><i class="fas fa-triangle-exclamation"></i> Không thể tra cứu lịch sử theo email</div>
-        <p class="text-[11px] leading-tight text-slate-500 dark:text-slate-400">Hệ thống chưa xác minh được lịch sử đơn hàng và Link Sub của email này. Hai lựa chọn đang khóa để tránh cấp nhầm link. Vui lòng thử kiểm tra lại email.</p>
-        <button type="button" onclick="retryEmailCheck()" class="mt-1 px-2.5 py-1 text-[11px] font-bold bg-rose-100 hover:bg-rose-200 text-rose-800 dark:bg-rose-950/60 dark:hover:bg-rose-900/80 dark:text-rose-300 rounded-lg transition"><i class="fas fa-rotate-right mr-1"></i>Thử lại kiểm tra email</button>
-      </div>`;
+  // Mục 3 hướng dẫn thanh toán: chuẩn hóa theo chính sách nghiệp vụ, loại bỏ hoàn toàn nội dung trùng lặp với cột trái
+  let step3Html = '';
+  if (isUpgradeMode) {
+    step3Html = `<br><br><b>3. Nâng cấp gói cước:</b><br>${l.guide_desc_upgrade || 'Nâng gói chỉ nâng số GB và giới hạn thiết bị trên cùng Link Sub hiện tại, không kéo dài hạn sử dụng và không đổi link.'}`;
+  } else if (isRenewMode) {
+    step3Html = `<br><br><b>3. Phương án Link Sub:</b><br>Gia hạn chính gói cước và Link Sub hiện tại trong portal (Hệ thống tự động giữ link cũ, không đổi link).`;
+  } else if (emailLookupState === 'found' && existingCustomerLinks.length === 1 && !isRenewMode && !isUpgradeMode) {
+    step3Html = `<br><br><b>3. Chọn phương án Link Sub (nếu khả dụng)</b><br>Nếu hệ thống cho phép lựa chọn, hãy chọn một trong hai phương án ở cột bên trái trước khi tạo mã QR:<br>• <b>Lựa chọn 1 — Giữ link cũ:</b> Tiếp tục sử dụng Link Sub hiện tại.<br>• <b>Lựa chọn 2 — Cấp link mới:</b> Sử dụng Link Sub mới sau khi thanh toán và kích hoạt thành công.`;
+  } else if (emailLookupState === 'found' && existingCustomerLinks.length > 1) {
+    step3Html = `<br><br><b>3. Phương án Link Sub:</b><br>Email có nhiều gói cước đang hoạt động cùng lúc. Hệ thống tự động cấp một Link Sub mới độc lập để không ảnh hưởng các link hiện tại.`;
+  } else if (emailLookupState === 'none') {
+    step3Html = `<br><br><b>3. Phương án Link Sub:</b><br>Email mới chưa từng có đơn hàng trên hệ thống. Hệ thống sẽ tự động cấp Link Sub mới sau khi thanh toán và kích hoạt thành công.`;
   } else if (emailLookupState === 'found') {
-    subLinkGuideHtml = `<br><br>
-      <div class="mt-3 pt-3 border-t border-slate-200 dark:border-white/10 space-y-2">
-        <div class="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-700/40 text-amber-800 dark:text-amber-300 text-xs font-bold flex items-center gap-2">
-          <i class="fas fa-hand-point-right text-amber-600"></i>
-          <span>Lưu ý: Email đã có Link Sub cũ. Bạn cần chọn Giữ link cũ hoặc Cấp link mới ở cột bên trái trước khi tạo đơn!</span>
-        </div>
-        <p><b class="text-indigo-600 dark:text-indigo-400">Giữ link cũ:</b> Tiếp tục dùng link sub đã thêm từ gói trước đó. Sau khi thanh toán và kích hoạt thành công, bạn chỉ cần cập nhật lại gói đăng ký trong app VPN tương ứng.</p>
-        <p><b class="text-indigo-600 dark:text-indigo-400">Cấp link mới:</b> Sau khi thanh toán và kích hoạt thành công, bạn sẽ cần copy hoặc quét QR để thêm link sub mới vào app VPN tương ứng.</p>
-      </div>`;
+    step3Html = `<br><br><b>3. Phương án Link Sub:</b><br>Tất cả gói cước trước đây của email này đã hết hạn. Hệ thống sẽ tự động cấp Link Sub mới sau khi thanh toán và kích hoạt thành công.`;
+  } else {
+    step3Html = `<br><br><b>3. Chọn phương án Link Sub (nếu khả dụng)</b><br>Vui lòng nhập Email để hệ thống kiểm tra lịch sử và hiển thị phương án Link Sub phù hợp.`;
   }
 
-  let guideHtml = l.guide_desc
-    + (isUpgradeMode ? "<br><br>" + l.guide_desc_upgrade : "")
-    + subLinkGuideHtml;
+  let guideHtml = l.guide_desc + step3Html;
+
+  const pName = currentPackage ? (currentPackage.name || (currentPackage.vi && currentPackage.vi.name) || 'Gói VPN') : '';
+  const pData = currentPackage ? (currentPackage.data || (currentPackage.vi && currentPackage.vi.data) || '') : '';
+  const pkgSummaryHtml = currentPackage ? `<div class="mb-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 flex items-center justify-between text-xs"><div class="font-bold text-slate-700 dark:text-slate-200"><i class="fas fa-box text-indigo-500 mr-1.5"></i>${esc(pName)}${pData ? ' (' + esc(pData) + ')' : ''}</div><div class="font-extrabold text-indigo-600 dark:text-indigo-400 text-sm">${fp}</div></div>` : '';
 
   if (!currentOrderId && !isUpgradeMode) {
-    col.innerHTML = `<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 dark:text-indigo-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4><p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${guideHtml}</p></div>`;
+    col.innerHTML = `<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 dark:text-indigo-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4>${pkgSummaryHtml}<p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${guideHtml}</p></div>`;
     return;
   }
   const dispId = isUpgradeMode ? oCache.id : currentOrderId;
@@ -2576,9 +2579,12 @@ function lockSubDecisionUI(selectedVal, reasonNotice = '') {
 }
 
 function unlockSubDecisionUI() {
+  currentSubDecision = '';
   document.querySelectorAll('input[name="subLinkDecisionRadio"]').forEach(r => {
+    r.checked = false;
     r.disabled = false;
   });
+  updateSubDecisionUI('');
   const lblKeep = $('lblSubKeep');
   const lblNew = $('lblSubNew');
   if (lblKeep) {
@@ -2591,6 +2597,8 @@ function unlockSubDecisionUI() {
   }
   const noticeEl = $('subDecisionLockNotice');
   if (noticeEl) noticeEl.classList.add('hidden');
+  const valEl = $('subDecisionValidationAlert');
+  if (valEl) valEl.classList.add('hidden');
 }
 
 function populateTargetLinks(links) {
@@ -2616,11 +2624,11 @@ function populateTargetLinks(links) {
 function onSubDecisionChange(val) {
   currentSubDecision = val;
   updateSubDecisionUI(val);
+  const valEl = $('subDecisionValidationAlert');
+  if (valEl) valEl.classList.add('hidden');
   const multiWrap = $('multiLinkSelectorWrap');
   if (multiWrap) {
-    const sel = $('targetLinkSubSelect');
-    const hasMultiple = sel && sel.options.length > 1;
-    multiWrap.classList.toggle('hidden', val !== 'KEEP_EXISTING' || !hasMultiple);
+    multiWrap.classList.toggle('hidden', val !== 'KEEP_EXISTING' || existingCustomerLinks.length <= 1);
   }
   renderPaymentBox();
 }
@@ -2785,10 +2793,21 @@ function submitOrder(e) {
     const checkedRadio = document.querySelector('input[name="subLinkDecisionRadio"]:checked');
     if (!checkedRadio || !checkedRadio.value) {
       showToast(lang === 'vi' ? 'Vui lòng chọn Giữ link cũ hoặc Cấp link mới trước khi tạo đơn!' : 'Please select Keep existing link or Create new link before creating order!', 'error');
+      let valEl = $('subDecisionValidationAlert');
+      if (!valEl) {
+        valEl = document.createElement('div');
+        valEl.id = 'subDecisionValidationAlert';
+        valEl.className = 'mt-2 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border-2 border-rose-400 dark:border-rose-600 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center gap-2 animate-pulse';
+        subWrap.appendChild(valEl);
+      }
+      valEl.innerHTML = '<i class="fas fa-circle-exclamation text-rose-500 shrink-0"></i><span>Vui lòng chọn 1 trong 2 phương án (Giữ link cũ hoặc Cấp link mới) để tiếp tục tạo mã QR.</span>';
+      valEl.classList.remove('hidden');
       subWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
     currentSubDecision = checkedRadio.value;
+    const valEl = $('subDecisionValidationAlert');
+    if (valEl) valEl.classList.add('hidden');
     if (currentSubDecision === 'KEEP_EXISTING' && existingCustomerLinks.length > 1) {
       const targetSel = $('targetLinkSubSelect');
       if (!targetSel || !targetSel.value) {
@@ -2955,6 +2974,15 @@ function pkgLine(o) {
   return `${tx(sc(p.vi.name))} – ${p.vnd.toLocaleString('en-US')}VND`;
 }
 
+function getEffectiveSubLink(o) {
+  if (!o) return { url: '', isBlur: false, field: 'info3', index: 3 };
+  const field = o.schemaField || (typeof location !== 'undefined' && location.hostname.includes('vpntrinhhg2') ? 'info2' : location.hostname.includes('vpntrinhhg3') ? 'info3' : 'info1');
+  const idx = Number(String(field).replace('info', '')) || (field === 'info2' ? 2 : (field === 'info3' ? 3 : 1));
+  const isBlur = !!o['blur' + idx];
+  let url = String(o[field] || (field === 'info1' ? (o.info || o.link) : '') || '').trim();
+  return { url, isBlur, field, index: idx };
+}
+
 function fillDashboard(o) {
   const L = i18n[lang];
   $('displayOrderId').innerText = o.id;
@@ -2980,29 +3008,49 @@ function fillDashboard(o) {
   }
   $('displayUpgradeStatus').innerText = ut;
   $('displayUpgradeStatus').className = 'text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap ' + uc;
-  const titles = ['Subscription URL 1:', 'Subscription URL 2:', 'Subscription URL 3:'];
+  const effective = getEffectiveSubLink(o);
   let fallbackNoticeHtml = '';
   if (o.fulfillResult === 'fallback_new' || o.fallbackNew) {
     fallbackNoticeHtml = `<div class="mb-3 p-3 bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-300 dark:border-amber-700/50 rounded-xl text-amber-900 dark:text-amber-200 text-xs font-bold leading-relaxed flex items-start gap-2.5"><i class="fas fa-triangle-exclamation text-amber-500 text-sm mt-0.5 shrink-0"></i><div><div class="font-black text-amber-800 dark:text-amber-300">Thông báo đổi Link Sub:</div><div>Không thể giữ link cũ theo yêu cầu do link cũ đã hết hiệu lực hoặc đã bị xóa. Hệ thống đã tự động cấp link sub mới.</div><div class="mt-1 font-semibold text-rose-600 dark:text-rose-400">👉 Quý khách vui lòng COPY hoặc quét mã QR bên dưới để thêm lại link mới vào ứng dụng VPN để tiếp tục sử dụng.</div></div></div>`;
   } else if (o.fulfillResult === 'multi_active_new') {
     fallbackNoticeHtml = `<div class="mb-3 p-2.5 bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/40 rounded-xl text-sky-800 dark:text-sky-300 text-xs font-bold flex items-center gap-2"><i class="fas fa-info-circle text-sky-500"></i><span>Email có nhiều đơn hàng cùng hoạt động. Hệ thống đã cấp một Link Sub mới độc lập.</span></div>`;
   }
-  $('linkBoxes').innerHTML = fallbackNoticeHtml + [1, 2, 3].map(i => `<div class="w-full ${i>1?'mt-2 border-t border-green-200/50 dark:border-green-800/50 pt-3':''}"><h3 class="text-green-700 dark:text-green-500 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>${titles[i-1]}</h3><div class="flex flex-col sm:flex-row gap-2 w-full items-stretch"><div class="relative w-full sm:flex-1 flex items-center overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]"><input type="text" id="subLink${i}" readonly class="w-full bg-transparent text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()"><div id="subBlurOverlay${i}" onclick="copyToClipboard('subLink${i}')" class="hidden absolute inset-0 z-10 flex items-center justify-start pl-3.5 pr-3 bg-white/25 dark:bg-black/30 backdrop-blur-[2px] cursor-pointer select-none"><span class="text-red-600 dark:text-amber-300 font-extrabold text-[11px] md:text-xs text-left leading-tight">Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!</span></div></div><div class="flex gap-2 shrink-0 w-full sm:w-auto"><button type="button" onclick="copyToClipboard('subLink${i}')" class="flex-1 sm:flex-none sm:w-[105px] bg-green-600 hover:bg-green-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-copy mr-1"></i>COPY</button><button type="button" onclick="openQrModal('subLink${i}', ${i})" class="flex-1 sm:flex-none sm:w-[105px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-qrcode mr-1"></i>LẤY QR</button></div></div></div>`).join('');
+
+  // Khối Link Subscription chuẩn theo schema của web hiện hành
+  const linkBoxHtml = `<div class="w-full">
+    <h3 class="text-green-700 dark:text-green-500 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Subscription URL:</h3>
+    <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
+      <div class="relative w-full sm:flex-1 flex items-center overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]">
+        <input type="text" id="subLink${effective.index}" readonly class="w-full bg-transparent text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+        <div id="subBlurOverlay${effective.index}" onclick="copyToClipboard('subLink${effective.index}')" class="hidden absolute inset-0 z-10 flex items-center justify-start pl-3.5 pr-3 bg-white/25 dark:bg-black/30 backdrop-blur-[2px] cursor-pointer select-none">
+          <span class="text-red-600 dark:text-amber-300 font-extrabold text-[11px] md:text-xs text-left leading-tight">Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!</span>
+        </div>
+      </div>
+      <div class="flex gap-2 shrink-0 w-full sm:w-auto">
+        <button type="button" onclick="copyToClipboard('subLink${effective.index}')" class="flex-1 sm:flex-none sm:w-[105px] bg-green-600 hover:bg-green-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-copy mr-1"></i>COPY</button>
+        <button type="button" onclick="openQrModal('subLink${effective.index}', ${effective.index})" class="flex-1 sm:flex-none sm:w-[105px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-qrcode mr-1"></i>LẤY QR</button>
+      </div>
+    </div>
+  </div>`;
+
+  $('linkBoxes').innerHTML = fallbackNoticeHtml + linkBoxHtml;
 
   // Đưa 2 nút Nâng gói và Gia hạn ra ngoài khối linkBoxes
   const actBtns = $('portalActionButtons');
   if (actBtns) {
     actBtns.innerHTML = `<button onclick="startUpgrade()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-3 rounded-xl text-xs md:text-sm transition flex items-center justify-center shadow-md active:scale-95"><i class="fas fa-arrow-up mr-1.5"></i> NÂNG GÓI</button><button onclick="startRenew()" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-extrabold py-3 rounded-xl text-xs md:text-sm transition flex items-center justify-center shadow-md active:scale-95"><i class="fas fa-redo-alt mr-1.5"></i> ${L.btn_renew||'GIA HẠN'}</button>`;
   }
-  [1, 2, 3].forEach(i => {
-    const inp = $('subLink' + i), ov = $('subBlurOverlay' + i), v = o['info' + i];
-    if (o['blur' + i]) {
-      inp.value = `https://vpntrinhhg${i===1?'':i}.pages.dev/v1/VPNTrinhHg?OwO=f8a9d2c4e1b7039a5d8e2f1c4b6a9d0e#VPNTrinhHg`;
+
+  const inp = $('subLink' + effective.index), ov = $('subBlurOverlay' + effective.index);
+  if (inp) {
+    if (effective.isBlur) {
+      inp.value = `https://vpntrinhhg${effective.index === 1 ? '' : effective.index}.pages.dev/v1/VPNTrinhHg?OwO=f8a9d2c4e1b7039a5d8e2f1c4b6a9d0e#VPNTrinhHg`;
       inp.classList.add('blur-link', 'select-none', 'pointer-events-none');
       inp.dataset.blurred = '1';
       inp.dataset.locked = '1';
       if (ov) ov.classList.remove('hidden');
     } else {
+      const v = effective.url;
       inp.value = v || '';
       inp.classList.remove('blur-link', 'select-none', 'pointer-events-none');
       inp.dataset.blurred = '';
@@ -3010,7 +3058,7 @@ function fillDashboard(o) {
       if (ov) ov.classList.add('hidden');
       if (!v && Date.now() + skew - (o.createdTs || 0) < 180000) inp.value = tx(L.link_generating);
     }
-  });
+  }
   const cd = localStorage.getItem('data_req_' + o.id), btn = $('btnRequestData');
   if (cd && Date.now() - parseInt(cd) < 300000) {
     btn.innerHTML = `<i class="fas fa-check-circle mr-1.5"></i> ${L.req_sent_btn}`;
@@ -3062,7 +3110,9 @@ async function refreshOrder() {
       return;
     }
     if (!r.ok) return;
-    const o = r.data.order, sig = JSON.stringify({ ...o, serverTime: 0 });
+    const o = r.data.order;
+    if (r.data.schemaField && !o.schemaField) o.schemaField = r.data.schemaField;
+    const sig = JSON.stringify({ ...o, serverTime: 0 });
     localStorage.setItem(CACHE_KEY, JSON.stringify(o));
     skew = (o.serverTime || Date.now()) - Date.now();
     if (sig !== lastSig) {
@@ -3162,6 +3212,7 @@ async function login(auto = false) {
     return;
   }
   const o = res.data.order;
+  if (res.data.schemaField && !o.schemaField) o.schemaField = res.data.schemaField;
   localStorage.setItem(SESSION_KEY, JSON.stringify({ id: o.id, time: Date.now() }));
   localStorage.setItem(CACHE_KEY, JSON.stringify(o));
   enterPortal(o, auto);
@@ -3326,6 +3377,7 @@ async function submitGuideAuth(e) {
       return;
     }
     const o = res.data.order;
+    if (res.data.schemaField && !o.schemaField) o.schemaField = res.data.schemaField;
     localStorage.setItem(SESSION_KEY, JSON.stringify({ id: o.id, time: Date.now() }));
     localStorage.setItem(CACHE_KEY, JSON.stringify(o));
     $('loginInput').value = o.id;
