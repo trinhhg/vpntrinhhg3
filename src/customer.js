@@ -115,7 +115,7 @@ function updateAppRoutes(customRoutes) {
 let currentTotalVnd = 0, currentTotalCny = 0, currentTotalUsd = 0, currentDurationMode = 1;
 let isUpgradeMode = false, isRenewMode = false, upgradeConfirmed = false, baseOrderPriceVnd = 0, baseOrderPriceUsd = 0, baseOrderPriceCny = 0;
 let lastScrollY = 0, pollT = null, tickT = null, skew = 0, lastSig = '';
-let emailLookupState = 'idle', emailLookupSeq = 0, currentSubDecision = '', existingCustomerLinks = [], detectedRenewOf = '';
+let emailLookupState = 'idle', emailLookupSeq = 0, currentSubDecision = '', existingCustomerLinks = [], detectedRenewOf = '', lastCheckedEmail = '';
 // $ imported from ./shared.js
 // esc imported from ./shared.js
 
@@ -1994,6 +1994,7 @@ function openCheckout(id) {
   currentSubDecision = '';
   detectedRenewOf = (isRenewMode && oCache) ? oCache.id : '';
   existingCustomerLinks = [];
+  lastCheckedEmail = '';
   document.querySelectorAll('input[name="subLinkDecisionRadio"]').forEach(r => {
     r.checked = false;
   });
@@ -2567,26 +2568,31 @@ async function checkEmailExistingLinks(email) {
   if (isUpgradeMode || isRenewMode) return;
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     emailLookupState = 'idle';
+    lastCheckedEmail = '';
     existingCustomerLinks = [];
     currentSubDecision = '';
+    detectedRenewOf = '';
     $('subLinkLifecycleWrap')?.classList.add('hidden');
     $('multiLinkSelectorWrap')?.classList.add('hidden');
     renderPaymentBox();
     return;
   }
+  const targetEmail = email.trim();
   const seq = ++emailLookupSeq;
   emailLookupState = 'checking';
   renderPaymentBox();
   try {
-    const res = await wpost('/api/public/lookup', { q: email });
+    const res = await wpost('/api/public/lookup', { q: targetEmail });
     if (seq !== emailLookupSeq) return;
     const currentTypedEmail = $('cusEmail')?.value.trim();
-    if (currentTypedEmail && currentTypedEmail.toLowerCase() !== email.toLowerCase()) {
+    if (currentTypedEmail && currentTypedEmail.toLowerCase() !== targetEmail.toLowerCase()) {
       return;
     }
-    if (res && res.ok && res.data) {
+    if (res && res.ok && res.data && typeof res.data === 'object' && res.data.isJson !== false) {
+      lastCheckedEmail = targetEmail.toLowerCase();
       if (res.data.found === false || !res.data.order) {
         existingCustomerLinks = [];
+        detectedRenewOf = '';
         emailLookupState = 'none';
         $('subLinkLifecycleWrap')?.classList.add('hidden');
         $('multiLinkSelectorWrap')?.classList.add('hidden');
@@ -2598,26 +2604,18 @@ async function checkEmailExistingLinks(email) {
       // Phân tách kho: Không xử lý đơn thuộc môi trường khác
       if (ord && ((ord.isTest && !isTestReq) || (!ord.isTest && isTestReq))) {
         existingCustomerLinks = [];
+        detectedRenewOf = '';
         emailLookupState = 'none';
         $('subLinkLifecycleWrap')?.classList.add('hidden');
         $('multiLinkSelectorWrap')?.classList.add('hidden');
         renderPaymentBox();
         return;
       }
-      if (ord) {
-        detectedRenewOf = ord.id;
-      }
+
       const links = [];
-      if (ord && ord.status === 'success') {
-        [1, 2, 3].forEach(i => {
-          if (ord['info' + i] && !ord['blur' + i]) {
-            links.push({ index: i, url: ord['info' + i], name: `Link Sub ${i}` });
-          }
-        });
-      }
       if (res.data.existingLinks && Array.isArray(res.data.existingLinks)) {
         res.data.existingLinks.forEach((el, idx) => {
-          if (!links.some(l => l.url === el.url)) {
+          if (el && el.url && !links.some(l => l.url === el.url)) {
             links.push({
               index: idx + 1,
               url: el.url,
@@ -2626,16 +2624,26 @@ async function checkEmailExistingLinks(email) {
           }
         });
       }
+      if (ord && ord.status === 'success') {
+        [1, 2, 3].forEach(i => {
+          if (ord['info' + i] && !ord['blur' + i] && !links.some(l => l.url === ord['info' + i])) {
+            links.push({ index: links.length + 1, url: ord['info' + i], name: `Link Sub ${i}` });
+          }
+        });
+      }
+
       if (links.length > 0) {
         existingCustomerLinks = links;
-        populateTargetLinks(links);
+        detectedRenewOf = ord.id || '';
         emailLookupState = 'found';
+        populateTargetLinks(links);
         $('subLinkLifecycleWrap')?.classList.remove('hidden');
         renderPaymentBox();
         return;
       } else {
         // Tra cứu thành công nhưng email không có link cũ: coi là khách mua mới
         existingCustomerLinks = [];
+        detectedRenewOf = '';
         emailLookupState = 'none';
         $('subLinkLifecycleWrap')?.classList.add('hidden');
         $('multiLinkSelectorWrap')?.classList.add('hidden');
@@ -2645,7 +2653,9 @@ async function checkEmailExistingLinks(email) {
     }
     // Tương thích ngược: chỉ coi là khách mới khi 404 trả JSON not_found chuẩn từ Worker
     if (res && res.status === 404 && res.data && res.data.error === 'not_found') {
+      lastCheckedEmail = targetEmail.toLowerCase();
       existingCustomerLinks = [];
+      detectedRenewOf = '';
       emailLookupState = 'none';
       $('subLinkLifecycleWrap')?.classList.add('hidden');
       $('multiLinkSelectorWrap')?.classList.add('hidden');
@@ -2654,12 +2664,14 @@ async function checkEmailExistingLinks(email) {
     }
     // Lỗi mạng hoặc server không phản hồi hợp lệ (status 500, 503, status 0, 404 HTML rác)
     existingCustomerLinks = [];
+    detectedRenewOf = '';
     emailLookupState = 'error';
     $('subLinkLifecycleWrap')?.classList.add('hidden');
     $('multiLinkSelectorWrap')?.classList.add('hidden');
     renderPaymentBox();
   } catch (e) {
     existingCustomerLinks = [];
+    detectedRenewOf = '';
     emailLookupState = 'error';
     $('subLinkLifecycleWrap')?.classList.add('hidden');
     $('multiLinkSelectorWrap')?.classList.add('hidden');
@@ -2670,6 +2682,7 @@ async function checkEmailExistingLinks(email) {
 function retryEmailCheck() {
   const emInput = $('cusEmail');
   if (emInput && emInput.value) {
+    lastCheckedEmail = '';
     checkEmailExistingLinks(emInput.value.trim());
   }
 }
@@ -3472,9 +3485,13 @@ window.onload = async function () {
 
       const email = emInput.value.trim();
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        lastCheckedEmail = '';
         emailLookupState = 'idle';
         clearTimeout(emailDebounce);
         renderPaymentBox();
+        return;
+      }
+      if (email.toLowerCase() === lastCheckedEmail.toLowerCase() && emailLookupState !== 'error') {
         return;
       }
       emailLookupState = 'checking';
@@ -3482,13 +3499,15 @@ window.onload = async function () {
       clearTimeout(emailDebounce);
       emailDebounce = setTimeout(() => {
         checkEmailExistingLinks(email);
-      }, 400);
+      }, 450);
     });
     emInput.addEventListener('blur', () => {
       clearTimeout(emailDebounce);
       const email = emInput.value.trim();
       if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        checkEmailExistingLinks(email);
+        if (email.toLowerCase() !== lastCheckedEmail.toLowerCase() || emailLookupState === 'error') {
+          checkEmailExistingLinks(email);
+        }
       }
     });
   }
