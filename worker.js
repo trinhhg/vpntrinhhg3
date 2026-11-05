@@ -1,4 +1,4 @@
-// v4 — 2026-11-05 19:00 (UTC+7)
+// v4 — 2026-11-04 21:00 (UTC+7)
 const getKV = (env) => env && (env.VPN_KV3 || env.VPN_KV || env.KV);
 
 // ====================================================================
@@ -2110,6 +2110,7 @@ export default {
           const pOrd = safeJson(rawPending, null);
           if (pOrd && isMatchingEnv(pOrd, isTestReq)) {
             o = pOrd;
+            o._fromKvPending = true; // Đánh dấu rõ nguồn dữ liệu từ bộ đệm tạm thời
             if (!matchedOrders.some(x => normId(x.id) === normId(pOrd.id))) matchedOrders.push(pOrd);
           }
         }
@@ -2437,7 +2438,18 @@ export default {
       await KV.put("PENDING_ORD_" + o.id, JSON.stringify(o), { expirationTtl: 86400 });
 
       const sb = getSupabase(env, st.isTest);
-      if (sb) await sb.upsert(o).catch(() => {});
+      if (sb) {
+        try {
+          await sb.upsert(o);
+        } catch (sbErr) {
+          const lErr = mkLog();
+          lErr("error", "order", `Lỗi ghi đơn vào Supabase (${st.isTest ? "Kho Test" : "Kho Thật"})`, `${o.id}: ${sbErr.message || String(sbErr)}`, o.id);
+          await flushLog(KV, lErr);
+          // Đánh dấu cờ chưa đồng bộ DB vào bộ nhớ đệm KV để nhận diện và đồng bộ bù
+          o._dbSynced = false;
+          await KV.put("PENDING_ORD_" + o.id, JSON.stringify(o), { expirationTtl: 86400 });
+        }
+      }
       ctx.waitUntil((async () => {
         try {
           const r = await d1Register(env, url, o, o.orderType), l2 = mkLog();
@@ -3452,12 +3464,15 @@ export default {
           if (b[k] === undefined) continue;
           if (lockExp && (k === "expDate" || k === "days")) continue;
           if (k.startsWith("info")) {
+            // Quy tắc Routing: Chỉ cho phép lưu ô info thuộc quyền sở hữu của Web này (me.field)
+            if (k !== me.field) {
+              continue; // Bỏ qua, không ghi đè ô của web khác
+            }
             o[k] = String(b[k]);
-            // Nếu bật Sửa tay: bất kỳ ô link nào có giá trị được nhập tay đều tự động khóa lockInfo để hệ thống không ghi đè
+            // Nếu bật Sửa tay: chỉ khóa ô thuộc quyền sở hữu
             if (isManualEdit && o[k]) {
               (o.lockInfo = o.lockInfo || {})[k] = true;
             } else if (isManualEdit && !o[k] && o.lockInfo) {
-              // Nếu admin chủ động xóa trắng ô đó thì mở khóa ô đó
               delete o.lockInfo[k];
             }
             continue;
