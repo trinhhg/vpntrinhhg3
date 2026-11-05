@@ -380,19 +380,23 @@ async function runTelegramBackup(env, actionReason = "Admin gửi thủ công", 
 
   let stt = 1;
   let prevCount = null;
-  const prefix = isTest ? "TG_BACKUP_TEST" : "TG_BACKUP_PROD";
+  const stateKey = isTest ? "TG_BACKUP_STATE_TEST" : "TG_BACKUP_STATE_PROD";
   if (KV) {
-    const lastDate = await KV.get(`${prefix}_LAST_DATE`);
-    const lastStt = Number(await KV.get(`${prefix}_LAST_STT`)) || 0;
-    const lastCount = Number(await KV.get(`${prefix}_LAST_COUNT`));
+    const rawState = safeJson(await KV.get(stateKey), null);
+    const lastDate = rawState ? rawState.date : (await KV.get(isTest ? "TG_BACKUP_TEST_LAST_DATE" : "TG_BACKUP_PROD_LAST_DATE"));
+    const lastStt = Number(rawState ? rawState.stt : (await KV.get(isTest ? "TG_BACKUP_TEST_LAST_STT" : "TG_BACKUP_PROD_LAST_STT"))) || 0;
+    const lastCount = Number(rawState ? rawState.count : (await KV.get(isTest ? "TG_BACKUP_TEST_LAST_COUNT" : "TG_BACKUP_PROD_LAST_COUNT")));
     if (!isNaN(lastCount)) prevCount = lastCount;
     if (lastDate === dayKey) {
       stt = lastStt + 1;
     }
-    await KV.put(`${prefix}_LAST_DATE`, dayKey);
-    await KV.put(`${prefix}_LAST_STT`, String(stt));
-    await KV.put(`${prefix}_LAST_COUNT`, String(orders.length));
-    await KV.put(`LAST_ORDER_BACKUP_TS`, String(Date.now()));
+    // Gộp tất cả metadata backup vào 1 key JSON duy nhất (giảm 75% lượt ghi KV)
+    await KV.put(stateKey, JSON.stringify({
+      date: dayKey,
+      stt: stt,
+      count: orders.length,
+      lastTs: Date.now()
+    }));
   }
   const sttStr = String(stt).padStart(2, "0");
   const envTag = isTest ? "TEST" : "PROD";
@@ -2503,7 +2507,15 @@ export default {
       o.upgradeStatus = "pending";
       o.isUpgrade = true;
       const sb = getSupabase(env, st.isTest);
-      if (sb) await sb.upsert(o).catch(() => {});
+      if (sb) {
+        try {
+          await sb.upsert(o);
+        } catch (sbErr) {
+          const lErr = mkLog();
+          lErr("error", "order", `Lỗi ghi đơn vào Supabase (${st.isTest ? "Kho Test" : "Kho Thật"})`, `${o.id}: ${sbErr.message || String(sbErr)}`, o.id);
+          await flushLog(KV, lErr);
+        }
+      }
       ctx.waitUntil((async () => {
         try {
           const r = await d1Upgrade(env, url, o, o.pendingUpgrade), l2 = mkLog();
@@ -3464,12 +3476,11 @@ export default {
           if (b[k] === undefined) continue;
           if (lockExp && (k === "expDate" || k === "days")) continue;
           if (k.startsWith("info")) {
-            // Quy tắc Routing: Chỉ cho phép lưu ô info thuộc quyền sở hữu của Web này (me.field)
+            // Server-side Routing Check: Chỉ cho phép lưu ô thuộc quyền sở hữu của Web này (me.field)
             if (k !== me.field) {
-              continue; // Bỏ qua, không ghi đè ô của web khác
+              continue; // Bỏ qua hoàn toàn, bảo vệ dữ liệu của web khác
             }
             o[k] = String(b[k]);
-            // Nếu bật Sửa tay: chỉ khóa ô thuộc quyền sở hữu
             if (isManualEdit && o[k]) {
               (o.lockInfo = o.lockInfo || {})[k] = true;
             } else if (isManualEdit && !o[k] && o.lockInfo) {
@@ -3483,7 +3494,7 @@ export default {
           }
           o[k] = b[k];
         }
-        for (const k of arr(b.unlockInfo)) if (/^info[123]$/.test(k) && o.lockInfo) delete o.lockInfo[k];
+        for (const k of arr(b.unlockInfo)) if (k === me.field && o.lockInfo) delete o.lockInfo[k];
         if (b.pkgId && PKGS[b.pkgId]) {
           const pk = PKGS[b.pkgId];
           Object.assign(o, {
@@ -3561,7 +3572,11 @@ export default {
         const sb = getSupabase(env, st.isTest);
         if (sb) {
           if (renamedFrom) await sb.delete(renamedFrom, renamedFrom).catch(() => {});
-          await sb.upsert(o).catch(() => {});
+          try {
+            await sb.upsert(o);
+          } catch (sbErr) {
+            log("error", "order", `Lỗi Supabase khi Admin lưu đơn (${st.isTest ? "Kho Test" : "Kho Thật"})`, `${o.id}: ${sbErr.message || String(sbErr)}`, o.id);
+          }
         }
         log("info", "admin", "Lưu đơn", `${o.id} → ${o.status}${kind ? " / " + kind : ""}${lockAuto ? " [khóa fulfillment]" : ""}${isManualEdit ? " [sửa tay]" : ""}${lockExp ? " [khóa hạn]" : ""}`, o.id);
         await flushLog(KV, log);
@@ -3931,7 +3946,8 @@ async function runCron(env, ctx, opt) {
     if (!alreadyDone) {
       ctx.waitUntil((async () => {
         await KV.put(backupKey, String(Date.now()), { expirationTtl: 86400 });
-        const lastOrderBackupTs = Number(await KV.get("LAST_ORDER_BACKUP_TS")) || 0;
+        const prodState = safeJson(await KV.get("TG_BACKUP_STATE_PROD"), null);
+        const lastOrderBackupTs = Number(prodState ? prodState.lastTs : (await KV.get("LAST_ORDER_BACKUP_TS"))) || 0;
         if (!lastOrderBackupTs || (Date.now() - lastOrderBackupTs >= 24 * 36e5)) {
           const resOrders = await runTelegramBackup(env, "Tự động định kỳ 8h sáng (24h qua chưa có biến động)");
           log(resOrders.ok ? "ok" : "warn", "cron", "Tự động sao lưu Đơn hàng 8h sáng", `Gửi ${resOrders.count} đơn`);
