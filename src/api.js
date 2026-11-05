@@ -34,21 +34,38 @@ export function clearAdminToken() {
   setAdminToken("");
 }
 
+let serverTestMode = null;
+
+export function setServerTestMode(active) {
+  serverTestMode = typeof active === "boolean" ? active : null;
+}
+
 export function isTestMode() {
   if (typeof location === "undefined") return false;
   const urlParam = new URLSearchParams(location.search).get("test");
   if (urlParam === "1") return true;
   if (urlParam === "0") return false;
-  // localStorage testMode chỉ áp dụng cho trang quản trị Admin, tuyệt đối không ô nhiễm trang khách
-  const isAdmin = typeof location !== "undefined" && (location.pathname.includes("admin") || location.pathname.startsWith("/admin"));
-  if (isAdmin && typeof localStorage !== "undefined") {
-    try {
-      const siteKey = getSiteKey();
-      const adminTest = localStorage.getItem(siteKey + "_testMode");
-      if (adminTest === "1") return true;
-      if (adminTest === "0") return false;
-    } catch {}
-  }
+
+  // 1. Nhận diện từ cấu hình Worker Server (đồng bộ qua loadConfig mà không cần ?test=1 trên URL)
+  if (serverTestMode !== null) return serverTestMode;
+
+  // 2. Nhận diện từ localStorage theo domain hiện tại
+  try {
+    const siteKey = getSiteKey();
+    const adminTest = localStorage.getItem(siteKey + "_testMode");
+    if (adminTest === "1") return true;
+    if (adminTest === "0") return false;
+  } catch {}
+
+  // 3. Nhận diện từ đơn hàng gần nhất trong session cache nếu là đơn test
+  try {
+    const cached = localStorage.getItem("vpn_portal_last_order");
+    if (cached) {
+      const co = JSON.parse(cached);
+      if (co && (co.isTest === true || (co.id && String(co.id).startsWith("DH_TEST_")))) return true;
+    }
+  } catch {}
+
   return false;
 }
 
@@ -127,8 +144,7 @@ export async function wpost(path, body) {
     let isJson = true;
     try {
       data = await res.json();
-    } catch {
-      isJson = false;
+    } catch { isJson = false;
     }
 
     if (!isJson) {
@@ -136,7 +152,10 @@ export async function wpost(path, body) {
       return {
         ok: false,
         status: res.status,
-        data: { error: 'Phản hồi từ máy chủ không đúng định dạng JSON', isJson: false }
+        data: {
+          error: 'Phản hồi từ máy chủ không đúng định dạng JSON',
+          isJson: false
+        }
       };
     }
 
@@ -153,7 +172,11 @@ export async function wpost(path, body) {
     return {
       ok: false,
       status: 0,
-      data: { error: err.message || String(err), isNetworkError: true, isTimeout }
+      data: {
+        error: err.message || String(err),
+        isNetworkError: true,
+        isTimeout
+      }
     };
   }
 }
