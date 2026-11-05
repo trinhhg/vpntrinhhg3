@@ -3,7 +3,7 @@
  * Tách từ index.html theo kiến trúc Giai đoạn 3
  */
 
-import { WORKER_URL, wpost, wpostRetry } from './api.js';
+import { WORKER_URL, wpost, wpostRetry, setServerTestMode } from './api.js';
 import {
   $,
   esc,
@@ -1272,6 +1272,9 @@ async function loadConfig() {
     const [r, pkgRes] = await Promise.all([fetch(WORKER_URL + '/api/public/config?_t=' + Date.now(), { cache: 'no-store' }), fetch(WORKER_URL + '/api/packages?_t=' + Date.now(), { cache: 'no-store' }).catch(() => null)]);
     if (r.ok) {
       cfgCache = await r.json();
+      if (typeof cfgCache.isTest === 'boolean') {
+        setServerTestMode(cfgCache.isTest);
+      }
       if (pkgRes && pkgRes.ok) {
         try {
           const extra = await pkgRes.json();
@@ -3100,6 +3103,7 @@ function stopTick() {
 
 async function refreshOrder() {
   if (!oCache) return;
+  if (oCache.isTest) setServerTestMode(true);
   try {
     const r = await wpost('/api/public/lookup', { q: oCache.id });
     if (r.status === 404) {
@@ -3166,6 +3170,7 @@ function highlightNavBtns(tabId) {
 }
 
 function enterPortal(o, auto) {
+  if (o && o.isTest) setServerTestMode(true);
   $('view-store').classList.remove('active');
   $('view-portal').classList.add('active');
   $('userMenu').classList.remove('hidden');
