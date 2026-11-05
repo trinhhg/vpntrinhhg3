@@ -1148,24 +1148,32 @@ function openOrdModal(id) {
     $("mOAmount").value = "";
   }
 
-  // Quản lý 3 ô Link theo công tắc "Sửa tay":
+  // Quản lý 3 ô Link theo quyền Routing và công tắc "Sửa tay":
   const canEditManual = manualEditOn();
+  const currentWebField = (myRoutingField && /^info[123]$/.test(myRoutingField)) ? myRoutingField : "info3"; // Mặc định Web 3 sở hữu info3
   ["1", "2", "3"].forEach(i => {
+    const fieldKey = "info" + i;
+    const isOwner = (fieldKey === currentWebField);
     const inp = $("mOLink" + i);
-    inp.readOnly = !canEditManual;
-    if (canEditManual) {
+    // Chỉ ô thuộc quyền routing VÀ bật sửa tay mới được phép sửa
+    inp.readOnly = !(canEditManual && isOwner);
+    if (canEditManual && isOwner) {
       inp.classList.remove("bg-slate-100", "cursor-not-allowed", "text-slate-500");
       inp.classList.add("bg-white", "cursor-text");
-      inp.placeholder = "Dán link sub vào đây (sau khi lưu sẽ được khóa)";
+      inp.placeholder = `Dán link sub cho ${fieldKey} (sau khi lưu sẽ được khóa)`;
+    } else if (!isOwner) {
+      inp.classList.add("bg-slate-100", "cursor-not-allowed", "text-slate-500");
+      inp.classList.remove("bg-white", "cursor-text");
+      inp.placeholder = `Ô này do website khác quản lý (chỉ đọc)`;
     } else {
       inp.classList.add("bg-slate-100", "cursor-not-allowed", "text-slate-500");
       inp.classList.remove("bg-white", "cursor-text");
       inp.placeholder = "Đang tắt Sửa tay (chỉ đọc) — bật công tắc Sửa tay ngoài tab để sửa";
     }
     $("mOUnl" + i).checked = false;
-    const lk = !!(o && o.lockInfo && o.lockInfo["info" + i]);
-    $("mOUnlW" + i).classList.toggle("hidden", !lk);
-    $("mOLkTag" + i).innerHTML = lk ? '<span class="text-purple-600 font-bold"><i class="fas fa-lock"></i> đã khóa (sửa tay)</span>' : "";
+    const lk = !!(o && o.lockInfo && o.lockInfo[fieldKey]);
+    $("mOUnlW" + i).classList.toggle("hidden", !lk || !isOwner);
+    $("mOLkTag" + i).innerHTML = lk ? '<span class="text-purple-600 font-bold"><i class="fas fa-lock"></i> đã khóa (sửa tay)</span>' : (!isOwner ? '<span class="text-slate-400 text-[10px]"><i class="fas fa-shield-alt"></i> ngoài routing</span>' : "");
   });
 
   const lockOn = !modalNew && expLocked();
