@@ -1150,12 +1150,13 @@ function openOrdModal(id) {
 
   // Quản lý 3 ô Link theo quyền Routing và công tắc "Sửa tay":
   const canEditManual = manualEditOn();
-  const currentWebField = (myRoutingField && /^info[123]$/.test(myRoutingField)) ? myRoutingField : "info3"; // Mặc định Web 3 sở hữu info3
+  const me = getMe(); // Sử dụng hàm chuẩn có sẵn của admin.js để lấy info1/info2/info3
+  const currentWebField = me.field;
   ["1", "2", "3"].forEach(i => {
     const fieldKey = "info" + i;
     const isOwner = (fieldKey === currentWebField);
     const inp = $("mOLink" + i);
-    // Chỉ ô thuộc quyền routing VÀ bật sửa tay mới được phép sửa
+    // Chỉ cho phép nhập khi: Đang bật Sửa tay VÀ ô này thuộc quyền sở hữu của Website hiện tại
     inp.readOnly = !(canEditManual && isOwner);
     if (canEditManual && isOwner) {
       inp.classList.remove("bg-slate-100", "cursor-not-allowed", "text-slate-500");
@@ -1164,7 +1165,7 @@ function openOrdModal(id) {
     } else if (!isOwner) {
       inp.classList.add("bg-slate-100", "cursor-not-allowed", "text-slate-500");
       inp.classList.remove("bg-white", "cursor-text");
-      inp.placeholder = `Ô này do website khác quản lý (chỉ đọc)`;
+      inp.placeholder = `Do Web ${i} quản lý (chỉ đọc)`;
     } else {
       inp.classList.add("bg-slate-100", "cursor-not-allowed", "text-slate-500");
       inp.classList.remove("bg-white", "cursor-text");
@@ -1173,7 +1174,7 @@ function openOrdModal(id) {
     $("mOUnl" + i).checked = false;
     const lk = !!(o && o.lockInfo && o.lockInfo[fieldKey]);
     $("mOUnlW" + i).classList.toggle("hidden", !lk || !isOwner);
-    $("mOLkTag" + i).innerHTML = lk ? '<span class="text-purple-600 font-bold"><i class="fas fa-lock"></i> đã khóa (sửa tay)</span>' : (!isOwner ? '<span class="text-slate-400 text-[10px]"><i class="fas fa-shield-alt"></i> ngoài routing</span>' : "");
+    $("mOLkTag" + i).innerHTML = lk ? '<span class="text-purple-600 font-bold"><i class="fas fa-lock"></i> đã khóa (sửa tay)</span>' : (!isOwner ? `<span class="text-slate-400 text-[10px]"><i class="fas fa-shield-alt"></i> Web ${i}</span>` : "");
   });
 
   const lockOn = !modalNew && expLocked();
@@ -1202,8 +1203,11 @@ async function saveOrd() {
   if ((!oldId || id !== oldId) && ordersDb.some(x => normId(x.id) === id)) return toast("Mã đơn " + id + " đã tồn tại", "err");
   const cur = readModal(), body = { id: oldId || id };
   if (oldId && id !== oldId) body.newId = id;
+  const me = getMe();
   for (const k in cur) {
     if (k === "amount") continue;
+    // BẢO VỆ ROUTING: Tuyệt đối không gửi các ô link ngoài quyền sở hữu của website này
+    if (/^info[123]$/.test(k) && k !== me.field) continue;
     if (modalNew ? (cur[k] !== "" && cur[k] !== "-1") : cur[k] !== modalInit[k]) {
       if (k === "pkgId" && cur[k] === "-1") continue;
       body[k] = cur[k];
@@ -1227,7 +1231,7 @@ async function saveOrd() {
   if (lockFulfillOn()) body.lockAuto = true;
   if (expLocked()) body.lockExpiry = true;
   if (manualEditOn()) body.manualEdit = true; // Báo cho server biết đang bật chế độ Sửa tay
-  const un = ["1", "2", "3"].filter(i => $("mOUnl" + i).checked).map(i => "info" + i);
+  const un = ["1", "2", "3"].filter(i => $("mOUnl" + i).checked).map(i => "info" + i).filter(f => f === me.field);
   if (un.length) body.unlockInfo = un;
   if (modalNew || curUpg() !== upgInit) body.upg = curUpg();
   if (modalNew && !body.status) body.status = "pending";
