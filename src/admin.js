@@ -7402,6 +7402,13 @@ async function toggleTestMode(checked) {
     }
 
     updateTestModeUI();
+    try {
+      const ch = new BroadcastChannel('vpn_trinhhg_sync');
+      ch.postMessage({ type: 'test_mode_change', isTest: checked });
+    } catch (e) {}
+    try {
+      localStorage.setItem('vpn_last_config_sync', String(Date.now()));
+    } catch (e) {}
     toast(checked ? "Đã BẬT Chế độ Test (ALL_ORDERS_TEST) và nạp dữ liệu thành công" : "Đã chuyển về Kho Thật (ALL_ORDERS) và nạp dữ liệu thành công");
   } catch (e) {
     await checkTestModeStatus();
