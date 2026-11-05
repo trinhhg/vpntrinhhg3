@@ -2329,6 +2329,9 @@ async function copyText(t) {
 }
 async function copyToClipboard(id) {
   let e = $(id);
+  if (!e && (id === 1 || id === 2 || id === 3 || id === '1' || id === '2' || id === '3')) {
+    e = $('subLink' + id);
+  }
   if (!e && oCache) {
     const eff = getEffectiveSubLink(oCache);
     e = $('subLink' + eff.index);
@@ -2389,6 +2392,14 @@ function drawQrCenterLogo(box) {
 
 async function openQrModal(id, idx) {
   let e = $(id);
+  if (!e && (id === 1 || id === 2 || id === 3 || id === '1' || id === '2' || id === '3')) {
+    idx = Number(id);
+    e = $('subLink' + idx);
+  }
+  if (!idx && typeof id === 'string') {
+    const m = id.match(/subLink([1-3])/);
+    if (m) idx = Number(m[1]);
+  }
   if (!e && oCache) {
     const eff = getEffectiveSubLink(oCache);
     e = $('subLink' + eff.index);
@@ -2977,12 +2988,19 @@ function pkgLine(o) {
   return `${tx(sc(p.vi.name))} – ${p.vnd.toLocaleString('en-US')}VND`;
 }
 
-function getEffectiveSubLink(o) {
+function getEffectiveSubLink(o, optIndex) {
   if (!o) return { url: '', isBlur: false, field: 'info3', index: 3 };
-  const field = o.schemaField || (typeof location !== 'undefined' && location.hostname.includes('vpntrinhhg2') ? 'info2' : location.hostname.includes('vpntrinhhg3') ? 'info3' : 'info1');
-  const idx = Number(String(field).replace('info', '')) || (field === 'info2' ? 2 : (field === 'info3' ? 3 : 1));
-  const isBlur = !!o['blur' + idx];
-  let url = String(o[field] || (field === 'info1' ? (o.info || o.link) : '') || '').trim();
+  let idx = 3;
+  if (optIndex && [1, 2, 3].includes(Number(optIndex))) {
+    idx = Number(optIndex);
+  } else if (o.schemaField && /^info[1-3]$/.test(o.schemaField)) {
+    idx = Number(o.schemaField.replace('info', '')) || 3;
+  } else if (typeof location !== 'undefined') {
+    idx = location.hostname.includes('vpntrinhhg2') ? 2 : location.hostname.includes('vpntrinhhg3') ? 3 : 1;
+  }
+  const field = 'info' + idx;
+  const isBlur = !!(o['blur' + idx] || (cfgCache && cfgCache.blur && cfgCache.blur[idx - 1]));
+  let url = String(o[field] || (idx === 1 ? (o.info || o.link) : '') || '').trim();
   return { url, isBlur, field, index: idx };
 }
 
@@ -3011,7 +3029,6 @@ function fillDashboard(o) {
   }
   $('displayUpgradeStatus').innerText = ut;
   $('displayUpgradeStatus').className = 'text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap ' + uc;
-  const effective = getEffectiveSubLink(o);
   let fallbackNoticeHtml = '';
   if (o.fulfillResult === 'fallback_new' || o.fallbackNew) {
     fallbackNoticeHtml = `<div class="mb-3 p-3 bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-300 dark:border-amber-700/50 rounded-xl text-amber-900 dark:text-amber-200 text-xs font-bold leading-relaxed flex items-start gap-2.5"><i class="fas fa-triangle-exclamation text-amber-500 text-sm mt-0.5 shrink-0"></i><div><div class="font-black text-amber-800 dark:text-amber-300">Thông báo đổi Link Sub:</div><div>Không thể giữ link cũ theo yêu cầu do link cũ đã hết hiệu lực hoặc đã bị xóa. Hệ thống đã tự động cấp link sub mới.</div><div class="mt-1 font-semibold text-rose-600 dark:text-rose-400">👉 Quý khách vui lòng COPY hoặc quét mã QR bên dưới để thêm lại link mới vào ứng dụng VPN để tiếp tục sử dụng.</div></div></div>`;
@@ -3019,24 +3036,28 @@ function fillDashboard(o) {
     fallbackNoticeHtml = `<div class="mb-3 p-2.5 bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/40 rounded-xl text-sky-800 dark:text-sky-300 text-xs font-bold flex items-center gap-2"><i class="fas fa-info-circle text-sky-500"></i><span>Email có nhiều đơn hàng cùng hoạt động. Hệ thống đã cấp một Link Sub mới độc lập.</span></div>`;
   }
 
-  // Khối Link Subscription chuẩn theo schema của web hiện hành
-  const linkBoxHtml = `<div class="w-full">
-    <h3 class="text-green-700 dark:text-green-500 font-extrabold mb-2 text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Subscription URL:</h3>
-    <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
-      <div class="relative w-full sm:flex-1 flex items-center overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]">
-        <input type="text" id="subLink${effective.index}" readonly class="w-full bg-transparent text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
-        <div id="subBlurOverlay${effective.index}" onclick="copyToClipboard('subLink${effective.index}')" class="hidden absolute inset-0 z-10 flex items-center justify-start pl-3.5 pr-3 bg-white/25 dark:bg-black/30 backdrop-blur-[2px] cursor-pointer select-none">
-          <span class="text-red-600 dark:text-amber-300 font-extrabold text-[11px] md:text-xs text-left leading-tight">Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!</span>
+  // Khối Link Subscription chuẩn cho cả 3 slot routing (#1, #2, #3)
+  const slotBoxesHtml = [1, 2, 3].map(i => `
+    <div class="w-full">
+      <div class="flex items-center justify-between mb-1.5">
+        <h3 class="text-green-700 dark:text-green-500 font-extrabold text-xs md:text-sm"><i class="fas fa-link mr-1"></i>Subscription URL #${i}:</h3>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
+        <div class="relative w-full sm:flex-1 flex items-center overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]">
+          <input type="text" id="subLink${i}" readonly placeholder="—" class="w-full bg-transparent text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
+          <div id="subBlurOverlay${i}" onclick="copyToClipboard('subLink${i}')" class="hidden absolute inset-0 z-10 flex items-center justify-start pl-3.5 pr-3 bg-white/25 dark:bg-black/30 backdrop-blur-[2px] cursor-pointer select-none">
+            <span class="text-red-600 dark:text-amber-300 font-extrabold text-[11px] md:text-xs text-left leading-tight">Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!</span>
+          </div>
+        </div>
+        <div class="flex gap-2 shrink-0 w-full sm:w-auto">
+          <button type="button" onclick="copyToClipboard('subLink${i}')" class="flex-1 sm:flex-none sm:w-[105px] bg-green-600 hover:bg-green-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-copy mr-1"></i>COPY</button>
+          <button type="button" onclick="openQrModal('subLink${i}', ${i})" class="flex-1 sm:flex-none sm:w-[105px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-qrcode mr-1"></i>LẤY QR</button>
         </div>
       </div>
-      <div class="flex gap-2 shrink-0 w-full sm:w-auto">
-        <button type="button" onclick="copyToClipboard('subLink${effective.index}')" class="flex-1 sm:flex-none sm:w-[105px] bg-green-600 hover:bg-green-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-copy mr-1"></i>COPY</button>
-        <button type="button" onclick="openQrModal('subLink${effective.index}', ${effective.index})" class="flex-1 sm:flex-none sm:w-[105px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-qrcode mr-1"></i>LẤY QR</button>
-      </div>
     </div>
-  </div>`;
+  `).join('');
 
-  $('linkBoxes').innerHTML = fallbackNoticeHtml + linkBoxHtml;
+  $('linkBoxes').innerHTML = fallbackNoticeHtml + slotBoxesHtml;
 
   // Đưa 2 nút Nâng gói và Gia hạn ra ngoài khối linkBoxes
   const actBtns = $('portalActionButtons');
@@ -3044,16 +3065,18 @@ function fillDashboard(o) {
     actBtns.innerHTML = `<button onclick="startUpgrade()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-3 rounded-xl text-xs md:text-sm transition flex items-center justify-center shadow-md active:scale-95"><i class="fas fa-arrow-up mr-1.5"></i> NÂNG GÓI</button><button onclick="startRenew()" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-extrabold py-3 rounded-xl text-xs md:text-sm transition flex items-center justify-center shadow-md active:scale-95"><i class="fas fa-redo-alt mr-1.5"></i> ${L.btn_renew||'GIA HẠN'}</button>`;
   }
 
-  const inp = $('subLink' + effective.index), ov = $('subBlurOverlay' + effective.index);
-  if (inp) {
-    if (effective.isBlur) {
-      inp.value = `https://vpntrinhhg${effective.index === 1 ? '' : effective.index}.pages.dev/v1/VPNTrinhHg?OwO=f8a9d2c4e1b7039a5d8e2f1c4b6a9d0e#VPNTrinhHg`;
+  [1, 2, 3].forEach(i => {
+    const slotData = getEffectiveSubLink(o, i);
+    const inp = $('subLink' + i), ov = $('subBlurOverlay' + i);
+    if (!inp) return;
+    if (slotData.isBlur) {
+      inp.value = `https://vpntrinhhg${i === 1 ? '' : i}.pages.dev/v1/VPNTrinhHg?OwO=f8a9d2c4e1b7039a5d8e2f1c4b6a9d0e#VPNTrinhHg`;
       inp.classList.add('blur-link', 'select-none', 'pointer-events-none');
       inp.dataset.blurred = '1';
       inp.dataset.locked = '1';
       if (ov) ov.classList.remove('hidden');
     } else {
-      const v = effective.url;
+      const v = slotData.url;
       inp.value = v || '';
       inp.classList.remove('blur-link', 'select-none', 'pointer-events-none');
       inp.dataset.blurred = '';
@@ -3061,7 +3084,7 @@ function fillDashboard(o) {
       if (ov) ov.classList.add('hidden');
       if (!v && Date.now() + skew - (o.createdTs || 0) < 180000) inp.value = tx(L.link_generating);
     }
-  }
+  });
   const cd = localStorage.getItem('data_req_' + o.id), btn = $('btnRequestData');
   if (cd && Date.now() - parseInt(cd) < 300000) {
     btn.innerHTML = `<i class="fas fa-check-circle mr-1.5"></i> ${L.req_sent_btn}`;
@@ -3818,6 +3841,10 @@ window.dismissAnnouncement = dismissAnnouncement;
       if (cWrap) {
         const ce = (cfgCache && (cfgCache.couponEnabled !== undefined ? cfgCache.couponEnabled : (cfgCache.cms && cfgCache.cms.settings && cfgCache.cms.settings.couponEnabled))) !== false;
         cWrap.classList.toggle('hidden', !ce);
+      }
+      if (oCache) {
+        if (typeof fillDashboard === 'function') fillDashboard(oCache);
+        if (typeof refreshOrder === 'function') await refreshOrder();
       }
     } catch (e) {}
   };
