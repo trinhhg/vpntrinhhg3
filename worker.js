@@ -1,4 +1,4 @@
-// v4 — 2026-11-04 22:00 (UTC+7)
+// v4 — 2026-11-05 11:00 (UTC+7)
 const getKV = (env) => env && (env.VPN_KV3 || env.VPN_KV || env.KV);
 
 // ====================================================================
@@ -1103,8 +1103,11 @@ const isTestOrderRecord = (o) => !o || !o.id || String(o.id).startsWith("DH_TEST
 
 async function loadAll(KV, env, isTestOverride = null) {
   const g = async (k, d) => safeJson(await KV.get(k), d);
-  // Mặc định luôn là Production; không tự ý dùng TEST_MODE_ACTIVE toàn cục nếu request không yêu cầu
-  const isTest = isTestOverride === null ? false : !!isTestOverride;
+  // Nếu không truyền isTestOverride cụ thể, tự động đồng bộ theo trạng thái TEST_MODE_ACTIVE trong KV
+  let isTest = isTestOverride;
+  if (isTest === null) {
+    isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
+  }
   const sb = env ? getSupabase(env, isTest) : null;
   let sbOk = false;
   let sbError = null;
@@ -1558,10 +1561,16 @@ export default {
     };
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
     const url = new URL(request.url), p = url.pathname, m = request.method;
-    // Chuẩn hóa xác định môi trường Test Mode cho request hiện tại:
-    const reqIsTest = url.searchParams.has("test") ? (url.searchParams.get("test") === "1") : (request.headers.has("X-Test-Mode") ? (request.headers.get("X-Test-Mode") === "1") : false);
     const KV = getKV(env);
     if (!KV) return new Response("LỖI: Chưa kết nối kho KV", { status: 500, headers: CORS });
+    // Chuẩn hóa xác định môi trường Test Mode cho request hiện tại:
+    // 1. Ưu tiên URL param ?test=1 hoặc ?test=0 (nếu có)
+    // 2. Tiếp theo ưu tiên Header X-Test-Mode: 1 hoặc 0 (nếu có)
+    // 3. Nếu không có cờ từ client, tự động lấy trạng thái TEST_MODE_ACTIVE từ KV (Admin chọn kho nào thì Worker dùng kho đó)
+    const isTestParam = url.searchParams.has("test") ? (url.searchParams.get("test") === "1") : null;
+    const isTestHeader = request.headers.has("X-Test-Mode") ? (request.headers.get("X-Test-Mode") === "1") : null;
+    const isTestKv = (await KV.get("TEST_MODE_ACTIVE")) === "1";
+    const reqIsTest = isTestParam !== null ? isTestParam : (isTestHeader !== null ? isTestHeader : isTestKv);
     const J = (d, s = 200) => new Response(JSON.stringify(d), {
       status: s,
       headers: {
@@ -1894,6 +1903,7 @@ export default {
       const giftRules = Array.isArray(cms.giftRules) ? cms.giftRules.filter(r => r && r.enabled !== false) : [];
       return J({
         ok: true,
+        isTest: (await KV.get("TEST_MODE_ACTIVE")) === "1",
         guides: g,
         blur,
         dock: dock.length ? dock : null,
@@ -2092,7 +2102,7 @@ export default {
             matchedOrders = em ? allOrders.filter(x => String(x.email || "").toLowerCase() === em) : [byId];
           }
         }
-
+      }
       // Fallback kiểm tra bộ nhớ đệm đơn hàng chờ (KV Pending Cache)
       if (!o && rawQ) {
         const rawPending = await KV.get("PENDING_ORD_" + normId(rawQ));
@@ -2230,16 +2240,15 @@ export default {
       // Chuẩn hóa đơn hàng đại diện 'o' khi tra cứu bằng email:
       // Ưu tiên đơn hàng thành công còn hạn sở hữu chính Link Sub hợp lệ của schemaField này
       if (isEmailQuery && matchedOrders.length > 0) {
-        const primaryOrder = (existingLinks.length > 0 && matchedOrders.find(x => normId(x.id) === normId(existingLinks[0].orderId))) ||
-          matchedOrders.find(ord => normStatus(ord.status) === "success" && isOrderActive(ord) && (ord[schemaField] || (schemaField === "info1" ? (ord.info || ord.link) : ""))) ||
-          matchedOrders.find(ord => normStatus(ord.status) === "success" && (ord[schemaField] || (schemaField === "info1" ? (ord.info || ord.link) : "")));
+        const primaryOrder = (existingLinks.length > 0 && matchedOrders.find(x => normId(x.id) === normId(existingLinks[0].orderId))) || matchedOrders.find(ord => normStatus(ord.status) === "success" && isOrderActive(ord) && (ord[schemaField] || (schemaField === "info1" ? (ord.info || ord.link) : ""))) || matchedOrders.find(ord => normStatus(ord.status) === "success" && (ord[schemaField] || (schemaField === "info1" ? (ord.info || ord.link) : "")));
         if (primaryOrder) o = primaryOrder;
       }
 
       return J({
         ok: true,
         found: true,
-        order: { ...pub(o, stMini), schemaField },
+        isTest: !!isTestReq,
+        order: { ...pub(o, stMini), schemaField, isTest: !!isTestReq },
         existingLinks,
         linkScenario,
         schemaField,
