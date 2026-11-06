@@ -57,12 +57,12 @@ export function isTestMode() {
     if (adminTest === "0") return false;
   } catch {}
 
-  // 3. Nhận diện từ đơn hàng gần nhất trong session cache nếu là đơn test
+  // 3. Nhận diện từ đơn hàng gần nhất trong session cache nếu là đơn test (không dùng tiền tố mã đơn DH_TEST_)
   try {
     const cached = localStorage.getItem("vpn_portal_last_order");
     if (cached) {
       const co = JSON.parse(cached);
-      if (co && (co.isTest === true || (co.id && String(co.id).startsWith("DH_TEST_")))) return true;
+      if (co && co.isTest === true) return true;
     }
   } catch {}
 
