@@ -219,6 +219,7 @@ KITTY_RULES = [
     "DOMAIN-KEYWORD,adwords,REJECT",
     "DOMAIN-SUFFIX,doubleclick.net,REJECT",
     "DOMAIN-SUFFIX,appsflyer.com,REJECT",
+    # v2.6 — 2026-11-06 21:10 (UTC+7) — Bổ sung đủ domain OverseasAI/MXH quốc tế và GEOIP,CN,DIRECT,no-resolve
     # 4. Trọn bộ AI nước ngoài (giải nén từ overseas-ai.list) -> Đi VPN
     "DOMAIN-SUFFIX,openai.com,VPN Trinh Hg",
     "DOMAIN-SUFFIX,chatgpt.com,VPN Trinh Hg",
@@ -226,8 +227,15 @@ KITTY_RULES = [
     "DOMAIN-SUFFIX,oaiusercontent.com,VPN Trinh Hg",
     "DOMAIN-SUFFIX,anthropic.com,VPN Trinh Hg",
     "DOMAIN-SUFFIX,claude.ai,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,gemini.google.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,bard.google.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,aistudio.google.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,notebooklm.google.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,makersuite.google.com,VPN Trinh Hg",
     "DOMAIN-SUFFIX,ai.google.dev,VPN Trinh Hg",
     "DOMAIN-SUFFIX,generativelanguage.googleapis.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,grok.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,x.ai,VPN Trinh Hg",
     "DOMAIN-SUFFIX,midjourney.com,VPN Trinh Hg",
     "DOMAIN-SUFFIX,poe.com,VPN Trinh Hg",
     "DOMAIN-SUFFIX,cursor.sh,VPN Trinh Hg",
@@ -237,6 +245,14 @@ KITTY_RULES = [
     "DOMAIN-SUFFIX,v0.dev,VPN Trinh Hg",
     "DOMAIN-SUFFIX,cohere.ai,VPN Trinh Hg",
     "DOMAIN-SUFFIX,cohere.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,huggingface.co,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,openrouter.ai,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,groq.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,mistral.ai,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,character.ai,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,civitai.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,elevenlabs.io,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,suno.com,VPN Trinh Hg",
     "DOMAIN-SUFFIX,deepseek.com,VPN Trinh Hg",
     "DOMAIN,api.githubcopilot.com,VPN Trinh Hg",
     "DOMAIN,api.jetbrains.ai,VPN Trinh Hg",
@@ -250,6 +266,7 @@ KITTY_RULES = [
     "DOMAIN-SUFFIX,snssdk.com,VPN Trinh Hg",
     "DOMAIN-SUFFIX,google.com,VPN Trinh Hg",
     "DOMAIN-SUFFIX,youtube.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,youtu.be,VPN Trinh Hg",
     "DOMAIN-SUFFIX,googlevideo.com,VPN Trinh Hg",
     "DOMAIN-SUFFIX,googleapis.com,VPN Trinh Hg",
     "DOMAIN-SUFFIX,gstatic.com,VPN Trinh Hg",
@@ -266,15 +283,33 @@ KITTY_RULES = [
     "DOMAIN-SUFFIX,fb.me,VPN Trinh Hg",
     "DOMAIN-SUFFIX,fbcdn.net,VPN Trinh Hg",
     "DOMAIN-KEYWORD,twitter,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,x.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,t.co,VPN Trinh Hg",
     "DOMAIN-KEYWORD,instagram,VPN Trinh Hg",
     "DOMAIN-SUFFIX,twimg.com,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,whatsapp,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,whatsapp.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,whatsapp.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,discord.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,discordapp.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,discord.gg,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,reddit.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,redd.it,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,github,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,github.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,githubusercontent.com,VPN Trinh Hg",
     "DOMAIN-KEYWORD,telegram,VPN Trinh Hg",
     "DOMAIN-SUFFIX,t.me,VPN Trinh Hg",
     "DOMAIN-SUFFIX,telegra.ph,VPN Trinh Hg",
     "DOMAIN-SUFFIX,telegram.org,VPN Trinh Hg",
     "IP-CIDR,91.108.4.0/22,VPN Trinh Hg,no-resolve",
+    "IP-CIDR,91.108.8.0/21,VPN Trinh Hg,no-resolve",
+    "IP-CIDR,91.108.16.0/22,VPN Trinh Hg,no-resolve",
     "IP-CIDR,91.108.56.0/22,VPN Trinh Hg,no-resolve",
     "IP-CIDR,149.154.160.0/20,VPN Trinh Hg,no-resolve",
+    "IP-CIDR6,2001:67c:4e8::/48,VPN Trinh Hg,no-resolve",
+    "IP-CIDR6,2001:b28:f23d::/48,VPN Trinh Hg,no-resolve",
+    "IP-CIDR6,2001:b28:f23f::/48,VPN Trinh Hg,no-resolve",
     "DOMAIN-SUFFIX,netflix.com,VPN Trinh Hg",
     "DOMAIN-SUFFIX,netflix.net,VPN Trinh Hg",
     "DOMAIN-SUFFIX,nflximg.net,VPN Trinh Hg",
@@ -311,13 +346,172 @@ KITTY_RULES = [
     "DOMAIN-SUFFIX,taobao.com,DIRECT",
     "DOMAIN-SUFFIX,weibo.com,DIRECT",
     "DOMAIN-SUFFIX,zhihu.com,DIRECT",
-    "GEOIP,CN,DIRECT",
+    "GEOIP,CN,DIRECT,no-resolve",
     # 9. Chốt chặn tất cả các trang quốc tế còn lại -> Đi VPN
     "MATCH,VPN Trinh Hg"
 ]
 
 # ── 3 BỘ RULES CLASH ĐỘC LẬP TƯỜNG MINH 100% (KHÔNG KẾ THỪA RÚT GỌN) ───────────
 LIANGXIN_RULES = [
+    "IP-CIDR,1.1.1.1/32,VPN Trinh Hg,no-resolve", "IP-CIDR,8.8.8.8/32,VPN Trinh Hg,no-resolve",
+    "DOMAIN-SUFFIX,services.googleapis.cn,VPN Trinh Hg", "DOMAIN-SUFFIX,xn--ngstr-lra8j.com,VPN Trinh Hg",
+    "DOMAIN,safebrowsing.urlsec.qq.com,DIRECT", "DOMAIN,safebrowsing.googleapis.com,DIRECT",
+    "DOMAIN,developer.apple.com,VPN Trinh Hg", "DOMAIN-SUFFIX,digicert.com,VPN Trinh Hg",
+    "DOMAIN,ocsp.apple.com,VPN Trinh Hg", "DOMAIN,ocsp.comodoca.com,VPN Trinh Hg",
+    "DOMAIN,ocsp.usertrust.com,VPN Trinh Hg", "DOMAIN,ocsp.sectigo.com,VPN Trinh Hg",
+    "DOMAIN,ocsp.verisign.net,VPN Trinh Hg", "DOMAIN-SUFFIX,apple-dns.net,VPN Trinh Hg",
+    "DOMAIN,testflight.apple.com,VPN Trinh Hg", "DOMAIN,sandbox.itunes.apple.com,VPN Trinh Hg",
+    "DOMAIN,itunes.apple.com,VPN Trinh Hg", "DOMAIN-SUFFIX,apps.apple.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,blobstore.apple.com,VPN Trinh Hg", "DOMAIN,cvws.icloud-content.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,mzstatic.com,DIRECT", "DOMAIN-SUFFIX,itunes.apple.com,DIRECT",
+    "DOMAIN-SUFFIX,icloud.com,DIRECT", "DOMAIN-SUFFIX,icloud-content.com,DIRECT",
+    "DOMAIN-SUFFIX,me.com,DIRECT", "DOMAIN-SUFFIX,aaplimg.com,DIRECT",
+    "DOMAIN-SUFFIX,cdn20.com,DIRECT", "DOMAIN-SUFFIX,cdn-apple.com,DIRECT",
+    "DOMAIN-SUFFIX,akadns.net,DIRECT", "DOMAIN-SUFFIX,akamaiedge.net,DIRECT",
+    "DOMAIN-SUFFIX,edgekey.net,DIRECT", "DOMAIN-SUFFIX,mwcloudcdn.com,DIRECT",
+    "DOMAIN-SUFFIX,mwcname.com,DIRECT", "DOMAIN-SUFFIX,apple.com,DIRECT",
+    "DOMAIN-SUFFIX,apple-cloudkit.com,DIRECT", "DOMAIN-SUFFIX,apple-mapkit.com,DIRECT",
+    "DOMAIN,cn.bing.com,DIRECT",
+    "DOMAIN-SUFFIX,126.com,DIRECT", "DOMAIN-SUFFIX,126.net,DIRECT", "DOMAIN-SUFFIX,127.net,DIRECT",
+    "DOMAIN-SUFFIX,163.com,DIRECT", "DOMAIN-SUFFIX,360buyimg.com,DIRECT", "DOMAIN-SUFFIX,36kr.com,DIRECT",
+    "DOMAIN-SUFFIX,acfun.tv,DIRECT", "DOMAIN-SUFFIX,air-matters.com,DIRECT", "DOMAIN-SUFFIX,aixifan.com,DIRECT",
+    "DOMAIN-KEYWORD,alicdn,DIRECT", "DOMAIN-KEYWORD,alipay,DIRECT", "DOMAIN-KEYWORD,taobao,DIRECT",
+    "DOMAIN-SUFFIX,amap.com,DIRECT", "DOMAIN-SUFFIX,autonavi.com,DIRECT", "DOMAIN-KEYWORD,baidu,DIRECT",
+    "DOMAIN-SUFFIX,bdimg.com,DIRECT", "DOMAIN-SUFFIX,bdstatic.com,DIRECT",
+    "DOMAIN-SUFFIX,bilibili.com,DIRECT", "DOMAIN-SUFFIX,bilivideo.com,DIRECT",
+    "DOMAIN-SUFFIX,caiyunapp.com,DIRECT", "DOMAIN-SUFFIX,clouddn.com,DIRECT",
+    "DOMAIN-SUFFIX,cnbeta.com,DIRECT", "DOMAIN-SUFFIX,cnbetacdn.com,DIRECT",
+    "DOMAIN-SUFFIX,cootekservice.com,DIRECT", "DOMAIN-SUFFIX,csdn.net,DIRECT",
+    "DOMAIN-SUFFIX,ctrip.com,DIRECT", "DOMAIN-SUFFIX,dgtle.com,DIRECT",
+    "DOMAIN-SUFFIX,dianping.com,DIRECT", "DOMAIN-SUFFIX,douban.com,DIRECT",
+    "DOMAIN-SUFFIX,doubanio.com,DIRECT", "DOMAIN-SUFFIX,duokan.com,DIRECT",
+    "DOMAIN-SUFFIX,easou.com,DIRECT", "DOMAIN-SUFFIX,ele.me,DIRECT",
+    "DOMAIN-SUFFIX,feng.com,DIRECT", "DOMAIN-SUFFIX,fir.im,DIRECT",
+    "DOMAIN-SUFFIX,frdic.com,DIRECT", "DOMAIN-SUFFIX,g-cores.com,DIRECT",
+    "DOMAIN-SUFFIX,godic.net,DIRECT", "DOMAIN-SUFFIX,gtimg.com,DIRECT",
+    "DOMAIN,cdn.hockeyapp.net,DIRECT", "DOMAIN-SUFFIX,hongxiu.com,DIRECT",
+    "DOMAIN-SUFFIX,hxcdn.net,DIRECT", "DOMAIN-SUFFIX,iciba.com,DIRECT",
+    "DOMAIN-SUFFIX,ifeng.com,DIRECT", "DOMAIN-SUFFIX,ifengimg.com,DIRECT",
+    "DOMAIN-SUFFIX,ipip.net,DIRECT", "DOMAIN-SUFFIX,iqiyi.com,DIRECT",
+    "DOMAIN-SUFFIX,jd.com,DIRECT", "DOMAIN-SUFFIX,jianshu.com,DIRECT",
+    "DOMAIN-SUFFIX,knewone.com,DIRECT", "DOMAIN-SUFFIX,le.com,DIRECT",
+    "DOMAIN-SUFFIX,lecloud.com,DIRECT", "DOMAIN-SUFFIX,lemicp.com,DIRECT",
+    "DOMAIN-SUFFIX,licdn.com,DIRECT", "DOMAIN-SUFFIX,luoo.net,DIRECT",
+    "DOMAIN-SUFFIX,meituan.com,DIRECT", "DOMAIN-SUFFIX,meituan.net,DIRECT",
+    "DOMAIN-SUFFIX,mi.com,DIRECT", "DOMAIN-SUFFIX,miaopai.com,DIRECT",
+    "DOMAIN-SUFFIX,microsoft.com,DIRECT", "DOMAIN-SUFFIX,microsoftonline.com,DIRECT",
+    "DOMAIN-SUFFIX,miui.com,DIRECT", "DOMAIN-SUFFIX,miwifi.com,DIRECT",
+    "DOMAIN-SUFFIX,mob.com,DIRECT", "DOMAIN-SUFFIX,netease.com,DIRECT",
+    "DOMAIN-SUFFIX,office.com,DIRECT", "DOMAIN-SUFFIX,office365.com,DIRECT",
+    "DOMAIN-KEYWORD,officecdn,DIRECT", "DOMAIN-SUFFIX,oschina.net,DIRECT",
+    "DOMAIN-SUFFIX,ppsimg.com,DIRECT", "DOMAIN-SUFFIX,pstatp.com,DIRECT",
+    "DOMAIN-SUFFIX,qcloud.com,DIRECT", "DOMAIN-SUFFIX,qdaily.com,DIRECT",
+    "DOMAIN-SUFFIX,qdmm.com,DIRECT", "DOMAIN-SUFFIX,qhimg.com,DIRECT",
+    "DOMAIN-SUFFIX,qhres.com,DIRECT", "DOMAIN-SUFFIX,qidian.com,DIRECT",
+    "DOMAIN-SUFFIX,qihucdn.com,DIRECT", "DOMAIN-SUFFIX,qiniu.com,DIRECT",
+    "DOMAIN-SUFFIX,qiniucdn.com,DIRECT", "DOMAIN-SUFFIX,qiyipic.com,DIRECT",
+    "DOMAIN-SUFFIX,qq.com,DIRECT", "DOMAIN-SUFFIX,qqurl.com,DIRECT",
+    "DOMAIN-SUFFIX,rarbg.to,DIRECT", "DOMAIN-SUFFIX,ruguoapp.com,DIRECT",
+    "DOMAIN-SUFFIX,segmentfault.com,DIRECT", "DOMAIN-SUFFIX,sinaapp.com,DIRECT",
+    "DOMAIN-SUFFIX,smzdm.com,DIRECT", "DOMAIN-SUFFIX,snapdrop.net,DIRECT",
+    "DOMAIN-SUFFIX,sogou.com,DIRECT", "DOMAIN-SUFFIX,sogoucdn.com,DIRECT",
+    "DOMAIN-SUFFIX,sohu.com,DIRECT", "DOMAIN-SUFFIX,soku.com,DIRECT",
+    "DOMAIN-SUFFIX,speedtest.net,DIRECT", "DOMAIN-SUFFIX,sspai.com,DIRECT",
+    "DOMAIN-SUFFIX,suning.com,DIRECT", "DOMAIN-SUFFIX,taobao.com,DIRECT",
+    "DOMAIN-SUFFIX,tencent.com,DIRECT", "DOMAIN-SUFFIX,tenpay.com,DIRECT",
+    "DOMAIN-SUFFIX,tianyancha.com,DIRECT", "DOMAIN-SUFFIX,tmall.com,DIRECT",
+    "DOMAIN-SUFFIX,tudou.com,DIRECT", "DOMAIN-SUFFIX,umetrip.com,DIRECT",
+    "DOMAIN-SUFFIX,upaiyun.com,DIRECT", "DOMAIN-SUFFIX,upyun.com,DIRECT",
+    "DOMAIN-SUFFIX,veryzhun.com,DIRECT", "DOMAIN-SUFFIX,weather.com,DIRECT",
+    "DOMAIN-SUFFIX,weibo.com,DIRECT", "DOMAIN-SUFFIX,xiami.com,DIRECT",
+    "DOMAIN-SUFFIX,xiami.net,DIRECT", "DOMAIN-SUFFIX,xiaomicp.com,DIRECT",
+    "DOMAIN-SUFFIX,ximalaya.com,DIRECT", "DOMAIN-SUFFIX,xmcdn.com,DIRECT",
+    "DOMAIN-SUFFIX,xunlei.com,DIRECT", "DOMAIN-SUFFIX,yhd.com,DIRECT",
+    "DOMAIN-SUFFIX,yihaodianimg.com,DIRECT", "DOMAIN-SUFFIX,yinxiang.com,DIRECT",
+    "DOMAIN-SUFFIX,ykimg.com,DIRECT", "DOMAIN-SUFFIX,youdao.com,DIRECT",
+    "DOMAIN-SUFFIX,youku.com,DIRECT", "DOMAIN-SUFFIX,zealer.com,DIRECT",
+    "DOMAIN-SUFFIX,zhihu.com,DIRECT", "DOMAIN-SUFFIX,zhimg.com,DIRECT",
+    "DOMAIN-SUFFIX,zimuzu.tv,DIRECT", "DOMAIN-SUFFIX,zoho.com,DIRECT",
+    "DOMAIN-KEYWORD,amazon,VPN Trinh Hg", "DOMAIN-KEYWORD,google,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,gmail,VPN Trinh Hg", "DOMAIN-KEYWORD,youtube,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,facebook,VPN Trinh Hg", "DOMAIN-SUFFIX,fb.me,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,fbcdn.net,VPN Trinh Hg", "DOMAIN-KEYWORD,twitter,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,instagram,VPN Trinh Hg", "DOMAIN-KEYWORD,dropbox,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,twimg.com,VPN Trinh Hg", "DOMAIN-KEYWORD,blogspot,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,youtu.be,VPN Trinh Hg", "DOMAIN-KEYWORD,whatsapp,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,telegra.ph,VPN Trinh Hg", "DOMAIN-SUFFIX,telegram.org,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,admarvel,REJECT", "DOMAIN-KEYWORD,admaster,REJECT",
+    "DOMAIN-KEYWORD,adsage,REJECT", "DOMAIN-KEYWORD,adsmogo,REJECT",
+    "DOMAIN-KEYWORD,adsrvmedia,REJECT", "DOMAIN-KEYWORD,adwords,REJECT",
+    "DOMAIN-KEYWORD,adservice,REJECT", "DOMAIN-SUFFIX,appsflyer.com,REJECT",
+    "DOMAIN-KEYWORD,domob,REJECT", "DOMAIN-SUFFIX,doubleclick.net,REJECT",
+    "DOMAIN-KEYWORD,duomeng,REJECT", "DOMAIN-KEYWORD,dwtrack,REJECT",
+    "DOMAIN-KEYWORD,guanggao,REJECT", "DOMAIN-KEYWORD,lianmeng,REJECT",
+    "DOMAIN-SUFFIX,mmstat.com,REJECT", "DOMAIN-KEYWORD,mopub,REJECT",
+    "DOMAIN-KEYWORD,omgmta,REJECT", "DOMAIN-KEYWORD,openx,REJECT",
+    "DOMAIN-KEYWORD,partnerad,REJECT", "DOMAIN-KEYWORD,pingfore,REJECT",
+    "DOMAIN-KEYWORD,supersonicads,REJECT", "DOMAIN-KEYWORD,uedas,REJECT",
+    "DOMAIN-KEYWORD,umeng,REJECT", "DOMAIN-KEYWORD,usage,REJECT",
+    "DOMAIN-SUFFIX,vungle.com,REJECT", "DOMAIN-KEYWORD,wlmonitor,REJECT",
+    "DOMAIN-KEYWORD,zjtoolbar,REJECT",
+    "DOMAIN-SUFFIX,9to5mac.com,VPN Trinh Hg", "DOMAIN-SUFFIX,abpchina.org,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,adblockplus.org,VPN Trinh Hg", "DOMAIN-SUFFIX,adobe.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,akamaized.net,VPN Trinh Hg", "DOMAIN-SUFFIX,android.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,appspot.com,VPN Trinh Hg", "DOMAIN-SUFFIX,archive.org,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,awsstatic.com,VPN Trinh Hg", "DOMAIN-SUFFIX,azureedge.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,azurewebsites.net,VPN Trinh Hg", "DOMAIN-SUFFIX,bing.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,bit.ly,VPN Trinh Hg", "DOMAIN-SUFFIX,bitbucket.org,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,blogger.com,VPN Trinh Hg", "DOMAIN-SUFFIX,blogspot.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,bloomberg.com,VPN Trinh Hg", "DOMAIN-SUFFIX,box.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,cachefly.net,VPN Trinh Hg", "DOMAIN-SUFFIX,chromium.org,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,cloudflare.com,VPN Trinh Hg", "DOMAIN-SUFFIX,cloudfront.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,docker.com,VPN Trinh Hg", "DOMAIN-SUFFIX,dribbble.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,duckduckgo.com,VPN Trinh Hg", "DOMAIN-SUFFIX,evernote.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,fast.com,VPN Trinh Hg", "DOMAIN-SUFFIX,fastly.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,feedly.com,VPN Trinh Hg", "DOMAIN-SUFFIX,firebaseio.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,flickr.com,VPN Trinh Hg", "DOMAIN-SUFFIX,g.co,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,ggpht.com,VPN Trinh Hg", "DOMAIN-SUFFIX,git.io,VPN Trinh Hg",
+    "DOMAIN-KEYWORD,github,VPN Trinh Hg", "DOMAIN-SUFFIX,golang.org,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,goo.gl,VPN Trinh Hg", "DOMAIN-SUFFIX,goodreads.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,gravatar.com,VPN Trinh Hg", "DOMAIN-SUFFIX,gstatic.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,hotmail.com,VPN Trinh Hg", "DOMAIN-SUFFIX,imgur.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,instapaper.com,VPN Trinh Hg", "DOMAIN-SUFFIX,linkedin.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,live.com,VPN Trinh Hg", "DOMAIN-SUFFIX,live.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,medium.com,VPN Trinh Hg", "DOMAIN-SUFFIX,mega.nz,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,microsofttranslator.com,VPN Trinh Hg", "DOMAIN-SUFFIX,msedge.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,onedrive.com,VPN Trinh Hg", "DOMAIN-SUFFIX,onenote.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,openvpn.net,VPN Trinh Hg", "DOMAIN-SUFFIX,outlook.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,pinterest.com,VPN Trinh Hg", "DOMAIN-SUFFIX,pixiv.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,playstation.com,VPN Trinh Hg", "DOMAIN-SUFFIX,playstation.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,shadowsocks.org,VPN Trinh Hg", "DOMAIN-SUFFIX,skype.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,soundcloud.com,VPN Trinh Hg", "DOMAIN-SUFFIX,sourceforge.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,spotify.com,VPN Trinh Hg", "DOMAIN-SUFFIX,stackoverflow.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,steamcommunity.com,VPN Trinh Hg", "DOMAIN-SUFFIX,techcrunch.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,theverge.com,VPN Trinh Hg", "DOMAIN-SUFFIX,todoist.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,trello.com,VPN Trinh Hg", "DOMAIN-SUFFIX,tumblr.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,twitch.tv,VPN Trinh Hg", "DOMAIN-SUFFIX,v2ex.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,vimeo.com,VPN Trinh Hg", "DOMAIN-SUFFIX,vultr.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,w.org,VPN Trinh Hg", "DOMAIN-SUFFIX,wikipedia.org,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,windows.com,VPN Trinh Hg", "DOMAIN-SUFFIX,windows.net,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,wordpress.com,VPN Trinh Hg", "DOMAIN-SUFFIX,wsj.com,VPN Trinh Hg",
+    "DOMAIN-SUFFIX,yahoo.com,VPN Trinh Hg", "DOMAIN-SUFFIX,ytimg.com,VPN Trinh Hg",
+    "IP-CIDR,91.108.4.0/22,VPN Trinh Hg,no-resolve", "IP-CIDR,91.108.8.0/21,VPN Trinh Hg,no-resolve",
+    "IP-CIDR,91.108.16.0/22,VPN Trinh Hg,no-resolve", "IP-CIDR,91.108.56.0/22,VPN Trinh Hg,no-resolve",
+    "IP-CIDR,149.154.160.0/20,VPN Trinh Hg,no-resolve",
+    "IP-CIDR6,2001:67c:4e8::/48,VPN Trinh Hg,no-resolve",
+    "IP-CIDR6,2001:b28:f23d::/48,VPN Trinh Hg,no-resolve",
+    "IP-CIDR6,2001:b28:f23f::/48,VPN Trinh Hg,no-resolve",
+    "DOMAIN,injections.adguard.org,DIRECT", "DOMAIN,local.adguard.org,DIRECT",
+    # v2.6 — 2026-11-06 21:10 (UTC+7) — Đồng bộ IP-CIDR 17.0.0.0/8 và 3 rule đầu của DJJC_RULES khớp YAML gốc
+    "DOMAIN-SUFFIX,local,DIRECT", "IP-CIDR,127.0.0.0/8,DIRECT",
+    "IP-CIDR,172.16.0.0/12,DIRECT", "IP-CIDR,192.168.0.0/16,DIRECT",
+    "IP-CIDR,10.0.0.0/8,DIRECT", "IP-CIDR,17.0.0.0/8,DIRECT",
+    "IP-CIDR,100.64.0.0/10,DIRECT", "IP-CIDR,224.0.0.0/4,DIRECT",
+    "IP-CIDR6,fe80::/10,DIRECT", "DOMAIN-SUFFIX,cn,DIRECT",
+    "DOMAIN-KEYWORD,-cn,DIRECT", "GEOIP,CN,DIRECT", "MATCH,VPN Trinh Hg"
+]
+
+DJJC_RULES = [
     "IP-CIDR,1.1.1.1/32,VPN Trinh Hg,no-resolve", "IP-CIDR,8.8.8.8/32,VPN Trinh Hg,no-resolve",
     "DOMAIN-SUFFIX,services.googleapis.cn,VPN Trinh Hg", "DOMAIN-SUFFIX,xn--ngstr-lra8j.com,VPN Trinh Hg",
     "DOMAIN,safebrowsing.urlsec.qq.com,DIRECT", "DOMAIN,safebrowsing.googleapis.com,DIRECT",
@@ -475,162 +669,6 @@ LIANGXIN_RULES = [
     "GEOIP,CN,DIRECT", "MATCH,VPN Trinh Hg"
 ]
 
-DJJC_RULES = [
-    "DOMAIN-SUFFIX,services.googleapis.cn,VPN Trinh Hg", "DOMAIN-SUFFIX,xn--ngstr-lra8j.com,VPN Trinh Hg",
-    "DOMAIN,safebrowsing.urlsec.qq.com,DIRECT", "DOMAIN,safebrowsing.googleapis.com,DIRECT",
-    "DOMAIN,developer.apple.com,VPN Trinh Hg", "DOMAIN-SUFFIX,digicert.com,VPN Trinh Hg",
-    "DOMAIN,ocsp.apple.com,VPN Trinh Hg", "DOMAIN,ocsp.comodoca.com,VPN Trinh Hg",
-    "DOMAIN,ocsp.usertrust.com,VPN Trinh Hg", "DOMAIN,ocsp.sectigo.com,VPN Trinh Hg",
-    "DOMAIN,ocsp.verisign.net,VPN Trinh Hg", "DOMAIN-SUFFIX,apple-dns.net,VPN Trinh Hg",
-    "DOMAIN,testflight.apple.com,VPN Trinh Hg", "DOMAIN,sandbox.itunes.apple.com,VPN Trinh Hg",
-    "DOMAIN,itunes.apple.com,VPN Trinh Hg", "DOMAIN-SUFFIX,apps.apple.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,blobstore.apple.com,VPN Trinh Hg", "DOMAIN,cvws.icloud-content.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,mzstatic.com,DIRECT", "DOMAIN-SUFFIX,itunes.apple.com,DIRECT",
-    "DOMAIN-SUFFIX,icloud.com,DIRECT", "DOMAIN-SUFFIX,icloud-content.com,DIRECT",
-    "DOMAIN-SUFFIX,me.com,DIRECT", "DOMAIN-SUFFIX,aaplimg.com,DIRECT",
-    "DOMAIN-SUFFIX,cdn20.com,DIRECT", "DOMAIN-SUFFIX,cdn-apple.com,DIRECT",
-    "DOMAIN-SUFFIX,akadns.net,DIRECT", "DOMAIN-SUFFIX,akamaiedge.net,DIRECT",
-    "DOMAIN-SUFFIX,edgekey.net,DIRECT", "DOMAIN-SUFFIX,mwcloudcdn.com,DIRECT",
-    "DOMAIN-SUFFIX,mwcname.com,DIRECT", "DOMAIN-SUFFIX,apple.com,DIRECT",
-    "DOMAIN-SUFFIX,apple-cloudkit.com,DIRECT", "DOMAIN-SUFFIX,apple-mapkit.com,DIRECT",
-    "DOMAIN-SUFFIX,126.com,DIRECT", "DOMAIN-SUFFIX,126.net,DIRECT", "DOMAIN-SUFFIX,127.net,DIRECT",
-    "DOMAIN-SUFFIX,163.com,DIRECT", "DOMAIN-SUFFIX,360buyimg.com,DIRECT", "DOMAIN-SUFFIX,36kr.com,DIRECT",
-    "DOMAIN-SUFFIX,acfun.tv,DIRECT", "DOMAIN-SUFFIX,air-matters.com,DIRECT", "DOMAIN-SUFFIX,aixifan.com,DIRECT",
-    "DOMAIN-KEYWORD,alicdn,DIRECT", "DOMAIN-KEYWORD,alipay,DIRECT", "DOMAIN-KEYWORD,taobao,DIRECT",
-    "DOMAIN-SUFFIX,amap.com,DIRECT", "DOMAIN-SUFFIX,autonavi.com,DIRECT", "DOMAIN-KEYWORD,baidu,DIRECT",
-    "DOMAIN-SUFFIX,bdimg.com,DIRECT", "DOMAIN-SUFFIX,bdstatic.com,DIRECT",
-    "DOMAIN-SUFFIX,bilibili.com,DIRECT", "DOMAIN-SUFFIX,bilivideo.com,DIRECT",
-    "DOMAIN-SUFFIX,caiyunapp.com,DIRECT", "DOMAIN-SUFFIX,clouddn.com,DIRECT",
-    "DOMAIN-SUFFIX,cnbeta.com,DIRECT", "DOMAIN-SUFFIX,cnbetacdn.com,DIRECT",
-    "DOMAIN-SUFFIX,cootekservice.com,DIRECT", "DOMAIN-SUFFIX,csdn.net,DIRECT",
-    "DOMAIN-SUFFIX,ctrip.com,DIRECT", "DOMAIN-SUFFIX,dgtle.com,DIRECT",
-    "DOMAIN-SUFFIX,dianping.com,DIRECT", "DOMAIN-SUFFIX,douban.com,DIRECT",
-    "DOMAIN-SUFFIX,doubanio.com,DIRECT", "DOMAIN-SUFFIX,duokan.com,DIRECT",
-    "DOMAIN-SUFFIX,easou.com,DIRECT", "DOMAIN-SUFFIX,ele.me,DIRECT",
-    "DOMAIN-SUFFIX,feng.com,DIRECT", "DOMAIN-SUFFIX,fir.im,DIRECT",
-    "DOMAIN-SUFFIX,frdic.com,DIRECT", "DOMAIN-SUFFIX,g-cores.com,DIRECT",
-    "DOMAIN-SUFFIX,godic.net,DIRECT", "DOMAIN-SUFFIX,gtimg.com,DIRECT",
-    "DOMAIN,cdn.hockeyapp.net,DIRECT", "DOMAIN-SUFFIX,hongxiu.com,DIRECT",
-    "DOMAIN-SUFFIX,hxcdn.net,DIRECT", "DOMAIN-SUFFIX,iciba.com,DIRECT",
-    "DOMAIN-SUFFIX,ifeng.com,DIRECT", "DOMAIN-SUFFIX,ifengimg.com,DIRECT",
-    "DOMAIN-SUFFIX,ipip.net,DIRECT", "DOMAIN-SUFFIX,iqiyi.com,DIRECT",
-    "DOMAIN-SUFFIX,jd.com,DIRECT", "DOMAIN-SUFFIX,jianshu.com,DIRECT",
-    "DOMAIN-SUFFIX,knewone.com,DIRECT", "DOMAIN-SUFFIX,le.com,DIRECT",
-    "DOMAIN-SUFFIX,lecloud.com,DIRECT", "DOMAIN-SUFFIX,lemicp.com,DIRECT",
-    "DOMAIN-SUFFIX,licdn.com,DIRECT", "DOMAIN-SUFFIX,luoo.net,DIRECT",
-    "DOMAIN-SUFFIX,meituan.com,DIRECT", "DOMAIN-SUFFIX,meituan.net,DIRECT",
-    "DOMAIN-SUFFIX,mi.com,DIRECT", "DOMAIN-SUFFIX,miaopai.com,DIRECT",
-    "DOMAIN-SUFFIX,microsoft.com,DIRECT", "DOMAIN-SUFFIX,microsoftonline.com,DIRECT",
-    "DOMAIN-SUFFIX,miui.com,DIRECT", "DOMAIN-SUFFIX,miwifi.com,DIRECT",
-    "DOMAIN-SUFFIX,mob.com,DIRECT", "DOMAIN-SUFFIX,netease.com,DIRECT",
-    "DOMAIN-SUFFIX,office.com,DIRECT", "DOMAIN-SUFFIX,office365.com,DIRECT",
-    "DOMAIN-KEYWORD,officecdn,DIRECT", "DOMAIN-SUFFIX,oschina.net,DIRECT",
-    "DOMAIN-SUFFIX,ppsimg.com,DIRECT", "DOMAIN-SUFFIX,pstatp.com,DIRECT",
-    "DOMAIN-SUFFIX,qcloud.com,DIRECT", "DOMAIN-SUFFIX,qdaily.com,DIRECT",
-    "DOMAIN-SUFFIX,qdmm.com,DIRECT", "DOMAIN-SUFFIX,qhimg.com,DIRECT",
-    "DOMAIN-SUFFIX,qhres.com,DIRECT", "DOMAIN-SUFFIX,qidian.com,DIRECT",
-    "DOMAIN-SUFFIX,qihucdn.com,DIRECT", "DOMAIN-SUFFIX,qiniu.com,DIRECT",
-    "DOMAIN-SUFFIX,qiniucdn.com,DIRECT", "DOMAIN-SUFFIX,qiyipic.com,DIRECT",
-    "DOMAIN-SUFFIX,qq.com,DIRECT", "DOMAIN-SUFFIX,qqurl.com,DIRECT",
-    "DOMAIN-SUFFIX,rarbg.to,DIRECT", "DOMAIN-SUFFIX,ruguoapp.com,DIRECT",
-    "DOMAIN-SUFFIX,segmentfault.com,DIRECT", "DOMAIN-SUFFIX,sinaapp.com,DIRECT",
-    "DOMAIN-SUFFIX,smzdm.com,DIRECT", "DOMAIN-SUFFIX,snapdrop.net,DIRECT",
-    "DOMAIN-SUFFIX,sogou.com,DIRECT", "DOMAIN-SUFFIX,sogoucdn.com,DIRECT",
-    "DOMAIN-SUFFIX,sohu.com,DIRECT", "DOMAIN-SUFFIX,soku.com,DIRECT",
-    "DOMAIN-SUFFIX,speedtest.net,DIRECT", "DOMAIN-SUFFIX,sspai.com,DIRECT",
-    "DOMAIN-SUFFIX,suning.com,DIRECT", "DOMAIN-SUFFIX,taobao.com,DIRECT",
-    "DOMAIN-SUFFIX,tencent.com,DIRECT", "DOMAIN-SUFFIX,tenpay.com,DIRECT",
-    "DOMAIN-SUFFIX,tianyancha.com,DIRECT", "DOMAIN-SUFFIX,tmall.com,DIRECT",
-    "DOMAIN-SUFFIX,tudou.com,DIRECT", "DOMAIN-SUFFIX,umetrip.com,DIRECT",
-    "DOMAIN-SUFFIX,upaiyun.com,DIRECT", "DOMAIN-SUFFIX,upyun.com,DIRECT",
-    "DOMAIN-SUFFIX,veryzhun.com,DIRECT", "DOMAIN-SUFFIX,weather.com,DIRECT",
-    "DOMAIN-SUFFIX,weibo.com,DIRECT", "DOMAIN-SUFFIX,xiami.com,DIRECT",
-    "DOMAIN-SUFFIX,xiami.net,DIRECT", "DOMAIN-SUFFIX,xiaomicp.com,DIRECT",
-    "DOMAIN-SUFFIX,ximalaya.com,DIRECT", "DOMAIN-SUFFIX,xmcdn.com,DIRECT",
-    "DOMAIN-SUFFIX,xunlei.com,DIRECT", "DOMAIN-SUFFIX,yhd.com,DIRECT",
-    "DOMAIN-SUFFIX,yihaodianimg.com,DIRECT", "DOMAIN-SUFFIX,yinxiang.com,DIRECT",
-    "DOMAIN-SUFFIX,ykimg.com,DIRECT", "DOMAIN-SUFFIX,youdao.com,DIRECT",
-    "DOMAIN-SUFFIX,youku.com,DIRECT", "DOMAIN-SUFFIX,zealer.com,DIRECT",
-    "DOMAIN-SUFFIX,zhihu.com,DIRECT", "DOMAIN-SUFFIX,zhimg.com,DIRECT",
-    "DOMAIN-SUFFIX,zimuzu.tv,DIRECT", "DOMAIN-SUFFIX,zoho.com,DIRECT",
-    "DOMAIN-KEYWORD,amazon,VPN Trinh Hg", "DOMAIN-KEYWORD,google,VPN Trinh Hg",
-    "DOMAIN-KEYWORD,gmail,VPN Trinh Hg", "DOMAIN-KEYWORD,youtube,VPN Trinh Hg",
-    "DOMAIN-KEYWORD,facebook,VPN Trinh Hg", "DOMAIN-SUFFIX,fb.me,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,fbcdn.net,VPN Trinh Hg", "DOMAIN-KEYWORD,twitter,VPN Trinh Hg",
-    "DOMAIN-KEYWORD,instagram,VPN Trinh Hg", "DOMAIN-KEYWORD,dropbox,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,twimg.com,VPN Trinh Hg", "DOMAIN-KEYWORD,blogspot,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,youtu.be,VPN Trinh Hg", "DOMAIN-KEYWORD,whatsapp,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,telegra.ph,VPN Trinh Hg", "DOMAIN-SUFFIX,telegram.org,VPN Trinh Hg",
-    "DOMAIN-KEYWORD,admarvel,REJECT", "DOMAIN-KEYWORD,admaster,REJECT",
-    "DOMAIN-KEYWORD,adsage,REJECT", "DOMAIN-KEYWORD,adsmogo,REJECT",
-    "DOMAIN-KEYWORD,adsrvmedia,REJECT", "DOMAIN-KEYWORD,adwords,REJECT",
-    "DOMAIN-KEYWORD,adservice,REJECT", "DOMAIN-SUFFIX,appsflyer.com,REJECT",
-    "DOMAIN-KEYWORD,domob,REJECT", "DOMAIN-SUFFIX,doubleclick.net,REJECT",
-    "DOMAIN-KEYWORD,duomeng,REJECT", "DOMAIN-KEYWORD,dwtrack,REJECT",
-    "DOMAIN-KEYWORD,guanggao,REJECT", "DOMAIN-KEYWORD,lianmeng,REJECT",
-    "DOMAIN-SUFFIX,mmstat.com,REJECT", "DOMAIN-KEYWORD,mopub,REJECT",
-    "DOMAIN-KEYWORD,omgmta,REJECT", "DOMAIN-KEYWORD,openx,REJECT",
-    "DOMAIN-KEYWORD,partnerad,REJECT", "DOMAIN-KEYWORD,pingfore,REJECT",
-    "DOMAIN-KEYWORD,supersonicads,REJECT", "DOMAIN-KEYWORD,uedas,REJECT",
-    "DOMAIN-KEYWORD,umeng,REJECT", "DOMAIN-KEYWORD,usage,REJECT",
-    "DOMAIN-SUFFIX,vungle.com,REJECT", "DOMAIN-KEYWORD,wlmonitor,REJECT",
-    "DOMAIN-KEYWORD,zjtoolbar,REJECT",
-    "DOMAIN-SUFFIX,9to5mac.com,VPN Trinh Hg", "DOMAIN-SUFFIX,abpchina.org,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,adblockplus.org,VPN Trinh Hg", "DOMAIN-SUFFIX,adobe.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,akamaized.net,VPN Trinh Hg", "DOMAIN-SUFFIX,android.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,appspot.com,VPN Trinh Hg", "DOMAIN-SUFFIX,archive.org,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,awsstatic.com,VPN Trinh Hg", "DOMAIN-SUFFIX,azureedge.net,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,azurewebsites.net,VPN Trinh Hg", "DOMAIN-SUFFIX,bing.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,bit.ly,VPN Trinh Hg", "DOMAIN-SUFFIX,bitbucket.org,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,blogger.com,VPN Trinh Hg", "DOMAIN-SUFFIX,blogspot.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,bloomberg.com,VPN Trinh Hg", "DOMAIN-SUFFIX,box.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,cachefly.net,VPN Trinh Hg", "DOMAIN-SUFFIX,chromium.org,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,cloudflare.com,VPN Trinh Hg", "DOMAIN-SUFFIX,cloudfront.net,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,docker.com,VPN Trinh Hg", "DOMAIN-SUFFIX,dribbble.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,duckduckgo.com,VPN Trinh Hg", "DOMAIN-SUFFIX,evernote.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,fast.com,VPN Trinh Hg", "DOMAIN-SUFFIX,fastly.net,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,feedly.com,VPN Trinh Hg", "DOMAIN-SUFFIX,firebaseio.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,flickr.com,VPN Trinh Hg", "DOMAIN-SUFFIX,g.co,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,ggpht.com,VPN Trinh Hg", "DOMAIN-SUFFIX,git.io,VPN Trinh Hg",
-    "DOMAIN-KEYWORD,github,VPN Trinh Hg", "DOMAIN-SUFFIX,golang.org,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,goo.gl,VPN Trinh Hg", "DOMAIN-SUFFIX,goodreads.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,gravatar.com,VPN Trinh Hg", "DOMAIN-SUFFIX,gstatic.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,hotmail.com,VPN Trinh Hg", "DOMAIN-SUFFIX,imgur.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,instapaper.com,VPN Trinh Hg", "DOMAIN-SUFFIX,linkedin.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,live.com,VPN Trinh Hg", "DOMAIN-SUFFIX,live.net,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,medium.com,VPN Trinh Hg", "DOMAIN-SUFFIX,mega.nz,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,microsofttranslator.com,VPN Trinh Hg", "DOMAIN-SUFFIX,msedge.net,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,onedrive.com,VPN Trinh Hg", "DOMAIN-SUFFIX,onenote.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,openvpn.net,VPN Trinh Hg", "DOMAIN-SUFFIX,outlook.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,pinterest.com,VPN Trinh Hg", "DOMAIN-SUFFIX,pixiv.net,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,playstation.com,VPN Trinh Hg", "DOMAIN-SUFFIX,playstation.net,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,shadowsocks.org,VPN Trinh Hg", "DOMAIN-SUFFIX,skype.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,soundcloud.com,VPN Trinh Hg", "DOMAIN-SUFFIX,sourceforge.net,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,spotify.com,VPN Trinh Hg", "DOMAIN-SUFFIX,stackoverflow.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,steamcommunity.com,VPN Trinh Hg", "DOMAIN-SUFFIX,techcrunch.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,theverge.com,VPN Trinh Hg", "DOMAIN-SUFFIX,todoist.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,trello.com,VPN Trinh Hg", "DOMAIN-SUFFIX,tumblr.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,twitch.tv,VPN Trinh Hg", "DOMAIN-SUFFIX,v2ex.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,vimeo.com,VPN Trinh Hg", "DOMAIN-SUFFIX,vultr.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,w.org,VPN Trinh Hg", "DOMAIN-SUFFIX,wikipedia.org,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,windows.com,VPN Trinh Hg", "DOMAIN-SUFFIX,windows.net,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,wordpress.com,VPN Trinh Hg", "DOMAIN-SUFFIX,wsj.com,VPN Trinh Hg",
-    "DOMAIN-SUFFIX,yahoo.com,VPN Trinh Hg", "DOMAIN-SUFFIX,ytimg.com,VPN Trinh Hg",
-    "IP-CIDR,91.108.4.0/22,VPN Trinh Hg,no-resolve", "IP-CIDR,91.108.8.0/21,VPN Trinh Hg,no-resolve",
-    "IP-CIDR,91.108.16.0/22,VPN Trinh Hg,no-resolve", "IP-CIDR,91.108.56.0/22,VPN Trinh Hg,no-resolve",
-    "IP-CIDR,149.154.160.0/20,VPN Trinh Hg,no-resolve",
-    "IP-CIDR6,2001:67c:4e8::/48,VPN Trinh Hg,no-resolve",
-    "IP-CIDR6,2001:b28:f23d::/48,VPN Trinh Hg,no-resolve",
-    "IP-CIDR6,2001:b28:f23f::/48,VPN Trinh Hg,no-resolve",
-    "DOMAIN,injections.adguard.org,DIRECT", "DOMAIN,local.adguard.org,DIRECT",
-    "DOMAIN-SUFFIX,local,DIRECT", "IP-CIDR,127.0.0.0/8,DIRECT",
-    "IP-CIDR,172.16.0.0/12,DIRECT", "IP-CIDR,192.168.0.0/16,DIRECT",
-    "IP-CIDR,10.0.0.0/8,DIRECT", "IP-CIDR,100.64.0.0/10,DIRECT",
-    "IP-CIDR,224.0.0.0/4,DIRECT", "IP-CIDR6,fe80::/10,DIRECT",
-    "DOMAIN-SUFFIX,cn,DIRECT", "DOMAIN-KEYWORD,-cn,DIRECT",
-    "GEOIP,CN,DIRECT", "MATCH,VPN Trinh Hg"
-]
-
 # COMBO_RULES gộp đầy đủ từ Liangxin + DJJC, loại bỏ trùng lặp và giữ nguyên thứ tự
 _seen_combo = set()
 COMBO_RULES = []
@@ -641,6 +679,7 @@ for _r in LIANGXIN_RULES + DJJC_RULES:
 
 
 # ── Parse proxy URI ───────────────────────────────────────────────────────────
+# v2.6 — 2026-11-06 21:10 (UTC+7) — Gán song song ports + mport cho Hysteria2 và network: tcp cho VLESS
 def parse_hysteria2(uri: str) -> dict | None:
     base = uri.split("#")[0]
     try:
@@ -655,8 +694,10 @@ def parse_hysteria2(uri: str) -> dict | None:
             "skip-cert-verify": True,
         }
         if p.get("sni"):           proxy["sni"]           = p["sni"]
-        if p.get("mport"):         proxy["mport"]         = p["mport"]
-        if p.get("ports"):         proxy["ports"]         = p["ports"]
+        port_hop = p.get("ports") or p.get("mport")
+        if port_hop:
+            proxy["ports"] = port_hop
+            proxy["mport"] = port_hop
         if p.get("obfs"):          proxy["obfs"]          = p["obfs"]
         if p.get("obfs-password"): proxy["obfs-password"] = urllib.parse.unquote(p["obfs-password"])
         return proxy
@@ -677,6 +718,7 @@ def parse_vless(uri: str) -> dict | None:
             "udp": True,
             "tls": sec in ("tls", "reality"),
             "skip-cert-verify": p.get("insecure", "0") == "1",
+            "network": net or "tcp",
         }
         if p.get("flow"): proxy["flow"] = p["flow"]
         if p.get("fp"):   proxy["client-fingerprint"] = p["fp"]
@@ -1132,30 +1174,22 @@ def build_yaml(proxy_list: list, mode: str) -> str:
 
 
 # ── HAI BỘ QUY TẮC CHUẨN HÓA TÊN NODE RIÊNG BIỆT (LIANGXIN & DJJC) ───────────
+# v2.6 — 2026-11-06 21:10 (UTC+7) — Đồng bộ clean_liangxin_node với worker.js và sửa lỗi _pad_dj_num ("0" + num)
 def clean_liangxin_node(raw_name: str) -> str:
     """
-    Quy tắc độc lập Liangxin:
+    Quy tắc độc lập Liangxin (khớp 100% cleanLiangxinNode trên worker.js):
     1. Đổi cờ: 🇨🇳台湾 -> 🇹🇼台湾
     2. Lọc bỏ ISP: CUCM, CTCU, CMCU, CTCUCM
-    3. Số thứ tự: 2 chữ số (01) -> 3 chữ số (001); 1 chữ số (1) -> 2 chữ số (01); không số giữ nguyên
-    4. Giữ nguyên hệ số nhân: 0.5x, 0.1x...
-    5. Hậu tố: - VPNTrinhHg
-    6. Fallback an toàn: raw_name + ' - VPNTrinhHg'
+    3. Giữ nguyên số thứ tự 2 chữ số gốc (01..08) và hệ số nhân (0.5x, 0.1x...)
+    4. Hậu tố: - VPNTrinhHg
     """
     if not raw_name: return "Liangxin - VPNTrinhHg"
     try:
         s = re.sub(r"\s*-\s*VPNTrinhHg$", "", raw_name.strip()).strip()
         s = s.replace("🇨🇳台湾", "🇹🇼台湾")
-        parts = [p.strip() for p in s.split("|")]
-        # Lọc bỏ nhà mạng ISP
+        parts = [p.strip() for p in s.split("|") if p.strip()]
         clean_parts = [p for p in parts if p.upper() not in ISP_DROP_KEYWORDS]
         s = "|".join(clean_parts) if clean_parts else s
-        
-        # Số hóa: 2 số -> 3 số (01 -> 001); 1 số -> 2 số (1 -> 01); bảo vệ số thập phân hệ số nhân
-        def _pad_lx_num(m):
-            num = m.group(1)
-            return ("00" + num[1]) if len(num) == 2 else ("0" + num)
-        s = re.sub(r"(?<![\d.])(\d{1,2})(?![\d.xX])", _pad_lx_num, s)
         return f"{s} - VPNTrinhHg"
     except Exception:
         fallback = raw_name.strip()
@@ -1169,7 +1203,7 @@ def clean_djjc_node(raw_name: str) -> str:
         s = re.sub(r"(\d+(?:\.\d+)?)\s*倍率?", r"\1x", s)
         def _pad_dj_num(m):
             num = m.group(1)
-            return ("00" + num[1]) if len(num) == 2 else ("0" + num)
+            return "0" + num
         s = re.sub(r"(?<![\d.])(\d{1,2})(?:\s*号)?(?![\d.xX])", _pad_dj_num, s)
         return f"{s} - VPNTrinhHg"
     except Exception:
@@ -1206,7 +1240,7 @@ ADS_AND_INFO_KEYWORDS = [
 def is_spam_node(name: str) -> bool:
     if not name: return True
     return any(kw in name for kw in ADS_AND_INFO_KEYWORDS)
-# ── Process b64 (Tự động nhận diện nguồn: Liangxin / DJJC / Nguồn mới) ──────────
+# ── Process b64 (Tự động nhận diện nguồn: Liangxin / DJJC / Kitty / Custom V7-V8) ──
 def process_b64(raw_b64: str, provider_name: str):
     pad = raw_b64 + "=" * ((-len(raw_b64)) % 4)
     try:
@@ -1216,22 +1250,31 @@ def process_b64(raw_b64: str, provider_name: str):
     proxy_list = []
     seen_names = {}
     new_b64_lines = [INFO_VLESS_PREFIX + urllib.parse.quote(n, safe="") for n in INFO_NODES]
+    raw_custom_singbox = ""
 
     # TRƯỜNG HỢP 1: Nguồn trả về JSON Sing-box (như Liangxin và DJJC outbounds)
     if decoded.strip().startswith("{") and '"outbounds"' in decoded:
         try:
             sb_data = json.loads(decoded)
             p_lower = provider_name.lower()
+            is_custom_prov = p_lower in ("custom_v7", "custom_v8", "custom_source", "v7", "v8")
+            kept_outbounds = []
+            renamed_map = {}
+
             for ob in sb_data.get("outbounds", []):
                 old_name = ob.get("tag", "")
+                ob_type = ob.get("type", "")
+                if ob_type in ("selector", "urltest", "direct", "block", "dns"):
+                    kept_outbounds.append(ob)
+                    continue
                 if is_spam_node(old_name): continue
                 if ob.get("server") in ("127.0.0.1", "1.1.1.1"): continue
 
-                if "kitty" in p_lower or "tohno-1.top" in p_lower or "oosaka" in p_lower:
+                if "kitty" in p_lower or p_lower == "kt" or "tohno-1.top" in p_lower or "oosaka" in p_lower:
                     new_name = clean_kitty_node(old_name)
-                elif "liangxin" in p_lower:
+                elif "liangxin" in p_lower or p_lower == "lx" or "7777699.xyz" in p_lower:
                     new_name = clean_liangxin_node(old_name)
-                elif "djjc" in p_lower:
+                elif "djjc" in p_lower or p_lower == "dj":
                     new_name = clean_djjc_node(old_name)
                 else:
                     new_name = clean_universal_node(old_name)
@@ -1241,6 +1284,11 @@ def process_b64(raw_b64: str, provider_name: str):
                     new_name = f"{new_name} ({seen_names[new_name]})"
                 else:
                     seen_names[new_name] = 1
+
+                renamed_map[old_name] = new_name
+                ob_copy = dict(ob)
+                ob_copy["tag"] = new_name
+                kept_outbounds.append(ob_copy)
 
                 p_type = ob.get("type")
                 if p_type in ("hysteria2", "hy2"):
@@ -1256,13 +1304,15 @@ def process_b64(raw_b64: str, provider_name: str):
                     if obfs.get("password"): px["obfs-password"] = obfs["password"]
                     mport = ob.get("mport") or ob.get("ports") or ob.get("server_ports")
                     if mport:
+                        if isinstance(mport, list):
+                            mport = ",".join(str(x).replace(":", "-") for x in mport)
                         px["mport"] = str(mport)
                         px["ports"] = str(mport)
                     proxy_list.append(px)
                     
-                    # Tạo URI Hysteria2 hoàn chỉnh đưa vào new_b64_lines
+                    # Tạo URI Hysteria2 hoàn chỉnh đưa vào new_b64_lines (có cả mport và ports)
                     sni_p = f"&sni={px['sni']}" if px.get("sni") else ""
-                    mport_p = f"&mport={px['mport']}" if px.get("mport") else ""
+                    mport_p = f"&mport={px['mport']}&ports={px['ports']}" if px.get("mport") else ""
                     obfs_p = f"&obfs={px['obfs']}&obfs-password={urllib.parse.quote(px['obfs-password'])}" if px.get("obfs") else ""
                     uri = f"hysteria2://{px['password']}@{px['server']}:{px['port']}?insecure=1{sni_p}{mport_p}{obfs_p}#{urllib.parse.quote(new_name)}"
                     new_b64_lines.append(uri)
@@ -1325,6 +1375,8 @@ def process_b64(raw_b64: str, provider_name: str):
                         px["grpc-opts"] = {
                             "grpc-service-name": transport_obj.get("service_name", "")
                         }
+                    else:
+                        px["network"] = "tcp"
 
                     proxy_list.append(px)
 
@@ -1371,6 +1423,22 @@ def process_b64(raw_b64: str, provider_name: str):
                     vless_uri = f"vless://{px['uuid']}@{px['server']}:{px['port']}?{query_str}#{urllib.parse.quote(new_name)}"
                     new_b64_lines.append(vless_uri)
 
+            # Bảo toàn nguyên vẹn cấu trúc Sing-box gốc (dns, route, experimental) cho nguồn Custom V7/V8
+            if is_custom_prov and kept_outbounds:
+                info_obs = [
+                    {
+                        "type": "vless", "tag": f"{name} § {i}",
+                        "server": "127.0.0.1", "server_port": 1,
+                        "uuid": "00000000-0000-0000-0000-000000000000", "packet_encoding": "xudp"
+                    }
+                    for i, name in enumerate(INFO_NODES)
+                ]
+                for ob in kept_outbounds:
+                    if isinstance(ob.get("outbounds"), list):
+                        ob["outbounds"] = [renamed_map[n] for n in ob["outbounds"] if n in renamed_map or n in ("自动选择", "direct", "block")]
+                sb_data["outbounds"] = kept_outbounds[:5] + info_obs + kept_outbounds[5:]
+                raw_custom_singbox = json.dumps(sb_data, ensure_ascii=False, indent=2)
+
         except Exception as e:
             print(f"  [!] Lỗi parse Singbox JSON: {e}")
 
@@ -1382,7 +1450,7 @@ def process_b64(raw_b64: str, provider_name: str):
             old_name = urllib.parse.unquote(line.split("#", 1)[-1]) if "#" in line else None
             if is_spam_node(old_name): continue
 
-            # v1 — 2026-11-06 20:15 (UTC+7) — Nhận diện nguồn Liangxin mới (7777699.xyz / OwO), đọc provider metadata và hỗ trợ ?hg=
+            # v2.6 — 2026-11-06 21:10 (UTC+7) — Nhận diện nguồn Liangxin mới (7777699.xyz / OwO), đọc provider metadata và hỗ trợ ?hg=
             p_lower = provider_name.lower()
             if "kitty" in p_lower or p_lower == "kt" or "tohno-1.top" in p_lower or "oosaka" in p_lower:
                 new_name = clean_kitty_node(old_name)
@@ -1413,10 +1481,14 @@ def process_b64(raw_b64: str, provider_name: str):
         mode = "liangxin"
     elif "djjc" in p_low or p_low == "dj":
         mode = "djjc"
+    elif p_low in ("custom_v7", "v7"):
+        mode = "custom_v7"
+    elif p_low in ("custom_v8", "v8"):
+        mode = "custom_v8"
     else:
         mode = "combo"
     yaml_str    = build_yaml(proxy_list, mode)        if proxy_list else ""
-    singbox_str = build_singbox_full(proxy_list, mode) if proxy_list else ""
+    singbox_str = raw_custom_singbox if raw_custom_singbox else (build_singbox_full(proxy_list, mode) if proxy_list else "")
     return new_b64, yaml_str, singbox_str
 
 # ── Parse traffic ─────────────────────────────────────────────────────────────
@@ -1430,41 +1502,80 @@ def parse_traffic(header: str) -> dict:
     return {"used": f"{used_gb:.2f}", "total": f"{total_gb:.2f}", "percent": pct, "expire": exp_str}
 
 
+def extract_source_token(u_val: str) -> str:
+    s = str(u_val or "").strip()
+    if not s or s == "Da_bi_khoa":
+        return ""
+    try:
+        m_kt = re.search(r'/oosaka/([a-zA-Z0-9_-]{8,})', s, re.IGNORECASE)
+        if m_kt:
+            return m_kt.group(1)
+        parsed_u = urllib.parse.urlparse(s)
+        qs = urllib.parse.parse_qs(parsed_u.query)
+        for k in ("OwO", "token", "top", "oos", "hg", "liki", "lidj", "kidj", "sub", "key", "auth", "id"):
+            if qs.get(k) and len(qs[k][0].strip()) >= 6:
+                return qs[k][0].strip()
+        for _, v_list in qs.items():
+            if v_list and re.match(r'^[a-zA-Z0-9_-]{12,}$', v_list[0].strip()):
+                return v_list[0].strip()
+        segs = [x for x in parsed_u.path.split("/") if x]
+        if segs:
+            last = segs[-1]
+            if re.match(r'^[a-zA-Z0-9_-]{16,}$', last) and last.lower() not in ("subscribe", "liangxin", "owo", "v1", "api"):
+                return last
+    except Exception:
+        pass
+    return ""
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 def update_all():
-    print("=== VPN Trinh Hg — update_sub.py v2.5 ===")
+    print("=== VPN Trinh Hg — update_sub.py v2.6 ===")
+    auth_headers = {"Authorization": f"Bearer {os.environ['WEB_API_SECRET2']}"}
     try:
-        res = requests.get(API_LINKS, headers={"Authorization": f"Bearer {os.environ['WEB_API_SECRET2']}"}, timeout=15); res.raise_for_status()
+        res = requests.get(API_LINKS, headers=auth_headers, timeout=15); res.raise_for_status()
         links_db = res.json()
     except Exception as e:
         print(f"[!] Lấy links thất bại: {e}"); sys.exit(1)
 
-    print(f"Tổng links: {len(links_db)}")
+    pool_db = []
+    try:
+        r_pool = requests.get(f"{WORKER_DOMAIN}/api/link_pool", headers=auth_headers, timeout=15)
+        if r_pool.status_code == 200:
+            pool_db = r_pool.json() if isinstance(r_pool.json(), list) else []
+    except Exception:
+        pool_db = []
+
+    print(f"Tổng links: {len(links_db)} | Tổng kho nguồn: {len(pool_db)}")
     seen_orig = {}
     seen_prov = {}
-    for lnk in links_db:
-        # Quét cả orig (chân 1) lẫn orig2 (chân 2 của Link Trộn)
-        for u_key, p_key in (("orig", "provider"), ("orig2", "provider2")):
-            u_val = lnk.get(u_key, "")
-            p_val = lnk.get(p_key, "")
+
+    # 1. Nạp metadata provider từ LINK_POOL trước (để có sẵn cấu hình Admin đã xác nhận)
+    for pl in pool_db:
+        if not isinstance(pl, dict): continue
+        for u_key, p_key in (("url", "provider"), ("url2", "provider2")):
+            u_val = str(pl.get(u_key) or "").strip()
+            p_val = str(pl.get(p_key) or "").strip()
             if not u_val or u_val == "Da_bi_khoa": continue
-            try:
-                m_kt = re.search(r'/oosaka/([a-zA-Z0-9_-]+)', u_val)
-                if m_kt:
-                    t = m_kt.group(1)
-                    if t not in seen_orig:
-                        seen_orig[t] = u_val
-                        seen_prov[t] = p_val
-                    continue
-                parsed_u = urllib.parse.urlparse(u_val)
-                qs = urllib.parse.parse_qs(parsed_u.query)
-                tok_list = qs.get("OwO") or qs.get("token") or qs.get("top") or qs.get("oos") or qs.get("hg") or qs.get("liki") or qs.get("lidj") or qs.get("kidj")
-                if tok_list:
-                    t = tok_list[0]
-                    if t not in seen_orig:
-                        seen_orig[t] = u_val
-                        seen_prov[t] = p_val
-            except Exception: continue
+            tok = extract_source_token(u_val)
+            if tok:
+                seen_orig[tok] = u_val
+                if p_val and p_val != "other":
+                    seen_prov[tok] = p_val
+
+    # 2. Quét toàn bộ ALL_LINKS (cả chân 1 orig và chân 2 orig2 của Link Combo)
+    for lnk in links_db:
+        if not isinstance(lnk, dict): continue
+        for u_key, p_key in (("orig", "provider"), ("orig2", "provider2")):
+            u_val = str(lnk.get(u_key) or "").strip()
+            p_val = str(lnk.get(p_key) or "").strip()
+            if not u_val or u_val == "Da_bi_khoa": continue
+            tok = extract_source_token(u_val)
+            if tok:
+                if tok not in seen_orig:
+                    seen_orig[tok] = u_val
+                if p_val and p_val != "other" and not seen_prov.get(tok):
+                    seen_prov[tok] = p_val
 
     print(f"Link gốc cần fetch: {len(seen_orig)}")
     global_subs_payload = {}
@@ -1472,12 +1583,16 @@ def update_all():
     for orig_token, orig_url in seen_orig.items():
         u_low = orig_url.lower()
         saved_p = str(seen_prov.get(orig_token) or "").lower()
-        if saved_p == "kt" or "tohno-1.top" in u_low or "oosaka" in u_low or "kitty" in u_low:
+        if saved_p in ("kt", "kitty") or "tohno-1.top" in u_low or "oosaka" in u_low or "kitty" in u_low:
             provider = "Kitty"
-        elif saved_p == "lx" or "liangxin" in u_low or "7777699.xyz" in u_low or "owo=" in u_low:
+        elif saved_p in ("lx", "liangxin") or "liangxin" in u_low or "7777699.xyz" in u_low or "owo=" in u_low or "/api/v1/owo" in u_low:
             provider = "Liangxin"
-        elif saved_p == "dj" or "djjc" in u_low:
+        elif saved_p in ("dj", "djjc") or "djjc" in u_low or "/api/v1/client/subscribe" in u_low:
             provider = "DJJC"
+        elif saved_p in ("custom_v7", "v7"):
+            provider = "custom_v7"
+        elif saved_p in ("custom_v8", "v8"):
+            provider = "custom_v8"
         else:
             provider = "Custom_Source"
         print(f"\n→ [{provider}] token: {orig_token[:12]}... url: {orig_url[:55]}...")
