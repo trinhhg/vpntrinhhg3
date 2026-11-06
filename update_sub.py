@@ -1382,12 +1382,13 @@ def process_b64(raw_b64: str, provider_name: str):
             old_name = urllib.parse.unquote(line.split("#", 1)[-1]) if "#" in line else None
             if is_spam_node(old_name): continue
 
+            # v1 — 2026-11-06 20:15 (UTC+7) — Nhận diện nguồn Liangxin mới (7777699.xyz / OwO), đọc provider metadata và hỗ trợ ?hg=
             p_lower = provider_name.lower()
-            if "kitty" in p_lower or "tohno-1.top" in p_lower or "oosaka" in p_lower:
+            if "kitty" in p_lower or p_lower == "kt" or "tohno-1.top" in p_lower or "oosaka" in p_lower:
                 new_name = clean_kitty_node(old_name)
-            elif "liangxin" in p_lower:
+            elif "liangxin" in p_lower or p_lower == "lx" or "7777699.xyz" in p_lower:
                 new_name = clean_liangxin_node(old_name)
-            elif "djjc" in p_lower:
+            elif "djjc" in p_lower or p_lower == "dj":
                 new_name = clean_djjc_node(old_name)
             else:
                 new_name = clean_universal_node(old_name)
@@ -1406,11 +1407,11 @@ def process_b64(raw_b64: str, provider_name: str):
     new_b64 = base64.b64encode("\n".join(new_b64_lines).encode("utf-8")).decode("ascii")
     print(f"  Parsed {len(proxy_list)} real proxies")
     p_low = provider_name.lower()
-    if "kitty" in p_low or "tohno-1.top" in p_low or "oosaka" in p_low:
+    if "kitty" in p_low or p_low == "kt" or "tohno-1.top" in p_low or "oosaka" in p_low:
         mode = "kitty"
-    elif "liangxin" in p_low:
+    elif "liangxin" in p_low or p_low == "lx" or "7777699.xyz" in p_low:
         mode = "liangxin"
-    elif "djjc" in p_low:
+    elif "djjc" in p_low or p_low == "dj":
         mode = "djjc"
     else:
         mode = "combo"
@@ -1431,7 +1432,7 @@ def parse_traffic(header: str) -> dict:
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 def update_all():
-    print("=== VPN Trinh Hg — update_sub.py v2.3 ===")
+    print("=== VPN Trinh Hg — update_sub.py v2.5 ===")
     try:
         res = requests.get(API_LINKS, headers={"Authorization": f"Bearer {os.environ['WEB_API_SECRET2']}"}, timeout=15); res.raise_for_status()
         links_db = res.json()
@@ -1440,22 +1441,29 @@ def update_all():
 
     print(f"Tổng links: {len(links_db)}")
     seen_orig = {}
+    seen_prov = {}
     for lnk in links_db:
         # Quét cả orig (chân 1) lẫn orig2 (chân 2 của Link Trộn)
-        for u_key in ("orig", "orig2"):
+        for u_key, p_key in (("orig", "provider"), ("orig2", "provider2")):
             u_val = lnk.get(u_key, "")
+            p_val = lnk.get(p_key, "")
             if not u_val or u_val == "Da_bi_khoa": continue
             try:
-                m_kt = re.search(r'/oosaka/([a-zA-Z0-9]+)', u_val)
+                m_kt = re.search(r'/oosaka/([a-zA-Z0-9_-]+)', u_val)
                 if m_kt:
                     t = m_kt.group(1)
-                    if t not in seen_orig: seen_orig[t] = u_val
+                    if t not in seen_orig:
+                        seen_orig[t] = u_val
+                        seen_prov[t] = p_val
                     continue
-                qs = urllib.parse.parse_qs(urllib.parse.urlparse(u_val).query)
-                tok_list = qs.get("OwO") or qs.get("token") or qs.get("top") or qs.get("liki") or qs.get("lidj") or qs.get("kidj")
+                parsed_u = urllib.parse.urlparse(u_val)
+                qs = urllib.parse.parse_qs(parsed_u.query)
+                tok_list = qs.get("OwO") or qs.get("token") or qs.get("top") or qs.get("oos") or qs.get("hg") or qs.get("liki") or qs.get("lidj") or qs.get("kidj")
                 if tok_list:
                     t = tok_list[0]
-                    if t not in seen_orig: seen_orig[t] = u_val
+                    if t not in seen_orig:
+                        seen_orig[t] = u_val
+                        seen_prov[t] = p_val
             except Exception: continue
 
     print(f"Link gốc cần fetch: {len(seen_orig)}")
@@ -1463,11 +1471,12 @@ def update_all():
 
     for orig_token, orig_url in seen_orig.items():
         u_low = orig_url.lower()
-        if "tohno-1.top" in u_low or "oosaka" in u_low or "kitty" in u_low:
+        saved_p = str(seen_prov.get(orig_token) or "").lower()
+        if saved_p == "kt" or "tohno-1.top" in u_low or "oosaka" in u_low or "kitty" in u_low:
             provider = "Kitty"
-        elif "liangxin" in u_low:
+        elif saved_p == "lx" or "liangxin" in u_low or "7777699.xyz" in u_low or "owo=" in u_low:
             provider = "Liangxin"
-        elif "djjc" in u_low:
+        elif saved_p == "dj" or "djjc" in u_low:
             provider = "DJJC"
         else:
             provider = "Custom_Source"
