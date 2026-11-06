@@ -39,13 +39,14 @@ export default {
       }
 
       // Xử lý 404 có hỗ trợ Markdown khi truy vấn đường dẫn không tồn tại
+      // v1 — 2026-11-06 20:15 (UTC+7) — Mở rộng proxy Pages cho route link ẩn /v7 và /v8
       const isKnownRoute = url.pathname === "/" || 
                            url.pathname === "/index.html" || 
                            url.pathname === "/admin" || 
                            url.pathname === "/admin.html" || 
                            url.pathname.startsWith("/portal/") || 
                            url.pathname.startsWith("/api") || 
-                           url.pathname.match(/^\/v[1-6]/) || 
+                           url.pathname.match(/^\/v[1-8]/) || 
                            url.pathname.startsWith("/qr") || 
                            url.pathname.startsWith("/assets/") || 
                            url.pathname.startsWith("/src/") ||
@@ -70,7 +71,7 @@ export default {
       }
 
       // Nếu là Link Sub hoặc API -> Chuyển hướng ngầm sang Worker API
-      if (url.pathname.match(/^\/v[1-6]/) || url.pathname.startsWith("/api") || url.pathname.startsWith("/qr")) {
+      if (url.pathname.match(/^\/v[1-8]/) || url.pathname.startsWith("/api") || url.pathname.startsWith("/qr")) {
         const workerUrl = new URL(request.url);
         workerUrl.hostname = "vpntrinhhg3worker.lucastanora.workers.dev";
         const init = {
