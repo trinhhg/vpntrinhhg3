@@ -1750,12 +1750,13 @@ function getActiveFlashSale() {
   };
 }
 
+// v1 — 2026-11-06 20:15 (UTC+7) — Đồng bộ kiểm tra scope Flash Sale (monthly/cycle và data/usage)
 function doesFlashSaleApply(pkg, sale) {
   if (!sale || !pkg || pkg.isCustom) return false;
-  if (sale.scope === "cycle") {
+  if (sale.scope === "cycle" || sale.scope === "monthly") {
     return pkg.time !== "lifetime" && (!pkg.category || !pkg.category.includes("usage"));
   }
-  if (sale.scope === "data") {
+  if (sale.scope === "data" || sale.scope === "usage") {
     return pkg.time === "lifetime" || (pkg.category && pkg.category.includes("usage"));
   }
   return true; // 'all'
@@ -2010,16 +2011,20 @@ function openCheckout(id) {
     r.checked = false;
   });
   updateSubDecisionUI('');
+  // v1 — 2026-11-06 20:15 (UTC+7) — Khi gia hạn từ Portal chỉ lấy đúng Link Sub thuộc schemaField của web hiện tại
   const subWrap = $('subLinkLifecycleWrap');
   if (subWrap) {
     subWrap.classList.remove('hidden');
     if (isRenewMode && oCache) {
+      const eff = getEffectiveSubLink(oCache);
       const links = [];
-      [1, 2, 3].forEach(i => {
-        if (oCache['info' + i] && !oCache['blur' + i]) {
-          links.push({ index: i, url: oCache['info' + i], name: `Link Sub ${i}` });
-        }
-      });
+      if (eff && eff.url && !eff.isBlur) {
+        links.push({
+          index: eff.index,
+          url: eff.url,
+          name: `Link Sub #${eff.index}`
+        });
+      }
       existingCustomerLinks = links;
       populateTargetLinks(links);
       lockSubDecisionUI('KEEP_EXISTING', 'Gia hạn chính gói cước và link sub này trong portal (Tự động giữ link cũ)');
