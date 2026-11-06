@@ -3220,26 +3220,43 @@ const PROV_LABELS = {
   other: "Chưa phân loại"
 };
 
+// v2 — 2026-11-06 22:00 (UTC+7) — Trích xuất token không phân biệt hoa/thường, giải mã URL-encoded và path token
 function extractOriginTokenAdmin(rawUrl) {
   const s = String(rawUrl || "").trim();
   if (!s || s === "Da_bi_khoa") return "";
-  try {
-    const mKt = s.match(/\/oosaka\/([a-zA-Z0-9_-]{8,})/i);
-    if (mKt) return mKt[1];
-    const u = new URL(s);
-    const keys = ["OwO", "token", "top", "oos", "hg", "liki", "lidj", "kidj", "sub", "key", "auth", "id"];
-    for (const k of keys) {
-      const v = u.searchParams.get(k);
-      if (v && v.trim().length >= 6) return v.trim();
+  const dec = (val) => {
+    try {
+      return decodeURIComponent(String(val || ""));
+    } catch {
+      return String(val || "");
     }
-    for (const [, v] of u.searchParams.entries()) {
-      if (v && /^[a-zA-Z0-9_-]{12,}$/.test(v.trim())) return v.trim();
+  };
+  try {
+    const mKt = s.match(/\/oosaka\/([a-zA-Z0-9_%-]{8,})/i);
+    if (mKt) {
+      const ktTok = dec(mKt[1]).trim();
+      if (ktTok.length >= 6) return ktTok;
+    }
+    const u = new URL(s);
+    const keysLow = ["owo", "token", "top", "oos", "hg", "liki", "lidj", "kidj", "sub", "key", "auth", "id"];
+    const entries = [...u.searchParams.entries()];
+    for (const k of keysLow) {
+      const found = entries.find(([ek]) => String(ek).toLowerCase() === k);
+      if (found && found[1]) {
+        const v = dec(found[1]).trim();
+        if (v.length >= 6) return v;
+      }
+    }
+    for (const [, v] of entries) {
+      const decV = dec(v).trim();
+      if (decV && /^[a-zA-Z0-9_-]{12,}$/.test(decV)) return decV;
     }
     const segs = u.pathname.split("/").filter(Boolean);
-    const last = segs[segs.length - 1] || "";
-    if (/^[a-zA-Z0-9_-]{16,}$/.test(last) && !/^(subscribe|liangxin|owo|v1|api)$/i.test(last)) return last;
+    const last = dec(segs[segs.length - 1] || "").trim();
+    if (/^[a-zA-Z0-9_-]{16,}$/.test(last) && !/^(subscribe|liangxin|owo|v1|api|client)$/i.test(last)) return last;
     return "";
-  } catch { return "";
+  } catch {
+    return "";
   }
 }
 
@@ -3274,11 +3291,12 @@ function analyzeSourceUrl(rawUrl, manualProv = "auto", manualProto = "auto", sav
   }
   const host = parsed.hostname.toLowerCase();
   const pathLow = parsed.pathname.toLowerCase();
-  const hasOwO = parsed.searchParams.has("OwO");
-  const hasToken = parsed.searchParams.has("token");
-  const hasTop = parsed.searchParams.has("top") || parsed.searchParams.has("oos");
-  const hasHg = parsed.searchParams.has("hg");
-  const isOosakaPath = /\/oosaka\/[a-zA-Z0-9_-]{8,}/i.test(parsed.pathname);
+  const paramKeysLow = new Set([...parsed.searchParams.keys()].map(k => String(k).toLowerCase()));
+  const hasOwO = paramKeysLow.has("owo");
+  const hasToken = paramKeysLow.has("token");
+  const hasTop = paramKeysLow.has("top") || paramKeysLow.has("oos");
+  const hasHg = paramKeysLow.has("hg");
+  const isOosakaPath = /\/oosaka\/[a-zA-Z0-9_%-]{8,}/i.test(parsed.pathname);
   const tok = extractOriginTokenAdmin(s);
 
   let autoProv = "other";
@@ -3510,6 +3528,13 @@ function onModalProvChange(leg = 1) {
 }
 window.onModalProvChange = onModalProvChange;
 
+// v2 — 2026-11-06 22:00 (UTC+7) — Chỉ tạo masked link Combo cho V4 (lx+kt), V5 (lx+dj), V6 (kt+dj); tuyệt đối không tạo masked link V5/V6 giả cho Combo Custom
+function isSupportedComboPair(p1, p2) {
+  if (!p1 || !p2 || p1 === p2) return false;
+  const s = new Set([p1, p2]);
+  return (s.has("lx") && s.has("kt")) || (s.has("lx") && s.has("dj")) || (s.has("kt") && s.has("dj"));
+}
+
 function buildMasked(orig, fresh, orig2, optMeta1 = null, optMeta2 = null) {
   const tok = genHex(32);
   const info1 = analyzeSourceUrl(orig, optMeta1?.provider || "auto", optMeta1?.protocol || "auto", optMeta1 || findPoolMetaForUrl(orig));
@@ -3522,7 +3547,7 @@ function buildMasked(orig, fresh, orig2, optMeta1 = null, optMeta2 = null) {
     if (s.has("lx") && s.has("kt")) return PD + "/v4/VPNTrinhHg?liki=" + tok + "#VPNTrinhHg";
     if (s.has("lx") && s.has("dj")) return PD + "/v5/VPNTrinhHg?lidj=" + tok + "#VPNTrinhHg";
     if (s.has("kt") && s.has("dj")) return PD + "/v6/VPNTrinhHg?kidj=" + tok + "#VPNTrinhHg";
-    return PD + "/v5/VPNTrinhHg?lidj=" + tok + "#VPNTrinhHg";
+    return "";
   }
   if (proto1 === "v7" || p1 === "custom_v7") return PD + "/v7/VPNTrinhHg?hg=" + tok + "#VPNTrinhHg";
   if (proto1 === "v8" || p1 === "custom_v8") return PD + "/v8/VPNTrinhHg?hg=" + tok + "#VPNTrinhHg";
@@ -3678,8 +3703,8 @@ function renderLinks() {
     // Render các link con trong cụm
     const rows = [...g.ch].sort((a, b) => (parseInt(a.linkIndex || 1)) - (parseInt(b.linkIndex || 1))).map(l => {
       if (!l.masked) {
-        l.masked = buildMasked(l.orig, true, l.orig2);
-        saveLinks();
+        const built = buildMasked(l.orig, true, l.orig2, info1, info2);
+        if (built) l.masked = built;
       }
       const tok = getT(l.masked), locked = !!l.isLocked, idx = parseInt(l.linkIndex || 1);
       const bottom = linkBottom(l);
@@ -3776,13 +3801,34 @@ async function saveRootEdit() {
   const newO1 = $("mREOrig1").value.trim(), newO2 = $("mREOrig2").value.trim();
   if (!newO1 && !newO2) return toast("Vui lòng nhập ít nhất 1 link gốc!", "err");
 
+  const parts = gKey.split("|");
+  const oldIsCombo = (parts[0] === "COMBO");
+  const oldO1 = oldIsCombo ? parts[1] : gKey;
+  const oldO2 = oldIsCombo ? parts[2] : "";
+  const poolItem = linkPoolDb.find(x => oldIsCombo ? (x.isCombo && x.url === oldO1 && x.url2 === oldO2) : (!x.isCombo && x.url === oldO1));
+
   const selProv1 = $("mREProv1") ? $("mREProv1").value : "auto";
   const selProto1 = $("mREProto1") ? $("mREProto1").value : "auto";
   const selProv2 = $("mREProv2") ? $("mREProv2").value : "auto";
   const selProto2 = $("mREProto2") ? $("mREProto2").value : "auto";
 
-  let info1 = newO1 ? analyzeSourceUrl(newO1, selProv1, selProto1) : null;
-  let info2 = newO2 ? analyzeSourceUrl(newO2, selProv2, selProto2) : null;
+  const savedMeta1 = poolItem && (poolItem.detectMode === "manual" || newO1 === oldO1) ? {
+    provider: poolItem.provider,
+    protocol: poolItem.protocol,
+    detectMode: poolItem.detectMode,
+    verified: poolItem.verified,
+    status: poolItem.status
+  } : findPoolMetaForUrl(newO1);
+  const savedMeta2 = poolItem && (poolItem.detectMode2 === "manual" || newO2 === oldO2) ? {
+    provider: poolItem.provider2,
+    protocol: poolItem.protocol2,
+    detectMode: poolItem.detectMode2,
+    verified: poolItem.verified2,
+    status: poolItem.status2
+  } : findPoolMetaForUrl(newO2);
+
+  let info1 = newO1 ? analyzeSourceUrl(newO1, selProv1, selProto1, savedMeta1) : null;
+  let info2 = newO2 ? analyzeSourceUrl(newO2, selProv2, selProto2, savedMeta2) : null;
 
   if (info1 && (!info1.verified || info1.provider === "other")) {
     return toast("Chân 1: " + (info1.reason || "Vui lòng chọn Nhà mạng & đảm bảo URL có đủ Token!"), "err");
@@ -3802,16 +3848,17 @@ async function saveRootEdit() {
       return toast("Không thể chuyển cụm sang Combo với 2 link cùng nhà mạng (" + (PROV_LABELS[p1] || p1) + ")!", "err");
     }
     isNowCombo = true;
-    if (p1 === "lx" || p2 === "dj") {
-      finalO1 = newO1;
-      finalO2 = newO2;
-      finalInfo1 = info1;
-      finalInfo2 = info2;
-    } else {
+    const supportedPair = isSupportedComboPair(p1, p2);
+    if (supportedPair && (p2 === "lx" || p1 === "dj")) {
       finalO1 = newO2;
       finalO2 = newO1;
       finalInfo1 = info2;
       finalInfo2 = info1;
+    } else {
+      finalO1 = newO1;
+      finalO2 = newO2;
+      finalInfo1 = info1;
+      finalInfo2 = info2;
     }
   } else {
     finalO1 = newO1 || newO2;
@@ -3819,36 +3866,33 @@ async function saveRootEdit() {
     finalInfo2 = null;
   }
 
-  const parts = gKey.split("|");
-  const oldIsCombo = (parts[0] === "COMBO");
-  const oldO1 = oldIsCombo ? parts[1] : gKey;
-  const oldO2 = oldIsCombo ? parts[2] : "";
-
+  const isSupportedCombo = !isNowCombo || isSupportedComboPair(finalInfo1.provider, finalInfo2?.provider);
   const newExp1 = $("mREExp").value.trim();
   const newExp2 = $("mREExp2").value.trim();
   const expToApply = newExp1 || (isNowCombo ? newExp2 : "");
 
-  linksDb.forEach(l => {
-    const match = oldIsCombo ? (l.isCombo && l.orig === oldO1 && l.orig2 === oldO2) : (!l.isCombo && l.orig === oldO1);
-    if (match) {
-      l.orig = finalO1;
-      l.isCombo = isNowCombo;
-      l.provider = finalInfo1.provider;
-      l.protocol = finalInfo1.protocol;
-      if (isNowCombo && finalInfo2) {
-        l.orig2 = finalO2;
-        l.provider2 = finalInfo2.provider;
-        l.protocol2 = finalInfo2.protocol;
-      } else {
-        delete l.orig2;
-        delete l.provider2;
-        delete l.protocol2;
+  if (isSupportedCombo) {
+    linksDb.forEach(l => {
+      const match = oldIsCombo ? (l.isCombo && l.orig === oldO1 && l.orig2 === oldO2) : (!l.isCombo && l.orig === oldO1);
+      if (match) {
+        l.orig = finalO1;
+        l.isCombo = isNowCombo;
+        l.provider = finalInfo1.provider;
+        l.protocol = finalInfo1.protocol;
+        if (isNowCombo && finalInfo2) {
+          l.orig2 = finalO2;
+          l.provider2 = finalInfo2.provider;
+          l.protocol2 = finalInfo2.protocol;
+        } else {
+          delete l.orig2;
+          delete l.provider2;
+          delete l.protocol2;
+        }
+        if (expToApply) l.expDate = expToApply;
       }
-      if (expToApply) l.expDate = expToApply;
-    }
-  });
+    });
+  }
 
-  const poolItem = linkPoolDb.find(x => oldIsCombo ? (x.isCombo && x.url === oldO1 && x.url2 === oldO2) : (!x.isCombo && x.url === oldO1));
   const m1Val = $("mREMax").value.trim();
   const newSpecs = {
     url: finalO1,
@@ -3900,10 +3944,13 @@ async function saveRootEdit() {
   }
 
   cm("mRootEdit");
-  // Gộp lưu Link và Kho trong 1 request duy nhất (giảm tải KV write)
   await aj("/api/admin/save_links_and_pool", { method: "POST", body: { links: linksDb, pool: linkPoolDb } });
   renderLinks();
-  toast("Đã cập nhật cả cụm link & đồng bộ metadata nguồn sang Kho thành công!");
+  if (!isSupportedCombo) {
+    toast("Đã lưu metadata Combo Custom vào Kho dự phòng (không đổi các Link Sub sang V5/V6 giả vì tổ hợp chưa hỗ trợ routing)!");
+  } else {
+    toast("Đã cập nhật cả cụm link & đồng bộ metadata nguồn sang Kho thành công!");
+  }
 }
 
 // 6. Tạo Link Thủ Công (Tự động nạp vào Kho nguồn ngầm nếu có thông số khai báo)
@@ -3917,8 +3964,8 @@ async function createLink() {
   const selProv2 = $("lkProv2") ? $("lkProv2").value : "auto";
   const selProto2 = $("lkProto2") ? $("lkProto2").value : "auto";
 
-  let info1 = orig1 ? analyzeSourceUrl(orig1, selProv1, selProto1) : null;
-  let info2 = orig2 ? analyzeSourceUrl(orig2, selProv2, selProto2) : null;
+  let info1 = orig1 ? analyzeSourceUrl(orig1, selProv1, selProto1, findPoolMetaForUrl(orig1)) : null;
+  let info2 = orig2 ? analyzeSourceUrl(orig2, selProv2, selProto2, findPoolMetaForUrl(orig2)) : null;
 
   if (info1 && (!info1.verified || info1.provider === "other")) {
     return toast("Nguồn 1: " + (info1.reason || "Chưa xác định được nhà mạng hoặc thiếu token! Hãy chọn Nhà mạng thủ công."), "err");
@@ -3938,16 +3985,17 @@ async function createLink() {
       return toast("Không thể tạo Link Trộn với 2 link cùng nhà mạng (" + (PROV_LABELS[p1] || p1) + ")!", "err");
     }
     isCombo = true;
-    if (p1 === "lx" || p2 === "dj") {
-      finalOrig1 = orig1;
-      finalOrig2 = orig2;
-      finalInfo1 = info1;
-      finalInfo2 = info2;
-    } else {
+    const supportedPair = isSupportedComboPair(p1, p2);
+    if (supportedPair && (p2 === "lx" || p1 === "dj")) {
       finalOrig1 = orig2;
       finalOrig2 = orig1;
       finalInfo1 = info2;
       finalInfo2 = info1;
+    } else {
+      finalOrig1 = orig1;
+      finalOrig2 = orig2;
+      finalInfo1 = info1;
+      finalInfo2 = info2;
     }
   } else {
     finalOrig1 = orig1 || orig2;
@@ -4040,6 +4088,26 @@ async function createLink() {
     }
   }
 
+  // Nếu là Combo Custom chưa có route V4/V5/V6: chỉ lưu vào LINK_POOL làm nguồn dự phòng, KHÔNG tạo masked link V5/V6 giả
+  if (isCombo && finalInfo2 && !isSupportedComboPair(finalInfo1.provider, finalInfo2.provider)) {
+    try {
+      await aj("/api/admin/save_links_and_pool", { method: "POST", body: { links: linksDb, pool: linkPoolDb } });
+      toast("Đã lưu Combo Custom vào Kho nguồn dự phòng (không tạo Link Sub V5/V6 giả vì tổ hợp chưa hỗ trợ routing)!");
+      ["lkOrig", "lkOrig2", "lkEmail", "lkExp", "lkIdx", "lkGb1", "lkRemainGb1", "lkPoolExp1", "lkGb2", "lkRemainGb2", "lkPoolExp2"].forEach(f => {
+        if ($(f)) $(f).value = "";
+      });
+      ["lkProv1", "lkProto1", "lkProv2", "lkProto2"].forEach(f => {
+        if ($(f)) $(f).value = "auto";
+      });
+      onOrigUrlInput(1);
+      onOrigUrlInput(2);
+      renderLinks();
+    } catch (e) {
+      toast("Lỗi: " + e.message, "err");
+    }
+    return;
+  }
+
   let finalIdx = idxInput;
   if (!finalIdx || parseInt(finalIdx) < 1) {
     const existingIndices = linksDb
@@ -4050,6 +4118,9 @@ async function createLink() {
   }
 
   const masked = isCombo ? buildMasked(finalOrig1, true, finalOrig2, finalInfo1, finalInfo2) : buildMasked(finalOrig1, true, "", finalInfo1);
+  if (!masked) {
+    return toast("Không thể tạo masked link cho tổ hợp nguồn này!", "err");
+  }
 
   linksDb.unshift({
     id: "LNK-" + Date.now() + "-" + genHex(4),
@@ -4104,21 +4175,37 @@ function openLnkModal(id) {
   $("mLnk").classList.remove("hidden");
 }
 
-// 7. Bút chì con: Sửa Email, HSD, Index VÀ SỬA LINK GỐC / CHUYỂN ĐƠN <-> COMBO cho riêng link đó
+// 7. Bút chì con: Sửa Email, HSD, Index VÀ SỬA LINK GỐC / CHUYỂN ĐƠN <-> COMBO cho riêng link đó (bảo toàn manual metadata)
 async function saveLnkEdit() {
   const l = linksDb.find(x => x.id === $("mLId").value);
   if (!l) return;
   const o1 = $("mLOrig").value.trim(), o2 = $("mLOrig2") ? $("mLOrig2").value.trim() : "";
   if (!o1 && !o2) return toast("Link gốc không được rỗng!", "err");
 
-  const info1 = o1 ? analyzeSourceUrl(o1) : null;
-  const info2 = o2 ? analyzeSourceUrl(o2) : null;
+  const fallbackMeta1 = (o1 === l.orig && l.provider && l.provider !== "other") ? {
+    provider: l.provider,
+    protocol: l.protocol,
+    detectMode: "manual",
+    verified: true
+  } : null;
+  const fallbackMeta2 = (o2 === l.orig2 && l.provider2 && l.provider2 !== "other") ? {
+    provider: l.provider2,
+    protocol: l.protocol2,
+    detectMode: "manual",
+    verified: true
+  } : null;
+
+  const info1 = o1 ? analyzeSourceUrl(o1, "auto", "auto", findPoolMetaForUrl(o1) || fallbackMeta1) : null;
+  const info2 = o2 ? analyzeSourceUrl(o2, "auto", "auto", findPoolMetaForUrl(o2) || fallbackMeta2) : null;
 
   let isCombo = false, finalOrig1 = o1, finalOrig2 = "", finalInfo1 = info1, finalInfo2 = info2;
   if (o1 && o2) {
     const p1 = info1.provider, p2 = info2.provider;
     if (p1 === p2 && p1 !== "other") {
       return toast("Không thể sửa thành Combo với 2 link cùng nhà mạng!", "err");
+    }
+    if (!isSupportedComboPair(p1, p2)) {
+      return toast("Tổ hợp Combo Custom này chưa có route V4/V5/V6 cho Link Sub khách hàng!", "err");
     }
     isCombo = true;
     if (p1 === "lx" || p2 === "dj") {
