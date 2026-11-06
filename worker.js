@@ -1506,6 +1506,7 @@ function findOrder(orders, q) {
   const list = orders.filter((o) => o && o.email && String(o.email).toLowerCase() === em).sort((a, b) => (b.createdTs || 0) - (a.createdTs || 0));
   return list.find((o) => normStatus(o.status) !== "failed") || list[0] || null;
 }
+// v2 — 2026-11-06 21:10 (UTC+7) — Đồng bộ applyUpgrade(o, st) cập nhật gói Vĩnh viễn và tìm đúng Link Sub qua info1/2/3
 function applyUpgrade(o, st = null) {
   const pu = o.pendingUpgrade || {}, pk = PKGS[pu.targetPkgId], cur = PKGS[o.pkgId];
   if (!pk) return false;
@@ -1515,6 +1516,11 @@ function applyUpgrade(o, st = null) {
     pkgData: pk.d,
     pkg: pkgStr(pk)
   });
+  if (pk.m === 0 || pk.time === "lifetime") {
+    o.expDate = "Vĩnh viễn";
+    o.days = 36500;
+    o.expFinal = true;
+  }
   if (isBankMethod(pu.method || o.method)) o.totalVnd = (Number(o.totalVnd) || 0) + (Number(pu.amount) || 0);
   else {
     const c = Number(pu.amountCny) || (cur ? Math.max(0, (pk.cny - cur.cny) * (Number(pu.qty) || 1)) : 0);
@@ -1525,12 +1531,12 @@ function applyUpgrade(o, st = null) {
   o.isUpgrade = true;
   o.upgradedAt = NOW();
 
-  // v1 — 2026-11-06 20:15 (UTC+7) — Khôi phục đủ 2 chân Combo khi nâng cấp & chuẩn hóa fulfillOrder theo thứ tự ưu tiên nguồn
   // Đồng bộ nâng cấp cấu hình ngay trên chính Link Sub hiện tại (không tạo link mới)
   if (st && Array.isArray(st.links)) {
-    const curLink = st.links.find(l => l && (normId(l.orderId) === normId(o.id) || (o.targetLink && l.masked === o.targetLink)));
+    const curLink = st.links.find(l => l && ((l.orderId && normId(l.orderId) === normId(o.id)) || (o.targetLink && l.masked === o.targetLink) || (o.info1 && l.masked === o.info1) || (o.info2 && l.masked === o.info2) || (o.info3 && l.masked === o.info3)));
     if (curLink) {
       curLink.pkg = o.pkgName || pk.n || "";
+      if (isLifetime(o.expDate)) curLink.expDate = "Vĩnh viễn";
       if (curLink.isLocked) {
         curLink.isLocked = false;
         if (curLink.orig === LOCK_ORIG && curLink.origBackup) {
@@ -2653,15 +2659,15 @@ export default {
       const st = await loadAll(KV, env, isTestReq), now = NOW();
       const dup = st.orders.find((o) => o && normId(o.id) === id);
       if (dup) return J({ ok: true, order: pub(dup, st), existed: true });
+      // v1 — 2026-11-06 20:35 (UTC+7) — Đồng bộ day0(now), liên kết renewSrc khi KEEP_EXISTING, đồng bộ fs.scope, làm tròn 1,000đ và maxDiscount
       let email = String(b.email || "").trim(), zalo = String(b.zalo || "").trim();
-      const renewSrc = b.renewOf ? st.orders.find((x) => x && normId(x.id) === normId(b.renewOf) && normStatus(x.status) === "success") : null;
+      let renewSrc = b.renewOf ? st.orders.find((x) => x && normId(x.id) === normId(b.renewOf) && normStatus(x.status) === "success") : null;
       if (renewSrc) {
         if (!email && renewSrc.email) email = renewSrc.email;
         if (!zalo && renewSrc.zalo) zalo = renewSrc.zalo;
       }
       if (!email && !zalo) return J({ ok: false, error: "Cần ít nhất Email hoặc Zalo" }, 400);
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return J({ ok: false, error: "Email không hợp lệ" }, 400);
-      const isRenew = !!renewSrc;
       const method = String(b.method || "Ngân hàng VN"), bank = isBankMethod(method);
 
       // Xác định web và trường schema tương ứng của web này
@@ -2676,7 +2682,7 @@ export default {
         for (const ord of st.orders) {
           if (!ord || String(ord.email || "").toLowerCase() !== emLower) continue;
           if (normStatus(ord.status) !== "success") continue;
-          const lk = ord[f];
+          const lk = ord[f] || ord.info1 || ord.info2 || ord.info3 || "";
           if (lk && !seenUrls.has(lk)) {
             seenUrls.add(lk);
             existingSubLinks.push({ url: lk, orderId: ord.id });
@@ -2688,13 +2694,14 @@ export default {
       let subLinkDecision = String(b.subLinkDecision || "").trim();
       let targetLink = String(b.targetLink || "").trim();
 
-      // Lọc các đơn đang còn hạn hoạt động của email này
-      const activeUserOrders = st.orders.filter(x => x && normStatus(x.status) === "success" && String(x.email || "").toLowerCase() === emLower && (isLifetime(x.expDate) || parseDmy(x.expDate) >= now));
+      // Lọc các đơn đang còn hạn hoạt động của email này (dùng day0(now) đồng bộ với /api/public/lookup)
+      const today0 = day0(now);
+      const activeUserOrders = st.orders.filter(x => x && normStatus(x.status) === "success" && String(x.email || "").toLowerCase() === emLower && (isLifetime(x.expDate) || parseDmy(x.expDate) >= today0));
 
       if (renewSrc) {
         // Gia hạn bắt đầu từ nút gia hạn portal -> 100% giữ link cũ đích danh của web này
         subLinkDecision = "KEEP_EXISTING";
-        targetLink = renewSrc[f] || "";
+        targetLink = renewSrc[f] || renewSrc.info1 || renewSrc.info2 || renewSrc.info3 || "";
       } else if (activeUserOrders.length >= 2) {
         // Email có >= 2 đơn hoạt động -> Backend tự động quyết định CẤP LINK MỚI ĐỘC LẬP
         subLinkDecision = "CREATE_NEW";
@@ -2705,7 +2712,9 @@ export default {
           return J({ ok: false, error: "Vui lòng chọn Giữ link cũ hoặc Cấp link mới" }, 400);
         }
         if (subLinkDecision === "KEEP_EXISTING") {
-          targetLink = targetLink && existingSubLinks.some(l => l.url === targetLink) ? targetLink : (activeUserOrders[0][f] || (existingSubLinks[0] ? existingSubLinks[0].url : ""));
+          const singleActiveOrd = activeUserOrders[0];
+          targetLink = targetLink && existingSubLinks.some(l => l.url === targetLink) ? targetLink : (singleActiveOrd[f] || singleActiveOrd.info1 || singleActiveOrd.info2 || singleActiveOrd.info3 || (existingSubLinks[0] ? existingSubLinks[0].url : ""));
+          if (!renewSrc) renewSrc = singleActiveOrd;
         } else {
           targetLink = "";
         }
@@ -2714,6 +2723,7 @@ export default {
         subLinkDecision = "CREATE_NEW";
         targetLink = "";
       }
+      const isRenew = !!renewSrc || subLinkDecision === "KEEP_EXISTING";
 
       // Snapshot Gift Rule đang có hiệu lực
       const giftRules = Array.isArray(st.cms?.giftRules) ? st.cms.giftRules : [];
@@ -2735,20 +2745,27 @@ export default {
         giftName = pk.promo_sticker || "";
       }
 
-      // TÍNH TOÁN GIÁ TIỀN AUTHORITATIVE PHÍA SERVER (HỖ TRỢ FLASH SALE & COUPON)
+      // TÍNH TOÁN GIÁ TIỀN AUTHORITATIVE PHÍA SERVER (ĐỒNG BỘ 100% VỚI FRONTEND)
       let baseVnd = pk.vnd * qty;
       let finalVnd = baseVnd;
       let appliedCouponCode = "";
       let discountVnd = 0;
 
-      // 1. Áp dụng Flash Sale nếu có hiệu lực
+      // 1. Áp dụng Flash Sale nếu có hiệu lực và khớp phạm vi gói (scope)
       const fs = (st.cms && st.cms.sales && st.cms.sales.campaign) || (st.cms && st.cms.settings && st.cms.settings.flashSale);
       if (fs && fs.enabled && Number(fs.discountPercent) > 0) {
         const fsStart = fs.startDate ? new Date(fs.startDate).getTime() : 0;
         const fsEnd = fs.endDate ? new Date(fs.endDate).getTime() : Infinity;
         if (now >= fsStart && now <= fsEnd) {
-          const discountPct = Math.min(90, Math.max(1, Number(fs.discountPercent)));
-          finalVnd = Math.round(baseVnd * (100 - discountPct) / 100);
+          const fsScope = fs.scope || "all";
+          const isCyclePkg = pk.m !== 0 && pk.time !== "lifetime" && (!pk.category || !pk.category.includes("usage"));
+          const isDataPkg = pk.m === 0 || pk.time === "lifetime" || (pk.category && pk.category.includes("usage"));
+          const scopeMatched = fsScope === "all" || ((fsScope === "monthly" || fsScope === "cycle") && isCyclePkg) || ((fsScope === "data" || fsScope === "usage") && isDataPkg);
+          if (scopeMatched) {
+            const discountPct = Math.min(90, Math.max(1, Number(fs.discountPercent)));
+            const unitDiscountedVnd = Math.max(1000, Math.round((Number(pk.vnd || 0) * (100 - discountPct) / 100) / 1000) * 1000);
+            finalVnd = unitDiscountedVnd * qty;
+          }
         }
       }
 
@@ -2764,12 +2781,18 @@ export default {
           const maxUsage = Number(foundC.maxUsage || foundC.usageLimit) || 0;
           const curUsage = Number(foundC.usedCount) || 0;
 
-          if (now >= cStart && now <= cEnd && baseVnd >= minSpend && (maxUsage === 0 || curUsage < maxUsage)) {
+          if (now >= cStart && now <= cEnd && finalVnd >= minSpend && (maxUsage === 0 || curUsage < maxUsage)) {
             appliedCouponCode = foundC.code;
             if (foundC.type === "percent") {
               discountVnd = Math.round(finalVnd * (Number(foundC.value) || 0) / 100);
             } else {
               discountVnd = Math.round(Number(foundC.value) || 0);
+            }
+            if (Number(foundC.maxDiscount) > 0 && discountVnd > Number(foundC.maxDiscount)) {
+              discountVnd = Number(foundC.maxDiscount);
+            }
+            if (discountVnd > finalVnd - 1000) {
+              discountVnd = Math.max(0, finalVnd - 1000);
             }
             finalVnd = Math.max(1000, finalVnd - discountVnd);
             // Ghi nhận số lượt dùng coupon
@@ -2856,6 +2879,7 @@ export default {
       })());
       return J({ ok: true, order: pub(o, st) });
     }
+    // v2 — 2026-11-06 21:10 (UTC+7) — Đồng bộ fs.scope và fallback giá gói cũ khi gói thay đổi trong /api/public/upgrade
     if (p === "/api/public/upgrade" && m === "POST") {
       const b = await body(), st = await loadAll(KV, env, reqIsTest), o = st.orders.find((x) => x && normId(x.id) === normId(b.orderId));
       const tg = PKGS[b.pkgId], qty = Math.max(1, Math.min(120, parseInt(b.qty) || 1));
@@ -2863,8 +2887,10 @@ export default {
       if (normStatus(o.status) !== "success") return J({ ok: false, error: "Đơn chưa kích hoạt" }, 409);
       if (o.pendingUpgrade) return J({ ok: false, error: "Đang có yêu cầu nâng gói chờ xác minh" }, 409);
       const cur = PKGS[o.pkgId] || Object.values(PKGS).find((x) => x.n === o.pkgName && x.d === o.pkgData);
+      const baseCurVnd = cur ? Number(cur.vnd || 0) : (Number(o.totalVnd) > 0 ? Math.round(Number(o.totalVnd) / Math.max(1, Number(o.qty) || 1)) : 0);
+      const baseCurCny = cur ? Number(cur.cny || 0) : (Number(o.totalCny) > 0 ? Number(o.totalCny) / Math.max(1, Number(o.qty) || 1) : 0);
 
-      // Tính giá gói đích chuẩn hóa (Áp dụng giảm giá Flash Sale nếu gói đích thỏa điều kiện)
+      // Tính giá gói đích chuẩn hóa (Áp dụng giảm giá Flash Sale nếu gói đích thỏa điều kiện fs.scope)
       let targetVnd = tg.vnd;
       const fs = (st.cms && st.cms.sales && st.cms.sales.campaign) || (st.cms && st.cms.settings && st.cms.settings.flashSale);
       if (fs && fs.enabled && Number(fs.discountPercent) > 0) {
@@ -2872,20 +2898,28 @@ export default {
         const fsEnd = fs.endDate ? new Date(fs.endDate).getTime() : Infinity;
         const nowMs = NOW();
         if (nowMs >= fsStart && nowMs <= fsEnd) {
-          const pct = Math.min(90, Math.max(1, Number(fs.discountPercent)));
-          targetVnd = Math.max(1000, Math.round((Number(tg.vnd || 0) * (100 - pct) / 100) / 1000) * 1000);
+          let matchScope = false;
+          const sc = fs.scope || "all";
+          const pkgTime = tg.time !== undefined ? tg.time : (tg.m === 0 ? "lifetime" : (tg.m || 1));
+          if (sc === "all") matchScope = true;
+          else if (sc === "pkg" && Array.isArray(fs.pkgIds) && fs.pkgIds.includes(b.pkgId)) matchScope = true;
+          else if (sc === "time" && Array.isArray(fs.times) && fs.times.map(String).includes(String(pkgTime))) matchScope = true;
+          if (matchScope) {
+            const pct = Math.min(90, Math.max(1, Number(fs.discountPercent)));
+            targetVnd = Math.max(1000, Math.round((Number(tg.vnd || 0) * (100 - pct) / 100) / 1000) * 1000);
+          }
         }
       }
 
-      const diff = targetVnd - (cur ? cur.vnd : 0);
-      if (!cur || diff <= 0) return J({ ok: false, error: "Vui lòng chọn gói cao hơn gói hiện tại" }, 400);
+      const diff = targetVnd - baseCurVnd;
+      if (diff <= 0) return J({ ok: false, error: "Vui lòng chọn gói cao hơn gói hiện tại" }, 400);
       o.pendingUpgrade = {
         ts: NOW(),
         targetPkg: tg.n,
         targetPkgData: tg.d,
         targetPkgId: b.pkgId,
         amount: diff * qty,
-        amountCny: Math.round(Math.max(0, tg.cny - cur.cny) * qty * 100) / 100,
+        amountCny: Math.round(Math.max(0, tg.cny - baseCurCny) * qty * 100) / 100,
         qty,
         method: String(b.method || "Ngân hàng VN")
       };
@@ -3053,18 +3087,30 @@ export default {
     }
 
     // ================================================================ INTERNAL (D1 / web khác / cron ngoài)
+    // v2 — 2026-11-06 21:10 (UTC+7) — Phân tách Kho Thật/Test theo mã đơn DH_TEST_ cho D1 Webhook & truyền applyUpgrade(o, st)
     if (p === "/api/internal/order" && m === "GET") {
       const bad = need(internal);
       if (bad) return bad;
       const targetId = normId(url.searchParams.get("id"));
-      const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
-      const sb = getSupabase(env, isTest);
+      const isTestOrd = targetId.startsWith("DH_TEST_");
+      const sb = getSupabase(env, isTestOrd);
       let o = null;
       if (sb) {
         try {
-          const orders = await sb.getAll();
-          o = orders.find(x => x && normId(x.id) === targetId);
+          if (typeof sb.getOrder === "function") o = await sb.getOrder(targetId);
+          if (!o) {
+            const orders = await sb.getAll();
+            o = orders.find(x => x && normId(x.id) === targetId);
+          }
         } catch {}
+      }
+      if (!o) {
+        const rawPending = await KV.get("PENDING_ORD_" + targetId);
+        if (rawPending) o = safeJson(rawPending, null);
+      }
+      if (!o) {
+        const kvAll = arr(safeJson(await KV.get(isTestOrd ? "ALL_ORDERS_TEST" : "ALL_ORDERS"), []));
+        o = kvAll.find(x => x && normId(x.id) === targetId) || null;
       }
       return o ? J({
         ok: true,
@@ -3106,9 +3152,13 @@ export default {
       if (bad) return bad;
       if (!(await acquire(KV))) return J({ ok: false, error: "Hệ thống đang bận", status: "locked" }, 429);
       try {
-        const b = await body(), st = await loadAll(KV, env), me = getMe(url, env, st.cms);
-        const sb = getSupabase(env, st.isTest);
+        const b = await body();
         const ids = [...new Set(arr(b.orderIds).map(normId).filter(Boolean))];
+        if (!ids.length) return J({ ok: true, skipped: true });
+        // Xác định kho Thật/Test theo chính mã đơn (đơn thật DH... luôn vào Kho Thật kể cả khi Admin đang bật Test Mode)
+        const isTestBatch = ids.every(id => id.startsWith("DH_TEST_"));
+        const st = await loadAll(KV, env, isTestBatch), me = getMe(url, env, st.cms);
+        const sb = getSupabase(env, st.isTest);
         const upOrders = new Set(arr(b.upgrades).map((u) => normId(u.orderId)));
         const results = {
           fulfilled: [],
@@ -3116,7 +3166,6 @@ export default {
           missing: [],
           errors: []
         };
-        if (!ids.length) return J({ ok: true, skipped: true });
         for (const oid of ids) {
           let o = st.orders.find((x) => x && normId(x.id) === oid);
           // Cơ chế phục hồi an toàn tầng 1: Kiểm tra bộ nhớ đệm PENDING_ORD_ trong KV
@@ -3144,6 +3193,7 @@ export default {
                   cny: 0,
                   m: 1
                 };
+                const ordType = d1o.order_type || "new";
                 o = {
                   id: oid,
                   email: d1o.email || "",
@@ -3171,9 +3221,10 @@ export default {
                   info3: "",
                   lockInfo: {},
                   sourceWeb: d1o.target_web || "Web 3",
-                  orderType: d1o.order_type || "new"
+                  orderType: ordType,
+                  subLinkDecision: ordType === "renew" ? "KEEP_EXISTING" : "CREATE_NEW"
                 };
-                o.expDate = computeExp(o, st.orders, NOW());
+                o.expDate = computeExp(o, st.orders, NOW(), st.cms?.giftRules);
                 st.orders.unshift(o);
                 log("info", "fulfill", "Phục hồi đơn từ D1 Database để fulfillment", oid, oid);
               }
@@ -3193,7 +3244,7 @@ export default {
           }
           if (upOrders.has(oid)) {
             if (o.pendingUpgrade) {
-              applyUpgrade(o);
+              applyUpgrade(o, st);
               st.dO = true;
               kind = "upgrade";
               log("ok", "upgrade", "Nâng gói thành công", `${oid} → ${o.pkgName} ${o.pkgData}`, oid);
@@ -3275,7 +3326,10 @@ export default {
       }
     }
 
-    // link + push_data_batch: admin hoặc internal (update_sub.py gửi kèm Bearer WEB_API_SECRET2)
+    // link + link_pool (GET) + push_data_batch: admin hoặc internal (update_sub.py gửi kèm Bearer WEB_API_SECRET2)
+    if (p === "/api/link_pool" && m === "GET" && internal && !admin) {
+      return RAW((await KV.get("LINK_POOL")) || "[]");
+    }
     if (p === "/api/links") {
       const bad = need(admin || internal);
       if (bad) return bad;
@@ -3894,7 +3948,7 @@ export default {
         }
         else if (u === "success") {
           if (o.pendingUpgrade) {
-            applyUpgrade(o);
+            applyUpgrade(o, st);
             ctx.waitUntil(d1(env, "/api/admin/upgrades/resolve", { method: "POST", body: { orderId: o.id, status: "success" } }));
           } else {
             o.isUpgrade = true;
@@ -5534,6 +5588,7 @@ function parseURI(line) {
     });
     const proto = u.protocol.replace(":", "").toLowerCase();
 
+    // v2 — 2026-11-06 21:10 (UTC+7) — Gán cả ports + mport cho Hysteria2 và network: tcp cho VLESS
     if (proto === "hysteria2" || proto === "hy2") {
       const proxy = {
         name,
@@ -5547,7 +5602,11 @@ function parseURI(line) {
       if (p.sni) proxy.sni = p.sni;
       if (p.obfs) proxy.obfs = p.obfs;
       if (p["obfs-password"]) proxy["obfs-password"] = safeDecode(p["obfs-password"]);
-      if (p.mport) proxy.mport = p.mport;
+      const portHop = p.ports || p.mport;
+      if (portHop) {
+        proxy.ports = portHop;
+        proxy.mport = portHop;
+      }
       return proxy;
     }
 
@@ -5560,7 +5619,8 @@ function parseURI(line) {
         server: u.hostname,
         port: parseInt(u.port) || 443,
         uuid: safeDecode(u.username || ""),
-        udp: true
+        udp: true,
+        network: net || "tcp"
       };
 
       proxy.tls = sec === "tls" || sec === "reality";
@@ -5648,16 +5708,20 @@ const DJJC_DNS_STR = `
 dns:
   enable: true
   ipv6: false
-  default-nameserver: [223.5.5.5, 119.29.29.29]
+  default-nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
   use-hosts: true
-  respect-rules: false
-  nameserver: ['https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query']
-  fallback: ['https://doh.dns.sb/dns-query', 'https://dns.cloudflare.com/dns-query', 'https://dns.twnic.tw/dns-query', 'tls://8.8.4.4:853']
+  respect-rules: true
+  proxy-server-nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]
+  nameserver: [223.5.5.5, 119.29.29.29, 114.114.114.114]
+  fallback: [1.1.1.1, 8.8.8.8]
   fallback-filter:
     geoip: true
-    ipcidr: [240.0.0.0/4, 0.0.0.0/32]
+    geoip-code: CN
+    geosite: [gfw]
+    ipcidr: [240.0.0.0/4]
+    domain: [+.google.com, +.facebook.com, +.youtube.com]
 `.trim();
 
 const COMBO_DNS_STR = `
@@ -5808,8 +5872,15 @@ DOMAIN-SUFFIX,oaistatic.com,VPN Trinh Hg
 DOMAIN-SUFFIX,oaiusercontent.com,VPN Trinh Hg
 DOMAIN-SUFFIX,anthropic.com,VPN Trinh Hg
 DOMAIN-SUFFIX,claude.ai,VPN Trinh Hg
+DOMAIN-SUFFIX,gemini.google.com,VPN Trinh Hg
+DOMAIN-SUFFIX,bard.google.com,VPN Trinh Hg
+DOMAIN-SUFFIX,aistudio.google.com,VPN Trinh Hg
+DOMAIN-SUFFIX,notebooklm.google.com,VPN Trinh Hg
+DOMAIN-SUFFIX,makersuite.google.com,VPN Trinh Hg
 DOMAIN-SUFFIX,ai.google.dev,VPN Trinh Hg
 DOMAIN-SUFFIX,generativelanguage.googleapis.com,VPN Trinh Hg
+DOMAIN-SUFFIX,grok.com,VPN Trinh Hg
+DOMAIN-SUFFIX,x.ai,VPN Trinh Hg
 DOMAIN-SUFFIX,midjourney.com,VPN Trinh Hg
 DOMAIN-SUFFIX,poe.com,VPN Trinh Hg
 DOMAIN-SUFFIX,cursor.sh,VPN Trinh Hg
@@ -5819,6 +5890,14 @@ DOMAIN-SUFFIX,sora.com,VPN Trinh Hg
 DOMAIN-SUFFIX,v0.dev,VPN Trinh Hg
 DOMAIN-SUFFIX,cohere.ai,VPN Trinh Hg
 DOMAIN-SUFFIX,cohere.com,VPN Trinh Hg
+DOMAIN-SUFFIX,huggingface.co,VPN Trinh Hg
+DOMAIN-SUFFIX,openrouter.ai,VPN Trinh Hg
+DOMAIN-SUFFIX,groq.com,VPN Trinh Hg
+DOMAIN-SUFFIX,mistral.ai,VPN Trinh Hg
+DOMAIN-SUFFIX,character.ai,VPN Trinh Hg
+DOMAIN-SUFFIX,civitai.com,VPN Trinh Hg
+DOMAIN-SUFFIX,elevenlabs.io,VPN Trinh Hg
+DOMAIN-SUFFIX,suno.com,VPN Trinh Hg
 DOMAIN-SUFFIX,deepseek.com,VPN Trinh Hg
 DOMAIN,api.githubcopilot.com,VPN Trinh Hg
 DOMAIN,api.jetbrains.ai,VPN Trinh Hg
@@ -5831,6 +5910,7 @@ DOMAIN-SUFFIX,musical.ly,VPN Trinh Hg
 DOMAIN-SUFFIX,snssdk.com,VPN Trinh Hg
 DOMAIN-SUFFIX,google.com,VPN Trinh Hg
 DOMAIN-SUFFIX,youtube.com,VPN Trinh Hg
+DOMAIN-SUFFIX,youtu.be,VPN Trinh Hg
 DOMAIN-SUFFIX,googlevideo.com,VPN Trinh Hg
 DOMAIN-SUFFIX,googleapis.com,VPN Trinh Hg
 DOMAIN-SUFFIX,gstatic.com,VPN Trinh Hg
@@ -5846,15 +5926,33 @@ DOMAIN-KEYWORD,facebook,VPN Trinh Hg
 DOMAIN-SUFFIX,fb.me,VPN Trinh Hg
 DOMAIN-SUFFIX,fbcdn.net,VPN Trinh Hg
 DOMAIN-KEYWORD,twitter,VPN Trinh Hg
+DOMAIN-SUFFIX,x.com,VPN Trinh Hg
+DOMAIN-SUFFIX,t.co,VPN Trinh Hg
 DOMAIN-KEYWORD,instagram,VPN Trinh Hg
 DOMAIN-SUFFIX,twimg.com,VPN Trinh Hg
+DOMAIN-KEYWORD,whatsapp,VPN Trinh Hg
+DOMAIN-SUFFIX,whatsapp.com,VPN Trinh Hg
+DOMAIN-SUFFIX,whatsapp.net,VPN Trinh Hg
+DOMAIN-SUFFIX,discord.com,VPN Trinh Hg
+DOMAIN-SUFFIX,discordapp.com,VPN Trinh Hg
+DOMAIN-SUFFIX,discord.gg,VPN Trinh Hg
+DOMAIN-SUFFIX,reddit.com,VPN Trinh Hg
+DOMAIN-SUFFIX,redd.it,VPN Trinh Hg
+DOMAIN-KEYWORD,github,VPN Trinh Hg
+DOMAIN-SUFFIX,github.com,VPN Trinh Hg
+DOMAIN-SUFFIX,githubusercontent.com,VPN Trinh Hg
 DOMAIN-KEYWORD,telegram,VPN Trinh Hg
 DOMAIN-SUFFIX,t.me,VPN Trinh Hg
 DOMAIN-SUFFIX,telegra.ph,VPN Trinh Hg
 DOMAIN-SUFFIX,telegram.org,VPN Trinh Hg
 IP-CIDR,91.108.4.0/22,VPN Trinh Hg,no-resolve
+IP-CIDR,91.108.8.0/21,VPN Trinh Hg,no-resolve
+IP-CIDR,91.108.16.0/22,VPN Trinh Hg,no-resolve
 IP-CIDR,91.108.56.0/22,VPN Trinh Hg,no-resolve
 IP-CIDR,149.154.160.0/20,VPN Trinh Hg,no-resolve
+IP-CIDR6,2001:67c:4e8::/48,VPN Trinh Hg,no-resolve
+IP-CIDR6,2001:b28:f23d::/48,VPN Trinh Hg,no-resolve
+IP-CIDR6,2001:b28:f23f::/48,VPN Trinh Hg,no-resolve
 DOMAIN-SUFFIX,netflix.com,VPN Trinh Hg
 DOMAIN-SUFFIX,netflix.net,VPN Trinh Hg
 DOMAIN-SUFFIX,nflximg.net,VPN Trinh Hg
@@ -5889,7 +5987,7 @@ DOMAIN-SUFFIX,qq.com,DIRECT
 DOMAIN-SUFFIX,taobao.com,DIRECT
 DOMAIN-SUFFIX,weibo.com,DIRECT
 DOMAIN-SUFFIX,zhihu.com,DIRECT
-GEOIP,CN,DIRECT
+GEOIP,CN,DIRECT,no-resolve
 MATCH,VPN Trinh Hg
 `;
 
@@ -6546,7 +6644,10 @@ function proxyToInline(p) {
     if (p["skip-cert-verify"]) out["skip-cert-verify"] = true;
     if (p.obfs) out.obfs = p.obfs;
     if (p["obfs-password"]) out["obfs-password"] = p["obfs-password"];
-    if (p.mport) out.mport = p.mport;
+    if (p.ports || p.mport) {
+      out.ports = p.ports || p.mport;
+      out.mport = p.mport || p.ports;
+    }
   } else if (p.type === "trojan") {
     out.password = p.password;
     out.udp = p.udp !== false;
