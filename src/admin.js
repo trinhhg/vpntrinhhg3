@@ -3203,19 +3203,320 @@ async function approveTransaction(id) {
   }
 }
 // ===================== LINK SUB =====================
-// 1. Hàm nhận diện nhà mạng (Khai báo dạng function chuẩn để hoist lên đầu phạm vi)
-function detectProvider(u) {
-  const s = String(u || "").toLowerCase();
-  if (s.includes("tohno-1.top") || s.includes("oosaka") || s.includes("kitty")) return "kt";
-  if (s.includes("liangxin")) return "lx";
-  if (s.includes("djjc")) return "dj";
-  return "other";
+// v1 — 2026-11-06 20:15 (UTC+7) — Nâng cấp nhận diện nguồn Hybrid (Auto + Manual + Fail-Closed) và hỗ trợ V7/V8
+const PROTO_BY_PROV = {
+  lx: "v1",
+  dj: "v2",
+  kt: "v3",
+  custom_v7: "v7",
+  custom_v8: "v8"
+};
+const PROV_LABELS = {
+  lx: "Liangxin",
+  dj: "DJJC",
+  kt: "Kitty",
+  custom_v7: "Custom V7",
+  custom_v8: "Custom V8",
+  other: "Chưa phân loại"
+};
+
+function extractOriginTokenAdmin(rawUrl) {
+  const s = String(rawUrl || "").trim();
+  if (!s || s === "Da_bi_khoa") return "";
+  try {
+    const mKt = s.match(/\/oosaka\/([a-zA-Z0-9_-]{8,})/i);
+    if (mKt) return mKt[1];
+    const u = new URL(s);
+    const keys = ["OwO", "token", "top", "oos", "hg", "liki", "lidj", "kidj", "sub", "key", "auth", "id"];
+    for (const k of keys) {
+      const v = u.searchParams.get(k);
+      if (v && v.trim().length >= 6) return v.trim();
+    }
+    for (const [, v] of u.searchParams.entries()) {
+      if (v && /^[a-zA-Z0-9_-]{12,}$/.test(v.trim())) return v.trim();
+    }
+    const segs = u.pathname.split("/").filter(Boolean);
+    const last = segs[segs.length - 1] || "";
+    if (/^[a-zA-Z0-9_-]{16,}$/.test(last) && !/^(subscribe|liangxin|owo|v1|api)$/i.test(last)) return last;
+    return "";
+  } catch { return "";
+  }
 }
 
-function buildMasked(orig, fresh, orig2) {
+function analyzeSourceUrl(rawUrl, manualProv = "auto", manualProto = "auto", savedMeta = null) {
+  const s = String(rawUrl || "").trim();
+  if (!s || s === "Da_bi_khoa") {
+    return {
+      provider: "other",
+      protocol: "",
+      token: "",
+      confidence: "none",
+      detectMode: "auto",
+      verified: false,
+      status: "locked",
+      reason: "Node khóa"
+    };
+  }
+  let parsed = null;
+  try {
+    parsed = new URL(s);
+  } catch {
+    return {
+      provider: "other",
+      protocol: "",
+      token: "",
+      confidence: "invalid",
+      detectMode: "auto",
+      verified: false,
+      status: "needs_check",
+      reason: "URL sai cú pháp"
+    };
+  }
+  const host = parsed.hostname.toLowerCase();
+  const pathLow = parsed.pathname.toLowerCase();
+  const hasOwO = parsed.searchParams.has("OwO");
+  const hasToken = parsed.searchParams.has("token");
+  const hasTop = parsed.searchParams.has("top") || parsed.searchParams.has("oos");
+  const hasHg = parsed.searchParams.has("hg");
+  const isOosakaPath = /\/oosaka\/[a-zA-Z0-9_-]{8,}/i.test(parsed.pathname);
+  const tok = extractOriginTokenAdmin(s);
+
+  let autoProv = "other";
+  let autoProto = "";
+  let confidence = "none";
+
+  // 1. Nhận diện Kitty
+  if (isOosakaPath || hasTop || host.includes("tohno-1.top") || host.includes("kitty")) {
+    autoProv = "kt";
+    autoProto = "v3";
+    confidence = tok ? "high" : "low";
+  }
+  // 2. Nhận diện Liangxin (cả domain cũ liangxin.xyz/api/v1/liangxin?OwO= lẫn domain mới 7777699.xyz/api/v1/owo?OwO=)
+  else if (hasOwO || host.includes("liangxin") || host.includes("7777699.xyz") || /\/api\/v1\/(liangxin|owo)\b/i.test(pathLow)) {
+    autoProv = "lx";
+    autoProto = "v1";
+    confidence = (tok && hasOwO) ? "high" : "low";
+  }
+  // 3. Nhận diện DJJC
+  else if (host.includes("djjc") || (hasToken && pathLow.includes("/api/v1/client/subscribe"))) {
+    autoProv = "dj";
+    autoProto = "v2";
+    confidence = tok ? "high" : "low";
+  }
+  // 4. Nhận diện Custom có sẵn ?hg=
+  else if (hasHg) {
+    autoProv = "custom_v7";
+    autoProto = "v7";
+    confidence = tok ? "medium" : "low";
+  }
+
+  // Ưu tiên 1: Nếu người dùng đang chọn thủ công trên UI
+  const effManualProv = (manualProv && manualProv !== "auto") ? manualProv : (savedMeta && savedMeta.detectMode === "manual" && savedMeta.provider ? savedMeta.provider : "auto");
+  const effManualProto = (manualProto && manualProto !== "auto") ? manualProto : (savedMeta && savedMeta.detectMode === "manual" && savedMeta.protocol ? savedMeta.protocol : "auto");
+
+  if (effManualProv !== "auto") {
+    const finalProv = effManualProv;
+    const finalProto = effManualProto !== "auto" ? effManualProto : (PROTO_BY_PROV[finalProv] || "v7");
+    const isConflict = confidence === "high" && autoProv !== "other" && autoProv !== finalProv;
+    if (!tok) {
+      return {
+        provider: finalProv,
+        protocol: finalProto,
+        token: "",
+        confidence: "low",
+        detectMode: "manual",
+        verified: false,
+        status: "needs_check",
+        conflict: isConflict,
+        autoProv,
+        reason: "Thiếu token trong URL nguồn"
+      };
+    }
+    return {
+      provider: finalProv,
+      protocol: finalProto,
+      token: tok,
+      confidence: isConflict ? "conflict" : "manual",
+      detectMode: "manual",
+      verified: true,
+      status: "active",
+      conflict: isConflict,
+      autoProv,
+      reason: isConflict ? `Đang ghi đè thủ công (${PROV_LABELS[finalProv]}) lên nhận diện tự động (${PROV_LABELS[autoProv]})` : `Đã xác minh thủ công (${PROV_LABELS[finalProv]} · /${finalProto})`
+    };
+  }
+
+  // Ưu tiên 2: Đọc từ metadata đã lưu trong LINK_POOL (nếu URL khớp)
+  if (savedMeta && savedMeta.provider && savedMeta.provider !== "other" && savedMeta.verified) {
+    const p = savedMeta.provider;
+    const pr = savedMeta.protocol || PROTO_BY_PROV[p] || "v1";
+    return {
+      provider: p,
+      protocol: pr,
+      token: tok,
+      confidence: "saved",
+      detectMode: savedMeta.detectMode || "auto",
+      verified: !!tok,
+      status: tok ? (savedMeta.status || "active") : "needs_check",
+      conflict: false,
+      autoProv,
+      reason: tok ? `Đã lưu (${PROV_LABELS[p]} · /${pr})` : "Thiếu token trong URL nguồn"
+    };
+  }
+
+  // Ưu tiên 3: Kết quả nhận diện tự động
+  if (autoProv !== "other" && confidence === "high" && tok) {
+    const finalProto = effManualProto !== "auto" ? effManualProto : autoProto;
+    return {
+      provider: autoProv,
+      protocol: finalProto,
+      token: tok,
+      confidence: "high",
+      detectMode: "auto",
+      verified: true,
+      status: "active",
+      conflict: false,
+      autoProv,
+      reason: `Tự động nhận diện: ${PROV_LABELS[autoProv]} (/ ${finalProto})`
+    };
+  }
+
+  if (autoProv !== "other" && !tok) {
+    return {
+      provider: autoProv,
+      protocol: autoProto,
+      token: "",
+      confidence: "low",
+      detectMode: "auto",
+      verified: false,
+      status: "needs_check",
+      conflict: false,
+      autoProv,
+      reason: `Nhận diện ${PROV_LABELS[autoProv]} nhưng thiếu tham số Token (?OwO= / ?token=)`
+    };
+  }
+
+  return {
+    provider: "other",
+    protocol: effManualProto !== "auto" ? effManualProto : "",
+    token: tok,
+    confidence: "none",
+    detectMode: "auto",
+    verified: false,
+    status: "unclassified",
+    conflict: false,
+    autoProv: "other",
+    reason: tok ? "Nguồn lạ chưa xác định nhà mạng — vui lòng chọn Nhà mạng & Giao thức" : "Nguồn lạ và không tìm thấy token hợp lệ"
+  };
+}
+
+function findPoolMetaForUrl(u) {
+  if (!u || !Array.isArray(linkPoolDb)) return null;
+  for (const p of linkPoolDb) {
+    if (!p) continue;
+    if (p.url === u && p.provider) {
+      return {
+        provider: p.provider,
+        protocol: p.protocol,
+        detectMode: p.detectMode,
+        verified: p.verified,
+        status: p.status
+      };
+    }
+    if (p.isCombo && p.url2 === u && p.provider2) {
+      return {
+        provider: p.provider2,
+        protocol: p.protocol2,
+        detectMode: p.detectMode2,
+        verified: p.verified2,
+        status: p.status2
+      };
+    }
+  }
+  return null;
+}
+
+// 1. Hàm nhận diện nhà mạng (Khai báo dạng function chuẩn để hoist lên đầu phạm vi)
+function detectProvider(u, manualProv = "auto", savedMeta = null) {
+  const info = analyzeSourceUrl(u, manualProv, "auto", savedMeta || findPoolMetaForUrl(u));
+  return info.provider || "other";
+}
+
+function onOrigUrlInput(leg = 1) {
+  const inp = $(leg === 1 ? "lkOrig" : "lkOrig2");
+  const provSel = $(leg === 1 ? "lkProv1" : "lkProv2");
+  const protoSel = $(leg === 1 ? "lkProto1" : "lkProto2");
+  const badge = $(leg === 1 ? "lkDetectBadge1" : "lkDetectBadge2");
+  if (!inp || !badge) return;
+  const val = inp.value.trim();
+  if (!val) {
+    badge.className = "text-[10px] text-slate-400 font-bold";
+    badge.textContent = leg === 1 ? "Nhập 1 ô = Link Đơn · Nhập 2 ô = Link Trộn" : "";
+    return;
+  }
+  const info = analyzeSourceUrl(val, provSel ? provSel.value : "auto", protoSel ? protoSel.value : "auto");
+  if (info.verified) {
+    badge.className = info.conflict ? "text-[10px] text-amber-600 font-black" : "text-[10px] text-emerald-600 font-black";
+    badge.textContent = (info.conflict ? "⚠️ " : "✔ ") + info.reason;
+  } else {
+    badge.className = "text-[10px] text-rose-600 font-black";
+    badge.textContent = "❗ " + info.reason;
+  }
+}
+window.onOrigUrlInput = onOrigUrlInput;
+
+function onManualProviderSelect(leg = 1) {
+  const provSel = $(leg === 1 ? "lkProv1" : "lkProv2");
+  const protoSel = $(leg === 1 ? "lkProto1" : "lkProto2");
+  if (provSel && protoSel && provSel.value !== "auto" && PROTO_BY_PROV[provSel.value]) {
+    protoSel.value = PROTO_BY_PROV[provSel.value];
+  } else if (provSel && protoSel && provSel.value === "auto") {
+    protoSel.value = "auto";
+  }
+  onOrigUrlInput(leg);
+}
+window.onManualProviderSelect = onManualProviderSelect;
+
+function onManualProtocolSelect(leg = 1) {
+  onOrigUrlInput(leg);
+}
+window.onManualProtocolSelect = onManualProtocolSelect;
+
+function onModalOrigInput(leg = 1) {
+  const inp = $(leg === 1 ? "mREOrig1" : "mREOrig2");
+  const provSel = $(leg === 1 ? "mREProv1" : "mREProv2");
+  const protoSel = $(leg === 1 ? "mREProto1" : "mREProto2");
+  const badge = $(leg === 1 ? "mREBadge1" : "mREBadge2");
+  if (!inp || !badge) return;
+  const val = inp.value.trim();
+  if (!val) {
+    badge.textContent = leg === 1 ? "Chân 1" : "Chân 2 (Trống)";
+    return;
+  }
+  const info = analyzeSourceUrl(val, provSel ? provSel.value : "auto", protoSel ? protoSel.value : "auto");
+  badge.textContent = `${PROV_LABELS[info.provider] || "Chưa rõ"}${info.protocol ? " (" + info.protocol + ")" : ""}`;
+}
+window.onModalOrigInput = onModalOrigInput;
+
+function onModalProvChange(leg = 1) {
+  const provSel = $(leg === 1 ? "mREProv1" : "mREProv2");
+  const protoSel = $(leg === 1 ? "mREProto1" : "mREProto2");
+  if (provSel && protoSel && provSel.value !== "auto" && PROTO_BY_PROV[provSel.value]) {
+    protoSel.value = PROTO_BY_PROV[provSel.value];
+  } else if (provSel && protoSel && provSel.value === "auto") {
+    protoSel.value = "auto";
+  }
+  onModalOrigInput(leg);
+}
+window.onModalProvChange = onModalProvChange;
+
+function buildMasked(orig, fresh, orig2, optMeta1 = null, optMeta2 = null) {
   const tok = genHex(32);
-  const p1 = detectProvider(orig);
-  const p2 = orig2 ? detectProvider(orig2) : null;
+  const info1 = analyzeSourceUrl(orig, optMeta1?.provider || "auto", optMeta1?.protocol || "auto", optMeta1 || findPoolMetaForUrl(orig));
+  const p1 = info1.provider;
+  const proto1 = info1.protocol || PROTO_BY_PROV[p1] || "v1";
+  const info2 = orig2 ? analyzeSourceUrl(orig2, optMeta2?.provider || "auto", optMeta2?.protocol || "auto", optMeta2 || findPoolMetaForUrl(orig2)) : null;
+  const p2 = info2 ? info2.provider : null;
   if (p2) {
     const s = new Set([p1, p2]);
     if (s.has("lx") && s.has("kt")) return PD + "/v4/VPNTrinhHg?liki=" + tok + "#VPNTrinhHg";
@@ -3223,8 +3524,10 @@ function buildMasked(orig, fresh, orig2) {
     if (s.has("kt") && s.has("dj")) return PD + "/v6/VPNTrinhHg?kidj=" + tok + "#VPNTrinhHg";
     return PD + "/v5/VPNTrinhHg?lidj=" + tok + "#VPNTrinhHg";
   }
-  if (p1 === "kt") return PD + "/v3/VPNTrinhHg?top=" + tok + "#VPNTrinhHg";
-  if (p1 === "dj") return PD + "/v2/VPNTrinhHg?token=" + tok + "#VPNTrinhHg";
+  if (proto1 === "v7" || p1 === "custom_v7") return PD + "/v7/VPNTrinhHg?hg=" + tok + "#VPNTrinhHg";
+  if (proto1 === "v8" || p1 === "custom_v8") return PD + "/v8/VPNTrinhHg?hg=" + tok + "#VPNTrinhHg";
+  if (proto1 === "v3" || p1 === "kt") return PD + "/v3/VPNTrinhHg?top=" + tok + "#VPNTrinhHg";
+  if (proto1 === "v2" || p1 === "dj") return PD + "/v2/VPNTrinhHg?token=" + tok + "#VPNTrinhHg";
   return PD + "/v1/VPNTrinhHg?OwO=" + tok + "#VPNTrinhHg";
 }
 
@@ -3247,12 +3550,19 @@ function openRootEditModal(groupKey) {
   $("mRERemain").value = p.remainGb || "";
   $("mREExp").value = p.exp || "";
   $("mREMax").value = p.max || 30;
+  if ($("mREProv1")) $("mREProv1").value = (p.detectMode === "manual" && p.provider) ? p.provider : "auto";
+  if ($("mREProto1")) $("mREProto1").value = (p.detectMode === "manual" && p.protocol) ? p.protocol : "auto";
 
   // Thông số Chân 2
   $("mREGb2").value = p.gb2 || "";
   $("mRERemain2").value = p.remainGb2 || "";
   $("mREExp2").value = p.exp2 || "";
   $("mREMax2").value = p.max2 || 30;
+  if ($("mREProv2")) $("mREProv2").value = (p.detectMode2 === "manual" && p.provider2) ? p.provider2 : "auto";
+  if ($("mREProto2")) $("mREProto2").value = (p.detectMode2 === "manual" && p.protocol2) ? p.protocol2 : "auto";
+
+  onModalOrigInput(1);
+  onModalOrigInput(2);
 
   $("mRootEdit").classList.remove("hidden");
 }
@@ -3316,22 +3626,49 @@ function renderLinks() {
     clusterIndex++;
     const idxId = clusterIndex;
 
+    // Lấy thông số từ LINK_POOL
+    const pItem = linkPoolDb.find(p => g.isCombo ? (p.isCombo && p.url === g.orig && p.url2 === g.orig2) : (!p.isCombo && p.url === g.orig)) || {};
+    const info1 = analyzeSourceUrl(g.orig, "auto", "auto", {
+      provider: pItem.provider || g.ch[0]?.provider,
+      protocol: pItem.protocol || g.ch[0]?.protocol,
+      detectMode: pItem.detectMode,
+      verified: pItem.verified
+    });
+    const info2 = g.isCombo ? analyzeSourceUrl(g.orig2, "auto", "auto", {
+      provider: pItem.provider2 || g.ch[0]?.provider2,
+      protocol: pItem.protocol2 || g.ch[0]?.protocol2,
+      detectMode: pItem.detectMode2,
+      verified: pItem.verified2
+    }) : null;
+
     let networkBadge = "";
     if (g.isCombo) {
-      const p1 = detectProvider(g.orig), p2 = detectProvider(g.orig2);
+      const p1 = info1.provider, p2 = info2 ? info2.provider : "other";
       const s = new Set([p1, p2]);
-      let cLabel = "Combo Trộn";
+      let cLabel = `${PROV_LABELS[p1] || p1} + ${PROV_LABELS[p2] || p2}`;
       if (s.has("lx") && s.has("kt")) cLabel = "Liangxin + Kitty (v4)";
       else if (s.has("lx") && s.has("dj")) cLabel = "Liangxin + DJJC (v5)";
       else if (s.has("kt") && s.has("dj")) cLabel = "Kitty + DJJC (v6)";
-      networkBadge = `<span class="inline-flex items-center gap-1.5 text-xs font-black text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200"><span class="w-2.5 h-2.5 rounded-full bg-purple-600 shrink-0"></span>${cLabel}</span>`;
+      networkBadge = `<span class="inline-flex items-center gap-1.5 text-xs font-black text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200"><span class="w-2.5 h-2.5 rounded-full bg-purple-600 shrink-0"></span>${esc(cLabel)}</span>`;
     } else {
-      const p = detectProvider(g.orig);
-      networkBadge = p === "kt" ? `<span class="badge-kt">Kitty</span>` : (p === "lx" ? `<span class="badge-lx">Liangxin</span>` : (p === "dj" ? `<span class="badge-dj">DJJC</span>` : `<span class="badge-ot">Other</span>`));
+      const p = info1.provider;
+      networkBadge = p === "kt" ? `<span class="badge-kt">Kitty (v3)</span>` : (p === "lx" ? `<span class="badge-lx">Liangxin (v1)</span>` : (p === "dj" ? `<span class="badge-dj">DJJC (v2)</span>` : (p === "custom_v7" ? `<span class="badge-ot !bg-indigo-100 !text-indigo-800">Custom V7</span>` : (p === "custom_v8" ? `<span class="badge-ot !bg-teal-100 !text-teal-800">Custom V8</span>` : `<span class="badge-ot">Chưa phân loại</span>`))));
     }
 
-    // Lấy thông số từ LINK_POOL
-    const pItem = linkPoolDb.find(p => g.isCombo ? (p.isCombo && p.url === g.orig && p.url2 === g.orig2) : (!p.isCombo && p.url === g.orig)) || {};
+    const isLockedCluster = (g.orig === "Da_bi_khoa" || g.key.includes("Da_bi_khoa"));
+    let verifyBadge = "";
+    if (!isLockedCluster) {
+      const allVerified = g.isCombo ? (info1.verified && info2 && info2.verified) : info1.verified;
+      const isManualMode = (pItem.detectMode === "manual" || pItem.detectMode2 === "manual");
+      if (!allVerified) {
+        verifyBadge = `<span class="bg-rose-100 text-rose-700 border border-rose-300 text-[10px] font-black px-2 py-0.5 rounded-full" title="Nguồn chưa xác minh hoặc thiếu token — đã khóa cấp tự động">⚠️ Needs Check</span>`;
+      } else if (isManualMode) {
+        verifyBadge = `<span class="bg-sky-100 text-sky-800 border border-sky-300 text-[10px] font-black px-2 py-0.5 rounded-full" title="Đã xác minh thủ công — Sẵn sàng cấp tự động">🛠 Manual Verified</span>`;
+      } else {
+        verifyBadge = `<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-full" title="Đã nhận diện tự động — Sẵn sàng cấp tự động">✔ Auto Ready</span>`;
+      }
+    }
+
     const expDisplay = g.isCombo ? (pItem.exp || pItem.exp2 || g.ch[0]?.expDate || "") : (pItem.exp || g.ch[0]?.expDate || "");
     const isClusterLifetime = !expDisplay || isLife(expDisplay);
 
@@ -3341,7 +3678,7 @@ function renderLinks() {
     // Render các link con trong cụm
     const rows = [...g.ch].sort((a, b) => (parseInt(a.linkIndex || 1)) - (parseInt(b.linkIndex || 1))).map(l => {
       if (!l.masked) {
-        l.masked = buildMasked(l.orig, true);
+        l.masked = buildMasked(l.orig, true, l.orig2);
         saveLinks();
       }
       const tok = getT(l.masked), locked = !!l.isLocked, idx = parseInt(l.linkIndex || 1);
@@ -3378,6 +3715,8 @@ function renderLinks() {
       <div class="flex items-center justify-between gap-2 flex-wrap">
         <div class="flex items-center gap-2 flex-wrap">
           ${networkBadge}
+          ${verifyBadge}
+          ${expBadgeHtml}
           <span class="text-[10px] font-black bg-white border border-slate-200 text-slate-700 px-2 py-0.5 rounded-full">${g.ch.length} LINK</span>
         </div>
         <!-- GÓC PHẢI: Nút Con Mắt (Ẩn/Hiện thông số) + Cây Bút Chì sửa cụm -->
@@ -3411,13 +3750,13 @@ function renderLinks() {
         <div class="text-[10px] font-bold text-slate-500 uppercase">Thông số chi tiết Node gốc (Kho):</div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
           <div class="bg-white p-2 rounded-lg border border-slate-100">
-            <div class="text-[10px] font-bold text-emerald-700">Chân 1:</div>
+            <div class="text-[10px] font-bold text-emerald-700">Chân 1 (${esc(PROV_LABELS[info1.provider] || info1.provider)} · /${esc(info1.protocol || "v1")}):</div>
             <div class="text-[11px] text-slate-600 mt-0.5">Dung lượng: <b>${pItem.gb ? `${esc(pItem.remainGb || "—")}/${esc(pItem.gb)} GB` : "Chưa xác định"}</b></div>
             <div class="text-[11px] text-slate-600">Tải trọng: <b>${pItem.used || g.ch.length}/${(pItem.max !== undefined && pItem.max !== null && pItem.max !== "") ? `${pItem.max} thiết bị` : "Chưa xác định"}</b></div>
           </div>
           ${g.isCombo ? `
           <div class="bg-white p-2 rounded-lg border border-slate-100">
-            <div class="text-[10px] font-bold text-blue-700">Chân 2:</div>
+            <div class="text-[10px] font-bold text-blue-700">Chân 2 (${esc(PROV_LABELS[info2?.provider] || info2?.provider || "")} · /${esc(info2?.protocol || "v2")}):</div>
             <div class="text-[11px] text-slate-600 mt-0.5">Dung lượng: <b>${pItem.gb2 ? `${esc(pItem.remainGb2 || "—")}/${esc(pItem.gb2)} GB` : "Chưa xác định"}</b></div>
             <div class="text-[11px] text-slate-600">Tải trọng: <b>${pItem.used || g.ch.length}/${(pItem.max2 !== undefined && pItem.max2 !== null && pItem.max2 !== "") ? `${pItem.max2} thiết bị` : "Chưa xác định"}</b></div>
           </div>` : ''}
@@ -3437,23 +3776,47 @@ async function saveRootEdit() {
   const newO1 = $("mREOrig1").value.trim(), newO2 = $("mREOrig2").value.trim();
   if (!newO1 && !newO2) return toast("Vui lòng nhập ít nhất 1 link gốc!", "err");
 
-  let isNowCombo = false, finalO1 = newO1, finalO2 = "";
+  const selProv1 = $("mREProv1") ? $("mREProv1").value : "auto";
+  const selProto1 = $("mREProto1") ? $("mREProto1").value : "auto";
+  const selProv2 = $("mREProv2") ? $("mREProv2").value : "auto";
+  const selProto2 = $("mREProto2") ? $("mREProto2").value : "auto";
+
+  let info1 = newO1 ? analyzeSourceUrl(newO1, selProv1, selProto1) : null;
+  let info2 = newO2 ? analyzeSourceUrl(newO2, selProv2, selProto2) : null;
+
+  if (info1 && (!info1.verified || info1.provider === "other")) {
+    return toast("Chân 1: " + (info1.reason || "Vui lòng chọn Nhà mạng & đảm bảo URL có đủ Token!"), "err");
+  }
+  if (info2 && (!info2.verified || info2.provider === "other")) {
+    return toast("Chân 2: " + (info2.reason || "Vui lòng chọn Nhà mạng & đảm bảo URL có đủ Token!"), "err");
+  }
+  if ((info1 && info1.conflict) || (info2 && info2.conflict)) {
+    const msg = [info1?.conflict ? `Chân 1: ${info1.reason}` : "", info2?.conflict ? `Chân 2: ${info2.reason}` : ""].filter(Boolean).join("\n");
+    if (!confirm(`CẢNH BÁO XUNG ĐỘT NHẬN DIỆN:\n${msg}\n\nBạn có chắc chắn muốn áp dụng cấu hình thủ công này không?`)) return;
+  }
+
+  let isNowCombo = false, finalO1 = newO1, finalO2 = "", finalInfo1 = info1, finalInfo2 = info2;
   if (newO1 && newO2) {
-    const p1 = detectProvider(newO1), p2 = detectProvider(newO2);
+    const p1 = info1.provider, p2 = info2.provider;
     if (p1 === p2 && p1 !== "other") {
-      return toast("Không thể chuyển cụm sang Combo với 2 link cùng nhà mạng!", "err");
+      return toast("Không thể chuyển cụm sang Combo với 2 link cùng nhà mạng (" + (PROV_LABELS[p1] || p1) + ")!", "err");
     }
     isNowCombo = true;
     if (p1 === "lx" || p2 === "dj") {
       finalO1 = newO1;
       finalO2 = newO2;
-    }
-    else {
+      finalInfo1 = info1;
+      finalInfo2 = info2;
+    } else {
       finalO1 = newO2;
       finalO2 = newO1;
+      finalInfo1 = info2;
+      finalInfo2 = info1;
     }
   } else {
     finalO1 = newO1 || newO2;
+    finalInfo1 = info1 || info2;
+    finalInfo2 = null;
   }
 
   const parts = gKey.split("|");
@@ -3470,8 +3833,17 @@ async function saveRootEdit() {
     if (match) {
       l.orig = finalO1;
       l.isCombo = isNowCombo;
-      if (isNowCombo) l.orig2 = finalO2;
-      else delete l.orig2;
+      l.provider = finalInfo1.provider;
+      l.protocol = finalInfo1.protocol;
+      if (isNowCombo && finalInfo2) {
+        l.orig2 = finalO2;
+        l.provider2 = finalInfo2.provider;
+        l.protocol2 = finalInfo2.protocol;
+      } else {
+        delete l.orig2;
+        delete l.provider2;
+        delete l.protocol2;
+      }
       if (expToApply) l.expDate = expToApply;
     }
   });
@@ -3479,15 +3851,27 @@ async function saveRootEdit() {
   const poolItem = linkPoolDb.find(x => oldIsCombo ? (x.isCombo && x.url === oldO1 && x.url2 === oldO2) : (!x.isCombo && x.url === oldO1));
   const m1Val = $("mREMax").value.trim();
   const newSpecs = {
+    url: finalO1,
     orig: finalO1,
+    isCombo: isNowCombo,
+    provider: finalInfo1.provider,
+    protocol: finalInfo1.protocol,
+    detectMode: finalInfo1.detectMode,
+    verified: finalInfo1.verified,
+    status: finalInfo1.status,
     gb: $("mREGb").value.trim(),
     remainGb: $("mRERemain").value.trim(),
     exp: $("mREExp").value.trim(),
     max: m1Val === "" ? "" : (isNaN(parseInt(m1Val)) ? "" : parseInt(m1Val))
   };
-  if (isNowCombo) {
+  if (isNowCombo && finalInfo2) {
     const m2Val = $("mREMax2").value.trim();
     newSpecs.url2 = finalO2;
+    newSpecs.provider2 = finalInfo2.provider;
+    newSpecs.protocol2 = finalInfo2.protocol;
+    newSpecs.detectMode2 = finalInfo2.detectMode;
+    newSpecs.verified2 = finalInfo2.verified;
+    newSpecs.status2 = finalInfo2.status;
     newSpecs.gb2 = $("mREGb2").value.trim();
     newSpecs.remainGb2 = $("mRERemain2").value.trim();
     newSpecs.exp2 = $("mREExp2").value.trim();
@@ -3497,6 +3881,11 @@ async function saveRootEdit() {
   if (poolItem) {
     if (!isNowCombo) {
       delete poolItem.url2;
+      delete poolItem.provider2;
+      delete poolItem.protocol2;
+      delete poolItem.detectMode2;
+      delete poolItem.verified2;
+      delete poolItem.status2;
       delete poolItem.gb2;
       delete poolItem.remainGb2;
       delete poolItem.exp2;
@@ -3504,14 +3893,17 @@ async function saveRootEdit() {
     }
     Object.assign(poolItem, newSpecs);
   } else {
-    linkPoolDb.unshift({ id: "POOL-" + Date.now(), ...newSpecs });
+    linkPoolDb.unshift({
+      id: (isNowCombo ? "POOL-COMBO-" : "POOL-") + Date.now(),
+      ...newSpecs
+    });
   }
 
   cm("mRootEdit");
   // Gộp lưu Link và Kho trong 1 request duy nhất (giảm tải KV write)
   await aj("/api/admin/save_links_and_pool", { method: "POST", body: { links: linksDb, pool: linkPoolDb } });
   renderLinks();
-  toast("Đã cập nhật cả cụm link & đồng bộ 2 chân sang Kho thành công!");
+  toast("Đã cập nhật cả cụm link & đồng bộ metadata nguồn sang Kho thành công!");
 }
 
 // 6. Tạo Link Thủ Công (Tự động nạp vào Kho nguồn ngầm nếu có thông số khai báo)
@@ -3520,23 +3912,47 @@ async function createLink() {
   const email = $("lkEmail").value.trim(), expDate = $("lkExp").value.trim(), idxInput = $("lkIdx").value.trim();
   if (!orig1 && !orig2) return toast("Chưa nhập link gốc!", "err");
 
-  let isCombo = false, finalOrig1 = orig1, finalOrig2 = "";
+  const selProv1 = $("lkProv1") ? $("lkProv1").value : "auto";
+  const selProto1 = $("lkProto1") ? $("lkProto1").value : "auto";
+  const selProv2 = $("lkProv2") ? $("lkProv2").value : "auto";
+  const selProto2 = $("lkProto2") ? $("lkProto2").value : "auto";
+
+  let info1 = orig1 ? analyzeSourceUrl(orig1, selProv1, selProto1) : null;
+  let info2 = orig2 ? analyzeSourceUrl(orig2, selProv2, selProto2) : null;
+
+  if (info1 && (!info1.verified || info1.provider === "other")) {
+    return toast("Nguồn 1: " + (info1.reason || "Chưa xác định được nhà mạng hoặc thiếu token! Hãy chọn Nhà mạng thủ công."), "err");
+  }
+  if (info2 && (!info2.verified || info2.provider === "other")) {
+    return toast("Nguồn 2: " + (info2.reason || "Chưa xác định được nhà mạng hoặc thiếu token! Hãy chọn Nhà mạng thủ công."), "err");
+  }
+  if ((info1 && info1.conflict) || (info2 && info2.conflict)) {
+    const msg = [info1?.conflict ? `Nguồn 1: ${info1.reason}` : "", info2?.conflict ? `Nguồn 2: ${info2.reason}` : ""].filter(Boolean).join("\n");
+    if (!confirm(`CẢNH BÁO XUNG ĐỘT NHẬN DIỆN:\n${msg}\n\nBạn có chắc chắn muốn tạo link theo cấu hình thủ công này không?`)) return;
+  }
+
+  let isCombo = false, finalOrig1 = orig1, finalOrig2 = "", finalInfo1 = info1, finalInfo2 = info2;
   if (orig1 && orig2) {
-    const p1 = detectProvider(orig1), p2 = detectProvider(orig2);
+    const p1 = info1.provider, p2 = info2.provider;
     if (p1 === p2 && p1 !== "other") {
-      return toast("Không thể tạo Link Trộn với 2 link cùng nhà mạng (" + (p1 === "lx" ? "Liangxin" : "DJJC") + ")!", "err");
+      return toast("Không thể tạo Link Trộn với 2 link cùng nhà mạng (" + (PROV_LABELS[p1] || p1) + ")!", "err");
     }
     isCombo = true;
     if (p1 === "lx" || p2 === "dj") {
       finalOrig1 = orig1;
       finalOrig2 = orig2;
-    }
-    else {
+      finalInfo1 = info1;
+      finalInfo2 = info2;
+    } else {
       finalOrig1 = orig2;
       finalOrig2 = orig1;
+      finalInfo1 = info2;
+      finalInfo2 = info1;
     }
   } else {
     finalOrig1 = orig1 || orig2;
+    finalInfo1 = info1 || info2;
+    finalInfo2 = null;
   }
 
   try {
@@ -3555,22 +3971,45 @@ async function createLink() {
   const max2 = (lk2Raw === "" || lk2Raw === undefined) ? "" : (isNaN(parseInt(lk2Raw)) ? "" : parseInt(lk2Raw));
   const poolExp2 = $("lkPoolExp2")?.value.trim() || expDate;
 
-  if (isCombo) {
+  if (isCombo && finalInfo2) {
     let pFound = linkPoolDb.find(p => p.isCombo && p.url === finalOrig1 && p.url2 === finalOrig2);
     if (!pFound) {
       linkPoolDb.unshift({
         id: "POOL-COMBO-" + Date.now(),
         isCombo: true,
         url: finalOrig1,
+        provider: finalInfo1.provider,
+        protocol: finalInfo1.protocol,
+        detectMode: finalInfo1.detectMode,
+        verified: finalInfo1.verified,
+        status: finalInfo1.status,
         gb: gb1,
         remainGb: remainGb1,
         exp: poolExp1,
         max: max1,
         url2: finalOrig2,
+        provider2: finalInfo2.provider,
+        protocol2: finalInfo2.protocol,
+        detectMode2: finalInfo2.detectMode,
+        verified2: finalInfo2.verified,
+        status2: finalInfo2.status,
         gb2: gb2,
         remainGb2: remainGb2,
         exp2: poolExp2,
         max2: max2
+      });
+    } else {
+      Object.assign(pFound, {
+        provider: finalInfo1.provider,
+        protocol: finalInfo1.protocol,
+        detectMode: finalInfo1.detectMode,
+        verified: finalInfo1.verified,
+        status: finalInfo1.status,
+        provider2: finalInfo2.provider,
+        protocol2: finalInfo2.protocol,
+        detectMode2: finalInfo2.detectMode,
+        verified2: finalInfo2.verified,
+        status2: finalInfo2.status
       });
     }
   } else {
@@ -3580,10 +4019,23 @@ async function createLink() {
         id: "POOL-" + Date.now(),
         isCombo: false,
         url: finalOrig1,
+        provider: finalInfo1.provider,
+        protocol: finalInfo1.protocol,
+        detectMode: finalInfo1.detectMode,
+        verified: finalInfo1.verified,
+        status: finalInfo1.status,
         gb: gb1,
         remainGb: remainGb1,
         exp: poolExp1,
         max: max1
+      });
+    } else {
+      Object.assign(pFound, {
+        provider: finalInfo1.provider,
+        protocol: finalInfo1.protocol,
+        detectMode: finalInfo1.detectMode,
+        verified: finalInfo1.verified,
+        status: finalInfo1.status
       });
     }
   }
@@ -3597,13 +4049,17 @@ async function createLink() {
     finalIdx = String(maxIdx + 1);
   }
 
-  const masked = isCombo ? buildMasked(finalOrig1, true, finalOrig2) : buildMasked(finalOrig1, true);
+  const masked = isCombo ? buildMasked(finalOrig1, true, finalOrig2, finalInfo1, finalInfo2) : buildMasked(finalOrig1, true, "", finalInfo1);
 
   linksDb.unshift({
     id: "LNK-" + Date.now() + "-" + genHex(4),
     isCombo,
     orig: finalOrig1,
     orig2: finalOrig2 || undefined,
+    provider: finalInfo1.provider,
+    protocol: finalInfo1.protocol,
+    provider2: isCombo && finalInfo2 ? finalInfo2.provider : undefined,
+    protocol2: isCombo && finalInfo2 ? finalInfo2.protocol : undefined,
     masked,
     email: email || "Khách",
     expDate,
@@ -3620,6 +4076,11 @@ async function createLink() {
     ["lkOrig", "lkOrig2", "lkEmail", "lkExp", "lkIdx", "lkGb1", "lkRemainGb1", "lkPoolExp1", "lkGb2", "lkRemainGb2", "lkPoolExp2"].forEach(f => {
       if ($(f)) $(f).value = "";
     });
+    ["lkProv1", "lkProto1", "lkProv2", "lkProto2"].forEach(f => {
+      if ($(f)) $(f).value = "auto";
+    });
+    onOrigUrlInput(1);
+    onOrigUrlInput(2);
     renderLinks();
   } catch (e) {
     toast("Lỗi: " + e.message, "err");
@@ -3650,9 +4111,12 @@ async function saveLnkEdit() {
   const o1 = $("mLOrig").value.trim(), o2 = $("mLOrig2") ? $("mLOrig2").value.trim() : "";
   if (!o1 && !o2) return toast("Link gốc không được rỗng!", "err");
 
-  let isCombo = false, finalOrig1 = o1, finalOrig2 = "";
+  const info1 = o1 ? analyzeSourceUrl(o1) : null;
+  const info2 = o2 ? analyzeSourceUrl(o2) : null;
+
+  let isCombo = false, finalOrig1 = o1, finalOrig2 = "", finalInfo1 = info1, finalInfo2 = info2;
   if (o1 && o2) {
-    const p1 = detectProvider(o1), p2 = detectProvider(o2);
+    const p1 = info1.provider, p2 = info2.provider;
     if (p1 === p2 && p1 !== "other") {
       return toast("Không thể sửa thành Combo với 2 link cùng nhà mạng!", "err");
     }
@@ -3660,13 +4124,18 @@ async function saveLnkEdit() {
     if (p1 === "lx" || p2 === "dj") {
       finalOrig1 = o1;
       finalOrig2 = o2;
-    }
-    else {
+      finalInfo1 = info1;
+      finalInfo2 = info2;
+    } else {
       finalOrig1 = o2;
       finalOrig2 = o1;
+      finalInfo1 = info2;
+      finalInfo2 = info1;
     }
   } else {
     finalOrig1 = o1 || o2;
+    finalInfo1 = info1 || info2;
+    finalInfo2 = null;
   }
 
   Object.assign(l, {
@@ -3674,10 +4143,21 @@ async function saveLnkEdit() {
     expDate: $("mLExp").value.trim(),
     linkIndex: $("mLIdx").value.trim(),
     orig: finalOrig1,
-    isCombo: isCombo
+    isCombo: isCombo,
+    provider: finalInfo1 ? finalInfo1.provider : l.provider,
+    protocol: finalInfo1 ? finalInfo1.protocol : l.protocol
   });
-  if (isCombo) l.orig2 = finalOrig2;
-  else delete l.orig2;
+  if (isCombo) {
+    l.orig2 = finalOrig2;
+    if (finalInfo2) {
+      l.provider2 = finalInfo2.provider;
+      l.protocol2 = finalInfo2.protocol;
+    }
+  } else {
+    delete l.orig2;
+    delete l.provider2;
+    delete l.protocol2;
+  }
   delete l.machine;
 
   cm("mLnk");
@@ -4405,10 +4885,13 @@ function addCustomPkg() {
     category: ["cycle"],
     features: ["Băng thông lên đến 3Gbps"]
   });
+  // v1 — 2026-11-06 20:15 (UTC+7) — Gán alias addNewCustomPkg đồng bộ với nút + Thêm gói trong admin.html
   renderPkgAdmin();
   toast("Đã thêm gói mới! Hãy điều chỉnh thông số và bấm Lưu Toàn Bộ Cửa Hàng.");
 }
+const addNewCustomPkg = addCustomPkg;
 window.addCustomPkg = addCustomPkg;
+window.addNewCustomPkg = addCustomPkg;
 
 async function saveAllPkgs() {
   const btn = $("btnSaveAllPkgs");
@@ -7125,13 +7608,16 @@ function renderFulfillmentUI() {
         </td>
         <td class="text-xs font-semibold text-slate-600">${timeStr}</td>
         <td>
+          <!-- v1 — 2026-11-06 20:15 (UTC+7) — Bổ sung tùy chọn nguồn mở rộng Custom V7/V8 trong Fulfillment Mapping -->
           <select id="sel_fulfill_${p.id}" ${isHidden ? 'disabled' : ''} class="w-full p-2 text-xs border border-slate-200 rounded-lg ${isHidden ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-white font-bold text-slate-700 outline-none focus:border-indigo-500'}">
-            <option value="single_lx" ${curVal === "single_lx" || !curVal ? "selected" : ""}>Link đơn Liangxin (Mặc định)</option>
-            <option value="single_dj" ${curVal === "single_dj" ? "selected" : ""}>Link đơn DJJC</option>
-            <option value="single_kt" ${curVal === "single_kt" ? "selected" : ""}>Link đơn Kitty (Mới)</option>
-            <option value="combo_lidj" ${curVal === "combo_lidj" || curVal === "combo" ? "selected" : ""}>Link Trộn (Liangxin + DJJC)</option>
-            <option value="combo_liki" ${curVal === "combo_liki" ? "selected" : ""}>Link Trộn (Liangxin + Kitty)</option>
-            <option value="combo_kidj" ${curVal === "combo_kidj" ? "selected" : ""}>Link Trộn (Kitty + DJJC)</option>
+            <option value="single_lx" ${curVal === "single_lx" || !curVal ? "selected" : ""}>Link đơn Liangxin (Mặc định - v1)</option>
+            <option value="single_dj" ${curVal === "single_dj" ? "selected" : ""}>Link đơn DJJC (v2)</option>
+            <option value="single_kt" ${curVal === "single_kt" ? "selected" : ""}>Link đơn Kitty (v3)</option>
+            <option value="single_v7" ${curVal === "single_v7" ? "selected" : ""}>Link đơn Custom 1 (v7)</option>
+            <option value="single_v8" ${curVal === "single_v8" ? "selected" : ""}>Link đơn Custom 2 (v8)</option>
+            <option value="combo_lidj" ${curVal === "combo_lidj" || curVal === "combo" ? "selected" : ""}>Link Trộn (Liangxin + DJJC - v5)</option>
+            <option value="combo_liki" ${curVal === "combo_liki" ? "selected" : ""}>Link Trộn (Liangxin + Kitty - v4)</option>
+            <option value="combo_kidj" ${curVal === "combo_kidj" ? "selected" : ""}>Link Trộn (Kitty + DJJC - v6)</option>
           </select>
         </td>
       </tr>
@@ -7530,10 +8016,12 @@ async function saveTgOrderAlertSetting() {
   try {
     await saveCmsDb();
     toast(chk.checked ? "Đã BẬT thông báo đơn hàng mới qua Telegram!" : "Đã TẮT thông báo đơn hàng mới qua Telegram!");
+    // v1 — 2026-11-06 20:15 (UTC+7) — Xuất saveTgOrderAlertSetting và testTelegramOrderAlert ra window
   } catch (e) {
     toast("Lỗi lưu cài đặt: " + e.message, "err");
   }
 }
+window.saveTgOrderAlertSetting = saveTgOrderAlertSetting;
 
 async function testTelegramOrderAlert() {
   const btn = $("btnTgOrderTest");
@@ -7556,6 +8044,7 @@ async function testTelegramOrderAlert() {
     if (btn) btn.disabled = false;
   }
 }
+window.testTelegramOrderAlert = testTelegramOrderAlert;
 
 window.onload = () => {
   if (TOKEN) startApp(false);
@@ -8055,6 +8544,7 @@ function fixMojibake(str) {
 window.fixMojibake = fixMojibake;
 
 // Nút Làm sạch giao dịch D1: Xác nhận và xóa sạch 3 tab đối soát mà không ảnh hưởng đơn hàng
+// v1 — 2026-11-06 20:15 (UTC+7) — Bỏ lời gọi renderRawTab() không tồn tại (renderTransactions đã xử lý cả tab main và raw)
 async function clearAllTransactions() {
   if (!confirm("CẢNH BÁO: Thao tác này sẽ xóa toàn bộ dữ liệu giao dịch đối soát D1 (cả 3 tab Đối soát D1, Ngoại lệ & Ghép đơn, Giao dịch thô).\n\nĐơn hàng và luồng cấp link VPN vẫn được bảo vệ 100% không bị ảnh hưởng.\n\nBạn có chắc chắn muốn làm sạch toàn bộ?")) return;
   try {
@@ -8063,7 +8553,6 @@ async function clearAllTransactions() {
     txData = [];
     renderTransactions();
     renderExceptionsTab();
-    renderRawTab();
     toast(`Đã làm sạch toàn bộ giao dịch D1 (${res.deleted || 0} dòng)!`);
     logEvent("warn", "admin", "Làm sạch toàn bộ giao dịch D1");
   } catch (e) {
