@@ -1232,21 +1232,31 @@ def clean_universal_node(raw_name: str) -> str:
     if not raw_name: return "VPN - VPNTrinhHg"
     s = re.sub(r"\s*-\s*VPNTrinhHg$", "", raw_name.strip()).strip()
     return f"{s} - VPNTrinhHg"
-# Danh sách từ khóa node rác/quảng cáo cần loại bỏ sạch
+# Danh sách từ khóa node rác/quảng cáo cần loại bỏ sạch (tránh từ đơn âm "群", "频道" làm rơi node "集群", "群马")
 ADS_AND_INFO_KEYWORDS = [
     "剩余流量", "已用流量", "套餐总量", "距离下次重置", "套餐到期", "认准官网", "官网地址", "官网", "kitty.fo",
-    "如果现在只能看到", "立即更新教程", "群", "频道", "公告"
+    "SKYLUMO", "如果现在只能看到", "立即更新教程", "交流群", "官方群", "电报群", "TG群", "售后群", "官方频道", "通知频道", "公告"
 ]
 def is_spam_node(name: str) -> bool:
     if not name: return True
     return any(kw in name for kw in ADS_AND_INFO_KEYWORDS)
 # ── Process b64 (Tự động nhận diện nguồn: Liangxin / DJJC / Kitty / Custom V7-V8) ──
 def process_b64(raw_b64: str, provider_name: str):
-    pad = raw_b64 + "=" * ((-len(raw_b64)) % 4)
-    try:
-        decoded = base64.b64decode(pad).decode("utf-8", errors="ignore")
-    except Exception as e:
-        print(f"  [!] b64 decode error: {e}"); return raw_b64, "", ""
+    raw_trim = (raw_b64 or "").strip()
+    if not raw_trim:
+        print("  [!] Dữ liệu nguồn rỗng"); return "", "", ""
+    is_plain_json = raw_trim.startswith("{") and '"outbounds"' in raw_trim
+    is_plain_yaml = bool(re.search(r"(?:^|\n)\s*proxies\s*:", raw_trim))
+    is_plain_uri = bool(re.search(r"^(?:vmess|vless|trojan|ss|hysteria2|hy2|tuic|anytls)://", raw_trim, re.IGNORECASE | re.MULTILINE))
+    if is_plain_json or is_plain_yaml or is_plain_uri:
+        decoded = raw_trim
+    else:
+        b64_clean = re.sub(r"\s+", "", raw_trim)
+        pad = b64_clean + "=" * ((-len(b64_clean)) % 4)
+        try:
+            decoded = base64.b64decode(pad).decode("utf-8", errors="ignore")
+        except Exception as e:
+            print(f"  [!] b64 decode error: {e}"); return "", "", ""
     proxy_list = []
     seen_names = {}
     new_b64_lines = [INFO_VLESS_PREFIX + urllib.parse.quote(n, safe="") for n in INFO_NODES]
@@ -1433,14 +1443,58 @@ def process_b64(raw_b64: str, provider_name: str):
                     }
                     for i, name in enumerate(INFO_NODES)
                 ]
+                valid_group_tags = {ob.get("tag") for ob in kept_outbounds if ob.get("tag")}
                 for ob in kept_outbounds:
                     if isinstance(ob.get("outbounds"), list):
-                        ob["outbounds"] = [renamed_map[n] for n in ob["outbounds"] if n in renamed_map or n in ("自动选择", "direct", "block")]
+                        ob["outbounds"] = [
+                            renamed_map.get(n, n) for n in ob["outbounds"]
+                            if n in renamed_map or n in valid_group_tags or n in ("direct", "block", "dns-out")
+                        ]
+                    if ob.get("default") in renamed_map:
+                        ob["default"] = renamed_map[ob["default"]]
+                if isinstance(sb_data.get("route"), dict):
+                    if sb_data["route"].get("final") in renamed_map:
+                        sb_data["route"]["final"] = renamed_map[sb_data["route"]["final"]]
+                    for r_item in sb_data["route"].get("rules", []):
+                        if isinstance(r_item, dict) and r_item.get("outbound") in renamed_map:
+                            r_item["outbound"] = renamed_map[r_item["outbound"]]
+                if isinstance(sb_data.get("dns"), dict):
+                    for s_item in sb_data["dns"].get("servers", []):
+                        if isinstance(s_item, dict) and s_item.get("detour") in renamed_map:
+                            s_item["detour"] = renamed_map[s_item["detour"]]
                 sb_data["outbounds"] = kept_outbounds[:5] + info_obs + kept_outbounds[5:]
                 raw_custom_singbox = json.dumps(sb_data, ensure_ascii=False, indent=2)
 
         except Exception as e:
             print(f"  [!] Lỗi parse Singbox JSON: {e}")
+            return "", "", ""
+
+    # TRƯỜNG HỢP 1B: Nguồn trả về Clash YAML (có mục proxies:)
+    elif re.search(r"(?:^|\n)\s*proxies\s*:", decoded):
+        try:
+            y_data = yaml.safe_load(decoded)
+            p_lower = provider_name.lower()
+            for px in (y_data.get("proxies") or [] if isinstance(y_data, dict) else []):
+                if not isinstance(px, dict): continue
+                old_name = str(px.get("name") or "")
+                if is_spam_node(old_name) or px.get("server") in ("127.0.0.1", "1.1.1.1"): continue
+                if "kitty" in p_lower or p_lower == "kt" or "tohno-1.top" in p_lower or "oosaka" in p_lower:
+                    new_name = clean_kitty_node(old_name)
+                elif "liangxin" in p_lower or p_lower == "lx" or "7777699.xyz" in p_lower:
+                    new_name = clean_liangxin_node(old_name)
+                elif "djjc" in p_lower or p_lower == "dj":
+                    new_name = clean_djjc_node(old_name)
+                else:
+                    new_name = clean_universal_node(old_name)
+                seen_names[new_name] = seen_names.get(new_name, 0) + 1
+                if seen_names[new_name] > 1:
+                    new_name = f"{new_name} ({seen_names[new_name]})"
+                px_copy = dict(px)
+                px_copy["name"] = new_name
+                proxy_list.append(px_copy)
+        except Exception as e:
+            print(f"  [!] Lỗi parse YAML: {e}")
+            return "", "", ""
 
     # TRƯỜNG HỢP 2: Nguồn trả về danh sách URI truyền thống
     else:
@@ -1507,21 +1561,26 @@ def extract_source_token(u_val: str) -> str:
     if not s or s == "Da_bi_khoa":
         return ""
     try:
-        m_kt = re.search(r'/oosaka/([a-zA-Z0-9_-]{8,})', s, re.IGNORECASE)
+        m_kt = re.search(r'/oosaka/([a-zA-Z0-9_%-]{8,})', s, re.IGNORECASE)
         if m_kt:
-            return m_kt.group(1)
+            kt_tok = urllib.parse.unquote(m_kt.group(1)).strip()
+            if len(kt_tok) >= 6:
+                return kt_tok
         parsed_u = urllib.parse.urlparse(s)
         qs = urllib.parse.parse_qs(parsed_u.query)
-        for k in ("OwO", "token", "top", "oos", "hg", "liki", "lidj", "kidj", "sub", "key", "auth", "id"):
-            if qs.get(k) and len(qs[k][0].strip()) >= 6:
-                return qs[k][0].strip()
+        qs_low = {str(k).lower(): v for k, v in qs.items()}
+        for k in ("owo", "token", "top", "oos", "hg", "liki", "lidj", "kidj", "sub", "key", "auth", "id"):
+            if qs_low.get(k) and len(urllib.parse.unquote(qs_low[k][0]).strip()) >= 6:
+                return urllib.parse.unquote(qs_low[k][0]).strip()
         for _, v_list in qs.items():
-            if v_list and re.match(r'^[a-zA-Z0-9_-]{12,}$', v_list[0].strip()):
-                return v_list[0].strip()
+            if v_list:
+                dec_v = urllib.parse.unquote(v_list[0]).strip()
+                if re.match(r'^[a-zA-Z0-9_-]{12,}$', dec_v):
+                    return dec_v
         segs = [x for x in parsed_u.path.split("/") if x]
         if segs:
-            last = segs[-1]
-            if re.match(r'^[a-zA-Z0-9_-]{16,}$', last) and last.lower() not in ("subscribe", "liangxin", "owo", "v1", "api"):
+            last = urllib.parse.unquote(segs[-1]).strip()
+            if re.match(r'^[a-zA-Z0-9_-]{16,}$', last) and last.lower() not in ("subscribe", "liangxin", "owo", "v1", "api", "client"):
                 return last
     except Exception:
         pass
@@ -1583,16 +1642,24 @@ def update_all():
     for orig_token, orig_url in seen_orig.items():
         u_low = orig_url.lower()
         saved_p = str(seen_prov.get(orig_token) or "").lower()
-        if saved_p in ("kt", "kitty") or "tohno-1.top" in u_low or "oosaka" in u_low or "kitty" in u_low:
-            provider = "Kitty"
-        elif saved_p in ("lx", "liangxin") or "liangxin" in u_low or "7777699.xyz" in u_low or "owo=" in u_low or "/api/v1/owo" in u_low:
-            provider = "Liangxin"
-        elif saved_p in ("dj", "djjc") or "djjc" in u_low or "/api/v1/client/subscribe" in u_low:
-            provider = "DJJC"
-        elif saved_p in ("custom_v7", "v7"):
+        # Ưu tiên 1: Metadata đã được Admin lưu trong LINK_POOL / ALL_LINKS
+        if saved_p in ("custom_v7", "v7"):
             provider = "custom_v7"
         elif saved_p in ("custom_v8", "v8"):
             provider = "custom_v8"
+        elif saved_p in ("kt", "kitty"):
+            provider = "Kitty"
+        elif saved_p in ("lx", "liangxin"):
+            provider = "Liangxin"
+        elif saved_p in ("dj", "djjc"):
+            provider = "DJJC"
+        # Ưu tiên 2: Tự động nhận diện theo URL khi chưa có saved_p
+        elif "tohno-1.top" in u_low or "oosaka" in u_low or "kitty" in u_low:
+            provider = "Kitty"
+        elif "liangxin" in u_low or "7777699.xyz" in u_low or "owo=" in u_low or "/api/v1/owo" in u_low:
+            provider = "Liangxin"
+        elif "djjc" in u_low or "/api/v1/client/subscribe" in u_low:
+            provider = "DJJC"
         else:
             provider = "Custom_Source"
         print(f"\n→ [{provider}] token: {orig_token[:12]}... url: {orig_url[:55]}...")
