@@ -212,13 +212,52 @@
           <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm mb-3">
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full"><button id="btnRunGC" onclick="runGC()" class="bg-white text-red-600 hover:bg-red-50 font-bold py-2 rounded-xl text-xs shadow-sm border border-slate-200 flex items-center justify-center gap-1.5 transition active:scale-95"><i class="fas fa-broom"></i>Dọn KV</button> <button id="btnRebuildAll" onclick="rebuildAllMAP()" class="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold py-2 rounded-xl text-xs shadow-sm border border-emerald-100 flex items-center justify-center gap-1.5 transition active:scale-95"><i class="fas fa-rotate"></i>Rebuild MAP</button> <button id="btnSortLinks" onclick="sortAllLinks()" class="bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold py-2 rounded-xl text-xs shadow-sm border border-purple-100 flex items-center justify-center gap-1.5 transition active:scale-95"><i class="fas fa-sort-numeric-down"></i>Sắp xếp</button> <button id="btnTriggerGH" onclick="triggerGitHub()" class="bg-blue-600 text-white hover:bg-blue-700 font-bold py-2 rounded-xl text-xs shadow-md flex items-center justify-center gap-1.5 transition active:scale-95"><i class="fab fa-github"></i>Đồng bộ GH</button></div>
           </div>
-          <!-- Form Tạo Link Sub thủ công -->
+          <!-- v1 — 2026-11-06 20:15 (UTC+7) — Bổ sung nhận diện Hybrid + chọn thủ công Provider/Protocol cho Nguồn 1 & 2 --> <!-- Form Tạo Link Sub thủ công -->
           <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-4">
             <div class="mb-3">
-              <div class="flex items-center justify-between mb-1"><label class="font-bold text-xs text-slate-700">Nguồn 1 (Liangxin hoặc DJJC)</label> <span class="text-[10px] text-slate-400 font-medium">Nhập 1 ô = Link Đơn · Nhập 2 ô = Link Trộn</span></div>
-              <input id="lkOrig" type="text" placeholder="Dán link nguồn (Liangxin hoặc DJJC)..." class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-xs bg-slate-50">
+              <div class="flex items-center justify-between mb-1"><label class="font-bold text-xs text-slate-700">Nguồn 1 (Liangxin, DJJC, Kitty hoặc Custom)</label> <span id="lkDetectBadge1" class="text-[10px] text-slate-400 font-bold">Nhập 1 ô = Link Đơn · Nhập 2 ô = Link Trộn</span></div>
+              <input id="lkOrig" type="text" oninput="onOrigUrlInput(1)" placeholder="Dán link nguồn (VD: https://7777699.xyz/api/v1/owo?OwO=...)" class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-xs bg-slate-50">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
+                <select id="lkProv1" onchange="onManualProviderSelect(1)" class="w-full p-1.5 border border-slate-200 rounded-lg bg-white text-[11px] font-bold text-slate-700 outline-none focus:border-indigo-500">
+                  <option value="auto">🔍 Tự động nhận diện Nhà mạng (Chân 1)</option>
+                  <option value="lx">Liangxin (OwO / v1)</option>
+                  <option value="dj">DJJC (token / v2)</option>
+                  <option value="kt">Kitty (oosaka / top / v3)</option>
+                  <option value="custom_v7">Nguồn mở rộng Custom 1 (hg / v7)</option>
+                  <option value="custom_v8">Nguồn mở rộng Custom 2 (hg / v8)</option>
+                </select>
+                <select id="lkProto1" onchange="onManualProtocolSelect(1)" class="w-full p-1.5 border border-slate-200 rounded-lg bg-white text-[11px] font-bold text-slate-700 outline-none focus:border-indigo-500">
+                  <option value="auto">⚙️ Tự động chọn Giao thức / Route (Chân 1)</option>
+                  <option value="v1">Route /v1 (?OwO= — Chuẩn Liangxin)</option>
+                  <option value="v2">Route /v2 (?token= — Chuẩn DJJC)</option>
+                  <option value="v3">Route /v3 (?top= — Chuẩn Kitty)</option>
+                  <option value="v7">Route /v7 (?hg= — Giữ nguyên DNS/Rules gốc)</option>
+                  <option value="v8">Route /v8 (?hg= — Giữ nguyên DNS/Rules gốc)</option>
+                </select>
+              </div>
             </div>
-            <div class="mb-3"><label class="block font-bold text-xs text-indigo-700 mb-1"><i class="fas fa-shuffle mr-1"></i>Nguồn 2 (Để trống nếu là Link Đơn)</label> <input id="lkOrig2" type="text" placeholder="https://gates.djjc... hoặc https://liangxin... (tự nhận diện nhà mạng)" class="w-full p-2 border border-indigo-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-xs bg-indigo-50/30"></div>
+            <div class="mb-3">
+              <div class="flex items-center justify-between mb-1"><label class="block font-bold text-xs text-indigo-700"><i class="fas fa-shuffle mr-1"></i>Nguồn 2 (Để trống nếu là Link Đơn)</label> <span id="lkDetectBadge2" class="text-[10px] text-slate-400 font-bold"></span></div>
+              <input id="lkOrig2" type="text" oninput="onOrigUrlInput(2)" placeholder="https://gates.djjc... hoặc https://liangxin... (tự nhận diện nhà mạng)" class="w-full p-2 border border-indigo-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-xs bg-indigo-50/30">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
+                <select id="lkProv2" onchange="onManualProviderSelect(2)" class="w-full p-1.5 border border-indigo-200 rounded-lg bg-white text-[11px] font-bold text-slate-700 outline-none focus:border-indigo-500">
+                  <option value="auto">🔍 Tự động nhận diện Nhà mạng (Chân 2)</option>
+                  <option value="lx">Liangxin (OwO / v1)</option>
+                  <option value="dj">DJJC (token / v2)</option>
+                  <option value="kt">Kitty (oosaka / top / v3)</option>
+                  <option value="custom_v7">Nguồn mở rộng Custom 1 (hg / v7)</option>
+                  <option value="custom_v8">Nguồn mở rộng Custom 2 (hg / v8)</option>
+                </select>
+                <select id="lkProto2" onchange="onManualProtocolSelect(2)" class="w-full p-1.5 border border-indigo-200 rounded-lg bg-white text-[11px] font-bold text-slate-700 outline-none focus:border-indigo-500">
+                  <option value="auto">⚙️ Tự động chọn Giao thức / Route (Chân 2)</option>
+                  <option value="v1">Route /v1 (?OwO= — Chuẩn Liangxin)</option>
+                  <option value="v2">Route /v2 (?token= — Chuẩn DJJC)</option>
+                  <option value="v3">Route /v3 (?top= — Chuẩn Kitty)</option>
+                  <option value="v7">Route /v7 (?hg= — Giữ nguyên DNS/Rules gốc)</option>
+                  <option value="v8">Route /v8 (?hg= — Giữ nguyên DNS/Rules gốc)</option>
+                </select>
+              </div>
+            </div>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
               <div><label class="block font-bold text-xs text-slate-700 mb-1">Email khách</label><input id="lkEmail" type="text" placeholder="khach@email.com" class="w-full p-2 border border-slate-200 bg-slate-50 rounded-xl outline-none text-xs"></div>
               <div><label class="block font-bold text-xs text-slate-700 mb-1">Hết hạn</label><input id="lkExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 border border-slate-200 bg-slate-50 rounded-xl outline-none text-xs text-center"></div>
@@ -1134,10 +1173,34 @@
               <span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800">Đầy đủ 2 chân</span>
             </div>
             <p class="text-[11px] text-slate-500 mb-3">Đổi link gốc &amp; thông số cụm (nhập 1 chân = Đơn, 2 chân = Trộn). <b>Token link ẩn của khách giữ nguyên 100%</b>.</p>
-            <input type="hidden" id="mREGroupKey"> <!-- BẢNG CHÂN 1 -->
+            <input type="hidden" id="mREGroupKey"> <!-- BẢNG CHÂN 1 --> <!-- v1 — 2026-11-06 20:15 (UTC+7) — Bổ sung chọn Provider/Protocol độc lập cho 2 chân trong Modal Sửa Nguồn Cấp Cụm -->
             <div class="border border-slate-200 rounded-2xl p-3.5 bg-slate-50/50 mb-3 space-y-2">
-              <div class="text-xs font-black text-slate-700 flex justify-between"><span>Thông số Chân 1</span> <span class="badge-lx">Chân 1 (LX)</span></div>
-              <div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link gốc 1</label> <input id="mREOrig1" type="text" placeholder="https://liangxin..." class="w-full p-2.5 text-xs border border-slate-300 rounded-xl font-mono outline-none bg-white"></div>
+              <div class="text-xs font-black text-slate-700 flex justify-between"><span>Thông số Chân 1</span> <span id="mREBadge1" class="badge-lx">Chân 1</span></div>
+              <div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link gốc 1</label> <input id="mREOrig1" type="text" oninput="onModalOrigInput(1)" placeholder="https://..." class="w-full p-2.5 text-xs border border-slate-300 rounded-xl font-mono outline-none bg-white"></div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Nhà mạng Chân 1</label>
+                  <select id="mREProv1" onchange="onModalProvChange(1)" class="w-full p-2 border rounded-xl bg-white text-xs font-bold text-slate-700">
+                    <option value="auto">🔍 Tự động nhận diện</option>
+                    <option value="lx">Liangxin (v1)</option>
+                    <option value="dj">DJJC (v2)</option>
+                    <option value="kt">Kitty (v3)</option>
+                    <option value="custom_v7">Custom 1 (v7)</option>
+                    <option value="custom_v8">Custom 2 (v8)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Giao thức / Route Chân 1</label>
+                  <select id="mREProto1" class="w-full p-2 border rounded-xl bg-white text-xs font-bold text-slate-700">
+                    <option value="auto">⚙️ Tự động theo nhà mạng</option>
+                    <option value="v1">Route /v1 (?OwO=)</option>
+                    <option value="v2">Route /v2 (?token=)</option>
+                    <option value="v3">Route /v3 (?top=)</option>
+                    <option value="v7">Route /v7 (?hg= Custom 1)</option>
+                    <option value="v8">Route /v8 (?hg= Custom 2)</option>
+                  </select>
+                </div>
+              </div>
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB</label><input id="mREGb" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
                 <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB</label><input id="mRERemain" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
@@ -1147,8 +1210,32 @@
             </div>
             <!-- BẢNG CHÂN 2 -->
             <div class="border border-indigo-200 rounded-2xl p-3.5 bg-indigo-50/30 mb-4 space-y-2">
-              <div class="text-xs font-black text-blue-700 flex justify-between"><span>Thông số Chân 2 (Để trống link nếu muốn chuyển về Link Đơn)</span> <span class="badge-dj">Chân 2 (DJ)</span></div>
-              <div><label class="block text-[10px] font-bold text-indigo-700 mb-0.5">Link gốc 2</label> <input id="mREOrig2" type="text" placeholder="Để trống nếu là Link Đơn" class="w-full p-2.5 text-xs border border-indigo-300 rounded-xl font-mono outline-none bg-white"></div>
+              <div class="text-xs font-black text-blue-700 flex justify-between"><span>Thông số Chân 2 (Để trống link nếu muốn chuyển về Link Đơn)</span> <span id="mREBadge2" class="badge-dj">Chân 2</span></div>
+              <div><label class="block text-[10px] font-bold text-indigo-700 mb-0.5">Link gốc 2</label> <input id="mREOrig2" type="text" oninput="onModalOrigInput(2)" placeholder="Để trống nếu là Link Đơn" class="w-full p-2.5 text-xs border border-indigo-300 rounded-xl font-mono outline-none bg-white"></div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Nhà mạng Chân 2</label>
+                  <select id="mREProv2" onchange="onModalProvChange(2)" class="w-full p-2 border rounded-xl bg-white text-xs font-bold text-slate-700">
+                    <option value="auto">🔍 Tự động nhận diện</option>
+                    <option value="lx">Liangxin (v1)</option>
+                    <option value="dj">DJJC (v2)</option>
+                    <option value="kt">Kitty (v3)</option>
+                    <option value="custom_v7">Custom 1 (v7)</option>
+                    <option value="custom_v8">Custom 2 (v8)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Giao thức / Route Chân 2</label>
+                  <select id="mREProto2" class="w-full p-2 border rounded-xl bg-white text-xs font-bold text-slate-700">
+                    <option value="auto">⚙️ Tự động theo nhà mạng</option>
+                    <option value="v1">Route /v1 (?OwO=)</option>
+                    <option value="v2">Route /v2 (?token=)</option>
+                    <option value="v3">Route /v3 (?top=)</option>
+                    <option value="v7">Route /v7 (?hg= Custom 1)</option>
+                    <option value="v8">Route /v8 (?hg= Custom 2)</option>
+                  </select>
+                </div>
+              </div>
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB 2</label><input id="mREGb2" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
                 <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB 2</label><input id="mRERemain2" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
