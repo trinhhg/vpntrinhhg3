@@ -873,6 +873,7 @@ function getActiveGiftRule(rules, pkgId, now = Date.now()) {
   return null;
 }
 
+// v1 — 2026-11-06 20:15 (UTC+7) — Đồng bộ computeExp cho KEEP_EXISTING + Bộ nhận diện nguồn Hybrid & ưu tiên Fallback
 function computeExp(o, orders, now, giftRules = []) {
   const pk = PKGS[o.pkgId];
   if (!pk) return o.expDate || addDaysDmy(day0(now), 30);
@@ -880,8 +881,8 @@ function computeExp(o, orders, now, giftRules = []) {
   const em = String(o.email || "").toLowerCase();
   let base = day0(now);
 
-  // CHỈ đơn gia hạn (orderType === "renew") VÀ khách không chọn cấp link mới VÀ link không phải fallback new
-  if (o.orderType === "renew" && em && o.subLinkDecision !== "CREATE_NEW" && !o.fallbackNew) {
+  // Cộng dồn hạn cũ khi là đơn gia hạn HOẶC khách chọn Giữ link cũ (KEEP_EXISTING), trừ khi tạo link mới / fallback_new
+  if ((o.orderType === "renew" || o.subLinkDecision === "KEEP_EXISTING") && em && o.subLinkDecision !== "CREATE_NEW" && !o.fallbackNew) {
     let targetOrd = null;
     if (o.renewOf) {
       targetOrd = orders.find(x => x && normId(x.id) === normId(o.renewOf));
@@ -928,22 +929,189 @@ function computeExp(o, orders, now, giftRules = []) {
   return addDaysDmy(base, totalDays);
 }
 
-// ---------------------------------------------------------------- node pool
+// ---------------------------------------------------------------- node pool & source recognition
 const todayVN0 = () => day0(NOW());
-function isDying(p) {
-  if (!p || !p.url) return false;
-  // 1. Kiểm tra hạn dùng: chỉ coi là sắp hết khi có hạn cụ thể và còn <= 1 ngày
-  if (p.exp && !isLifetime(p.exp)) {
-    const t = parseDmy(p.exp);
+const PROTO_MAP_DEFAULT = {
+  lx: "v1",
+  dj: "v2",
+  kt: "v3",
+  custom_v7: "v7",
+  custom_v8: "v8"
+};
+const PARAM_MAP_DEFAULT = {
+  v1: "OwO",
+  v2: "token",
+  v3: "top",
+  v4: "liki",
+  v5: "lidj",
+  v6: "kidj",
+  v7: "hg",
+  v8: "hg"
+};
+
+function extractSourceToken(rawUrl) {
+  const s = String(rawUrl || "").trim();
+  if (!s || s === LOCK_ORIG) return "";
+  try {
+    const mKt = s.match(/\/oosaka\/([a-zA-Z0-9_-]{8,})/i);
+    if (mKt) return mKt[1];
+    const u = new URL(s);
+    const keys = ["OwO", "token", "top", "oos", "hg", "liki", "lidj", "kidj", "sub", "key", "auth", "id"];
+    for (const k of keys) {
+      const v = u.searchParams.get(k);
+      if (v && v.trim().length >= 6) return v.trim();
+    }
+    for (const [, v] of u.searchParams.entries()) {
+      if (v && /^[a-zA-Z0-9_-]{12,}$/.test(v.trim())) return v.trim();
+    }
+    const segs = u.pathname.split("/").filter(Boolean);
+    const last = segs[segs.length - 1] || "";
+    if (/^[a-zA-Z0-9_-]{16,}$/.test(last) && !/^(subscribe|liangxin|owo|v1|api)$/i.test(last)) return last;
+    return "";
+  } catch { return "";
+  }
+}
+
+function detectUrlSourceMeta(rawUrl) {
+  const s = String(rawUrl || "").trim();
+  if (!s || s === LOCK_ORIG) return { provider: "other", protocol: "", token: "", verified: false };
+  try {
+    const u = new URL(s);
+    const host = u.hostname.toLowerCase();
+    const pathLow = u.pathname.toLowerCase();
+    const tok = extractSourceToken(s);
+    if (/\/oosaka\/[a-zA-Z0-9_-]{8,}/i.test(u.pathname) || u.searchParams.has("top") || u.searchParams.has("oos") || host.includes("tohno-1.top") || host.includes("kitty")) {
+      return {
+        provider: "kt",
+        protocol: "v3",
+        token: tok,
+        verified: !!tok
+      };
+    }
+    if (u.searchParams.has("OwO") || host.includes("liangxin") || host.includes("7777699.xyz") || /\/api\/v1\/(liangxin|owo)\b/i.test(pathLow)) {
+      return {
+        provider: "lx",
+        protocol: "v1",
+        token: tok,
+        verified: !!(tok && u.searchParams.has("OwO"))
+      };
+    }
+    if (host.includes("djjc") || (u.searchParams.has("token") && pathLow.includes("/api/v1/client/subscribe"))) {
+      return {
+        provider: "dj",
+        protocol: "v2",
+        token: tok,
+        verified: !!tok
+      };
+    }
+    if (u.searchParams.has("hg")) {
+      return {
+        provider: "custom_v7",
+        protocol: "v7",
+        token: tok,
+        verified: !!tok
+      };
+    }
+    return { provider: "other", protocol: "", token: tok, verified: false };
+  } catch {
+    return { provider: "other", protocol: "", token: "", verified: false };
+  }
+}
+
+function resolvePoolLegMeta(p, leg = 1) {
+  if (!p) return { provider: "other", protocol: "", token: "", verified: false };
+  const rawUrl = leg === 2 ? p.url2 : p.url;
+  const savedProv = leg === 2 ? p.provider2 : p.provider;
+  const savedProto = leg === 2 ? p.protocol2 : p.protocol;
+  const savedMode = leg === 2 ? p.detectMode2 : p.detectMode;
+  const savedVer = leg === 2 ? p.verified2 : p.verified;
+  const savedStatus = leg === 2 ? p.status2 : p.status;
+  const auto = detectUrlSourceMeta(rawUrl);
+  const tok = auto.token;
+  if (!tok || savedStatus === "needs_check" || savedStatus === "unclassified" || savedStatus === "conflict") {
+    return {
+      provider: savedProv || auto.provider || "other",
+      protocol: savedProto || auto.protocol || "",
+      token: tok,
+      verified: false
+    };
+  }
+  if (savedMode === "manual" && savedProv && savedProv !== "other") {
+    const pr = savedProto || PROTO_MAP_DEFAULT[savedProv] || "v7";
+    return {
+      provider: savedProv,
+      protocol: pr,
+      token: tok,
+      verified: savedVer !== false
+    };
+  }
+  if (savedProv && savedProv !== "other") {
+    const pr = savedProto || PROTO_MAP_DEFAULT[savedProv] || auto.protocol || "v1";
+    return {
+      provider: savedProv,
+      protocol: pr,
+      token: tok,
+      verified: savedVer !== false
+    };
+  }
+  return auto;
+}
+
+function resolveUrlMetaFromPool(rawUrl, pool = [], fallbackLink = null, leg = 1) {
+  if (!rawUrl || rawUrl === LOCK_ORIG) return { provider: "other", protocol: "", token: "", verified: false };
+  for (const p of (pool || [])) {
+    if (!p) continue;
+    if (p.url === rawUrl) return resolvePoolLegMeta(p, 1);
+    if (p.isCombo && p.url2 === rawUrl) return resolvePoolLegMeta(p, 2);
+  }
+  if (fallbackLink) {
+    const lProv = leg === 2 ? fallbackLink.provider2 : fallbackLink.provider;
+    const lProto = leg === 2 ? fallbackLink.protocol2 : fallbackLink.protocol;
+    const tok = extractSourceToken(rawUrl);
+    if (lProv && lProv !== "other" && tok) {
+      return {
+        provider: lProv,
+        protocol: lProto || PROTO_MAP_DEFAULT[lProv] || "v1",
+        token: tok,
+        verified: true
+      };
+    }
+  }
+  return detectUrlSourceMeta(rawUrl);
+}
+
+function isLegDying(p, leg = 1) {
+  if (!p) return true;
+  const u = leg === 2 ? p.url2 : p.url;
+  if (!u || u === LOCK_ORIG) return true;
+  const exp = leg === 2 ? (p.exp2 || p.exp) : p.exp;
+  if (exp && !isLifetime(exp)) {
+    const t = parseDmy(exp);
     if (t && t <= todayVN0() + 864e5) return true;
   }
-  // 2. Kiểm tra dung lượng: CHỈ báo sắp cạn khi THỰC SỰ có nhập số lớn hơn 0 và nhỏ hơn 100
-  // (Nếu để trống hoặc mặc định "0" do chưa tra cứu thì TUYỆT ĐỐI không coi là dying)
-  const rg = String(p.remainGb ?? "").trim();
+  const rg = String((leg === 2 ? p.remainGb2 : p.remainGb) ?? "").trim();
   const nRg = Number(rg);
   return rg !== "" && !isNaN(nRg) && nRg > 0 && nRg < 100;
 }
-const poolOk = (p) => !!(p && p.url) && (Number(p.used) || 0) < (Number(p.max) || 30) && !isDying(p);
+
+function isDying(p) {
+  if (!p || !p.url) return false;
+  if (isLegDying(p, 1)) return true;
+  if (p.isCombo && p.url2 && isLegDying(p, 2)) return true;
+  return false;
+}
+
+const poolOk = (p) => !!(p && p.url && p.url !== LOCK_ORIG && p.id !== "POOL-179017008791528") && (Number(p.used) || 0) < (Number(p.max) || 30) && !isDying(p);
+
+function isSourceEligibleForAuto(p, reqProv = null, reqProto = null) {
+  if (!poolOk(p) || p.isCombo) return false;
+  const m = resolvePoolLegMeta(p, 1);
+  if (!m.verified || !m.token || m.provider === "other") return false;
+  if (reqProv && m.provider !== reqProv) return false;
+  if (reqProto && m.protocol && m.protocol !== reqProto) return false;
+  return true;
+}
+
 function pickNode(pool, exclude) {
   const c = pool.filter((p) => poolOk(p) && p.url !== exclude);
   if (!c.length) return null;
@@ -957,6 +1125,69 @@ function pickNode(pool, exclude) {
     return parseDmy(a.exp) - parseDmy(b.exp);
   });
   return c[0];
+}
+
+// Thứ tự ưu tiên chọn nguồn Đơn chuẩn theo lệnh Admin:
+// 1. Cùng nhà mạng & giao thức đủ điều kiện
+// 2. Nếu hết nguồn cùng mạng -> chuyển sang nguồn Kitty (kt / v3) đủ điều kiện
+// 3. Nếu vẫn không có -> trả về null (Fail-Closed, không bốc bừa nguồn lạ)
+function pickSingleWithPriority(pool, reqProv, reqProto = null, excludeUrl = "") {
+  const sameNet = (pool || []).filter(p => p.url !== excludeUrl && isSourceEligibleForAuto(p, reqProv, reqProto));
+  const pickedSame = pickNode(sameNet, excludeUrl);
+  if (pickedSame) return {
+    node: pickedSame,
+    meta: resolvePoolLegMeta(pickedSame, 1),
+    fallbackUsed: false
+  };
+
+  if (reqProv !== "kt") {
+    const ktNet = (pool || []).filter(p => p.url !== excludeUrl && isSourceEligibleForAuto(p, "kt", "v3"));
+    const pickedKt = pickNode(ktNet, excludeUrl);
+    if (pickedKt) return {
+      node: pickedKt,
+      meta: resolvePoolLegMeta(pickedKt, 1),
+      fallbackUsed: true
+    };
+  }
+  return null;
+}
+
+// Chọn nguồn thay thế cho 1 chân bị hỏng trong Link Combo:
+// 1. Ưu tiên nguồn cùng nhà mạng với chân bị hỏng (khác nhà mạng với chân lành)
+// 2. Nếu hết nguồn cùng mạng -> chọn bất kỳ nguồn đủ điều kiện nào khác nhà mạng với chân lành (ưu tiên Kitty -> failover_pref -> các mạng đã xác minh)
+function pickComboReplacementLeg(pool, brokenProv, healthyProv, healthyUrl = "", failoverPref = "kt") {
+  if (brokenProv && brokenProv !== "other" && brokenProv !== healthyProv) {
+    const samePool = (pool || []).filter(p => p.url !== healthyUrl && isSourceEligibleForAuto(p, brokenProv, null));
+    const nSame = pickNode(samePool, healthyUrl);
+    if (nSame) return {
+      node: nSame,
+      meta: resolvePoolLegMeta(nSame, 1),
+      sameNetwork: true
+    };
+  }
+  const prefOrder = Array.from(new Set(["kt", failoverPref || "lx", "lx", "dj"]));
+  for (const candProv of prefOrder) {
+    if (!candProv || candProv === healthyProv) continue;
+    const candPool = (pool || []).filter(p => p.url !== healthyUrl && isSourceEligibleForAuto(p, candProv, null));
+    const nCand = pickNode(candPool, healthyUrl);
+    if (nCand) return {
+      node: nCand,
+      meta: resolvePoolLegMeta(nCand, 1),
+      sameNetwork: false
+    };
+  }
+  const anyOther = (pool || []).filter(p => {
+    if (p.url === healthyUrl || !isSourceEligibleForAuto(p, null, null)) return false;
+    const m = resolvePoolLegMeta(p, 1);
+    return m.provider !== healthyProv;
+  });
+  const nAny = pickNode(anyOther, healthyUrl);
+  if (nAny) return {
+    node: nAny,
+    meta: resolvePoolLegMeta(nAny, 1),
+    sameNetwork: false
+  };
+  return null;
 }
 
 function getMe(url, env, cms, request = null) {
@@ -1138,12 +1369,14 @@ async function loadAll(KV, env, isTestOverride = null) {
     orders = isTest ? kvOrders : kvOrders.filter(o => !isTestOrderRecord(o));
     sbOk = true;
   }
-  const [links, pool, cms] = await Promise.all([g("ALL_LINKS", []), g("LINK_POOL", []), g("ALL_CMS", {})]);
+  // v1 — 2026-11-06 20:15 (UTC+7) — Nạp thêm FULFILLMENT_CONFIG trong loadAll() để fulfillOrder đọc đúng cấu hình
+  const [links, pool, cms, fulfillCfgRaw] = await Promise.all([g("ALL_LINKS", []), g("LINK_POOL", []), g("ALL_CMS", {}), g("FULFILLMENT_CONFIG", { mapping: {}, failover_pref: "lx" })]);
   const st = {
     orders,
     links: arr(links),
     pool: arr(pool),
     cms: cms && typeof cms === "object" && !Array.isArray(cms) ? cms : {},
+    fulfillment_config: fulfillCfgRaw && typeof fulfillCfgRaw === "object" ? fulfillCfgRaw : { mapping: {}, failover_pref: "lx" },
     dO: false,
     dL: false,
     dP: false,
@@ -1292,6 +1525,7 @@ function applyUpgrade(o, st = null) {
   o.isUpgrade = true;
   o.upgradedAt = NOW();
 
+  // v1 — 2026-11-06 20:15 (UTC+7) — Khôi phục đủ 2 chân Combo khi nâng cấp & chuẩn hóa fulfillOrder theo thứ tự ưu tiên nguồn
   // Đồng bộ nâng cấp cấu hình ngay trên chính Link Sub hiện tại (không tạo link mới)
   if (st && Array.isArray(st.links)) {
     const curLink = st.links.find(l => l && (normId(l.orderId) === normId(o.id) || (o.targetLink && l.masked === o.targetLink)));
@@ -1299,7 +1533,14 @@ function applyUpgrade(o, st = null) {
       curLink.pkg = o.pkgName || pk.n || "";
       if (curLink.isLocked) {
         curLink.isLocked = false;
-        if (curLink.orig === LOCK_ORIG && curLink.origBackup) curLink.orig = curLink.origBackup;
+        if (curLink.orig === LOCK_ORIG && curLink.origBackup) {
+          curLink.orig = curLink.origBackup;
+          delete curLink.origBackup;
+        }
+        if (curLink.isCombo && !curLink.orig2 && curLink.origBackup2) {
+          curLink.orig2 = curLink.origBackup2;
+          delete curLink.origBackup2;
+        }
       }
       st.dL = true;
     }
@@ -1309,7 +1550,7 @@ function applyUpgrade(o, st = null) {
 
 // Cấp link cho 1 đơn (đã success) trên web này. Trả về: new | renew | already | error | skip
 function fulfillOrder(st, o, me, log) {
-  const f = me.field, now = NOW();
+  const f = me.field, now = NOW(), today0 = day0(now);
   if (normStatus(o.status) !== "success") return "skip";
   if (!o.expFinal) {
     if (o.orderType || !o.expDate) o.expDate = computeExp(o, st.orders, now, st.cms?.giftRules);
@@ -1318,11 +1559,16 @@ function fulfillOrder(st, o, me, log) {
   } // đơn cũ (không có orderType): giữ nguyên HSD
   if (o.lockInfo && o.lockInfo[f]) return "already"; // admin đã sửa tay ô này: web không tự sửa lại
   if (o[f] && st.links.some((l) => l && l.masked === o[f])) return "already";
-  const life = isLifetime(o.expDate), em = String(o.email || "").toLowerCase(), cts = o.createdTs || now;
+  const em = String(o.email || "").toLowerCase(), cts = o.createdTs || now;
   let link = null;
 
-  // Lọc các đơn đang hoạt động theo HSD của email này
-  const activeOrders = st.orders.filter(x => x && x !== o && normStatus(x.status) === "success" && String(x.email || "").toLowerCase() === em && (isLifetime(x.expDate) || parseDmy(x.expDate) >= now));
+  // Đọc cấu hình Mapping Fulfillment & Failover Policy
+  const fulfillData = st.fulfillment_config || safeJson(st.cms?.fulfillment_config, {}) || {};
+  const fulfillCfg = fulfillData.mapping || fulfillData;
+  const failoverPref = fulfillData.failover_pref || "lx";
+
+  // Lọc các đơn đang hoạt động theo HSD của email này (chuẩn mốc đầu ngày 00:00 UTC+7)
+  const activeOrders = st.orders.filter(x => x && x !== o && normStatus(x.status) === "success" && String(x.email || "").toLowerCase() === em && (isLifetime(x.expDate) || parseDmy(x.expDate) >= today0));
 
   // Kiểm tra case B6: Email có >= 2 đơn đang hoạt động cùng lúc VÀ không phải luồng gia hạn đích danh từ portal
   const isMultiActive = activeOrders.length >= 2 && !o.renewOf;
@@ -1377,44 +1623,119 @@ function fulfillOrder(st, o, me, log) {
     if (candidate) {
       link = candidate;
     } else {
-      // Fallback B2 / B5: Khách chọn giữ link cũ nhưng link cũ không tồn tại hoặc đã bị xóa -> Fallback cấp link mới
+      // Fallback B2 / B5: Khách chọn giữ link cũ nhưng link cũ không tồn tại hoặc đã bị xóa -> Fallback cấp link mới & tính lại HSD từ hôm nay
       log("warn", "fulfill", "Khách chọn giữ link cũ nhưng link cũ không tồn tại hoặc đã bị xóa -> Fallback cấp link mới", o.id, o.id);
       o.fallbackNew = true;
       o.fulfillResult = "fallback_new";
+      o.expDate = computeExp(o, st.orders, now, st.cms?.giftRules);
+      st.dO = true;
       link = null;
     }
   }
 
+  const life = isLifetime(o.expDate);
+
   if (link) {
     const isLocked = link.isLocked || link.orig === LOCK_ORIG;
-    if (isLocked) {
-      // B8: Mở khóa link -> kiểm tra node nguồn đủ GB và slot
-      let eligibleNode = null;
-      if (link.origBackup && link.origBackup !== LOCK_ORIG) {
-        eligibleNode = st.pool.find(p => p && p.url === link.origBackup && poolOk(p));
+    if (link.isCombo) {
+      // Xử lý mở khóa / kiểm tra 2 chân của Link Combo theo đúng thứ tự ưu tiên
+      const orig1Candidate = isLocked ? (link.origBackup && link.origBackup !== LOCK_ORIG ? link.origBackup : "") : link.orig;
+      const orig2Candidate = isLocked ? (link.origBackup2 && link.origBackup2 !== LOCK_ORIG ? link.origBackup2 : "") : link.orig2;
+      const meta1Old = resolveUrlMetaFromPool(orig1Candidate, st.pool, link, 1);
+      const meta2Old = resolveUrlMetaFromPool(orig2Candidate, st.pool, link, 2);
+      const reqProv1 = meta1Old.provider !== "other" ? meta1Old.provider : "lx";
+      const reqProv2 = meta2Old.provider !== "other" ? meta2Old.provider : (reqProv1 === "lx" ? "dj" : "lx");
+
+      let node1 = orig1Candidate ? st.pool.find(p => p && !p.isCombo && p.url === orig1Candidate && isSourceEligibleForAuto(p)) : null;
+      let node2 = orig2Candidate ? st.pool.find(p => p && !p.isCombo && p.url === orig2Candidate && isSourceEligibleForAuto(p)) : null;
+
+      if (!node1 && node2) {
+        const m2 = resolvePoolLegMeta(node2, 1);
+        const rep1 = pickComboReplacementLeg(st.pool, reqProv1, m2.provider, node2.url, failoverPref);
+        if (rep1) node1 = rep1.node;
+      } else if (node1 && !node2) {
+        const m1 = resolvePoolLegMeta(node1, 1);
+        const rep2 = pickComboReplacementLeg(st.pool, reqProv2, m1.provider, node1.url, failoverPref);
+        if (rep2) node2 = rep2.node;
+      } else if (!node1 && !node2) {
+        const rep1 = pickSingleWithPriority(st.pool, reqProv1, null, "");
+        if (rep1) {
+          node1 = rep1.node;
+          const m1 = rep1.meta;
+          const rep2 = pickComboReplacementLeg(st.pool, reqProv2, m1.provider, node1.url, failoverPref);
+          if (rep2) node2 = rep2.node;
+        }
       }
-      if (!eligibleNode) {
-        eligibleNode = pickNode(st.pool);
-      }
-      if (!eligibleNode) {
-        log("error", "fulfill", "Không tìm thấy link nguồn đáp ứng điều kiện GB/slot để mở khóa", o.id, o.id);
-        o.fulfillResult = "error_no_source";
+
+      if (!node1 && !node2) {
+        log("error", "fulfill", "Không tìm thấy nguồn đủ điều kiện để khôi phục Link Combo", o.id, o.id);
+        o.fulfillResult = "no_matching_source";
         return "error";
       }
 
+      if (node1 && node2) {
+        const m1 = resolvePoolLegMeta(node1, 1), m2 = resolvePoolLegMeta(node2, 1);
+        link.orig = node1.url;
+        link.orig2 = node2.url;
+        link.provider = m1.provider;
+        link.protocol = m1.protocol;
+        link.provider2 = m2.provider;
+        link.protocol2 = m2.protocol;
+        link.isCombo = true;
+        node1.used = (Number(node1.used) || 0) + 1;
+        node2.used = (Number(node2.used) || 0) + 1;
+      } else {
+        // Trường hợp bất khả kháng chỉ còn 1 mạng duy nhất trong kho -> rớt về 1 chân đủ điều kiện để khách không mất mạng
+        const singleSurv = node1 || node2;
+        const mSurv = resolvePoolLegMeta(singleSurv, 1);
+        link.orig = singleSurv.url;
+        delete link.orig2;
+        link.isCombo = false;
+        link.provider = mSurv.provider;
+        link.protocol = mSurv.protocol;
+        delete link.provider2;
+        delete link.protocol2;
+        singleSurv.used = (Number(singleSurv.used) || 0) + 1;
+      }
+      delete link.origBackup;
+      delete link.origBackup2;
+      link.isLocked = false;
+      o.fulfillResult = isLocked ? "restore_locked" : "keep_active";
+    } else if (isLocked) {
+      // B8: Mở khóa link đơn -> ưu tiên cùng nguồn cũ -> cùng nhà mạng -> Kitty -> Fail-Closed
+      const backupUrl = (link.origBackup && link.origBackup !== LOCK_ORIG) ? link.origBackup : "";
+      const oldMeta = resolveUrlMetaFromPool(backupUrl, st.pool, link, 1);
+      const reqProv = oldMeta.provider !== "other" ? oldMeta.provider : "lx";
+      let eligibleNode = backupUrl ? st.pool.find(p => p && !p.isCombo && p.url === backupUrl && isSourceEligibleForAuto(p)) : null;
+      if (!eligibleNode) {
+        const picked = pickSingleWithPriority(st.pool, reqProv, null, "");
+        if (picked) eligibleNode = picked.node;
+      }
+      if (!eligibleNode) {
+        log("error", "fulfill", `Không tìm thấy nguồn ${reqProv} hoặc Kitty đủ điều kiện để mở khóa link`, o.id, o.id);
+        o.fulfillResult = "no_matching_source";
+        return "error";
+      }
+      const mPicked = resolvePoolLegMeta(eligibleNode, 1);
       link.orig = eligibleNode.url;
+      link.provider = mPicked.provider;
+      link.protocol = mPicked.protocol;
       eligibleNode.used = (Number(eligibleNode.used) || 0) + 1;
       delete link.origBackup;
       delete link.origBackup2;
       link.isLocked = false;
       o.fulfillResult = "restore_locked";
     } else {
-      // Link đang hoạt động bình thường
+      // Link đơn đang hoạt động bình thường: chỉ bù nguồn nếu nguồn cũ đã bị xóa khỏi kho
       if (!st.pool.some(p => p && p.url === link.orig)) {
-        const eligibleNode = pickNode(st.pool);
-        if (eligibleNode) {
-          link.orig = eligibleNode.url;
-          eligibleNode.used = (Number(eligibleNode.used) || 0) + 1;
+        const oldMeta = resolveUrlMetaFromPool(link.orig, st.pool, link, 1);
+        const reqProv = oldMeta.provider !== "other" ? oldMeta.provider : "lx";
+        const picked = pickSingleWithPriority(st.pool, reqProv, null, "");
+        if (picked && picked.node) {
+          link.orig = picked.node.url;
+          link.provider = picked.meta.provider;
+          link.protocol = picked.meta.protocol;
+          picked.node.used = (Number(picked.node.used) || 0) + 1;
         }
       }
       o.fulfillResult = "keep_active";
@@ -1436,41 +1757,68 @@ function fulfillOrder(st, o, me, log) {
     log("ok", "fulfill", `Fulfillment thành công [${o.fulfillResult}]: Link sub ${link.masked}`, o.id, o.id);
     return "renew";
   }
-  // Đọc cấu hình Mapping Fulfillment động (đã nạp sẵn trong st, mặc định luôn là single_lx)
-  const fulfillData = st.fulfillment_config || safeJson(st.cms?.fulfillment_config, {}) || {};
-  const fulfillCfg = fulfillData.mapping || fulfillData;
+
   const pkgTargetType = fulfillCfg[o.pkgId] || "single_lx"; // Chuẩn hóa mặc định: single_lx
 
-  const isKittyUrl = u => String(u || "").includes("tohno-1.top") || String(u || "").includes("oosaka") || String(u || "").includes("kitty");
-
   if (pkgTargetType === "combo" || pkgTargetType.startsWith("combo_")) {
-    let pool1, pool2, cVer, cParam, cName;
+    let reqP1 = "lx", reqP2 = "dj", cVer = "v5", cParam = "lidj", cName = "Liangxin + DJJC";
     if (pkgTargetType === "combo_liki") {
-      pool1 = st.pool.filter(p => poolOk(p) && String(p.url).includes("liangxin"));
-      pool2 = st.pool.filter(p => poolOk(p) && isKittyUrl(p.url));
+      reqP1 = "lx";
+      reqP2 = "kt";
       cVer = "v4";
       cParam = "liki";
       cName = "Liangxin + Kitty";
     } else if (pkgTargetType === "combo_kidj") {
-      pool1 = st.pool.filter(p => poolOk(p) && isKittyUrl(p.url));
-      pool2 = st.pool.filter(p => poolOk(p) && String(p.url).includes("djjc"));
+      reqP1 = "kt";
+      reqP2 = "dj";
+      cVer = "v6";
+      cParam = "kidj";
+      cName = "Kitty + DJJC";
+    }
+
+    // 1. Ưu tiên tìm nguồn đúng nhà mạng của từng chân
+    let node1 = pickNode(st.pool.filter(p => isSourceEligibleForAuto(p, reqP1, null)));
+    let node2 = pickNode(st.pool.filter(p => isSourceEligibleForAuto(p, reqP2, null)), node1 ? node1.url : "");
+
+    // 2. Nếu 1 trong 2 chân hết nguồn cùng mạng -> thay chân thiếu bằng nguồn đủ điều kiện của mạng khác (ưu tiên Kitty / failover_pref)
+    if (!node1 && node2) {
+      const m2 = resolvePoolLegMeta(node2, 1);
+      const rep1 = pickComboReplacementLeg(st.pool, reqP1, m2.provider, node2.url, failoverPref);
+      if (rep1) node1 = rep1.node;
+    } else if (node1 && !node2) {
+      const m1 = resolvePoolLegMeta(node1, 1);
+      const rep2 = pickComboReplacementLeg(st.pool, reqP2, m1.provider, node1.url, failoverPref);
+      if (rep2) node2 = rep2.node;
+    } else if (!node1 && !node2) {
+      // Cả 2 mạng yêu cầu đều hết -> thử tìm cặp 2 mạng bất kỳ đủ điều kiện
+      const firstPick = pickSingleWithPriority(st.pool, failoverPref, null, "");
+      if (firstPick) {
+        node1 = firstPick.node;
+        const rep2 = pickComboReplacementLeg(st.pool, reqP2, firstPick.meta.provider, node1.url, failoverPref);
+        if (rep2) node2 = rep2.node;
+      }
+    }
+
+    if (!node1 || !node2) {
+      log("error", "fulfill", `Không đủ 2 nguồn đã xác minh để ghép ${cName} (no_matching_source)`, o.id, o.id);
+      o.fulfillResult = "no_matching_source";
+      return "error";
+    }
+
+    const m1 = resolvePoolLegMeta(node1, 1), m2 = resolvePoolLegMeta(node2, 1);
+    const pairSet = new Set([m1.provider, m2.provider]);
+    if (pairSet.has("lx") && pairSet.has("kt")) {
+      cVer = "v4";
+      cParam = "liki";
+      cName = "Liangxin + Kitty";
+    } else if (pairSet.has("kt") && pairSet.has("dj")) {
       cVer = "v6";
       cParam = "kidj";
       cName = "Kitty + DJJC";
     } else {
-      pool1 = st.pool.filter(p => poolOk(p) && String(p.url).includes("liangxin"));
-      pool2 = st.pool.filter(p => poolOk(p) && String(p.url).includes("djjc"));
       cVer = "v5";
       cParam = "lidj";
       cName = "Liangxin + DJJC";
-    }
-
-    const node1 = pool1[0] || pickNode(st.pool);
-    const node2 = pool2[0] || pickNode(st.pool, node1 ? node1.url : "");
-
-    if (!node1 || !node2) {
-      log("error", "fulfill", `Hết nguồn trống để ghép ${cName}`, o.id, o.id);
-      return "error";
     }
 
     const masked = `${me.PD}/${cVer}/VPNTrinhHg?${cParam}=${hex(32)}#VPNTrinhHg`;
@@ -1486,6 +1834,10 @@ function fulfillOrder(st, o, me, log) {
       isCombo: true,
       orig: node1.url,
       orig2: node2.url,
+      provider: m1.provider,
+      protocol: m1.protocol,
+      provider2: m2.provider,
+      protocol2: m2.protocol,
       masked,
       email: o.email || "Khach",
       expDate: life ? "Vĩnh viễn" : o.expDate,
@@ -1501,30 +1853,43 @@ function fulfillOrder(st, o, me, log) {
     return "new";
   }
 
-  // Cấp Link Đơn có lọc mạng theo cấu hình
-  let candidatePool = st.pool;
-  if (pkgTargetType === "single_kt") candidatePool = st.pool.filter(p => isKittyUrl(p.url));
-  else if (pkgTargetType === "single_dj") candidatePool = st.pool.filter(p => String(p.url).includes("djjc"));
-  else candidatePool = st.pool.filter(p => String(p.url).includes("liangxin"));
+  // Cấp Link Đơn theo thứ tự ưu tiên: Cùng mạng đã xác minh -> Kitty (kt) -> Fail-Closed (no_matching_source)
+  let reqProv = "lx", reqProto = "v1";
+  if (pkgTargetType === "single_kt") {
+    reqProv = "kt";
+    reqProto = "v3";
+  } else if (pkgTargetType === "single_dj") {
+    reqProv = "dj";
+    reqProto = "v2";
+  } else if (pkgTargetType === "single_v7") {
+    reqProv = "custom_v7";
+    reqProto = "v7";
+  } else if (pkgTargetType === "single_v8") {
+    reqProv = "custom_v8";
+    reqProto = "v8";
+  }
 
-  const node = pickNode(candidatePool) || pickNode(st.pool);
-  if (!node) {
-    log("error", "fulfill", "Hết node trống", o.id, o.id);
+  const pickedSingle = pickSingleWithPriority(st.pool, reqProv, reqProto, "");
+  if (!pickedSingle || !pickedSingle.node) {
+    log("error", "fulfill", `Hết nguồn ${reqProv} (và nguồn dự phòng Kitty) đủ điều kiện đã xác minh (no_matching_source)`, o.id, o.id);
+    o.fulfillResult = "no_matching_source";
     return "error";
   }
-  const lx = String(node.url).includes("liangxin");
-  const kt = isKittyUrl(node.url);
-  const vNum = kt ? "v3" : (lx ? "v1" : "v2");
-  const pParam = kt ? "top=" : (lx ? "OwO=" : "token=");
-  const masked = `${me.PD}/${vNum}/VPNTrinhHg?${pParam}${hex(32)}#VPNTrinhHg`;
+  const node = pickedSingle.node;
+  const nMeta = pickedSingle.meta;
+  const vNum = nMeta.protocol || PROTO_MAP_DEFAULT[nMeta.provider] || "v1";
+  const pKey = PARAM_MAP_DEFAULT[vNum] || "OwO";
+  const masked = `${me.PD}/${vNum}/VPNTrinhHg?${pKey}=${hex(32)}#VPNTrinhHg`;
   const existingNodeIndices = st.links.filter((x) => x && x.orig === node.url).map(x => parseInt(x.linkIndex) || 0);
   const idx = (existingNodeIndices.length ? Math.max(...existingNodeIndices) : 0) + 1;
-  node.used = (node.used || 0) + 1;
+  node.used = (Number(node.used) || 0) + 1;
   st.links.unshift({
     id: "LNK-" + now + "-" + hex(4),
     orderId: o.id,
     pkg: o.pkgName || "",
     orig: node.url,
+    provider: nMeta.provider,
+    protocol: vNum,
     masked,
     email: o.email || "Khach",
     expDate: life ? "Vĩnh viễn" : o.expDate,
@@ -1536,7 +1901,7 @@ function fulfillOrder(st, o, me, log) {
   o[f] = masked;
   o.fulfilledAt = now;
   st.dL = st.dO = true;
-  log("ok", "fulfill", "Cấp link mới", `${o.id} → node #${idx}`, o.id);
+  log("ok", "fulfill", pickedSingle.fallbackUsed ? `Cấp link mới (Fallback sang Kitty từ ${reqProv})` : `Cấp link mới (${nMeta.provider}/${vNum})`, `${o.id} → node #${idx}`, o.id);
   return "new";
 }
 function mailFor(ctx, env, st, o, kind, me) {
@@ -1648,9 +2013,11 @@ export default {
       return Response.redirect(tktData.url, 302);
     }
 
-    // ================================================================ SUBSCRIPTION /v1 -> /v6
-    if (p.match(/^\/v[1-6]/)) {
-      const reqToken = getP(url, "top", "liki", "lidj", "kidj", "OwO", "token", "oos");
+    // ================================================================ SUBSCRIPTION /v1 -> /v8
+    // v1 — 2026-11-06 20:15 (UTC+7) — Mở rộng xử lý Subscription /v1->/v8, hỗ trợ ?hg= và giữ nguyên cấu hình gốc cho Custom V7/V8
+    if (p.match(/^\/v[1-8]/)) {
+      const reqToken = getP(url, "top", "liki", "lidj", "kidj", "OwO", "token", "oos", "hg");
+      const routeVer = (p.match(/^\/(v[1-8])/i) || [])[1]?.toLowerCase() || "v1";
       const ua = request.headers.get("User-Agent") || "";
       const isSingbox = /hiddify|sing-box|singbox|nekobox|nekoray|singbox-legacy/i.test(ua);
       const isClash = !isSingbox && /clash|meta|stash|surfboard|flclash|mihomo|clashmeta/i.test(ua);
@@ -1711,27 +2078,15 @@ export default {
         const mapping = routerObj[reqToken];
         if (!mapping) return getDead();
 
-        // Mốc hết hạn của link sub: Đúng 00:00:00 UTC+7 ngày hết hạn
         const isLife = !!mapping.isLife || isLifetime(mapping.expDate);
         const dayStart = parseDmy(mapping.expDate);
         const lockTs = isLife ? 4102444800000 : (mapping.lockTs || dayStart);
         const expireSec = isLife ? 4102444800 : Math.floor(lockTs / 1000);
 
-        // Kiểm tra khóa: Do Admin khóa tay HOẶC chạm 00:00:00 ngày hết hạn
         const now = NOW();
         const isExpired = (!isLife && lockTs > 0 && now >= lockTs);
         if (mapping.isLocked || isExpired) return getLocked(expireSec);
 
-        // Danh sách 3 Node thông tin chuẩn: HSD kèm số ngày còn lại (lấy mốc Tab Đơn hàng), Website, Zalo
-        let remainDaysText = "";
-        if (!isLife && mapping.expDate) {
-          const lockT = mapping.lockTs || parseDmy(mapping.expDate);
-          if (lockT > now) {
-            const dLeft = Math.floor((lockT - now) / 864e5);
-            remainDaysText = ` (Còn ${dLeft} ngày)`;
-          }
-        }
-        // Danh sách 3 Node thông tin chuẩn: Node 1 chỉ hiện HSD (thời gian còn lại app tự hiện ở thanh VPN), Website, Zalo
         const hsdNodeTitle = isLife ? "♾️ HSD: Vĩnh viễn" : `⏰ HSD: ${mapping.expDate || "Đang hoạt động"}`;
         const ACTIVE_INFO_NAMES = [hsdNodeTitle, "🌐 Website: vpntrinhhg.pages.dev", "📞 Zalo hỗ trợ: 0917678211"];
         let subsObj = safeJson(await KV.get("GLOBAL_SUBS"), {});
@@ -1743,25 +2098,54 @@ export default {
           return dec.split(/\r?\n/).map(l => l.trim()).filter(l => l.includes("://") && !l.includes("127.0.0.1"));
         };
 
-        const isKtUrl = u => String(u || "").includes("tohno-1.top") || String(u || "").includes("oosaka") || String(u || "").includes("kitty");
+        const modeFromProv = (prov, u, proto = "") => {
+          if (proto === "v7" || prov === "custom_v7" || routeVer === "v7") return "custom_v7";
+          if (proto === "v8" || prov === "custom_v8" || routeVer === "v8") return "custom_v8";
+          if (prov === "kt" || proto === "v3") return "kitty";
+          if (prov === "lx" || proto === "v1") return "liangxin";
+          if (prov === "dj" || proto === "v2") return "djjc";
+          const m = detectUrlSourceMeta(u);
+          if (m.provider === "kt") return "kitty";
+          if (m.provider === "lx") return "liangxin";
+          if (m.provider === "dj") return "djjc";
+          if (m.provider === "custom_v7") return "custom_v7";
+          if (m.provider === "custom_v8") return "custom_v8";
+          return "liangxin";
+        };
 
         // XỬ LÝ LINK COMBO TRỘN REAL-TIME
         if (mapping.isCombo && Array.isArray(mapping.tokens) && mapping.tokens.length) {
           const [tok1, tok2] = mapping.tokens;
           let cd1 = subsObj[tok1], cd2 = subsObj[tok2];
+          const p1 = mapping.providers?.[0] || detectUrlSourceMeta(mapping.origUrls?.[0]).provider;
+          const p2 = mapping.providers?.[1] || detectUrlSourceMeta(mapping.origUrls?.[1]).provider;
 
           if (!cd1 && !cd2) {
             const fulfillCfg = safeJson(await KV.get("FULFILLMENT_CONFIG"), {});
             const pref = fulfillCfg.failover_pref || "lx";
             let targetUrl = mapping.origUrls?.[0];
-            if (pref === "dj" && mapping.origUrls?.[1]) targetUrl = mapping.origUrls[1];
-            else if (pref === "kt" && mapping.origUrls) targetUrl = mapping.origUrls.find(isKtUrl) || mapping.origUrls[0];
-            else if (pref === "lx" && mapping.origUrls) targetUrl = mapping.origUrls.find(u => String(u).includes("liangxin")) || mapping.origUrls[0];
+            let targetProv = p1;
+            if (pref === "dj" && mapping.origUrls?.[1]) {
+              targetUrl = mapping.origUrls[1];
+              targetProv = p2;
+            } else if (pref === "kt" && mapping.origUrls) {
+              const ktIdx = [p1, p2].indexOf("kt");
+              if (ktIdx >= 0 && mapping.origUrls[ktIdx]) {
+                targetUrl = mapping.origUrls[ktIdx];
+                targetProv = "kt";
+              }
+            } else if (pref === "lx" && mapping.origUrls) {
+              const lxIdx = [p1, p2].indexOf("lx");
+              if (lxIdx >= 0 && mapping.origUrls[lxIdx]) {
+                targetUrl = mapping.origUrls[lxIdx];
+                targetProv = "lx";
+              }
+            }
             if (!targetUrl) return getDead();
             const r = await fetch(targetUrl, { headers: { "User-Agent": "v2rayN/6.23" } });
             if (!r.ok) return getDead();
             const rawB64 = (await r.text()).replace(/\s+/g, "");
-            const provName = isKtUrl(targetUrl) ? "kitty" : (String(targetUrl).includes("liangxin") ? "liangxin" : "djjc");
+            const provName = modeFromProv(targetProv, targetUrl);
             const { newB64, yamlStr, singboxStr } = processB64(rawB64, ACTIVE_INFO_NAMES, VP, provName);
             return isSingbox ? respond(singboxStr, "singbox", expireSec) : isClash ? respond(yamlStr, "yaml", expireSec) : respond(newB64, "b64", expireSec);
           }
@@ -1782,11 +2166,10 @@ export default {
             if (p && p.server && p.name) proxies.push(p);
           }
 
-          const uJoined = (mapping.origUrls || []).join(" ");
-          const hasLx = uJoined.includes("liangxin"), hasDj = uJoined.includes("djjc"), hasKt = isKtUrl(uJoined);
+          const pairSet = new Set([p1, p2]);
           let comboMode = "combo_lidj";
-          if (hasLx && hasKt) comboMode = "combo_liki";
-          else if (hasKt && hasDj) comboMode = "combo_kidj";
+          if (pairSet.has("lx") && pairSet.has("kt")) comboMode = "combo_liki";
+          else if (pairSet.has("kt") && pairSet.has("dj")) comboMode = "combo_kidj";
 
           if (isSingbox) {
             const sbStr = buildSingboxFull(proxies, ACTIVE_INFO_NAMES, comboMode);
@@ -1799,15 +2182,17 @@ export default {
           return respond(comboB64, "b64", expireSec);
         }
 
-        // XỬ LÝ LINK ĐƠN (LIANGXIN, DJJC HOẶC KITTY)
+        // XỬ LÝ LINK ĐƠN (LIANGXIN, DJJC, KITTY HOẶC CUSTOM V7/V8)
         const originToken = mapping.origTok, origUrl = mapping.origUrl;
         let cd = subsObj[originToken];
-        const isKt = isKtUrl(origUrl);
-        const isLiangxin = String(origUrl || "").includes("liangxin");
-        const singleMode = isKt ? "kitty" : (isLiangxin ? "liangxin" : "djjc");
+        const singleMode = modeFromProv(mapping.provider, origUrl, mapping.protocol);
+        const isCustomMode = (singleMode === "custom_v7" || singleMode === "custom_v8");
 
-        // FAST-PATH v2.4: Lấy node thực tế từ cache Python và chèn 3 Node thông tin cá nhân hóa (HSD + remainings)
         if (cd) {
+          if (isCustomMode) {
+            if (isSingbox && cd.body_singbox && cd.body_singbox.length > 200) return respond(cd.body_singbox, "singbox", expireSec);
+            if (isClash && cd.body_yaml && cd.body_yaml.length > 100) return respond(cd.body_yaml, "yaml", expireSec);
+          }
           const rawNodes = extractNodes(cd);
           if (rawNodes.length) {
             const infoLines = ACTIVE_INFO_NAMES.map(n => VP + encodeURIComponent(n));
@@ -2946,14 +3331,10 @@ export default {
         // Xóa link neo #1 Auto tương ứng
         st.links = st.links.filter(l => !(l && ((l.orig === pUrl1 && (!pUrl2 || l.orig2 === pUrl2)) || (pUrl2 && l.orig === pUrl2)) && String(l.linkIndex) === "1"));
 
+        // v1 — 2026-11-06 20:15 (UTC+7) — Dùng extractSourceToken xóa sạch token mọi nhà mạng trong GLOBAL_SUBS
         // Xóa token trong GLOBAL_SUBS
         let subsObj = safeJson(await KV.get("GLOBAL_SUBS"), {});
-        const getTokSafe = (u) => {
-          try {
-            return u ? getParam(new URL(u), "OwO", "token") : null;
-          } catch { return null;
-          }
-        };
+        const getTokSafe = (u) => extractSourceToken(u) || null;
         const tok1 = getTokSafe(pUrl1);
         const tok2 = getTokSafe(pUrl2);
         if (tok1 && subsObj[tok1]) delete subsObj[tok1];
@@ -2975,12 +3356,7 @@ export default {
         let subsObj = safeJson(await KV.get("GLOBAL_SUBS"), {});
         let deletedCount = 0;
 
-        const getTokSafe = (u) => {
-          try {
-            return u ? getParam(new URL(u), "OwO", "token") : null;
-          } catch { return null;
-          }
-        };
+        const getTokSafe = (u) => extractSourceToken(u) || null;
         const unusedPool = st.pool.filter(p => {
           if (!p || !p.url) return false;
           const activeLinks = st.links.filter(l => l && String(l.linkIndex) !== "1" && (l.orig === p.url || l.orig2 === p.url));
@@ -3262,6 +3638,7 @@ export default {
             if (od.lockInfo) delete od.lockInfo[it.field];
             n++;
             appliedItems.push({ id: od.id, field: it.field, to: it.to });
+            // v1 — 2026-11-06 20:15 (UTC+7) — Khôi phục cả origBackup2 cho Link Combo khi Map lại link
             const lTarget = st.links.find(l => l && l.masked === it.to);
             if (lTarget) {
               lTarget.expDate = isLifetime(od.expDate) ? "Vĩnh viễn" : od.expDate;
@@ -3270,6 +3647,10 @@ export default {
               if (lTarget.orig === LOCK_ORIG && lTarget.origBackup) {
                 lTarget.orig = lTarget.origBackup;
                 delete lTarget.origBackup;
+              }
+              if (lTarget.isCombo && !lTarget.orig2 && lTarget.origBackup2) {
+                lTarget.orig2 = lTarget.origBackup2;
+                delete lTarget.origBackup2;
               }
               st.dL = true;
             }
@@ -3906,33 +4287,62 @@ async function runCron(env, ctx, opt) {
     const live = st.links.filter((l) => l && !l.isLocked && l.expDate && !isLifetime(l.expDate)), next = live.length ? Math.min(...live.map((l) => lockAt(l.expDate, linkTs(l) || now))) : 0;
     log("info", "cron", "Kiểm tra khóa link", `giờ hệ thống ${fmtBank(now)}${SIM_OFF !== 0 ? " (GIỜ TÙY CHỈNH)" : ""} · ${live.length} link còn hoạt động${next ? " · sắp khóa gần nhất lúc " + fmtBank(next) : ""}`);
   }
+  // v1 — 2026-11-06 20:15 (UTC+7) — Luân chuyển node sắp hết hạn theo đúng thứ tự ưu tiên cho cả Link Đơn và từng chân Link Combo
   // 2. Luân chuyển node sắp hết hạn: Link con chuyển đi, Neo Index #1 bị khóa, Node nguồn VẪN GIỮ NGUYÊN
   if (s.autoMigrateNode !== false) {
-    const dying = st.pool.filter((p) => isDying(p));
+    const failoverPref = (st.fulfillment_config && st.fulfillment_config.failover_pref) || "lx";
+    const dying = st.pool.filter((p) => !p.isCombo && isDying(p));
     for (const dn of dying) {
+      const dnMeta = resolvePoolLegMeta(dn, 1);
+      const reqProv = dnMeta.provider !== "other" ? dnMeta.provider : "lx";
+
       // Khóa neo Index #1 tại node dying (không chuyển đi đâu)
-      for (const l of st.links.filter((x) => x && x.orig === dn.url && String(x.linkIndex) === "1" && !x.isLocked)) {
+      for (const l of st.links.filter((x) => x && !x.isCombo && x.orig === dn.url && String(x.linkIndex) === "1" && !x.isLocked)) {
         lockLink(l);
         st.dL = true;
       }
 
-      const candidateNodes = st.pool.filter((p) => !dying.includes(p) && p.url !== dn.url);
-      const tn = pickNode(candidateNodes);
-      if (!tn) continue;
-
-      let moved = 0;
-      // Chuyển toàn bộ link khách (Index >= 2) sang node mới còn trống
-      for (const l of st.links.filter((x) => x && x.orig === dn.url && !x.isLocked && String(x.linkIndex) !== "1")) {
-        if (l.orig !== tn.url) {
-          l.orig = tn.url;
+      // 2a. Chuyển các Link Đơn đang chạy trên dn: Ưu tiên Cùng nhà mạng -> Kitty -> Dừng
+      for (const l of st.links.filter((x) => x && !x.isCombo && x.orig === dn.url && !x.isLocked && String(x.linkIndex) !== "1")) {
+        const picked = pickSingleWithPriority(st.pool, reqProv, null, dn.url);
+        if (picked && picked.node && picked.node.url !== l.orig) {
+          l.orig = picked.node.url;
+          l.provider = picked.meta.provider;
+          l.protocol = picked.meta.protocol;
           dn.used = Math.max(0, (Number(dn.used) || 0) - 1);
-          tn.used = (Number(tn.used) || 0) + 1;
-          moved++;
+          picked.node.used = (Number(picked.node.used) || 0) + 1;
+          migrated++;
+          st.dL = true;
         }
       }
-      if (moved > 0) {
-        migrated += moved;
-        st.dL = true;
+
+      // 2b. Chuyển riêng chân bị ảnh hưởng của các Link Combo đang tham chiếu tới dn.url
+      for (const l of st.links.filter((x) => x && x.isCombo && !x.isLocked && (x.orig === dn.url || x.orig2 === dn.url))) {
+        if (l.orig === dn.url) {
+          const healthyMeta = resolveUrlMetaFromPool(l.orig2, st.pool, l, 2);
+          const rep = pickComboReplacementLeg(st.pool, reqProv, healthyMeta.provider, l.orig2 || "", failoverPref);
+          if (rep && rep.node && rep.node.url !== l.orig) {
+            l.orig = rep.node.url;
+            l.provider = rep.meta.provider;
+            l.protocol = rep.meta.protocol;
+            dn.used = Math.max(0, (Number(dn.used) || 0) - 1);
+            rep.node.used = (Number(rep.node.used) || 0) + 1;
+            migrated++;
+            st.dL = true;
+          }
+        } else if (l.orig2 === dn.url) {
+          const healthyMeta = resolveUrlMetaFromPool(l.orig, st.pool, l, 1);
+          const rep = pickComboReplacementLeg(st.pool, reqProv, healthyMeta.provider, l.orig || "", failoverPref);
+          if (rep && rep.node && rep.node.url !== l.orig2) {
+            l.orig2 = rep.node.url;
+            l.provider2 = rep.meta.provider;
+            l.protocol2 = rep.meta.protocol;
+            dn.used = Math.max(0, (Number(dn.used) || 0) - 1);
+            rep.node.used = (Number(rep.node.used) || 0) + 1;
+            migrated++;
+            st.dL = true;
+          }
+        }
       }
       // Node nguồn dn VẪN GIỮ NGUYÊN TRONG KHO để Admin theo dõi, tuyệt đối không xóa
     }
@@ -4027,6 +4437,7 @@ async function runCron(env, ctx, opt) {
   return sum;
 }
 
+// v1 — 2026-11-06 20:15 (UTC+7) — Mở rộng buildGlobalRouter hỗ trợ ?hg= (v7/v8) và lưu metadata provider/protocol
 function buildGlobalRouter(links, orders = []) {
   const r = {};
   if (!Array.isArray(links)) return r;
@@ -4038,20 +4449,10 @@ function buildGlobalRouter(links, orders = []) {
     }
   }
 
-  const extractOriginToken = u => {
-    if (!u || u === LOCK_ORIG) return "";
-    try {
-      const mKt = String(u).match(/\/oosaka\/([a-zA-Z0-9]+)/);
-      if (mKt) return mKt[1];
-      return getParam(new URL(u), "top", "liki", "lidj", "kidj", "OwO", "token", "oos") || "";
-    } catch { return "";
-    }
-  };
-
   for (const l of links) {
     try {
       if (!l || !l.masked) continue;
-      const mt = getParam(new URL(l.masked), "top", "liki", "lidj", "kidj", "OwO", "token", "oos");
+      const mt = getParam(new URL(l.masked), "top", "liki", "lidj", "kidj", "OwO", "token", "oos", "hg");
       if (!mt) continue;
 
       let effectiveExp = l.expDate;
@@ -4081,12 +4482,15 @@ function buildGlobalRouter(links, orders = []) {
           };
           continue;
         }
-        const ot1 = l.orig && l.orig !== LOCK_ORIG ? extractOriginToken(l.orig) : "";
-        const ot2 = l.orig2 && l.orig2 !== LOCK_ORIG ? extractOriginToken(l.orig2) : "";
+        const ot1 = l.orig && l.orig !== LOCK_ORIG ? extractSourceToken(l.orig) : "";
+        const ot2 = l.orig2 && l.orig2 !== LOCK_ORIG ? extractSourceToken(l.orig2) : "";
+        const p1 = l.provider || detectUrlSourceMeta(l.orig).provider;
+        const p2 = l.provider2 || detectUrlSourceMeta(l.orig2).provider;
         r[mt] = {
           isCombo: true,
           tokens: [ot1, ot2].filter(Boolean),
           origUrls: [l.orig, l.orig2].filter(Boolean),
+          providers: [p1, p2],
           isLocked,
           expDate: effectiveExp || (isLife ? "Vĩnh viễn" : ""),
           lockTs,
@@ -4107,10 +4511,13 @@ function buildGlobalRouter(links, orders = []) {
         };
         continue;
       }
-      const ot = extractOriginToken(l.orig);
+      const ot = extractSourceToken(l.orig);
+      const m1 = detectUrlSourceMeta(l.orig);
       if (ot) r[mt] = {
         origTok: ot,
         origUrl: l.orig,
+        provider: l.provider || m1.provider,
+        protocol: l.protocol || m1.protocol,
         isLocked,
         isCombo: false,
         expDate: effectiveExp || (isLife ? "Vĩnh viễn" : ""),
@@ -4933,11 +5340,13 @@ function cleanUniversalNode(rawName) {
   let s = String(rawName).replace(/\s*-\s*VPNTrinhHg$/g, "").trim();
   return `${s} - VPNTrinhHg`;
 }
+// v1 — 2026-11-06 20:15 (UTC+7) — Hỗ trợ nhận diện Liangxin mới (7777699.xyz / lx) và bảo toàn Sing-box JSON gốc cho Custom V7/V8
 function formatNodeName(rawName, prov = "liangxin") {
   const p = String(prov).toLowerCase();
-  if (p.includes("kitty") || p.includes("tohno-1.top") || p.includes("oosaka")) return cleanKittyNode(rawName);
-  if (p === "true" || p.includes("liangxin")) return cleanLiangxinNode(rawName);
-  if (p.includes("djjc")) return cleanDjjcNode(rawName);
+  if (p.includes("custom")) return cleanUniversalNode(rawName);
+  if (p.includes("kitty") || p === "kt" || p.includes("tohno-1.top") || p.includes("oosaka")) return cleanKittyNode(rawName);
+  if (p === "true" || p === "lx" || p.includes("liangxin") || p.includes("7777699.xyz")) return cleanLiangxinNode(rawName);
+  if (p === "dj" || p.includes("djjc")) return cleanDjjcNode(rawName);
   return cleanUniversalNode(rawName);
 }
 
@@ -4948,6 +5357,8 @@ function processB64(rawB64, infoNames, vp, isLiangxin) {
   const newB64Lines = infoNames.map(n => vp + encodeURIComponent(n));
   const proxies = [];
   const seenNames = {};
+  const isCustomMode = /^custom/i.test(String(isLiangxin || ""));
+  let customSingboxStr = "";
 
   if (decoded.trim().startsWith("{") && decoded.includes('"outbounds"')) {
     try {
@@ -5052,6 +5463,21 @@ function processB64(rawB64, infoNames, vp, isLiangxin) {
           newB64Lines.push(`hysteria2://${px.password}@${px.server}:${px.port}?insecure=1${sniP}${mpP}#${encodeURIComponent(newName)}`);
         }
       }
+      if (isCustomMode && sbData && typeof sbData === "object") {
+        const infoOutbounds = infoNames.map((n, i) => ({
+          type: "vless",
+          tag: `${n} § ${i}`,
+          server: "127.0.0.1",
+          server_port: 1,
+          uuid: "00000000-0000-0000-0000-000000000000",
+          packet_encoding: "xudp"
+        }));
+        const preserved = {
+          ...sbData,
+          outbounds: [...infoOutbounds, ...(sbData.outbounds || []).filter(ob => ob && !INFO_SKIP.some(k => String(ob.tag || "").includes(k)))]
+        };
+        customSingboxStr = JSON.stringify(preserved, null, 2);
+      }
     } catch (e) {}
   } else {
     const lines = decoded.split(/\r?\n/).map(l => l.trim()).filter(l => l.includes("://"));
@@ -5080,7 +5506,7 @@ function processB64(rawB64, infoNames, vp, isLiangxin) {
 
   const newB64 = encB64(newB64Lines.join("\n"));
   const yamlStr = proxies.length ? buildYaml(proxies, infoNames, isLiangxin) : "";
-  const singboxStr = proxies.length ? buildSingboxFull(proxies, infoNames, isLiangxin) : "";
+  const singboxStr = customSingboxStr || (proxies.length ? buildSingboxFull(proxies, infoNames, isLiangxin) : "");
 
   return { newB64, yamlStr, singboxStr };
 }
