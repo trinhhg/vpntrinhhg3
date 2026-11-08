@@ -4164,16 +4164,23 @@ async function createLink() {
 function openLnkModal(id) {
   const l = linksDb.find(x => x.id === id);
   if (!l) return;
+  const ord = l.orderId ? ordersDb.find(o => normId(o.id) === normId(l.orderId)) : null;
+  const effectiveExp = ord && ord.expDate ? (isLife(ord.expDate) ? "Vĩnh viễn" : ord.expDate) : (l.expDate || "");
+  const expEl = $("mLEExp") || $("mLExp");
+  if (expEl) {
+    expEl.value = effectiveExp;
+    expEl.readOnly = !!ord;
+    expEl.classList.toggle("bg-slate-100", !!ord);
+    expEl.classList.toggle("text-slate-500", !!ord);
+  }
+  const hintEl = $("mLEExpSyncHint");
+  if (hintEl) {
+    hintEl.innerHTML = ord ? `<span class="text-indigo-600 font-bold"><i class="fas fa-link mr-1"></i>Đang đồng bộ theo đơn <b>${esc(ord.id)}</b> (${esc(effectiveExp)}). Muốn đổi HSD, vui lòng sửa tại tab Đơn hàng.</span>` : `<span class="text-slate-500">Link lẻ chưa gắn đơn hàng — bạn có thể nhập trực tiếp DD/MM/YYYY hoặc Vĩnh viễn.</span>`;
+  }
   $("mLId").value = id;
   $("mLOrig").value = l.orig || "";
   if ($("mLOrig2")) $("mLOrig2").value = l.orig2 || "";
   $("mLEmail").value = l.email || "";
-  let expVal = l.expDate || "";
-  if (l.orderId) {
-    const od = ordersDb.find(o => normId(o.id) === normId(l.orderId));
-    if (od && od.expDate) expVal = od.expDate;
-  }
-  $("mLExp").value = expVal;
   $("mLIdx").value = l.linkIndex || l.machine || "";
   $("mLnk").classList.remove("hidden");
 }
@@ -4228,9 +4235,14 @@ async function saveLnkEdit() {
     finalInfo2 = null;
   }
 
+  const expEl = $("mLEExp") || $("mLExp");
+  const linkedOrd = l.orderId ? ordersDb.find(o => normId(o.id) === normId(l.orderId)) : null;
+  const rawExpInput = expEl ? expEl.value.trim() : (l.expDate || "");
+  const effectiveExpDate = (linkedOrd && linkedOrd.expDate) ? (isLife(linkedOrd.expDate) ? "Vĩnh viễn" : linkedOrd.expDate) : rawExpInput;
+
   Object.assign(l, {
     email: $("mLEmail").value.trim(),
-    expDate: $("mLExp").value.trim(),
+    expDate: effectiveExpDate,
     linkIndex: $("mLIdx").value.trim(),
     orig: finalOrig1,
     isCombo: isCombo,
@@ -6635,12 +6647,22 @@ const BLUR_RULES = { 1: "doicucden", 2: "onepiecechapter", 3: "lucastanora" };
 function checkBlurValidity(i) {
   const val = String($("blurRoute" + i)?.value || "").trim().toLowerCase();
   const req = BLUR_RULES[i];
+  const isValid = !!val && val.includes(req);
+  const chkBlur = $("blurOn" + i);
+  const chkLock = $("lockOn" + i);
+  const chkVerify = $("verifyOn" + i);
+  [chkBlur, chkLock, chkVerify].forEach(chk => {
+    if (chk) {
+      chk.disabled = !isValid;
+      if (!isValid) chk.checked = false;
+    }
+  });
   const badge = $("blurBadge" + i);
   if (!badge) return;
   if (!val) {
     badge.className = "text-[9px] font-bold text-slate-400";
     badge.textContent = "Chưa nhập";
-  } else if (val.includes(req)) {
+  } else if (isValid) {
     badge.className = "text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200";
     badge.textContent = "✔ Hợp lệ (" + req + ")";
   } else {
@@ -6650,39 +6672,57 @@ function checkBlurValidity(i) {
 }
 
 function renderBlurRows() {
-  const s = cmsDb.settings;
-  $("blurRows").innerHTML = [1, 2, 3].map(i => `
-    <div class="flex items-center justify-between bg-purple-50/50 border border-purple-100 p-2.5 rounded-xl">
-      <div class="flex-1 mr-3">
-        <div class="flex items-center justify-between mb-1">
-          <label class="block font-bold text-[10px] text-purple-900">Ô ${i} → Mờ Link ${i}</label>
-          <span id="blurBadge${i}"></span>
+  const s = (cmsDb && cmsDb.settings) || {};
+  $("blurRows").innerHTML = [1, 2, 3].map(i => {
+    const routeVal = s["blurRoute" + i] !== undefined ? s["blurRoute" + i] : "";
+    const isValid = String(routeVal).trim().toLowerCase().includes(BLUR_RULES[i]);
+    const blurChecked = isValid && !!s["blurOn" + i];
+    const lockChecked = isValid && !!s["lockOn" + i];
+    const verifyChecked = isValid && !!s["verifyOn" + i];
+    return `
+      <div class="flex flex-wrap items-center gap-2.5 bg-purple-50/50 border border-purple-100 p-2.5 rounded-xl">
+        <div class="flex-1 min-w-[200px] mr-2">
+          <div class="flex items-center justify-between mb-1">
+            <label class="block font-bold text-[10px] text-purple-900">Ô ${i} → Link Sub ${i}</label>
+            <span id="blurBadge${i}"></span>
+          </div>
+          <input id="blurRoute${i}" type="text" oninput="checkBlurValidity(${i})" value="${esc(routeVal)}" placeholder="Bắt buộc nhập: ${BLUR_RULES[i]}" class="w-full p-1.5 border border-purple-200 rounded-lg outline-none font-mono text-[11px] bg-white font-bold text-purple-950">
         </div>
-        <input id="blurRoute${i}" type="text" oninput="checkBlurValidity(${i})" value="${esc(s["blurRoute" + i] || "")}" placeholder="Bắt buộc nhập: ${BLUR_RULES[i]}" class="w-full p-1.5 border border-purple-200 rounded-lg outline-none font-mono text-[11px] bg-white font-bold text-purple-950">
-      </div>
-      <div class="flex flex-col items-center shrink-0">
-        <label class="block font-bold text-[10px] text-purple-800 mb-1">Bật mờ</label>
-        <div class="toggle-wrap">
-          <input type="checkbox" id="blurOn${i}" ${s["blurOn" + i] ? "checked" : ""}>
-          <span class="toggle-slider"></span>
+        <div class="flex items-center gap-3 shrink-0 ml-auto">
+          <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer select-none text-indigo-700">
+            <input type="checkbox" id="blurOn${i}" ${blurChecked ? "checked" : ""} ${!isValid ? "disabled" : ""} class="w-4 h-4 accent-indigo-600">
+            <span>Bật mờ</span>
+          </label>
+          <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer select-none text-rose-700">
+            <input type="checkbox" id="lockOn${i}" ${lockChecked ? "checked" : ""} ${!isValid ? "disabled" : ""} class="w-4 h-4 accent-rose-600">
+            <span>Khóa</span>
+          </label>
+          <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer select-none text-amber-700">
+            <input type="checkbox" id="verifyOn${i}" ${verifyChecked ? "checked" : ""} ${!isValid ? "disabled" : ""} class="w-4 h-4 accent-amber-600">
+            <span>Kiểm tra</span>
+          </label>
         </div>
       </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
   [1, 2, 3].forEach(checkBlurValidity);
 }
 
 async function saveBlur() {
   const s = cmsDb.settings;
   [1, 2, 3].forEach(i => {
-    s["blurRoute" + i] = $("blurRoute" + i).value.trim();
-    s["blurOn" + i] = $("blurOn" + i).checked;
+    const val = String($("blurRoute" + i)?.value || "").trim();
+    const isValid = val.toLowerCase().includes(BLUR_RULES[i]);
+    s["blurRoute" + i] = val;
+    s["blurOn" + i] = isValid ? !!$("blurOn" + i)?.checked : false;
+    s["lockOn" + i] = isValid ? !!$("lockOn" + i)?.checked : false;
+    s["verifyOn" + i] = isValid ? !!$("verifyOn" + i)?.checked : false;
   });
   try {
     // Chỉ lưu vào KV của web này, KHÔNG bắn đồng bộ đi đâu cả!
     await saveCmsDb();
-    toast("Đã lưu cấu hình làm mờ cho web này");
-    logEvent("ok", "Lưu cấu hình", "Làm mờ Blur cục bộ");
+    toast("Đã lưu cấu hình Làm mờ / Khóa / Kiểm tra cho web này");
+    logEvent("ok", "Lưu cấu hình", "Làm mờ / Khóa / Kiểm tra cục bộ");
     renderBlurRows();
     renderOrd();
   } catch (e) {
@@ -7088,6 +7128,24 @@ async function saveQrExpireSeconds() {
     toast("Lỗi lưu thời gian QR: " + e.message, "err");
   }
 }
+async function saveEmailVerifyTtl() {
+  const raw = parseInt($("emailVerifyTtlHoursInp")?.value);
+  if (!raw || raw < 1) {
+    return toast("Vui lòng nhập thời gian hiệu lực là số nguyên dương (>= 1 giờ)", "warn");
+  }
+  const val = Math.max(1, Math.min(8760, raw));
+  cmsDb.settings = cmsDb.settings || {};
+  cmsDb.settings.emailVerifyTtlHours = val;
+  if ($("emailVerifyTtlHoursInp")) $("emailVerifyTtlHoursInp").value = val;
+  try {
+    await saveCmsDb();
+    toast(`Đã lưu thời gian hiệu lực xác minh email: ${val} giờ!`);
+    logEvent("ok", "Lưu TTL xác minh email", `${val} giờ`);
+  } catch (e) {
+    toast("Lỗi lưu thời gian hiệu lực: " + e.message, "err");
+  }
+}
+window.saveEmailVerifyTtl = saveEmailVerifyTtl;
 function switchWebAdminTab(tab, fromHistory = false) {
   $("wpane-ui").classList.toggle("hidden", tab !== "ui");
   $("wpane-footer").classList.toggle("hidden", tab !== "footer");
@@ -7105,7 +7163,9 @@ window.switchWebAdminTab = switchWebAdminTab;
 
 function loadWebAdminUI() {
   loadDrawerSettingsUI();
-  if ($("qrExpireSecondsInp")) $("qrExpireSecondsInp").value = Number((cmsDb.settings || {}).qrExpireSeconds) || 30;
+  const s = (cmsDb && cmsDb.settings) || {};
+  if ($("qrExpireSecondsInp")) $("qrExpireSecondsInp").value = Number(s.qrExpireSeconds) || 30;
+  if ($("emailVerifyTtlHoursInp")) $("emailVerifyTtlHoursInp").value = Number(s.emailVerifyTtlHours) || 72;
   renderBlurRows();
   renderRouteRows();
   renderDockRows();
@@ -7114,7 +7174,7 @@ function loadWebAdminUI() {
 }
 
 function loadSettingsUI() {
-  const s = cmsDb.settings;
+  const s = (cmsDb && cmsDb.settings) || {};
   renderRouteRows();
   renderBlurRows();
   renderDockRows();
@@ -7127,6 +7187,15 @@ function loadSettingsUI() {
   if ($("toggleAutoMail")) $("toggleAutoMail").checked = !!s.autoMailEnabled;
   if ($("toggleAutoMigrate")) $("toggleAutoMigrate").checked = s.autoMigrateNode !== false;
   if ($("toggleLockExpiry")) $("toggleLockExpiry").checked = !!s.lockExpiry;
+  if ($("toggleTgOrderAlert")) $("toggleTgOrderAlert").checked = s.tgOrderAlert !== false;
+  const defField = ["info1", "info2", "info3"].includes(s.telegramOrderLinkField) ? s.telegramOrderLinkField : (getMe ? getMe().field : "info1");
+  document.querySelectorAll('input[name="tgOrderLinkFieldRadio"]').forEach(r => {
+    r.checked = (r.value === defField);
+  });
+  const savedLbl = $("tgOrderNotifySavedFieldText");
+  if (savedLbl) {
+    savedLbl.innerHTML = s.telegramOrderLinkField ? `Nguồn Link Sub đã lưu: <span class="text-emerald-700 font-mono font-black">${esc(s.telegramOrderLinkField)}</span>` : `Nguồn Link Sub mặc định: <span class="text-indigo-600 font-mono font-bold">${esc(defField)} (Bấm Lưu cấu hình để chốt)</span>`;
+  }
   updateOrderTogglesUI();
   paintTimeUI();
   initAdminNotifyUI();
@@ -7274,6 +7343,16 @@ async function loadStatus() {
     const be = await aj("/api/cms");
     bs = (be && be.settings) || {};
   } catch (e) {}
+  const tgBadge = $("tgOrderNotifyEnvBadge");
+  if (tgBadge) {
+    if (j.hasTgOrderBot) {
+      tgBadge.className = "text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200";
+      tgBadge.innerHTML = '<i class="fas fa-check-circle mr-1"></i>Đã cấu hình Bot & Chat ID';
+    } else {
+      tgBadge.className = "text-[10px] font-black px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 border border-amber-200";
+      tgBadge.innerHTML = '<i class="fas fa-triangle-exclamation mr-1"></i>Chưa cấu hình TELEGRAM_ORDER_BOT_TOKEN / CHAT_ID';
+    }
+  }
   const c = j.cron, age = c ? nowMs() - c.ts : null, ok = c && age < 90 * 60000, cb = $("cronBox"), sb = $("statusBox");
   if (cb) {
     cb.className = "text-xs rounded-xl border p-3 space-y-1 " + (ok ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-red-50 border-red-200 text-red-700");
@@ -8100,13 +8179,19 @@ async function clearTestOrders() {
 // ==================== THÔNG BÁO ĐƠN HÀNG MỚI TELEGRAM ====================
 async function saveTgOrderAlertSetting() {
   const chk = $("toggleTgOrderAlert");
-  if (!chk) return;
+  const fieldRad = document.querySelector('input[name="tgOrderLinkFieldRadio"]:checked');
+  const selField = fieldRad ? fieldRad.value : "info1";
   cmsDb.settings = cmsDb.settings || {};
-  cmsDb.settings.tgOrderAlert = chk.checked;
+  if (chk) cmsDb.settings.tgOrderAlert = chk.checked;
+  cmsDb.settings.telegramOrderLinkField = selField;
   try {
     await saveCmsDb();
-    toast(chk.checked ? "Đã BẬT thông báo đơn hàng mới qua Telegram!" : "Đã TẮT thông báo đơn hàng mới qua Telegram!");
-    // v1 — 2026-11-06 20:15 (UTC+7) — Xuất saveTgOrderAlertSetting và testTelegramOrderAlert ra window
+    const savedLbl = $("tgOrderNotifySavedFieldText");
+    if (savedLbl) {
+      savedLbl.innerHTML = `Nguồn Link Sub đã lưu: <span class="text-emerald-700 font-mono font-black">${esc(selField)}</span>`;
+    }
+    toast(`Đã lưu cấu hình thông báo Telegram đơn hàng (Nguồn ${selField})!`);
+    logEvent("ok", "Lưu cấu hình", `Telegram Order Alert: ${selField}`);
   } catch (e) {
     toast("Lỗi lưu cài đặt: " + e.message, "err");
   }
