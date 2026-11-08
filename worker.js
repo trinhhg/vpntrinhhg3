@@ -378,19 +378,19 @@ async function runTelegramBackup(env, actionReason = "Admin gửi thủ công", 
   const dateStr = `${y}_${m}_${d}`;
   const dayKey = `${d}_${m}_${y}`;
 
+  // v2 — 2026-11-06 22:00 (UTC+7) — Loại bỏ hoàn toàn fallback KV key TG_BACKUP_*_LAST_* lỗi thời, chỉ dùng TG_BACKUP_STATE_PROD / TG_BACKUP_STATE_TEST
   let stt = 1;
   let prevCount = null;
   const stateKey = isTest ? "TG_BACKUP_STATE_TEST" : "TG_BACKUP_STATE_PROD";
   if (KV) {
     const rawState = safeJson(await KV.get(stateKey), null);
-    const lastDate = rawState ? rawState.date : (await KV.get(isTest ? "TG_BACKUP_TEST_LAST_DATE" : "TG_BACKUP_PROD_LAST_DATE"));
-    const lastStt = Number(rawState ? rawState.stt : (await KV.get(isTest ? "TG_BACKUP_TEST_LAST_STT" : "TG_BACKUP_PROD_LAST_STT"))) || 0;
-    const lastCount = Number(rawState ? rawState.count : (await KV.get(isTest ? "TG_BACKUP_TEST_LAST_COUNT" : "TG_BACKUP_PROD_LAST_COUNT")));
+    const lastDate = rawState && rawState.date ? String(rawState.date) : "";
+    const lastStt = Number(rawState && rawState.stt) || 0;
+    const lastCount = rawState && rawState.count !== undefined && rawState.count !== null ? Number(rawState.count) : NaN;
     if (!isNaN(lastCount)) prevCount = lastCount;
     if (lastDate === dayKey) {
       stt = lastStt + 1;
     }
-    // Gộp tất cả metadata backup vào 1 key JSON duy nhất (giảm 75% lượt ghi KV)
     await KV.put(stateKey, JSON.stringify({
       date: dayKey,
       stt: stt,
@@ -949,26 +949,36 @@ const PARAM_MAP_DEFAULT = {
   v8: "hg"
 };
 
+// v2 — 2026-11-06 22:00 (UTC+7) — Trích xuất token không phân biệt hoa/thường, giải mã URL-encoded và path token
 function extractSourceToken(rawUrl) {
   const s = String(rawUrl || "").trim();
   if (!s || s === LOCK_ORIG) return "";
   try {
-    const mKt = s.match(/\/oosaka\/([a-zA-Z0-9_-]{8,})/i);
-    if (mKt) return mKt[1];
-    const u = new URL(s);
-    const keys = ["OwO", "token", "top", "oos", "hg", "liki", "lidj", "kidj", "sub", "key", "auth", "id"];
-    for (const k of keys) {
-      const v = u.searchParams.get(k);
-      if (v && v.trim().length >= 6) return v.trim();
+    const mKt = s.match(/\/oosaka\/([a-zA-Z0-9_%-]{8,})/i);
+    if (mKt) {
+      const decKt = safeDecode(mKt[1]).trim();
+      if (decKt.length >= 6) return decKt;
     }
-    for (const [, v] of u.searchParams.entries()) {
-      if (v && /^[a-zA-Z0-9_-]{12,}$/.test(v.trim())) return v.trim();
+    const u = new URL(s);
+    const keysLow = ["owo", "token", "top", "oos", "hg", "liki", "lidj", "kidj", "sub", "key", "auth", "id"];
+    const entries = [...u.searchParams.entries()];
+    for (const k of keysLow) {
+      const found = entries.find(([ek]) => String(ek).toLowerCase() === k);
+      if (found && found[1]) {
+        const decVal = safeDecode(String(found[1])).trim();
+        if (decVal.length >= 6) return decVal;
+      }
+    }
+    for (const [, v] of entries) {
+      const decVal = safeDecode(String(v || "")).trim();
+      if (decVal && /^[a-zA-Z0-9_-]{12,}$/.test(decVal)) return decVal;
     }
     const segs = u.pathname.split("/").filter(Boolean);
-    const last = segs[segs.length - 1] || "";
-    if (/^[a-zA-Z0-9_-]{16,}$/.test(last) && !/^(subscribe|liangxin|owo|v1|api)$/i.test(last)) return last;
+    const last = safeDecode(segs[segs.length - 1] || "").trim();
+    if (/^[a-zA-Z0-9_-]{16,}$/.test(last) && !/^(subscribe|liangxin|owo|v1|api|client)$/i.test(last)) return last;
     return "";
-  } catch { return "";
+  } catch {
+    return "";
   }
 }
 
@@ -979,8 +989,13 @@ function detectUrlSourceMeta(rawUrl) {
     const u = new URL(s);
     const host = u.hostname.toLowerCase();
     const pathLow = u.pathname.toLowerCase();
+    const paramKeysLow = new Set([...u.searchParams.keys()].map(k => String(k).toLowerCase()));
+    const hasOwO = paramKeysLow.has("owo");
+    const hasToken = paramKeysLow.has("token");
+    const hasTop = paramKeysLow.has("top") || paramKeysLow.has("oos");
+    const hasHg = paramKeysLow.has("hg");
     const tok = extractSourceToken(s);
-    if (/\/oosaka\/[a-zA-Z0-9_-]{8,}/i.test(u.pathname) || u.searchParams.has("top") || u.searchParams.has("oos") || host.includes("tohno-1.top") || host.includes("kitty")) {
+    if (/\/oosaka\/[a-zA-Z0-9_%-]{8,}/i.test(u.pathname) || hasTop || host.includes("tohno-1.top") || host.includes("kitty")) {
       return {
         provider: "kt",
         protocol: "v3",
@@ -988,15 +1003,15 @@ function detectUrlSourceMeta(rawUrl) {
         verified: !!tok
       };
     }
-    if (u.searchParams.has("OwO") || host.includes("liangxin") || host.includes("7777699.xyz") || /\/api\/v1\/(liangxin|owo)\b/i.test(pathLow)) {
+    if (hasOwO || host.includes("liangxin") || host.includes("7777699.xyz") || /\/api\/v1\/(liangxin|owo)\b/i.test(pathLow)) {
       return {
         provider: "lx",
         protocol: "v1",
         token: tok,
-        verified: !!(tok && u.searchParams.has("OwO"))
+        verified: !!(tok && hasOwO)
       };
     }
-    if (host.includes("djjc") || (u.searchParams.has("token") && pathLow.includes("/api/v1/client/subscribe"))) {
+    if (host.includes("djjc") || (hasToken && pathLow.includes("/api/v1/client/subscribe"))) {
       return {
         provider: "dj",
         protocol: "v2",
@@ -1004,7 +1019,7 @@ function detectUrlSourceMeta(rawUrl) {
         verified: !!tok
       };
     }
-    if (u.searchParams.has("hg")) {
+    if (hasHg) {
       return {
         provider: "custom_v7",
         protocol: "v7",
@@ -1080,6 +1095,7 @@ function resolveUrlMetaFromPool(rawUrl, pool = [], fallbackLink = null, leg = 1)
   return detectUrlSourceMeta(rawUrl);
 }
 
+// v2 — 2026-11-06 22:00 (UTC+7) — Sửa lỗi 0 GB (<= 0 hoặc NaN là hết/không hợp lệ), chặn auto-fallback Kitty cho Custom V7/V8 và chặn Combo Custom không tương thích
 function isLegDying(p, leg = 1) {
   if (!p) return true;
   const u = leg === 2 ? p.url2 : p.url;
@@ -1089,9 +1105,12 @@ function isLegDying(p, leg = 1) {
     const t = parseDmy(exp);
     if (t && t <= todayVN0() + 864e5) return true;
   }
-  const rg = String((leg === 2 ? p.remainGb2 : p.remainGb) ?? "").trim();
+  const rawRg = (leg === 2 ? p.remainGb2 : p.remainGb);
+  const rg = String(rawRg ?? "").trim();
+  if (rg === "") return false;
   const nRg = Number(rg);
-  return rg !== "" && !isNaN(nRg) && nRg > 0 && nRg < 100;
+  if (!Number.isFinite(nRg)) return true;
+  return nRg < 100;
 }
 
 function isDying(p) {
@@ -1127,11 +1146,11 @@ function pickNode(pool, exclude) {
   return c[0];
 }
 
-// Thứ tự ưu tiên chọn nguồn Đơn chuẩn theo lệnh Admin:
+// Thứ tự ưu tiên chọn nguồn Đơn:
 // 1. Cùng nhà mạng & giao thức đủ điều kiện
-// 2. Nếu hết nguồn cùng mạng -> chuyển sang nguồn Kitty (kt / v3) đủ điều kiện
+// 2. Chỉ fallback sang Kitty (kt / v3) cho các gói tiêu chuẩn (lx / dj) khi allowKittyFallback = true; KHÔNG tự fallback Kitty cho gói yêu cầu đích danh Custom V7/V8
 // 3. Nếu vẫn không có -> trả về null (Fail-Closed, không bốc bừa nguồn lạ)
-function pickSingleWithPriority(pool, reqProv, reqProto = null, excludeUrl = "") {
+function pickSingleWithPriority(pool, reqProv, reqProto = null, excludeUrl = "", allowKittyFallback = null) {
   const sameNet = (pool || []).filter(p => p.url !== excludeUrl && isSourceEligibleForAuto(p, reqProv, reqProto));
   const pickedSame = pickNode(sameNet, excludeUrl);
   if (pickedSame) return {
@@ -1140,7 +1159,9 @@ function pickSingleWithPriority(pool, reqProv, reqProto = null, excludeUrl = "")
     fallbackUsed: false
   };
 
-  if (reqProv !== "kt") {
+  const isCustomReq = reqProv === "custom_v7" || reqProv === "custom_v8" || reqProto === "v7" || reqProto === "v8";
+  const canFallbackKt = allowKittyFallback !== null ? !!allowKittyFallback : (!isCustomReq && reqProv !== "kt");
+  if (canFallbackKt && reqProv !== "kt") {
     const ktNet = (pool || []).filter(p => p.url !== excludeUrl && isSourceEligibleForAuto(p, "kt", "v3"));
     const pickedKt = pickNode(ktNet, excludeUrl);
     if (pickedKt) return {
@@ -1152,11 +1173,11 @@ function pickSingleWithPriority(pool, reqProv, reqProto = null, excludeUrl = "")
   return null;
 }
 
-// Chọn nguồn thay thế cho 1 chân bị hỏng trong Link Combo:
-// 1. Ưu tiên nguồn cùng nhà mạng với chân bị hỏng (khác nhà mạng với chân lành)
-// 2. Nếu hết nguồn cùng mạng -> chọn bất kỳ nguồn đủ điều kiện nào khác nhà mạng với chân lành (ưu tiên Kitty -> failover_pref -> các mạng đã xác minh)
+// Chọn nguồn thay thế cho 1 chân bị hỏng trong Link Combo (chỉ trong tập nhà mạng hỗ trợ V4/V5/V6: lx, dj, kt)
 function pickComboReplacementLeg(pool, brokenProv, healthyProv, healthyUrl = "", failoverPref = "kt") {
-  if (brokenProv && brokenProv !== "other" && brokenProv !== healthyProv) {
+  const supportedComboProvs = new Set(["lx", "dj", "kt"]);
+  if (!supportedComboProvs.has(healthyProv)) return null;
+  if (brokenProv && supportedComboProvs.has(brokenProv) && brokenProv !== healthyProv) {
     const samePool = (pool || []).filter(p => p.url !== healthyUrl && isSourceEligibleForAuto(p, brokenProv, null));
     const nSame = pickNode(samePool, healthyUrl);
     if (nSame) return {
@@ -1165,7 +1186,7 @@ function pickComboReplacementLeg(pool, brokenProv, healthyProv, healthyUrl = "",
       sameNetwork: true
     };
   }
-  const prefOrder = Array.from(new Set(["kt", failoverPref || "lx", "lx", "dj"]));
+  const prefOrder = Array.from(new Set(["kt", failoverPref || "lx", "lx", "dj"])).filter(p => supportedComboProvs.has(p));
   for (const candProv of prefOrder) {
     if (!candProv || candProv === healthyProv) continue;
     const candPool = (pool || []).filter(p => p.url !== healthyUrl && isSourceEligibleForAuto(p, candProv, null));
@@ -1176,17 +1197,6 @@ function pickComboReplacementLeg(pool, brokenProv, healthyProv, healthyUrl = "",
       sameNetwork: false
     };
   }
-  const anyOther = (pool || []).filter(p => {
-    if (p.url === healthyUrl || !isSourceEligibleForAuto(p, null, null)) return false;
-    const m = resolvePoolLegMeta(p, 1);
-    return m.provider !== healthyProv;
-  });
-  const nAny = pickNode(anyOther, healthyUrl);
-  if (nAny) return {
-    node: nAny,
-    meta: resolvePoolLegMeta(nAny, 1),
-    sameNetwork: false
-  };
   return null;
 }
 
@@ -1334,11 +1344,9 @@ const notTomb = (links, tb) => {
 };
 
 // ---------------------------------------------------------------- state
-const isTestOrderRecord = (o) => !o || !o.id || String(o.id).startsWith("DH_TEST_") || o.isTest === true || String(o.email || "").toLowerCase().includes("khach_test");
-
+// v2 — 2026-11-06 22:00 (UTC+7) — Supabase là nguồn đơn hàng duy nhất; loại bỏ hoàn toàn đọc/ghi ALL_ORDERS và ALL_ORDERS_TEST trong KV
 async function loadAll(KV, env, isTestOverride = null) {
   const g = async (k, d) => safeJson(await KV.get(k), d);
-  // Nếu không truyền isTestOverride cụ thể, tự động đồng bộ theo trạng thái TEST_MODE_ACTIVE trong KV
   let isTest = isTestOverride;
   if (isTest === null) {
     isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
@@ -1363,13 +1371,9 @@ async function loadAll(KV, env, isTestOverride = null) {
       orders = [];
     }
   } else {
+    sbOk = false;
     sbError = "Chưa cấu hình SUPABASE_KEY / SUPABASE_URL";
-    // Chỉ đọc KV khi hoàn toàn không có kết nối Supabase
-    const kvOrders = arr(await g(isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS", []));
-    orders = isTest ? kvOrders : kvOrders.filter(o => !isTestOrderRecord(o));
-    sbOk = true;
   }
-  // v1 — 2026-11-06 20:15 (UTC+7) — Nạp thêm FULFILLMENT_CONFIG trong loadAll() để fulfillOrder đọc đúng cấu hình
   const [links, pool, cms, fulfillCfgRaw] = await Promise.all([g("ALL_LINKS", []), g("LINK_POOL", []), g("ALL_CMS", {}), g("FULFILLMENT_CONFIG", { mapping: {}, failover_pref: "lx" })]);
   const st = {
     orders,
@@ -1394,8 +1398,7 @@ async function persist(KV, st) {
   }
   for (const p of st.pool) p.used = st.links.filter((l) => l && (l.orig === p.url || l.orig2 === p.url)).length;
   const w = [];
-  // Tuyệt đối không ghi ALL_ORDERS vào Cloudflare KV nữa - 100% dùng Supabase
-  if (st.dL) w.push(KV.put("ALL_LINKS", JSON.stringify(st.links)), KV.put("GLOBAL_ROUTER", JSON.stringify(buildGlobalRouter(st.links, st.orders))));
+  if (st.dL) w.push(KV.put("ALL_LINKS", JSON.stringify(st.links)), KV.put("GLOBAL_ROUTER", JSON.stringify(buildGlobalRouter(st.links, st.orders, st.pool))));
   if (st.dP) w.push(KV.put("LINK_POOL", JSON.stringify(st.pool)));
   await Promise.all(w);
   st.dO = st.dL = st.dP = false;
@@ -1938,14 +1941,9 @@ export default {
     const url = new URL(request.url), p = url.pathname, m = request.method;
     const KV = getKV(env);
     if (!KV) return new Response("LỖI: Chưa kết nối kho KV", { status: 500, headers: CORS });
-    // Chuẩn hóa xác định môi trường Test Mode cho request hiện tại:
-    // 1. Ưu tiên URL param ?test=1 hoặc ?test=0 (nếu có)
-    // 2. Tiếp theo ưu tiên Header X-Test-Mode: 1 hoặc 0 (nếu có)
-    // 3. Nếu không có cờ từ client, tự động lấy trạng thái TEST_MODE_ACTIVE từ KV (Admin chọn kho nào thì Worker dùng kho đó)
-    const isTestParam = url.searchParams.has("test") ? (url.searchParams.get("test") === "1") : null;
-    const isTestHeader = request.headers.has("X-Test-Mode") ? (request.headers.get("X-Test-Mode") === "1") : null;
+    // v2 — 2026-11-06 22:00 (UTC+7) — KV TEST_MODE_ACTIVE của chính Worker là nguồn duy nhất quyết định bảng Supabase (ALL_ORDERS_TEST vs ALL_ORDERS)
     const isTestKv = (await KV.get("TEST_MODE_ACTIVE")) === "1";
-    const reqIsTest = isTestParam !== null ? isTestParam : (isTestHeader !== null ? isTestHeader : isTestKv);
+    const reqIsTest = isTestKv;
     const J = (d, s = 200) => new Response(JSON.stringify(d), {
       status: s,
       headers: {
@@ -2105,17 +2103,19 @@ export default {
         };
 
         const modeFromProv = (prov, u, proto = "") => {
-          if (proto === "v7" || prov === "custom_v7" || routeVer === "v7") return "custom_v7";
-          if (proto === "v8" || prov === "custom_v8" || routeVer === "v8") return "custom_v8";
+          if (prov === "custom_v7" || proto === "v7") return "custom_v7";
+          if (prov === "custom_v8" || proto === "v8") return "custom_v8";
           if (prov === "kt" || proto === "v3") return "kitty";
           if (prov === "lx" || proto === "v1") return "liangxin";
           if (prov === "dj" || proto === "v2") return "djjc";
+          if (routeVer === "v7") return "custom_v7";
+          if (routeVer === "v8") return "custom_v8";
           const m = detectUrlSourceMeta(u);
+          if (m.provider === "custom_v7") return "custom_v7";
+          if (m.provider === "custom_v8") return "custom_v8";
           if (m.provider === "kt") return "kitty";
           if (m.provider === "lx") return "liangxin";
           if (m.provider === "dj") return "djjc";
-          if (m.provider === "custom_v7") return "custom_v7";
-          if (m.provider === "custom_v8") return "custom_v8";
           return "liangxin";
         };
 
@@ -2150,9 +2150,10 @@ export default {
             if (!targetUrl) return getDead();
             const r = await fetch(targetUrl, { headers: { "User-Agent": "v2rayN/6.23" } });
             if (!r.ok) return getDead();
-            const rawB64 = (await r.text()).replace(/\s+/g, "");
+            const rawText = (await r.text()).trim();
             const provName = modeFromProv(targetProv, targetUrl);
-            const { newB64, yamlStr, singboxStr } = processB64(rawB64, ACTIVE_INFO_NAMES, VP, provName);
+            const { newB64, yamlStr, singboxStr, error: procErr } = processB64(rawText, ACTIVE_INFO_NAMES, VP, provName);
+            if (procErr || (!newB64 && !yamlStr && !singboxStr)) return getDead();
             return isSingbox ? respond(singboxStr, "singbox", expireSec) : isClash ? respond(yamlStr, "yaml", expireSec) : respond(newB64, "b64", expireSec);
           }
 
@@ -2232,20 +2233,19 @@ export default {
             cf: { cacheTtl: 0, cacheEverything: false }
           });
           if (r.ok) {
-            const rawB64 = (await r.text()).replace(/\s+/g, ""), ui = r.headers.get("subscription-userinfo") || "";
-            if (rawB64 && rawB64.length >= 20) {
-              const { newB64, yamlStr, singboxStr } = processB64(rawB64, ACTIVE_INFO_NAMES, VP, singleMode);
-              cd = {
-                body_b64: newB64,
-                body_yaml: yamlStr,
-                body_singbox: singboxStr,
-                info: ui
-              };
-              subsObj[originToken] = cd;
-              ctx.waitUntil(KV.put("GLOBAL_SUBS", JSON.stringify(subsObj)));
-              if (isSingbox) return singboxStr && singboxStr.length > 500 ? respond(singboxStr, "singbox", expireSec) : getDead();
-              if (isClash) return yamlStr && yamlStr.length > 200 ? respond(yamlStr, "yaml", expireSec) : getDead();
-              return respond(newB64, "b64", expireSec);
+            const rawText = (await r.text()).trim(), ui = r.headers.get("subscription-userinfo") || "";
+            if (rawText && rawText.length >= 20) {
+              const { newB64, yamlStr, singboxStr, error: procErr } = processB64(rawText, ACTIVE_INFO_NAMES, VP, singleMode);
+              if (!procErr && (newB64 || yamlStr || singboxStr)) {
+                cd = {
+                  body_b64: newB64,
+                  body_yaml: yamlStr,
+                  body_singbox: singboxStr,
+                  info: ui
+                };
+                subsObj[originToken] = cd;
+                ctx.waitUntil(KV.put("GLOBAL_SUBS", JSON.stringify(subsObj)));
+              }
             }
           }
         }
@@ -2427,88 +2427,53 @@ export default {
       const t = await KV.get("translations", { cacheTtl: 60 });
       return RAW(t || '{"version":"","vi":{},"en":{},"zh":{}}');
     }
+    // v2 — 2026-11-06 22:00 (UTC+7) — Tra cứu đơn trực tiếp từ Supabase theo TEST_MODE_ACTIVE, loại bỏ fallback KV và PENDING_ORD_*
     if (p === "/api/public/lookup" && m === "POST") {
       const isTestReq = reqIsTest;
       const b = await body();
       const rawQ = String(b.q || "").trim();
       const isEmailQuery = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawQ);
       const sb = env ? getSupabase(env, isTestReq) : null;
+      if (!sb) {
+        return J({
+          ok: false,
+          error: "Chưa cấu hình kết nối cơ sở dữ liệu đơn hàng (Supabase)"
+        }, 503);
+      }
 
       let matchedOrders = [];
       let o = null;
 
-      // Quy tắc môi trường chuẩn hóa:
-      // Trong kho TEST (ALL_ORDERS_TEST), mọi bản ghi lấy ra đều là đơn test hợp lệ.
-      // Trong kho PROD (ALL_ORDERS), loại bỏ đơn có cờ test hoặc tiền tố DH_TEST_ để bảo vệ dữ liệu thật.
-      const isMatchingEnv = (ord, isTest) => {
-        if (!ord) return false;
-        if (isTest) return true;
-        return !isTestOrderRecord(ord);
-      };
-
-      if (sb) {
-        try {
-          if (isEmailQuery) {
-            const emQuery = rawQ.toLowerCase().trim();
-            const resOrders = await sb.getOrdersByEmail(emQuery, 100);
-            matchedOrders = Array.isArray(resOrders) ? resOrders : [];
-            matchedOrders = matchedOrders.filter(ord => ord && String(ord.email || "").toLowerCase() === emQuery);
-            matchedOrders.sort((a, b) => (b.createdTs || 0) - (a.createdTs || 0));
-            o = matchedOrders.find(ord => normStatus(ord.status) === "success") || matchedOrders[0] || null;
-          } else {
-            const singleOrd = await sb.getOrder(normId(rawQ));
-            if (singleOrd) {
-              o = singleOrd;
-              matchedOrders = [singleOrd];
-              if (singleOrd.email) {
-                const related = await sb.getOrdersByEmail(singleOrd.email, 50).catch(() => []);
-                if (Array.isArray(related)) {
-                  related.forEach(ro => {
-                    if (ro && !matchedOrders.some(x => normId(x.id) === normId(ro.id))) {
-                      matchedOrders.push(ro);
-                    }
-                  });
-                }
+      try {
+        if (isEmailQuery) {
+          const emQuery = rawQ.toLowerCase().trim();
+          const resOrders = await sb.getOrdersByEmail(emQuery, 100);
+          matchedOrders = Array.isArray(resOrders) ? resOrders : [];
+          matchedOrders = matchedOrders.filter(ord => ord && String(ord.email || "").toLowerCase() === emQuery);
+          matchedOrders.sort((a, b) => (b.createdTs || 0) - (a.createdTs || 0));
+          o = matchedOrders.find(ord => normStatus(ord.status) === "success") || matchedOrders[0] || null;
+        } else if (rawQ) {
+          const singleOrd = await sb.getOrder(normId(rawQ));
+          if (singleOrd) {
+            o = singleOrd;
+            matchedOrders = [singleOrd];
+            if (singleOrd.email) {
+              const related = await sb.getOrdersByEmail(singleOrd.email, 50).catch(() => []);
+              if (Array.isArray(related)) {
+                related.forEach(ro => {
+                  if (ro && !matchedOrders.some(x => normId(x.id) === normId(ro.id))) {
+                    matchedOrders.push(ro);
+                  }
+                });
               }
             }
           }
-        } catch (err) {
-          return J({
-            ok: false,
-            error: "Lỗi kết nối cơ sở dữ liệu tra cứu: " + (err.message || String(err))
-          }, 503);
         }
-      } else {
-        // Fallback đọc KV khi không cấu hình Supabase
-        const g = async (k, d) => safeJson(await KV.get(k), d);
-        const kvOrders = arr(await g(isTestReq ? "ALL_ORDERS_TEST" : "ALL_ORDERS", []));
-        const allOrders = isTestReq ? kvOrders : kvOrders.filter(x => !isTestOrderRecord(x));
-
-        if (isEmailQuery) {
-          const emQuery = rawQ.toLowerCase();
-          matchedOrders = allOrders.filter(ord => ord && String(ord.email || "").toLowerCase() === emQuery);
-          matchedOrders.sort((a, b) => (b.createdTs || 0) - (a.createdTs || 0));
-          o = matchedOrders.find(ord => normStatus(ord.status) === "success") || matchedOrders[0] || null;
-        } else {
-          const byId = allOrders.find(ord => ord && normId(ord.id) === normId(rawQ));
-          if (byId) {
-            o = byId;
-            const em = String(byId.email || "").toLowerCase();
-            matchedOrders = em ? allOrders.filter(x => String(x.email || "").toLowerCase() === em) : [byId];
-          }
-        }
-      }
-      // Fallback kiểm tra bộ nhớ đệm đơn hàng chờ (KV Pending Cache)
-      if (!o && rawQ) {
-        const rawPending = await KV.get("PENDING_ORD_" + normId(rawQ));
-        if (rawPending) {
-          const pOrd = safeJson(rawPending, null);
-          if (pOrd && isMatchingEnv(pOrd, isTestReq)) {
-            o = pOrd;
-            o._fromKvPending = true; // Đánh dấu rõ nguồn dữ liệu từ bộ đệm tạm thời
-            if (!matchedOrders.some(x => normId(x.id) === normId(pOrd.id))) matchedOrders.push(pOrd);
-          }
-        }
+      } catch (err) {
+        return J({
+          ok: false,
+          error: "Lỗi kết nối cơ sở dữ liệu tra cứu: " + (err.message || String(err))
+        }, 503);
       }
 
       // 1. Xác định Web và trường schema tương ứng (Web 1 -> info1, Web 2 -> info2, Web 3 -> info3)
@@ -2657,6 +2622,11 @@ export default {
       const b = await body(), id = normId(b.id), pk = PKGS[b.pkgId], qty = Math.max(1, Math.min(120, parseInt(b.qty) || 1));
       if (!/^DH[A-Z0-9]{10}$/.test(id) || !pk || pk.old) return J({ ok: false, error: "Dữ liệu đơn hàng không hợp lệ" }, 400);
       const st = await loadAll(KV, env, isTestReq), now = NOW();
+      if (!st.sbOk) {
+        log("error", "order", `Không thể tải dữ liệu Supabase (${isTestReq ? "ALL_ORDERS_TEST" : "ALL_ORDERS"}) khi tạo đơn`, `${id}: ${st.sbError || "Supabase unavailable"}`, id);
+        await flushLog(KV, log);
+        return J({ ok: false, error: "Hệ thống cơ sở dữ liệu đơn hàng đang bận hoặc lỗi kết nối. Vui lòng thử lại!" }, 503);
+      }
       const dup = st.orders.find((o) => o && normId(o.id) === id);
       if (dup) return J({ ok: true, order: pub(dup, st), existed: true });
       // v1 — 2026-11-06 20:35 (UTC+7) — Đồng bộ day0(now), liên kết renewSrc khi KEEP_EXISTING, đồng bộ fs.scope, làm tròn 1,000đ và maxDiscount
@@ -2844,24 +2814,23 @@ export default {
         bonusText
       };
       o.expDate = computeExp(o, st.orders, now, giftRules);
-      st.orders.unshift(o);
-
-      // Lưu bộ đệm dự phòng vào KV với TTL 24h để tra cứu không bao giờ 404
-      await KV.put("PENDING_ORD_" + o.id, JSON.stringify(o), { expirationTtl: 86400 });
-
       const sb = getSupabase(env, st.isTest);
-      if (sb) {
+      if (!sb) {
+        return J({ ok: false, error: "Chưa cấu hình cơ sở dữ liệu đơn hàng (Supabase)" }, 503);
+      }
+      try {
+        await sb.upsert(o);
+      } catch (sbErr1) {
         try {
           await sb.upsert(o);
-        } catch (sbErr) {
+        } catch (sbErr2) {
           const lErr = mkLog();
-          lErr("error", "order", `Lỗi ghi đơn vào Supabase (${st.isTest ? "Kho Test" : "Kho Thật"})`, `${o.id}: ${sbErr.message || String(sbErr)}`, o.id);
+          lErr("error", "order", `Lỗi ghi đơn vào Supabase (${st.isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS"})`, `${o.id}: ${sbErr2.message || String(sbErr2)}`, o.id);
           await flushLog(KV, lErr);
-          // Đánh dấu cờ chưa đồng bộ DB vào bộ nhớ đệm KV để nhận diện và đồng bộ bù
-          o._dbSynced = false;
-          await KV.put("PENDING_ORD_" + o.id, JSON.stringify(o), { expirationTtl: 86400 });
+          return J({ ok: false, error: "Không thể lưu đơn hàng vào cơ sở dữ liệu. Vui lòng thử lại!" }, 503);
         }
       }
+      st.orders.unshift(o);
       ctx.waitUntil((async () => {
         try {
           const r = await d1Register(env, url, o, o.orderType), l2 = mkLog();
@@ -2879,9 +2848,11 @@ export default {
       })());
       return J({ ok: true, order: pub(o, st) });
     }
-    // v2 — 2026-11-06 21:10 (UTC+7) — Đồng bộ fs.scope và fallback giá gói cũ khi gói thay đổi trong /api/public/upgrade
+    // v3 — 2026-11-06 22:00 (UTC+7) — Bắt buộc lưu thành công vào Supabase trước khi trả ok trong /api/public/upgrade
     if (p === "/api/public/upgrade" && m === "POST") {
-      const b = await body(), st = await loadAll(KV, env, reqIsTest), o = st.orders.find((x) => x && normId(x.id) === normId(b.orderId));
+      const b = await body(), st = await loadAll(KV, env, reqIsTest);
+      if (!st.sbOk) return J({ ok: false, error: "Lỗi kết nối cơ sở dữ liệu đơn hàng" }, 503);
+      const o = st.orders.find((x) => x && normId(x.id) === normId(b.orderId));
       const tg = PKGS[b.pkgId], qty = Math.max(1, Math.min(120, parseInt(b.qty) || 1));
       if (!o || !tg || tg.old) return J({ ok: false, error: "Không tìm thấy đơn hoặc gói" }, 404);
       if (normStatus(o.status) !== "success") return J({ ok: false, error: "Đơn chưa kích hoạt" }, 409);
@@ -2926,13 +2897,17 @@ export default {
       o.upgradeStatus = "pending";
       o.isUpgrade = true;
       const sb = getSupabase(env, st.isTest);
-      if (sb) {
+      if (!sb) return J({ ok: false, error: "Chưa cấu hình cơ sở dữ liệu đơn hàng (Supabase)" }, 503);
+      try {
+        await sb.upsert(o);
+      } catch (sbErr1) {
         try {
           await sb.upsert(o);
-        } catch (sbErr) {
+        } catch (sbErr2) {
           const lErr = mkLog();
-          lErr("error", "order", `Lỗi ghi đơn vào Supabase (${st.isTest ? "Kho Test" : "Kho Thật"})`, `${o.id}: ${sbErr.message || String(sbErr)}`, o.id);
+          lErr("error", "order", `Lỗi ghi nâng gói vào Supabase (${st.isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS"})`, `${o.id}: ${sbErr2.message || String(sbErr2)}`, o.id);
           await flushLog(KV, lErr);
+          return J({ ok: false, error: "Không thể lưu yêu cầu nâng gói vào cơ sở dữ liệu. Vui lòng thử lại!" }, 503);
         }
       }
       ctx.waitUntil((async () => {
@@ -2952,7 +2927,9 @@ export default {
       return J({ ok: true, order: pub(o, st) });
     }
     if (p === "/api/public/data_request" && m === "POST") {
-      const b = await body(), st = await loadAll(KV, env, reqIsTest), o = st.orders.find((x) => x && normId(x.id) === normId(b.orderId));
+      const b = await body(), st = await loadAll(KV, env, reqIsTest);
+      if (!st.sbOk) return J({ ok: false, error: "Lỗi kết nối cơ sở dữ liệu đơn hàng" }, 503);
+      const o = st.orders.find((x) => x && normId(x.id) === normId(b.orderId));
       if (!o) return J({ ok: false, error: "not_found" }, 404);
       let reqs = arr(safeJson(await KV.get("ALL_DATA_REQUESTS"), []));
       const old = reqs.find((r) => r.orderId === o.id && r.status === "pending");
@@ -3003,7 +2980,11 @@ export default {
       const sb = getSupabase(env, true);
       if (!sb) return J({ ok: false, error: "Chưa cấu hình Supabase" }, 500);
       const now = NOW();
-      const fakeId = "DH_TEST_" + Math.floor(1000 + Math.random() * 9000);
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      const rndBytes = new Uint8Array(10);
+      crypto.getRandomValues(rndBytes);
+      let fakeId = "DH";
+      for (let i = 0; i < 10; i++) fakeId += chars[rndBytes[i] % chars.length];
       const fakeOrder = {
         id: fakeId,
         email: "khach_test@gmail.com",
@@ -3022,6 +3003,7 @@ export default {
         createdTs: now,
         date: fmtBank(now),
         dateCreated: dmy(now),
+        isTest: true,
         info1: "https://vpntrinhhg.pages.dev/v1/VPNTrinhHg?OwO=test1",
         info2: "",
         info3: ""
@@ -3036,8 +3018,8 @@ export default {
     }
     if (p === "/api/admin/test/clear" && m === "POST") {
       const sb = getSupabase(env, true);
-      if (sb) await sb.clearTest();
-      await KV.put("ALL_ORDERS_TEST", "[]");
+      if (!sb) return J({ ok: false, error: "Chưa cấu hình Supabase" }, 500);
+      await sb.clearTest();
       return J({ ok: true });
     }
 
@@ -3087,30 +3069,19 @@ export default {
     }
 
     // ================================================================ INTERNAL (D1 / web khác / cron ngoài)
-    // v2 — 2026-11-06 21:10 (UTC+7) — Phân tách Kho Thật/Test theo mã đơn DH_TEST_ cho D1 Webhook & truyền applyUpgrade(o, st)
+    // v3 — 2026-11-06 22:00 (UTC+7) — Xác định bảng Supabase theo TEST_MODE_ACTIVE của Worker, tra cứu trực tiếp theo mã đơn, bỏ hoàn toàn fallback KV & PENDING_ORD_*
     if (p === "/api/internal/order" && m === "GET") {
       const bad = need(internal);
       if (bad) return bad;
       const targetId = normId(url.searchParams.get("id"));
-      const isTestOrd = targetId.startsWith("DH_TEST_");
-      const sb = getSupabase(env, isTestOrd);
+      if (!targetId) return J({ ok: false, error: "Missing id" }, 400);
+      const sb = getSupabase(env, reqIsTest);
+      if (!sb) return J({ ok: false, error: "Chưa cấu hình Supabase" }, 503);
       let o = null;
-      if (sb) {
-        try {
-          if (typeof sb.getOrder === "function") o = await sb.getOrder(targetId);
-          if (!o) {
-            const orders = await sb.getAll();
-            o = orders.find(x => x && normId(x.id) === targetId);
-          }
-        } catch {}
-      }
-      if (!o) {
-        const rawPending = await KV.get("PENDING_ORD_" + targetId);
-        if (rawPending) o = safeJson(rawPending, null);
-      }
-      if (!o) {
-        const kvAll = arr(safeJson(await KV.get(isTestOrd ? "ALL_ORDERS_TEST" : "ALL_ORDERS"), []));
-        o = kvAll.find(x => x && normId(x.id) === targetId) || null;
+      try {
+        o = await sb.getOrder(targetId);
+      } catch (err) {
+        return J({ ok: false, error: err.message || String(err) }, 503);
       }
       return o ? J({
         ok: true,
@@ -3137,7 +3108,7 @@ export default {
     if (p === "/api/internal/rename_order" && m === "POST") {
       const bad = need(internal);
       if (bad) return bad;
-      const b = await body(), st = await loadAll(KV, env), r = await applyRename(KV, st, b.from, b.to);
+      const b = await body(), st = await loadAll(KV, env, reqIsTest), r = await applyRename(KV, st, b.from, b.to);
       if (r > 0) await persist(KV, st);
       return J({ ok: true, renamed: r });
     }
@@ -3155,10 +3126,14 @@ export default {
         const b = await body();
         const ids = [...new Set(arr(b.orderIds).map(normId).filter(Boolean))];
         if (!ids.length) return J({ ok: true, skipped: true });
-        // Xác định kho Thật/Test theo chính mã đơn (đơn thật DH... luôn vào Kho Thật kể cả khi Admin đang bật Test Mode)
-        const isTestBatch = ids.every(id => id.startsWith("DH_TEST_"));
-        const st = await loadAll(KV, env, isTestBatch), me = getMe(url, env, st.cms);
+        // Xác định bảng Supabase theo TEST_MODE_ACTIVE của chính Worker nhận request
+        const st = await loadAll(KV, env, reqIsTest), me = getMe(url, env, st.cms);
         const sb = getSupabase(env, st.isTest);
+        if (!sb || !st.sbOk) {
+          log("error", "fulfill", `Supabase không sẵn sàng khi chạy auto_fulfill (${st.isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS"})`, st.sbError || "Supabase unavailable", ids[0]);
+          await flushLog(KV, log);
+          return J({ ok: false, error: st.sbError || "Supabase unavailable" }, 503);
+        }
         const upOrders = new Set(arr(b.upgrades).map((u) => normId(u.orderId)));
         const results = {
           fulfilled: [],
@@ -3168,80 +3143,38 @@ export default {
         };
         for (const oid of ids) {
           let o = st.orders.find((x) => x && normId(x.id) === oid);
-          // Cơ chế phục hồi an toàn tầng 1: Kiểm tra bộ nhớ đệm PENDING_ORD_ trong KV
-          if (!o) {
-            const rawPending = await KV.get("PENDING_ORD_" + oid);
-            if (rawPending) {
-              const po = safeJson(rawPending, null);
-              if (po && po.id) {
-                o = po;
-                st.orders.unshift(o);
-                log("info", "fulfill", "Phục hồi đơn từ KV PENDING cache để fulfillment", oid, oid);
-              }
-            }
-          }
-          // Cơ chế phục hồi an toàn tầng 2: Truy vấn trực tiếp từ D1 database
           if (!o) {
             try {
-              const d1Res = await d1(env, `/api/orders/${oid}`);
-              if (d1Res.ok && d1Res.data && d1Res.data.order) {
-                const d1o = d1Res.data.order;
-                const d1Pk = PKGS[d1o.pkg_id] || PKGS.d1 || {
-                  n: "Gói VPN",
-                  d: "100GB",
-                  vnd: d1o.total_vnd,
-                  cny: 0,
-                  m: 1
-                };
-                const ordType = d1o.order_type || "new";
-                o = {
-                  id: oid,
-                  email: d1o.email || "",
-                  zalo: "",
-                  method: "Ngân hàng VN",
-                  pkgId: d1o.pkg_id || "d1",
-                  qty: 1,
-                  pkgName: d1Pk.n,
-                  pkgData: d1Pk.d,
-                  pkg: pkgStr(d1Pk),
-                  totalVnd: Number(d1o.total_vnd) || 0,
-                  totalCny: 0,
-                  days: daysOfPkg(d1Pk, 1),
-                  needSupport: false,
-                  status: "pending",
-                  createdTs: d1o.created_at ? new Date(d1o.created_at).getTime() : NOW(),
-                  date: fmtBank(NOW()),
-                  dateCreated: dmy(NOW()),
-                  expFinal: false,
-                  workerUrl: d1o.worker_url || env.PUBLIC_WORKER_URL || url.origin,
-                  nickname: "",
-                  reason: "",
-                  info1: "",
-                  info2: "",
-                  info3: "",
-                  lockInfo: {},
-                  sourceWeb: d1o.target_web || "Web 3",
-                  orderType: ordType,
-                  subLinkDecision: ordType === "renew" ? "KEEP_EXISTING" : "CREATE_NEW"
-                };
-                o.expDate = computeExp(o, st.orders, NOW(), st.cms?.giftRules);
+              const directOrd = await sb.getOrder(oid);
+              if (directOrd && directOrd.id) {
+                o = directOrd;
                 st.orders.unshift(o);
-                log("info", "fulfill", "Phục hồi đơn từ D1 Database để fulfillment", oid, oid);
               }
-            } catch (errD1) {}
+            } catch (sbGetErr) {
+              results.errors.push(oid);
+              log("error", "fulfill", "Lỗi truy vấn trực tiếp đơn trên Supabase", `${oid}: ${sbGetErr.message || String(sbGetErr)}`, oid);
+              continue;
+            }
           }
           if (!o) {
             results.missing.push(oid);
-            log("warn", "fulfill", "D1 báo đã thanh toán nhưng không tìm thấy thông tin đơn", oid, oid);
+            log("warn", "fulfill", `Không tìm thấy đơn trong bảng ${st.isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS"}`, oid, oid);
             continue;
           }
-          let kind = null;
+          // Xác minh trạng thái thanh toán trước khi fulfillment (kiểm tra D1 nếu có kết nối, hoặc trạng thái đơn)
           if (normStatus(o.status) !== "success") {
+            const d1Check = await d1(env, `/api/orders/${oid}`);
+            if (d1Check.ok && d1Check.data && d1Check.data.order && d1Check.data.order.status && d1Check.data.order.status !== "success") {
+              results.errors.push(oid);
+              log("warn", "fulfill", "Chặn fulfillment - D1 chưa xác nhận trạng thái thanh toán success", oid, oid);
+              continue;
+            }
             o.status = "success";
             o.paidAt = NOW();
             o.reason = "";
             st.dO = true;
           }
+          let kind = null;
           if (upOrders.has(oid)) {
             if (o.pendingUpgrade) {
               applyUpgrade(o, st);
@@ -3256,47 +3189,50 @@ export default {
             results.errors.push(oid);
             continue;
           }
-          if (sb) {
-            // Cập nhật an toàn qua PATCH: chỉ cập nhật trường info của web này, không đè info web khác
-            const patchPayload = {
-              [me.field]: o[me.field],
-              status: o.status,
-              paidAt: o.paidAt,
-              expDate: o.expDate,
-              expFinal: o.expFinal,
-              fulfilledAt: o.fulfilledAt,
-              fulfillResult: o.fulfillResult,
-              subLinkDecision: o.subLinkDecision,
-              fallbackNew: !!o.fallbackNew
-            };
-            if (o.isUpgrade) {
-              patchPayload.isUpgrade = true;
-              patchPayload.upgradeStatus = o.upgradeStatus;
-              patchPayload.upgradedAt = o.upgradedAt;
-              patchPayload.pkgId = o.pkgId;
-              patchPayload.pkgName = o.pkgName;
-              patchPayload.pkgData = o.pkgData;
-              patchPayload.pkg = o.pkg;
-              patchPayload.totalVnd = o.totalVnd;
-              patchPayload.totalCny = o.totalCny;
-            }
+          // Cập nhật đơn vào đúng bảng Supabase đang chọn; nếu ghi Supabase thất bại thì báo lỗi để retry, không báo fulfilled ảo
+          const patchPayload = {
+            [me.field]: o[me.field],
+            status: o.status,
+            paidAt: o.paidAt,
+            expDate: o.expDate,
+            expFinal: o.expFinal,
+            fulfilledAt: o.fulfilledAt,
+            fulfillResult: o.fulfillResult,
+            subLinkDecision: o.subLinkDecision,
+            fallbackNew: !!o.fallbackNew
+          };
+          if (o.isUpgrade) {
+            patchPayload.isUpgrade = true;
+            patchPayload.upgradeStatus = o.upgradeStatus;
+            patchPayload.upgradedAt = o.upgradedAt;
+            patchPayload.pkgId = o.pkgId;
+            patchPayload.pkgName = o.pkgName;
+            patchPayload.pkgData = o.pkgData;
+            patchPayload.pkg = o.pkg;
+            patchPayload.totalVnd = o.totalVnd;
+            patchPayload.totalCny = o.totalCny;
+            patchPayload.pendingUpgrade = o.pendingUpgrade || null;
+          }
+          let sbSaved = false;
+          try {
             if (typeof sb.updateOrder === "function") {
-              await sb.updateOrder(o.id, patchPayload).catch(async () => {
-                await sb.upsert(o).catch(() => {});
-              });
+              await sb.updateOrder(o.id, patchPayload);
             } else {
-              await sb.upsert(o).catch(() => {});
+              await sb.upsert(o);
+            }
+            sbSaved = true;
+          } catch {
+            try {
+              await sb.upsert(o);
+              sbSaved = true;
+            } catch (sbSaveErr) {
+              log("error", "fulfill", `Lỗi lưu kết quả fulfillment vào Supabase (${st.isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS"})`, `${oid}: ${sbSaveErr.message || String(sbSaveErr)}`, oid);
             }
           }
-          // Lưu trạng thái thành công và link VPN vào KV cache để Index tra cứu ra ngay
-          await KV.put("PENDING_ORD_" + o.id, JSON.stringify(o), { expirationTtl: 86400 });
-          // Đồng bộ vào bảng dự phòng tương ứng của KV (Kho Thật hoặc Kho Test)
-          const targetKvTable = st.isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS";
-          const kvAll = arr(safeJson(await KV.get(targetKvTable), []));
-          const idxAll = kvAll.findIndex(x => x && normId(x.id) === normId(o.id));
-          if (idxAll >= 0) kvAll[idxAll] = o;
-          else kvAll.unshift(o);
-          await KV.put(targetKvTable, JSON.stringify(kvAll.slice(0, 3000)));
+          if (!sbSaved) {
+            results.errors.push(oid);
+            continue;
+          }
 
           const mailKind = o.orderType === "renew" ? "renew" : "new";
           if (r === "new" || r === "renew") {
@@ -3338,9 +3274,11 @@ export default {
         try {
           let links = JSON.parse(await request.text());
           if (!Array.isArray(links)) return J({ error: "ALL_LINKS must be an array" }, 400);
-          links = notTomb(links, await loadTombs(KV)); // link đã xóa không thể được ghi lại từ bản cũ (admin cũ / update_sub.py)
+          const [tb, rawPool] = await Promise.all([loadTombs(KV), KV.get("LINK_POOL")]);
+          links = notTomb(links, tb); // link đã xóa không thể được ghi lại từ bản cũ (admin cũ / update_sub.py)
+          const pool = arr(safeJson(rawPool, []));
           await KV.put("ALL_LINKS", JSON.stringify(links));
-          await KV.put("GLOBAL_ROUTER", JSON.stringify(buildGlobalRouter(links, [])));
+          await KV.put("GLOBAL_ROUTER", JSON.stringify(buildGlobalRouter(links, [], pool)));
           return OK();
         } catch (e) {
           return J({ error: (e && e.message) || "Links error" }, 400);
@@ -3493,11 +3431,6 @@ export default {
           }
         } else {
           sbError = "Chưa cấu hình SUPABASE_KEY / SUPABASE_URL";
-          const kvOrders = safeJson(await KV.get(isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS"), []);
-          if (Array.isArray(kvOrders)) {
-            ordersList = isTest ? kvOrders : kvOrders.filter(o => !isTestOrderRecord(o));
-            sbOk = true;
-          }
         }
         const ordersData = JSON.stringify(ordersList);
         const [l, pl, dr] = await Promise.all(["ALL_LINKS", "LINK_POOL", "ALL_DATA_REQUESTS"].map((k) => KV.get(k)));
@@ -3539,7 +3472,7 @@ export default {
         links = notTomb(links, tb);
         const pool = arr(b.pool);
         for (const pl of pool) pl.used = links.filter((l) => l && (l.orig === pl.url || l.orig2 === pl.url)).length;
-        await Promise.all([KV.put("ALL_LINKS", JSON.stringify(links)), KV.put("LINK_POOL", JSON.stringify(pool)), KV.put("GLOBAL_ROUTER", JSON.stringify(buildGlobalRouter(links, [])))]);
+        await Promise.all([KV.put("ALL_LINKS", JSON.stringify(links)), KV.put("LINK_POOL", JSON.stringify(pool)), KV.put("GLOBAL_ROUTER", JSON.stringify(buildGlobalRouter(links, [], pool)))]);
         return OK();
       }
 
@@ -3638,7 +3571,13 @@ export default {
         return J(res);
       }
       if (p === "/api/admin/telegram/reset_stt" && m === "POST") {
-        await Promise.all([KV.delete("TG_BACKUP_PROD_LAST_STT"), KV.delete("TG_BACKUP_TEST_LAST_STT")]);
+        for (const sk of ["TG_BACKUP_STATE_PROD", "TG_BACKUP_STATE_TEST"]) {
+          const stObj = safeJson(await KV.get(sk), null);
+          if (stObj && typeof stObj === "object") {
+            stObj.stt = 0;
+            await KV.put(sk, JSON.stringify(stObj));
+          }
+        }
         log("warn", "admin", "Reset STT Telegram Backup về 01");
         await flushLog(KV, log);
         return J({ ok: true });
@@ -3773,7 +3712,7 @@ export default {
         return J(r.data || { ok: false }, r.ok ? 200 : r.status || 502);
       }
 
-      // ===== Đơn hàng: API danh sách phân trang, tìm kiếm & chi tiết
+      // ===== Đơn hàng: API danh sách phân trang, tìm kiếm & chi tiết (100% Supabase, không fallback KV)
       if (p === "/api/admin/orders" && m === "GET") {
         const isTest = reqIsTest;
         const sb = getSupabase(env, isTest);
@@ -3781,57 +3720,22 @@ export default {
         const search = url.searchParams.get("q") || url.searchParams.get("search") || "";
         const limit = Math.min(Number(url.searchParams.get("limit")) || 50, 500);
         const offset = Math.max(Number(url.searchParams.get("offset")) || 0, 0);
-        if (sb) {
-          try {
-            const res = await sb.listOrders({ status, search, limit, offset });
-            return J({
-              ok: true,
-              orders: res.data,
-              count: res.count,
-              limit,
-              offset,
-              source: isTest ? "supabase_test" : "supabase_prod"
-            });
-          } catch (e) {
-            if (!isTest) {
-              const all = arr(safeJson(await KV.get("ALL_ORDERS"), []));
-              let filtered = all;
-              if (status && status !== "all") filtered = filtered.filter(o => normStatus(o.status) === normStatus(status));
-              if (search) {
-                const s = search.toLowerCase();
-                filtered = filtered.filter(o => (o.id && o.id.toLowerCase().includes(s)) || (o.email && o.email.toLowerCase().includes(s)) || (o.nickname && o.nickname.toLowerCase().includes(s)));
-              }
-              const paged = filtered.slice(offset, offset + limit);
-              return J({
-                ok: true,
-                orders: paged,
-                count: filtered.length,
-                limit,
-                offset,
-                source: "kv_fallback",
-                sbError: e.message || String(e)
-              });
-            }
-            return J({ ok: false, error: e.message || String(e) }, 500);
-          }
+        if (!sb) {
+          return J({ ok: false, error: "Chưa cấu hình SUPABASE_KEY / SUPABASE_URL" }, 503);
         }
-        const all = arr(safeJson(await KV.get(isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS"), []));
-        let filtered = all;
-        if (status && status !== "all") filtered = filtered.filter(o => normStatus(o.status) === normStatus(status));
-        if (search) {
-          const s = search.toLowerCase();
-          filtered = filtered.filter(o => (o.id && o.id.toLowerCase().includes(s)) || (o.email && o.email.toLowerCase().includes(s)) || (o.nickname && o.nickname.toLowerCase().includes(s)));
+        try {
+          const res = await sb.listOrders({ status, search, limit, offset });
+          return J({
+            ok: true,
+            orders: res.data,
+            count: res.count,
+            limit,
+            offset,
+            source: isTest ? "supabase_test" : "supabase_prod"
+          });
+        } catch (e) {
+          return J({ ok: false, error: e.message || String(e) }, 503);
         }
-        const paged = filtered.slice(offset, offset + limit);
-        return J({
-          ok: true,
-          orders: paged,
-          count: filtered.length,
-          limit,
-          offset,
-          source: "kv",
-          sbError: "Chưa cấu hình SUPABASE_KEY / SUPABASE_URL"
-        });
       }
 
       const ordDetailMatch = p.match(/^\/api\/admin\/orders\/([A-Za-z0-9_-]+)$/);
@@ -3839,20 +3743,20 @@ export default {
         const oid = normId(ordDetailMatch[1]);
         const isTest = reqIsTest;
         const sb = getSupabase(env, isTest);
-        if (sb) {
-          try {
-            const order = await sb.getOrder(oid);
-            if (order) return J({
-              ok: true,
-              order,
-              source: isTest ? "supabase_test" : "supabase_prod"
-            });
-          } catch (e) {}
+        if (!sb) {
+          return J({ ok: false, error: "Chưa cấu hình SUPABASE_KEY / SUPABASE_URL" }, 503);
         }
-        const st = await loadAll(KV, env);
-        const order = st.orders.find(o => o && normId(o.id) === oid);
-        if (!order) return J({ ok: false, error: "Không tìm thấy đơn hàng" }, 404);
-        return J({ ok: true, order, source: "kv" });
+        try {
+          const order = await sb.getOrder(oid);
+          if (!order) return J({ ok: false, error: "Không tìm thấy đơn hàng" }, 404);
+          return J({
+            ok: true,
+            order,
+            source: isTest ? "supabase_test" : "supabase_prod"
+          });
+        } catch (e) {
+          return J({ ok: false, error: e.message || String(e) }, 503);
+        }
       }
 
       // ===== Đơn hàng: upsert 1 đơn theo admin.html v2
@@ -4003,16 +3907,19 @@ export default {
           st.links = st.links.filter((l) => !(l && normId(l.orderId) === normId(o.id)));
           if (st.links.length !== before) st.dL = true;
         }
-        if (st.dL || st.dP) await persist(KV, st);
         const sb = getSupabase(env, st.isTest);
-        if (sb) {
-          if (renamedFrom) await sb.delete(renamedFrom, renamedFrom).catch(() => {});
-          try {
-            await sb.upsert(o);
-          } catch (sbErr) {
-            log("error", "order", `Lỗi Supabase khi Admin lưu đơn (${st.isTest ? "Kho Test" : "Kho Thật"})`, `${o.id}: ${sbErr.message || String(sbErr)}`, o.id);
-          }
+        if (!sb) {
+          return J({ ok: false, error: "Chưa cấu hình SUPABASE_KEY / SUPABASE_URL" }, 503);
         }
+        if (renamedFrom) await sb.delete(renamedFrom, renamedFrom).catch(() => {});
+        try {
+          await sb.upsert(o);
+        } catch (sbErr) {
+          log("error", "order", `Lỗi Supabase khi Admin lưu đơn (${st.isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS"})`, `${o.id}: ${sbErr.message || String(sbErr)}`, o.id);
+          await flushLog(KV, log);
+          return J({ ok: false, error: "Lỗi lưu đơn vào Supabase: " + (sbErr.message || String(sbErr)) }, 503);
+        }
+        if (st.dL || st.dP) await persist(KV, st);
         log("info", "admin", "Lưu đơn", `${o.id} → ${o.status}${kind ? " / " + kind : ""}${lockAuto ? " [khóa fulfillment]" : ""}${isManualEdit ? " [sửa tay]" : ""}${lockExp ? " [khóa hạn]" : ""}`, o.id);
         await flushLog(KV, log);
         if (stNorm === "success" && b.sendMail === true) mailFor(ctx, env, st, o, "new", me);
@@ -4029,8 +3936,20 @@ export default {
       if (p === "/api/admin/order" && m === "DELETE") {
         const rawParamId = String(url.searchParams.get("id") || "").trim();
         const id = normId(rawParamId), st = await st0();
+        const isTest = reqIsTest;
+        const sb = getSupabase(env, isTest);
+        if (!sb) return J({ ok: false, error: "Chưa cấu hình SUPABASE_KEY / SUPABASE_URL" }, 503);
         const oTarget = st.orders.find((x) => x && (normId(x.id) === id || x.id === rawParamId));
         const rawId = oTarget ? oTarget.id : rawParamId;
+
+        // Xóa đơn trên Supabase đồng bộ trước khi thu hồi link và phản hồi
+        try {
+          await sb.delete(id, rawId);
+        } catch (sbDelErr) {
+          log("error", "admin", "Lỗi xóa đơn trên Supabase", `${rawId}: ${sbDelErr.message || String(sbDelErr)}`, id);
+          await flushLog(KV, log);
+          return J({ ok: false, error: "Lỗi xóa đơn trên Supabase: " + (sbDelErr.message || String(sbDelErr)) }, 503);
+        }
 
         // Thu hồi và chuyển tất cả link sub của đơn này sang DEAD_LINKS
         const orderLinks = st.links.filter((l) => l && (normId(l.orderId) === id || (oTarget && [oTarget.info1, oTarget.info2, oTarget.info3].includes(l.masked))));
@@ -4053,19 +3972,9 @@ export default {
           st.dL = true;
         }
 
-        // Xóa đơn khỏi ALL_ORDERS
         st.orders = st.orders.filter((x) => !(x && (normId(x.id) === id || x.id === rawId)));
         st.dO = true;
         await persist(KV, st);
-
-        // Xóa đơn trên Supabase đồng bộ trước khi phản hồi (xóa cả id chuẩn lẫn rawId)
-        const isTest = reqIsTest;
-        const sb = getSupabase(env, isTest);
-        if (sb) {
-          try {
-            await sb.delete(id, rawId);
-          } catch {}
-        }
 
         log("warn", "admin", "Xóa đơn & Thu hồi Link", `${rawId} (${id}) · Thu hồi ${orderLinks.length} link sub`, id);
         await flushLog(KV, log);
@@ -4131,7 +4040,7 @@ export default {
           const tb = await loadTombs(KV);
           const links = notTomb(st.links, tb);
           await Promise.all([KV.put("ALL_LINKS", JSON.stringify(links)), KV.put("DEAD_LINKS", JSON.stringify(dead)), KV.put("ADMIN_DEVICES", JSON.stringify(devs)), KV.put("ALL_DATA_REQUESTS", JSON.stringify(drs))]);
-          await KV.put("GLOBAL_ROUTER", JSON.stringify(buildGlobalRouter(links, st.orders)));
+          await KV.put("GLOBAL_ROUTER", JSON.stringify(buildGlobalRouter(links, st.orders, st.pool)));
           log("ok", "admin", "Chuẩn hóa định dạng thời gian", JSON.stringify(Object.fromEntries(Object.entries(rep).map(([k, v]) => [k, v.changed]))));
           await flushLog(KV, log);
         }
@@ -4411,7 +4320,7 @@ async function runCron(env, ctx, opt) {
       ctx.waitUntil((async () => {
         await KV.put(backupKey, String(Date.now()), { expirationTtl: 86400 });
         const prodState = safeJson(await KV.get("TG_BACKUP_STATE_PROD"), null);
-        const lastOrderBackupTs = Number(prodState ? prodState.lastTs : (await KV.get("LAST_ORDER_BACKUP_TS"))) || 0;
+        const lastOrderBackupTs = Number(prodState && prodState.lastTs) || 0;
         if (!lastOrderBackupTs || (Date.now() - lastOrderBackupTs >= 24 * 36e5)) {
           const resOrders = await runTelegramBackup(env, "Tự động định kỳ 8h sáng (24h qua chưa có biến động)");
           log(resOrders.ok ? "ok" : "warn", "cron", "Tự động sao lưu Đơn hàng 8h sáng", `Gửi ${resOrders.count} đơn`);
@@ -4491,8 +4400,8 @@ async function runCron(env, ctx, opt) {
   return sum;
 }
 
-// v1 — 2026-11-06 20:15 (UTC+7) — Mở rộng buildGlobalRouter hỗ trợ ?hg= (v7/v8) và lưu metadata provider/protocol
-function buildGlobalRouter(links, orders = []) {
+// v2 — 2026-11-06 22:00 (UTC+7) — Ưu tiên manual metadata từ LINK_POOL và ALL_LINKS trong buildGlobalRouter, hỗ trợ getParam không phân biệt hoa/thường
+function buildGlobalRouter(links, orders = [], pool = []) {
   const r = {};
   if (!Array.isArray(links)) return r;
   const now = NOW();
@@ -4538,8 +4447,10 @@ function buildGlobalRouter(links, orders = []) {
         }
         const ot1 = l.orig && l.orig !== LOCK_ORIG ? extractSourceToken(l.orig) : "";
         const ot2 = l.orig2 && l.orig2 !== LOCK_ORIG ? extractSourceToken(l.orig2) : "";
-        const p1 = l.provider || detectUrlSourceMeta(l.orig).provider;
-        const p2 = l.provider2 || detectUrlSourceMeta(l.orig2).provider;
+        const meta1 = resolveUrlMetaFromPool(l.orig, pool, l, 1);
+        const meta2 = resolveUrlMetaFromPool(l.orig2, pool, l, 2);
+        const p1 = (l.provider && l.provider !== "other") ? l.provider : meta1.provider;
+        const p2 = (l.provider2 && l.provider2 !== "other") ? l.provider2 : meta2.provider;
         r[mt] = {
           isCombo: true,
           tokens: [ot1, ot2].filter(Boolean),
@@ -4566,12 +4477,14 @@ function buildGlobalRouter(links, orders = []) {
         continue;
       }
       const ot = extractSourceToken(l.orig);
-      const m1 = detectUrlSourceMeta(l.orig);
+      const meta1 = resolveUrlMetaFromPool(l.orig, pool, l, 1);
+      const finalProv = (meta1.provider && meta1.provider !== "other") ? meta1.provider : (l.provider || meta1.provider);
+      const finalProto = meta1.protocol || l.protocol || PROTO_MAP_DEFAULT[finalProv] || "v1";
       if (ot) r[mt] = {
         origTok: ot,
         origUrl: l.orig,
-        provider: l.provider || m1.provider,
-        protocol: l.protocol || m1.protocol,
+        provider: finalProv,
+        protocol: finalProto,
         isLocked,
         isCombo: false,
         expDate: effectiveExp || (isLife ? "Vĩnh viễn" : ""),
@@ -4585,9 +4498,13 @@ function buildGlobalRouter(links, orders = []) {
   return r;
 }
 function getParam(url, ...keys) {
+  const entries = [...url.searchParams.entries()];
   for (const k of keys) {
-    const v = url.searchParams.get(k);
-    if (v) return v;
+    const vDirect = url.searchParams.get(k);
+    if (vDirect) return safeDecode(vDirect).trim();
+    const kLow = String(k).toLowerCase();
+    const found = entries.find(([ek]) => String(ek).toLowerCase() === kLow);
+    if (found && found[1]) return safeDecode(found[1]).trim();
   }
   return null;
 }
@@ -5334,7 +5251,8 @@ function encB64(str) {
 // SUB PROCESS & CHUẨN HÓA NODE ĐỘC LẬP
 // ====================================================================
 
-const INFO_SKIP = ["剩余流量", "已用流量", "套餐总量", "距离下次重置", "套餐到期", "认准官网", "官网地址", "官网", "kitty.fo", "SKYLUMO", "如果现在只能看到", "立即更新教程", "群", "频道", "公告"];
+// v2 — 2026-11-06 22:00 (UTC+7) — Thay từ khóa đơn âm "群", "频道" quá rộng bằng cụm từ cụ thể để không làm rơi node thật ("集群", "群马")
+const INFO_SKIP = ["剩余流量", "已用流量", "套餐总量", "距离下次重置", "套餐到期", "认准官网", "官网地址", "官网", "kitty.fo", "SKYLUMO", "如果现在只能看到", "立即更新教程", "交流群", "官方群", "电报群", "TG群", "售后群", "官方频道", "通知频道", "公告"];
 const ISP_DROP_KEYWORDS = new Set(["CUCM", "CMCU", "CTCUCM", "CTCU"]);
 function cleanLiangxinNode(rawName) {
   if (!rawName) return "Liangxin - VPNTrinhHg";
@@ -5404,137 +5322,254 @@ function formatNodeName(rawName, prov = "liangxin") {
   return cleanUniversalNode(rawName);
 }
 
+// v2 — 2026-11-06 22:00 (UTC+7) — Hỗ trợ đầu vào Sing-box JSON, YAML, URI list (Base64 hoặc plain-text), cập nhật tag tham chiếu Sing-box và bắt lỗi định dạng rõ ràng
 function processB64(rawB64, infoNames, vp, isLiangxin) {
-  const decoded = decB64(rawB64);
-  if (!decoded) return { newB64: rawB64, yamlStr: "", singboxStr: "" };
+  const rawTrim = String(rawB64 || "").trim();
+  if (!rawTrim) return { newB64: "", yamlStr: "", singboxStr: "", error: "empty_subscription_input" };
+
+  const isPlainJson = rawTrim.startsWith("{") && rawTrim.includes('"outbounds"');
+  const isPlainYaml = /(?:^|\n)\s*proxies\s*:/m.test(rawTrim);
+  const isPlainUriList = /^(?:vmess|vless|trojan|ss|hysteria2|hy2|tuic|anytls):\/\//im.test(rawTrim);
+
+  const decoded = (isPlainJson || isPlainYaml || isPlainUriList) ? rawTrim : decB64(rawTrim);
+  if (!decoded) return { newB64: "", yamlStr: "", singboxStr: "", error: "invalid_base64_or_format" };
 
   const newB64Lines = infoNames.map(n => vp + encodeURIComponent(n));
   const proxies = [];
   const seenNames = {};
   const isCustomMode = /^custom/i.test(String(isLiangxin || ""));
   let customSingboxStr = "";
+  let customYamlStr = "";
 
-  if (decoded.trim().startsWith("{") && decoded.includes('"outbounds"')) {
+  const decTrim = decoded.trim();
+  if (decTrim.startsWith("{") && decTrim.includes('"outbounds"')) {
+    let sbData;
     try {
-      const sbData = JSON.parse(decoded);
-      for (const ob of (sbData.outbounds || [])) {
-        const oldName = ob.tag || "";
-        if (!oldName || INFO_SKIP.some(k => oldName.includes(k))) continue;
-        if (ob.server === "127.0.0.1" || ob.server === "1.1.1.1") continue;
-        let newName = formatNodeName(oldName, isLiangxin);
-        if (seenNames[newName]) {
-          seenNames[newName]++;
-          newName = `${newName} (${seenNames[newName]})`;
-        } else {
-          seenNames[newName] = 1;
-        }
+      sbData = JSON.parse(decTrim);
+    } catch (e) {
+      return { newB64: "", yamlStr: "", singboxStr: "", error: "invalid_singbox_json: " + (e.message || String(e)) };
+    }
+    const keptOutbounds = [];
+    const renamedMap = {};
+    const removedSpamTags = new Set();
 
-        const pType = ob.type;
-        if (pType === "vless") {
-          const tlsObj = ob.tls || {};
-          const trObj = ob.transport || {};
-          const roObj = tlsObj.reality || {};
-          const px = {
-            name: newName,
-            type: "vless",
-            server: ob.server,
-            port: Number(ob.server_port) || 443,
-            uuid: ob.uuid,
-            udp: true
-          };
-          if (ob.flow) px.flow = ob.flow;
-          if (tlsObj.utls && tlsObj.utls.fingerprint) px["client-fingerprint"] = tlsObj.utls.fingerprint;
-          if (tlsObj.server_name) px.servername = tlsObj.server_name;
-          let secType = "none";
-          if (tlsObj.enabled) {
-            px.tls = true;
-            if (roObj.enabled || roObj.public_key) {
-              secType = "reality";
-              px["reality-opts"] = {
-                "public-key": roObj.public_key || "",
-                "short-id": roObj.short_id || ""
-              };
-            } else {
-              secType = "tls";
-            }
-            if (tlsObj.insecure) px["skip-cert-verify"] = true;
-          }
-          if (trObj.type === "ws") {
-            px.network = "ws";
-            px["ws-opts"] = {
-              path: trObj.path || "/",
-              headers: {
-                Host: (trObj.headers && trObj.headers.Host) || px.servername || px.server
-              }
-            };
-          } else if (trObj.type === "grpc") {
-            px.network = "grpc";
-            px["grpc-opts"] = { "grpc-service-name": trObj.service_name || "" };
-          }
-          proxies.push(px);
-
-          const params = [];
-          if (trObj.type === "ws") {
-            params.push("type=ws", `path=${encodeURIComponent(trObj.path || "/")}`);
-            if (trObj.headers && trObj.headers.Host) params.push(`host=${encodeURIComponent(trObj.headers.Host)}`);
-          } else if (trObj.type === "grpc") {
-            params.push("type=grpc", `serviceName=${encodeURIComponent(trObj.service_name || "")}`);
-          } else {
-            params.push("type=tcp");
-          }
-          params.push(`security=${secType}`);
-          if (secType === "reality") {
-            if (roObj.public_key) params.push(`pbk=${roObj.public_key}`);
-            if (roObj.short_id) params.push(`sid=${roObj.short_id}`);
-            if (px.servername) params.push(`sni=${px.servername}`);
-            if (px["client-fingerprint"]) params.push(`fp=${px["client-fingerprint"]}`);
-          } else if (secType === "tls") {
-            if (px.servername) params.push(`sni=${px.servername}`);
-            if (px["client-fingerprint"]) params.push(`fp=${px["client-fingerprint"]}`);
-            if (px["skip-cert-verify"]) params.push("insecure=1");
-          }
-          if (px.flow) params.push(`flow=${px.flow}`);
-          newB64Lines.push(`vless://${px.uuid}@${px.server}:${px.port}?${params.join("&")}#${encodeURIComponent(newName)}`);
-        } else if (pType === "hysteria2" || pType === "hy2") {
-          const px = {
-            name: newName,
-            type: "hysteria2",
-            server: ob.server,
-            port: Number(ob.server_port) || 443,
-            password: ob.password || "",
-            udp: true,
-            "skip-cert-verify": true
-          };
-          if (ob.tls && ob.tls.server_name) px.sni = ob.tls.server_name;
-          const mport = ob.mport || ob.ports;
-          if (mport) {
-            px.mport = String(mport);
-            px.ports = String(mport);
-          }
-          proxies.push(px);
-          const sniP = px.sni ? `&sni=${px.sni}` : "";
-          const mpP = px.mport ? `&mport=${px.mport}` : "";
-          newB64Lines.push(`hysteria2://${px.password}@${px.server}:${px.port}?insecure=1${sniP}${mpP}#${encodeURIComponent(newName)}`);
-        }
+    for (const ob of (sbData.outbounds || [])) {
+      if (!ob || typeof ob !== "object") continue;
+      const oldName = String(ob.tag || "");
+      const pType = String(ob.type || "");
+      if (["selector", "urltest", "direct", "block", "dns"].includes(pType)) {
+        keptOutbounds.push({ ...ob });
+        continue;
       }
-      if (isCustomMode && sbData && typeof sbData === "object") {
-        const infoOutbounds = infoNames.map((n, i) => ({
+      if (!oldName || INFO_SKIP.some(k => oldName.includes(k)) || ob.server === "127.0.0.1" || ob.server === "1.1.1.1") {
+        if (oldName) removedSpamTags.add(oldName);
+        continue;
+      }
+      let newName = formatNodeName(oldName, isLiangxin);
+      if (seenNames[newName]) {
+        seenNames[newName]++;
+        newName = `${newName} (${seenNames[newName]})`;
+      } else {
+        seenNames[newName] = 1;
+      }
+      renamedMap[oldName] = newName;
+      keptOutbounds.push({ ...ob, tag: newName });
+
+      if (pType === "vless") {
+        const tlsObj = ob.tls || {};
+        const trObj = ob.transport || {};
+        const realityObj = tlsObj.reality || {};
+        const flow = ob.flow || "";
+        const sni = tlsObj.server_name || "";
+        const fp = tlsObj.utls?.fingerprint || "";
+        let secType = "none";
+
+        const px = {
+          name: newName,
           type: "vless",
-          tag: `${n} § ${i}`,
-          server: "127.0.0.1",
-          server_port: 1,
-          uuid: "00000000-0000-0000-0000-000000000000",
-          packet_encoding: "xudp"
-        }));
-        const preserved = {
-          ...sbData,
-          outbounds: [...infoOutbounds, ...(sbData.outbounds || []).filter(ob => ob && !INFO_SKIP.some(k => String(ob.tag || "").includes(k)))]
+          server: ob.server,
+          port: Number(ob.server_port) || 443,
+          uuid: ob.uuid,
+          udp: true
         };
-        customSingboxStr = JSON.stringify(preserved, null, 2);
+        if (flow) px.flow = flow;
+        if (fp) px["client-fingerprint"] = fp;
+        if (sni) px.servername = sni;
+
+        if (tlsObj.enabled) {
+          px.tls = true;
+          if (realityObj.enabled || realityObj.public_key) {
+            secType = "reality";
+            const ro = {};
+            if (realityObj.public_key) ro["public-key"] = realityObj.public_key;
+            if (realityObj.short_id) ro["short-id"] = realityObj.short_id;
+            if (Object.keys(ro).length) px["reality-opts"] = ro;
+          } else {
+            secType = "tls";
+          }
+          if (tlsObj.insecure) px["skip-cert-verify"] = true;
+        }
+
+        const trType = trObj.type || "tcp";
+        const params = [];
+        if (trType === "ws") {
+          px.network = "ws";
+          const wsPath = trObj.path || "/";
+          const wsHost = trObj.headers?.Host || sni || px.server;
+          px["ws-opts"] = { path: wsPath, headers: { Host: wsHost } };
+          params.push("type=ws", `path=${encodeURIComponent(wsPath)}`);
+          if (wsHost) params.push(`host=${encodeURIComponent(wsHost)}`);
+        } else if (trType === "grpc") {
+          px.network = "grpc";
+          const sn = trObj.service_name || "";
+          px["grpc-opts"] = { "grpc-service-name": sn };
+          params.push("type=grpc");
+          if (sn) params.push(`serviceName=${encodeURIComponent(sn)}`);
+        } else {
+          px.network = "tcp";
+          params.push("type=tcp");
+        }
+
+        params.push(`security=${secType}`);
+        if (secType === "reality") {
+          if (realityObj.public_key) params.push(`pbk=${realityObj.public_key}`);
+          if (realityObj.short_id) params.push(`sid=${realityObj.short_id}`);
+          if (sni) params.push(`sni=${sni}`);
+          if (fp) params.push(`fp=${fp}`);
+        } else if (secType === "tls") {
+          if (sni) params.push(`sni=${sni}`);
+          if (fp) params.push(`fp=${fp}`);
+          if (tlsObj.insecure) params.push("insecure=1");
+        }
+        if (flow) params.push(`flow=${flow}`);
+
+        proxies.push(px);
+        newB64Lines.push(`vless://${px.uuid}@${px.server}:${px.port}?${params.join("&")}#${encodeURIComponent(newName)}`);
+      } else if (pType === "hysteria2" || pType === "hy2") {
+        const tlsObj = ob.tls || {};
+        const obfsObj = ob.obfs || {};
+        const px = {
+          name: newName,
+          type: "hysteria2",
+          server: ob.server,
+          port: Number(ob.server_port) || 443,
+          password: ob.password,
+          udp: true,
+          "skip-cert-verify": true
+        };
+        if (tlsObj.server_name) px.sni = tlsObj.server_name;
+        if (obfsObj.type) px.obfs = obfsObj.type;
+        if (obfsObj.password) px["obfs-password"] = obfsObj.password;
+        let mport = ob.mport || ob.ports || ob.server_ports;
+        if (mport) {
+          if (Array.isArray(mport)) mport = mport.map(x => String(x).replace(":", "-")).join(",");
+          px.mport = String(mport);
+          px.ports = String(mport);
+        }
+        proxies.push(px);
+        const sniP = px.sni ? `&sni=${px.sni}` : "";
+        const mportP = px.mport ? `&mport=${px.mport}&ports=${px.ports}` : "";
+        const obfsP = px.obfs ? `&obfs=${px.obfs}&obfs-password=${encodeURIComponent(px["obfs-password"] || "")}` : "";
+        newB64Lines.push(`hysteria2://${px.password}@${px.server}:${px.port}?insecure=1${sniP}${mportP}${obfsP}#${encodeURIComponent(newName)}`);
       }
-    } catch (e) {}
+    }
+
+    if (isCustomMode && keptOutbounds.length) {
+      const infoOutbounds = infoNames.map((n, idx) => ({
+        type: "vless",
+        tag: `${n} § ${idx}`,
+        server: "127.0.0.1",
+        server_port: 1,
+        uuid: "00000000-0000-0000-0000-000000000000",
+        packet_encoding: "xudp"
+      }));
+      const infoTags = infoOutbounds.map(x => x.tag);
+      for (const ob of keptOutbounds) {
+        if (Array.isArray(ob.outbounds)) {
+          const mapped = ob.outbounds
+            .filter(t => !removedSpamTags.has(t))
+            .map(t => renamedMap[t] || t);
+          if (ob.type === "selector") {
+            ob.outbounds = [...infoTags, ...mapped.filter(t => !infoTags.includes(t))];
+          } else {
+            ob.outbounds = mapped;
+          }
+          if (ob.default && renamedMap[ob.default]) ob.default = renamedMap[ob.default];
+        }
+      }
+      if (sbData.route && typeof sbData.route === "object") {
+        if (sbData.route.final && renamedMap[sbData.route.final]) {
+          sbData.route.final = renamedMap[sbData.route.final];
+        }
+        if (Array.isArray(sbData.route.rules)) {
+          for (const r of sbData.route.rules) {
+            if (r && r.outbound && renamedMap[r.outbound]) r.outbound = renamedMap[r.outbound];
+          }
+        }
+      }
+      if (sbData.dns && typeof sbData.dns === "object" && Array.isArray(sbData.dns.servers)) {
+        for (const s of sbData.dns.servers) {
+          if (s && s.detour && renamedMap[s.detour]) s.detour = renamedMap[s.detour];
+        }
+      }
+      const preserved = {
+        ...sbData,
+        outbounds: [...infoOutbounds, ...keptOutbounds]
+      };
+      customSingboxStr = JSON.stringify(preserved, null, 2);
+    }
+  } else if (/(?:^|\n)\s*proxies\s*:/m.test(decTrim)) {
+    const yLines = decTrim.split(/\r?\n/);
+    let inProxies = false;
+    for (const rawLine of yLines) {
+      const trimmed = rawLine.trim();
+      if (/^proxies\s*:/i.test(trimmed)) {
+        inProxies = true;
+        continue;
+      }
+      if (inProxies && /^[a-zA-Z0-9_-]+\s*:/.test(trimmed) && !trimmed.startsWith("-")) {
+        inProxies = false;
+        continue;
+      }
+      if (!inProxies || !trimmed.startsWith("-")) continue;
+      const braceIdx = trimmed.indexOf("{");
+      const braceEnd = trimmed.lastIndexOf("}");
+      if (braceIdx >= 0 && braceEnd > braceIdx) {
+        try {
+          const jsonCandidate = trimmed.slice(braceIdx, braceEnd + 1)
+            .replace(/([{,]\s*)([a-zA-Z0-9_-]+)\s*:/g, '$1"$2":');
+          const pxObj = JSON.parse(jsonCandidate);
+          const oldName = String(pxObj.name || "");
+          if (!oldName || INFO_SKIP.some(k => oldName.includes(k)) || pxObj.server === "127.0.0.1") continue;
+          let newName = formatNodeName(oldName, isLiangxin);
+          if (seenNames[newName]) {
+            seenNames[newName]++;
+            newName = `${newName} (${seenNames[newName]})`;
+          } else {
+            seenNames[newName] = 1;
+          }
+          pxObj.name = newName;
+          pxObj.port = Number(pxObj.port) || 443;
+          proxies.push(pxObj);
+          if (pxObj.type === "vless" && pxObj.uuid) {
+            newB64Lines.push(`vless://${pxObj.uuid}@${pxObj.server}:${pxObj.port}?type=${pxObj.network || "tcp"}#${encodeURIComponent(newName)}`);
+          } else if ((pxObj.type === "hysteria2" || pxObj.type === "hy2") && pxObj.password) {
+            newB64Lines.push(`hysteria2://${pxObj.password}@${pxObj.server}:${pxObj.port}?insecure=1#${encodeURIComponent(newName)}`);
+          }
+        } catch {}
+      }
+    }
+    if (isCustomMode) {
+      customYamlStr = decTrim;
+    }
+    if (!proxies.length && !customYamlStr) {
+      return { newB64: "", yamlStr: "", singboxStr: "", error: "invalid_yaml_proxies" };
+    }
   } else {
-    const lines = decoded.split(/\r?\n/).map(l => l.trim()).filter(l => l.includes("://"));
+    const lines = decTrim.split(/\r?\n/).map(l => l.trim()).filter(l => l.includes("://"));
+    if (!lines.length) {
+      return { newB64: "", yamlStr: "", singboxStr: "", error: "invalid_uri_list" };
+    }
     for (const line of lines) {
       if (line.includes("127.0.0.1")) continue;
       const hi = line.lastIndexOf("#");
@@ -5559,7 +5594,7 @@ function processB64(rawB64, infoNames, vp, isLiangxin) {
   }
 
   const newB64 = encB64(newB64Lines.join("\n"));
-  const yamlStr = proxies.length ? buildYaml(proxies, infoNames, isLiangxin) : "";
+  const yamlStr = customYamlStr || (proxies.length ? buildYaml(proxies, infoNames, isLiangxin) : "");
   const singboxStr = customSingboxStr || (proxies.length ? buildSingboxFull(proxies, infoNames, isLiangxin) : "");
 
   return { newB64, yamlStr, singboxStr };
