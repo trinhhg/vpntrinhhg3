@@ -1,4 +1,4 @@
-<!-- v1.0 -2026-11-03 -->
+<!-- v1.0 -2026-11-08 -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
   <head>
@@ -38,10 +38,8 @@
     <link rel="stylesheet" href="/src/customer.css">
     <script>
       try {
-        const s = JSON.parse(localStorage.getItem('vpn_portal_session_24h') || 'null');
-        if (s && Date.now() - s.time < 864e5) {
-          document.documentElement.classList.add('has-user-session');
-        }
+        localStorage.removeItem('vpn_portal_session_24h');
+        localStorage.removeItem('vpn_portal_last_order');
       } catch (e) {}
       try {
         const t = localStorage.getItem('vpn_theme');
@@ -67,15 +65,49 @@
     </div>
     <!-- 4 BONG BÓNG HỖ TRỢ TRÊN MÁY TÍNH (GIỮ NGUYÊN 100% VỊ TRÍ VÀ HIỆU ỨNG GỐC) -->
     <div id="floatingSocials" class="hidden md:flex fixed bottom-6 right-6 z-50 flex-col gap-3 transition-all duration-300"><button onclick="openWechatModal()" class="w-12 h-12 bg-wechat text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce"><i class="fab fa-weixin"></i></button> <a href="https://t.me/hoaian57" target="_blank" class="w-12 h-12 bg-tele text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.1s"><i class="fab fa-telegram-plane"></i></a> <a href="https://www.facebook.com/trinh.hg.57" target="_blank" class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.2s"><i class="fab fa-facebook-messenger"></i></a> <a href="https://zalo.me/0917678211" target="_blank" class="w-12 h-12 bg-[#0068ff] text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition animate-bounce" style="animation-delay:.3s"><span class="font-bold text-[14px]">Zalo</span></a></div>
-    <!-- MODAL ĐĂNG NHẬP PORTAL (LAYER z-[99900] - DƯỚI TOAST) -->
+    <!-- MODAL ĐĂNG NHẬP PORTAL BẰNG MÃ ĐƠN HÀNG DH (LAYER z-[99900] - DƯỚI TOAST) -->
     <div id="guideAuthModal" class="hidden fixed inset-0 z-[99900] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all" onclick="closeGuideAuthModal()">
       <div class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-6 md:p-8 rounded-3xl text-center max-w-md w-full shadow-2xl relative" onclick="event.stopPropagation()">
         <button type="button" onclick="closeGuideAuthModal()" title="Đóng" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition"> <i class="fas fa-times text-sm"></i> </button>
         <div class="w-14 h-14 bg-indigo-100 dark:bg-indigo-900/40 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-600 dark:text-indigo-400 text-2xl shadow-inner"><i class="fas fa-shield-halved"></i></div>
         <h3 class="font-extrabold text-lg md:text-xl text-slate-800 dark:text-slate-100 mb-1">Truy cập Cổng Đơn Hàng</h3>
         <p id="guideAuthArtTitle" class="text-xs font-extrabold text-indigo-600 dark:text-indigo-400 mb-2"></p>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">Nhập <b>Email</b> hoặc <b>Mã đơn hàng (DH...)</b> của bạn để xem thông tin đơn hàng & lấy Link Subscription.</p>
-        <form onsubmit="submitGuideAuth(event)" class="space-y-3"><input type="text" id="guideAuthInput" name="vpn_portal_no_autofill_auth" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-lpignore="true" required placeholder="Nhập Email hoặc Mã đơn hàng..." class="w-full bg-slate-50 dark:bg-black border-2 border-indigo-100 dark:border-white/15 rounded-xl px-4 py-3 text-sm text-center font-bold text-slate-800 dark:text-white outline-none focus:border-indigo-500 transition"> <button type="submit" id="btnGuideAuthSubmit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 rounded-xl text-xs md:text-sm uppercase transition shadow-md"> <i class="fas fa-unlock-keyhole mr-1.5"></i>ĐĂNG NHẬP PORTAL NGAY </button></form>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">Nhập <b>Mã đơn hàng (DH...)</b> của bạn để xem thông tin đơn hàng &amp; lấy Link Subscription.</p>
+        <form onsubmit="submitGuideAuth(event)" class="space-y-3"><input type="text" id="guideAuthInput" name="vpn_portal_no_autofill_auth" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" data-lpignore="true" required placeholder="Nhập Mã đơn hàng (VD: DH7A92K5M3PQ)..." class="w-full bg-slate-50 dark:bg-black border-2 border-indigo-100 dark:border-white/15 rounded-xl px-4 py-3 text-sm text-center font-mono font-bold text-slate-800 dark:text-white uppercase outline-none focus:border-indigo-500 transition"> <button type="submit" id="btnGuideAuthSubmit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 rounded-xl text-xs md:text-sm uppercase transition shadow-md"> <i class="fas fa-unlock-keyhole mr-1.5"></i>MỞ CỔNG ĐƠN HÀNG </button></form>
+      </div>
+    </div>
+    <!-- MODAL XÁC MINH EMAIL KHI Ô LINK SUB BẬT KIỂM TRA (LAYER z-[99900] - DƯỚI TOAST z-[999999]) -->
+    <div id="emailVerifyModal" class="hidden fixed inset-0 z-[99900] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all" onclick="closeEmailVerifyModal()">
+      <div class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-6 md:p-8 rounded-3xl text-center max-w-md w-full shadow-2xl relative" onclick="event.stopPropagation()">
+        <button type="button" onclick="closeEmailVerifyModal()" title="Đóng" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition"> <i class="fas fa-times text-sm"></i> </button>
+        <div class="w-14 h-14 bg-indigo-100 dark:bg-indigo-900/40 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-600 dark:text-indigo-400 text-2xl shadow-inner"><i class="fas fa-envelope-circle-check"></i></div>
+        <h3 class="font-extrabold text-lg md:text-xl text-slate-800 dark:text-slate-100 mb-1">Xác minh email</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">Nhập email đã dùng khi mua đơn hàng để tiếp tục.</p>
+        <form onsubmit="submitEmailVerifyModal(event)" class="space-y-3"><input type="email" id="emailVerifyInput" name="vpn_portal_verify_email" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required placeholder="Nhập email mua hàng..." class="w-full bg-slate-50 dark:bg-black border-2 border-indigo-100 dark:border-white/15 rounded-xl px-4 py-3 text-sm text-center font-bold text-slate-800 dark:text-white outline-none focus:border-indigo-500 transition"> <button type="submit" id="btnEmailVerifySubmit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 rounded-xl text-xs md:text-sm uppercase transition shadow-md"> <i class="fas fa-check-circle mr-1.5"></i>Xác minh &amp; Tiếp tục </button></form>
+      </div>
+    </div>
+    <!-- MODAL HƯỚNG DẪN CÀI ĐẶT ỨNG DỤNG PWA (LAYER z-[99900] - DƯỚI TOAST) -->
+    <div id="pwaInstallGuideModal" class="hidden fixed inset-0 z-[99900] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm transition-all" onclick="closePwaInstallGuideModal()">
+      <div class="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-6 md:p-7 rounded-3xl max-w-md w-full shadow-2xl relative text-left" onclick="event.stopPropagation()">
+        <button type="button" onclick="closePwaInstallGuideModal()" title="Đóng" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition"> <i class="fas fa-times text-sm"></i> </button>
+        <div class="flex items-center gap-3 mb-4">
+          <img src="/icon-192.png" alt="VPN Trinh Hg" class="w-12 h-12 rounded-2xl shadow-md border border-slate-200 dark:border-white/10">
+          <div>
+            <h3 class="font-extrabold text-base md:text-lg text-slate-800 dark:text-white">Cài đặt ứng dụng VPN Trinh Hg</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Mở nhanh từ màn hình chính &amp; tra cứu đơn tiện lợi</p>
+          </div>
+        </div>
+        <div class="space-y-3 text-xs text-slate-600 dark:text-slate-300">
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#111111] border border-slate-200 dark:border-white/10 space-y-1.5">
+            <div class="font-extrabold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5"><i class="fab fa-apple text-sm"></i><span>Trên iPhone / iPad (Safari):</span></div>
+            <p class="leading-relaxed">1. Bấm nút <b>Chia sẻ (Share <i class="fas fa-arrow-up-from-bracket"></i>)</b> ở thanh công cụ dưới đáy trình duyệt.<br>2. Cuộn xuống và chọn <b>"Thêm vào MH chính" (Add to Home Screen)</b>.<br>3. Bấm <b>Thêm (Add)</b> ở góc phải trên cùng.</p>
+          </div>
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#111111] border border-slate-200 dark:border-white/10 space-y-1.5">
+            <div class="font-extrabold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5"><i class="fab fa-android text-sm"></i><span>Trên Android / Máy tính (Chrome, Edge):</span></div>
+            <p class="leading-relaxed">1. Bấm biểu tượng <b>Menu (⋮)</b> ở góc phải trình duyệt.<br>2. Chọn <b>"Cài đặt ứng dụng" (Install app)</b> hoặc <b>"Thêm vào màn hình chính"</b>.</p>
+          </div>
+        </div>
+        <button type="button" onclick="closePwaInstallGuideModal()" class="mt-5 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl text-xs uppercase transition">Đã hiểu</button>
       </div>
     </div>
     <!-- MODAL WECHAT (LAYER z-[99900] - DƯỚI TOAST) -->
@@ -131,12 +163,12 @@
               <button type="button" onclick="toggleLangMenu('mobile')" id="langBtnMobile" class="bg-indigo-50 dark:bg-[#0a0a0a] text-indigo-700 dark:text-white border border-indigo-100 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs font-bold flex items-center gap-1.5 outline-none"></button>
               <div id="langMenuMobile" class="hidden absolute right-0 mt-1.5 w-36 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 rounded-xl shadow-xl py-1 z-[100]"><button type="button" onclick="pickLangOption('vi')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2"><img src="https://flagcdn.com/w40/vn.png" class="w-4 h-3 object-cover rounded-[2px]"><span>Tiếng Việt</span></button> <button type="button" onclick="pickLangOption('en')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2"><img src="https://flagcdn.com/w40/gb.png" class="w-4 h-3 object-cover rounded-[2px]"><span>English</span></button> <button type="button" onclick="pickLangOption('zh')" class="w-full px-3 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2"><img src="https://flagcdn.com/w40/cn.png" class="w-4 h-3 object-cover rounded-[2px]"><span>中文</span></button></div>
             </div>
-            <button id="themeToggleMobile" onclick="toggleTheme()" title="Sáng / Tối" class="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0 transition bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-[#0a0a0a] dark:text-indigo-400 dark:hover:bg-[#111111]"></button>
+            <button type="button" id="pwaHeaderBtnMobile" onclick="triggerPwaInstall()" title="Cài ứng dụng" class="w-9 h-9 rounded-full flex items-center justify-center text-sm shrink-0 transition bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-[#0a0a0a] dark:text-indigo-400 border border-indigo-100 dark:border-white/10"><i class="fas fa-download"></i></button> <button id="themeToggleMobile" onclick="toggleTheme()" title="Sáng / Tối" class="w-9 h-9 rounded-full flex items-center justify-center text-lg shrink-0 transition bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-[#0a0a0a] dark:text-indigo-400 dark:hover:bg-[#111111]"></button>
             <div id="userMenuMobile" class="hidden"><button onclick="logout()" title="Thoát" class="w-9 h-9 rounded-full bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center text-sm shadow-sm"><i class="fas fa-sign-out-alt"></i></button></div>
           </div>
         </div>
         <div class="flex-1 w-full md:flex-1 flex items-center justify-center mx-0 md:mx-2">
-          <div class="w-full relative min-w-0"><input type="text" id="loginInput" name="vpn_no_autofill_order_search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-lpignore="true" onkeyup="if(event.key==='Enter'){event.preventDefault();login();}" class="w-full bg-white dark:bg-[#0a0a0a] border-2 border-indigo-100 dark:border-white/10 rounded-full pl-5 pr-12 py-2.5 text-sm outline-none font-bold text-slate-700 dark:text-white focus:border-indigo-400 dark:focus:border-indigo-500 transition shadow-sm placeholder:dark:text-slate-500" placeholder="Nhập Mã Đơn hoặc Email..." data-i18n-placeholder="search_placeholder"> <button onclick="login()" id="loginSearchBtn" title="Tìm kiếm" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 min-h-[32px] max-h-[32px] shrink-0 aspect-square bg-indigo-600 dark:bg-indigo-500 rounded-full text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 flex items-center justify-center transition shadow-sm"><i class="fas fa-search text-xs"></i></button></div>
+          <div class="w-full relative min-w-0"><input type="text" id="loginInput" name="vpn_no_autofill_order_search" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" data-lpignore="true" onkeyup="if(event.key==='Enter'){event.preventDefault();login();}" class="w-full bg-white dark:bg-[#0a0a0a] border-2 border-indigo-100 dark:border-white/10 rounded-full pl-5 pr-12 py-2.5 text-sm outline-none font-bold text-slate-700 dark:text-white focus:border-indigo-400 dark:focus:border-indigo-500 transition shadow-sm placeholder:dark:text-slate-500" placeholder="Nhập Mã đơn hàng (DH...)..." data-i18n-placeholder="search_placeholder"> <button onclick="login()" id="loginSearchBtn" title="Tìm kiếm" class="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 min-h-[32px] max-h-[32px] shrink-0 aspect-square bg-indigo-600 dark:bg-indigo-500 rounded-full text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 flex items-center justify-center transition shadow-sm"><i class="fas fa-search text-xs"></i></button></div>
         </div>
         <div class="hidden md:flex items-center justify-end w-auto gap-3 shrink-0">
           <div id="desktopPortalNav" class="hidden flex items-center gap-2 shrink-0 whitespace-nowrap transition-all duration-300"><button onclick="switchPortalTab('p-home')" class="btn-nav-p-home desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center"><i class="fas fa-tv mr-2"></i><span data-i18n="tab_p_home">Bảng điều khiển</span></button> <button onclick="switchPortalTab('p-store')" class="btn-nav-p-store desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center"><i class="fas fa-shopping-cart mr-2"></i><span data-i18n="tab_p_store">Cửa hàng</span></button> <button onclick="switchPortalTab('p-guide')" class="btn-nav-p-guide desktop-tab-btn px-4 py-2 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center"><i class="fas fa-book mr-2"></i><span data-i18n="tab_p_guide">Hướng dẫn</span></button></div>
@@ -150,7 +182,7 @@
             <button type="button" onclick="toggleLangMenu('desktop')" id="langBtnDesktop" class="bg-indigo-50 dark:bg-[#0a0a0a] text-indigo-700 dark:text-white border border-indigo-100 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold flex items-center gap-2 outline-none hover:border-indigo-300 transition shrink-0"></button>
             <div id="langMenuDesktop" class="hidden absolute right-0 top-full mt-2 w-40 bg-white dark:bg-[#14151a] border border-slate-200 dark:border-white/15 rounded-xl shadow-2xl py-1 z-[100] origin-top-right"><button type="button" onclick="pickLangOption('vi')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/vn.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>Tiếng Việt</span></button> <button type="button" onclick="pickLangOption('en')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/gb.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>English</span></button> <button type="button" onclick="pickLangOption('zh')" class="w-full px-3.5 py-2 text-left text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-white/10 flex items-center gap-2.5"><img src="https://flagcdn.com/w40/cn.png" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>中文</span></button></div>
           </div>
-          <button id="themeToggleDesktop" onclick="toggleTheme()" title="Sáng / Tối" class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-[#0a0a0a] dark:text-yellow-400 dark:hover:bg-[#111111]"></button>
+          <button type="button" id="pwaHeaderBtnDesktop" onclick="triggerPwaInstall()" title="Cài ứng dụng VPN Trinh Hg" class="bg-indigo-50 hover:bg-indigo-100 dark:bg-[#0a0a0a] dark:hover:bg-[#14151a] text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-extrabold flex items-center gap-1.5 transition shrink-0"><i class="fas fa-download text-xs"></i><span>Cài App</span></button> <button id="themeToggleDesktop" onclick="toggleTheme()" title="Sáng / Tối" class="w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 transition bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-[#0a0a0a] dark:text-yellow-400 dark:hover:bg-[#111111]"></button>
           <div id="userMenu" class="hidden"><button onclick="logout()" class="text-sm bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-bold px-4 py-2 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/50 transition shadow-sm flex items-center justify-center whitespace-nowrap"><i class="fas fa-sign-out-alt md:mr-1"></i><span class="hidden md:inline" data-i18n="btn_logout">Thoát</span></button></div>
         </div>
       </div>
@@ -230,7 +262,24 @@
                 <a href="https://zalo.me/0917678211" target="_blank" class="mx-auto bg-gradient-to-r from-[#0068ff] to-[#0055d4] dark:from-[#0068ff]/30 dark:to-[#0055d4]/30 text-white dark:text-[#66a3ff] font-bold py-3.5 px-8 rounded-xl flex items-center justify-center gap-2 text-sm w-fit hover:scale-105 transition-all shadow-lg shadow-blue-500/30 dark:shadow-none"> <i class="fas fa-comment-dots text-lg"></i> Nhắn Zalo Admin ngay </a>
               </div>
             </div>
+            <!-- TRẠNG THÁI LỖI MẠNG KHI MỞ /portal/order/DH... (GIỮ NGUYÊN URL & CHO PHÉP THỬ LẠI) -->
+            <div id="portalContentLoadError" class="hidden bg-slate-50 dark:bg-[#0a0a0a] border border-slate-200 dark:border-white/10 p-6 md:p-8 rounded-3xl flex flex-col items-center text-center mb-5 shadow-sm">
+              <div class="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center text-2xl mb-3"><i class="fas fa-wifi"></i></div>
+              <h4 id="portalLoadErrorTitle" class="font-extrabold text-slate-800 dark:text-white text-base md:text-lg">Không thể tải thông tin đơn hàng</h4>
+              <p id="portalLoadErrorDesc" class="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1 mb-4 max-w-md">Kết nối mạng bị gián đoạn hoặc máy chủ đang bận. Đường dẫn đơn hàng của bạn vẫn được giữ nguyên.</p>
+              <button type="button" onclick="retryPortalOrderLoad()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-6 py-2.5 rounded-xl text-xs md:text-sm shadow-sm transition flex items-center gap-2"> <i class="fas fa-rotate-right"></i><span>Thử lại ngay</span> </button>
+            </div>
             <div id="portalContentSuccess" class="hidden w-full">
+              <!-- KHỐI CÀI ĐẶT ỨNG DỤNG PWA TRONG PORTAL (NẰM NGAY TRÊN BẢNG CẢNH BÁO BẢO MẬT) -->
+              <div id="pwaPortalInstallBox" class="mb-3 flex justify-center w-full">
+                <div class="bg-gradient-to-r from-indigo-50/90 via-purple-50/90 to-indigo-50/90 dark:from-indigo-950/30 dark:via-purple-950/25 dark:to-indigo-950/30 border border-indigo-200/80 dark:border-white/10 px-3.5 py-2.5 rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 w-full text-left">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs"><i class="fas fa-mobile-screen-button text-sm"></i></div>
+                    <p class="text-slate-700 dark:text-slate-200 font-bold text-[11px] sm:text-xs leading-snug">Cài ứng dụng VPN Trinh Hg ra màn hình chính để mở nhanh và tra cứu đơn tiện hơn.</p>
+                  </div>
+                  <button type="button" onclick="triggerPwaInstall()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3.5 py-1.5 rounded-lg text-xs transition shadow-xs whitespace-nowrap shrink-0 flex items-center justify-center gap-1.5"> <i class="fas fa-download text-[11px]"></i><span>Cài đặt ngay</span> </button>
+                </div>
+              </div>
               <!-- BẢNG CẢNH BÁO BẢO MẬT THU GỌN - ICON CĂN TRÁI PHỦ 2 DÒNG -->
               <div class="mb-3.5 flex justify-center w-full">
                 <div class="bg-gradient-to-r from-rose-50/90 to-amber-50/90 dark:from-rose-950/30 dark:to-amber-950/30 border-l-4 border-l-rose-500 border border-rose-200/80 dark:border-rose-900/40 px-3 py-2.5 rounded-xl shadow-xs flex items-center gap-3 w-full text-left">
@@ -246,7 +295,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 mb-3">
                   <div class="flex flex-col gap-2">
                     <div class="flex items-center gap-2 min-w-0"><i class="fas fa-envelope text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0">Email:</span><span id="displayEmail" class="font-bold text-slate-800 dark:text-slate-200 text-[11px] md:text-xs truncate"></span></div>
-                    <div class="flex items-center gap-2 min-w-0"><i class="fas fa-hashtag text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0" data-i18n="order_id_label">Mã đơn:</span><span id="displayOrderId" class="font-mono font-black text-indigo-600 dark:text-indigo-400 text-xs md:text-sm"></span></div>
+                    <div class="flex items-center gap-2 min-w-0"><i class="fas fa-hashtag text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0" data-i18n="order_id_label">Mã đơn:</span><span id="displayOrderId" class="font-mono font-black text-indigo-600 dark:text-indigo-400 text-xs md:text-sm"></span><button type="button" onclick="copyCurrentOrderId()" title="Sao chép mã đơn hàng" class="text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-white/10 px-2 py-0.5 rounded-lg text-[10px] font-extrabold border border-indigo-200 dark:border-white/15 transition flex items-center gap-1 shrink-0"><i class="far fa-copy"></i><span>Copy</span></button></div>
                     <div class="flex items-center gap-2 min-w-0"><i class="fas fa-box text-slate-400 w-4 text-center"></i><span class="text-[11px] md:text-xs text-slate-500 dark:text-slate-400 shrink-0" data-i18n="pkg_name_label">Gói VPN:</span><span id="displayPkg" class="font-bold text-slate-800 dark:text-slate-200 text-[11px] md:text-xs truncate"></span></div>
                   </div>
                   <div class="flex flex-col gap-2">
