@@ -1,3 +1,4 @@
+// v2 — 2026-11-08 22:30 (UTC+7) — Nâng cấp Portal DH-only (/portal/order/:orderId), Bảo mật Link Sub 3 Toggles, Xác minh Email TTL & Tích hợp PWA
 /**
  * src/customer.js — Toàn bộ nghiệp vụ cổng khách hàng (VPNTrinhHg)
  * Tách từ index.html theo kiến trúc Giai đoạn 3
@@ -125,7 +126,7 @@ paintThemeIcon();
 const i18n = {
   vi: {
     brand: "VPN Trinh Hg",
-    search_placeholder: "Nhập Mã Đơn hoặc Email...",
+    search_placeholder: "Nhập Mã đơn hàng (DH...)...",
     btn_logout: "Thoát",
     tab_p_home: "Bảng điều khiển",
     tab_p_store: "Cửa hàng",
@@ -169,7 +170,7 @@ const i18n = {
     need_support: "Cần Hỗ trợ Cài đặt (Zalo/Tele)",
     faq_title: "Câu hỏi thường gặp (FAQ)",
     faq_1_q: "Làm sao lấy Link cài đặt?",
-    faq_1_a: "Nhập Mã Đơn hoặc Email vào thanh tìm kiếm trên cùng.",
+    faq_1_a: "Nhập Mã đơn hàng (DH...) vào thanh tìm kiếm trên cùng hoặc mở trực tiếp đường dẫn /portal/order/DH... trong email kích hoạt.",
     faq_2_q: "VPN hỗ trợ những app nào?",
     faq_2_a: "TikTok, Facebook, Messenger, Instagram, Telegram, Zalo, YouTube... Nhắn Admin để test.",
     faq_3_q: "Có những phương thức thanh toán nào?",
@@ -207,8 +208,9 @@ const i18n = {
     req_sent: "Đã gửi yêu cầu! Vui lòng chờ Email báo cáo.",
     req_err: "Có lỗi xảy ra, vui lòng thử lại!",
     select_higher: "Vui lòng chọn gói cao hơn gói hiện tại để nâng cấp",
-    copy_success: "Đã Copy!",
-    not_found: "Không tìm thấy Đơn hàng/Email!",
+    copy_success: "Đã sao chép",
+    not_found: "Không tìm thấy mã đơn hàng này!",
+    order_id_only: "Vui lòng nhập Mã đơn hàng (bắt đầu bằng DH...) để mở Cổng Đơn Hàng!",
     login_success: "Vào cổng thành công!",
     sending: "Đang gửi...",
     checking_upgrade: "ĐANG KIỂM TRA GIAO DỊCH NÂNG GÓI...",
@@ -795,7 +797,7 @@ function lockBodyScroll() {
   document.body.style.overflow = 'hidden';
 }
 function unlockBodyScroll() {
-  const anyOpen = ['qrSubModal', 'guideAuthModal', 'wechatModal'].some(id => {
+  const anyOpen = ['qrSubModal', 'guideAuthModal', 'wechatModal', 'emailVerifyModal', 'pwaInstallGuideModal'].some(id => {
     const el = $(id);
     return el && !el.classList.contains('hidden');
   }) || document.querySelector('.lb-overlay-active');
@@ -2017,14 +2019,12 @@ function openCheckout(id) {
     subWrap.classList.remove('hidden');
     if (isRenewMode && oCache) {
       const eff = getEffectiveSubLink(oCache);
-      const links = [];
-      if (eff && eff.url && !eff.isBlur) {
-        links.push({
-          index: eff.index,
-          url: eff.url,
-          name: `Link Sub #${eff.index}`
-        });
-      }
+      const links = [{
+        index: eff.index,
+        url: `ORDER_REF:${oCache.id}`,
+        orderId: oCache.id,
+        name: `Link Sub #${eff.index} (Đơn ${oCache.id})`
+      }];
       existingCustomerLinks = links;
       populateTargetLinks(links);
       lockSubDecisionUI('KEEP_EXISTING', 'Gia hạn chính gói cước và link sub này trong portal (Tự động giữ link cũ)');
@@ -2332,27 +2332,171 @@ async function copyText(t) {
   }
   showToast(i18n[lang].copy_success);
 }
-async function copyToClipboard(id) {
-  let e = $(id);
-  if (!e && (id === 1 || id === 2 || id === 3 || id === '1' || id === '2' || id === '3')) {
-    e = $('subLink' + id);
+const EMAIL_VERIFY_STORAGE_KEY = 'vpn_email_verify_tokens';
+let pendingEmailVerifyAction = null; // { idx, mode: 'copy' | 'qr' }
+
+function normOrderIdClean(v) {
+  return String(v || '').trim().toUpperCase().replace(/[-_.\s]/g, '');
+}
+
+function getStoredEmailVerifyToken(orderId, idx) {
+  try {
+    const map = JSON.parse(localStorage.getItem(EMAIL_VERIFY_STORAGE_KEY) || '{}');
+    const key = `${normOrderIdClean(orderId)}_${idx}`;
+    const entry = map && map[key];
+    if (!entry || !entry.token) return '';
+    if (entry.expiresAt && Date.now() >= Number(entry.expiresAt)) {
+      delete map[key];
+      localStorage.setItem(EMAIL_VERIFY_STORAGE_KEY, JSON.stringify(map));
+      return '';
+    }
+    return String(entry.token);
+  } catch (e) {
+    return '';
   }
-  if (!e && oCache) {
+}
+
+function setStoredEmailVerifyToken(orderId, idx, token, expiresAt) {
+  try {
+    const map = JSON.parse(localStorage.getItem(EMAIL_VERIFY_STORAGE_KEY) || '{}');
+    const now = Date.now();
+    Object.keys(map).forEach(k => {
+      if (!map[k] || (map[k].expiresAt && now >= Number(map[k].expiresAt))) delete map[k];
+    });
+    map[`${normOrderIdClean(orderId)}_${idx}`] = { token, expiresAt };
+    localStorage.setItem(EMAIL_VERIFY_STORAGE_KEY, JSON.stringify(map));
+  } catch (e) {}
+}
+
+function clearStoredEmailVerifyToken(orderId, idx) {
+  try {
+    const map = JSON.parse(localStorage.getItem(EMAIL_VERIFY_STORAGE_KEY) || '{}');
+    delete map[`${normOrderIdClean(orderId)}_${idx}`];
+    localStorage.setItem(EMAIL_VERIFY_STORAGE_KEY, JSON.stringify(map));
+  } catch (e) {}
+}
+
+function resolveSlotIndex(id, idx) {
+  if (idx && [1, 2, 3].includes(Number(idx))) return Number(idx);
+  if (id === 1 || id === 2 || id === 3 || id === '1' || id === '2' || id === '3') return Number(id);
+  if (typeof id === 'string') {
+    const m = id.match(/subLink([1-3])/);
+    if (m) return Number(m[1]);
+  }
+  if (oCache) {
     const eff = getEffectiveSubLink(oCache);
-    e = $('subLink' + eff.index);
+    return eff.index;
   }
-  if (!e) return;
-  if (e.dataset.blurred === '1') {
+  return 1;
+}
+
+function openEmailVerifyModal(idx, mode) {
+  pendingEmailVerifyAction = { idx, mode };
+  const m = $('emailVerifyModal');
+  const inp = $('emailVerifyInput');
+  if (!m) return;
+  if (inp) inp.value = '';
+  m.classList.remove('hidden');
+  lockBodyScroll();
+  pushOverlayState('email_verify');
+  setTimeout(() => inp?.focus(), 80);
+}
+
+function closeEmailVerifyModal(fromPop) {
+  const m = $('emailVerifyModal');
+  if (!m || m.classList.contains('hidden')) return;
+  m.classList.add('hidden');
+  unlockBodyScroll();
+  if (!fromPop && history.state && history.state.modal === 'email_verify') history.back();
+}
+
+async function submitEmailVerifyModal(e) {
+  e.preventDefault();
+  if (!oCache || !oCache.id || !pendingEmailVerifyAction) return;
+  const emailVal = ($('emailVerifyInput')?.value || '').trim();
+  if (!emailVal) return;
+  const btn = $('btnEmailVerifySubmit');
+  const orig = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i>ĐANG XÁC MINH...';
+  }
+  const { idx, mode } = pendingEmailVerifyAction;
+  try {
+    const res = await wpost('/api/public/verify_email', { orderId: oCache.id, infoIndex: idx, email: emailVal });
+    if (!res || !res.ok || !res.data || !res.data.token) {
+      showToast((res && res.data && res.data.error) || 'Email không khớp với đơn hàng này!', 'error');
+      return;
+    }
+    const token = res.data.token;
+    const expiresAt = res.data.expiresAt || (Date.now() + 72 * 3600000);
+    setStoredEmailVerifyToken(oCache.id, idx, token, expiresAt);
+    pendingEmailVerifyAction = null;
+    closeEmailVerifyModal(true);
+    if (mode === 'qr') {
+      await executeOpenQrWithToken(idx, token);
+    } else {
+      await executeCopySubLinkWithToken(idx, token);
+    }
+  } catch (err) {
+    showToast(i18n[lang].req_err, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = orig;
+    }
+  }
+}
+
+async function executeCopySubLinkWithToken(idx, verifyToken) {
+  if (!oCache || !oCache.id) return;
+  try {
+    const res = await wpost('/api/public/sub_link', {
+      orderId: oCache.id,
+      infoIndex: idx,
+      verifyToken: verifyToken || ''
+    });
+    if (res && res.data && res.data.needEmailVerify) {
+      clearStoredEmailVerifyToken(oCache.id, idx);
+      openEmailVerifyModal(idx, 'copy');
+      return;
+    }
+    if (!res || !res.ok || !res.data || !res.data.url) {
+      showToast((res && res.data && res.data.error) || 'Không thể lấy Link Sub, vui lòng thử lại!', 'error');
+      return;
+    }
+    await copyText(res.data.url);
+  } catch (err) {
+    showToast(i18n[lang].req_err, 'error');
+  }
+}
+
+async function copyToClipboard(id) {
+  if (!oCache || !oCache.id) return;
+  const idx = resolveSlotIndex(id);
+  const slotData = getEffectiveSubLink(oCache, idx);
+  if (slotData.isLock) {
     showToast("Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!", "error");
     return;
   }
-  const linkVal = (e.value || '').trim();
-  if (e.dataset.locked === '1' || !linkVal || !/^https?:\/\//i.test(linkVal)) {
+  if (!slotData.hasLink) {
     showToast("Link chưa được khởi tạo hoặc đang chờ cấp, vui lòng thử lại sau!", "error");
     return;
   }
-  e.select();
-  await copyText(linkVal);
+  let token = '';
+  if (slotData.isVerify) {
+    token = getStoredEmailVerifyToken(oCache.id, idx);
+    if (!token) {
+      openEmailVerifyModal(idx, 'copy');
+      return;
+    }
+  }
+  await executeCopySubLinkWithToken(idx, token);
+}
+
+function copyCurrentOrderId() {
+  if (!oCache || !oCache.id) return;
+  copyText(oCache.id);
 }
 
 let qrSubTimer = null;
@@ -2395,31 +2539,8 @@ function drawQrCenterLogo(box) {
   }
 }
 
-async function openQrModal(id, idx) {
-  let e = $(id);
-  if (!e && (id === 1 || id === 2 || id === 3 || id === '1' || id === '2' || id === '3')) {
-    idx = Number(id);
-    e = $('subLink' + idx);
-  }
-  if (!idx && typeof id === 'string') {
-    const m = id.match(/subLink([1-3])/);
-    if (m) idx = Number(m[1]);
-  }
-  if (!e && oCache) {
-    const eff = getEffectiveSubLink(oCache);
-    e = $('subLink' + eff.index);
-    if (!idx) idx = eff.index;
-  }
-  if (!e) return;
-  if (e.dataset.blurred === '1') {
-    showToast("Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!", "error");
-    return;
-  }
-  const linkVal = (e.value || '').trim();
-  if (e.dataset.locked === '1' || !linkVal || !/^https?:\/\//i.test(linkVal)) {
-    showToast("Link chưa được khởi tạo hoặc đang chờ cấp, vui lòng thử lại sau!", "error");
-    return;
-  }
+async function executeOpenQrWithToken(idx, verifyToken) {
+  if (!oCache || !oCache.id) return;
   if (typeof QRCode === 'undefined') {
     showToast("Không tải được bộ tạo mã QR, vui lòng thử lại!", "error");
     return;
@@ -2437,16 +2558,33 @@ async function openQrModal(id, idx) {
   lockBodyScroll();
   pushOverlayState('qr');
 
-  let qrPayload = linkVal;
+  let qrPayload = '';
   let activeSec = totalSec;
   try {
-    const res = await wpost('/api/public/qr_ticket', { url: linkVal });
-    if (res && res.ok && res.data && res.data.qrUrl) {
-      qrPayload = res.data.qrUrl;
-      activeSec = Number(res.data.expireSeconds) || totalSec;
-      currentQrTicket = res.data.ticket || '';
+    const res = await wpost('/api/public/qr_ticket', {
+      orderId: oCache.id,
+      infoIndex: idx,
+      verifyToken: verifyToken || ''
+    });
+    if (res && res.data && res.data.needEmailVerify) {
+      closeQrModal(true);
+      clearStoredEmailVerifyToken(oCache.id, idx);
+      openEmailVerifyModal(idx, 'qr');
+      return;
     }
-  } catch (err) {}
+    if (!res || !res.ok || !res.data || !res.data.qrUrl) {
+      closeQrModal(true);
+      showToast((res && res.data && res.data.error) || 'Không thể tạo mã QR, vui lòng thử lại!', 'error');
+      return;
+    }
+    qrPayload = res.data.qrUrl;
+    activeSec = Number(res.data.expireSeconds) || totalSec;
+    currentQrTicket = res.data.ticket || '';
+  } catch (err) {
+    closeQrModal(true);
+    showToast(i18n[lang].req_err, 'error');
+    return;
+  }
 
   if (modal.classList.contains('hidden')) return;
   box.innerHTML = '';
@@ -2480,6 +2618,29 @@ async function openQrModal(id, idx) {
   }, 1000);
 }
 
+async function openQrModal(id, idx) {
+  if (!oCache || !oCache.id) return;
+  const slotIdx = resolveSlotIndex(id, idx);
+  const slotData = getEffectiveSubLink(oCache, slotIdx);
+  if (slotData.isLock) {
+    showToast("Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!", "error");
+    return;
+  }
+  if (!slotData.hasLink) {
+    showToast("Link chưa được khởi tạo hoặc đang chờ cấp, vui lòng thử lại sau!", "error");
+    return;
+  }
+  let token = '';
+  if (slotData.isVerify) {
+    token = getStoredEmailVerifyToken(oCache.id, slotIdx);
+    if (!token) {
+      openEmailVerifyModal(slotIdx, 'qr');
+      return;
+    }
+  }
+  await executeOpenQrWithToken(slotIdx, token);
+}
+
 function closeQrModal(fromPop) {
   if (qrSubTimer) {
     clearInterval(qrSubTimer);
@@ -2496,6 +2657,76 @@ function closeQrModal(fromPop) {
   if (box) box.innerHTML = '';
   unlockBodyScroll();
   if (!fromPop && history.state && history.state.modal === 'qr') history.back();
+}
+
+// ==================== QUẢN LÝ CÀI ĐẶT ỨNG DỤNG PWA ====================
+let deferredPwaPrompt = null;
+
+function isPwaInstalled() {
+  try {
+    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
+    if (window.navigator && window.navigator.standalone === true) return true;
+    if (localStorage.getItem('vpn_pwa_installed') === '1') return true;
+  } catch (e) {}
+  return false;
+}
+
+function updatePwaVisibility() {
+  const installed = isPwaInstalled();
+  const inPortal = $('view-portal') && $('view-portal').classList.contains('active');
+  const btnMob = $('pwaHeaderBtnMobile');
+  const btnDesk = $('pwaHeaderBtnDesktop');
+  const portalBox = $('pwaPortalInstallBox');
+
+  if (btnMob) btnMob.classList.toggle('hidden', installed || inPortal);
+  if (btnDesk) btnDesk.classList.toggle('hidden', installed || inPortal);
+  if (portalBox) portalBox.classList.toggle('hidden', installed || !inPortal);
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPwaPrompt = e;
+    updatePwaVisibility();
+  });
+  window.addEventListener('appinstalled', () => {
+    deferredPwaPrompt = null;
+    try {
+      localStorage.setItem('vpn_pwa_installed', '1');
+    } catch (e) {}
+    updatePwaVisibility();
+  });
+}
+
+async function triggerPwaInstall() {
+  if (deferredPwaPrompt) {
+    try {
+      deferredPwaPrompt.prompt();
+      const choice = await deferredPwaPrompt.userChoice;
+      if (choice && choice.outcome === 'accepted') {
+        deferredPwaPrompt = null;
+        try {
+          localStorage.setItem('vpn_pwa_installed', '1');
+        } catch (e) {}
+        updatePwaVisibility();
+      }
+      return;
+    } catch (e) {}
+  }
+  const m = $('pwaInstallGuideModal');
+  if (m) {
+    m.classList.remove('hidden');
+    lockBodyScroll();
+    pushOverlayState('pwa_guide');
+  }
+}
+
+function closePwaInstallGuideModal(fromPop) {
+  const m = $('pwaInstallGuideModal');
+  if (!m || m.classList.contains('hidden')) return;
+  m.classList.add('hidden');
+  unlockBodyScroll();
+  if (!fromPop && history.state && history.state.modal === 'pwa_guide') history.back();
 }
 
 function renderPaymentBox() {
@@ -2627,8 +2858,9 @@ function populateTargetLinks(links) {
   links.forEach((l, idx) => {
     const opt = document.createElement('option');
     opt.value = l.url;
-    const shortUrl = l.url.length > 40 ? l.url.slice(0, 35) + '...' : l.url;
-    opt.textContent = `${l.name || ('Link ' + (idx + 1))}: ${shortUrl}`;
+    const isRef = String(l.url || '').startsWith('ORDER_REF:');
+    const dispLabel = isRef ? `Đơn #${l.orderId || l.url.slice(10)}` : (l.url.length > 40 ? l.url.slice(0, 35) + '...' : l.url);
+    opt.textContent = `${l.name || ('Link ' + (idx + 1))} — ${dispLabel}`;
     sel.appendChild(opt);
   });
   if (links.length > 0 && !sel.value) {
@@ -2913,7 +3145,7 @@ async function confirmPaid() {
     return;
   }
   const o = res.data.order;
-  showToast(lang === 'vi' ? 'Đã ghi nhận thanh toán! Vui lòng chờ hệ thống kiểm tra và kích hoạt tự động.' : 'Payment recorded! Waiting for automatic activation.');
+  showToast(lang === 'vi' ? `Đã ghi nhận đơn hàng #${o.id}! Vui lòng lưu lại Mã đơn hàng này.` : `Order #${o.id} recorded!`);
   $('checkoutSection').classList.add('hidden');
   $('orderForm').reset();
   $('loginInput').value = o.id;
@@ -2927,9 +3159,12 @@ async function confirmPaid() {
   existingCustomerLinks = [];
   emailLookupState = 'idle';
   if ($('subLinkLifecycleWrap')) lockSubDecisionUI('CREATE_NEW', 'Vui lòng nhập email để hệ thống kiểm tra lịch sử link sub.');
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ id: o.id, time: Date.now() }));
-  localStorage.setItem(CACHE_KEY, JSON.stringify(o));
+  try {
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(CACHE_KEY);
+  } catch (e) {}
   enterPortal(o, false);
+  router.navigate(`${appRoutes.order}/${encodeURIComponent(normOrderIdClean(o.id))}`);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -2941,7 +3176,7 @@ function updatePortalInfo(o) {
   oCache = o;
   skew = (o.serverTime || Date.now()) - Date.now();
   const L = i18n[lang];
-  ['portalContentPending', 'portalContentManual', 'pendingActiveState', 'pendingTimeoutState', 'portalContentSuccess', 'portalContentFailed'].forEach(id => $(id).classList.add('hidden'));
+  ['portalContentPending', 'portalContentManual', 'pendingActiveState', 'pendingTimeoutState', 'portalContentSuccess', 'portalContentFailed', 'portalContentLoadError'].forEach(id => $(id)?.classList.add('hidden'));
   $('upgradeSuccessBadge').classList.add('hidden');
   stopTick();
   const manual = /alipay|weixin|wechat/i.test(o.method || ''), now = Date.now() + skew;
@@ -2966,6 +3201,7 @@ function updatePortalInfo(o) {
     return;
   }
   $('portalContentSuccess').classList.remove('hidden');
+  updatePwaVisibility();
   fillDashboard(o);
   const up = o.pendingUpgrade;
   if (up) {
@@ -2994,7 +3230,15 @@ function pkgLine(o) {
 }
 
 function getEffectiveSubLink(o, optIndex) {
-  if (!o) return { url: '', isBlur: false, field: 'info3', index: 3 };
+  if (!o) return {
+    url: '',
+    hasLink: false,
+    isBlur: false,
+    isLock: false,
+    isVerify: false,
+    field: 'info3',
+    index: 3
+  };
   let idx = 3;
   if (optIndex && [1, 2, 3].includes(Number(optIndex))) {
     idx = Number(optIndex);
@@ -3004,9 +3248,20 @@ function getEffectiveSubLink(o, optIndex) {
     idx = location.hostname.includes('vpntrinhhg2') ? 2 : location.hostname.includes('vpntrinhhg3') ? 3 : 1;
   }
   const field = 'info' + idx;
-  const isBlur = !!(o['blur' + idx] || (cfgCache && cfgCache.blur && cfgCache.blur[idx - 1]));
-  let url = String(o[field] || (idx === 1 ? (o.info || o.link) : '') || '').trim();
-  return { url, isBlur, field, index: idx };
+  const isBlur = !!(o['blur' + idx] !== undefined ? o['blur' + idx] : (cfgCache && cfgCache.blur && cfgCache.blur[idx - 1]));
+  const isLock = !!(o['lock' + idx] !== undefined ? o['lock' + idx] : (cfgCache && cfgCache.lock && cfgCache.lock[idx - 1]));
+  const isVerify = !!(o['verify' + idx] !== undefined ? o['verify' + idx] : (cfgCache && cfgCache.verify && cfgCache.verify[idx - 1]));
+  const hasLink = !!(o['hasInfo' + idx] !== undefined ? o['hasInfo' + idx] : o[field]);
+  const maskedDisplay = hasLink ? `https://vpntrinhhg${idx === 1 ? '' : idx}.pages.dev/v${idx}/••••••••••••••••••••••••` : '';
+  return {
+    url: maskedDisplay,
+    hasLink,
+    isBlur,
+    isLock,
+    isVerify,
+    field,
+    index: idx
+  };
 }
 
 function fillDashboard(o) {
@@ -3018,7 +3273,7 @@ function fillDashboard(o) {
   const life = /vĩnh viễn|lifetime|永久/i.test(o.expDate || '');
   let exp = false;
   const mm = String(o.expDate || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if (!life && mm) exp = Date.now() + skew > Date.UTC(+mm[3], mm[2] - 1, +mm[1], 16, 59, 59);
+  if (!life && mm) exp = Date.now() + skew >= Date.UTC(+mm[3], mm[2] - 1, +mm[1]) - 7 * 36e5;
   $('displayStatus').innerText = exp ? L.expired_lbl : L.active;
   $('displayStatus').className = 'text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap ' + (exp ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400');
   let ut = L.upg_none, uc = 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400';
@@ -3049,14 +3304,14 @@ function fillDashboard(o) {
       </div>
       <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
         <div class="relative w-full sm:flex-1 flex items-center overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]">
-          <input type="text" id="subLink${i}" readonly placeholder="—" class="w-full bg-transparent text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl" onclick="this.select()">
-          <div id="subBlurOverlay${i}" onclick="copyToClipboard('subLink${i}')" class="hidden absolute inset-0 z-10 flex items-center justify-start pl-3.5 pr-3 bg-white/25 dark:bg-black/30 backdrop-blur-[2px] cursor-pointer select-none">
+          <input type="text" id="subLink${i}" readonly placeholder="—" class="w-full bg-transparent text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl select-none">
+          <div id="subBlurOverlay${i}" onclick="copyToClipboard('subLink${i}')" class="hidden absolute inset-0 z-10 flex items-center justify-start pl-3.5 pr-3 bg-white/25 dark:bg-black/30 backdrop-blur-[2px] cursor-not-allowed select-none">
             <span class="text-red-600 dark:text-amber-300 font-extrabold text-[11px] md:text-xs text-left leading-tight">Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!</span>
           </div>
         </div>
         <div class="flex gap-2 shrink-0 w-full sm:w-auto">
-          <button type="button" onclick="copyToClipboard('subLink${i}')" class="flex-1 sm:flex-none sm:w-[105px] bg-green-600 hover:bg-green-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-copy mr-1"></i>COPY</button>
-          <button type="button" onclick="openQrModal('subLink${i}', ${i})" class="flex-1 sm:flex-none sm:w-[105px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-qrcode mr-1"></i>LẤY QR</button>
+          <button type="button" id="btnCopySub${i}" onclick="copyToClipboard('subLink${i}')" class="flex-1 sm:flex-none sm:w-[105px] bg-green-600 hover:bg-green-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-copy mr-1"></i>COPY</button>
+          <button type="button" id="btnQrSub${i}" onclick="openQrModal('subLink${i}', ${i})" class="flex-1 sm:flex-none sm:w-[105px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-qrcode mr-1"></i>LẤY QR</button>
         </div>
       </div>
     </div>
@@ -3073,21 +3328,46 @@ function fillDashboard(o) {
   [1, 2, 3].forEach(i => {
     const slotData = getEffectiveSubLink(o, i);
     const inp = $('subLink' + i), ov = $('subBlurOverlay' + i);
+    const btnCopy = $('btnCopySub' + i), btnQr = $('btnQrSub' + i);
     if (!inp) return;
+
+    // 1. Hiển thị chuỗi đại diện (tuyệt đối không chứa Link Sub thật)
+    if (slotData.hasLink) {
+      inp.value = slotData.url;
+    } else if (Date.now() + skew - (o.createdTs || 0) < 180000) {
+      inp.value = tx(L.link_generating);
+    } else {
+      inp.value = '';
+    }
+
+    // 2. Bật mờ (Blur): chỉ làm mờ phần hiển thị, không chặn Copy/QR
     if (slotData.isBlur) {
-      inp.value = `https://vpntrinhhg${i === 1 ? '' : i}.pages.dev/v1/VPNTrinhHg?OwO=f8a9d2c4e1b7039a5d8e2f1c4b6a9d0e#VPNTrinhHg`;
       inp.classList.add('blur-link', 'select-none', 'pointer-events-none');
       inp.dataset.blurred = '1';
-      inp.dataset.locked = '1';
-      if (ov) ov.classList.remove('hidden');
     } else {
-      const v = slotData.url;
-      inp.value = v || '';
       inp.classList.remove('blur-link', 'select-none', 'pointer-events-none');
       inp.dataset.blurred = '';
-      inp.dataset.locked = v ? '' : '1';
+    }
+
+    // 3. Khóa (Lock): hiện thông báo bảo trì và vô hiệu hóa cả 2 nút Copy & Lấy QR
+    if (slotData.isLock) {
+      inp.dataset.locked = '1';
+      if (ov) ov.classList.remove('hidden');
+      [btnCopy, btnQr].forEach(btn => {
+        if (btn) {
+          btn.disabled = true;
+          btn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+      });
+    } else {
+      inp.dataset.locked = slotData.hasLink ? '' : '1';
       if (ov) ov.classList.add('hidden');
-      if (!v && Date.now() + skew - (o.createdTs || 0) < 180000) inp.value = tx(L.link_generating);
+      [btnCopy, btnQr].forEach(btn => {
+        if (btn) {
+          btn.disabled = false;
+          btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+      });
     }
   });
   const cd = localStorage.getItem('data_req_' + o.id), btn = $('btnRequestData');
@@ -3133,7 +3413,7 @@ async function refreshOrder() {
   if (!oCache) return;
   if (oCache.isTest) setServerTestMode(true);
   try {
-    const r = await wpost('/api/public/lookup', { q: oCache.id });
+    const r = await wpost('/api/public/lookup', { q: oCache.id, mode: 'portal' });
     if (r.status === 404) {
       // Nếu đơn mới tạo trong vòng 10 phút, không logout tức thì (cho phép retry tiếp tục)
       if (oCache.createdTs && Date.now() - oCache.createdTs < 600000) return;
@@ -3145,7 +3425,6 @@ async function refreshOrder() {
     const o = r.data.order;
     if (r.data.schemaField && !o.schemaField) o.schemaField = r.data.schemaField;
     const sig = JSON.stringify({ ...o, serverTime: 0 });
-    localStorage.setItem(CACHE_KEY, JSON.stringify(o));
     skew = (o.serverTime || Date.now()) - Date.now();
     if (sig !== lastSig) {
       lastSig = sig;
@@ -3159,7 +3438,7 @@ async function refreshOrder() {
 function pollLoop() {
   clearTimeout(pollT);
   if (!oCache) return;
-  const fast = oCache.status === 'pending' || oCache.pendingUpgrade || [1, 2, 3].some(i => oCache.status === 'success' && !oCache['info' + i] && !oCache['blur' + i]);
+  const fast = oCache.status === 'pending' || oCache.pendingUpgrade || [1, 2, 3].some(i => oCache.status === 'success' && !oCache['hasInfo' + i] && !oCache['info' + i] && !oCache['lock' + i]);
   pollT = setTimeout(async () => {
     if (!document.hidden) await refreshOrder();
     pollLoop();
@@ -3171,6 +3450,7 @@ document.addEventListener('visibilitychange', () => {
 
 // ===== HỆ THỐNG ĐỊNH TUYẾN CLEAN PATH ROUTER (NAVIGO) =====
 const router = new Navigo('/', { hash: false });
+let currentUrlOrderId = '';
 
 function pushOverlayState(modalName) {
   try {
@@ -3199,6 +3479,7 @@ function highlightNavBtns(tabId) {
 
 function enterPortal(o, auto) {
   if (o && o.isTest) setServerTestMode(true);
+  if (o && o.id) currentUrlOrderId = normOrderIdClean(o.id);
   $('view-store').classList.remove('active');
   $('view-portal').classList.add('active');
   $('userMenu').classList.remove('hidden');
@@ -3206,53 +3487,84 @@ function enterPortal(o, auto) {
   $('mobileNavWrapper')?.classList.remove('hidden');
   $('checkoutSection').classList.add('hidden');
   document.documentElement.classList.add('has-user-session');
+  if ($('loginInput') && o && o.id) $('loginInput').value = o.id;
   lastSig = JSON.stringify({ ...o, serverTime: 0 });
   updatePortalInfo(o);
   if (!auto) {
-    switchPortalTab('p-home', false, false);
+    switchPortalTab('p-home', false, true);
   }
   renderPackages('all');
   pollLoop();
   document.body.classList.remove('checkout-active');
+  updatePwaVisibility();
+}
+
+async function openPortalByOrderId(rawId, pushUrl = false) {
+  const cleanId = normOrderIdClean(rawId);
+  if (!cleanId || rawId.includes('@') || !/^DH[A-Z0-9]{6,20}$/i.test(cleanId)) {
+    showToast(i18n[lang].order_id_only || 'Vui lòng nhập Mã đơn hàng (bắt đầu bằng DH...) để mở Cổng Đơn Hàng!', 'error');
+    return false;
+  }
+  currentUrlOrderId = cleanId;
+  if ($('loginInput')) $('loginInput').value = cleanId;
+
+  let res = null;
+  try {
+    res = await wpost('/api/public/lookup', { q: cleanId, mode: 'portal' });
+  } catch (e) {
+    res = null;
+  }
+
+  if ((res && res.status === 404) || (res && res.ok && res.data && res.data.found === false && !res.data.order)) {
+    showToast(i18n[lang].not_found, 'error');
+    if (location.pathname.startsWith(appRoutes.order) || location.pathname.startsWith('/portal/order')) {
+      logout();
+    }
+    return false;
+  }
+
+  if (!res || !res.ok || !res.data || !res.data.order) {
+    // Khi mất mạng hoặc lỗi 5xx trên đường dẫn /portal/order/DH...: giữ nguyên URL và hiện khung Thử lại
+    enablePortalFrame();
+    document.querySelectorAll('.portal-tab-content').forEach(el => el.classList.remove('active'));
+    $('p-home')?.classList.add('active');
+    highlightNavBtns('p-home');
+    ['portalContentPending', 'portalContentManual', 'portalContentSuccess', 'portalContentFailed'].forEach(id => $(id)?.classList.add('hidden'));
+    $('portalContentLoadError')?.classList.remove('hidden');
+    showToast((res && res.data && res.data.error) || i18n[lang].req_err, 'error');
+    return false;
+  }
+
+  const o = res.data.order;
+  if (res.data.schemaField && !o.schemaField) o.schemaField = res.data.schemaField;
+  enterPortal(o, false);
+  if (pushUrl) {
+    router.navigate(`${appRoutes.order}/${encodeURIComponent(normOrderIdClean(o.id))}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  return true;
+}
+
+async function retryPortalOrderLoad() {
+  const targetId = currentUrlOrderId || normOrderIdClean($('loginInput')?.value || '');
+  if (!targetId) {
+    router.navigate('/');
+    return;
+  }
+  await openPortalByOrderId(targetId, false);
 }
 
 async function login(auto = false) {
   if (auto && auto.type) auto = false;
-  const input = $('loginInput').value.trim();
+  const input = ($('loginInput')?.value || '').trim();
   if (!input) return;
-  let res = null;
-  try {
-    res = await wpost('/api/public/lookup', { q: input });
-  } catch (e) {
-    res = null;
-  }
-  if ((res && res.status === 404) || (res && res.ok && res.data && res.data.found === false && !res.data.order)) {
-    showToast(i18n[lang].not_found, 'error');
-    logout();
+  if (input.includes('@') || !/^DH[A-Z0-9]{6,20}$/i.test(normOrderIdClean(input))) {
+    showToast(i18n[lang].order_id_only || 'Vui lòng nhập Mã đơn hàng (bắt đầu bằng DH...) để mở Cổng Đơn Hàng!', 'error');
     return;
   }
-  if (!res || !res.ok) {
-    let c = null;
-    try {
-      c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
-    } catch {}
-    if (auto && c) {
-      enterPortal(c, true);
-      return;
-    }
-    showToast(i18n[lang].req_err, 'error');
-    if (auto) logout();
-    return;
-  }
-  const o = res.data.order;
-  if (res.data.schemaField && !o.schemaField) o.schemaField = res.data.schemaField;
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ id: o.id, time: Date.now() }));
-  localStorage.setItem(CACHE_KEY, JSON.stringify(o));
-  enterPortal(o, auto);
-  if (!auto) {
+  const ok = await openPortalByOrderId(input, true);
+  if (ok && !auto) {
     showToast(i18n[lang].login_success, 'info');
-    router.navigate(appRoutes.order);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
 
@@ -3269,7 +3581,7 @@ function closeGuideAuthModal(fromPop) {
   if (!m || m.classList.contains('hidden')) return;
   m.classList.add('hidden');
   unlockBodyScroll();
-  if (!oCache && !localStorage.getItem(SESSION_KEY)) router.navigate('/');
+  if (!oCache) router.navigate('/');
 }
 
 // Bật giao diện Portal thật sự (với 3 tab ở Header trên cả Desktop & Mobile)
@@ -3279,6 +3591,7 @@ function enablePortalFrame() {
   $('view-portal').classList.add('active');
   $('desktopPortalNav')?.classList.remove('hidden');
   $('mobileNavWrapper')?.classList.remove('hidden');
+  updatePwaVisibility();
 }
 
 // Bật giao diện Trang chủ gốc ngoài (Landing page với Hero Chặn thì vượt, Dock icon...)
@@ -3289,6 +3602,7 @@ function showLandingPage() {
   $('desktopPortalNav')?.classList.add('hidden');
   $('mobileNavWrapper')?.classList.add('hidden');
   renderPackages('all');
+  updatePwaVisibility();
 }
 
 function scrollToPolicySection(id) {
@@ -3306,6 +3620,7 @@ function showPolicyPage(targetSection, skipPush = false) {
   $('view-policy')?.classList.add('active');
   $('desktopPortalNav')?.classList.add('hidden');
   $('mobileNavWrapper')?.classList.add('hidden');
+  updatePwaVisibility();
 
   const ft = cfgCache.footer || {};
   if ($('policyBodyTerms')) $('policyBodyTerms').innerHTML = ft.terms ? `<p class="whitespace-pre-line leading-relaxed">${esc(ft.terms)}</p>` : "<p>Quý khách sử dụng dịch vụ VPN vui lòng tuân thủ quy định pháp luật nước sở tại, không sử dụng dịch vụ vào các mục đích vi phạm pháp luật.</p>";
@@ -3324,13 +3639,19 @@ function switchPortalTab(tabId, fromUpgrade = false, skipPush = false) {
   saveAndSwitchTabScroll(tabId);
   enablePortalFrame();
 
-  // 1. Tab Quản lý Đơn hàng (Auth Guard): Chưa đăng nhập thì Modal khóa lại
+  // 1. Tab Quản lý Đơn hàng (Auth Guard): Chưa có đơn đang mở thì hiện Modal nhập mã DH
   if (tabId === 'p-home') {
     document.querySelectorAll('.portal-tab-content').forEach(el => el.classList.remove('active'));
     $('p-home').classList.add('active');
     highlightNavBtns('p-home');
-    if (!skipPush) router.navigate(appRoutes.order);
-    if (!oCache && !localStorage.getItem(SESSION_KEY)) {
+    if (!skipPush) {
+      if (oCache && oCache.id) {
+        router.navigate(`${appRoutes.order}/${encodeURIComponent(normOrderIdClean(oCache.id))}`);
+      } else {
+        router.navigate(appRoutes.order);
+      }
+    }
+    if (!oCache) {
       openPortalAuthModal();
     }
     return;
@@ -3365,12 +3686,16 @@ function switchPortalTab(tabId, fromUpgrade = false, skipPush = false) {
 }
 
 function logout() {
-  localStorage.removeItem(SESSION_KEY);
-  localStorage.removeItem(CACHE_KEY);
+  try {
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(CACHE_KEY);
+  } catch (e) {}
   oCache = null;
+  currentUrlOrderId = '';
   clearTimeout(pollT);
   stopTick();
   closeQrModal(true);
+  closeEmailVerifyModal(true);
   disableUpgradeMode();
   $('userMenu').classList.add('hidden');
   $('userMenuMobile')?.classList.add('hidden');
@@ -3383,7 +3708,7 @@ function logout() {
 }
 
 function resetToGuest() {
-  ['guideAuthModal', 'policyModal'].forEach(id => {
+  ['guideAuthModal', 'policyModal', 'emailVerifyModal', 'pwaInstallGuideModal'].forEach(id => {
     const m = $(id);
     if (m && !m.classList.contains('hidden')) {
       m.classList.add('hidden');
@@ -3398,26 +3723,19 @@ async function submitGuideAuth(e) {
   e.preventDefault();
   const qVal = ($('guideAuthInput').value || '').trim();
   if (!qVal) return;
+  if (qVal.includes('@') || !/^DH[A-Z0-9]{6,20}$/i.test(normOrderIdClean(qVal))) {
+    showToast(i18n[lang].order_id_only || 'Vui lòng nhập Mã đơn hàng (bắt đầu bằng DH...) để mở Cổng Đơn Hàng!', 'error');
+    return;
+  }
   const btn = $('btnGuideAuthSubmit'), orig = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1.5"></i>ĐANG KIỂM TRA...`;
   try {
-    const res = await wpost('/api/public/lookup', { q: qVal });
-    if (!res || !res.ok || !res.data || !res.data.order) {
-      showToast(i18n[lang].not_found, 'error');
-      btn.disabled = false;
-      btn.innerHTML = orig;
-      return;
+    const ok = await openPortalByOrderId(qVal, true);
+    if (ok) {
+      closeGuideAuthModal(true);
+      showToast(i18n[lang].login_success, 'info');
     }
-    const o = res.data.order;
-    if (res.data.schemaField && !o.schemaField) o.schemaField = res.data.schemaField;
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ id: o.id, time: Date.now() }));
-    localStorage.setItem(CACHE_KEY, JSON.stringify(o));
-    $('loginInput').value = o.id;
-    closeGuideAuthModal(true);
-    showToast(i18n[lang].login_success, 'info');
-    enterPortal(o, false);
-    router.navigate(appRoutes.order);
   } catch (err) {
     showToast(i18n[lang].req_err, 'error');
   }
@@ -3464,8 +3782,12 @@ function clickFooterServiceLink(type) {
     return;
   }
   if (type === 'data') {
-    router.navigate(appRoutes.order);
-    if (oCache) requestDataCheck();
+    if (oCache && oCache.id) {
+      router.navigate(`${appRoutes.order}/${encodeURIComponent(normOrderIdClean(oCache.id))}`);
+      requestDataCheck();
+    } else {
+      router.navigate(appRoutes.order);
+    }
     return;
   }
 }
@@ -3479,6 +3801,14 @@ window.addEventListener('popstate', () => {
   const lb = document.querySelector('.lb-overlay-active');
   if (lb && lb.__closeLb) {
     lb.__closeLb();
+    return;
+  }
+  if ($('emailVerifyModal') && !$('emailVerifyModal').classList.contains('hidden')) {
+    closeEmailVerifyModal(true);
+    return;
+  }
+  if ($('pwaInstallGuideModal') && !$('pwaInstallGuideModal').classList.contains('hidden')) {
+    closePwaInstallGuideModal(true);
     return;
   }
   if (!$('qrSubModal').classList.contains('hidden')) {
@@ -3495,20 +3825,11 @@ window.addEventListener('popstate', () => {
   }
 });
 
-// KHAI BÁO CÁC ROUTE ĐỘNG TRÊN NAVIGO (NẠP ĐƯỜNG DẪN TỪ KV HOẶC FALLBACK MẶC ĐỊNH)
+// KHAI BÁO CÁC ROUTE ĐỘNG TRÊN NAVIGO (ĐỊNH DANH ĐƠN BẰNG /portal/order/:orderId, BỎ SESSION 24H)
 function setupAppRoutes() {
   router.on('/', () => {
-    let s = null;
-    try {
-      s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
-    } catch (e) {}
-    const valid = !!(s && Date.now() - s.time < 864e5 && oCache);
-    if (valid) {
-      enterPortal(oCache, true);
-    } else {
-      showLandingPage();
-      restoreIndexScroll();
-    }
+    showLandingPage();
+    restoreIndexScroll();
   });
 
   // Tuyệt đối không dùng /packages lẻ bên ngoài -> Tự động chuyển về trang chủ /
@@ -3518,7 +3839,20 @@ function setupAppRoutes() {
 
   const bindOrderRoute = (path) => {
     router.on(path, () => {
+      if (oCache && oCache.id) {
+        router.navigate(`${path}/${encodeURIComponent(normOrderIdClean(oCache.id))}`);
+        return;
+      }
       switchPortalTab('p-home', false, true);
+    });
+    router.on(`${path}/:orderId`, async (match) => {
+      const oid = match && match.data && match.data.orderId ? decodeURIComponent(match.data.orderId) : '';
+      const cleanId = normOrderIdClean(oid);
+      if (oCache && normOrderIdClean(oCache.id) === cleanId) {
+        enterPortal(oCache, true);
+        return;
+      }
+      await openPortalByOrderId(cleanId, false);
     });
   };
   bindOrderRoute(appRoutes.order);
@@ -3593,6 +3927,13 @@ window.onload = async function () {
   changeLanguage('vi');
   renderDock();
 
+  // Dọn dẹp triệt để dữ liệu session 24h & cache đơn hàng cũ (không lưu Link Sub hay session 24h trong localStorage)
+  try {
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(CACHE_KEY);
+    document.documentElement.classList.remove('has-user-session');
+  } catch (e) {}
+
   try {
     const fc = JSON.parse(localStorage.getItem('vpn_footer_cache') || 'null');
     if (fc) {
@@ -3601,43 +3942,11 @@ window.onload = async function () {
     }
   } catch (e) {}
 
-  const curPath = window.location.pathname;
-  const isPolicyOrGuide = curPath.startsWith('/policy') || curPath.startsWith('/portal/guide') || curPath.startsWith(appRoutes.policy) || curPath.startsWith(appRoutes.guide);
-
-  let s = null, cachedOrd = null;
-  try {
-    s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
-  } catch (e) {}
-  try {
-    cachedOrd = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
-  } catch (e) {}
-
-  const hasValidSession = !!(s && Date.now() - s.time < 864e5);
-  if (hasValidSession) {
-    $('loginInput').value = s.id;
-    if (cachedOrd && cachedOrd.id) {
-      if (!isPolicyOrGuide) {
-        enterPortal(cachedOrd, true);
-      } else {
-        oCache = cachedOrd;
-        document.documentElement.classList.add('has-user-session');
-        $('userMenu')?.classList.remove('hidden');
-        $('userMenuMobile')?.classList.remove('hidden');
-      }
-    }
-  } else if (s) {
-    localStorage.removeItem(SESSION_KEY);
-    document.documentElement.classList.remove('has-user-session');
-  }
-
+  updatePwaVisibility();
   setupAppRoutes();
   router.resolve();
 
-  const tasks = [loadConfig()];
-  if (hasValidSession && cachedOrd) {
-    tasks.push(refreshOrder());
-  }
-  await Promise.all(tasks);
+  await loadConfig();
 
   const emInput = $('cusEmail');
   if (emInput) {
@@ -3769,7 +4078,13 @@ const EXPOSED_FNS = {
   paintThemeIcon: typeof paintThemeIcon !== 'undefined' ? paintThemeIcon : undefined,
   resetAndHardReload: typeof resetAndHardReload !== 'undefined' ? resetAndHardReload : undefined,
   openImageLightbox: typeof openImageLightbox !== 'undefined' ? openImageLightbox : undefined,
-  closeImageLightbox: typeof closeImageLightbox !== 'undefined' ? closeImageLightbox : undefined
+  closeImageLightbox: typeof closeImageLightbox !== 'undefined' ? closeImageLightbox : undefined,
+  closeEmailVerifyModal: typeof closeEmailVerifyModal !== 'undefined' ? closeEmailVerifyModal : undefined,
+  submitEmailVerifyModal: typeof submitEmailVerifyModal !== 'undefined' ? submitEmailVerifyModal : undefined,
+  copyCurrentOrderId: typeof copyCurrentOrderId !== 'undefined' ? copyCurrentOrderId : undefined,
+  retryPortalOrderLoad: typeof retryPortalOrderLoad !== 'undefined' ? retryPortalOrderLoad : undefined,
+  triggerPwaInstall: typeof triggerPwaInstall !== 'undefined' ? triggerPwaInstall : undefined,
+  closePwaInstallGuideModal: typeof closePwaInstallGuideModal !== 'undefined' ? closePwaInstallGuideModal : undefined
 };
 
 if (typeof window !== 'undefined') {
