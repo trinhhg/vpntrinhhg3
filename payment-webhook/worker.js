@@ -300,31 +300,17 @@ async function notifyFulfillmentReady(env, cfg, ctx, args) {
   return { triggered: true };
 }
 
-// ------------------------------------------------------------ tÃ¬m ÄÆ¡n tháº³ng tá»« Supabase (Fallback worker cÅ©)
+// ------------------------------------------------------------ tìm đơn qua Worker (/api/internal/order xác định bảng Supabase theo TEST_MODE_ACTIVE)
+// v2 — 2026-11-06 22:00 (UTC+7) — Gọi qua Worker URL để Worker xác định đúng bảng ALL_ORDERS hoặc ALL_ORDERS_TEST theo TEST_MODE_ACTIVE
 async function fetchOrderFromSource(env, cfg, orderId) {
-  if (cfg.SUPABASE_URL && cfg.SUPABASE_KEY) {
-    try {
-      const res = await fetch(`${cfg.SUPABASE_URL}ALL_ORDERS?id=eq.${encodeURIComponent(orderId)}&select=*`, {
-        headers: {
-          apikey: cfg.SUPABASE_KEY,
-          Authorization: "Bearer " + cfg.SUPABASE_KEY
-        }
-      });
-      if (res.ok) {
-        const list = await res.json();
-        if (Array.isArray(list) && list.length) {
-          const o = list[0];
-          return { ...o, worker_url: o.workerUrl || cfg.WEBSITE_WORKER_URL };
-        }
-      }
-    } catch {}
-  }
   for (const w of cfg.WORKER_URLS) {
     try {
-      const r = await fetch(`${w}/api/internal/order?id=${orderId}`, { headers: { Authorization: `Bearer ${cfg.WEB_API_SECRET2}` } });
+      const r = await fetch(`${w}/api/internal/order?id=${encodeURIComponent(orderId)}`, {
+        headers: { Authorization: `Bearer ${cfg.WEB_API_SECRET2}` }
+      });
       if (r.ok) {
         const j = await r.json();
-        if (j.order) return { ...j.order, worker_url: w };
+        if (j && j.order) return { ...j.order, worker_url: j.order.workerUrl || w };
       }
     } catch {}
   }
