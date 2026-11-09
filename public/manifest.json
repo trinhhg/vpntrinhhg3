@@ -2,6 +2,7 @@
   "name": "VPNTrinhHg3 Khách",
   "short_name": "Khách",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
