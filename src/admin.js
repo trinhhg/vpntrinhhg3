@@ -525,8 +525,10 @@ function healLinks() {
   return n - linksDb.length;
 }
 
+let lastSbError = null;
 function applyPoll(j) {
   if (!j) return;
+  lastSbError = (j.sbOk === false || j.sbError) ? (j.sbError || "Không thể kết nối Supabase") : null;
   ordersDb = arr(j.orders);
   linksDb = arr(j.links);
   healLinks();
@@ -888,7 +890,11 @@ function renderOrd() {
   ["success", "pending", "failed"].forEach(t => $("cnt-" + t).textContent = counts[t]);
   const list = ordersDb.filter(o => normSt(o.status) === curOrdTab), tb = $("ordBody");
   if (!list.length) {
-    tb.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold">Không có đơn nào</div>`;
+    if (lastSbError) {
+      tb.innerHTML = `<div class="p-6 text-center text-rose-600 bg-rose-50 rounded-xl border border-rose-200 shadow-sm font-bold space-y-1"><div><i class="fas fa-triangle-exclamation mr-1.5"></i>Lỗi kết nối kho đơn hàng Supabase</div><div class="text-xs text-rose-500 font-medium">${esc(lastSbError)}</div></div>`;
+    } else {
+      tb.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold">Không có đơn nào</div>`;
+    }
     return;
   }
   const groups = {};
@@ -4175,7 +4181,7 @@ function openLnkModal(id) {
   }
   const hintEl = $("mLEExpSyncHint");
   if (hintEl) {
-    hintEl.innerHTML = ord ? `<span class="text-indigo-600 font-bold"><i class="fas fa-link mr-1"></i>Đang đồng bộ theo đơn <b>${esc(ord.id)}</b> (${esc(effectiveExp)}). Muốn đổi HSD, vui lòng sửa tại tab Đơn hàng.</span>` : `<span class="text-slate-500">Link lẻ chưa gắn đơn hàng — bạn có thể nhập trực tiếp DD/MM/YYYY hoặc Vĩnh viễn.</span>`;
+    hintEl.innerHTML = ord ? `<span class="text-indigo-600 font-bold"><i class="fas fa-link mr-1"></i>Đang đồng bộ theo đơn <b>${esc(ord.id)}</b> (${esc(effectiveExp)}). Muốn đổi HSD, vui lòng sửa tại tab Đơn hàng.</span>` : "";
   }
   $("mLId").value = id;
   $("mLOrig").value = l.orig || "";
@@ -6688,17 +6694,17 @@ function renderBlurRows() {
           </div>
           <input id="blurRoute${i}" type="text" oninput="checkBlurValidity(${i})" value="${esc(routeVal)}" placeholder="Bắt buộc nhập: ${BLUR_RULES[i]}" class="w-full p-1.5 border border-purple-200 rounded-lg outline-none font-mono text-[11px] bg-white font-bold text-purple-950">
         </div>
-        <div class="flex items-center gap-3 shrink-0 ml-auto">
+        <div class="flex items-center gap-4 shrink-0 ml-auto">
           <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer select-none text-indigo-700">
-            <input type="checkbox" id="blurOn${i}" ${blurChecked ? "checked" : ""} ${!isValid ? "disabled" : ""} class="w-4 h-4 accent-indigo-600">
+            <div class="toggle-wrap"><input type="checkbox" id="blurOn${i}" ${blurChecked ? "checked" : ""} ${!isValid ? "disabled" : ""}><span class="toggle-slider"></span></div>
             <span>Bật mờ</span>
           </label>
           <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer select-none text-rose-700">
-            <input type="checkbox" id="lockOn${i}" ${lockChecked ? "checked" : ""} ${!isValid ? "disabled" : ""} class="w-4 h-4 accent-rose-600">
+            <div class="toggle-wrap"><input type="checkbox" id="lockOn${i}" ${lockChecked ? "checked" : ""} ${!isValid ? "disabled" : ""}><span class="toggle-slider"></span></div>
             <span>Khóa</span>
           </label>
           <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer select-none text-amber-700">
-            <input type="checkbox" id="verifyOn${i}" ${verifyChecked ? "checked" : ""} ${!isValid ? "disabled" : ""} class="w-4 h-4 accent-amber-600">
+            <div class="toggle-wrap"><input type="checkbox" id="verifyOn${i}" ${verifyChecked ? "checked" : ""} ${!isValid ? "disabled" : ""}><span class="toggle-slider"></span></div>
             <span>Kiểm tra</span>
           </label>
         </div>
@@ -7196,6 +7202,11 @@ function loadSettingsUI() {
   if (savedLbl) {
     savedLbl.innerHTML = s.telegramOrderLinkField ? `Nguồn Link Sub đã lưu: <span class="text-emerald-700 font-mono font-black">${esc(s.telegramOrderLinkField)}</span>` : `Nguồn Link Sub mặc định: <span class="text-indigo-600 font-mono font-bold">${esc(defField)} (Bấm Lưu cấu hình để chốt)</span>`;
   }
+  const selDomain = $("tgOrderPortalDomainSelect");
+  if (selDomain) {
+    const curDomain = s.telegramOrderPortalDomain || PDS[myWebIndex || 3] || "https://vpntrinhhg3.pages.dev";
+    selDomain.value = ["https://vpntrinhhg.pages.dev", "https://vpntrinhhg2.pages.dev", "https://vpntrinhhg3.pages.dev"].includes(curDomain) ? curDomain : "https://vpntrinhhg3.pages.dev";
+  }
   updateOrderTogglesUI();
   paintTimeUI();
   initAdminNotifyUI();
@@ -7332,6 +7343,21 @@ async function loadStatus() {
   try {
     j = await aj("/api/admin/status");
   } catch (e) {
+    const tgBadge = $("tgOrderNotifyEnvBadge");
+    if (tgBadge) {
+      tgBadge.className = "text-[10px] font-black px-2.5 py-1 rounded-full bg-red-100 text-red-700 border border-red-200";
+      tgBadge.innerHTML = `<i class="fas fa-triangle-exclamation mr-1"></i>Lỗi kết nối Worker (${esc(e.message || "500")})`;
+    }
+    const cb = $("cronBox");
+    if (cb) {
+      cb.className = "text-xs rounded-xl border p-3 bg-red-50 border-red-200 text-red-700";
+      cb.innerHTML = `<div><i class="fas fa-triangle-exclamation mr-1"></i><b>Lỗi tải trạng thái Cron:</b> ${esc(e.message || "Không thể kết nối Worker")}</div>`;
+    }
+    const sb = $("statusBox");
+    if (sb) {
+      sb.className = "text-xs rounded-xl border p-3 bg-red-50 border-red-200 text-red-700";
+      sb.innerHTML = `<div><i class="fas fa-circle-xmark text-red-600 mr-1"></i><b>Lỗi kết nối Worker:</b> ${esc(e.message || "HTTP 500")}</div>`;
+    }
     return;
   }
   if (j.web) {
@@ -8181,9 +8207,14 @@ async function saveTgOrderAlertSetting() {
   const chk = $("toggleTgOrderAlert");
   const fieldRad = document.querySelector('input[name="tgOrderLinkFieldRadio"]:checked');
   const selField = fieldRad ? fieldRad.value : "info1";
+  const selDomain = $("tgOrderPortalDomainSelect");
+  const validDomains = ["https://vpntrinhhg.pages.dev", "https://vpntrinhhg2.pages.dev", "https://vpntrinhhg3.pages.dev"];
   cmsDb.settings = cmsDb.settings || {};
   if (chk) cmsDb.settings.tgOrderAlert = chk.checked;
   cmsDb.settings.telegramOrderLinkField = selField;
+  if (selDomain && validDomains.includes(selDomain.value)) {
+    cmsDb.settings.telegramOrderPortalDomain = selDomain.value;
+  }
   try {
     await saveCmsDb();
     const savedLbl = $("tgOrderNotifySavedFieldText");
