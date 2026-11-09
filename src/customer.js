@@ -2666,7 +2666,6 @@ function isPwaInstalled() {
   try {
     if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
     if (window.navigator && window.navigator.standalone === true) return true;
-    if (localStorage.getItem('vpn_pwa_installed') === '1') return true;
   } catch (e) {}
   return false;
 }
@@ -2687,6 +2686,9 @@ if (typeof window !== 'undefined') {
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPwaPrompt = e;
+    try {
+      localStorage.removeItem('vpn_pwa_installed');
+    } catch (e) {}
     updatePwaVisibility();
   });
   window.addEventListener('appinstalled', () => {
@@ -3857,6 +3859,17 @@ function setupAppRoutes() {
   };
   bindOrderRoute(appRoutes.order);
   if (appRoutes.order !== DEFAULT_ROUTES.order) bindOrderRoute(DEFAULT_ROUTES.order);
+
+  // Short route /DH... tự động chuyển hướng vào Portal đơn hàng
+  router.on(/^\/(DH[A-Za-z0-9_-]+)$/, (match) => {
+    const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
+    const cleanId = normOrderIdClean(rawOid);
+    if (cleanId) {
+      router.navigate(`${appRoutes.order}/${encodeURIComponent(cleanId)}`);
+    } else {
+      router.navigate('/');
+    }
+  });
 
   const bindPackagesRoute = (path) => {
     router.on(path, () => {
