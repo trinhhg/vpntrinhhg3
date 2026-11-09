@@ -125,7 +125,7 @@ paintThemeIcon();
 
 const i18n = {
   vi: {
-    brand: "VPN Trinh Hg",
+    brand: "VPNTrinhHg",
     search_placeholder: "Nhập Mã đơn hàng (DH...)...",
     btn_logout: "Thoát",
     tab_p_home: "Bảng điều khiển",
