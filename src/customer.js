@@ -1283,6 +1283,7 @@ async function loadConfig() {
           if (extra.flashSale) cfgCache.flashSale = extra.flashSale;
           if (Array.isArray(extra.coupons)) cfgCache.coupons = extra.coupons;
           if (extra.couponEnabled !== undefined) cfgCache.couponEnabled = extra.couponEnabled;
+          if (Array.isArray(extra.giftRules) && extra.giftRules.length) cfgCache.giftRules = extra.giftRules;
           if (Array.isArray(extra.packages) && extra.packages.length && (!cfgCache.packages || !cfgCache.packages.length)) {
             cfgCache.packages = extra.packages;
           }
