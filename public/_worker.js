@@ -26,6 +26,49 @@ export default {
     try {
       const url = new URL(request.url);
 
+      // 1. Redirect URL rút gọn /DH... sang /portal/order/DH...
+      const dhMatch = url.pathname.match(/^\/(DH[A-Za-z0-9_-]+)\/?$/i);
+      if (dhMatch) {
+        const dest = new URL(`/portal/order/${dhMatch[1]}`, request.url);
+        dest.search = url.search;
+        return Response.redirect(dest.toString(), 302);
+      }
+
+      // 2. Dynamic PWA Manifest theo đúng đường dẫn đơn hàng khi cài từ Portal
+      if (url.pathname === "/manifest.json") {
+        const orderId = url.searchParams.get("order");
+        const cleanOid = orderId ? orderId.trim().toUpperCase().replace(/[-_.\s]/g, "") : "";
+        if (cleanOid && /^DH[A-Z0-9]{6,20}$/i.test(cleanOid)) {
+          const manifest = {
+            name: `VPNTrinhHg - Đơn ${cleanOid}`,
+            short_name: cleanOid,
+            start_url: `/portal/order/${cleanOid}`,
+            scope: "/",
+            display: "standalone",
+            background_color: "#ffffff",
+            theme_color: "#ffffff",
+            icons: [{
+              src: "/icon-192.png",
+              sizes: "192x192",
+              type: "image/png",
+              purpose: "any maskable"
+            }, {
+              src: "/icon-512.png",
+              sizes: "512x512",
+              type: "image/png",
+              purpose: "any maskable"
+            }]
+          };
+          return new Response(JSON.stringify(manifest), {
+            status: 200,
+            headers: {
+              "Content-Type": "application/manifest+json; charset=utf-8",
+              "Cache-Control": "public, max-age=0, must-revalidate"
+            }
+          });
+        }
+      }
+
       // Markdown Content Negotiation cho AI Agents trên trang chủ
       if ((url.pathname === "/" || url.pathname === "/index.html") && request.headers.get("Accept")?.includes("text/markdown")) {
         return new Response(SITE_MARKDOWN, {
@@ -40,33 +83,13 @@ export default {
 
       // Xử lý 404 có hỗ trợ Markdown khi truy vấn đường dẫn không tồn tại
       // v1 — 2026-11-06 20:15 (UTC+7) — Mở rộng proxy Pages cho route link ẩn /v7 và /v8
-      const isKnownRoute = url.pathname === "/" || 
-                           url.pathname === "/index.html" || 
-                           url.pathname === "/admin" || 
-                           url.pathname === "/admin.html" || 
-                           url.pathname.startsWith("/portal/") || 
-                           url.pathname.startsWith("/api") || 
-                           url.pathname.match(/^\/v[1-8]/) || 
-                           url.pathname.startsWith("/qr") || 
-                           url.pathname.startsWith("/assets/") || 
-                           url.pathname.startsWith("/src/") ||
-                           url.pathname === "/robots.txt" || 
-                           url.pathname === "/sitemap.xml" || 
-                           url.pathname === "/llms.txt" ||
-                           url.pathname === "/manifest.json" || 
-                           url.pathname === "/manifestadmin.json" || 
-                           url.pathname === "/icon-192.png" || 
-                           url.pathname === "/icon-512.png" ||
-                           url.pathname.includes(".");
+      const isKnownRoute = url.pathname === "/" || url.pathname === "/index.html" || url.pathname === "/admin" || url.pathname === "/admin.html" || url.pathname.startsWith("/portal/") || url.pathname.startsWith("/api") || url.pathname.match(/^\/v[1-8]/) || url.pathname.startsWith("/qr") || url.pathname.startsWith("/assets/") || url.pathname.startsWith("/src/") || url.pathname === "/robots.txt" || url.pathname === "/sitemap.xml" || url.pathname === "/llms.txt" || url.pathname === "/manifest.json" || url.pathname === "/manifestadmin.json" || url.pathname === "/icon-192.png" || url.pathname === "/icon-512.png" || url.pathname.includes(".");
 
       if (!isKnownRoute && request.headers.get("Accept")?.includes("text/markdown")) {
         const notFoundMd = `# 404 - Tài nguyên không tồn tại / Resource Not Found\n\nĐường dẫn \`${url.pathname}\` không tồn tại trên hệ thống VPNTrinhHg.\n\n- Trang chủ: https://vpntrinhhg3.pages.dev/\n- Tài liệu AI: https://vpntrinhhg3.pages.dev/llms.txt\n- Sơ đồ website: https://vpntrinhhg3.pages.dev/sitemap.xml\n`;
         return new Response(notFoundMd, {
           status: 404,
-          headers: {
-            "Content-Type": "text/markdown; charset=utf-8",
-            "Vary": "Accept"
-          }
+          headers: { "Content-Type": "text/markdown; charset=utf-8", "Vary": "Accept" }
         });
       }
 
@@ -74,20 +97,14 @@ export default {
       if (url.pathname.match(/^\/v[1-8]/) || url.pathname.startsWith("/api") || url.pathname.startsWith("/qr")) {
         const workerUrl = new URL(request.url);
         workerUrl.hostname = "vpntrinhhg3worker.lucastanora.workers.dev";
-        const init = {
-          method: request.method,
-          headers: request.headers
-        };
+        const init = { method: request.method, headers: request.headers };
         if (request.method !== "GET" && request.method !== "HEAD") {
           init.body = request.body;
         }
 
         // Tăng cường cho /api/public/config để tự động đồng bộ Flash Sale & Coupon từ Kho Packages
         if (url.pathname === "/api/public/config" && request.method === "GET") {
-          const [cfgRes, pkgRes] = await Promise.all([
-            fetch(new Request(workerUrl.toString(), init)),
-            fetch(new Request("https://vpntrinhhg3worker.lucastanora.workers.dev/api/packages", { headers: request.headers, cache: "no-store" })).catch(() => null)
-          ]);
+          const [cfgRes, pkgRes] = await Promise.all([fetch(new Request(workerUrl.toString(), init)), fetch(new Request("https://vpntrinhhg3worker.lucastanora.workers.dev/api/packages", { headers: request.headers, cache: "no-store" })).catch(() => null)]);
           if (cfgRes && cfgRes.ok) {
             try {
               const cfgData = await cfgRes.json();
