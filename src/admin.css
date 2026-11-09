@@ -1053,3 +1053,36 @@ hr.guide-hr,
   white-space: nowrap;
   flex-shrink: 0;
 }
+/* ===== TỐI ƯU GIAO DIỆN ADMIN TRÊN MOBILE (P2) ===== */
+@media (max-width: 639px) {
+  /* 1. Khu vực Set Web: input full width, toggle không bị ép */
+  #settings-view-setweb input[type="text"],
+  #settings-view-setweb input[type="password"],
+  #settings-view-setweb input[type="number"],
+  #settings-view-setweb select {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .toggle-wrap {
+    flex-shrink: 0 !important;
+  }
+
+  /* 2. Sub-tabs trên mobile: linh hoạt xuống dòng, không bị ép cuộn */
+  .settings-sub-tab {
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+  }
+
+  /* 3. Header Admin: thu gọn khoảng cách trên màn hình nhỏ */
+  #hdr {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+  #hdr h1 {
+    font-size: 0.95rem !important;
+  }
+  #hdrTestBadge {
+    padding: 2px 6px !important;
+    font-size: 8.5px !important;
+  }
+}
