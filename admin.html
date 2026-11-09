@@ -1099,53 +1099,47 @@
           </div>
         </div>
       </div>
-      <!-- ===== TAB CHỨC NĂNG VẬN HÀNH (4 BLOCK ĐIỀU KHIỂN ĐƠN HÀNG) ===== -->
+      <!-- ===== TAB CHỨC NĂNG (ĐỒNG NHẤT 4 TOGGLE SWITCH & 1 NÚT LƯU DUY NHẤT) ===== -->
       <div id="t-func" class="hidden w-full min-w-0 space-y-4">
         <div class="flex items-center justify-between px-1">
-          <div>
-            <h2 class="text-lg md:text-2xl font-bold text-slate-800">Chức năng Vận hành Đơn hàng</h2>
-            <p class="text-xs text-slate-500 mt-0.5">Các chế độ tự động hóa, khóa fulfillment, gửi email và bảo vệ dữ liệu đơn hàng.</p>
-          </div>
+          <h2 class="text-lg md:text-2xl font-bold text-slate-800">Chức năng</h2>
           <button onclick="go('t-ord')" class="text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1"><i class="fas fa-arrow-left text-xs"></i><span>Về Đơn hàng</span></button>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           <!-- 1. Khóa fulfillment tự động -->
           <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
             <div class="flex items-center justify-between">
-              <div class="font-extrabold text-sm text-slate-800 flex items-center gap-2"><i class="fas fa-lock text-amber-500"></i><span>Khóa Fulfillment Tự động</span></div>
-              <span id="badgeLockFulfill" class="text-[9px] font-black px-2 py-0.5 rounded uppercase bg-slate-100 text-slate-600">TẮT</span>
+              <div class="font-extrabold text-sm text-slate-800 flex items-center gap-2"><i class="fas fa-lock text-amber-500"></i><span>Khóa tự động Fulfillment</span></div>
+              <div class="toggle-wrap"><input type="checkbox" id="toggleFuncLockFulfill"><span class="toggle-slider"></span></div>
             </div>
             <p class="text-xs text-slate-500 leading-relaxed">Khi BẬT: Khi Admin sửa đơn hoặc bấm lưu đơn, hệ thống sẽ <b>KHÔNG tự động cấp link hay luân chuyển node</b>. Đơn hàng giữ nguyên trạng thái link hiện tại.</p>
-            <button type="button" id="btnToggleLockFulfill" onclick="toggleLockFulfillBtn()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2"> <i class="fas fa-power-off text-xs"></i><span>BẬT / TẮT KHÓA FULFILLMENT</span> </button>
           </div>
           <!-- 2. Gửi email khi lưu đơn -->
           <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
             <div class="flex items-center justify-between">
-              <div class="font-extrabold text-sm text-slate-800 flex items-center gap-2"><i class="fas fa-envelope text-indigo-500"></i><span>Gửi Email Báo Khách Khi Lưu Đơn</span></div>
-              <span id="badgeMailOnSave" class="text-[9px] font-black px-2 py-0.5 rounded uppercase bg-slate-100 text-slate-600">TẮT</span>
+              <div class="font-extrabold text-sm text-slate-800 flex items-center gap-2"><i class="fas fa-envelope text-indigo-500"></i><span>Gửi email khách hàng khi lưu đơn</span></div>
+              <div class="toggle-wrap"><input type="checkbox" id="toggleFuncMailOnSave"><span class="toggle-slider"></span></div>
             </div>
             <p class="text-xs text-slate-500 leading-relaxed">Khi BẬT: Mỗi khi bạn bấm "LƯU ĐƠN HÀNG" trong form sửa đơn, hệ thống sẽ <b>tự động gửi email kích hoạt / cập nhật</b> đến hòm thư khách hàng.</p>
-            <button type="button" id="btnToggleMailOnSave" onclick="toggleMailOnSaveBtn()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2"> <i class="fas fa-power-off text-xs"></i><span>BẬT / TẮT GỬI EMAIL KHI LƯU</span> </button>
           </div>
-          <!-- 3. Cho phép sửa tay 3 ô Link Sub -->
+          <!-- 3. Cho phép chỉnh sửa thủ công link Sub -->
           <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
             <div class="flex items-center justify-between">
-              <div class="font-extrabold text-sm text-slate-800 flex items-center gap-2"><i class="fas fa-pen-to-square text-purple-600"></i><span>Chế độ Sửa Tay Ô Link Sub</span></div>
-              <span id="badgeManualEdit" class="text-[9px] font-black px-2 py-0.5 rounded uppercase bg-slate-100 text-slate-600">TẮT</span>
+              <div class="font-extrabold text-sm text-slate-800 flex items-center gap-2"><i class="fas fa-pen-to-square text-purple-600"></i><span>Cho phép chỉnh sửa thủ công link Sub</span></div>
+              <div class="toggle-wrap"><input type="checkbox" id="toggleFuncManualEdit"><span class="toggle-slider"></span></div>
             </div>
             <p class="text-xs text-slate-500 leading-relaxed">Khi BẬT: Trong modal chi tiết đơn hàng, <b>3 ô định tuyến (info1, info2, info3) được mở khóa</b> để Admin có thể nhập link tùy chỉnh thủ công.</p>
-            <button type="button" id="btnToggleManualEdit" onclick="toggleManualEditBtn()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2"> <i class="fas fa-power-off text-xs"></i><span>BẬT / TẮT CHẾ ĐỘ SỬA TAY</span> </button>
           </div>
-          <!-- 4. Khóa thông tin hết hạn của đơn hàng -->
+          <!-- 4. Khóa chỉnh sửa thời hạn đơn hàng -->
           <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
             <div class="flex items-center justify-between">
-              <div class="font-extrabold text-sm text-slate-800 flex items-center gap-2"><i class="fas fa-calendar-lock text-amber-500"></i><span>Khóa Thông Tin Hết Hạn Của Đơn</span></div>
-              <div class="toggle-wrap"><input type="checkbox" id="toggleLockExpiry"><span class="toggle-slider"></span></div>
+              <div class="font-extrabold text-sm text-slate-800 flex items-center gap-2"><i class="fas fa-calendar-lock text-rose-500"></i><span>Khóa chỉnh sửa thời hạn đơn hàng</span></div>
+              <div class="toggle-wrap"><input type="checkbox" id="toggleFuncLockExpiry"><span class="toggle-slider"></span></div>
             </div>
             <p class="text-xs text-slate-500 leading-relaxed">Khi BẬT: <b>expDate</b> và <b>days</b> của đơn KHÔNG bị thay đổi, kể cả khi bạn đổi gói / đổi giá. Dùng để sửa thông tin lịch sử mà không làm đổi thời hạn của khách.</p>
-            <button onclick="saveLockExpiry()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-2"> <i class="fas fa-save text-xs"></i><span>LƯU CẤU HÌNH KHÓA HẠN</span> </button>
           </div>
         </div>
+        <div class="pt-2"><button type="button" id="btnSaveAllFunc" onclick="saveAllFuncSettings()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3.5 rounded-2xl shadow-md transition flex items-center justify-center gap-2 active:scale-95 text-sm min-h-[48px]"> <i class="fas fa-save text-base"></i><span>LƯU TẤT CẢ CẤU HÌNH</span> </button></div>
       </div>
       <!-- ===== MỤC 5: TÍNH NĂNG MỞ RỘNG (KONSTA UI INSET GROUPED LIST CHO CÁC SUB-TAB CÒN LẠI) ===== -->
       <div id="t-more" class="hidden w-full min-w-0 space-y-3">
@@ -1267,16 +1261,19 @@
               </div>
               <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">HSD</label><input id="mOExp" type="text" oninput="recalcDaysFromExp()" class="w-full p-2.5 text-xs border rounded-xl outline-none text-center font-bold bg-white" placeholder="DD/MM/YYYY"></div>
             </div>
-            <div class="grid grid-cols-2 gap-2 mb-2">
+            <!-- HÀNG 1: SĐT Zalo | Số ngày SD | Tặng -->
+            <div class="grid grid-cols-3 gap-2 mb-2">
               <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">SĐT Zalo</label><input id="mOZalo" type="text" placeholder="0917..." class="w-full p-2.5 text-xs border rounded-xl outline-none bg-slate-50 font-medium"></div>
-              <div class="grid grid-cols-2 gap-2">
-                <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Số ngày SD</label><input id="mODays" type="number" min="1" placeholder="30" class="w-full p-2.5 text-xs border rounded-xl outline-none text-center bg-slate-50 font-bold" oninput="recalcExpFromDays()"></div>
-                <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Số tháng</label><input id="mOMonths" type="text" readonly class="w-full p-2.5 text-xs border rounded-xl outline-none text-center bg-slate-100 text-slate-600 font-bold" placeholder="—"></div>
-              </div>
+              <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Số ngày SD</label><input id="mODays" type="number" min="0" placeholder="30" class="w-full p-2.5 text-xs border rounded-xl outline-none text-center bg-slate-50 font-bold" oninput="recalcExpFromDays()"></div>
+              <div><label class="block font-bold text-[10px] text-purple-700 mb-0.5">Tặng (+ngày)</label><input id="mOBonusDays" type="number" min="0" placeholder="0" class="w-full p-2.5 text-xs border border-purple-200 rounded-xl outline-none text-center bg-purple-50/50 text-purple-700 font-bold" oninput="recalcExpFromDays()"></div>
             </div>
-            <div class="mb-2">
-              <label id="mOAmountLbl" class="block font-bold text-[10px] text-slate-600 mb-0.5">Số tiền đã nhận</label><input id="mOAmount" type="text" inputmode="decimal" class="w-full p-2.5 text-xs border rounded-xl outline-none bg-slate-50 font-bold">
-              <div id="mOAmountNote" class="text-[10px] text-slate-400 mt-0.5"></div>
+            <!-- HÀNG 2: Thực số tiền thu (VND) – totalVnd | Số tháng -->
+            <div class="flex gap-2 mb-2 items-start">
+              <div class="flex-1 min-w-0">
+                <label id="mOAmountLbl" class="block font-bold text-[10px] text-slate-600 mb-0.5">Thực số tiền thu (VND) – totalVnd</label><input id="mOAmount" type="text" inputmode="decimal" class="w-full p-2.5 text-xs border rounded-xl outline-none bg-slate-50 font-bold">
+                <div id="mOAmountNote" class="text-[10px] text-slate-400 mt-0.5"></div>
+              </div>
+              <div class="w-24 shrink-0"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Số tháng</label><input id="mOMonths" type="text" readonly class="w-full p-2.5 text-xs border rounded-xl outline-none text-center bg-slate-100 text-slate-600 font-bold" placeholder="-"></div>
             </div>
             <div id="mOLockNote" class="hidden text-[10px] text-purple-700 bg-purple-50 border border-purple-200 rounded-xl p-2 mb-2"></div>
             <div id="fSuc" class="hidden mb-3 p-3 border border-green-200 bg-green-50/70 rounded-2xl space-y-2.5">
