@@ -1283,7 +1283,6 @@ async function loadConfig() {
           if (extra.flashSale) cfgCache.flashSale = extra.flashSale;
           if (Array.isArray(extra.coupons)) cfgCache.coupons = extra.coupons;
           if (extra.couponEnabled !== undefined) cfgCache.couponEnabled = extra.couponEnabled;
-          if (Array.isArray(extra.giftRules) && extra.giftRules.length) cfgCache.giftRules = extra.giftRules;
           if (Array.isArray(extra.packages) && extra.packages.length && (!cfgCache.packages || !cfgCache.packages.length)) {
             cfgCache.packages = extra.packages;
           }
@@ -1832,11 +1831,26 @@ function genHTML(rawPkg) {
   // Tra cứu Gift Rule đang có hiệu lực cho gói này từ cfgCache
   const giftRules = Array.isArray(cfgCache?.giftRules) ? cfgCache.giftRules : [];
   const nowMs = Date.now();
+  const parseVnDateLimit = (str, isEnd = false) => {
+    if (!str) return isEnd ? Infinity : 0;
+    const raw = String(str).trim();
+    const mIso = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    const mDmy = !mIso && raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    const m = mIso || mDmy;
+    if (m) {
+      const y = +(mIso ? m[1] : m[3]), mo = +m[2], d = +(mIso ? m[3] : m[1]);
+      const t0 = Date.UTC(y, mo - 1, d) - 7 * 36e5;
+      return isEnd ? (t0 + 864e5 - 1) : t0;
+    }
+    const t = new Date(raw).getTime();
+    return isNaN(t) ? (isEnd ? Infinity : 0) : t;
+  };
+
   const matchedGift = giftRules.find(r => {
     if (!r || r.enabled === false) return false;
     if (!Array.isArray(r.packageIds) || !r.packageIds.includes(pkg.id)) return false;
-    const s = r.startDate ? new Date(r.startDate).getTime() : 0;
-    const e = r.endDate ? new Date(r.endDate).getTime() : Infinity;
+    const s = parseVnDateLimit(r.startDate, false);
+    const e = parseVnDateLimit(r.endDate, true);
     return nowMs >= s && nowMs <= e;
   });
 
