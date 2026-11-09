@@ -5,7 +5,7 @@ Tài liệu hướng dẫn (AI-friendly): https://vpntrinhhg3.pages.dev/llms.txt
 Sitemap: https://vpntrinhhg3.pages.dev/sitemap.xml
 
 ## Giới thiệu
-VPN Trinh Hg cung cấp hạ tầng VPN tối ưu hóa cho mạng di động 4G/5G và Wi-Fi tại Việt Nam, Trung Quốc và quốc tế. Tối ưu đường truyền xem TikTok, Facebook, YouTube và chơi Game ping thấp. Hỗ trợ đa nền tảng: iOS, Android, Windows, macOS qua Shadowrocket, Clash, v2rayN.
+VPN Trinh Hg cung cấp hạ tầng VPN tối ưu hóa cho mạng di động 4G/5G và Wi-Fi tại Việt Nam, Trung Quốc và quốc tế. Tối ưu đường truyền xem TikTok, Facebook, YouTube và lướt web tốc độ cao. Hỗ trợ đa nền tảng: iOS, Android, Windows, macOS qua Shadowrocket, Clash, v2rayN.
 
 ## Gói cước mở bán
 - Gói 1 tháng (100GB / 1 thiết bị): 54,000 VND
