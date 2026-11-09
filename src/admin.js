@@ -8266,14 +8266,15 @@ async function syncPublicPackagesPayload() {
   const flashSale = (cmsDb && cmsDb.sales && cmsDb.sales.campaign) || (cmsDb && cmsDb.settings && cmsDb.settings.flashSale) || null;
   const coupons = (cmsDb && Array.isArray(cmsDb.coupons)) ? cmsDb.coupons : [];
   const couponEnabled = (cmsDb && cmsDb.settings && cmsDb.settings.couponEnabled !== false);
-  try {
-    await aj("/api/packages", {
-      method: "POST",
-      body: { packages: pkgs, flashSale, coupons, couponEnabled }
-    });
-  } catch (e) {
-    console.warn("Lỗi syncPublicPackagesPayload:", e.message);
+  const giftRules = (cmsDb && Array.isArray(cmsDb.giftRules)) ? cmsDb.giftRules : [];
+  const res = await aj("/api/packages", {
+    method: "POST",
+    body: { packages: pkgs, flashSale, coupons, couponEnabled, giftRules }
+  });
+  if (!res || !res.ok) {
+    throw new Error((res && res.error) || "Không thể đồng bộ gói cước và khuyến mãi sang máy chủ");
   }
+  return res;
 }
 window.syncPublicPackagesPayload = syncPublicPackagesPayload;
 
@@ -8310,6 +8311,7 @@ async function toggleFlashSale(checked) {
   if ($("saleCampaignActive")) $("saleCampaignActive").checked = checked;
   try {
     await saveCmsDb();
+    await syncPublicPackagesPayload();
     broadcastAdminSync('flash_sale_toggle', { flashSale: cmsDb.sales.campaign });
     toast(checked ? "Đã BẬT chiến dịch Flash Sale" : "Đã TẮT chiến dịch Flash Sale");
   } catch (e) {
@@ -8337,6 +8339,7 @@ async function saveFlashSaleConfig() {
 
   try {
     await saveCmsDb();
+    await syncPublicPackagesPayload();
     broadcastAdminSync('flash_sale_update', { flashSale: c });
     toast("Đã lưu chiến dịch Flash Sale thành công!");
     logEvent("ok", "admin", "Lưu Flash Sale: " + (c.title || "Chiến dịch mới"));
@@ -8619,12 +8622,11 @@ async function saveGiftRuleModal() {
   }
 
   try {
-    await Promise.all([saveCmsDb(), aj("/api/packages", {
-      method: "POST",
-      body: { packages: adminPkgsList, giftRules: cmsDb.giftRules }
-    }).catch(() => null)]);
+    await saveCmsDb();
+    await syncPublicPackagesPayload();
     renderGiftRulesAdmin();
     closeGiftRuleModal();
+    broadcastAdminSync('gift_rules_update', { giftRules: cmsDb.giftRules });
     toast("Đã lưu quy tắc quà tặng thành công!");
     logEvent("ok", "admin", "Lưu quy tắc quà tặng: " + ruleObj.name);
   } catch (e) {
@@ -8639,13 +8641,13 @@ async function toggleGiftRuleStatus(idx) {
   const cur = cmsDb.giftRules[idx];
   cur.enabled = cur.enabled === false ? true : false;
   try {
-    await Promise.all([saveCmsDb(), aj("/api/packages", {
-      method: "POST",
-      body: { packages: adminPkgsList, giftRules: cmsDb.giftRules }
-    }).catch(() => null)]);
+    await saveCmsDb();
+    await syncPublicPackagesPayload();
     renderGiftRulesAdmin();
+    broadcastAdminSync('gift_rules_toggle', { giftRules: cmsDb.giftRules });
     toast(`Đã ${cur.enabled ? "BẬT" : "TẮT"} quy tắc quà tặng "${cur.name}"`);
   } catch (e) {
+    cur.enabled = !cur.enabled;
     toast("Lỗi cập nhật trạng thái: " + e.message, "err");
   }
 }
@@ -8656,15 +8658,15 @@ async function deleteGiftRuleItem(idx) {
   if (!cmsDb.giftRules[idx]) return;
   const name = cmsDb.giftRules[idx].name || "quy tắc";
   if (!confirm(`Bạn có chắc chắn muốn xóa quy tắc quà tặng "${name}"?`)) return;
-  cmsDb.giftRules.splice(idx, 1);
+  const removed = cmsDb.giftRules.splice(idx, 1);
   try {
-    await Promise.all([saveCmsDb(), aj("/api/packages", {
-      method: "POST",
-      body: { packages: adminPkgsList, giftRules: cmsDb.giftRules }
-    }).catch(() => null)]);
+    await saveCmsDb();
+    await syncPublicPackagesPayload();
     renderGiftRulesAdmin();
+    broadcastAdminSync('gift_rules_delete', { giftRules: cmsDb.giftRules });
     toast(`Đã xóa quy tắc "${name}"`);
   } catch (e) {
+    if (removed && removed[0]) cmsDb.giftRules.splice(idx, 0, removed[0]);
     toast("Lỗi xóa quy tắc: " + e.message, "err");
   }
 }
