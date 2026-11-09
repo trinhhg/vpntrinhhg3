@@ -2682,6 +2682,23 @@ function updatePwaVisibility() {
   if (portalBox) portalBox.classList.toggle('hidden', installed || !inPortal);
 }
 
+function updatePwaManifest(orderId) {
+  try {
+    let link = document.querySelector('link[rel="manifest"]');
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'manifest';
+      document.head.appendChild(link);
+    }
+    const clean = orderId ? normOrderIdClean(orderId) : '';
+    if (clean && /^DH[A-Z0-9]{6,20}$/i.test(clean)) {
+      link.href = `/manifest.json?order=${encodeURIComponent(clean)}`;
+    } else {
+      link.href = '/manifest.json';
+    }
+  } catch (e) {}
+}
+
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
@@ -2696,6 +2713,14 @@ if (typeof window !== 'undefined') {
     try {
       localStorage.setItem('vpn_pwa_installed', '1');
     } catch (e) {}
+    updatePwaVisibility();
+  });
+  window.addEventListener('focus', () => {
+    if (!isPwaInstalled()) {
+      try {
+        localStorage.removeItem('vpn_pwa_installed');
+      } catch (e) {}
+    }
     updatePwaVisibility();
   });
 }
@@ -3306,14 +3331,14 @@ function fillDashboard(o) {
       </div>
       <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
         <div class="relative w-full sm:flex-1 flex items-center overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]">
-          <input type="text" id="subLink${i}" readonly placeholder="—" class="w-full bg-transparent text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl select-none">
+          <input type="text" id="subLink${i}" readonly placeholder="" class="w-full bg-transparent text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl select-none">
           <div id="subBlurOverlay${i}" onclick="copyToClipboard('subLink${i}')" class="hidden absolute inset-0 z-10 flex items-center justify-start pl-3.5 pr-3 bg-white/25 dark:bg-black/30 backdrop-blur-[2px] cursor-not-allowed select-none">
             <span class="text-red-600 dark:text-amber-300 font-extrabold text-[11px] md:text-xs text-left leading-tight">Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!</span>
           </div>
         </div>
         <div class="flex gap-2 shrink-0 w-full sm:w-auto">
-          <button type="button" id="btnCopySub${i}" onclick="copyToClipboard('subLink${i}')" class="flex-1 sm:flex-none sm:w-[105px] bg-green-600 hover:bg-green-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-copy mr-1"></i>COPY</button>
-          <button type="button" id="btnQrSub${i}" onclick="openQrModal('subLink${i}', ${i})" class="flex-1 sm:flex-none sm:w-[105px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-qrcode mr-1"></i>LẤY QR</button>
+          <button type="button" id="btnCopySub${i}" onclick="copyToClipboard('subLink${i}')" class="flex-1 sm:flex-none sm:w-[105px] bg-green-600 hover:bg-green-700 text-white font-extrabold px-2.5 sm:px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-copy sm:mr-1"></i><span class="hidden sm:inline">COPY</span></button>
+          <button type="button" id="btnQrSub${i}" onclick="openQrModal('subLink${i}', ${i})" class="flex-1 sm:flex-none sm:w-[105px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-2.5 sm:px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-qrcode mr-1"></i>LẤY QR</button>
         </div>
       </div>
     </div>
@@ -3336,8 +3361,6 @@ function fillDashboard(o) {
     // 1. Hiển thị chuỗi đại diện (tuyệt đối không chứa Link Sub thật)
     if (slotData.hasLink) {
       inp.value = slotData.url;
-    } else if (Date.now() + skew - (o.createdTs || 0) < 180000) {
-      inp.value = tx(L.link_generating);
     } else {
       inp.value = '';
     }
@@ -3482,6 +3505,7 @@ function highlightNavBtns(tabId) {
 function enterPortal(o, auto) {
   if (o && o.isTest) setServerTestMode(true);
   if (o && o.id) currentUrlOrderId = normOrderIdClean(o.id);
+  updatePwaManifest(o && o.id);
   $('view-store').classList.remove('active');
   $('view-portal').classList.add('active');
   $('userMenu').classList.remove('hidden');
@@ -3598,6 +3622,7 @@ function enablePortalFrame() {
 
 // Bật giao diện Trang chủ gốc ngoài (Landing page với Hero Chặn thì vượt, Dock icon...)
 function showLandingPage() {
+  updatePwaManifest('');
   $('view-portal').classList.remove('active');
   $('view-policy')?.classList.remove('active');
   $('view-store').classList.add('active');
