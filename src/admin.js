@@ -127,7 +127,7 @@ const PDS = {
 let PD = /pages\.dev$/.test(location.hostname) ? location.origin : PDS[3];
 const GH_REPO = "trinhhg/vpntrinhhg3";
 const PKG_LIST = [["t1", "Gói 1 tháng - 60,000VND / $2.5 / ¥15.5 (100GB)", 30], ["t2", "Gói 1 tháng - 70,000VND / $3 / ¥18 (500GB)", 30], ["c1", "Gói 1 tháng - 80,000VND / $3.5 / ¥20.5 (1000GB)", 30], ["c2", "Gói Cao Cấp - 200,000VND / $8 / ¥50 (3000GB)", 30], ["c3", "Gói 1 Năm - 799,000VND / $30 / ¥199 (300GB/tháng)", 365], ["d1", "Không Giới Hạn - 200,000VND / $8 / ¥52 (200GB)", 0], ["d2", "Không Giới Hạn - 399,000VND / $16 / ¥102 (1000GB)", 0], ["d3", "Không Giới Hạn - 999,000VND / $40 / ¥256 (5000GB)", 0], ["o1", "[Giá cũ] Gói 1 tháng - 50,000VND / ¥12.5 (100GB)", 30], ["o2", "[Giá cũ] Gói 1 tháng - 60,000VND / ¥15 (500GB)", 30], ["o3", "[Giá cũ] Gói 1 tháng - 70,000VND / ¥17.5 (1000GB)", 30]];
-const TABS = [["t-ord", "fa-box", "Đơn hàng"], ["t-pkg", "fa-tags", "Bán hàng"], ["t-rev", "fa-chart-pie", "Doanh thu"], ["t-trans", "fa-file-invoice-dollar", "Đối soát"], ["t-check", "fa-clipboard-check", "Kiểm tra"], ["t-lnk", "fa-link", "Link Sub"], ["t-dead", "fa-ban", "Đã xóa"], ["t-mail", "fa-envelope", "Soạn mail"], ["t-cms", "fa-book", "H.Dẫn"], ["t-settings", "fa-cog", "Cài đặt"], ["t-more", "fa-ellipsis-h", "Thêm"]];
+const TABS = [["t-ord", "fa-box", "Đơn hàng"], ["t-func", "fa-sliders", "Chức năng"], ["t-pkg", "fa-tags", "Bán hàng"], ["t-rev", "fa-chart-pie", "Doanh thu"], ["t-trans", "fa-file-invoice-dollar", "Đối soát"], ["t-check", "fa-clipboard-check", "Kiểm tra"], ["t-lnk", "fa-link", "Link Sub"], ["t-dead", "fa-ban", "Đã xóa"], ["t-mail", "fa-envelope", "Soạn mail"], ["t-cms", "fa-book", "H.Dẫn"], ["t-settings", "fa-cog", "Cài đặt"], ["t-more", "fa-ellipsis-h", "Thêm"]];
 // PKG_DB: giá hiện tại + giá cũ (o1/o2/o3) để nhận diện dữ liệu lịch sử — TUYỆT ĐỐI không quy đổi totalVnd của đơn cũ sang giá mới.
 const PKG_DB = {
   t1: { n: "Gói 1 tháng", d: "100GB", vnd: 60000, cny: 15.5, m: 1 },
@@ -682,7 +682,7 @@ function go(id, fromHistory) {
 
   // Đồng bộ thanh điều hướng đáy Mobile (4 tab chính + 1 tab Thêm)
   const navItems = ['t-ord', 't-lnk', 't-check', 't-trans', 't-more'];
-  const moreSubTabs = ['t-pkg', 't-rev', 't-dead', 't-mail', 't-cms', 't-settings', 't-more'];
+  const moreSubTabs = ['t-func', 't-pkg', 't-rev', 't-dead', 't-mail', 't-cms', 't-settings', 't-more'];
   const activeSlot = moreSubTabs.includes(id) ? 't-more' : id;
   navItems.forEach(k => {
     const btn = $('bnav-' + k);
@@ -716,6 +716,10 @@ function go(id, fromHistory) {
       renderCheckTab();
       const savedSub = localStorage.getItem(SITE_KEY + "_subTab_t-check") || "data";
       switchCheckSubTab(savedSub, true);
+    }
+    if (id === "t-func") {
+      updateOrderTogglesUI();
+      if ($("toggleLockExpiry")) $("toggleLockExpiry").checked = !!(cmsDb.settings && cmsDb.settings.lockExpiry);
     }
     if (id === "t-dead") renderDead();
     if (id === "t-lnk") renderLinks();
@@ -6687,15 +6691,15 @@ function renderBlurRows() {
     const lockChecked = isValid && !!s["lockOn" + i];
     const verifyChecked = isValid && !!s["verifyOn" + i];
     return `
-      <div class="flex flex-wrap items-center gap-2.5 bg-purple-50/50 border border-purple-100 p-2.5 rounded-xl">
-        <div class="flex-1 min-w-[200px] mr-2">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-purple-50/50 border border-purple-100 p-3 rounded-xl">
+        <div class="w-full sm:flex-1 min-w-0">
           <div class="flex items-center justify-between mb-1">
             <label class="block font-bold text-[10px] text-purple-900">Ô ${i} → Link Sub ${i}</label>
             <span id="blurBadge${i}"></span>
           </div>
-          <input id="blurRoute${i}" type="text" oninput="checkBlurValidity(${i})" value="${esc(routeVal)}" placeholder="Bắt buộc nhập: ${BLUR_RULES[i]}" class="w-full p-1.5 border border-purple-200 rounded-lg outline-none font-mono text-[11px] bg-white font-bold text-purple-950">
+          <input id="blurRoute${i}" type="text" oninput="checkBlurValidity(${i})" value="${esc(routeVal)}" placeholder="Bắt buộc nhập: ${BLUR_RULES[i]}" class="w-full p-2 border border-purple-200 rounded-lg outline-none font-mono text-xs bg-white font-bold text-purple-950">
         </div>
-        <div class="flex items-center gap-4 shrink-0 ml-auto">
+        <div class="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 shrink-0 w-full sm:w-auto pt-1 sm:pt-0 border-t border-purple-100/60 sm:border-0">
           <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer select-none text-indigo-700">
             <div class="toggle-wrap"><input type="checkbox" id="blurOn${i}" ${blurChecked ? "checked" : ""} ${!isValid ? "disabled" : ""}><span class="toggle-slider"></span></div>
             <span>Bật mờ</span>
