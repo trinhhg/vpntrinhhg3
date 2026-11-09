@@ -113,6 +113,7 @@ export default {
                 if (pkgData.flashSale && !cfgData.flashSale) cfgData.flashSale = pkgData.flashSale;
                 if (Array.isArray(pkgData.coupons) && !cfgData.coupons) cfgData.coupons = pkgData.coupons;
                 if (pkgData.couponEnabled !== undefined && cfgData.couponEnabled === undefined) cfgData.couponEnabled = pkgData.couponEnabled;
+                if (Array.isArray(pkgData.giftRules) && (!cfgData.giftRules || !cfgData.giftRules.length)) cfgData.giftRules = pkgData.giftRules;
               }
               return new Response(JSON.stringify(cfgData), {
                 status: 200,
