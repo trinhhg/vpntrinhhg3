@@ -216,7 +216,7 @@
           <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-4">
             <div class="mb-3">
               <div class="flex items-center justify-between mb-1"><label class="font-bold text-xs text-slate-700">Nguồn 1 (Liangxin, DJJC, Kitty hoặc Custom)</label> <span id="lkDetectBadge1" class="text-[10px] text-slate-400 font-bold">Nhập 1 ô = Link Đơn · Nhập 2 ô = Link Trộn</span></div>
-              <input id="lkOrig" type="text" oninput="onOrigUrlInput(1)" placeholder="Dán link nguồn (VD: https://7777699.xyz/api/v1/owo?OwO=...)" class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-xs bg-slate-50">
+              <input id="lkOrig" type="text" oninput="onOrigUrlInput(1)" placeholder="" class="w-full p-2 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-xs bg-slate-50">
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
                 <select id="lkProv1" onchange="onManualProviderSelect(1)" class="w-full p-1.5 border border-slate-200 rounded-lg bg-white text-[11px] font-bold text-slate-700 outline-none focus:border-indigo-500">
                   <option value="auto">🔍 Tự động nhận diện Nhà mạng (Chân 1)</option>
@@ -238,7 +238,7 @@
             </div>
             <div class="mb-3">
               <div class="flex items-center justify-between mb-1"><label class="block font-bold text-xs text-indigo-700"><i class="fas fa-shuffle mr-1"></i>Nguồn 2 (Để trống nếu là Link Đơn)</label> <span id="lkDetectBadge2" class="text-[10px] text-slate-400 font-bold"></span></div>
-              <input id="lkOrig2" type="text" oninput="onOrigUrlInput(2)" placeholder="https://gates.djjc... hoặc https://liangxin... (tự nhận diện nhà mạng)" class="w-full p-2 border border-indigo-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-xs bg-indigo-50/30">
+              <input id="lkOrig2" type="text" oninput="onOrigUrlInput(2)" placeholder="" class="w-full p-2 border border-indigo-200 rounded-xl outline-none focus:border-indigo-500 font-mono text-xs bg-indigo-50/30">
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
                 <select id="lkProv2" onchange="onManualProviderSelect(2)" class="w-full p-1.5 border border-indigo-200 rounded-lg bg-white text-[11px] font-bold text-slate-700 outline-none focus:border-indigo-500">
                   <option value="auto">🔍 Tự động nhận diện Nhà mạng (Chân 2)</option>
@@ -636,10 +636,10 @@
       <div id="t-settings" class="hidden w-full min-w-0">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h2 class="text-lg md:text-2xl font-bold text-slate-800 shrink-0">Cài đặt hệ thống</h2>
-          <div class="flex justify-end w-full sm:w-auto overflow-x-auto scroll-hide"><button type="button" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 py-1.5 font-bold text-xs" id="stab-setweb" onclick="switchSettingsTab('setweb')"><i class="fas fa-sliders mr-1 hidden sm:inline"></i>Set Web</button> <button type="button" class="settings-sub-tab whitespace-nowrap shrink-0 active text-center !px-3 py-1.5 font-bold text-xs" id="stab-webadmin" onclick="switchSettingsTab('webadmin')"><i class="fas fa-globe mr-1 hidden sm:inline"></i>Quản trị Web</button> <button type="button" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 py-1.5 font-bold text-xs" id="stab-log" onclick="switchSettingsTab('log')"><i class="fas fa-list-alt mr-1 hidden sm:inline"></i>Nhật ký</button> <button type="button" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 py-1.5 font-bold text-xs" id="stab-dev" onclick="switchSettingsTab('dev')"><i class="fas fa-laptop mr-1 hidden sm:inline"></i>Thiết bị</button> <button type="button" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 py-1.5 font-bold text-xs" id="stab-time" onclick="switchSettingsTab('time')"><i class="fas fa-clock mr-1 hidden sm:inline"></i>Thời gian</button></div>
+          <div class="flex justify-start sm:justify-end w-full sm:w-auto overflow-x-auto scrollbar-none pb-1"><button type="button" class="settings-sub-tab whitespace-nowrap shrink-0 active text-center !px-3 py-1.5 font-bold text-xs" id="stab-setweb" onclick="switchSettingsTab('setweb')"><i class="fas fa-sliders mr-1 hidden sm:inline"></i>Set Web</button> <button type="button" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 py-1.5 font-bold text-xs" id="stab-webadmin" onclick="switchSettingsTab('webadmin')"><i class="fas fa-globe mr-1 hidden sm:inline"></i>Quản trị Web</button> <button type="button" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 py-1.5 font-bold text-xs" id="stab-log" onclick="switchSettingsTab('log')"><i class="fas fa-list-alt mr-1 hidden sm:inline"></i>Nhật ký</button> <button type="button" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 py-1.5 font-bold text-xs" id="stab-dev" onclick="switchSettingsTab('dev')"><i class="fas fa-laptop mr-1 hidden sm:inline"></i>Thiết bị</button> <button type="button" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 py-1.5 font-bold text-xs" id="stab-time" onclick="switchSettingsTab('time')"><i class="fas fa-clock mr-1 hidden sm:inline"></i>Thời gian</button></div>
         </div>
         <!-- 1. SUB-TAB QUẢN TRỊ WEB (GIAO DIỆN & TIỆN ÍCH TRANG CHỦ) -->
-        <div id="settings-view-webadmin" class="space-y-4">
+        <div id="settings-view-webadmin" class="hidden space-y-4">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
             <div>
               <h3 class="text-base md:text-lg font-bold text-slate-800">Quản trị Giao diện &amp; Tiện ích Trang chủ</h3>
@@ -879,7 +879,7 @@
           </div>
         </div>
         <!-- 2. SUB-TAB SET WEB (ĐÃ DỌN DẸP SẠCH BLOCK THỪA, CHIA ĐỀU 2 CỘT 4 - 4 CÂN ĐỐI) -->
-        <div id="settings-view-setweb" class="hidden space-y-4">
+        <div id="settings-view-setweb" class="space-y-4">
           <!-- KHU VỰC 2 THẺ KHO DỮ LIỆU: KHO THẬT & KHO TEST SONG SONG -->
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 mb-2">
             <!-- 1. THẺ KHO THẬT (ALL_ORDERS) -->
@@ -977,7 +977,14 @@
                     <span id="tgOrderNotifyEnvBadge" class="text-[10px] font-black px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">Đang kiểm tra biến môi trường...</span>
                   </div>
                   <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1"><label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 bg-slate-50 hover:border-sky-400 cursor-pointer text-xs font-bold text-slate-700"> <input type="radio" name="tgOrderLinkFieldRadio" value="info1" class="accent-sky-600"> <span>Ô Link Sub 1 (<code class="font-mono text-indigo-600">info1</code>)</span> </label> <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 bg-slate-50 hover:border-sky-400 cursor-pointer text-xs font-bold text-slate-700"> <input type="radio" name="tgOrderLinkFieldRadio" value="info2" class="accent-sky-600"> <span>Ô Link Sub 2 (<code class="font-mono text-indigo-600">info2</code>)</span> </label> <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 bg-slate-50 hover:border-sky-400 cursor-pointer text-xs font-bold text-slate-700"> <input type="radio" name="tgOrderLinkFieldRadio" value="info3" class="accent-sky-600"> <span>Ô Link Sub 3 (<code class="font-mono text-indigo-600">info3</code>)</span> </label></div>
-                  <div class="pt-1.5"><label class="block text-[11px] font-bold text-slate-700 mb-1">Domain Portal trong tin nhắn:</label> <select id="tgOrderPortalDomainSelect" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 text-xs font-bold text-slate-800 outline-none"> <option value="https://vpntrinhhg.pages.dev">Web 1 — https://vpntrinhhg.pages.dev</option> <option value="https://vpntrinhhg2.pages.dev">Web 2 — https://vpntrinhhg2.pages.dev</option> <option value="https://vpntrinhhg3.pages.dev">Web 3 — https://vpntrinhhg3.pages.dev</option> </select></div>
+                  <div class="pt-1.5">
+                    <label class="block text-[11px] font-bold text-slate-700 mb-1">Domain Portal trong tin nhắn:</label>
+                    <select id="tgOrderPortalDomainSelect" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 text-xs font-bold text-slate-800 outline-none">
+                      <option value="https://vpntrinhhg.pages.dev">Web 1 — https://vpntrinhhg.pages.dev</option>
+                      <option value="https://vpntrinhhg2.pages.dev">Web 2 — https://vpntrinhhg2.pages.dev</option>
+                      <option value="https://vpntrinhhg3.pages.dev">Web 3 — https://vpntrinhhg3.pages.dev</option>
+                    </select>
+                  </div>
                   <div class="flex items-center justify-between flex-wrap gap-2 pt-1">
                     <div id="tgOrderNotifySavedFieldText" class="text-[11px] font-bold text-slate-600">Nguồn Link Sub đang chọn: <span class="text-indigo-600 font-mono">Chưa lưu</span></div>
                     <div class="flex items-center gap-2"><button type="button" onclick="saveTgOrderAlertSetting()" id="btnSaveTgOrderCfg" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition shadow-sm flex items-center gap-1"> <i class="fas fa-save"></i>Lưu cấu hình </button> <button type="button" onclick="testTelegramOrderAlert()" id="btnTgOrderTest" class="bg-sky-600 hover:bg-sky-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition shadow-sm flex items-center gap-1"> <i class="fas fa-paper-plane"></i>Gửi thử thông báo đơn </button></div>
