@@ -723,7 +723,8 @@ function go(id, fromHistory) {
       loadSettingsUI();
       loadStatus();
       loadQuota();
-      const savedSub = localStorage.getItem(SITE_KEY + "_subTab_t-settings") || "webadmin";
+      let savedSub = localStorage.getItem(SITE_KEY + "_subTab_t-settings");
+      if (!savedSub || savedSub === "webadmin") savedSub = "setweb";
       switchSettingsTab(savedSub);
     }
     if (id === "t-rev") renderRevenue();
