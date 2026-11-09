@@ -1738,11 +1738,11 @@ function getActiveFlashSale() {
   if (pct <= 0) return null;
   const now = Date.now();
   if (s.startDate) {
-    const startT = new Date(s.startDate).getTime();
+    const startT = parseVnDateLimit(s.startDate, false);
     if (!isNaN(startT) && now < startT) return null;
   }
   if (s.endDate) {
-    const endT = new Date(s.endDate).getTime();
+    const endT = parseVnDateLimit(s.endDate, true);
     if (!isNaN(endT) && now > endT) return null;
   }
   return {
@@ -1770,7 +1770,7 @@ function getEffectivePkg(pkg) {
   if (!doesFlashSaleApply(pkg, sale)) return pkg;
   const pct = sale.percent;
   const factor = (100 - pct) / 100;
-  const discountedVnd = Math.max(1000, Math.round((Number(pkg.vnd || 0) * factor) / 1000) * 1000);
+  const discountedVnd = Math.max(2000, Math.round(Number(pkg.vnd || 0) * factor));
   const discountedCny = Math.round((Number(pkg.cny || 0) * factor) * 10) / 10;
   const discountedUsd = Math.round((Number(pkg.usd || 0) * factor) * 10) / 10;
   return {
@@ -1780,7 +1780,8 @@ function getEffectivePkg(pkg) {
     flashSalePercent: pct,
     vnd: discountedVnd,
     cny: discountedCny,
-    usd: discountedUsd
+    usd: discountedUsd,
+    originalVnd: Number(pkg.vnd || 0)
   };
 }
 
@@ -1834,13 +1835,17 @@ function genHTML(rawPkg) {
   const parseVnDateLimit = (str, isEnd = false) => {
     if (!str) return isEnd ? Infinity : 0;
     const raw = String(str).trim();
+    const mTime = raw.match(/[T\s](\d{1,2}):(\d{1,2})/);
     const mIso = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
     const mDmy = !mIso && raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
     const m = mIso || mDmy;
     if (m) {
       const y = +(mIso ? m[1] : m[3]), mo = +m[2], d = +(mIso ? m[3] : m[1]);
-      const t0 = Date.UTC(y, mo - 1, d) - 7 * 36e5;
-      return isEnd ? (t0 + 864e5 - 1) : t0;
+      const hh = mTime ? +mTime[1] : (isEnd ? 23 : 0);
+      const mm = mTime ? +mTime[2] : (isEnd ? 59 : 0);
+      const ss = isEnd && !mTime ? 59 : 0;
+      const ms = isEnd && !mTime ? 999 : 0;
+      return Date.UTC(y, mo - 1, d, hh - 7, mm, ss, ms);
     }
     const t = new Date(raw).getTime();
     return isNaN(t) ? (isEnd ? Infinity : 0) : t;
@@ -1860,7 +1865,18 @@ function genHTML(rawPkg) {
 
   const inlineBadges = (flashSaleBadge || promoStickerBadge) ? `<div class="flex items-center gap-1.5 flex-wrap justify-end mb-1">${flashSaleBadge}${promoStickerBadge}</div>` : '';
 
-  const priceHTML = pkg.isCustom ? `<div class="text-xl font-black text-red-600 dark:text-red-400 mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${p.price || ''}</div>` : `<div class="mb-4 border-b border-slate-100 dark:border-white/10 pb-3 mt-1.5 flex flex-wrap items-baseline"><span class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-white price-glow">${realPriceDisplay}</span></div>`;
+  let originalPriceDisplay = '';
+  if (pkg.isFlashSale) {
+    if (lang === 'zh') {
+      originalPriceDisplay = `<span class="text-xs md:text-sm font-semibold line-through text-slate-400 dark:text-slate-500 ml-2">¥${rawPkg.cny || 0}</span>`;
+    } else if (lang === 'en') {
+      originalPriceDisplay = `<span class="text-xs md:text-sm font-semibold line-through text-slate-400 dark:text-slate-500 ml-2">$${rawPkg.usd || 0}</span>`;
+    } else {
+      originalPriceDisplay = `<span class="text-xs md:text-sm font-semibold line-through text-slate-400 dark:text-slate-500 ml-2">${Number(rawPkg.vnd || 0).toLocaleString('en-US')} VND</span>`;
+    }
+  }
+
+  const priceHTML = pkg.isCustom ? `<div class="text-xl font-black text-red-600 dark:text-red-400 mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${p.price || ''}</div>` : `<div class="mb-4 border-b border-slate-100 dark:border-white/10 pb-3 mt-1.5 flex flex-wrap items-baseline"><span class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-white price-glow">${realPriceDisplay}</span>${originalPriceDisplay}</div>`;
 
   // Chữ hiển thị cạnh thời hạn: Ưu tiên Gift Rule
   let bonusLabel = '';
@@ -2307,8 +2323,8 @@ function calculateTotal() {
       const isPct = currentAppliedCoupon.type === 'percent';
       let disc = isPct ? Math.round((currentTotalVnd * currentAppliedCoupon.value) / 100) : currentAppliedCoupon.value;
       if (currentAppliedCoupon.maxDiscount && disc > currentAppliedCoupon.maxDiscount) disc = currentAppliedCoupon.maxDiscount;
-      if (disc >= currentTotalVnd) disc = Math.max(0, currentTotalVnd - 1000);
-      currentTotalVnd = Math.max(1000, currentTotalVnd - disc);
+      if (disc > currentTotalVnd - 2000) disc = Math.max(0, currentTotalVnd - 2000);
+      currentTotalVnd = Math.max(2000, currentTotalVnd - disc);
       if (pCalc) {
         if (m === 'bank') {
           pCalc.innerHTML = `${calcStr}<br><span class="text-emerald-600 dark:text-emerald-400 font-black text-xs md:text-sm mt-1.5 block">Đã áp dụng mã ${esc(currentAppliedCoupon.code)} (-${disc.toLocaleString('en-US')}đ) → Thực thu: <b>${currentTotalVnd.toLocaleString('en-US')}VND</b></span>`;
