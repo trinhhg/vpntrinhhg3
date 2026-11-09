@@ -400,9 +400,24 @@ async function sendTelegramOrderActivationNotify(env, KV, cms, o, fulfillKind, l
     }
   }
 
-  const portalUrl = `https://vpntrinhhg.pages.dev/portal/order/${encodeURIComponent(cleanOrdId)}`;
-  const pkgDisplay = formatTelegramOrderPkgName(o);
-  const lines = [isTestPing ? "🧪 <b>[TEST] ĐƠN HÀNG ĐÃ KÍCH HOẠT</b>" : "🎉 <b>ĐƠN HÀNG ĐÃ KÍCH HOẠT</b>", "━━━━━━━━━━━━━━━", `📧 Email: <code>${htmlEscape(o.email || "—")}</code>`, `🧾 Mã đơn: <code>${htmlEscape(cleanOrdId)}</code> (<a href="${htmlEscape(portalUrl)}">Mở Portal</a>)`, `📦 Tên gói: <b>${htmlEscape(pkgDisplay)}</b>`, `🔗 Link Sub: <code>${htmlEscape(subLink)}</code>`, `⏳ Hạn sử dụng: <b>${htmlEscape(expText)}</b>`];
+  const ALLOWED_PORTAL_DOMAINS = ["https://vpntrinhhg.pages.dev", "https://vpntrinhhg2.pages.dev", "https://vpntrinhhg3.pages.dev"];
+  let baseDomain = "";
+  const cfgDomain = String(s.telegramOrderPortalDomain || "").trim();
+  if (ALLOWED_PORTAL_DOMAINS.includes(cfgDomain)) {
+    baseDomain = cfgDomain;
+  }
+  if (!baseDomain && o && o.sourceWeb) {
+    const sw = String(o.sourceWeb).trim().replace(/\/$/, "");
+    if (ALLOWED_PORTAL_DOMAINS.includes(sw)) {
+      baseDomain = sw;
+    }
+  }
+  if (!baseDomain) {
+    const meN = (getMe(null, env, cms) || {}).n;
+    baseDomain = PDS[meN] || "https://vpntrinhhg3.pages.dev";
+  }
+  const portalUrl = `${baseDomain}/${encodeURIComponent(cleanOrdId)}`;
+  const lines = [isTestPing ? "🧪 <b>[TEST] ĐƠN HÀNG ĐÃ KÍCH HOẠT</b>" : "🎉 <b>ĐƠN HÀNG ĐÃ KÍCH HOẠT</b>", "━━━━━━━━━━━━━━━", `📧 Email: <code>${htmlEscape(o.email || "—")}</code>`, `🧾 Mã đơn: <code>${htmlEscape(cleanOrdId)}</code>`, `🌐 Portal: ${htmlEscape(portalUrl)}`, `🔗 Link Sub: <code>${htmlEscape(subLink)}</code>`, `⏳ Hạn sử dụng: <b>${htmlEscape(expText)}</b>`];
 
   try {
     const res = await fetch(`https://api.telegram.org/bot${String(env.TELEGRAM_ORDER_BOT_TOKEN).trim()}/sendMessage`, {
@@ -2213,7 +2228,12 @@ export default {
     const KV = getKV(env);
     if (!KV) return new Response("LỖI: Chưa kết nối kho KV", { status: 500, headers: CORS });
     // v2 — 2026-11-06 22:00 (UTC+7) — KV TEST_MODE_ACTIVE của chính Worker là nguồn duy nhất quyết định bảng Supabase (ALL_ORDERS_TEST vs ALL_ORDERS)
-    const isTestKv = (await KV.get("TEST_MODE_ACTIVE")) === "1";
+    let isTestKv = false;
+    try {
+      isTestKv = (await KV.get("TEST_MODE_ACTIVE")) === "1";
+    } catch (e) {
+      console.error("KV TEST_MODE_ACTIVE error:", e && e.message || e);
+    }
     const reqIsTest = isTestKv;
     const J = (d, s = 200) => new Response(JSON.stringify(d), {
       status: s,
@@ -2258,6 +2278,8 @@ export default {
       const rawTkt = ticket ? await KV.get("QR_TKT_" + ticket) : null;
       const tktData = safeJson(rawTkt, null);
       const ua = request.headers.get("User-Agent") || "";
+      const isVpnClient = /clash|meta|stash|surfboard|flclash|mihomo|clashmeta|hiddify|sing-box|singbox|nekobox|nekoray|singbox-legacy|shadowrocket|quantumult|surge|loon|v2ray|xray|streisand|subconverter/i.test(ua);
+      const isBrowser = !isVpnClient && /mozilla|chrome|safari|firefox|edge|opera|msie|trident/i.test(ua);
       const isSingbox = /hiddify|sing-box|singbox|nekobox|nekoray|singbox-legacy/i.test(ua);
       const isClash = !isSingbox && /clash|meta|stash|surfboard|flclash|mihomo|clashmeta/i.test(ua);
       const VP = "vless://00000000-0000-0000-0000-000000000000@127.0.0.1:1?type=tcp#";
@@ -2271,6 +2293,12 @@ export default {
           "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
           "Access-Control-Expose-Headers": "profile-title,Profile-Title,subscription-userinfo,Content-Disposition"
         });
+        if (isBrowser) {
+          rh.set("Content-Disposition", "inline");
+          rh.set("Content-Type", isSingbox ? "application/json; charset=utf-8" : isClash ? "text/yaml; charset=utf-8" : "text/plain; charset=utf-8");
+          const bodyContent = isSingbox ? makeSimpleSingbox(EXP_QR_NODES) : isClash ? makeSimpleYaml(EXP_QR_NODES) : b64e(EXP_QR_NODES.map(n => VP + encodeURIComponent(n)).join("\n"));
+          return new Response(bodyContent, { status: 200, headers: rh });
+        }
         if (isSingbox) {
           rh.set("Content-Disposition", 'attachment; filename="VPNTrinhHg"');
           rh.set("Content-Type", "application/json; charset=utf-8");
@@ -2319,11 +2347,16 @@ export default {
       const DEAD_SB = makeSimpleSingbox(DEAD_NODES);
 
       // Gắn DUY NHẤT tham số expire (Tuyệt đối KHÔNG có upload, download, total)
+      const isVpnClientSub = /clash|meta|stash|surfboard|flclash|mihomo|clashmeta|hiddify|sing-box|singbox|nekobox|nekoray|singbox-legacy|shadowrocket|quantumult|surge|loon|v2ray|xray|streisand|subconverter/i.test(ua);
+      const isBrowserSub = !isVpnClientSub && /mozilla|chrome|safari|firefox|edge|opera|msie|trident/i.test(ua);
       const respond = (b, fmt, expireSec = null) => {
         if (expireSec !== null && expireSec !== undefined) {
           rh.set("subscription-userinfo", `expire=${expireSec}`);
         }
-        if (fmt === "yaml") {
+        if (isBrowserSub) {
+          rh.set("Content-Disposition", 'inline; filename="VPNTrinhHg' + (fmt === "yaml" ? ".yaml" : "") + '"');
+          rh.set("Content-Type", fmt === "yaml" ? "text/yaml; charset=utf-8" : fmt === "singbox" ? "application/json; charset=utf-8" : "text/plain; charset=utf-8");
+        } else if (fmt === "yaml") {
           rh.set("Content-Disposition", 'attachment; filename="VPNTrinhHg.yaml"');
           rh.set("Content-Type", "text/yaml; charset=utf-8");
         }
@@ -2528,8 +2561,16 @@ export default {
       }
     }
 
-    await syncClock(KV);
-    await getActivePkgs(KV);
+    try {
+      await syncClock(KV);
+    } catch (e) {
+      console.error("syncClock error:", e && e.message || e);
+    }
+    try {
+      await getActivePkgs(KV);
+    } catch (e) {
+      console.error("getActivePkgs error:", e && e.message || e);
+    }
     const admin = await isAdmin(request, env), internal = isInternal(request, env), log = mkLog();
     const need = (ok) => (ok ? null : J({ ok: false, error: "Unauthorized" }, 401));
     const pub = (o, st) => publicOrder(o, st.cms, st.links, getMe(url, env, st.cms).field);
@@ -3825,21 +3866,55 @@ export default {
           sbError = "Chưa cấu hình SUPABASE_KEY / SUPABASE_URL";
         }
         const ordersData = JSON.stringify(ordersList);
-        const [l, pl, dr] = await Promise.all(["ALL_LINKS", "LINK_POOL", "ALL_DATA_REQUESTS"].map((k) => KV.get(k)));
+        let l = "[]", pl = "[]", dr = "[]";
+        try {
+          const res = await Promise.all(["ALL_LINKS", "LINK_POOL", "ALL_DATA_REQUESTS"].map((k) => KV.get(k)));
+          l = res[0] || "[]";
+          pl = res[1] || "[]";
+          dr = res[2] || "[]";
+        } catch (e) {
+          console.error("Poll KV read error:", e && e.message || e);
+        }
         return RAW(`{"orders":${ordersData},"links":${l || "[]"},"pool":${pl || "[]"},"data_requests":${dr || "[]"}${sbError ? `,"sbError":${JSON.stringify(sbError)}` : ""},"sbOk":${sbOk},"isTest":${isTest}}`);
       }
       if (p === "/api/admin/status") {
-        const cron = safeJson(await KV.get("CRON_LAST_RUN"), null), r = await d1(env, "/api/admin/logs?limit=1");
-        const tgOrdEnv = getTelegramOrderEnvStatus(env);
+        let cron = null;
+        try {
+          cron = safeJson(await KV.get("CRON_LAST_RUN"), null);
+        } catch (e) {
+          console.error("Status CRON_LAST_RUN error:", e && e.message || e);
+        }
+        let r = { ok: false, status: 0, data: { error: "Chưa kiểm tra D1" } };
+        try {
+          r = await d1(env, "/api/admin/logs?limit=1");
+        } catch (e) {
+          r = {
+            ok: false,
+            status: 0,
+            data: { error: String(e && e.message || e) }
+          };
+        }
+        let tgOrdEnv = { configured: false, hasToken: false, hasChatId: false };
+        try {
+          tgOrdEnv = getTelegramOrderEnvStatus(env);
+        } catch (e) {
+          console.error("Status tgOrdEnv error:", e && e.message || e);
+        }
+        let webIdx = 3;
+        try {
+          webIdx = (getMe(url, env, {}) || {}).n || 3;
+        } catch (e) {
+          console.error("Status getMe error:", e && e.message || e);
+        }
         return J({
           ok: true,
           cron,
-          d1: r.ok,
-          d1Error: r.ok ? "" : (r.data && r.data.error) || "HTTP " + r.status,
-          web: getMe(url, env, {}).n,
-          hasPassword: !!env.ADMIN_PASSWORD,
-          hasSecret2: !!env.WEB_API_SECRET2,
-          hasTgOrderBot: tgOrdEnv.configured,
+          d1: !!(r && r.ok),
+          d1Error: (r && r.ok) ? "" : ((r && r.data && r.data.error) || (r && ("HTTP " + r.status)) || "Lỗi D1"),
+          web: webIdx,
+          hasPassword: !!(env && env.ADMIN_PASSWORD),
+          hasSecret2: !!(env && env.WEB_API_SECRET2),
+          hasTgOrderBot: !!(tgOrdEnv && tgOrdEnv.configured),
           tgOrderEnv,
           cronEveryMin: 15
         });
