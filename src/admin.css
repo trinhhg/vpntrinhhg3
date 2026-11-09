@@ -290,6 +290,8 @@ body {
 .scroll-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ===== ORDER STATUS TABS ===== */
