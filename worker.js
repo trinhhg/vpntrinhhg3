@@ -1689,7 +1689,7 @@ function publicOrder(o, cms, links, field) {
     totalCny: o.totalCny || 0,
     days: o.days || "",
     expDate: o.expDate || "",
-    createdTs: o.createdTs || 0,
+    createdTs: Number(o.createdTs) || (o.created_at ? new Date(o.created_at).getTime() : 0) || 0,
     reason: o.reason || "",
     isUpgrade: !!o.isUpgrade,
     upgradeStatus: o.upgradeStatus || null,
@@ -2298,14 +2298,16 @@ export default {
     const url = new URL(request.url), p = url.pathname, m = request.method;
     const KV = getKV(env);
     if (!KV) return new Response("LỖI: Chưa kết nối kho KV", { status: 500, headers: CORS });
-    // v2 — 2026-11-06 22:00 (UTC+7) — KV TEST_MODE_ACTIVE của chính Worker là nguồn duy nhất quyết định bảng Supabase (ALL_ORDERS_TEST vs ALL_ORDERS)
+    // Đồng bộ nhận biết TEST/PROD từ query (?test=1/0), header (X-Test-Mode: 1/0) và fallback về KV TEST_MODE_ACTIVE
     let isTestKv = false;
     try {
       isTestKv = (await KV.get("TEST_MODE_ACTIVE")) === "1";
     } catch (e) {
       console.error("KV TEST_MODE_ACTIVE error:", e && e.message || e);
     }
-    const reqIsTest = isTestKv;
+    const qTest = url.searchParams.get("test");
+    const hTest = request.headers.get("X-Test-Mode");
+    const reqIsTest = qTest === "1" || hTest === "1" ? true : (qTest === "0" || hTest === "0" ? false : isTestKv);
     try {
       const J = (d, s = 200) => new Response(JSON.stringify(d), {
         status: s,
@@ -3592,9 +3594,19 @@ export default {
         if (!targetId) return J({ ok: false, error: "Missing id" }, 400);
         const sb = getSupabase(env, reqIsTest);
         if (!sb) return J({ ok: false, error: "Chưa cấu hình Supabase" }, 503);
-        let o = null;
+        let o = null, foundInTest = reqIsTest;
         try {
           o = await sb.getOrder(targetId);
+          if (!o) {
+            const sbAlt = getSupabase(env, !reqIsTest);
+            if (sbAlt) {
+              const oAlt = await sbAlt.getOrder(targetId);
+              if (oAlt) {
+                o = oAlt;
+                foundInTest = !reqIsTest;
+              }
+            }
+          }
         } catch (err) {
           return J({ ok: false, error: err.message || String(err) }, 503);
         }
