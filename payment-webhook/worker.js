@@ -168,13 +168,13 @@ const pendingUpgradeOf = (env, id) => env.DB.prepare(`SELECT * FROM order_upgrad
 async function markOrderSuccess(env, orderId, note = null) {
   await env.DB.prepare(`UPDATE orders SET status = 'success', paid_at = ${NOW}, fulfillment_status = 'pending', fulfill_at = ${NOW}, fulfill_tries = 0, reviewed_at = CASE WHEN ? IS NOT NULL THEN ${NOW} ELSE reviewed_at END, review_note = CASE WHEN ? IS NOT NULL THEN ? ELSE review_note END WHERE order_id = ?`).bind(note, note, note, orderId).run();
 }
-// giao dá»ch tiá»n vÃ o trÆ°á»c, ÄÆ¡n tá»i sau
+/// giao dịch tiền vào trước, đơn tới sau
 async function reconcileOrderAfterCreation(env, orderId, totalVnd) {
-  const direct = await env.DB.prepare(`SELECT id FROM transactions WHERE status = 'unmatched' AND order_id = ? AND ABS(amount - ?) <= 1 ORDER BY id ASC LIMIT 1`).bind(orderId, totalVnd).first();
+  const direct = await env.DB.prepare(`SELECT id FROM transactions WHERE status = 'unmatched' AND order_id = ? AND amount = ? ORDER BY id ASC LIMIT 1`).bind(orderId, totalVnd).first();
   if (direct) {
-    const r = await env.DB.prepare(`UPDATE transactions SET status = 'success', kind = COALESCE((SELECT order_type FROM orders WHERE order_id = ?), 'new'), updated_at = ${NOW}, reviewed_at = ${NOW}, review_note = 'Khá»p tá»± Äá»ng - tiá»n vÃ o trÆ°á»c' WHERE id = ? AND status = 'unmatched'`).bind(orderId, direct.id).run();
+    const r = await env.DB.prepare(`UPDATE transactions SET status = 'success', kind = COALESCE((SELECT order_type FROM orders WHERE order_id = ?), 'new'), updated_at = ${NOW}, reviewed_at = ${NOW}, review_note = 'Khớp tự động - tiền vào trước' WHERE id = ? AND status = 'unmatched'`).bind(orderId, direct.id).run();
     if (r.meta.changes > 0) {
-      await markOrderSuccess(env, orderId, "Khá»p tá»± Äá»ng - tiá»n vÃ o trÆ°á»c");
+      await markOrderSuccess(env, orderId, "Khớp tự động - tiền vào trước");
       return {
         matched: true,
         transactionId: direct.id,
@@ -182,9 +182,9 @@ async function reconcileOrderAfterCreation(env, orderId, totalVnd) {
       };
     }
   }
-  const pend = (await env.DB.prepare(`SELECT id, pkg_id FROM orders WHERE status = 'pending' AND ABS(total_vnd - ?) <= 1 AND datetime(created_at) >= datetime('now', '+7 hours', '-60 minutes')`).bind(totalVnd).all()).results || [];
+  const pend = (await env.DB.prepare(`SELECT id, pkg_id FROM orders WHERE status = 'pending' AND total_vnd = ? AND datetime(created_at) >= datetime('now', '+7 hours', '-60 minutes')`).bind(totalVnd).all()).results || [];
   if (pend.length === 1) {
-    const un = await env.DB.prepare(`SELECT id, content FROM transactions WHERE status = 'unmatched' AND ABS(amount - ?) <= 1 AND (order_id IS NULL OR order_id = '') AND datetime(created_at) >= datetime('now', '+7 hours', '-60 minutes') ORDER BY id ASC LIMIT 1`).bind(totalVnd).first();
+    const un = await env.DB.prepare(`SELECT id, content FROM transactions WHERE status = 'unmatched' AND amount = ? AND (order_id IS NULL OR order_id = '') AND datetime(created_at) >= datetime('now', '+7 hours', '-60 minutes') ORDER BY id ASC LIMIT 1`).bind(totalVnd).first();
     if (un) {
       const pkgInContent = extractPkgCodeFromContent(un.content);
       if (!pkgInContent || !pend[0].pkg_id || pkgInContent === normalizePkgCode(pend[0].pkg_id)) {
@@ -305,9 +305,7 @@ async function notifyFulfillmentReady(env, cfg, ctx, args) {
 async function fetchOrderFromSource(env, cfg, orderId) {
   for (const w of cfg.WORKER_URLS) {
     try {
-      const r = await fetch(`${w}/api/internal/order?id=${encodeURIComponent(orderId)}`, {
-        headers: { Authorization: `Bearer ${cfg.WEB_API_SECRET2}` }
-      });
+      const r = await fetch(`${w}/api/internal/order?id=${encodeURIComponent(orderId)}`, { headers: { Authorization: `Bearer ${cfg.WEB_API_SECRET2}` } });
       if (r.ok) {
         const j = await r.json();
         if (j && j.order) return { ...j.order, worker_url: j.order.workerUrl || w };
@@ -459,7 +457,7 @@ export default {
       const r = await env.DB.prepare(`INSERT INTO order_upgrades (order_id, from_price_vnd, target_package_id, target_price_vnd, upgrade_amount_vnd, status, created_at, fulfillment_status) VALUES (?, ?, ?, 0, ?, 'pending', ${NOW}, 'pending')`).bind(orderId, Number(order.total_vnd), targetPackageId, amount).run();
       const upgradeId = r.meta.last_row_id;
       await logSys(env, "info", "Nháº­n yÃªu cáº§u nÃ¢ng gÃ³i", `${orderId} â ${targetPackageId} Â· ${amount}`, orderId);
-      const early = await env.DB.prepare(`SELECT id FROM transactions WHERE order_id = ? AND status = 'unmatched' AND ABS(amount - ?) <= 1 ORDER BY id ASC LIMIT 1`).bind(orderId, amount).first();
+      const early = await env.DB.prepare(`SELECT id FROM transactions WHERE order_id = ? AND status = 'unmatched' AND amount = ? ORDER BY id ASC LIMIT 1`).bind(orderId, amount).first();
       if (early) {
         const tr = await env.DB.prepare(`UPDATE transactions SET status = 'success', kind = 'upgrade', updated_at = ${NOW}, reviewed_at = ${NOW}, review_note = 'Khá»p tá»± Äá»ng - tiá»n nÃ¢ng gÃ³i vÃ o trÆ°á»c' WHERE id = ? AND status = 'unmatched'`).bind(early.id).run();
         if (tr.meta.changes > 0 && (await upgradeSuccess(env, upgradeId, early.id))) {
@@ -536,8 +534,8 @@ export default {
         let candidateOrders = [];
         if (r.status === "review_required" || r.status === "success_review") {
           try {
-            // Tối ưu hóa: Dùng BETWEEN để tận dụng index idx_orders_pending_amt, giới hạn 5 ứng viên gần nhất
-            candidateOrders = (await env.DB.prepare(`SELECT order_id, total_vnd, status, created_at FROM orders WHERE status = 'pending' AND total_vnd BETWEEN ? - 1 AND ? + 1 ORDER BY id DESC LIMIT 5`).bind(r.amount, r.amount).all()).results || [];
+            // Tối ưu hóa: Dùng phép so khớp chính xác để tận dụng index idx_orders_pending_amt, giới hạn 5 ứng viên gần nhất
+            candidateOrders = (await env.DB.prepare(`SELECT order_id, total_vnd, status, created_at FROM orders WHERE status = 'pending' AND total_vnd = ? ORDER BY id DESC LIMIT 5`).bind(r.amount).all()).results || [];
           } catch {}
         }
         const tx = {
@@ -741,22 +739,24 @@ export default {
           await updateTx(env, txId, "invalid_order_status", "ÄÆ¡n hÃ ng ÄÃ£ bá» tá»« chá»i", orderId);
           return json({ ok: true, status: "invalid_order_status", transactionId: txId });
         }
-        if (amount < Number(order.total_vnd) - 1) {
-          await updateTx(env, txId, "amount_mismatch", `Thiếu tiền (Đơn: ${order.total_vnd}, Nhận: ${amount})`, orderId);
+        if (amount !== Number(order.total_vnd)) {
+          const isUnder = amount < Number(order.total_vnd);
+          const note = isUnder ? `Thiếu tiền (Đơn: ${order.total_vnd}, Nhận: ${amount})` : `Thừa tiền (Đơn: ${order.total_vnd}, Nhận: ${amount}, Thừa: ${amount - Number(order.total_vnd)})`;
+          await updateTx(env, txId, "amount_mismatch", note, orderId);
           return json({
             ok: true,
             status: "amount_mismatch",
             transactionId: txId,
             expected: Number(order.total_vnd),
             received: amount,
-            substatus: "underpaid"
+            substatus: isUnder ? "underpaid" : "overpaid"
           });
         }
 
-        // Kiá»m tra Äá»i chiáº¿u mÃ£ gÃ³i tá»« ná»i dung chuyá»n khoáº£n náº¿u cÃ³
+        // Kiểm tra đối chiếu mã gói từ nội dung chuyển khoản nếu có
         const pkgInContent = extractPkgCodeFromContent(content);
         if (pkgInContent && order.pkg_id && pkgInContent !== normalizePkgCode(order.pkg_id)) {
-          await updateTx(env, txId, "review_required", `TrÃ¹ng mÃ£ ÄÆ¡n nhÆ°ng sai mÃ£ gÃ³i (Ná»i dung: ${pkgInContent}, ÄÆ¡n: ${order.pkg_id})`, orderId);
+          await updateTx(env, txId, "review_required", `Trùng mã đơn nhưng sai mã gói (Nội dung: ${pkgInContent}, Đơn: ${order.pkg_id})`, orderId);
           return json({
             ok: true,
             status: "review_required",
@@ -766,10 +766,7 @@ export default {
           });
         }
 
-        let successNote = "Khớp thanh toán thành công";
-        if (amount > Number(order.total_vnd) + 1) {
-          successNote = `Khớp thanh toán thừa tiền (Đơn: ${order.total_vnd}, Nhận: ${amount}, Thừa: ${amount - Number(order.total_vnd)})`;
-        }
+        const successNote = "Khớp thanh toán thành công";
         await updateTx(env, txId, "success", successNote, orderId, order.order_type === "renew" ? "renew" : "new");
         const ur = await env.DB.prepare(`UPDATE orders SET status = 'success', paid_at = ${NOW}, fulfillment_status = 'pending', fulfill_at = ${NOW}, fulfill_tries = 0 WHERE order_id = ? AND status = 'pending'`).bind(orderId).run();
         if (ur.meta.changes === 0) {
@@ -787,10 +784,10 @@ export default {
         });
       }
 
-      // khÃ´ng cÃ³ mÃ£ ÄÆ¡n: dÃ² theo sá» tiá»n + time-window 60 phÃºt
-      const cands = (await env.DB.prepare(`SELECT order_id, total_vnd, pkg_id, status, created_at FROM orders WHERE status = 'pending' AND ABS(total_vnd - ?) <= 1 AND datetime(created_at) >= datetime('now', '+7 hours', '-60 minutes') ORDER BY id ASC`).bind(amount).all()).results || [];
+      // không có mã đơn: dò theo số tiền + time-window 60 phút
+      const cands = (await env.DB.prepare(`SELECT order_id, total_vnd, pkg_id, status, created_at FROM orders WHERE status = 'pending' AND total_vnd = ? AND datetime(created_at) >= datetime('now', '+7 hours', '-60 minutes') ORDER BY id ASC`).bind(amount).all()).results || [];
       if (!cands.length) {
-        const older = await env.DB.prepare(`SELECT id FROM orders WHERE status = 'pending' AND ABS(total_vnd - ?) <= 1 LIMIT 1`).bind(amount).first();
+        const older = await env.DB.prepare(`SELECT id FROM orders WHERE status = 'pending' AND total_vnd = ? LIMIT 1`).bind(amount).first();
         if (older) {
           await updateTx(env, txId, "review_required", "CÃ³ ÄÆ¡n chá» cÃ¹ng sá» tiá»n nhÆ°ng ÄÃ£ quÃ¡ 60 phÃºt - cáº§n Admin kiá»m tra trÃ¡nh gÃ¡n nháº§m");
           return json({
@@ -906,7 +903,7 @@ export default {
       SELECT t.id AS tx_id, o.order_id, o.order_type
       FROM transactions t
       INNER JOIN orders o ON t.order_id = o.order_id
-      WHERE t.status = 'unmatched' AND o.status = 'pending' AND ABS(t.amount - o.total_vnd) <= 1
+      WHERE t.status = 'unmatched' AND o.status = 'pending' AND t.amount = o.total_vnd
       LIMIT 20
     `).all()).results || [];
 
@@ -925,7 +922,7 @@ export default {
       SELECT t.id AS tx_id, u.id AS upgrade_id, u.order_id
       FROM transactions t
       INNER JOIN order_upgrades u ON t.order_id = u.order_id
-      WHERE t.status = 'unmatched' AND u.status = 'pending' AND ABS(t.amount - u.upgrade_amount_vnd) <= 1
+      WHERE t.status = 'unmatched' AND u.status = 'pending' AND t.amount = u.upgrade_amount_vnd
       LIMIT 10
     `).all()).results || [];
 
