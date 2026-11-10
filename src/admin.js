@@ -865,8 +865,14 @@ function ordCard(o, ro) {
   else if (o.isUpgrade) bu = `<span class="bg-green-100 text-green-800 border border-green-200 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 uppercase">Nâng gói Thành công</span>`;
   const kind = o.orderType === "renew" ? `<span class="bg-sky-100 text-sky-700 text-[9px] font-black px-1.5 py-0.5 rounded ml-1 uppercase">Gia hạn</span>` : "";
   const nick = o.nickname ? `<span class="text-[10px] font-black bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded ml-1"><i class="fas fa-user-tag mr-0.5"></i>${esc(o.nickname)}</span>` : "";
-  const lk = o.lockInfo ? Object.keys(o.lockInfo).filter(k => o.lockInfo[k]) : [];
-  const lkb = lk.length ? `<span title="Ô đã khóa (sửa tay): ${esc(lk.join(", "))}" class="text-[9px] font-black bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded ml-1"><i class="fas fa-lock mr-0.5"></i>${lk.map(k=>k.replace("info","")).join("/")}</span>` : "";
+  let lockObj = {};
+  if (typeof o.lockInfo === "string") {
+    try { lockObj = JSON.parse(o.lockInfo) || {}; } catch { lockObj = {}; }
+  } else if (typeof o.lockInfo === "object" && o.lockInfo !== null) {
+    lockObj = o.lockInfo;
+  }
+  const lk = Object.keys(lockObj).filter(k => !k.startsWith("_") && lockObj[k]);
+  const lkb = lk.length ? `<span title="Ô đã khóa (sửa tay): ${esc(lk.join(", "))}" class="text-[9px] font-black bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded ml-1 max-w-[120px] truncate inline-block align-middle"><i class="fas fa-lock mr-0.5"></i>${lk.map(k=>k.replace("info","")).join("/")}</span>` : "";
 
   // Hàng 3: Zalo chiếm cố định ~140px (đủ 15 số điện thoại), HSD nhận trọn 65% đất còn lại không bị cắt ngày
   const zaloPart = `Zalo: <span class="font-bold text-slate-700 cp" onclick="cp(${q(o.zalo)})">${esc(o.zalo||"")}</span>`;
