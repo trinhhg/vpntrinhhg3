@@ -2987,7 +2987,7 @@ async function checkEmailExistingLinks(email) {
       }
       const ord = res.data.order;
 
-      // Chỉ nạp link thuộc schema tương ứng của web này
+      // Chỉ nạp tham chiếu ORDER_REF từ existingLinks của Worker, TUYỆT ĐỐI không nạp chuỗi đại diện ord[currentSchemaField]
       const links = [];
       if (res.data.existingLinks && Array.isArray(res.data.existingLinks)) {
         res.data.existingLinks.forEach((el, idx) => {
@@ -3000,45 +3000,38 @@ async function checkEmailExistingLinks(email) {
           }
         });
       }
-      const currentSchemaField = res.data.schemaField || 'info3';
-      if (ord && ord.status === 'success' && ord[currentSchemaField] && !ord['blur' + currentSchemaField.replace('info', '')] && !links.some(l => l.url === ord[currentSchemaField])) {
-        links.push({
-          index: links.length + 1,
-          url: ord[currentSchemaField],
-          name: `Link Sub (${ord.pkgName || 'VPN'})`
-        });
-      }
 
-      const scenario = res.data.linkScenario || (activeCount >= 2 ? 'multi_active' : (activeCount === 1 ? 'single_link' : 'expired'));
-
-      if (scenario === 'multi_active' || activeCount >= 2) {
-        // Tình huống 3: Email có nhiều đơn còn hoạt động -> Hiện cả 2 lựa chọn nhưng KHÓA cả 2, tự chọn CREATE_NEW
+      if (activeCount >= 2) {
+        // Email có nhiều đơn còn hoạt động -> Tự động CREATE_NEW, ẩn hoàn toàn dropdown và lựa chọn thủ công
         existingCustomerLinks = links;
         detectedRenewOf = '';
+        currentSubDecision = 'CREATE_NEW';
         emailLookupState = 'found';
-        $('subLinkLifecycleWrap')?.classList.remove('hidden');
+        $('subLinkLifecycleWrap')?.classList.add('hidden');
         $('multiLinkSelectorWrap')?.classList.add('hidden');
-        lockSubDecisionUI('CREATE_NEW', 'Email có nhiều gói cước đang hoạt động cùng lúc. Hệ thống tự động cấp link mới độc lập để không ảnh hưởng các link hiện tại.');
+        lockSubDecisionUI('CREATE_NEW', 'Email có nhiều gói cước đang hoạt động cùng lúc. Hệ thống tự động cấp link mới độc lập.');
         renderPaymentBox();
         return;
-      } else if (scenario === 'single_link' || activeCount === 1) {
-        // Tình huống 2: Email có đúng 1 đơn còn hoạt động -> Hiện cả 2 lựa chọn, MỞ KHÓA cho phép khách tự chọn
+      } else if (activeCount === 1) {
+        // Email có đúng 1 đơn hoạt động -> Tự động KEEP_EXISTING, ẩn hoàn toàn radio và dropdown
         existingCustomerLinks = links;
-        detectedRenewOf = ord.id || (links[0] ? links[0].orderId : '');
+        detectedRenewOf = (ord && ord.id) || (links[0] ? links[0].orderId : '');
+        currentSubDecision = 'KEEP_EXISTING';
         emailLookupState = 'found';
-        $('subLinkLifecycleWrap')?.classList.remove('hidden');
-        unlockSubDecisionUI();
-        populateTargetLinks(links);
+        $('subLinkLifecycleWrap')?.classList.add('hidden');
+        $('multiLinkSelectorWrap')?.classList.add('hidden');
+        lockSubDecisionUI('KEEP_EXISTING', 'Tự động chọn Giữ link cũ theo đơn hàng đang hoạt động duy nhất.');
         renderPaymentBox();
         return;
       } else {
-        // Tình huống: Có lịch sử đơn nhưng tất cả đã hết hạn -> Hiện cả 2 lựa chọn nhưng KHÓA cả 2, tự chọn CREATE_NEW
+        // Không có đơn còn hạn -> Tự động CREATE_NEW, ẩn hoàn toàn radio và dropdown
         existingCustomerLinks = links;
         detectedRenewOf = '';
+        currentSubDecision = 'CREATE_NEW';
         emailLookupState = 'found';
-        $('subLinkLifecycleWrap')?.classList.remove('hidden');
+        $('subLinkLifecycleWrap')?.classList.add('hidden');
         $('multiLinkSelectorWrap')?.classList.add('hidden');
-        lockSubDecisionUI('CREATE_NEW', 'Tất cả gói cước trước đây của email này đã hết hạn. Hệ thống tự động cấp link mới.');
+        lockSubDecisionUI('CREATE_NEW', 'Email chưa có gói cước còn hạn. Hệ thống tự động cấp link mới.');
         renderPaymentBox();
         return;
       }
@@ -4219,24 +4212,38 @@ function dismissAnnouncement() {
 }
 window.dismissAnnouncement = dismissAnnouncement;
 
-// Lắng nghe sự kiện đồng bộ từ Admin (Cập nhật tức thì không cần F5)
+// Lắng nghe sự kiện đồng bộ từ Admin & Polling cấu hình đa thiết bị (Cập nhật tức thì không cần F5)
 (function initAdminRealtimeSync() {
+  let isSyncing = false;
   const syncHandler = async () => {
+    if (isSyncing) return;
+    isSyncing = true;
     try {
       await loadConfig();
       if (typeof renderPackages === 'function') renderPackages('all');
       if (typeof renderDock === 'function') renderDock();
+      if (typeof renderGiftSticker === 'function') renderGiftSticker();
+      if (typeof renderHeaderDrawer === 'function') renderHeaderDrawer();
+      if (typeof renderAnnouncementBanner === 'function') renderAnnouncementBanner();
       const cWrap = $('couponBlockWrap');
       if (cWrap) {
         const ce = (cfgCache && (cfgCache.couponEnabled !== undefined ? cfgCache.couponEnabled : (cfgCache.cms && cfgCache.cms.settings && cfgCache.cms.settings.couponEnabled))) !== false;
         cWrap.classList.toggle('hidden', !ce);
       }
+      // Bảo toàn mã coupon và thông tin checkout khi đồng bộ giá
+      if ($('view-checkout')?.classList.contains('active') && typeof renderPaymentBox === 'function') {
+        renderPaymentBox();
+      }
       if (oCache) {
         if (typeof fillDashboard === 'function') fillDashboard(oCache);
         if (typeof refreshOrder === 'function') await refreshOrder();
       }
-    } catch (e) {}
+    } catch (e) {} finally {
+      isSyncing = false;
+    }
   };
+
+  // 1. Đồng bộ giữa các tab cùng trình duyệt
   try {
     const ch = new BroadcastChannel('vpn_trinhhg_sync');
     ch.onmessage = () => syncHandler();
@@ -4245,5 +4252,22 @@ window.dismissAnnouncement = dismissAnnouncement;
     if (e.key === 'vpn_last_config_sync') {
       syncHandler();
     }
+  });
+
+  // 2. Polling định kỳ mỗi 20 giây khi tab đang hiển thị (xử lý thiết bị di động/máy tính khác)
+  setInterval(() => {
+    if (!document.hidden) {
+      syncHandler();
+    }
+  }, 20000);
+
+  // 3. Làm mới ngay khi người dùng quay lại tab hoặc mở khóa màn hình
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      syncHandler();
+    }
+  });
+  window.addEventListener('focus', () => {
+    syncHandler();
   });
 })();
