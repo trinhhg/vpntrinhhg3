@@ -19,16 +19,51 @@ function cleanOrderForSupabase(o) {
   } else {
     c.totalCny = Math.round(Number(c.totalCny) * 100) / 100;
   }
-  if (typeof c.lockInfo === "object" && c.lockInfo !== null) {
-    c.lockInfo = JSON.stringify(c.lockInfo);
+  // Chuẩn hóa bonusDays thành số nguyên hợp lệ (cột thứ 38 trong Schema)
+  if (c.bonusDays !== undefined) {
+    c.bonusDays = Math.max(0, parseInt(c.bonusDays) || 0);
+  } else {
+    c.bonusDays = 0;
+  }
+  // Bảo toàn thông tin workflow cần thiết cho fulfillment vào lockInfo trước khi gửi Supabase
+  let li = {};
+  if (typeof c.lockInfo === "string") {
+    try {
+      li = JSON.parse(c.lockInfo) || {};
+    } catch (e) {
+      li = {};
+    }
+  } else if (typeof c.lockInfo === "object" && c.lockInfo !== null) {
+    li = { ...c.lockInfo };
+  }
+  if (c.subLinkDecision || c.targetLink || c.renewOf) {
+    li._wf = {
+      ...(li._wf || {}),
+      ...(c.subLinkDecision ? { subLinkDecision: c.subLinkDecision } : {}),
+      ...(c.targetLink ? { targetLink: c.targetLink } : {}),
+      ...(c.renewOf ? { renewOf: c.renewOf } : {})
+    };
+  }
+  if (Object.keys(li).length > 0) {
+    c.lockInfo = JSON.stringify(li);
+  } else {
+    c.lockInfo = null;
   }
   if (typeof c.expFinal === "boolean") {
     c.expFinal = c.expFinal ? "true" : "false";
   }
-  // Loại bỏ các trường tính giá nội bộ không có trong bảng ALL_ORDERS của Supabase để tránh lỗi PGRST204
+  // Loại bỏ toàn bộ các trường không thuộc Schema 38 cột của Supabase để triệt tiêu lỗi PGRST204
   delete c.originalVnd;
   delete c.discountVnd;
   delete c.couponCode;
+  delete c.coupon;
+  delete c.bonusText;
+  delete c.giftName;
+  delete c.giftRuleId;
+  delete c.isTest;
+  delete c.subLinkDecision;
+  delete c.targetLink;
+  delete c.renewOf;
   return c;
 }
 
@@ -1081,8 +1116,8 @@ function computeExp(o, orders, now, giftRules = []) {
     }
   }
 
-  // Quy ước cứng: 1 năm = 365 ngày; còn lại = (30 ngày * số tháng + số ngày tặng khuyến mãi) * số lượng
-  const totalDays = ((pk.m === 12 ? 365 : 30 * pk.m) + bonus) * (Number(o.qty) || 1);
+  // Chuẩn hóa: Nếu o.days đã có giá trị tổng ngày SD (đã gồm ngày tặng) thì dùng trực tiếp, tránh cộng dồn thưởng 2 lần
+  const totalDays = (o.days !== undefined && o.days !== "" && !isNaN(Number(o.days))) ? Number(o.days) : (((pk.m === 12 ? 365 : 30 * pk.m) * (Number(o.qty) || 1)) + bonus);
   return addDaysDmy(base, totalDays);
 }
 
@@ -1516,7 +1551,22 @@ async function loadAll(KV, env, isTestOverride = null) {
       const res = await sb.getAll();
       if (Array.isArray(res)) {
         sbOk = true;
-        orders = res;
+        orders = res.map(ord => {
+          if (!ord) return ord;
+          if (typeof ord.lockInfo === "string") {
+            try {
+              ord.lockInfo = JSON.parse(ord.lockInfo) || {};
+            } catch (e) {
+              ord.lockInfo = {};
+            }
+          }
+          if (ord.lockInfo && ord.lockInfo._wf) {
+            if (!ord.subLinkDecision && ord.lockInfo._wf.subLinkDecision) ord.subLinkDecision = ord.lockInfo._wf.subLinkDecision;
+            if (!ord.targetLink && ord.lockInfo._wf.targetLink) ord.targetLink = ord.lockInfo._wf.targetLink;
+            if (!ord.renewOf && ord.lockInfo._wf.renewOf) ord.renewOf = ord.lockInfo._wf.renewOf;
+          }
+          return ord;
+        });
       } else {
         sbOk = false;
         sbError = "Dữ liệu Supabase trả về không phải mảng";
@@ -1668,8 +1718,9 @@ function publicOrder(o, cms, links, field) {
     out["verify" + i] = sec.verify;
     out["hasInfo" + i] = hasLink;
     out["linkLocked" + i] = isLinkLocked;
-    // Tuyệt đối không trả Link Sub thật về frontend; chỉ trả chuỗi đại diện để hiển thị UI
-    out["info" + i] = hasLink ? `https://vpntrinhhg${i === 1 ? "" : i}.pages.dev/v${i}/••••••••••••••••••••••••` : "";
+    // Tuyệt đối không trả Link Sub thật về frontend; chỉ trả chuỗi đại diện 40 dấu chấm chuẩn PDS
+    const basePds = PDS[i] || `https://vpntrinhhg${i === 1 ? "" : i}.pages.dev`;
+    out["info" + i] = hasLink ? `${basePds}/${".".repeat(40)}` : "";
   }
   out["schemaField"] = field || "info3";
   return out;
@@ -2983,21 +3034,21 @@ export default {
         const now = NOW();
         const todayStart = day0(now);
         const isOrderActive = (ord) => {
-          if (!ord) return false;
-          if (!ord.expDate) return true;
+          if (!ord || normStatus(ord.status) !== "success") return false;
+          if (!ord.expDate) return false;
           if (isLifetime(ord.expDate)) return true;
           const expT = parseDmy(ord.expDate);
-          return expT ? expT >= todayStart : false;
+          return !!expT && expT >= todayStart;
         };
         const activeOrders = userOrders.filter(isOrderActive);
 
-        // 5. CHỈ ĐỌC TRƯỜNG INFO TƯƠNG ỨNG CỦA WEB NÀY (schemaField) VÀ TRẢ VỀ THAM CHIẾU ĐƠN (ORDER_REF:), KHÔNG TRẢ URL THẬT
+        // 5. CHỈ ĐỌC ĐƠN ĐANG HOẠT ĐỘNG VÀ ĐÚNG TRƯỜNG INFO CỦA WEB NÀY (schemaField), KHÔNG FALLBACK SANG WEB KHÁC
         const existingLinks = [];
         const seenMasked = new Set();
         let hasTombstonedLink = false;
 
-        for (const ord of userOrders) {
-          const lk = String(ord[schemaField] || (schemaField === "info1" ? (ord.info || ord.link) : "") || (ord.field === schemaField ? (ord.info || ord.link) : "") || "").trim();
+        for (const ord of activeOrders) {
+          const lk = String(ord[schemaField] || "").trim();
           if (lk && !seenMasked.has(lk)) {
             seenMasked.add(lk);
             const foundRec = links.find(l => l && (l.masked === lk || l.id === lk));
@@ -3006,7 +3057,7 @@ export default {
               hasTombstonedLink = true;
               continue;
             }
-            const ordActive = isOrderActive(ord);
+            const ordActive = true;
             let isLocked = false;
             let linkStatus = "active";
             if (foundRec) {
@@ -3099,7 +3150,7 @@ export default {
           for (const ord of st.orders) {
             if (!ord || String(ord.email || "").toLowerCase() !== emLower) continue;
             if (normStatus(ord.status) !== "success") continue;
-            const lk = ord[f] || ord.info1 || ord.info2 || ord.info3 || "";
+            const lk = String(ord[f] || "").trim();
             if (lk && !seenUrls.has(lk)) {
               seenUrls.add(lk);
               existingSubLinks.push({ url: lk, orderId: ord.id });
@@ -3107,7 +3158,7 @@ export default {
           }
         }
 
-        // XÁC THỰC BẮT BUỘC VÒNG ĐỜI LINK SUB TRÊN SERVER
+        // XÁC THỰC BẮT BUỘC VÒNG ĐỜI LINK SUB TRÊN SERVER (CHỈ DÙNG TRƯỜNG f CỦA WEB NÀY)
         let subLinkDecision = String(b.subLinkDecision || "").trim();
         let targetLink = String(b.targetLink || "").trim();
 
@@ -3115,71 +3166,67 @@ export default {
         if (targetLink.startsWith("ORDER_REF:")) {
           const refOid = normId(targetLink.slice(10));
           const refOrd = st.orders.find(x => x && normId(x.id) === refOid && String(x.email || "").toLowerCase() === emLower);
-          targetLink = refOrd ? (refOrd[f] || refOrd.info1 || refOrd.info2 || refOrd.info3 || "") : "";
+          targetLink = refOrd ? String(refOrd[f] || "").trim() : "";
         }
 
-        // Lọc các đơn đang còn hạn hoạt động của email này (dùng day0(now) đồng bộ với /api/public/lookup)
+        // Lọc các đơn thực sự còn hạn hoạt động của email này (HSD hợp lệ hoặc vĩnh viễn, loại trừ đơn thiếu/hỏng HSD)
         const today0 = day0(now);
-        const activeUserOrders = st.orders.filter(x => x && normStatus(x.status) === "success" && String(x.email || "").toLowerCase() === emLower && (!x.expDate || isLifetime(x.expDate) || parseDmy(x.expDate) >= today0));
+        const activeUserOrders = st.orders.filter(x => x && normStatus(x.status) === "success" && String(x.email || "").toLowerCase() === emLower && x.expDate && (isLifetime(x.expDate) || (parseDmy(x.expDate) > 0 && parseDmy(x.expDate) >= today0)));
 
         if (renewSrc) {
           // Gia hạn bắt đầu từ nút gia hạn portal -> 100% giữ link cũ đích danh của web này
           subLinkDecision = "KEEP_EXISTING";
-          targetLink = renewSrc[f] || renewSrc.info1 || renewSrc.info2 || renewSrc.info3 || "";
+          targetLink = String(renewSrc[f] || "").trim();
         } else if (activeUserOrders.length >= 2) {
-          // Email có >= 2 đơn hoạt động -> Backend tự động quyết định CẤP LINK MỚI ĐỘC LẬP
+          // Email có >= 2 đơn hoạt động -> Tự động cấp link mới độc lập
           subLinkDecision = "CREATE_NEW";
           targetLink = "";
         } else if (activeUserOrders.length === 1) {
-          // Có đúng 1 đơn còn hạn trong luồng mua thông thường -> xác thực lựa chọn của khách
-          if (!subLinkDecision || (subLinkDecision !== "KEEP_EXISTING" && subLinkDecision !== "CREATE_NEW")) {
-            return J({ ok: false, error: "Vui lòng chọn Giữ link cũ hoặc Cấp link mới" }, 400);
-          }
-          if (subLinkDecision === "KEEP_EXISTING") {
-            const singleActiveOrd = activeUserOrders[0];
-            targetLink = targetLink && existingSubLinks.some(l => l.url === targetLink) ? targetLink : (singleActiveOrd[f] || singleActiveOrd.info1 || singleActiveOrd.info2 || singleActiveOrd.info3 || (existingSubLinks[0] ? existingSubLinks[0].url : ""));
+          // Email có đúng 1 đơn hoạt động -> Tự động giữ link cũ nếu ô của web này đã có link
+          const singleActiveOrd = activeUserOrders[0];
+          const candidateLink = String(singleActiveOrd[f] || "").trim();
+          if (candidateLink) {
+            subLinkDecision = "KEEP_EXISTING";
+            targetLink = candidateLink;
             if (!renewSrc) renewSrc = singleActiveOrd;
           } else {
+            // Web này chưa có link trong đơn -> Tự động cấp link mới, không lấy link của web khác
+            subLinkDecision = "CREATE_NEW";
             targetLink = "";
           }
         } else {
-          // Email mới chưa từng tồn tại hoặc tất cả đơn đã hết hạn -> Tự động cấp link mới
+          // Không có đơn hoạt động -> Tự động cấp link mới
           subLinkDecision = "CREATE_NEW";
           targetLink = "";
         }
         const isRenew = !!renewSrc || subLinkDecision === "KEEP_EXISTING";
 
-        // Snapshot Gift Rule đang có hiệu lực
+        // Snapshot Gift Rule đang có hiệu lực (quy định số ngày tặng trên một đơn vị gói)
         const giftRules = Array.isArray(st.cms?.giftRules) ? st.cms.giftRules : [];
         const activeGift = getActiveGiftRule(giftRules, b.pkgId, now);
-        let giftRuleId = "";
-        let giftName = "";
-        let bonusDays = 0;
-        let bonusText = "";
+        let bonusDaysPerUnit = 0;
 
         if (activeGift && pk.m !== 0 && pk.time !== "lifetime") {
-          giftRuleId = activeGift.id || "";
-          giftName = activeGift.name || activeGift.sticker || "";
-          bonusDays = Number(activeGift.bonusDays) || 0;
-          bonusText = activeGift.bonusText || "";
+          bonusDaysPerUnit = Number(activeGift.bonusDays) || 0;
         } else if (pk.m !== 0 && pk.time !== "lifetime") {
-          // Fallback đơn cũ
-          bonusDays = Number(pk.bonus_days || pk.bonusDays || 0);
-          bonusText = pk.bonus_text || "";
-          giftName = pk.promo_sticker || "";
+          bonusDaysPerUnit = Number(pk.bonus_days || pk.bonusDays || 0);
         }
 
-        // TÍNH TOÁN GIÁ TIỀN AUTHORITATIVE PHÍA SERVER (ĐỒNG BỘ 100% VỚI FRONTEND)
+        const totalBonusDays = bonusDaysPerUnit * qty;
+        const baseDays = pk.m === 0 ? 0 : (pk.m === 12 ? 365 : 30 * pk.m) * qty;
+        const totalDays = baseDays > 0 ? (baseDays + totalBonusDays) : (pk.m === 0 ? "" : totalBonusDays);
+
+        // TÍNH TOÁN GIÁ TIỀN AUTHORITATIVE PHÍA SERVER (ĐỒNG BỘ 100% VỚI FRONTEND: MIN 2.000đ, LÀM TRÒN 1đ)
         let baseVnd = pk.vnd * qty;
         let finalVnd = baseVnd;
         let appliedCouponCode = "";
         let discountVnd = 0;
 
-        // 1. Áp dụng Flash Sale nếu có hiệu lực và khớp phạm vi gói (scope)
+        // 1. Áp dụng Flash Sale nếu có hiệu lực và khớp phạm vi gói (scope) - chuẩn múi giờ UTC+7
         const fs = (st.cms && st.cms.sales && st.cms.sales.campaign) || (st.cms && st.cms.settings && st.cms.settings.flashSale);
         if (fs && fs.enabled && Number(fs.discountPercent) > 0) {
-          const fsStart = fs.startDate ? new Date(fs.startDate).getTime() : 0;
-          const fsEnd = fs.endDate ? new Date(fs.endDate).getTime() : Infinity;
+          const fsStart = parseVnBoundary(fs.startDate, false);
+          const fsEnd = parseVnBoundary(fs.endDate, true);
           if (now >= fsStart && now <= fsEnd) {
             const fsScope = fs.scope || "all";
             const isCyclePkg = pk.m !== 0 && pk.time !== "lifetime" && (!pk.category || !pk.category.includes("usage"));
@@ -3187,20 +3234,20 @@ export default {
             const scopeMatched = fsScope === "all" || ((fsScope === "monthly" || fsScope === "cycle") && isCyclePkg) || ((fsScope === "data" || fsScope === "usage") && isDataPkg);
             if (scopeMatched) {
               const discountPct = Math.min(90, Math.max(1, Number(fs.discountPercent)));
-              const unitDiscountedVnd = Math.max(1000, Math.round((Number(pk.vnd || 0) * (100 - discountPct) / 100) / 1000) * 1000);
+              const unitDiscountedVnd = Math.max(2000, Math.round(Number(pk.vnd || 0) * (100 - discountPct) / 100));
               finalVnd = unitDiscountedVnd * qty;
             }
           }
         }
 
-        // 2. Xác thực và áp dụng mã giảm giá Coupon từ ALL_CMS phía Server
+        // 2. Xác thực và áp dụng mã giảm giá Coupon từ ALL_CMS phía Server - chuẩn múi giờ UTC+7
         const rawCode = String(b.couponCode || b.coupon || "").trim().toUpperCase();
         const couponsList = Array.isArray(st.cms?.coupons) ? st.cms.coupons : [];
         if (rawCode && st.cms?.settings?.couponEnabled !== false) {
           const foundC = couponsList.find(c => c && String(c.code).trim().toUpperCase() === rawCode && c.enabled !== false);
           if (foundC) {
-            const cEnd = foundC.endDate ? new Date(foundC.endDate).getTime() : (foundC.expiry ? new Date(foundC.expiry).getTime() : Infinity);
-            const cStart = foundC.startDate ? new Date(foundC.startDate).getTime() : 0;
+            const cEnd = parseVnBoundary(foundC.endDate || foundC.expiry, true);
+            const cStart = parseVnBoundary(foundC.startDate, false);
             const minSpend = Number(foundC.minSpend || foundC.minOrder) || 0;
             const maxUsage = Number(foundC.maxUsage || foundC.usageLimit) || 0;
             const curUsage = Number(foundC.usedCount) || 0;
@@ -3215,10 +3262,10 @@ export default {
               if (Number(foundC.maxDiscount) > 0 && discountVnd > Number(foundC.maxDiscount)) {
                 discountVnd = Number(foundC.maxDiscount);
               }
-              if (discountVnd > finalVnd - 1000) {
-                discountVnd = Math.max(0, finalVnd - 1000);
+              if (discountVnd > finalVnd - 2000) {
+                discountVnd = Math.max(0, finalVnd - 2000);
               }
-              finalVnd = Math.max(1000, finalVnd - discountVnd);
+              finalVnd = Math.max(2000, finalVnd - discountVnd);
               // Ghi nhận số lượt dùng coupon
               foundC.usedCount = curUsage + 1;
               ctx.waitUntil(KV.put("ALL_CMS", JSON.stringify(st.cms)));
@@ -3239,10 +3286,8 @@ export default {
           // Schema tiền chuẩn hóa (không rỗng): Bank VN lưu totalVnd, Cổng CNY lưu totalCny
           totalVnd: bank ? finalVnd : 0,
           totalCny: bank ? 0 : Math.round(pk.cny * qty * 100) / 100,
-          originalVnd: baseVnd,
-          discountVnd,
-          couponCode: appliedCouponCode,
-          days: daysOfPkg(pk, qty),
+          days: totalDays,
+          bonusDays: totalBonusDays,
           needSupport: !!b.needSupport,
           status: "pending",
           createdTs: now,
@@ -3261,11 +3306,7 @@ export default {
           isTest: !!isTestReq,
           subLinkDecision,
           targetLink,
-          renewOf: renewSrc ? renewSrc.id : (b.renewOf ? String(b.renewOf) : ""),
-          giftRuleId,
-          giftName,
-          bonusDays,
-          bonusText
+          renewOf: renewSrc ? renewSrc.id : (b.renewOf ? String(b.renewOf) : "")
         };
         o.expDate = computeExp(o, st.orders, now, giftRules);
         const sb = getSupabase(env, st.isTest);
@@ -3337,7 +3378,7 @@ export default {
             else if (sc === "time" && Array.isArray(fs.times) && fs.times.map(String).includes(String(pkgTime))) matchScope = true;
             if (matchScope) {
               const pct = Math.min(90, Math.max(1, Number(fs.discountPercent)));
-              targetVnd = Math.max(1000, Math.round((Number(tg.vnd || 0) * (100 - pct) / 100) / 1000) * 1000);
+              targetVnd = Math.max(2000, Math.round(Number(tg.vnd || 0) * (100 - pct) / 100));
             }
           }
         }
@@ -3664,7 +3705,6 @@ export default {
               expFinal: o.expFinal,
               fulfilledAt: o.fulfilledAt,
               fulfillResult: o.fulfillResult,
-              subLinkDecision: o.subLinkDecision,
               fallbackNew: !!o.fallbackNew
             };
             if (o.isUpgrade) {
@@ -4344,9 +4384,9 @@ export default {
           }
           const prevExp = o.expDate, prevDays = o.days, hadPrevDays = "days" in o;
           const isManualEdit = b.manualEdit === true;
-          for (const k of ["email", "nickname", "zalo", "method", "status", "expDate", "days", "reason", "info1", "info2", "info3", "totalVnd", "totalCny", "qty"]) {
+          for (const k of ["email", "nickname", "zalo", "method", "status", "expDate", "days", "bonusDays", "reason", "info1", "info2", "info3", "totalVnd", "totalCny", "qty"]) {
             if (b[k] === undefined) continue;
-            if (lockExp && (k === "expDate" || k === "days")) continue;
+            if (lockExp && (k === "expDate" || k === "days" || k === "bonusDays")) continue;
             if (k.startsWith("info")) {
               // Server-side Routing Check: Chỉ cho phép lưu ô thuộc quyền sở hữu của Web này (me.field)
               if (k !== me.field) {
@@ -4360,7 +4400,7 @@ export default {
               }
               continue;
             }
-            if (k === "totalVnd" || k === "totalCny" || k === "days" || k === "qty") {
+            if (k === "totalVnd" || k === "totalCny" || k === "days" || k === "qty" || k === "bonusDays") {
               o[k] = numOrEmpty(b[k]);
               continue;
             }
