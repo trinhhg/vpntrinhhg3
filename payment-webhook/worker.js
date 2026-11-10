@@ -315,10 +315,17 @@ async function fetchOrderFromSource(env, cfg, orderId) {
   return null;
 }
 
-// D1 chÆ°a cÃ³ ÄÆ¡n nhÆ°ng Supabase cÃ³: nháº­n vá» ÄÃNG tráº¡ng thÃ¡i ÄÆ¡n
+// D1 chưa có đơn nhưng Supabase có: nhận về ĐÚNG trạng thái đơn và đồng bộ đầy đủ metadata
 async function adoptOrderFromSource(env, ko, orderId, amount) {
   const done = ko.status === "success";
-  await env.DB.prepare(`INSERT OR IGNORE INTO orders (order_id, total_vnd, status, created_at, paid_at, fulfillment_status, email, worker_url, order_type, pkg_id) VALUES (?, ?, ?, ${NOW}, ${done ? NOW : "NULL"}, ?, ?, ?, ?, ?)`).bind(orderId, Number(ko.totalVnd) || amount, done ? "success" : "pending", done ? "fulfilled" : "pending", ko.email || null, ko.worker_url || ko.workerUrl || null, ko.orderType || "new", ko.pkgId || null).run();
+  const targetWeb = ko.targetWeb || ko.sourceWeb || ko.target_web || null;
+  const workerUrl = ko.worker_url || ko.workerUrl || null;
+  const pkgId = ko.pkgId || ko.pkg_id || null;
+  const email = ko.email || null;
+  const orderType = ko.orderType || ko.order_type || "new";
+  const totalVnd = Number(ko.totalVnd || ko.total_vnd) || amount;
+  await env.DB.prepare(`INSERT OR IGNORE INTO orders (order_id, total_vnd, status, created_at, paid_at, fulfillment_status, email, target_web, worker_url, order_type, pkg_id) VALUES (?, ?, ?, ${NOW}, ${done ? NOW : "NULL"}, ?, ?, ?, ?, ?, ?)`).bind(orderId, totalVnd, done ? "success" : "pending", done ? "fulfilled" : "pending", email, targetWeb, workerUrl, orderType, pkgId).run();
+  await env.DB.prepare(`UPDATE orders SET email = COALESCE(email, ?), target_web = COALESCE(target_web, ?), worker_url = COALESCE(worker_url, ?), pkg_id = COALESCE(pkg_id, ?) WHERE order_id = ?`).bind(email, targetWeb, workerUrl, pkgId, orderId).run();
   const pu = ko.pendingUpgrade;
   if (done && pu && Number(pu.amount) > 0 && !(await pendingUpgradeOf(env, orderId))) {
     const targetPkgId = String(pu.targetPackageId || pu.targetPkgId || "unknown");
@@ -700,8 +707,8 @@ export default {
           }
           if (up) {
             const exp = Number(up.upgrade_amount_vnd);
-            if (Math.abs(amount - exp) > 1) {
-              await updateTx(env, txId, "amount_mismatch", `Sai sá» tiá»n nÃ¢ng gÃ³i (cáº§n ${exp}, nháº­n ${amount})`, orderId, "upgrade");
+            if (amount !== exp) {
+              await updateTx(env, txId, "amount_mismatch", `Sai số tiền nâng gói (cần ${exp}, nhận ${amount})`, orderId, "upgrade");
               return json({
                 ok: true,
                 status: "upgrade_amount_mismatch",
@@ -898,7 +905,26 @@ export default {
     if (!env.DB || (!CONFIG.WEB_API_SECRET2 && !CONFIG.D1_SECRET && !CONFIG.WEB_API_SECRET)) return;
     let matched = 0, retried = 0;
 
-    // 1. Khá»p tá»± Äá»ng ÄÆ¡n pending báº±ng 1 cÃ¢u INNER JOIN duy nháº¥t (khÃ´ng láº·p SELECT)
+    // 0. Phục hồi metadata đơn hàng từ Supabase cho các giao dịch unmatched chưa có bản ghi trong D1
+    const orphanTxs = (await env.DB.prepare(`
+      SELECT t.id AS tx_id, t.order_id, t.amount
+      FROM transactions t
+      LEFT JOIN orders o ON t.order_id = o.order_id
+      WHERE t.status = 'unmatched' AND t.order_id IS NOT NULL AND o.order_id IS NULL
+      LIMIT 10
+    `).all()).results || [];
+
+    for (const ot of orphanTxs) {
+      try {
+        const ko = await fetchOrderFromSource(env, CONFIG, ot.order_id);
+        if (ko) {
+          await adoptOrderFromSource(env, ko, ot.order_id, ot.amount);
+          await logSys(env, "ok", "Cron phục hồi đơn D1 từ Supabase", ot.order_id, ot.order_id);
+        }
+      } catch (e) {}
+    }
+
+    // 1. Khớp tự động đơn pending bằng 1 câu INNER JOIN duy nhất (không lặp SELECT)
     const matchedPending = (await env.DB.prepare(`
       SELECT t.id AS tx_id, o.order_id, o.order_type
       FROM transactions t
@@ -906,7 +932,6 @@ export default {
       WHERE t.status = 'unmatched' AND o.status = 'pending' AND t.amount = o.total_vnd
       LIMIT 20
     `).all()).results || [];
-
     for (const row of matchedPending) {
       const r = await env.DB.prepare(`UPDATE transactions SET status = 'success', kind = ?, updated_at = ${NOW}, reviewed_at = ${NOW}, review_note = 'Khá»p tá»± Äá»ng (cron)' WHERE id = ? AND status = 'unmatched'`).bind(row.order_type === "renew" ? "renew" : "new", row.tx_id).run();
       if (r.meta.changes > 0) {
