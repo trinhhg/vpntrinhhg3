@@ -3248,24 +3248,24 @@ function updatePortalInfo(o) {
     $('portalContentPending').classList.remove('hidden');
     $('pendingTitleUI').innerText = L.checking_tx;
     let orderStartTs = Number(o.createdTs) || 0;
-    if (!orderStartTs) {
-      try {
-        const storedTs = Number(sessionStorage.getItem('portal_order_ts_' + o.id)) || 0;
-        if (storedTs > 0) {
-          orderStartTs = storedTs;
-        } else {
-          orderStartTs = now;
-          sessionStorage.setItem('portal_order_ts_' + o.id, String(orderStartTs));
-        }
-      } catch (e) {
-        orderStartTs = now;
+    if (!orderStartTs && o.date) {
+      const dParts = String(o.date).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+      if (dParts) {
+        orderStartTs = new Date(Number(dParts[3]), Number(dParts[2]) - 1, Number(dParts[1]), Number(dParts[4] || 0), Number(dParts[5] || 0), Number(dParts[6] || 0)).getTime();
+      } else {
+        const parsed = Date.parse(o.date);
+        if (!isNaN(parsed)) orderStartTs = parsed;
       }
     }
-    const end = orderStartTs + 300000;
-    if (now >= end) $('pendingTimeoutState').classList.remove('hidden');
-    else {
+    if (orderStartTs > 0) {
+      const end = orderStartTs + 300000;
+      if (now >= end) $('pendingTimeoutState').classList.remove('hidden');
+      else {
+        $('pendingActiveState').classList.remove('hidden');
+        startTick(end, false);
+      }
+    } else {
       $('pendingActiveState').classList.remove('hidden');
-      startTick(end, false);
     }
     return;
   }
@@ -3482,10 +3482,7 @@ async function refreshOrder() {
   try {
     const r = await wpost('/api/public/lookup', { q: oCache.id, mode: 'portal' });
     if (r.status === 404) {
-      // Nếu đơn mới tạo trong vòng 10 phút, không logout tức thì (cho phép retry tiếp tục)
-      if (oCache.createdTs && Date.now() - oCache.createdTs < 600000) return;
-      showToast(i18n[lang].not_found, 'error');
-      logout();
+      // Không tự ý logout làm mất phiên khi polling ngầm gặp lỗi tạm thời
       return;
     }
     if (!r.ok) return;
@@ -3584,24 +3581,23 @@ async function openPortalByOrderId(rawId, pushUrl = false) {
   }
 
   if ((res && res.status === 404) || (res && res.ok && res.data && res.data.found === false && !res.data.order)) {
-    enablePortalFrame();
-    document.querySelectorAll('.portal-tab-content').forEach(el => el.classList.remove('active'));
-    $('p-home')?.classList.add('active');
-    highlightNavBtns('p-home');
-    ['portalContentPending', 'portalContentManual', 'portalContentSuccess', 'portalContentFailed'].forEach(id => $(id)?.classList.add('hidden'));
-    $('portalContentLoadError')?.classList.remove('hidden');
+    if (location.pathname.startsWith(appRoutes.order) || location.pathname.startsWith('/portal/order')) {
+      router.navigate('/');
+    }
     showToast(i18n[lang].not_found, 'error');
     return false;
   }
 
   if (!res || !res.ok || !res.data || !res.data.order) {
-    // Khi mất mạng hoặc lỗi 5xx trên đường dẫn /portal/order/DH...: giữ nguyên URL và hiện khung Thử lại
-    enablePortalFrame();
-    document.querySelectorAll('.portal-tab-content').forEach(el => el.classList.remove('active'));
-    $('p-home')?.classList.add('active');
-    highlightNavBtns('p-home');
-    ['portalContentPending', 'portalContentManual', 'portalContentSuccess', 'portalContentFailed'].forEach(id => $(id)?.classList.add('hidden'));
-    $('portalContentLoadError')?.classList.remove('hidden');
+    // Khi mất mạng hoặc lỗi 5xx: nếu đang ở đường dẫn Portal thì giữ URL và hiện khung Thử lại
+    if (location.pathname.startsWith(appRoutes.order) || location.pathname.startsWith('/portal/order')) {
+      enablePortalFrame();
+      document.querySelectorAll('.portal-tab-content').forEach(el => el.classList.remove('active'));
+      $('p-home')?.classList.add('active');
+      highlightNavBtns('p-home');
+      ['portalContentPending', 'portalContentManual', 'portalContentSuccess', 'portalContentFailed'].forEach(id => $(id)?.classList.add('hidden'));
+      $('portalContentLoadError')?.classList.remove('hidden');
+    }
     showToast((res && res.data && res.data.error) || i18n[lang].req_err, 'error');
     return false;
   }
@@ -3716,15 +3712,20 @@ function switchPortalTab(tabId, fromUpgrade = false, skipPush = false) {
     document.querySelectorAll('.portal-tab-content').forEach(el => el.classList.remove('active'));
     $('p-home').classList.add('active');
     highlightNavBtns('p-home');
+    const targetOid = (oCache && oCache.id) || currentUrlOrderId || (location.pathname.match(/\/portal\/order\/([A-Za-z0-9_-]+)/) || [])[1] || '';
     if (!skipPush) {
-      if (oCache && oCache.id) {
-        router.navigate(`${appRoutes.order}/${encodeURIComponent(normOrderIdClean(oCache.id))}`);
+      if (targetOid) {
+        router.navigate(`${appRoutes.order}/${encodeURIComponent(normOrderIdClean(targetOid))}`);
       } else {
         router.navigate(appRoutes.order);
       }
     }
     if (!oCache) {
-      openPortalAuthModal();
+      if (targetOid) {
+        openPortalByOrderId(targetOid, false);
+      } else {
+        openPortalAuthModal();
+      }
     }
     return;
   }
