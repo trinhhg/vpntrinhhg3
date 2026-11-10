@@ -4771,6 +4771,7 @@ async function saveHeaderDrawer() {
   cmsDb.settings.headerDrawer = getHeaderDrawerFromForm();
   try {
     await saveCmsDb();
+    broadcastAdminSync('header_drawer_update', { headerDrawer: cmsDb.settings.headerDrawer });
     toast("Đã lưu cấu hình thanh thông báo đỉnh web thành công!");
     logEvent("ok", "admin", "Lưu thông báo đỉnh web Pro");
     updateHeaderDrawerPreview();
@@ -8473,6 +8474,7 @@ async function saveCouponModal() {
   try {
     await saveCmsDb();
     await syncPublicPackagesPayload();
+    broadcastAdminSync('coupon_update', { coupons: cmsDb.coupons });
     closeCouponModal();
     renderCouponAdmin();
     toast(`Đã lưu thành công coupon: ${cleanCode} (-${type === 'percent' ? numVal + '%' : fmtVnd(numVal) + 'đ'})`);
@@ -8696,6 +8698,7 @@ async function toggleCouponStatus(idx) {
   try {
     await saveCmsDb();
     await syncPublicPackagesPayload();
+    broadcastAdminSync('coupon_toggle', { coupons: cmsDb.coupons });
     renderCouponAdmin();
     toast("Đã cập nhật trạng thái mã coupon");
   } catch (e) {
@@ -8712,6 +8715,7 @@ async function deleteCouponItem(idx) {
   try {
     await saveCmsDb();
     await syncPublicPackagesPayload();
+    broadcastAdminSync('coupon_delete', { coupons: cmsDb.coupons });
     renderCouponAdmin();
     toast("Đã xóa mã coupon: " + code);
   } catch (e) {
