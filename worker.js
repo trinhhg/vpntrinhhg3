@@ -36,12 +36,14 @@ function cleanOrderForSupabase(o) {
   } else if (typeof c.lockInfo === "object" && c.lockInfo !== null) {
     li = { ...c.lockInfo };
   }
-  if (c.subLinkDecision || c.targetLink || c.renewOf) {
+  if (c.subLinkDecision || c.targetLink || c.renewOf || c.fulfillResult || c.fallbackNew !== undefined) {
     li._wf = {
       ...(li._wf || {}),
       ...(c.subLinkDecision ? { subLinkDecision: c.subLinkDecision } : {}),
       ...(c.targetLink ? { targetLink: c.targetLink } : {}),
-      ...(c.renewOf ? { renewOf: c.renewOf } : {})
+      ...(c.renewOf ? { renewOf: c.renewOf } : {}),
+      ...(c.fulfillResult ? { fulfillResult: c.fulfillResult } : {}),
+      ...(c.fallbackNew !== undefined ? { fallbackNew: !!c.fallbackNew } : {})
     };
   }
   if (Object.keys(li).length > 0) {
@@ -64,6 +66,8 @@ function cleanOrderForSupabase(o) {
   delete c.subLinkDecision;
   delete c.targetLink;
   delete c.renewOf;
+  delete c.fulfillResult;
+  delete c.fallbackNew;
   return c;
 }
 
@@ -3182,15 +3186,19 @@ export default {
           subLinkDecision = "CREATE_NEW";
           targetLink = "";
         } else if (activeUserOrders.length === 1) {
-          // Email có đúng 1 đơn hoạt động -> Tự động giữ link cũ nếu ô của web này đã có link
           const singleActiveOrd = activeUserOrders[0];
           const candidateLink = String(singleActiveOrd[f] || "").trim();
-          if (candidateLink) {
+          // Nếu khách chủ động chọn CREATE_NEW (Cấp link mới): Tôn trọng lựa chọn của khách
+          if (b.subLinkDecision === "CREATE_NEW") {
+            subLinkDecision = "CREATE_NEW";
+            targetLink = "";
+          } else if (candidateLink) {
+            // Khách chọn KEEP_EXISTING hoặc mặc định: giữ link cũ nếu ô của web này đã có link
             subLinkDecision = "KEEP_EXISTING";
             targetLink = candidateLink;
             if (!renewSrc) renewSrc = singleActiveOrd;
           } else {
-            // Web này chưa có link trong đơn -> Tự động cấp link mới, không lấy link của web khác
+            // Web này chưa có link trong đơn (web phụ phát hiện ô trống) -> Tự động cấp link mới riêng
             subLinkDecision = "CREATE_NEW";
             targetLink = "";
           }
@@ -3703,9 +3711,7 @@ export default {
               paidAt: o.paidAt,
               expDate: o.expDate,
               expFinal: o.expFinal,
-              fulfilledAt: o.fulfilledAt,
-              fulfillResult: o.fulfillResult,
-              fallbackNew: !!o.fallbackNew
+              fulfilledAt: o.fulfilledAt
             };
             if (o.isUpgrade) {
               patchPayload.isUpgrade = true;
@@ -3928,7 +3934,16 @@ export default {
             try {
               const sbOrders = await sb.getAll();
               if (Array.isArray(sbOrders)) {
-                ordersList = sbOrders;
+                ordersList = sbOrders.map(ord => {
+                  if (!ord) return ord;
+                  if (typeof ord.lockInfo === "string") {
+                    try {
+                      ord.lockInfo = JSON.parse(ord.lockInfo) || {};
+                    } catch { ord.lockInfo = {};
+                    }
+                  }
+                  return ord;
+                });
                 sbOk = true;
               } else {
                 sbError = "Dữ liệu Supabase trả về không phải mảng";
