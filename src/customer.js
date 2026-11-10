@@ -3002,34 +3002,38 @@ async function checkEmailExistingLinks(email) {
       }
 
       if (activeCount >= 2) {
-        // Email có nhiều đơn còn hoạt động -> Tự động CREATE_NEW, ẩn hoàn toàn dropdown và lựa chọn thủ công
+        // Email có nhiều đơn còn hoạt động -> Tự động CREATE_NEW, khóa lựa chọn
         existingCustomerLinks = links;
         detectedRenewOf = '';
         currentSubDecision = 'CREATE_NEW';
         emailLookupState = 'found';
-        $('subLinkLifecycleWrap')?.classList.add('hidden');
+        $('subLinkLifecycleWrap')?.classList.remove('hidden');
         $('multiLinkSelectorWrap')?.classList.add('hidden');
         lockSubDecisionUI('CREATE_NEW', 'Email có nhiều gói cước đang hoạt động cùng lúc. Hệ thống tự động cấp link mới độc lập.');
         renderPaymentBox();
         return;
       } else if (activeCount === 1) {
-        // Email có đúng 1 đơn hoạt động -> Tự động KEEP_EXISTING, ẩn hoàn toàn radio và dropdown
+        // Email có đúng 1 đơn hoạt động -> Mở khóa cho phép khách tự chọn giữa Giữ link cũ hoặc Cấp link mới
         existingCustomerLinks = links;
         detectedRenewOf = (ord && ord.id) || (links[0] ? links[0].orderId : '');
         currentSubDecision = 'KEEP_EXISTING';
         emailLookupState = 'found';
-        $('subLinkLifecycleWrap')?.classList.add('hidden');
-        $('multiLinkSelectorWrap')?.classList.add('hidden');
-        lockSubDecisionUI('KEEP_EXISTING', 'Tự động chọn Giữ link cũ theo đơn hàng đang hoạt động duy nhất.');
+        $('subLinkLifecycleWrap')?.classList.remove('hidden');
+        unlockSubDecisionUI();
+        currentSubDecision = 'KEEP_EXISTING';
+        updateSubDecisionUI('KEEP_EXISTING');
+        const rKeep = document.querySelector('input[name="subLinkDecisionRadio"][value="KEEP_EXISTING"]');
+        if (rKeep) rKeep.checked = true;
+        populateTargetLinks(links);
         renderPaymentBox();
         return;
       } else {
-        // Không có đơn còn hạn -> Tự động CREATE_NEW, ẩn hoàn toàn radio và dropdown
+        // Không có đơn còn hạn -> Tự động CREATE_NEW, khóa lựa chọn
         existingCustomerLinks = links;
         detectedRenewOf = '';
         currentSubDecision = 'CREATE_NEW';
         emailLookupState = 'found';
-        $('subLinkLifecycleWrap')?.classList.add('hidden');
+        $('subLinkLifecycleWrap')?.classList.remove('hidden');
         $('multiLinkSelectorWrap')?.classList.add('hidden');
         lockSubDecisionUI('CREATE_NEW', 'Email chưa có gói cước còn hạn. Hệ thống tự động cấp link mới.');
         renderPaymentBox();
@@ -3243,7 +3247,21 @@ function updatePortalInfo(o) {
     }
     $('portalContentPending').classList.remove('hidden');
     $('pendingTitleUI').innerText = L.checking_tx;
-    const end = (o.createdTs || now) + 300000;
+    let orderStartTs = Number(o.createdTs) || 0;
+    if (!orderStartTs) {
+      try {
+        const storedTs = Number(sessionStorage.getItem('portal_order_ts_' + o.id)) || 0;
+        if (storedTs > 0) {
+          orderStartTs = storedTs;
+        } else {
+          orderStartTs = now;
+          sessionStorage.setItem('portal_order_ts_' + o.id, String(orderStartTs));
+        }
+      } catch (e) {
+        orderStartTs = now;
+      }
+    }
+    const end = orderStartTs + 300000;
     if (now >= end) $('pendingTimeoutState').classList.remove('hidden');
     else {
       $('pendingActiveState').classList.remove('hidden');
@@ -3566,10 +3584,13 @@ async function openPortalByOrderId(rawId, pushUrl = false) {
   }
 
   if ((res && res.status === 404) || (res && res.ok && res.data && res.data.found === false && !res.data.order)) {
+    enablePortalFrame();
+    document.querySelectorAll('.portal-tab-content').forEach(el => el.classList.remove('active'));
+    $('p-home')?.classList.add('active');
+    highlightNavBtns('p-home');
+    ['portalContentPending', 'portalContentManual', 'portalContentSuccess', 'portalContentFailed'].forEach(id => $(id)?.classList.add('hidden'));
+    $('portalContentLoadError')?.classList.remove('hidden');
     showToast(i18n[lang].not_found, 'error');
-    if (location.pathname.startsWith(appRoutes.order) || location.pathname.startsWith('/portal/order')) {
-      logout();
-    }
     return false;
   }
 
