@@ -26,12 +26,13 @@ export default {
     try {
       const url = new URL(request.url);
 
-      // 1. Redirect URL rút gọn /DH... sang /portal/order/DH...
-      const dhMatch = url.pathname.match(/^\/(DH[A-Za-z0-9_-]+)\/?$/i);
-      if (dhMatch) {
-        const dest = new URL(`/portal/order/${dhMatch[1]}`, request.url);
+      // 1. Chuyển hướng URL cũ /portal/order/DH... sang URL chuẩn mới /DH...
+      const oldPortalMatch = url.pathname.match(/^\/portal\/order\/(DH[A-Za-z0-9_-]+)(\/.*)?$/i);
+      if (oldPortalMatch) {
+        const newPath = `/${oldPortalMatch[1]}${oldPortalMatch[2] || ""}`;
+        const dest = new URL(newPath, request.url);
         dest.search = url.search;
-        return Response.redirect(dest.toString(), 302);
+        return Response.redirect(dest.toString(), 301);
       }
 
       // 2. Dynamic PWA Manifest theo đúng đường dẫn đơn hàng khi cài từ Portal
@@ -44,7 +45,7 @@ export default {
           const manifest = {
             name: `VPNTrinhHg - Đơn ${cleanOid}`,
             short_name: cleanOid,
-            start_url: `/portal/order/${cleanOid}${testQuery}`,
+            start_url: `/${cleanOid}${testQuery}`,
             scope: "/",
             display: "standalone",
             background_color: "#ffffff",
@@ -71,33 +72,90 @@ export default {
         }
       }
 
-      // 2.1. Proxy ảnh QR Same-Origin cho VietQR, Alipay, Weixin để triệt tiêu lỗi CORS/Tainted Canvas
-      if (url.pathname === "/api/qr-proxy") {
-        const targetUrl = url.searchParams.get("url");
-        if (!targetUrl) return new Response("Missing url", { status: 400 });
-        let parsed;
+      // 2.1. Dedicated VietQR Gateway cùng Origin: Kiểm tra tham số, xử lý redirect an toàn & chống Tainted Canvas
+      if (url.pathname === "/api/vietqr-image") {
+        const amount = parseInt(url.searchParams.get("amount") || "0", 10);
+        const addInfo = (url.searchParams.get("addInfo") || url.searchParams.get("memo") || "").trim().slice(0, 50);
+        const bank = "mbbank";
+        const accNum = "0917678211";
+        const accName = encodeURIComponent("TRINH THI XUAN HUONG");
+
+        if (!amount || amount < 1000 || !addInfo || !/^DH[A-Za-z0-9_-]{4,25}$/i.test(addInfo)) {
+          return new Response("Invalid transaction parameters", { status: 400 });
+        }
+
+        const targetUrl = `https://img.vietqr.io/image/${bank}-${accNum}-compact.png?amount=${amount}&addInfo=${encodeURIComponent(addInfo)}&accountName=${accName}`;
+
         try {
-          parsed = new URL(targetUrl);
-        } catch (e) {
-          return new Response("Invalid url", { status: 400 });
-        }
-        const allowedHosts = ["img.vietqr.io", "i.pinimg.com"];
-        if (!allowedHosts.includes(parsed.hostname.toLowerCase())) {
-          return new Response("Host not allowed", { status: 403 });
-        }
-        const imgRes = await fetch(targetUrl, {
-          headers: { "User-Agent": "Mozilla/5.0 (compatible; VPNTrinhHg-Proxy/1.0)" }
-        });
-        if (!imgRes.ok) return new Response("Failed to fetch image", { status: 502 });
-        const contentType = imgRes.headers.get("content-type") || "image/png";
-        return new Response(imgRes.body, {
-          status: 200,
-          headers: {
-            "Content-Type": contentType,
-            "Access-Control-Allow-Origin": "*",
-            "Cache-Control": "public, max-age=3600"
+          let fetchUrl = targetUrl;
+          let imgRes = await fetch(fetchUrl, {
+            redirect: "manual",
+            headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) VPNTrinhHg/1.0" }
+          });
+
+          // Xử lý an toàn khi VietQR trả 301/302 Redirect: kiểm tra chặt chẽ hostname đích
+          if ([301, 302, 307, 308].includes(imgRes.status)) {
+            const loc = imgRes.headers.get("Location");
+            if (!loc) return new Response("Redirect without Location", { status: 502 });
+            const nextUrl = new URL(loc, fetchUrl);
+            const allowedHosts = ["img.vietqr.io", "vietqr.io", "api.vietqr.io"];
+            if (!allowedHosts.includes(nextUrl.hostname.toLowerCase())) {
+              return new Response("Redirect host not allowed", { status: 403 });
+            }
+            fetchUrl = nextUrl.toString();
+            imgRes = await fetch(fetchUrl, {
+              headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) VPNTrinhHg/1.0" }
+            });
           }
-        });
+
+          if (!imgRes.ok) return new Response("Failed to fetch VietQR image", { status: 502 });
+
+          const contentType = imgRes.headers.get("content-type") || "image/png";
+          if (!contentType.startsWith("image/")) {
+            return new Response("Invalid image content type", { status: 502 });
+          }
+
+          return new Response(imgRes.body, {
+            status: 200,
+            headers: {
+              "Content-Type": contentType,
+              "Access-Control-Allow-Origin": "*",
+              "Cache-Control": "private, no-cache, no-store, must-revalidate",
+              "Pragma": "no-cache"
+            }
+          });
+        } catch (err) {
+          return new Response("QR Gateway error: " + err.message, { status: 502 });
+        }
+      }
+
+      // 2.2. QR tĩnh Alipay & Weixin (ưu tiên asset tĩnh nội bộ, fallback an toàn sang ảnh gốc)
+      if (url.pathname === "/assets/qr/alipay.jpg" || url.pathname === "/assets/qr/weixin.jpg") {
+        const assetRes = await env.ASSETS.fetch(request).catch(() => null);
+        if (assetRes && assetRes.ok) return assetRes;
+
+        const isAli = url.pathname.includes("alipay");
+        const fallbackUrl = isAli 
+          ? "https://i.pinimg.com/736x/44/57/9d/44579dfb5241614ddc897a21ce34e233.jpg"
+          : "https://i.pinimg.com/736x/28/b2/95/28b29577c6229ec943e8e13afe241db3.jpg";
+        
+        try {
+          const imgRes = await fetch(fallbackUrl, {
+            headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) VPNTrinhHg/1.0" }
+          });
+          if (!imgRes.ok) return new Response("Failed to fetch static QR", { status: 502 });
+          const contentType = imgRes.headers.get("content-type") || "image/jpeg";
+          return new Response(imgRes.body, {
+            status: 200,
+            headers: {
+              "Content-Type": contentType,
+              "Access-Control-Allow-Origin": "*",
+              "Cache-Control": "public, max-age=86400"
+            }
+          });
+        } catch (e) {
+          return new Response("Static QR fetch error", { status: 502 });
+        }
       }
 
       // Markdown Content Negotiation cho AI Agents trên trang chủ
@@ -113,8 +171,8 @@ export default {
       }
 
       // Xử lý 404 có hỗ trợ Markdown khi truy vấn đường dẫn không tồn tại
-      // v1 — 2026-11-06 20:15 (UTC+7) — Mở rộng proxy Pages cho route link ẩn /v7 và /v8
-      const isKnownRoute = url.pathname === "/" || url.pathname === "/index.html" || url.pathname === "/admin" || url.pathname === "/admin.html" || url.pathname.startsWith("/portal/") || url.pathname.startsWith("/api") || url.pathname.match(/^\/v[1-8]/) || url.pathname.startsWith("/qr") || url.pathname.startsWith("/assets/") || url.pathname.startsWith("/src/") || url.pathname === "/robots.txt" || url.pathname === "/sitemap.xml" || url.pathname === "/llms.txt" || url.pathname === "/manifest.json" || url.pathname === "/manifestadmin.json" || url.pathname === "/icon-192.png" || url.pathname === "/icon-512.png" || url.pathname.includes(".");
+      // v2 — 2026-11-13 — Đồng bộ route Portal mang mã DH (/DH...) và route hướng dẫn công khai
+      const isKnownRoute = url.pathname === "/" || url.pathname === "/index.html" || url.pathname === "/admin" || url.pathname === "/admin.html" || url.pathname.match(/^\/DH[A-Za-z0-9_-]+/i) || url.pathname.startsWith("/portal/") || url.pathname.startsWith("/guide") || url.pathname.startsWith("/api") || url.pathname.match(/^\/v[1-8]/) || url.pathname.startsWith("/qr") || url.pathname.startsWith("/assets/") || url.pathname.startsWith("/src/") || url.pathname === "/robots.txt" || url.pathname === "/sitemap.xml" || url.pathname === "/llms.txt" || url.pathname === "/manifest.json" || url.pathname === "/manifestadmin.json" || url.pathname === "/icon-192.png" || url.pathname === "/icon-512.png" || url.pathname.includes(".");
 
       if (!isKnownRoute && request.headers.get("Accept")?.includes("text/markdown")) {
         const notFoundMd = `# 404 - Tài nguyên không tồn tại / Resource Not Found\n\nĐường dẫn \`${url.pathname}\` không tồn tại trên hệ thống VPNTrinhHg.\n\n- Trang chủ: https://vpntrinhhg3.pages.dev/\n- Tài liệu AI: https://vpntrinhhg3.pages.dev/llms.txt\n- Sơ đồ website: https://vpntrinhhg3.pages.dev/sitemap.xml\n`;
