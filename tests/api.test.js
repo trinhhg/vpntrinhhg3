@@ -58,7 +58,7 @@ describe('src/api.js — Giao tiếp API & Cơ chế An toàn Idempotency', () =
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toBe('https://vpntrinhhg3worker.lucastanora.workers.dev/api/orders');
+      expect(url).toBe('https://vpntrinhhg3worker.lucastanora.workers.dev/api/orders?test=0');
       expect(options.headers['Content-Type']).toBe('application/json');
       expect(options.headers['Authorization']).toBe('Bearer my_adm_token');
     });
