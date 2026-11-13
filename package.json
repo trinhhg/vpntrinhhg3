@@ -20,6 +20,7 @@
     "dayjs": "^1.11.13",
     "dompurify": "^3.1.6",
     "gridjs": "^6.2.0",
+    "modern-screenshot": "^4.7.0",
     "navigo": "^8.11.1",
     "qrcode": "^1.5.4",
     "quill": "^2.0.2",
