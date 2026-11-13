@@ -26,15 +26,14 @@ export default {
     try {
       const url = new URL(request.url);
 
-      // 1. Chuyển hướng URL cũ /portal/order/DH... sang URL chuẩn mới /DH...
-      const oldPortalMatch = url.pathname.match(/^\/portal\/order\/(DH[A-Za-z0-9_-]+)(\/.*)?$/i);
-      if (oldPortalMatch) {
-        const newPath = `/${oldPortalMatch[1]}${oldPortalMatch[2] || ""}`;
+      // 1. Chuyển hướng URL rút gọn /DH... sang URL Portal chuẩn /portal/order/DH... (bảo toàn query string)
+      const shortOrderMatch = url.pathname.match(/^\/(DH[A-Za-z0-9_-]{6,25})(\/.*)?$/i);
+      if (shortOrderMatch) {
+        const newPath = `/portal/order/${shortOrderMatch[1]}${shortOrderMatch[2] || ""}`;
         const dest = new URL(newPath, request.url);
         dest.search = url.search;
-        return Response.redirect(dest.toString(), 301);
+        return Response.redirect(dest.toString(), 302);
       }
-
       // 2. Dynamic PWA Manifest theo đúng đường dẫn đơn hàng khi cài từ Portal
       if (url.pathname === "/manifest.json") {
         const orderId = url.searchParams.get("order");
@@ -45,7 +44,7 @@ export default {
           const manifest = {
             name: `VPNTrinhHg - Đơn ${cleanOid}`,
             short_name: cleanOid,
-            start_url: `/${cleanOid}${testQuery}`,
+            start_url: `/portal/order/${cleanOid}${testQuery}`,
             scope: "/",
             display: "standalone",
             background_color: "#ffffff",
@@ -90,7 +89,9 @@ export default {
           let fetchUrl = targetUrl;
           let imgRes = await fetch(fetchUrl, {
             redirect: "manual",
-            headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) VPNTrinhHg/1.0" }
+            headers: {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) VPNTrinhHg/1.0"
+            }
           });
 
           // Xử lý an toàn khi VietQR trả 301/302 Redirect: kiểm tra chặt chẽ hostname đích
@@ -104,7 +105,9 @@ export default {
             }
             fetchUrl = nextUrl.toString();
             imgRes = await fetch(fetchUrl, {
-              headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) VPNTrinhHg/1.0" }
+              headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) VPNTrinhHg/1.0"
+              }
             });
           }
 
@@ -133,16 +136,25 @@ export default {
       if (url.pathname === "/assets/qr/alipay.jpg" || url.pathname === "/assets/qr/weixin.jpg") {
         const assetRes = await env.ASSETS.fetch(request).catch(() => null);
         const assetCt = (assetRes && assetRes.headers && assetRes.headers.get("content-type")) || "";
-        if (assetRes && assetRes.ok && assetCt.startsWith("image/")) return assetRes;
+        if (assetRes && assetRes.ok && assetCt.startsWith("image/")) {
+          const newHeaders = new Headers(assetRes.headers);
+          newHeaders.set("Access-Control-Allow-Origin", "*");
+          newHeaders.set("Cache-Control", "public, max-age=86400");
+          return new Response(assetRes.body, {
+            status: assetRes.status,
+            statusText: assetRes.statusText,
+            headers: newHeaders
+          });
+        }
 
         const isAli = url.pathname.includes("alipay");
-        const fallbackUrl = isAli 
-          ? "https://i.pinimg.com/736x/44/57/9d/44579dfb5241614ddc897a21ce34e233.jpg"
-          : "https://i.pinimg.com/736x/28/b2/95/28b29577c6229ec943e8e13afe241db3.jpg";
-        
+        const fallbackUrl = isAli ? "https://i.pinimg.com/736x/44/57/9d/44579dfb5241614ddc897a21ce34e233.jpg" : "https://i.pinimg.com/736x/28/b2/95/28b29577c6229ec943e8e13afe241db3.jpg";
+
         try {
           const imgRes = await fetch(fallbackUrl, {
-            headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) VPNTrinhHg/1.0" }
+            headers: {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) VPNTrinhHg/1.0"
+            }
           });
           if (!imgRes.ok) return new Response("Failed to fetch static QR", { status: 502 });
           const contentType = imgRes.headers.get("content-type") || "image/jpeg";
