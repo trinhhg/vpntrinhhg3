@@ -19,6 +19,7 @@ import Navigo from 'navigo';
 import Swal from 'sweetalert2';
 import DOMPurify from 'dompurify';
 import QRCodeLib from 'qrcode';
+import { domToPng } from 'modern-screenshot';
 
 // Drop-in compatible QRCode class for new QRCode(box, options)
 class QRCode {
@@ -1040,7 +1041,12 @@ async function openGuideArticle(tabId, slug, skipPush) {
   curGuide = foundTab;
   curGuideSlug = art.slug || toSlug(art.name);
   if (!skipPush && typeof router !== 'undefined') {
-    router.navigate(`${appRoutes.guide}/${encodeURIComponent(curGuide)}/${encodeURIComponent(curGuideSlug)}`);
+    const targetOid = (oCache && oCache.id) || currentUrlOrderId || '';
+    if (targetOid) {
+      router.navigate(`/${encodeURIComponent(normOrderIdClean(targetOid))}/guide/${encodeURIComponent(curGuide)}/${encodeURIComponent(curGuideSlug)}`);
+    } else {
+      router.navigate(`${appRoutes.guide}/${encodeURIComponent(curGuide)}/${encodeURIComponent(curGuideSlug)}`);
+    }
   }
 
   $('guideCategoryList').classList.add('hidden');
@@ -1216,7 +1222,12 @@ function renderRichGuideHtml(rawHtml, showToc, gid) {
 async function closeGuideArticle(skipPush) {
   curGuideSlug = '';
   if (!skipPush && typeof router !== 'undefined') {
-    router.navigate(`${appRoutes.guide}/${encodeURIComponent(curGuide || 'android')}`);
+    const targetOid = (oCache && oCache.id) || currentUrlOrderId || '';
+    if (targetOid) {
+      router.navigate(`/${encodeURIComponent(normOrderIdClean(targetOid))}/guide/${encodeURIComponent(curGuide || 'android')}`);
+    } else {
+      router.navigate(`${appRoutes.guide}/${encodeURIComponent(curGuide || 'android')}`);
+    }
   }
   await loadConfig();
   renderGuideCategories();
@@ -2713,7 +2724,7 @@ function updatePwaVisibility() {
   if (portalBox) portalBox.classList.toggle('hidden', installed || !inPortal);
 }
 
-function updatePwaManifest(orderId) {
+function updatePwaManifest(orderId, isTest) {
   try {
     let link = document.querySelector('link[rel="manifest"]');
     if (!link) {
@@ -2722,11 +2733,12 @@ function updatePwaManifest(orderId) {
       document.head.appendChild(link);
     }
     const clean = orderId ? normOrderIdClean(orderId) : '';
-    const testQuery = isTestMode() ? '&test=1' : '';
+    const testActive = typeof isTest === 'boolean' ? isTest : isTestMode();
+    const testQuery = testActive ? '&test=1' : '&test=0';
     if (clean && /^DH[A-Z0-9]{6,20}$/i.test(clean)) {
       link.href = `/manifest.json?order=${encodeURIComponent(clean)}${testQuery}`;
     } else {
-      link.href = isTestMode() ? '/manifest.json?test=1' : '/manifest.json';
+      link.href = testActive ? '/manifest.json?test=1' : '/manifest.json?test=0';
     }
   } catch (e) {}
 }
@@ -2822,27 +2834,65 @@ function renderPaymentBox() {
     return;
   }
   const dispId = isUpgradeMode ? oCache.id : currentOrderId;
-  const decisionBadgeHtml = currentSubDecision ? `<div class="my-3 py-1.5 px-3 rounded-lg bg-indigo-50/70 dark:bg-white/5 border border-indigo-100 dark:border-white/10 text-center text-xs font-bold text-slate-600 dark:text-slate-300 inline-block w-full"><i class="fas fa-info-circle mr-1.5 text-indigo-500"></i>Phương án link: <span class="text-indigo-600 dark:text-indigo-400 font-extrabold">${currentSubDecision === 'KEEP_EXISTING' ? 'Gia hạn Link cũ' : 'Cấp Link mới'}</span></div>` : '';
-  const paidBtnHtml = `<div class="mt-auto pt-4 md:pt-6 w-full">${decisionBadgeHtml}<button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full mt-3 md:mt-4 bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center btn-heartbeat"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button></div>`;
-  const memo = (cls, extra) => `<div class="highlight-copy py-4 px-3 rounded-xl text-center cursor-pointer" onclick="copyText('${dispId}')"><span class="block text-[11px] font-black mb-2 uppercase text-[#854d0e] dark:text-indigo-200">${l.copy_memo}</span><strong class="block bg-white dark:bg-black font-mono ${cls} py-3 rounded-xl shadow-inner border-2 border-yellow-400 dark:border-indigo-500 text-[#854d0e] dark:text-indigo-100 flex items-center justify-center gap-2">${dispId} <i class="far fa-copy opacity-50"></i></strong><p class="text-[10px] mt-2 italic font-bold opacity-80 ${extra} text-[#854d0e] dark:text-indigo-300">${extra?l.input_manual:l.click_copy}</p></div>`;
-  const dlBtn = `<button type="button" onclick="downloadPaymentCard()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 transition shadow-sm border border-slate-200 dark:border-white/10 active:scale-95"><i class="fas fa-download text-indigo-500"></i> ${l.download_qr || 'Tải ảnh'}</button>`;
+  const decisionBadgeHtml = currentSubDecision ? `<div class="my-2 py-1.5 px-3 rounded-lg bg-indigo-50/70 dark:bg-white/5 border border-indigo-100 dark:border-white/10 text-center text-xs font-bold text-slate-600 dark:text-slate-300 inline-block w-full"><i class="fas fa-info-circle mr-1.5 text-indigo-500"></i>Phương án link: <span class="text-indigo-600 dark:text-indigo-400 font-extrabold">${currentSubDecision === 'KEEP_EXISTING' ? 'Gia hạn Link cũ' : 'Cấp Link mới'}</span></div>` : '';
+  const dlBtnLiquid = `<button type="button" onclick="downloadPaymentCard()" class="w-full mb-3 py-3 px-5 rounded-full text-xs md:text-sm font-bold text-slate-700 dark:text-slate-200 bg-white/40 dark:bg-white/10 hover:bg-white/60 dark:hover:bg-white/20 backdrop-blur-md border border-white/60 dark:border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)] shadow-sm hover:shadow-md transition flex items-center justify-center active:scale-95"><i class="fas fa-arrow-down-to-line mr-2 text-indigo-500"></i>${l.download_qr || 'Tải ảnh thanh toán'}</button>`;
+  const paidBtnHtml = `<div class="mt-auto pt-3 w-full">${dlBtnLiquid}<button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center btn-heartbeat"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button></div>`;
+  const memo = (cls, extra) => `<div class="highlight-copy py-3 px-3 rounded-xl text-center cursor-pointer mb-2" onclick="copyText('${dispId}')"><span class="block text-[11px] font-black mb-1.5 uppercase text-[#854d0e] dark:text-indigo-200">${l.copy_memo}</span><strong class="block bg-white dark:bg-black font-mono ${cls} py-2.5 rounded-xl shadow-inner border-2 border-yellow-400 dark:border-indigo-500 text-[#854d0e] dark:text-indigo-100 flex items-center justify-center gap-2">${dispId} <i class="far fa-copy opacity-50"></i></strong><p class="text-[10px] mt-1.5 italic font-bold opacity-80 ${extra} text-[#854d0e] dark:text-indigo-300">${extra?l.input_manual:l.click_copy}</p></div>`;
+
   if (m === 'bank') {
-    col.innerHTML = `<div class="text-center w-full flex flex-col flex-1 justify-between h-full"><div><div class="flex items-center justify-between mb-3 w-full">${dlBtn}<span class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">VietQR</span></div><div class="bg-indigo-50 dark:bg-white p-2 rounded-xl inline-block mb-4 border border-transparent dark:border-indigo-500 shadow-sm dark:shadow-[0_0_15px_rgba(99,102,241,0.5)]"><img id="paymentQrImg" crossOrigin="anonymous" src="https://img.vietqr.io/image/mbbank-0917678211-compact.png?amount=${currentTotalVnd}&addInfo=${dispId}&accountName=TRINH THI XUAN HUONG" class="w-40 h-40 md:w-56 md:h-56 rounded-xl mx-auto object-contain mix-blend-multiply dark:mix-blend-normal"></div>
-  <div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_name}</span><strong class="dark:text-white">MB BANK</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_num}</span><strong class="text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.6)] cursor-pointer" onclick="copyText('0917678211')">0917678211 <i class="far fa-copy ml-1"></i></strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div></div>${memo('text-2xl md:text-3xl','')}</div>${paidBtnHtml}</div>`;
-  }
-  else {
-    const ali = m === 'alipay', img = ali ? 'https://i.pinimg.com/736x/44/57/9d/44579dfb5241614ddc897a21ce34e233.jpg' : 'https://i.pinimg.com/736x/28/b2/95/28b29577c6229ec943e8e13afe241db3.jpg';
-    col.innerHTML = `<div class="text-center w-full flex flex-col flex-1 justify-between h-full"><div><div class="flex items-center justify-between mb-3 w-full">${dlBtn}<h4 class="font-extrabold text-base ${ali?'text-blue-600':'text-green-600'}">${ali?'Alipay <i class="fas fa-qrcode text-sm ml-1"></i>':'Weixin <i class="fas fa-qrcode text-sm ml-1"></i>'}</h4></div><div class="bg-slate-50 dark:bg-white p-2 rounded-xl inline-block mb-4 border border-slate-100 dark:border-transparent shadow-sm"><img id="paymentQrImg" crossOrigin="anonymous" src="${img}" class="w-48 max-w-full h-auto mx-auto rounded-lg object-contain mix-blend-multiply dark:mix-blend-normal"></div>
-  <div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div></div>${memo('text-2xl','uppercase')}</div>${paidBtnHtml}</div>`;
+    const vietQrSrc = `/api/vietqr-image?amount=${currentTotalVnd}&addInfo=${encodeURIComponent(dispId)}`;
+    col.innerHTML = `<div class="text-center w-full flex flex-col flex-1 justify-between h-full">
+      <div id="paymentReceiptCard" class="bg-white dark:bg-[#0a0a0a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-white/10 text-center w-full shadow-sm mb-2">
+        <div class="flex items-center justify-between mb-3 w-full">
+          <span class="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5"><i class="fas fa-qrcode"></i> VietQR • Chuyển khoản MB Bank</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-white/10 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-white/15">Tự động điền</span>
+        </div>
+        <div class="bg-indigo-50 dark:bg-white p-2.5 rounded-2xl inline-block mb-3 border border-transparent dark:border-indigo-500 shadow-sm dark:shadow-[0_0_15px_rgba(99,102,241,0.5)]">
+          <img id="paymentQrImg" src="${vietQrSrc}" class="w-44 h-44 md:w-56 md:h-56 rounded-xl mx-auto object-contain mix-blend-multiply dark:mix-blend-normal">
+        </div>
+        <div class="text-left text-xs space-y-2 mb-3 w-full">
+          <div class="flex justify-between bg-slate-50 dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div>
+          <div class="flex justify-between bg-slate-50 dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_name}</span><strong class="dark:text-white">MB BANK</strong></div>
+          <div class="flex justify-between bg-slate-50 dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_num}</span><strong class="text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.6)] cursor-pointer" onclick="copyText('0917678211')">0917678211 <i class="far fa-copy ml-1"></i></strong></div>
+          <div class="flex justify-between bg-slate-50 dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div>
+        </div>
+        ${memo('text-2xl md:text-3xl','')}
+        ${decisionBadgeHtml}
+      </div>
+      ${paidBtnHtml}
+    </div>`;
+  } else {
+    const ali = m === 'alipay';
+    const staticQrSrc = ali ? '/assets/qr/alipay.jpg' : '/assets/qr/weixin.jpg';
+    col.innerHTML = `<div class="text-center w-full flex flex-col flex-1 justify-between h-full">
+      <div id="paymentReceiptCard" class="bg-white dark:bg-[#0a0a0a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-white/10 text-center w-full shadow-sm mb-2">
+        <div class="flex items-center justify-between mb-3 w-full">
+          <h4 class="font-extrabold text-sm ${ali?'text-blue-600':'text-green-600'} flex items-center gap-1.5">${ali?'Alipay 支付宝 • Quét mã thanh toán':'Weixin Pay 微信支付 • Quét mã thanh toán'}</h4>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/15">Mã cố định</span>
+        </div>
+        <div class="bg-slate-50 dark:bg-white p-2.5 rounded-2xl inline-block mb-3 border border-slate-100 dark:border-transparent shadow-sm">
+          <img id="paymentQrImg" src="${staticQrSrc}" class="w-48 max-w-full h-auto mx-auto rounded-lg object-contain mix-blend-multiply dark:mix-blend-normal">
+        </div>
+        <div class="text-left text-xs space-y-2 mb-3 w-full">
+          <div class="flex justify-between bg-slate-50 dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div>
+          <div class="flex justify-between bg-slate-50 dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div>
+        </div>
+        ${memo('text-2xl','uppercase')}
+        ${decisionBadgeHtml}
+      </div>
+      ${paidBtnHtml}
+    </div>`;
   }
 }
 
 async function downloadPaymentCard() {
-  const m = $('payMethod')?.value || 'bank';
+  const card = document.getElementById('paymentReceiptCard');
+  if (!card) {
+    showToast('Chưa có thẻ thanh toán để tải ảnh!', 'error');
+    return;
+  }
   const dispId = isUpgradeMode ? (oCache?.id || '') : (currentOrderId || '');
-  if (!dispId) return;
-  const fp = m === 'bank' ? `${currentTotalVnd.toLocaleString('en-US')}VND` : m === 'alipay' || m === 'wechat' || m === 'weixin' ? `¥${currentTotalCny}` : `$${currentTotalUsd}`;
-  const qrImg = document.getElementById('paymentQrImg') || document.querySelector('#checkoutRightCol img');
+  const qrImg = card.querySelector('#paymentQrImg');
   if (!qrImg || !qrImg.src) {
     showToast('Chưa có mã QR để tải ảnh!', 'error');
     return;
@@ -2850,180 +2900,39 @@ async function downloadPaymentCard() {
 
   showToast('Đang tạo ảnh thanh toán...', 'info');
 
-  const cvs = document.createElement('canvas');
-  const ctx = cvs.getContext('2d');
-  const dpr = 2;
-  const W = 460;
-  let H = 640;
-  if (currentSubDecision) H += 40;
-  if (m === 'bank') H += 35;
+  try {
+    // 1. Chờ ảnh QR tải và giải mã hoàn tất trong DOM
+    if (!qrImg.complete) {
+      await new Promise((resolve) => {
+        qrImg.onload = resolve;
+        qrImg.onerror = resolve;
+        setTimeout(resolve, 3000);
+      });
+    }
+    if (typeof qrImg.decode === 'function') {
+      try {
+        await qrImg.decode();
+      } catch (e) {}
+    }
 
-  cvs.width = W * dpr;
-  cvs.height = H * dpr;
-  ctx.scale(dpr, dpr);
+    // 2. Xuất file PNG sắc nét x2 với modern-screenshot
+    const dataUrl = await domToPng(card, { scale: 2, backgroundColor: '#ffffff' });
 
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, W, H);
+    if (!dataUrl || dataUrl.length < 200) {
+      throw new Error('Dữ liệu ảnh xuất ra không hợp lệ');
+    }
 
-  ctx.strokeStyle = '#e2e8f0';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(0, 0, W, H);
-
-  let headerBg = '#4f46e5';
-  let headerTitle = 'VIETQR — CHUYỂN KHOẢN NGÂN HÀNG';
-  if (m === 'alipay') {
-    headerBg = '#2563eb';
-    headerTitle = 'ALIPAY 支付宝 — QUÉT MÃ THANH TOÁN';
-  } else if (m === 'weixin' || m === 'wechat') {
-    headerBg = '#16a34a';
-    headerTitle = 'WEIXIN PAY 微信支付 — QUÉT MÃ THANH TOÁN';
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `VPNTrinhHg_${dispId || 'Payment'}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast('Đã tải ảnh thanh toán thành công!', 'ok');
+  } catch (err) {
+    console.error('Lỗi xuất ảnh thanh toán:', err);
+    showToast('Không thể xuất ảnh tự động. Vui lòng chụp màn hình hoặc lưu ảnh QR!', 'error');
   }
-  ctx.fillStyle = headerBg;
-  ctx.fillRect(0, 0, W, 48);
-
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 13px system-ui, -apple-system, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(headerTitle, W / 2, 29);
-
-  const drawDetails = () => {
-    let curY = 265;
-    if (m === 'bank') curY = 270;
-
-    const boxX = 24;
-    const boxW = W - 48;
-    const infoRows = [];
-    infoRows.push(['Chủ tài khoản:', 'TRINH THI XUAN HUONG']);
-    if (m === 'bank') {
-      infoRows.push(['Ngân hàng:', 'MB BANK']);
-      infoRows.push(['Số tài khoản:', '0917678211']);
-    }
-    infoRows.push(['Số tiền:', fp]);
-
-    const boxH = infoRows.length * 28 + 14;
-    ctx.fillStyle = '#f8fafc';
-    ctx.fillRect(boxX, curY, boxW, boxH);
-    ctx.strokeStyle = '#e2e8f0';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(boxX, curY, boxW, boxH);
-
-    let rowY = curY + 24;
-    infoRows.forEach(([lbl, val]) => {
-      ctx.textAlign = 'left';
-      ctx.font = '12px system-ui, -apple-system, sans-serif';
-      ctx.fillStyle = '#64748b';
-      ctx.fillText(lbl, boxX + 14, rowY);
-
-      ctx.textAlign = 'right';
-      if (lbl === 'Số tiền:') {
-        ctx.font = 'bold 15px system-ui, -apple-system, sans-serif';
-        ctx.fillStyle = '#dc2626';
-      } else {
-        ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
-        ctx.fillStyle = '#1e293b';
-      }
-      ctx.fillText(val, boxX + boxW - 14, rowY);
-      rowY += 28;
-    });
-
-    curY += boxH + 14;
-
-    const memoH = 76;
-    ctx.fillStyle = '#fef9c3';
-    ctx.fillRect(boxX, curY, boxW, memoH);
-    ctx.strokeStyle = '#facc15';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(boxX, curY, boxW, memoH);
-
-    ctx.textAlign = 'center';
-    ctx.font = 'bold 11px system-ui, -apple-system, sans-serif';
-    ctx.fillStyle = '#854d0e';
-    ctx.fillText('NỘI DUNG CHUYỂN KHOẢN (BẮT BUỘC):', W / 2, curY + 20);
-
-    ctx.font = 'bold 20px monospace';
-    ctx.fillStyle = '#713f12';
-    ctx.fillText(dispId, W / 2, curY + 45);
-
-    ctx.font = 'italic 10px system-ui, -apple-system, sans-serif';
-    ctx.fillStyle = '#a16207';
-    ctx.fillText('(Vui lòng ghi chính xác mã đơn để kích hoạt tự động)', W / 2, curY + 63);
-
-    curY += memoH + 12;
-
-    if (currentSubDecision) {
-      const decisionText = currentSubDecision === 'KEEP_EXISTING' ? 'Gia hạn Link cũ' : 'Cấp Link mới';
-      ctx.fillStyle = '#eef2ff';
-      ctx.fillRect(boxX, curY, boxW, 28);
-      ctx.strokeStyle = '#c7d2fe';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(boxX, curY, boxW, 28);
-
-      ctx.textAlign = 'center';
-      ctx.font = 'bold 11px system-ui, -apple-system, sans-serif';
-      ctx.fillStyle = '#4338ca';
-      ctx.fillText(`Phương án link: ${decisionText}`, W / 2, curY + 18);
-      curY += 38;
-    } else {
-      curY += 10;
-    }
-
-    ctx.textAlign = 'center';
-    ctx.font = '10px system-ui, -apple-system, sans-serif';
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText('VPNTrinhHg • https://vpntrinhhg3.pages.dev', W / 2, H - 12);
-
-    try {
-      cvs.toBlob(blob => {
-        if (!blob) {
-          showToast('Lỗi xuất ảnh canvas!', 'error');
-          return;
-        }
-        const a = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        a.href = url;
-        a.download = `VPNTrinhHg_${dispId}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 5000);
-        showToast('Đã tải ảnh thanh toán thành công!', 'ok');
-      }, 'image/png');
-    } catch (err) {
-      const fallbackA = document.createElement('a');
-      fallbackA.href = qrImg.src;
-      fallbackA.download = `QR_${dispId}.png`;
-      fallbackA.target = '_blank';
-      document.body.appendChild(fallbackA);
-      fallbackA.click();
-      document.body.removeChild(fallbackA);
-      showToast('Đã mở ảnh QR gốc do hạn chế bảo mật trình duyệt!', 'info');
-    }
-  };
-
-  const imgObj = new Image();
-  imgObj.crossOrigin = 'anonymous';
-  imgObj.onload = () => {
-    const qrSize = 190;
-    const qrX = (W - qrSize) / 2;
-    const qrY = 62;
-    ctx.drawImage(imgObj, qrX, qrY, qrSize, qrSize);
-    drawDetails();
-  };
-  imgObj.onerror = () => {
-    const plainImg = new Image();
-    plainImg.onload = () => {
-      const qrSize = 190;
-      const qrX = (W - qrSize) / 2;
-      const qrY = 62;
-      ctx.drawImage(plainImg, qrX, qrY, qrSize, qrSize);
-      drawDetails();
-    };
-    plainImg.onerror = () => {
-      showToast('Không thể tải ảnh QR để đóng gói PNG!', 'error');
-    };
-    plainImg.src = qrImg.src;
-  };
-  imgObj.src = qrImg.src;
 }
 
 function updateSubDecisionUI(val) {
@@ -3204,11 +3113,27 @@ async function checkEmailExistingLinks(email) {
         renderPaymentBox();
         return;
       } else if (activeCount === 1) {
-        // Email có đúng 1 đơn hoạt động -> Mở khóa cho phép khách tự chọn giữa Giữ link cũ hoặc Cấp link mới
         existingCustomerLinks = links;
-        detectedRenewOf = (ord && ord.id) || (links[0] ? links[0].orderId : '');
-        currentSubDecision = 'KEEP_EXISTING';
+        detectedRenewOf = '';
         emailLookupState = 'found';
+        const sField = res.data.schemaField || (ord && ord.schemaField) || (location.hostname.includes('vpntrinhhg2') ? 'info2' : location.hostname.includes('vpntrinhhg3') ? 'info3' : 'info1');
+        const isSubWebsite = (sField === 'info2' || sField === 'info3');
+
+        if (isSubWebsite) {
+          // Quy tắc Website phụ: KHÔNG hiển thị lựa chọn
+          if (links.length > 0) {
+            currentSubDecision = 'KEEP_EXISTING';
+            lockSubDecisionUI('KEEP_EXISTING', 'Hệ thống tự động liên kết với Link Sub hiện tại của website này.');
+          } else {
+            currentSubDecision = 'CREATE_NEW';
+            lockSubDecisionUI('CREATE_NEW', 'Website này chưa có Link Sub. Hệ thống tự động cấp link mới.');
+          }
+          $('subLinkLifecycleWrap')?.classList.add('hidden');
+          renderPaymentBox();
+          return;
+        }
+
+        // Quy tắc Website mẹ (info1): Mở khóa cho phép khách tự chọn giữa Giữ link cũ hoặc Cấp link mới
         $('subLinkLifecycleWrap')?.classList.remove('hidden');
         unlockSubDecisionUI();
         currentSubDecision = 'KEEP_EXISTING';
@@ -3410,7 +3335,7 @@ async function confirmPaid() {
     localStorage.removeItem(CACHE_KEY);
   } catch (e) {}
   enterPortal(o, false);
-  router.navigate(`${appRoutes.order}/${encodeURIComponent(normOrderIdClean(o.id))}`);
+  router.navigate(`/${encodeURIComponent(normOrderIdClean(o.id))}`);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -3735,9 +3660,10 @@ function highlightNavBtns(tabId) {
 }
 
 function enterPortal(o, auto) {
-  if (o && o.isTest) setServerTestMode(true);
+  const isOrderTest = !!(o && o.isTest);
+  setServerTestMode(isOrderTest);
   if (o && o.id) currentUrlOrderId = normOrderIdClean(o.id);
-  updatePwaManifest(o && o.id);
+  updatePwaManifest(o && o.id, isOrderTest);
   $('view-store').classList.remove('active');
   $('view-portal').classList.add('active');
   $('userMenu').classList.remove('hidden');
@@ -3801,7 +3727,7 @@ async function openPortalByOrderId(rawId, pushUrl = false) {
   if (res.data.schemaField && !o.schemaField) o.schemaField = res.data.schemaField;
   enterPortal(o, false);
   if (pushUrl) {
-    router.navigate(`${appRoutes.order}/${encodeURIComponent(normOrderIdClean(o.id))}`);
+    router.navigate(`/${encodeURIComponent(normOrderIdClean(o.id))}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   return true;
@@ -3902,17 +3828,18 @@ function switchPortalTab(tabId, fromUpgrade = false, skipPush = false) {
   saveAndSwitchTabScroll(tabId);
   enablePortalFrame();
 
-  // 1. Tab Quản lý Đơn hàng (Auth Guard): Chưa có đơn đang mở thì hiện Modal nhập mã DH
+  const targetOid = (oCache && oCache.id) || currentUrlOrderId || (location.pathname.match(/\/(DH[A-Za-z0-9_-]+)/) || [])[1] || '';
+
+  // 1. Tab Quản lý Đơn hàng (Auth Guard)
   if (tabId === 'p-home') {
     document.querySelectorAll('.portal-tab-content').forEach(el => el.classList.remove('active'));
     $('p-home').classList.add('active');
     highlightNavBtns('p-home');
-    const targetOid = (oCache && oCache.id) || currentUrlOrderId || (location.pathname.match(/\/portal\/order\/([A-Za-z0-9_-]+)/) || [])[1] || '';
     if (!skipPush) {
       if (targetOid) {
-        router.navigate(`${appRoutes.order}/${encodeURIComponent(normOrderIdClean(targetOid))}`);
+        router.navigate(`/${encodeURIComponent(normOrderIdClean(targetOid))}`);
       } else {
-        router.navigate(appRoutes.order);
+        router.navigate('/');
       }
     }
     if (!oCache) {
@@ -3925,17 +3852,23 @@ function switchPortalTab(tabId, fromUpgrade = false, skipPush = false) {
     return;
   }
 
-  // 2. Tab Cửa hàng Portal: Xem tự do trong khung Portal
+  // 2. Tab Cửa hàng Portal: Giữ tiền tố mã đơn DH trên URL
   if (tabId === 'p-store') {
     document.querySelectorAll('.portal-tab-content').forEach(el => el.classList.remove('active'));
     $('p-store').classList.add('active');
     highlightNavBtns('p-store');
-    if (!skipPush) router.navigate(appRoutes.packages);
+    if (!skipPush) {
+      if (targetOid) {
+        router.navigate(`/${encodeURIComponent(normOrderIdClean(targetOid))}/packages`);
+      } else {
+        router.navigate(appRoutes.packages);
+      }
+    }
     renderPackages('all');
     return;
   }
 
-  // 3. Tab Hướng dẫn Portal: Xem tự do (luôn reset về danh mục tổng quan)
+  // 3. Tab Hướng dẫn Portal: Giữ tiền tố mã đơn DH trên URL
   if (tabId === 'p-guide') {
     curGuideSlug = '';
     document.querySelectorAll('.portal-tab-content').forEach(el => el.classList.remove('active'));
@@ -3943,7 +3876,11 @@ function switchPortalTab(tabId, fromUpgrade = false, skipPush = false) {
     highlightNavBtns('p-guide');
     const targetCat = curGuide || (guideTabList()[0] || {}).id || 'android';
     if (!skipPush) {
-      router.navigate(`${appRoutes.guide}`);
+      if (targetOid) {
+        router.navigate(`/${encodeURIComponent(normOrderIdClean(targetOid))}/guide`);
+      } else {
+        router.navigate(appRoutes.guide);
+      }
     }
     loadConfig().then(() => {
       showGuide(targetCat);
@@ -3960,6 +3897,7 @@ function logout() {
   } catch (e) {}
   oCache = null;
   currentUrlOrderId = '';
+  setServerTestMode(null);
   clearTimeout(pollT);
   stopTick();
   closeQrModal(true);
@@ -3978,11 +3916,12 @@ function logout() {
 function resetToGuest() {
   ['guideAuthModal', 'policyModal', 'emailVerifyModal', 'pwaInstallGuideModal'].forEach(id => {
     const m = $(id);
-    if (m && !m.classList.contains('hidden')) {
-      m.classList.add('hidden');
-      unlockBodyScroll();
-    }
+    if (m && !m.classList.contains('hidden')) m.classList.add('hidden');
   });
+  unlockBodyScroll();
+  oCache = null;
+  currentUrlOrderId = '';
+  setServerTestMode(null);
   if ($('guideAuthInput')) $('guideAuthInput').value = '';
   logout();
 }
@@ -4105,36 +4044,102 @@ function setupAppRoutes() {
     router.navigate('/');
   });
 
-  const bindOrderRoute = (path) => {
-    router.on(path, () => {
-      if (oCache && oCache.id) {
-        router.navigate(`${path}/${encodeURIComponent(normOrderIdClean(oCache.id))}`);
-        return;
-      }
-      switchPortalTab('p-home', false, true);
-    });
-    router.on(`${path}/:orderId`, async (match) => {
-      const oid = match && match.data && match.data.orderId ? decodeURIComponent(match.data.orderId) : '';
-      const cleanId = normOrderIdClean(oid);
-      if (oCache && normOrderIdClean(oCache.id) === cleanId) {
-        enterPortal(oCache, true);
-        return;
-      }
-      await openPortalByOrderId(cleanId, false);
-    });
-  };
-  bindOrderRoute(appRoutes.order);
-  if (appRoutes.order !== DEFAULT_ROUTES.order) bindOrderRoute(DEFAULT_ROUTES.order);
-
-  // Short route /DH... tự động chuyển hướng vào Portal đơn hàng
-  router.on(/^\/(DH[A-Za-z0-9_-]+)$/, (match) => {
+  // 1. Tuyến đường chuẩn mới: Dashboard /DHXXXXXXXXXX
+  router.on(/^\/(DH[A-Za-z0-9_-]{6,25})$/, async (match) => {
     const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
     const cleanId = normOrderIdClean(rawOid);
-    if (cleanId) {
-      router.navigate(`${appRoutes.order}/${encodeURIComponent(cleanId)}`);
-    } else {
-      router.navigate('/');
+    if (!cleanId) return router.navigate('/');
+    if (oCache && normOrderIdClean(oCache.id) === cleanId) {
+      enterPortal(oCache, true);
+      switchPortalTab('p-home', false, true);
+      return;
     }
+    const ok = await openPortalByOrderId(cleanId, false);
+    if (ok) switchPortalTab('p-home', false, true);
+  });
+
+  // 2. Tuyến đường chuẩn mới: Cửa hàng /DHXXXXXXXXXX/packages
+  router.on(/^\/(DH[A-Za-z0-9_-]{6,25})\/packages$/, async (match) => {
+    const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
+    const cleanId = normOrderIdClean(rawOid);
+    if (!cleanId) return router.navigate('/');
+    if (oCache && normOrderIdClean(oCache.id) === cleanId) {
+      enterPortal(oCache, true);
+      switchPortalTab('p-store', false, true);
+      return;
+    }
+    const ok = await openPortalByOrderId(cleanId, false);
+    if (ok) switchPortalTab('p-store', false, true);
+  });
+
+  // 3. Tuyến đường chuẩn mới: Hướng dẫn tổng quan /DHXXXXXXXXXX/guide
+  router.on(/^\/(DH[A-Za-z0-9_-]{6,25})\/guide$/, async (match) => {
+    const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
+    const cleanId = normOrderIdClean(rawOid);
+    if (!cleanId) return router.navigate('/');
+    if (oCache && normOrderIdClean(oCache.id) === cleanId) {
+      enterPortal(oCache, true);
+      switchPortalTab('p-guide', false, true);
+      return;
+    }
+    const ok = await openPortalByOrderId(cleanId, false);
+    if (ok) switchPortalTab('p-guide', false, true);
+  });
+
+  // 4. Tuyến đường chuẩn mới: Danh mục hướng dẫn /DHXXXXXXXXXX/guide/:category
+  router.on(/^\/(DH[A-Za-z0-9_-]{6,25})\/guide\/([A-Za-z0-9_-]+)$/, async (match) => {
+    const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
+    const cat = match && match.data && match.data[1] ? decodeURIComponent(match.data[1]) : '';
+    const cleanId = normOrderIdClean(rawOid);
+    if (!cleanId) return router.navigate('/');
+    curGuide = cat || 'android';
+    curGuideSlug = '';
+    const setupGuideView = () => {
+      enablePortalFrame();
+      document.querySelectorAll('.portal-tab-content').forEach(el => el.classList.remove('active'));
+      $('p-guide').classList.add('active');
+      highlightNavBtns('p-guide');
+      showGuide(curGuide);
+    };
+    if (oCache && normOrderIdClean(oCache.id) === cleanId) {
+      enterPortal(oCache, true);
+      setupGuideView();
+      return;
+    }
+    const ok = await openPortalByOrderId(cleanId, false);
+    if (ok) setupGuideView();
+  });
+
+  // 5. Tuyến đường chuẩn mới: Bài viết hướng dẫn /DHXXXXXXXXXX/guide/:category/:slug
+  router.on(/^\/(DH[A-Za-z0-9_-]{6,25})\/guide\/([A-Za-z0-9_-]+)\/(.+)$/, async (match) => {
+    const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
+    const cat = match && match.data && match.data[1] ? decodeURIComponent(match.data[1]) : '';
+    const slug = match && match.data && match.data[2] ? decodeURIComponent(match.data[2]) : '';
+    const cleanId = normOrderIdClean(rawOid);
+    if (!cleanId) return router.navigate('/');
+    const setupArticleView = async () => {
+      enablePortalFrame();
+      document.querySelectorAll('.portal-tab-content').forEach(el => el.classList.remove('active'));
+      $('p-guide').classList.add('active');
+      highlightNavBtns('p-guide');
+      await openGuideArticle(cat, slug, true);
+    };
+    if (oCache && normOrderIdClean(oCache.id) === cleanId) {
+      enterPortal(oCache, true);
+      await setupArticleView();
+      return;
+    }
+    const ok = await openPortalByOrderId(cleanId, false);
+    if (ok) await setupArticleView();
+  });
+
+  // Tương thích ngược: Chuyển hướng các URL cũ /portal/order/DH... sang /DH...
+  router.on(/^\/portal\/order\/(DH[A-Za-z0-9_-]{6,25})(.*)$/, (match) => {
+    const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
+    const rest = match && match.data && match.data[1] ? match.data[1] : '';
+    const cleanId = normOrderIdClean(rawOid);
+    if (cleanId) router.navigate(`/${encodeURIComponent(cleanId)}${rest}`);
+    else router.navigate('/');
   });
 
   const bindPackagesRoute = (path) => {
