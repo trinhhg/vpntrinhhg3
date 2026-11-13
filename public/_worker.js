@@ -132,7 +132,8 @@ export default {
       // 2.2. QR tĩnh Alipay & Weixin (ưu tiên asset tĩnh nội bộ, fallback an toàn sang ảnh gốc)
       if (url.pathname === "/assets/qr/alipay.jpg" || url.pathname === "/assets/qr/weixin.jpg") {
         const assetRes = await env.ASSETS.fetch(request).catch(() => null);
-        if (assetRes && assetRes.ok) return assetRes;
+        const assetCt = (assetRes && assetRes.headers && assetRes.headers.get("content-type")) || "";
+        if (assetRes && assetRes.ok && assetCt.startsWith("image/")) return assetRes;
 
         const isAli = url.pathname.includes("alipay");
         const fallbackUrl = isAli 
@@ -145,6 +146,9 @@ export default {
           });
           if (!imgRes.ok) return new Response("Failed to fetch static QR", { status: 502 });
           const contentType = imgRes.headers.get("content-type") || "image/jpeg";
+          if (!contentType.startsWith("image/")) {
+            return new Response("Invalid image content type from fallback", { status: 502 });
+          }
           return new Response(imgRes.body, {
             status: 200,
             headers: {
