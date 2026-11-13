@@ -71,6 +71,35 @@ export default {
         }
       }
 
+      // 2.1. Proxy ảnh QR Same-Origin cho VietQR, Alipay, Weixin để triệt tiêu lỗi CORS/Tainted Canvas
+      if (url.pathname === "/api/qr-proxy") {
+        const targetUrl = url.searchParams.get("url");
+        if (!targetUrl) return new Response("Missing url", { status: 400 });
+        let parsed;
+        try {
+          parsed = new URL(targetUrl);
+        } catch (e) {
+          return new Response("Invalid url", { status: 400 });
+        }
+        const allowedHosts = ["img.vietqr.io", "i.pinimg.com"];
+        if (!allowedHosts.includes(parsed.hostname.toLowerCase())) {
+          return new Response("Host not allowed", { status: 403 });
+        }
+        const imgRes = await fetch(targetUrl, {
+          headers: { "User-Agent": "Mozilla/5.0 (compatible; VPNTrinhHg-Proxy/1.0)" }
+        });
+        if (!imgRes.ok) return new Response("Failed to fetch image", { status: 502 });
+        const contentType = imgRes.headers.get("content-type") || "image/png";
+        return new Response(imgRes.body, {
+          status: 200,
+          headers: {
+            "Content-Type": contentType,
+            "Access-Control-Allow-Origin": "*",
+            "Cache-Control": "public, max-age=3600"
+          }
+        });
+      }
+
       // Markdown Content Negotiation cho AI Agents trên trang chủ
       if ((url.pathname === "/" || url.pathname === "/index.html") && request.headers.get("Accept")?.includes("text/markdown")) {
         return new Response(SITE_MARKDOWN, {
