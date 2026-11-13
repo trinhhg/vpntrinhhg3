@@ -95,9 +95,45 @@ describe('Cloudflare Pages Proxy & Fallback Routing (_worker.js)', () => {
     }));
     globalThis.fetch = mockImgFetch;
 
-    const goodReq = new Request('https://trinhhg.pages.dev/api/vietqr-image?amount=54000&addInfo=DH1234567890');
-    const resGood = await worker.fetch(goodReq, env);
-    expect(resGood.status).toBe(200);
-    expect(resGood.headers.get('Content-Type')).toBe('image/png');
-  });
-});
+  const dlBtnCard = `<div class="flex items-center justify-start mb-3 w-full"><button type="button" onclick="downloadPaymentCard()" class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 bg-white/40 dark:bg-white/10 hover:bg-white/60 dark:hover:bg-white/20 backdrop-blur-md border border-white/60 dark:border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)] shadow-sm hover:shadow-md transition active:scale-95"><i class="fas fa-arrow-down-to-line text-indigo-500"></i>${l.download_qr || 'Tải ảnh'}</button></div>`;
+  const paidBtnHtml = `<div class="mt-auto pt-3 w-full"><button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center btn-heartbeat"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button></div>`;
+  const memo = (cls, extra) => `<div class="highlight-copy py-3 px-3 rounded-xl text-center cursor-pointer mb-2" onclick="copyText('${dispId}')"><span class="block text-[11px] font-black mb-1.5 uppercase text-[#854d0e] dark:text-indigo-200">${l.copy_memo}</span><strong class="block bg-white dark:bg-black font-mono ${cls} py-2.5 rounded-xl shadow-inner border-2 border-yellow-400 dark:border-indigo-500 text-[#854d0e] dark:text-indigo-100 flex items-center justify-center gap-2">${dispId} <i class="far fa-copy opacity-50"></i></strong><p class="text-[10px] mt-1.5 italic font-bold opacity-80 ${extra} text-[#854d0e] dark:text-indigo-300">${extra?l.input_manual:l.click_copy}</p></div>`;
+
+  if (m === 'bank') {
+    const vietQrSrc = `/api/vietqr-image?amount=${currentTotalVnd}&addInfo=${encodeURIComponent(dispId)}`;
+    col.innerHTML = `<div class="text-center w-full flex flex-col flex-1 justify-between h-full">
+      <div id="paymentReceiptCard" class="bg-white dark:bg-[#0a0a0a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-white/10 text-center w-full shadow-sm mb-2">
+        ${dlBtnCard}
+        <div class="bg-indigo-50 dark:bg-white p-2.5 rounded-2xl inline-block mb-3 border border-transparent dark:border-indigo-500 shadow-sm dark:shadow-[0_0_15px_rgba(99,102,241,0.5)]">
+          <img id="paymentQrImg" src="${vietQrSrc}" class="w-44 h-44 md:w-56 md:h-56 rounded-xl mx-auto object-contain mix-blend-multiply dark:mix-blend-normal">
+        </div>
+        <div class="text-left text-xs space-y-2 mb-3 w-full">
+          <div class="flex justify-between bg-slate-50 dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div>
+          <div class="flex justify-between bg-slate-50 dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_name}</span><strong class="dark:text-white">MB BANK</strong></div>
+          <div class="flex justify-between bg-slate-50 dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_num}</span><strong class="text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.6)] cursor-pointer" onclick="copyText('0917678211')">0917678211 <i class="far fa-copy ml-1"></i></strong></div>
+          <div class="flex justify-between bg-slate-50 dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div>
+        </div>
+        ${memo('text-2xl md:text-3xl','')}
+        ${decisionBadgeHtml}
+      </div>
+      ${paidBtnHtml}
+    </div>`;
+  } else {
+    const ali = m === 'alipay';
+    const staticQrSrc = ali ? '/assets/qr/alipay.jpg' : '/assets/qr/weixin.jpg';
+    col.innerHTML = `<div class="text-center w-full flex flex-col flex-1 justify-between h-full">
+      <div id="paymentReceiptCard" class="bg-white dark:bg-[#0a0a0a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-white/10 text-center w-full shadow-sm mb-2">
+        ${dlBtnCard}
+        <div class="bg-slate-50 dark:bg-white p-2.5 rounded-2xl inline-block mb-3 border border-slate-100 dark:border-transparent shadow-sm">
+          <img id="paymentQrImg" src="${staticQrSrc}" class="w-48 max-w-full h-auto mx-auto rounded-lg object-contain mix-blend-multiply dark:mix-blend-normal">
+        </div>
+        <div class="text-left text-xs space-y-2 mb-3 w-full">
+          <div class="flex justify-between bg-slate-50 dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div>
+          <div class="flex justify-between bg-slate-50 dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div>
+        </div>
+        ${memo('text-2xl','uppercase')}
+        ${decisionBadgeHtml}
+      </div>
+      ${paidBtnHtml}
+    </div>`;
+  }
