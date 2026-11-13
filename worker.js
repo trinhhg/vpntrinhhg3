@@ -1665,7 +1665,8 @@ function getOrderRawSubLink(o, idx, schemaField) {
 
 function publicOrder(o, cms, links, field) {
   const s = (cms && cms.settings) || {};
-  const emailVerifyTtlHours = Math.max(1, Math.min(8760, parseInt(s.emailVerifyTtlHours) || 72));
+  const emailVerifyTtlSeconds = s.emailVerifyTtlSeconds !== undefined ? Math.max(1, parseInt(s.emailVerifyTtlSeconds) || 259200) : ((parseInt(s.emailVerifyTtlHours) || 72) * 3600);
+  const emailVerifyTtlHours = Math.round(emailVerifyTtlSeconds / 3600);
   const out = {
     id: o.id,
     email: maskEmail(o.email),
@@ -2671,7 +2672,8 @@ export default {
         const blur = [sec1.blur, sec2.blur, sec3.blur];
         const lock = [sec1.lock, sec2.lock, sec3.lock];
         const verify = [sec1.verify, sec2.verify, sec3.verify];
-        const emailVerifyTtlHours = Math.max(1, Math.min(8760, parseInt(s.emailVerifyTtlHours) || 72));
+        const emailVerifyTtlSeconds = s.emailVerifyTtlSeconds !== undefined ? Math.max(1, parseInt(s.emailVerifyTtlSeconds) || 259200) : ((parseInt(s.emailVerifyTtlHours) || 72) * 3600);
+        const emailVerifyTtlHours = Math.round(emailVerifyTtlSeconds / 3600);
 
         const httpOnly = (v) => (/^https?:\/\//i.test(String(v || "")) ? String(v) : "");
         const dock = Array.isArray(s.dock) ? s.dock.filter((d) => d && (httpOnly(d.img) || d.icon)).map((d) => ({
@@ -2754,13 +2756,12 @@ export default {
         }
         const cms = safeJson(await KV.get("ALL_CMS"), {});
         const s = (cms && cms.settings) || {};
-        const ttlHours = Math.max(1, Math.min(8760, parseInt(s.emailVerifyTtlHours) || 72));
-        const ttlSeconds = ttlHours * 3600;
+        const ttlSeconds = s.emailVerifyTtlSeconds !== undefined ? Math.max(1, parseInt(s.emailVerifyTtlSeconds) || 259200) : ((parseInt(s.emailVerifyTtlHours) || 72) * 3600);
         const token = hex(32);
         const expiresAt = Date.now() + ttlSeconds * 1000;
-        await KV.put(`EMAIL_VERIFY_${oid}_${idx}_${token}`, JSON.stringify({ orderId: oid, infoIndex: idx, exp: expiresAt }), { expirationTtl: ttlSeconds });
+        await KV.put(`EMAIL_VERIFY_${oid}_${idx}_${token}`, JSON.stringify({ orderId: oid, infoIndex: idx, exp: expiresAt }), { expirationTtl: Math.max(60, ttlSeconds) });
 
-        return J({ ok: true, token, expiresAt, ttlHours });
+        return J({ ok: true, token, expiresAt, ttlSeconds, ttlHours: Math.round(ttlSeconds / 3600) });
       }
 
       // Endpoint cấp Link Sub thật cho thao tác Copy (Kiểm tra Khóa > Quyền đơn > Xác minh Email trên Server)
