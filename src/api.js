@@ -80,6 +80,8 @@ export async function request(path, options = {}) {
   const testActive = options.isTest !== undefined ? !!options.isTest : isTestMode();
   if (testActive) {
     urlStr += (urlStr.includes('?') ? '&' : '?') + 'test=1';
+  } else {
+    urlStr += (urlStr.includes('?') ? '&' : '?') + 'test=0';
   }
 
   const headers = {
@@ -89,6 +91,8 @@ export async function request(path, options = {}) {
 
   if (testActive) {
     headers['X-Test-Mode'] = '1';
+  } else {
+    headers['X-Test-Mode'] = '0';
   }
 
   const token = options.token || getAdminToken();
