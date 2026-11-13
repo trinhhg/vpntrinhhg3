@@ -38,11 +38,13 @@ export default {
       if (url.pathname === "/manifest.json") {
         const orderId = url.searchParams.get("order");
         const cleanOid = orderId ? orderId.trim().toUpperCase().replace(/[-_.\s]/g, "") : "";
+        const testParam = url.searchParams.get("test");
+        const testQuery = testParam === "1" ? "?test=1" : (testParam === "0" ? "?test=0" : "");
         if (cleanOid && /^DH[A-Z0-9]{6,20}$/i.test(cleanOid)) {
           const manifest = {
             name: `VPNTrinhHg - Đơn ${cleanOid}`,
             short_name: cleanOid,
-            start_url: `/portal/order/${cleanOid}`,
+            start_url: `/portal/order/${cleanOid}${testQuery}`,
             scope: "/",
             display: "standalone",
             background_color: "#ffffff",
