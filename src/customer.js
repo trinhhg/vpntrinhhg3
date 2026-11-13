@@ -1043,7 +1043,7 @@ async function openGuideArticle(tabId, slug, skipPush) {
   if (!skipPush && typeof router !== 'undefined') {
     const targetOid = (oCache && oCache.id) || currentUrlOrderId || '';
     if (targetOid) {
-      router.navigate(`/${encodeURIComponent(normOrderIdClean(targetOid))}/guide/${encodeURIComponent(curGuide)}/${encodeURIComponent(curGuideSlug)}`);
+      router.navigate(`/portal/order/${encodeURIComponent(normOrderIdClean(targetOid))}/guide/${encodeURIComponent(curGuide)}/${encodeURIComponent(curGuideSlug)}`);
     } else {
       router.navigate(`${appRoutes.guide}/${encodeURIComponent(curGuide)}/${encodeURIComponent(curGuideSlug)}`);
     }
@@ -1224,7 +1224,7 @@ async function closeGuideArticle(skipPush) {
   if (!skipPush && typeof router !== 'undefined') {
     const targetOid = (oCache && oCache.id) || currentUrlOrderId || '';
     if (targetOid) {
-      router.navigate(`/${encodeURIComponent(normOrderIdClean(targetOid))}/guide/${encodeURIComponent(curGuide || 'android')}`);
+      router.navigate(`/portal/order/${encodeURIComponent(normOrderIdClean(targetOid))}/guide/${encodeURIComponent(curGuide || 'android')}`);
     } else {
       router.navigate(`${appRoutes.guide}/${encodeURIComponent(curGuide || 'android')}`);
     }
@@ -2834,8 +2834,8 @@ function renderPaymentBox() {
     return;
   }
   const dispId = isUpgradeMode ? oCache.id : currentOrderId;
-  const decisionBadgeHtml = currentSubDecision ? `<div class="my-2 py-1.5 px-3 rounded-lg bg-indigo-50/70 dark:bg-white/5 border border-indigo-100 dark:border-white/10 text-center text-xs font-bold text-slate-600 dark:text-slate-300 inline-block w-full"><i class="fas fa-info-circle mr-1.5 text-indigo-500"></i>Phương án link: <span class="text-indigo-600 dark:text-indigo-400 font-extrabold">${currentSubDecision === 'KEEP_EXISTING' ? 'Gia hạn Link cũ' : 'Cấp Link mới'}</span></div>` : '';
-  const dlBtnCard = `<div class="flex items-center justify-start mb-3 w-full"><button type="button" onclick="downloadPaymentCard()" class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 bg-white/40 dark:bg-white/10 hover:bg-white/60 dark:hover:bg-white/20 backdrop-blur-md border border-white/60 dark:border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)] shadow-sm hover:shadow-md transition active:scale-95"><i class="fas fa-arrow-down-to-line text-indigo-500"></i>${l.download_qr || 'Tải ảnh'}</button></div>`;
+  const decisionBadgeHtml = currentSubDecision ? `<div class="my-2 py-2 px-3 rounded-xl bg-indigo-50 dark:bg-white/5 border border-indigo-100 dark:border-white/10 text-center text-xs font-bold text-slate-600 dark:text-slate-300 inline-block w-full"><i class="fas fa-info-circle mr-1.5 text-indigo-500"></i>Phương án link: <span class="text-indigo-600 dark:text-indigo-400 font-extrabold">${currentSubDecision === 'KEEP_EXISTING' ? 'Gia hạn Link cũ' : 'Cấp Link mới'}</span></div>` : '';
+  const dlBtnOverlay = `<button type="button" onclick="downloadPaymentCard()" title="${l.download_qr || 'Tải ảnh thanh toán'}" class="export-ignore absolute top-2 left-2 z-10 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 dark:text-indigo-200 bg-indigo-100/90 dark:bg-indigo-950/80 hover:bg-indigo-200 dark:hover:bg-indigo-900 border border-indigo-200/80 dark:border-indigo-400/30 shadow-sm backdrop-blur transition active:scale-90"><i class="fas fa-arrow-down-to-line text-indigo-600 dark:text-indigo-300"></i></button>`;
   const paidBtnHtml = `<div class="mt-auto pt-3 w-full"><button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center btn-heartbeat"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button></div>`;
   const memo = (cls, extra) => `<div class="highlight-copy py-3 px-3 rounded-xl text-center cursor-pointer mb-2" onclick="copyText('${dispId}')"><span class="block text-[11px] font-black mb-1.5 uppercase text-[#854d0e] dark:text-indigo-200">${l.copy_memo}</span><strong class="block bg-white dark:bg-black font-mono ${cls} py-2.5 rounded-xl shadow-inner border-2 border-yellow-400 dark:border-indigo-500 text-[#854d0e] dark:text-indigo-100 flex items-center justify-center gap-2">${dispId} <i class="far fa-copy opacity-50"></i></strong><p class="text-[10px] mt-1.5 italic font-bold opacity-80 ${extra} text-[#854d0e] dark:text-indigo-300">${extra?l.input_manual:l.click_copy}</p></div>`;
 
@@ -2843,8 +2843,8 @@ function renderPaymentBox() {
     const vietQrSrc = `/api/vietqr-image?amount=${currentTotalVnd}&addInfo=${encodeURIComponent(dispId)}`;
     col.innerHTML = `<div class="text-center w-full flex flex-col flex-1 justify-between h-full">
       <div id="paymentReceiptCard" class="bg-white dark:bg-[#0a0a0a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-white/10 text-center w-full shadow-sm mb-2">
-        ${dlBtnCard}
-        <div class="bg-indigo-50 dark:bg-white p-2.5 rounded-2xl inline-block mb-3 border border-transparent dark:border-indigo-500 shadow-sm dark:shadow-[0_0_15px_rgba(99,102,241,0.5)]">
+        <div class="relative inline-block mb-3 bg-indigo-50 dark:bg-white p-2.5 rounded-2xl border border-transparent dark:border-indigo-500 shadow-sm dark:shadow-[0_0_15px_rgba(99,102,241,0.5)]">
+          ${dlBtnOverlay}
           <img id="paymentQrImg" src="${vietQrSrc}" class="w-44 h-44 md:w-56 md:h-56 rounded-xl mx-auto object-contain mix-blend-multiply dark:mix-blend-normal">
         </div>
         <div class="text-left text-xs space-y-2 mb-3 w-full">
@@ -2863,8 +2863,8 @@ function renderPaymentBox() {
     const staticQrSrc = ali ? '/assets/qr/alipay.jpg' : '/assets/qr/weixin.jpg';
     col.innerHTML = `<div class="text-center w-full flex flex-col flex-1 justify-between h-full">
       <div id="paymentReceiptCard" class="bg-white dark:bg-[#0a0a0a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-white/10 text-center w-full shadow-sm mb-2">
-        ${dlBtnCard}
-        <div class="bg-slate-50 dark:bg-white p-2.5 rounded-2xl inline-block mb-3 border border-slate-100 dark:border-transparent shadow-sm">
+        <div class="relative inline-block mb-3 bg-slate-50 dark:bg-white p-2.5 rounded-2xl border border-slate-100 dark:border-transparent shadow-sm">
+          ${dlBtnOverlay}
           <img id="paymentQrImg" src="${staticQrSrc}" class="w-48 max-w-full h-auto mx-auto rounded-lg object-contain mix-blend-multiply dark:mix-blend-normal">
         </div>
         <div class="text-left text-xs space-y-2 mb-3 w-full">
@@ -2914,8 +2914,13 @@ async function downloadPaymentCard() {
       throw new Error('Ảnh QR chưa tải xong hoặc không hiển thị');
     }
 
-    // 2. Xuất file PNG sắc nét x2 với modern-screenshot
-    const dataUrl = await domToPng(card, { scale: 2, backgroundColor: '#ffffff' });
+    // 2. Xuất file PNG sắc nét x2 với modern-screenshot (lọc bỏ nút điều khiển và chọn nền theo Theme)
+    const isDark = document.documentElement.classList.contains('dark');
+    const dataUrl = await domToPng(card, {
+      scale: 2,
+      backgroundColor: isDark ? '#0a0a0a' : '#ffffff',
+      filter: (node) => !node.classList?.contains('export-ignore')
+    });
 
     if (!dataUrl || dataUrl.length < 200) {
       throw new Error('Dữ liệu ảnh xuất ra không hợp lệ');
@@ -3336,7 +3341,7 @@ async function confirmPaid() {
     localStorage.removeItem(CACHE_KEY);
   } catch (e) {}
   enterPortal(o, false);
-  router.navigate(`/${encodeURIComponent(normOrderIdClean(o.id))}`);
+  router.navigate(`/portal/order/${encodeURIComponent(normOrderIdClean(o.id))}`);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -3732,7 +3737,7 @@ async function openPortalByOrderId(rawId, pushUrl = false) {
   enterPortal(o, false);
   if (pushUrl) {
     const testQuery = o.isTest ? '?test=1' : '';
-    router.navigate(`/${encodeURIComponent(normOrderIdClean(o.id))}${testQuery}`);
+    router.navigate(`/portal/order/${encodeURIComponent(normOrderIdClean(o.id))}${testQuery}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   return true;
@@ -3842,7 +3847,7 @@ function switchPortalTab(tabId, fromUpgrade = false, skipPush = false) {
     highlightNavBtns('p-home');
     if (!skipPush) {
       if (targetOid) {
-        router.navigate(`/${encodeURIComponent(normOrderIdClean(targetOid))}`);
+        router.navigate(`/portal/order/${encodeURIComponent(normOrderIdClean(targetOid))}`);
       } else {
         router.navigate('/');
       }
@@ -3864,7 +3869,7 @@ function switchPortalTab(tabId, fromUpgrade = false, skipPush = false) {
     highlightNavBtns('p-store');
     if (!skipPush) {
       if (targetOid) {
-        router.navigate(`/${encodeURIComponent(normOrderIdClean(targetOid))}/packages`);
+        router.navigate(`/portal/order/${encodeURIComponent(normOrderIdClean(targetOid))}/packages`);
       } else {
         router.navigate(appRoutes.packages);
       }
@@ -3882,7 +3887,7 @@ function switchPortalTab(tabId, fromUpgrade = false, skipPush = false) {
     const targetCat = curGuide || (guideTabList()[0] || {}).id || 'android';
     if (!skipPush) {
       if (targetOid) {
-        router.navigate(`/${encodeURIComponent(normOrderIdClean(targetOid))}/guide`);
+        router.navigate(`/portal/order/${encodeURIComponent(normOrderIdClean(targetOid))}/guide`);
       } else {
         router.navigate(appRoutes.guide);
       }
@@ -3995,7 +4000,7 @@ function clickFooterServiceLink(type) {
   }
   if (type === 'data') {
     if (oCache && oCache.id) {
-      router.navigate(`/${encodeURIComponent(normOrderIdClean(oCache.id))}`);
+      router.navigate(`/portal/order/${encodeURIComponent(normOrderIdClean(oCache.id))}`);
       requestDataCheck();
     } else {
       showToast('Vui lòng nhập Mã đơn hàng để kiểm tra dung lượng!', 'info');
@@ -4050,22 +4055,8 @@ function setupAppRoutes() {
     router.navigate('/');
   });
 
-  // 1. Tuyến đường chuẩn mới: Dashboard /DHXXXXXXXXXX
-  router.on(/^\/?(DH[A-Za-z0-9_-]{6,25})$/, async (match) => {
-    const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
-    const cleanId = normOrderIdClean(rawOid);
-    if (!cleanId) return router.navigate('/');
-    if (oCache && normOrderIdClean(oCache.id) === cleanId) {
-      enterPortal(oCache, true);
-      switchPortalTab('p-home', false, true);
-      return;
-    }
-    const ok = await openPortalByOrderId(cleanId, false);
-    if (ok) switchPortalTab('p-home', false, true);
-  });
-
-  // 2. Tuyến đường chuẩn mới: Cửa hàng /DHXXXXXXXXXX/packages
-  router.on(/^\/?(DH[A-Za-z0-9_-]{6,25})\/packages$/, async (match) => {
+  // 1. Tuyến đường chuẩn: Cửa hàng /portal/order/DHXXXXXXXXXX/packages
+  router.on(/^\/?portal\/order\/(DH[A-Za-z0-9_-]{6,25})\/packages$/, async (match) => {
     const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
     const cleanId = normOrderIdClean(rawOid);
     if (!cleanId) return router.navigate('/');
@@ -4078,22 +4069,31 @@ function setupAppRoutes() {
     if (ok) switchPortalTab('p-store', false, true);
   });
 
-  // 3. Tuyến đường chuẩn mới: Hướng dẫn tổng quan /DHXXXXXXXXXX/guide
-  router.on(/^\/?(DH[A-Za-z0-9_-]{6,25})\/guide$/, async (match) => {
+  // 2. Tuyến đường chuẩn: Bài viết hướng dẫn /portal/order/DHXXXXXXXXXX/guide/:category/:slug
+  router.on(/^\/?portal\/order\/(DH[A-Za-z0-9_-]{6,25})\/guide\/([A-Za-z0-9_-]+)\/(.+)$/, async (match) => {
     const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
+    const cat = match && match.data && match.data[1] ? decodeURIComponent(match.data[1]) : '';
+    const slug = match && match.data && match.data[2] ? decodeURIComponent(match.data[2]) : '';
     const cleanId = normOrderIdClean(rawOid);
     if (!cleanId) return router.navigate('/');
+    const setupArticleView = async () => {
+      enablePortalFrame();
+      document.querySelectorAll('.portal-tab-content').forEach(el => el.classList.remove('active'));
+      $('p-guide').classList.add('active');
+      highlightNavBtns('p-guide');
+      await openGuideArticle(cat, slug, true);
+    };
     if (oCache && normOrderIdClean(oCache.id) === cleanId) {
       enterPortal(oCache, true);
-      switchPortalTab('p-guide', false, true);
+      await setupArticleView();
       return;
     }
     const ok = await openPortalByOrderId(cleanId, false);
-    if (ok) switchPortalTab('p-guide', false, true);
+    if (ok) await setupArticleView();
   });
 
-  // 4. Tuyến đường chuẩn mới: Danh mục hướng dẫn /DHXXXXXXXXXX/guide/:category
-  router.on(/^\/?(DH[A-Za-z0-9_-]{6,25})\/guide\/([A-Za-z0-9_-]+)$/, async (match) => {
+  // 3. Tuyến đường chuẩn: Danh mục hướng dẫn /portal/order/DHXXXXXXXXXX/guide/:category
+  router.on(/^\/?portal\/order\/(DH[A-Za-z0-9_-]{6,25})\/guide\/([A-Za-z0-9_-]+)$/, async (match) => {
     const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
     const cat = match && match.data && match.data[1] ? decodeURIComponent(match.data[1]) : '';
     const cleanId = normOrderIdClean(rawOid);
@@ -4116,35 +4116,40 @@ function setupAppRoutes() {
     if (ok) setupGuideView();
   });
 
-  // 5. Tuyến đường chuẩn mới: Bài viết hướng dẫn /DHXXXXXXXXXX/guide/:category/:slug
-  router.on(/^\/?(DH[A-Za-z0-9_-]{6,25})\/guide\/([A-Za-z0-9_-]+)\/(.+)$/, async (match) => {
+  // 4. Tuyến đường chuẩn: Hướng dẫn tổng quan /portal/order/DHXXXXXXXXXX/guide
+  router.on(/^\/?portal\/order\/(DH[A-Za-z0-9_-]{6,25})\/guide$/, async (match) => {
     const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
-    const cat = match && match.data && match.data[1] ? decodeURIComponent(match.data[1]) : '';
-    const slug = match && match.data && match.data[2] ? decodeURIComponent(match.data[2]) : '';
     const cleanId = normOrderIdClean(rawOid);
     if (!cleanId) return router.navigate('/');
-    const setupArticleView = async () => {
-      enablePortalFrame();
-      document.querySelectorAll('.portal-tab-content').forEach(el => el.classList.remove('active'));
-      $('p-guide').classList.add('active');
-      highlightNavBtns('p-guide');
-      await openGuideArticle(cat, slug, true);
-    };
     if (oCache && normOrderIdClean(oCache.id) === cleanId) {
       enterPortal(oCache, true);
-      await setupArticleView();
+      switchPortalTab('p-guide', false, true);
       return;
     }
     const ok = await openPortalByOrderId(cleanId, false);
-    if (ok) await setupArticleView();
+    if (ok) switchPortalTab('p-guide', false, true);
   });
 
-  // Tương thích ngược: Chuyển hướng các URL cũ /portal/order/DH... sang /DH...
-  router.on(/^\/?portal\/order\/(DH[A-Za-z0-9_-]{6,25})(.*)$/, (match) => {
+  // 5. Tuyến đường chuẩn: Dashboard /portal/order/DHXXXXXXXXXX
+  router.on(/^\/?portal\/order\/(DH[A-Za-z0-9_-]{6,25})$/, async (match) => {
+    const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
+    const cleanId = normOrderIdClean(rawOid);
+    if (!cleanId) return router.navigate('/');
+    if (oCache && normOrderIdClean(oCache.id) === cleanId) {
+      enterPortal(oCache, true);
+      switchPortalTab('p-home', false, true);
+      return;
+    }
+    const ok = await openPortalByOrderId(cleanId, false);
+    if (ok) switchPortalTab('p-home', false, true);
+  });
+
+  // Tuyến đường trung gian /DH...: Điều hướng nội bộ sang route Portal chuẩn /portal/order/DH...
+  router.on(/^\/?(DH[A-Za-z0-9_-]{6,25})(.*)$/, (match) => {
     const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
     const rest = match && match.data && match.data[1] ? match.data[1] : '';
     const cleanId = normOrderIdClean(rawOid);
-    if (cleanId) router.navigate(`/${encodeURIComponent(cleanId)}${rest}`);
+    if (cleanId) router.navigate(`/portal/order/${encodeURIComponent(cleanId)}${rest}`);
     else router.navigate('/');
   });
 
