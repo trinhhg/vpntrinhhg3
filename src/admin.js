@@ -867,7 +867,10 @@ function ordCard(o, ro) {
   const nick = o.nickname ? `<span class="text-[10px] font-black bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded ml-1"><i class="fas fa-user-tag mr-0.5"></i>${esc(o.nickname)}</span>` : "";
   let lockObj = {};
   if (typeof o.lockInfo === "string") {
-    try { lockObj = JSON.parse(o.lockInfo) || {}; } catch { lockObj = {}; }
+    try {
+      lockObj = JSON.parse(o.lockInfo) || {};
+    } catch { lockObj = {};
+    }
   } else if (typeof o.lockInfo === "object" && o.lockInfo !== null) {
     lockObj = o.lockInfo;
   }
@@ -7160,18 +7163,18 @@ async function saveQrExpireSeconds() {
   }
 }
 async function saveEmailVerifyTtl() {
-  const raw = parseInt($("emailVerifyTtlHoursInp")?.value);
+  const raw = parseInt($("emailVerifyTtlSecondsInp")?.value || $("emailVerifyTtlHoursInp")?.value);
   if (!raw || raw < 1) {
-    return toast("Vui lòng nhập thời gian hiệu lực là số nguyên dương (>= 1 giờ)", "warn");
+    return toast("Vui lòng nhập thời gian hiệu lực là số nguyên dương (>= 1 giây)", "warn");
   }
-  const val = Math.max(1, Math.min(8760, raw));
+  const val = Math.max(1, Math.min(31536000, raw));
   cmsDb.settings = cmsDb.settings || {};
-  cmsDb.settings.emailVerifyTtlHours = val;
-  if ($("emailVerifyTtlHoursInp")) $("emailVerifyTtlHoursInp").value = val;
+  cmsDb.settings.emailVerifyTtlSeconds = val;
+  cmsDb.settings.emailVerifyTtlHours = Math.round(val / 3600);
+  if ($("emailVerifyTtlSecondsInp")) $("emailVerifyTtlSecondsInp").value = val;
   try {
     await saveCmsDb();
-    toast(`Đã lưu thời gian hiệu lực xác minh email: ${val} giờ!`);
-    logEvent("ok", "Lưu TTL xác minh email", `${val} giờ`);
+    toast(`Đã lưu thời gian hiệu lực xác minh email: ${val} giây!`);
   } catch (e) {
     toast("Lỗi lưu thời gian hiệu lực: " + e.message, "err");
   }
@@ -7196,7 +7199,9 @@ function loadWebAdminUI() {
   loadDrawerSettingsUI();
   const s = (cmsDb && cmsDb.settings) || {};
   if ($("qrExpireSecondsInp")) $("qrExpireSecondsInp").value = Number(s.qrExpireSeconds) || 30;
-  if ($("emailVerifyTtlHoursInp")) $("emailVerifyTtlHoursInp").value = Number(s.emailVerifyTtlHours) || 72;
+  const ttlSec = s.emailVerifyTtlSeconds !== undefined ? Number(s.emailVerifyTtlSeconds) : (Number(s.emailVerifyTtlHours) ? Number(s.emailVerifyTtlHours) * 3600 : 259200);
+  if ($("emailVerifyTtlSecondsInp")) $("emailVerifyTtlSecondsInp").value = ttlSec;
+  if ($("emailVerifyTtlHoursInp")) $("emailVerifyTtlHoursInp").value = Math.round(ttlSec / 3600);
   renderBlurRows();
   renderRouteRows();
   renderDockRows();
