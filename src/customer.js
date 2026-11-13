@@ -2835,18 +2835,15 @@ function renderPaymentBox() {
   }
   const dispId = isUpgradeMode ? oCache.id : currentOrderId;
   const decisionBadgeHtml = currentSubDecision ? `<div class="my-2 py-1.5 px-3 rounded-lg bg-indigo-50/70 dark:bg-white/5 border border-indigo-100 dark:border-white/10 text-center text-xs font-bold text-slate-600 dark:text-slate-300 inline-block w-full"><i class="fas fa-info-circle mr-1.5 text-indigo-500"></i>Phương án link: <span class="text-indigo-600 dark:text-indigo-400 font-extrabold">${currentSubDecision === 'KEEP_EXISTING' ? 'Gia hạn Link cũ' : 'Cấp Link mới'}</span></div>` : '';
-  const dlBtnLiquid = `<button type="button" onclick="downloadPaymentCard()" class="w-full mb-3 py-3 px-5 rounded-full text-xs md:text-sm font-bold text-slate-700 dark:text-slate-200 bg-white/40 dark:bg-white/10 hover:bg-white/60 dark:hover:bg-white/20 backdrop-blur-md border border-white/60 dark:border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)] shadow-sm hover:shadow-md transition flex items-center justify-center active:scale-95"><i class="fas fa-arrow-down-to-line mr-2 text-indigo-500"></i>${l.download_qr || 'Tải ảnh thanh toán'}</button>`;
-  const paidBtnHtml = `<div class="mt-auto pt-3 w-full">${dlBtnLiquid}<button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center btn-heartbeat"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button></div>`;
+  const dlBtnCard = `<div class="flex items-center justify-start mb-3 w-full"><button type="button" onclick="downloadPaymentCard()" class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 bg-white/40 dark:bg-white/10 hover:bg-white/60 dark:hover:bg-white/20 backdrop-blur-md border border-white/60 dark:border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)] shadow-sm hover:shadow-md transition active:scale-95"><i class="fas fa-arrow-down-to-line text-indigo-500"></i>${l.download_qr || 'Tải ảnh'}</button></div>`;
+  const paidBtnHtml = `<div class="mt-auto pt-3 w-full"><button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center btn-heartbeat"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button></div>`;
   const memo = (cls, extra) => `<div class="highlight-copy py-3 px-3 rounded-xl text-center cursor-pointer mb-2" onclick="copyText('${dispId}')"><span class="block text-[11px] font-black mb-1.5 uppercase text-[#854d0e] dark:text-indigo-200">${l.copy_memo}</span><strong class="block bg-white dark:bg-black font-mono ${cls} py-2.5 rounded-xl shadow-inner border-2 border-yellow-400 dark:border-indigo-500 text-[#854d0e] dark:text-indigo-100 flex items-center justify-center gap-2">${dispId} <i class="far fa-copy opacity-50"></i></strong><p class="text-[10px] mt-1.5 italic font-bold opacity-80 ${extra} text-[#854d0e] dark:text-indigo-300">${extra?l.input_manual:l.click_copy}</p></div>`;
 
   if (m === 'bank') {
     const vietQrSrc = `/api/vietqr-image?amount=${currentTotalVnd}&addInfo=${encodeURIComponent(dispId)}`;
     col.innerHTML = `<div class="text-center w-full flex flex-col flex-1 justify-between h-full">
       <div id="paymentReceiptCard" class="bg-white dark:bg-[#0a0a0a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-white/10 text-center w-full shadow-sm mb-2">
-        <div class="flex items-center justify-between mb-3 w-full">
-          <span class="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5"><i class="fas fa-qrcode"></i> VietQR • Chuyển khoản MB Bank</span>
-          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-white/10 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-white/15">Tự động điền</span>
-        </div>
+        ${dlBtnCard}
         <div class="bg-indigo-50 dark:bg-white p-2.5 rounded-2xl inline-block mb-3 border border-transparent dark:border-indigo-500 shadow-sm dark:shadow-[0_0_15px_rgba(99,102,241,0.5)]">
           <img id="paymentQrImg" src="${vietQrSrc}" class="w-44 h-44 md:w-56 md:h-56 rounded-xl mx-auto object-contain mix-blend-multiply dark:mix-blend-normal">
         </div>
@@ -2866,10 +2863,7 @@ function renderPaymentBox() {
     const staticQrSrc = ali ? '/assets/qr/alipay.jpg' : '/assets/qr/weixin.jpg';
     col.innerHTML = `<div class="text-center w-full flex flex-col flex-1 justify-between h-full">
       <div id="paymentReceiptCard" class="bg-white dark:bg-[#0a0a0a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-white/10 text-center w-full shadow-sm mb-2">
-        <div class="flex items-center justify-between mb-3 w-full">
-          <h4 class="font-extrabold text-sm ${ali?'text-blue-600':'text-green-600'} flex items-center gap-1.5">${ali?'Alipay 支付宝 • Quét mã thanh toán':'Weixin Pay 微信支付 • Quét mã thanh toán'}</h4>
-          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/15">Mã cố định</span>
-        </div>
+        ${dlBtnCard}
         <div class="bg-slate-50 dark:bg-white p-2.5 rounded-2xl inline-block mb-3 border border-slate-100 dark:border-transparent shadow-sm">
           <img id="paymentQrImg" src="${staticQrSrc}" class="w-48 max-w-full h-auto mx-auto rounded-lg object-contain mix-blend-multiply dark:mix-blend-normal">
         </div>
@@ -2912,7 +2906,12 @@ async function downloadPaymentCard() {
     if (typeof qrImg.decode === 'function') {
       try {
         await qrImg.decode();
-      } catch (e) {}
+      } catch (e) {
+        throw new Error('Không thể giải mã hình ảnh QR code');
+      }
+    }
+    if (!qrImg.naturalWidth || qrImg.naturalWidth <= 0) {
+      throw new Error('Ảnh QR chưa tải xong hoặc không hiển thị');
     }
 
     // 2. Xuất file PNG sắc nét x2 với modern-screenshot
@@ -3116,7 +3115,9 @@ async function checkEmailExistingLinks(email) {
         existingCustomerLinks = links;
         detectedRenewOf = '';
         emailLookupState = 'found';
-        const sField = res.data.schemaField || (ord && ord.schemaField) || (location.hostname.includes('vpntrinhhg2') ? 'info2' : location.hostname.includes('vpntrinhhg3') ? 'info3' : 'info1');
+        const searchParamWeb = (typeof location !== 'undefined') ? (new URLSearchParams(location.search).get('web') || new URLSearchParams(location.search).get('schema')) : null;
+        const forcedField = searchParamWeb ? (searchParamWeb.startsWith('info') ? searchParamWeb : ('info' + searchParamWeb)) : null;
+        const sField = res.data.schemaField || (ord && ord.schemaField) || forcedField || (location.hostname.includes('vpntrinhhg2') ? 'info2' : location.hostname.includes('vpntrinhhg3') ? 'info3' : 'info1');
         const isSubWebsite = (sField === 'info2' || sField === 'info3');
 
         if (isSubWebsite) {
@@ -3699,19 +3700,21 @@ async function openPortalByOrderId(rawId, pushUrl = false) {
     res = null;
   }
 
+  const isPortalPath = /^\/?DH[A-Za-z0-9_-]{6,25}/i.test(location.pathname.replace(/^\//, '')) || location.pathname.startsWith(appRoutes.order) || location.pathname.startsWith('/portal/order');
+
   if ((res && res.status === 404) || (res && res.ok && res.data && res.data.found === false && !res.data.order)) {
     if ($('loginInput')) $('loginInput').value = '';
     currentUrlOrderId = '';
-    if (location.pathname.startsWith(appRoutes.order) || location.pathname.startsWith('/portal/order')) {
+    if (isPortalPath) {
       router.navigate('/');
     }
-    showToast(i18n[lang].not_found, 'error');
+    showToast(i18n[lang].not_found || 'Không tìm thấy thông tin đơn hàng này!', 'error');
     return false;
   }
 
   if (!res || !res.ok || !res.data || !res.data.order) {
     // Khi mất mạng hoặc lỗi 5xx: nếu đang ở đường dẫn Portal thì giữ URL và hiện khung Thử lại
-    if (location.pathname.startsWith(appRoutes.order) || location.pathname.startsWith('/portal/order')) {
+    if (isPortalPath) {
       enablePortalFrame();
       document.querySelectorAll('.portal-tab-content').forEach(el => el.classList.remove('active'));
       $('p-home')?.classList.add('active');
@@ -3724,10 +3727,12 @@ async function openPortalByOrderId(rawId, pushUrl = false) {
   }
 
   const o = res.data.order;
+  if (res.data.isTest !== undefined && o.isTest === undefined) o.isTest = !!res.data.isTest;
   if (res.data.schemaField && !o.schemaField) o.schemaField = res.data.schemaField;
   enterPortal(o, false);
   if (pushUrl) {
-    router.navigate(`/${encodeURIComponent(normOrderIdClean(o.id))}`);
+    const testQuery = o.isTest ? '?test=1' : '';
+    router.navigate(`/${encodeURIComponent(normOrderIdClean(o.id))}${testQuery}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   return true;
@@ -3990,10 +3995,11 @@ function clickFooterServiceLink(type) {
   }
   if (type === 'data') {
     if (oCache && oCache.id) {
-      router.navigate(`${appRoutes.order}/${encodeURIComponent(normOrderIdClean(oCache.id))}`);
+      router.navigate(`/${encodeURIComponent(normOrderIdClean(oCache.id))}`);
       requestDataCheck();
     } else {
-      router.navigate(appRoutes.order);
+      showToast('Vui lòng nhập Mã đơn hàng để kiểm tra dung lượng!', 'info');
+      $('loginInput')?.focus();
     }
     return;
   }
@@ -4045,7 +4051,7 @@ function setupAppRoutes() {
   });
 
   // 1. Tuyến đường chuẩn mới: Dashboard /DHXXXXXXXXXX
-  router.on(/^\/(DH[A-Za-z0-9_-]{6,25})$/, async (match) => {
+  router.on(/^\/?(DH[A-Za-z0-9_-]{6,25})$/, async (match) => {
     const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
     const cleanId = normOrderIdClean(rawOid);
     if (!cleanId) return router.navigate('/');
@@ -4059,7 +4065,7 @@ function setupAppRoutes() {
   });
 
   // 2. Tuyến đường chuẩn mới: Cửa hàng /DHXXXXXXXXXX/packages
-  router.on(/^\/(DH[A-Za-z0-9_-]{6,25})\/packages$/, async (match) => {
+  router.on(/^\/?(DH[A-Za-z0-9_-]{6,25})\/packages$/, async (match) => {
     const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
     const cleanId = normOrderIdClean(rawOid);
     if (!cleanId) return router.navigate('/');
@@ -4073,7 +4079,7 @@ function setupAppRoutes() {
   });
 
   // 3. Tuyến đường chuẩn mới: Hướng dẫn tổng quan /DHXXXXXXXXXX/guide
-  router.on(/^\/(DH[A-Za-z0-9_-]{6,25})\/guide$/, async (match) => {
+  router.on(/^\/?(DH[A-Za-z0-9_-]{6,25})\/guide$/, async (match) => {
     const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
     const cleanId = normOrderIdClean(rawOid);
     if (!cleanId) return router.navigate('/');
@@ -4087,7 +4093,7 @@ function setupAppRoutes() {
   });
 
   // 4. Tuyến đường chuẩn mới: Danh mục hướng dẫn /DHXXXXXXXXXX/guide/:category
-  router.on(/^\/(DH[A-Za-z0-9_-]{6,25})\/guide\/([A-Za-z0-9_-]+)$/, async (match) => {
+  router.on(/^\/?(DH[A-Za-z0-9_-]{6,25})\/guide\/([A-Za-z0-9_-]+)$/, async (match) => {
     const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
     const cat = match && match.data && match.data[1] ? decodeURIComponent(match.data[1]) : '';
     const cleanId = normOrderIdClean(rawOid);
@@ -4111,7 +4117,7 @@ function setupAppRoutes() {
   });
 
   // 5. Tuyến đường chuẩn mới: Bài viết hướng dẫn /DHXXXXXXXXXX/guide/:category/:slug
-  router.on(/^\/(DH[A-Za-z0-9_-]{6,25})\/guide\/([A-Za-z0-9_-]+)\/(.+)$/, async (match) => {
+  router.on(/^\/?(DH[A-Za-z0-9_-]{6,25})\/guide\/([A-Za-z0-9_-]+)\/(.+)$/, async (match) => {
     const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
     const cat = match && match.data && match.data[1] ? decodeURIComponent(match.data[1]) : '';
     const slug = match && match.data && match.data[2] ? decodeURIComponent(match.data[2]) : '';
@@ -4134,7 +4140,7 @@ function setupAppRoutes() {
   });
 
   // Tương thích ngược: Chuyển hướng các URL cũ /portal/order/DH... sang /DH...
-  router.on(/^\/portal\/order\/(DH[A-Za-z0-9_-]{6,25})(.*)$/, (match) => {
+  router.on(/^\/?portal\/order\/(DH[A-Za-z0-9_-]{6,25})(.*)$/, (match) => {
     const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
     const rest = match && match.data && match.data[1] ? match.data[1] : '';
     const cleanId = normOrderIdClean(rawOid);
@@ -4201,7 +4207,7 @@ function setupAppRoutes() {
   if (!appRoutes.policy.startsWith('/policy')) bindPolicyRoutes('/policy');
 
   router.notFound(() => {
-    showToast('Nội dung đang cập nhật hoặc liên kết không tồn tại!', 'info');
+    showToast('Đường dẫn không hợp lệ hoặc trang không tồn tại!', 'info');
     router.navigate('/');
   });
 }
