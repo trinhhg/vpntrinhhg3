@@ -66,4 +66,38 @@ describe('Cloudflare Pages Proxy & Fallback Routing (_worker.js)', () => {
 
     expect(mockAssetFetch).toHaveBeenCalledTimes(staticPaths.length);
   });
+
+  it('nhận diện route /DH... là route tĩnh để env.ASSETS xử lý cho SPA', async () => {
+    const mockAssetFetch = vi.fn().mockResolvedValue(new Response('INDEX_HTML', { status: 200 }));
+    const env = { ASSETS: { fetch: mockAssetFetch } };
+
+    const portalPaths = ['/DH47H06DUHTI', '/DH47H06DUHTI/packages', '/DH47H06DUHTI/guide', '/DH47H06DUHTI/guide/windows/v2rayn'];
+    for (const p of portalPaths) {
+      const req = new Request(`https://trinhhg.pages.dev${p}`);
+      await worker.fetch(req, env);
+    }
+
+    expect(mockAssetFetch).toHaveBeenCalledTimes(portalPaths.length);
+  });
+
+  it('xử lý endpoint /api/vietqr-image: từ chối tham số không hợp lệ và fetch VietQR an toàn', async () => {
+    const env = { ASSETS: { fetch: vi.fn() } };
+    
+    // Test từ chối khi thiếu amount hoặc memo
+    const badReq = new Request('https://trinhhg.pages.dev/api/vietqr-image?amount=500');
+    const resBad = await worker.fetch(badReq, env);
+    expect(resBad.status).toBe(400);
+
+    // Test gọi thành công với tham số hợp lệ
+    const mockImgFetch = vi.fn().mockResolvedValue(new Response('IMAGE_BYTES', {
+      status: 200,
+      headers: { 'content-type': 'image/png' }
+    }));
+    globalThis.fetch = mockImgFetch;
+
+    const goodReq = new Request('https://trinhhg.pages.dev/api/vietqr-image?amount=54000&addInfo=DH1234567890');
+    const resGood = await worker.fetch(goodReq, env);
+    expect(resGood.status).toBe(200);
+    expect(resGood.headers.get('Content-Type')).toBe('image/png');
+  });
 });
