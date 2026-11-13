@@ -1077,30 +1077,20 @@ function computeExp(o, orders, now, giftRules = []) {
   const em = String(o.email || "").toLowerCase();
   let base = day0(now);
 
-  // Cộng dồn hạn cũ khi là đơn gia hạn HOẶC khách chọn Giữ link cũ (KEEP_EXISTING), trừ khi tạo link mới / fallback_new
-  if ((o.orderType === "renew" || o.subLinkDecision === "KEEP_EXISTING") && em && o.subLinkDecision !== "CREATE_NEW" && !o.fallbackNew) {
-    let targetOrd = null;
-    if (o.renewOf) {
-      targetOrd = orders.find(x => x && normId(x.id) === normId(o.renewOf));
-    }
+  // Chỉ cộng dồn hạn cũ khi thực sự là đơn gia hạn hợp lệ (orderType === "renew" và có đơn nguồn renewOf)
+  if (o.orderType === "renew" && o.renewOf && em && o.subLinkDecision !== "CREATE_NEW" && !o.fallbackNew) {
+    let targetOrd = orders.find(x => x && normId(x.id) === normId(o.renewOf));
     if (!targetOrd && o.targetLink) {
       targetOrd = orders.find(x => x && (x.info1 === o.targetLink || x.info2 === o.targetLink || x.info3 === o.targetLink));
     }
     if (targetOrd && targetOrd.expDate && !isLifetime(targetOrd.expDate)) {
       const targetT = parseDmy(targetOrd.expDate);
-      // Nếu link/đơn cũ còn hạn (targetT >= day0(now)): cộng dồn từ HSD chuẩn trong tab Đơn hàng
+      // Nếu link/đơn cũ còn hạn (targetT >= day0(now)): cộng dồn từ HSD chuẩn của đơn nguồn
       if (targetT >= day0(now)) {
         base = targetT;
       } else {
-        // Link cũ đã hết hạn/bị khóa: tính từ ngày mua hôm nay
+        // Link/đơn cũ đã hết hạn: tính từ ngày duyệt hôm nay
         base = day0(now);
-      }
-    } else {
-      // Heuristic fallback: tìm đơn thành công còn hạn dài nhất
-      for (const x of orders) {
-        if (!x || x === o || normStatus(x.status) !== "success" || String(x.email || "").toLowerCase() !== em || isLifetime(x.expDate)) continue;
-        const t = parseDmy(x.expDate);
-        if (t > base) base = t;
       }
     }
   }
@@ -1919,7 +1909,8 @@ function fulfillOrder(st, o, me, log) {
   const f = me.field, now = NOW(), today0 = day0(now);
   if (normStatus(o.status) !== "success") return "skip";
   if (!o.expFinal) {
-    if (o.orderType || !o.expDate) o.expDate = computeExp(o, st.orders, now, st.cms?.giftRules);
+    const calcNow = o.paidAt || now;
+    if (o.orderType || !o.expDate) o.expDate = computeExp(o, st.orders, calcNow, st.cms?.giftRules);
     o.expFinal = true;
     st.dO = true;
   } // đơn cũ (không có orderType): giữ nguyên HSD
@@ -2961,9 +2952,19 @@ export default {
           if (!/^DH[A-Z0-9]{6,20}$/i.test(qOrderId)) {
             return J({ ok: false, found: false, error: "not_found", schemaField }, 404);
           }
-          let singleOrd = null;
+          let singleOrd = null, finalIsTest = isTestReq;
           try {
             singleOrd = await sb.getOrder(qOrderId);
+            if (!singleOrd) {
+              const sbAlt = env ? getSupabase(env, !isTestReq) : null;
+              if (sbAlt) {
+                const altOrd = await sbAlt.getOrder(qOrderId);
+                if (altOrd) {
+                  singleOrd = altOrd;
+                  finalIsTest = !isTestReq;
+                }
+              }
+            }
           } catch (err) {
             return J({
               ok: false,
@@ -2976,11 +2977,11 @@ export default {
           return J({
             ok: true,
             found: true,
-            isTest: !!isTestReq,
+            isTest: !!finalIsTest,
             order: {
               ...pub(singleOrd, stMini),
               schemaField,
-              isTest: !!isTestReq
+              isTest: !!finalIsTest
             },
             schemaField
           });
@@ -3179,8 +3180,23 @@ export default {
         const today0 = day0(now);
         const activeUserOrders = st.orders.filter(x => x && normStatus(x.status) === "success" && String(x.email || "").toLowerCase() === emLower && x.expDate && (isLifetime(x.expDate) || (parseDmy(x.expDate) > 0 && parseDmy(x.expDate) >= today0)));
 
-        if (renewSrc) {
-          // Gia hạn bắt đầu từ nút gia hạn portal -> 100% giữ link cũ đích danh của web này
+        const isLegitRenew = !!(
+          b.renewOf &&
+          renewSrc &&
+          normStatus(renewSrc.status) === "success" &&
+          String(renewSrc.email || "").toLowerCase() === emLower &&
+          activeUserOrders.length === 1 &&
+          normId(activeUserOrders[0].id) === normId(renewSrc.id) &&
+          renewSrc.expDate &&
+          !isLifetime(renewSrc.expDate)
+        );
+
+        if (!isLegitRenew) {
+          renewSrc = null;
+        }
+
+        if (isLegitRenew && renewSrc) {
+          // Gia hạn thực sự bắt đầu từ nút gia hạn portal -> 100% giữ link cũ đích danh của web này
           subLinkDecision = "KEEP_EXISTING";
           targetLink = String(renewSrc[f] || "").trim();
         } else if (activeUserOrders.length >= 2) {
@@ -3195,10 +3211,9 @@ export default {
             subLinkDecision = "CREATE_NEW";
             targetLink = "";
           } else if (candidateLink) {
-            // Khách chọn KEEP_EXISTING hoặc mặc định: giữ link cũ nếu ô của web này đã có link
+            // Khách chọn KEEP_EXISTING: chỉ giữ link cũ, KHÔNG biến thành đơn gia hạn và KHÔNG gắn renewSrc
             subLinkDecision = "KEEP_EXISTING";
             targetLink = candidateLink;
-            if (!renewSrc) renewSrc = singleActiveOrd;
           } else {
             // Web này chưa có link trong đơn (web phụ phát hiện ô trống) -> Tự động cấp link mới riêng
             subLinkDecision = "CREATE_NEW";
@@ -3209,7 +3224,7 @@ export default {
           subLinkDecision = "CREATE_NEW";
           targetLink = "";
         }
-        const isRenew = !!renewSrc || subLinkDecision === "KEEP_EXISTING";
+        const isRenew = isLegitRenew;
 
         // Snapshot Gift Rule đang có hiệu lực (quy định số ngày tặng trên một đơn vị gói)
         const giftRules = Array.isArray(st.cms?.giftRules) ? st.cms.giftRules : [];
@@ -3316,7 +3331,7 @@ export default {
           isTest: !!isTestReq,
           subLinkDecision,
           targetLink,
-          renewOf: renewSrc ? renewSrc.id : (b.renewOf ? String(b.renewOf) : "")
+          renewOf: isLegitRenew && renewSrc ? renewSrc.id : ""
         };
         o.expDate = computeExp(o, st.orders, now, giftRules);
         const sb = getSupabase(env, st.isTest);
@@ -4410,6 +4425,7 @@ export default {
             st.orders.unshift(o);
           }
           const prevExp = o.expDate, prevDays = o.days, hadPrevDays = "days" in o;
+          const prevStatus = normStatus(o.status);
           const isManualEdit = b.manualEdit === true;
           for (const k of ["email", "nickname", "zalo", "method", "status", "expDate", "days", "bonusDays", "reason", "info1", "info2", "info3", "totalVnd", "totalCny", "qty"]) {
             if (b[k] === undefined) continue;
@@ -4443,7 +4459,7 @@ export default {
               pkg: pkgStr(pk)
             });
           }
-          if (b.expDate && !lockExp) o.expFinal = true;
+          if (b.expDate && !lockExp && b.expDate !== prevExp) o.expFinal = true;
           const u = b.upg;
           if (u === "verify") {
             o.isUpgrade = true;
@@ -4482,7 +4498,14 @@ export default {
           let kind = null;
           if (normStatus(o.status) === "success") {
             o.status = "success";
-            if (o.expDate) o.expFinal = true;
+            // Khi đơn chuyển từ trạng thái khác sang success: ghi nhận paidAt nếu chưa có
+            if (prevStatus !== "success" && !o.paidAt) {
+              o.paidAt = NOW();
+              // Cho phép fulfillOrder tính lại HSD chính xác theo ngày duyệt thành công (trừ khi Admin đã khóa hạn hoặc sửa tay)
+              if (!lockExp && b.expDate === prevExp) {
+                o.expFinal = false;
+              }
+            }
             // Ưu tiên Sửa tay trước fulfillment: Nếu ô của web này đã bị sửa tay (lockInfo) thì fulfillOrder tự trả về 'already'
             if (!lockAuto) kind = fulfillOrder(st, o, me, log);
           }
