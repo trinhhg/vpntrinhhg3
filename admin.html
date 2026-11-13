@@ -684,9 +684,9 @@
                 <!-- Khối cấu hình Thời gian hiệu lực xác minh Email -->
                 <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-5 space-y-2">
                   <div class="font-bold text-sm text-slate-800"><i class="fas fa-user-shield text-indigo-500 mr-1.5"></i>Thời gian hiệu lực xác minh email</div>
-                  <p class="text-[11px] text-slate-500">Cài đặt thời gian khách được phép Copy Link Sub và lấy QR sau khi xác minh email thành công (tính theo giờ, mặc định: <b>72</b> giờ).</p>
+                  <p class="text-[11px] text-slate-500">Cài đặt thời gian khách được phép Copy Link Sub và lấy QR sau khi xác minh email thành công (tính theo giây, mặc định: <b>259200</b> giây = 72 giờ).</p>
                   <div class="flex items-center gap-2">
-                    <div class="relative flex-1"><input id="emailVerifyTtlHoursInp" type="number" min="1" max="8760" placeholder="72" class="w-full p-2 pr-14 border border-slate-200 rounded-xl outline-none font-bold text-sm text-indigo-700 bg-slate-50 focus:bg-white focus:border-indigo-500"> <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">giờ</span></div>
+                    <div class="relative flex-1"><input id="emailVerifyTtlSecondsInp" type="number" min="1" max="31536000" placeholder="259200" class="w-full p-2 pr-14 border border-slate-200 rounded-xl outline-none font-bold text-sm text-indigo-700 bg-slate-50 focus:bg-white focus:border-indigo-500"> <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">giây</span></div>
                     <button type="button" onclick="saveEmailVerifyTtl()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md shrink-0 transition active:scale-95"> <i class="fas fa-save mr-1"></i>LƯU THỜI GIAN XÁC MINH </button>
                   </div>
                 </div>
