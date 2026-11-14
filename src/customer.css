@@ -9,7 +9,7 @@
 @tailwind utilities;
 
 body,
-input,
+input, 
 button,
 select,
 textarea {
