@@ -2833,9 +2833,9 @@ async function preparePaymentCardSnapshot(expectedKey) {
 
   paymentCardCache.generatingPromise = (async () => {
     try {
-      const card = document.getElementById('checkoutRightCol');
-      if (!card) return null;
-      const qrImg = card.querySelector('#paymentQrImg');
+      const exportArea = document.getElementById('paymentExportArea');
+      if (!exportArea) return null;
+      const qrImg = exportArea.querySelector('#paymentQrImg');
       if (!qrImg || !qrImg.src) return null;
 
       if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
@@ -2869,7 +2869,7 @@ async function preparePaymentCardSnapshot(expectedKey) {
       if (getPaymentCardCacheKey() !== expectedKey) return null;
 
       const isDark = document.documentElement.classList.contains('dark');
-      const dataUrl = await domToPng(card, {
+      const dataUrl = await domToPng(exportArea, {
         scale: 2,
         backgroundColor: isDark ? '#0a0a0a' : '#ffffff',
         filter: (node) => !node.classList?.contains('export-ignore')
@@ -2953,58 +2953,24 @@ function renderPaymentBox() {
   const pkgSummaryHtml = currentPackage ? `<div class="mb-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 flex items-center justify-between text-xs"><div class="font-bold text-slate-700 dark:text-slate-200"><i class="fas fa-box text-indigo-500 mr-1.5"></i>${esc(pName)}${pData ? ' (' + esc(pData) + ')' : ''}</div><div class="font-extrabold text-indigo-600 dark:text-indigo-400 text-sm">${fp}</div></div>` : '';
 
   if (!currentOrderId && !isUpgradeMode) {
+    col.classList.remove('relative');
     col.innerHTML = `<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 dark:text-indigo-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4>${pkgSummaryHtml}<p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${guideHtml}</p></div>`;
     return;
   }
+  col.classList.add('relative');
   const dispId = isUpgradeMode ? (oCache?.id || '') : (currentOrderId || '');
-  const dlBtnHtml = `<button type="button" onclick="downloadPaymentCard()" title="${l.download_qr || 'Tải ảnh thanh toán'}" aria-label="${l.download_qr || 'Tải ảnh thanh toán'}" class="export-ignore w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100/80 hover:bg-slate-200 text-slate-500 hover:text-indigo-600 dark:bg-white/10 dark:hover:bg-white/20 dark:text-slate-300 dark:hover:text-white transition-all duration-200 active:scale-90 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" /></svg></button>`;
-  const decisionBadgeHtml = currentSubDecision ? `<div class="my-2.5 py-2.5 px-3 rounded-xl bg-[#eef2ff] dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 text-center text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1.5"><i class="fas fa-info-circle text-[#6366f1]"></i>Phương án link: <span class="text-[#4f46e5] dark:text-indigo-400 font-extrabold">${currentSubDecision === 'KEEP_EXISTING' ? 'Gia hạn Link cũ' : 'Cấp Link mới'}</span></div>` : '';
-  const paidBtnHtml = `<div class="mt-2.5 w-full"><button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full bg-[#16a34a] hover:bg-[#15803d] text-white font-black py-3.5 md:py-4 rounded-2xl text-sm md:text-base uppercase transition shadow-md flex justify-center items-center gap-2 btn-heartbeat"><i class="fas fa-check-circle mr-1"></i>${l.btn_paid}</button></div>`;
-  const memoHtml = (extra) => `<div class="highlight-copy py-3.5 px-3 md:px-4 rounded-2xl text-center cursor-pointer my-3 shadow-sm" onclick="copyText('${dispId}')"><span class="block text-[11px] md:text-xs font-black mb-2 uppercase tracking-wider">${l.copy_memo}</span><strong class="block bg-white dark:bg-[#18181b] font-mono text-2xl md:text-3xl py-2.5 md:py-3 px-3 rounded-xl shadow-inner border-2 border-yellow-400 dark:border-yellow-500/70 text-[#713f12] dark:text-yellow-300 tracking-wider flex items-center justify-center gap-2">${dispId} <i class="far fa-copy text-xl text-[#713f12]/70 dark:text-yellow-400/80"></i></strong><p class="text-[10px] md:text-[11px] mt-2 italic font-bold opacity-85 tracking-wide">${extra ? l.input_manual : l.click_copy}</p></div>`;
+  const dlBtnHtml = `<button type="button" onclick="downloadPaymentCard()" title="${l.download_qr || 'Tải ảnh thanh toán'}" aria-label="${l.download_qr || 'Tải ảnh thanh toán'}" class="export-ignore absolute top-4 left-4 md:top-5 md:left-5 z-10 w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100/90 hover:bg-slate-200 text-slate-500 hover:text-indigo-600 dark:bg-white/10 dark:hover:bg-white/20 dark:text-slate-300 dark:hover:text-white transition-all duration-200 active:scale-90 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" /></svg></button>`;
+  const decisionBadgeHtml = currentSubDecision ? `<div class="mt-4 py-2.5 px-3 rounded-xl bg-[#eef2ff] dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 text-center text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1.5"><i class="fas fa-info-circle text-[#6366f1]"></i>Phương án link: <span class="text-[#4f46e5] dark:text-indigo-400 font-extrabold">${currentSubDecision === 'KEEP_EXISTING' ? 'Gia hạn Link cũ' : 'Cấp Link mới'}</span></div>` : '';
+  const paidBtnHtml = `<div class="mt-auto pt-4 w-full"><button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center btn-heartbeat"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button></div>`;
+  const memo = (cls, extra) => `<div class="highlight-copy py-4 px-3 rounded-xl text-center cursor-pointer" onclick="copyText('${dispId}')"><span class="block text-[11px] font-black mb-2 uppercase text-[#854d0e] dark:text-indigo-200">${l.copy_memo}</span><strong class="block bg-white dark:bg-black font-mono ${cls} py-3 rounded-xl shadow-inner border-2 border-yellow-400 dark:border-indigo-500 text-[#854d0e] dark:text-indigo-100 flex items-center justify-center gap-2">${dispId} <i class="far fa-copy opacity-50"></i></strong><p class="text-[10px] mt-2 italic font-bold opacity-80 ${extra} text-[#854d0e] dark:text-indigo-300">${extra ? l.input_manual : l.click_copy}</p></div>`;
 
   if (m === 'bank') {
     const vietQrSrc = `/api/vietqr-image?amount=${currentTotalVnd}&addInfo=${encodeURIComponent(dispId)}`;
-    col.innerHTML = `<div class="w-full flex flex-col flex-1 text-center">
-      <div class="grid grid-cols-[1fr_auto_1fr] items-center w-full my-2">
-        <div class="flex items-center justify-start">${dlBtnHtml}</div>
-        <div class="flex justify-center">
-          <div class="bg-[#eef2ff] dark:bg-white/5 p-3.5 md:p-4 rounded-3xl inline-block shadow-sm">
-            <img id="paymentQrImg" src="${vietQrSrc}" class="w-48 h-48 md:w-56 md:h-56 rounded-2xl mx-auto object-contain mix-blend-multiply dark:mix-blend-normal">
-          </div>
-        </div>
-        <div class="pointer-events-none" aria-hidden="true"></div>
-      </div>
-      <div class="text-left text-xs md:text-sm space-y-2.5 my-3 w-full">
-        <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_owner}</span><strong class="font-bold text-slate-900 dark:text-white uppercase tracking-wide">TRINH THI XUAN HUONG</strong></div>
-        <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_name}</span><strong class="font-bold text-slate-900 dark:text-white uppercase tracking-wide">MB BANK</strong></div>
-        <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_num}</span><strong class="text-indigo-600 dark:text-indigo-400 font-bold text-sm md:text-base cursor-pointer hover:underline flex items-center gap-1.5" onclick="copyText('0917678211')"><span>0917678211</span> <i class="far fa-copy text-xs text-indigo-500 dark:text-indigo-400"></i></strong></div>
-        <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.copy_amount}</span><strong class="text-[#ef4444] font-black text-base md:text-lg tracking-tight">${fp}</strong></div>
-      </div>
-      ${memoHtml('')}
-      ${decisionBadgeHtml}
-      ${paidBtnHtml}
-    </div>`;
+    col.innerHTML = `${dlBtnHtml}<div class="text-center w-full flex flex-col flex-1 justify-between h-full"><div><div id="paymentExportArea"><div class="bg-indigo-50 dark:bg-white p-2 rounded-xl inline-block mb-4 border border-transparent dark:border-indigo-500 shadow-sm dark:shadow-[0_0_15px_rgba(99,102,241,0.5)]"><img id="paymentQrImg" src="${vietQrSrc}" class="w-40 h-40 md:w-56 md:h-56 rounded-xl mx-auto object-contain mix-blend-multiply dark:mix-blend-normal"></div><div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_name}</span><strong class="dark:text-white">MB BANK</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_num}</span><strong class="text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.6)] cursor-pointer" onclick="copyText('0917678211')">0917678211 <i class="far fa-copy ml-1"></i></strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div></div>${memo('text-2xl md:text-3xl', '')}</div>${decisionBadgeHtml}</div>${paidBtnHtml}</div>`;
   } else {
     const ali = m === 'alipay';
     const staticQrSrc = ali ? '/assets/qr/alipay.jpg' : '/assets/qr/weixin.jpg';
-    col.innerHTML = `<div class="w-full flex flex-col flex-1 text-center">
-      <div class="grid grid-cols-[1fr_auto_1fr] items-center w-full my-2">
-        <div class="flex items-center justify-start">${dlBtnHtml}</div>
-        <div class="flex justify-center">
-          <div class="bg-slate-50 dark:bg-white/5 p-2 rounded-2xl inline-block border border-slate-100 dark:border-white/10 shadow-sm">
-            <img id="paymentQrImg" src="${staticQrSrc}" class="w-48 md:w-52 max-w-full h-auto mx-auto rounded-xl object-contain">
-          </div>
-        </div>
-        <div class="pointer-events-none" aria-hidden="true"></div>
-      </div>
-      <div class="text-left text-xs md:text-sm space-y-2.5 my-3 w-full">
-        <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_owner}</span><strong class="font-bold text-slate-900 dark:text-white uppercase tracking-wide">TRINH THI XUAN HUONG</strong></div>
-        <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.copy_amount}</span><strong class="text-[#ef4444] font-black text-base md:text-lg tracking-tight">${fp}</strong></div>
-      </div>
-      ${memoHtml('uppercase')}
-      ${decisionBadgeHtml}
-      ${paidBtnHtml}
-    </div>`;
+    col.innerHTML = `${dlBtnHtml}<div class="text-center w-full flex flex-col flex-1 justify-between h-full"><div><div id="paymentExportArea"><div class="bg-slate-50 dark:bg-white p-2 rounded-xl inline-block mb-4 border border-slate-100 dark:border-transparent shadow-sm"><img id="paymentQrImg" src="${staticQrSrc}" class="w-48 max-w-full h-auto mx-auto rounded-lg object-contain mix-blend-multiply dark:mix-blend-normal"></div><div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div></div>${memo('text-2xl', 'uppercase')}</div>${decisionBadgeHtml}</div>${paidBtnHtml}</div>`;
   }
 
   invalidatePaymentCardCache();
@@ -3017,13 +2983,13 @@ function renderPaymentBox() {
 }
 
 async function downloadPaymentCard() {
-  const card = document.getElementById('checkoutRightCol');
-  if (!card) {
+  const exportArea = document.getElementById('paymentExportArea');
+  if (!exportArea) {
     showToast('Chưa có thẻ thanh toán để tải ảnh!', 'error');
     return;
   }
   const dispId = isUpgradeMode ? (oCache?.id || '') : (currentOrderId || '');
-  const qrImg = card.querySelector('#paymentQrImg');
+  const qrImg = exportArea.querySelector('#paymentQrImg');
   if (!qrImg || !qrImg.src) {
     showToast('Chưa có mã QR để tải ảnh!', 'error');
     return;
