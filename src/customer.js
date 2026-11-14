@@ -2834,47 +2834,54 @@ function renderPaymentBox() {
     return;
   }
   const dispId = isUpgradeMode ? oCache.id : currentOrderId;
-  const decisionBadgeHtml = currentSubDecision ? `<div class="my-2 py-2 px-3 rounded-xl bg-indigo-50 dark:bg-white/5 border border-indigo-100 dark:border-white/10 text-center text-xs font-bold text-slate-600 dark:text-slate-300 inline-block w-full"><i class="fas fa-info-circle mr-1.5 text-indigo-500"></i>Phương án link: <span class="text-indigo-600 dark:text-indigo-400 font-extrabold">${currentSubDecision === 'KEEP_EXISTING' ? 'Gia hạn Link cũ' : 'Cấp Link mới'}</span></div>` : '';
-  const dlBtnOverlay = `<button type="button" onclick="downloadPaymentCard()" title="${l.download_qr || 'Tải ảnh thanh toán'}" class="export-ignore absolute top-2 left-2 z-10 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-indigo-700 dark:text-indigo-200 bg-indigo-100/90 dark:bg-indigo-950/80 hover:bg-indigo-200 dark:hover:bg-indigo-900 border border-indigo-200/80 dark:border-indigo-400/30 shadow-sm backdrop-blur transition active:scale-90"><i class="fas fa-arrow-down-to-line text-indigo-600 dark:text-indigo-300"></i></button>`;
-  const paidBtnHtml = `<div class="mt-auto pt-3 w-full"><button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center btn-heartbeat"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button></div>`;
-  const memo = (cls, extra) => `<div class="highlight-copy py-3 px-3 rounded-xl text-center cursor-pointer mb-2" onclick="copyText('${dispId}')"><span class="block text-[11px] font-black mb-1.5 uppercase text-[#854d0e] dark:text-indigo-200">${l.copy_memo}</span><strong class="block bg-white dark:bg-black font-mono ${cls} py-2.5 rounded-xl shadow-inner border-2 border-yellow-400 dark:border-indigo-500 text-[#854d0e] dark:text-indigo-100 flex items-center justify-center gap-2">${dispId} <i class="far fa-copy opacity-50"></i></strong><p class="text-[10px] mt-1.5 italic font-bold opacity-80 ${extra} text-[#854d0e] dark:text-indigo-300">${extra?l.input_manual:l.click_copy}</p></div>`;
+  const dlBtnHtml = `<button type="button" onclick="downloadPaymentCard()" title="${l.download_qr || 'Tải ảnh thanh toán'}" aria-label="${l.download_qr || 'Tải ảnh thanh toán'}" class="export-ignore payment-dl-btn absolute top-3.5 left-3.5 z-20 w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-700 shadow-sm dark:bg-indigo-100 dark:hover:bg-white dark:text-indigo-950 dark:border-indigo-300 transition active:scale-90"><i class="fas fa-arrow-down-to-line"></i></button>`;
+  const paidBtnHtml = `<div class="mt-4 pt-3 border-t border-slate-100 dark:border-white/10 w-full"><button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center btn-heartbeat"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button></div>`;
+  const subDecisionRowHtml = currentSubDecision ? `<div class="payment-flat-row flex justify-between items-center py-2 text-xs border-b border-slate-100 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400 font-medium">Phương án link:</span><span class="font-extrabold text-indigo-600 dark:text-indigo-400 flex items-center gap-1"><i class="fas fa-circle-check text-xs"></i>${currentSubDecision === 'KEEP_EXISTING' ? 'Gia hạn Link cũ' : 'Cấp Link mới'}</span></div>` : '';
+  const memoHtml = (extra) => `<div class="my-3 p-3 rounded-xl border border-dashed border-indigo-200 dark:border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-950/20 text-center cursor-pointer transition hover:bg-indigo-50/80 dark:hover:bg-indigo-950/40" onclick="copyText('${dispId}')"><div class="flex items-center justify-between text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-300 mb-1"><span>${l.copy_memo}</span><span class="text-[10px] font-normal lowercase opacity-80">${extra ? l.input_manual : l.click_copy}</span></div><div class="font-mono font-black text-xl md:text-2xl text-indigo-900 dark:text-white tracking-wider flex items-center justify-center gap-2"><span>${dispId}</span><i class="far fa-copy text-xs opacity-60"></i></div></div>`;
 
   if (m === 'bank') {
     const vietQrSrc = `/api/vietqr-image?amount=${currentTotalVnd}&addInfo=${encodeURIComponent(dispId)}`;
-    col.innerHTML = `<div class="text-center w-full flex flex-col flex-1 justify-between h-full">
-      <div id="paymentReceiptCard" class="bg-white dark:bg-[#0a0a0a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-white/10 text-center w-full shadow-sm mb-2">
-        <div class="relative inline-block mb-3 bg-indigo-50 dark:bg-white p-2.5 rounded-2xl border border-transparent dark:border-indigo-500 shadow-sm dark:shadow-[0_0_15px_rgba(99,102,241,0.5)]">
-          ${dlBtnOverlay}
-          <img id="paymentQrImg" src="${vietQrSrc}" class="w-44 h-44 md:w-56 md:h-56 rounded-xl mx-auto object-contain mix-blend-multiply dark:mix-blend-normal">
+    col.innerHTML = `<div class="w-full flex flex-col flex-1 h-full">
+      <div id="paymentReceiptCard" class="relative bg-white dark:bg-[#0a0a0a] p-4 md:p-6 rounded-3xl border border-slate-200 dark:border-white/10 w-full shadow-sm flex flex-col justify-between">
+        ${dlBtnHtml}
+        <div class="text-center pt-1 mb-2">
+          <h4 class="font-extrabold text-sm md:text-base text-slate-800 dark:text-white uppercase tracking-wider flex items-center justify-center gap-1.5"><i class="fas fa-qrcode text-indigo-600 dark:text-indigo-400"></i>Quét mã VietQR</h4>
         </div>
-        <div class="text-left text-xs space-y-2 mb-3 w-full">
-          <div class="flex justify-between bg-slate-50 dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div>
-          <div class="flex justify-between bg-slate-50 dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_name}</span><strong class="dark:text-white">MB BANK</strong></div>
-          <div class="flex justify-between bg-slate-50 dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_num}</span><strong class="text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.6)] cursor-pointer" onclick="copyText('0917678211')">0917678211 <i class="far fa-copy ml-1"></i></strong></div>
-          <div class="flex justify-between bg-slate-50 dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div>
+        <div class="my-2 flex justify-center">
+          <img id="paymentQrImg" src="${vietQrSrc}" class="w-48 h-48 md:w-56 md:h-56 rounded-xl object-contain mix-blend-multiply dark:mix-blend-normal">
         </div>
-        ${memo('text-2xl md:text-3xl','')}
-        ${decisionBadgeHtml}
+        <div class="text-xs space-y-0 text-left my-2 divide-y divide-slate-100 dark:divide-white/10">
+          <div class="payment-flat-row flex justify-between items-center py-2"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_owner}</span><strong class="font-bold text-slate-800 dark:text-white">TRINH THI XUAN HUONG</strong></div>
+          <div class="payment-flat-row flex justify-between items-center py-2"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_name}</span><strong class="font-bold text-slate-800 dark:text-white">MB BANK</strong></div>
+          <div class="payment-flat-row flex justify-between items-center py-2"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_num}</span><strong class="text-indigo-600 dark:text-indigo-300 font-mono font-bold cursor-pointer hover:underline flex items-center gap-1" onclick="copyText('0917678211')">0917678211 <i class="far fa-copy text-[10px]"></i></strong></div>
+          <div class="payment-flat-row flex justify-between items-center py-2"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div>
+          ${subDecisionRowHtml}
+        </div>
+        ${memoHtml('')}
+        ${paidBtnHtml}
       </div>
-      ${paidBtnHtml}
     </div>`;
   } else {
     const ali = m === 'alipay';
     const staticQrSrc = ali ? '/assets/qr/alipay.jpg' : '/assets/qr/weixin.jpg';
-    col.innerHTML = `<div class="text-center w-full flex flex-col flex-1 justify-between h-full">
-      <div id="paymentReceiptCard" class="bg-white dark:bg-[#0a0a0a] p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-white/10 text-center w-full shadow-sm mb-2">
-        <div class="relative inline-block mb-3 bg-slate-50 dark:bg-white p-2.5 rounded-2xl border border-slate-100 dark:border-transparent shadow-sm">
-          ${dlBtnOverlay}
-          <img id="paymentQrImg" src="${staticQrSrc}" class="w-48 max-w-full h-auto mx-auto rounded-lg object-contain mix-blend-multiply dark:mix-blend-normal">
+    const methodTitle = ali ? 'Thanh toán Alipay' : 'Thanh toán WeChat Pay';
+    col.innerHTML = `<div class="w-full flex flex-col flex-1 h-full">
+      <div id="paymentReceiptCard" class="relative bg-white dark:bg-[#0a0a0a] p-4 md:p-6 rounded-3xl border border-slate-200 dark:border-white/10 w-full shadow-sm flex flex-col justify-between">
+        ${dlBtnHtml}
+        <div class="text-center pt-1 mb-2">
+          <h4 class="font-extrabold text-sm md:text-base text-slate-800 dark:text-white uppercase tracking-wider flex items-center justify-center gap-1.5"><i class="fas fa-qrcode text-indigo-600 dark:text-indigo-400"></i>${methodTitle}</h4>
         </div>
-        <div class="text-left text-xs space-y-2 mb-3 w-full">
-          <div class="flex justify-between bg-slate-50 dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div>
-          <div class="flex justify-between bg-slate-50 dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div>
+        <div class="my-2 flex justify-center">
+          <img id="paymentQrImg" src="${staticQrSrc}" class="w-48 max-w-full h-auto mx-auto rounded-xl object-contain mix-blend-multiply dark:mix-blend-normal">
         </div>
-        ${memo('text-2xl','uppercase')}
-        ${decisionBadgeHtml}
+        <div class="text-xs space-y-0 text-left my-2 divide-y divide-slate-100 dark:divide-white/10">
+          <div class="payment-flat-row flex justify-between items-center py-2"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_owner}</span><strong class="font-bold text-slate-800 dark:text-white">TRINH THI XUAN HUONG</strong></div>
+          <div class="payment-flat-row flex justify-between items-center py-2"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div>
+          ${subDecisionRowHtml}
+        </div>
+        ${memoHtml('uppercase')}
+        ${paidBtnHtml}
       </div>
-      ${paidBtnHtml}
     </div>`;
   }
 }
@@ -2956,25 +2963,37 @@ function updateSubDecisionUI(val) {
   }
 }
 
-function lockSubDecisionUI(selectedVal, reasonNotice = '') {
+function lockSubDecisionUI(selectedVal, reasonNotice = '', lockMode = 'all') {
   currentSubDecision = selectedVal;
-  document.querySelectorAll('input[name="subLinkDecisionRadio"]').forEach(r => {
-    r.checked = (r.value === selectedVal);
-    r.disabled = true;
-  });
+  const rKeep = document.querySelector('input[name="subLinkDecisionRadio"][value="KEEP_EXISTING"]');
+  const rNew = document.querySelector('input[name="subLinkDecisionRadio"][value="CREATE_NEW"]');
+  if (rKeep) rKeep.checked = (selectedVal === 'KEEP_EXISTING');
+  if (rNew) rNew.checked = (selectedVal === 'CREATE_NEW');
+
+  const lockKeep = (lockMode === 'all' || lockMode === 'keep_only');
+  const lockNew = (lockMode === 'all' || lockMode === 'new_only');
+
+  if (rKeep) rKeep.disabled = lockKeep;
+  if (rNew) rNew.disabled = lockNew;
+
   updateSubDecisionUI(selectedVal);
+
   const lblKeep = $('lblSubKeep');
   const lblNew = $('lblSubNew');
   if (lblKeep) {
-    lblKeep.classList.add('pointer-events-none', 'opacity-70');
-    if (!lblKeep.querySelector('.sub-lock-icon')) {
+    lblKeep.classList.toggle('pointer-events-none', lockKeep);
+    lblKeep.classList.toggle('opacity-60', lockKeep);
+    lblKeep.querySelectorAll('.sub-lock-icon').forEach(el => el.remove());
+    if (lockKeep) {
       const sp = lblKeep.querySelector('span');
       if (sp) sp.insertAdjacentHTML('beforeend', ' <i class="fas fa-lock text-slate-400 text-xs ml-1 sub-lock-icon"></i>');
     }
   }
   if (lblNew) {
-    lblNew.classList.add('pointer-events-none', 'opacity-70');
-    if (!lblNew.querySelector('.sub-lock-icon')) {
+    lblNew.classList.toggle('pointer-events-none', lockNew);
+    lblNew.classList.toggle('opacity-60', lockNew);
+    lblNew.querySelectorAll('.sub-lock-icon').forEach(el => el.remove());
+    if (lockNew) {
       const sp = lblNew.querySelector('span');
       if (sp) sp.insertAdjacentHTML('beforeend', ' <i class="fas fa-lock text-slate-400 text-xs ml-1 sub-lock-icon"></i>');
     }
@@ -2983,28 +3002,36 @@ function lockSubDecisionUI(selectedVal, reasonNotice = '') {
   if (!noticeEl) {
     noticeEl = document.createElement('div');
     noticeEl.id = 'subDecisionLockNotice';
-    noticeEl.className = 'text-[11px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/30 p-2 rounded-lg border border-indigo-200 dark:border-indigo-900/40 mt-2 flex items-center gap-1.5';
+    noticeEl.className = 'text-[11px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/30 p-2 rounded-lg border border-indigo-200 dark:border-indigo-900/40 mt-2 flex items-center justify-between gap-1.5';
     $('subLinkLifecycleWrap')?.appendChild(noticeEl);
   }
-  noticeEl.innerHTML = `<i class="fas fa-info-circle text-indigo-500"></i><span>${esc(reasonNotice)}</span>`;
+  const retryBtnHtml = emailLookupState === 'error' ? `<button type="button" onclick="retryEmailCheck()" class="shrink-0 underline text-xs font-bold text-rose-600 dark:text-rose-400 hover:opacity-80">Thử lại</button>` : '';
+  const iconCls = emailLookupState === 'error' ? 'fa-circle-exclamation text-rose-500' : 'fa-info-circle text-indigo-500';
+  noticeEl.innerHTML = `<div class="flex items-center gap-1.5 flex-1 min-w-0"><i class="fas ${iconCls} shrink-0"></i><span class="break-words">${esc(reasonNotice)}</span></div>${retryBtnHtml}`;
   noticeEl.classList.toggle('hidden', !reasonNotice);
 }
 
-function unlockSubDecisionUI() {
-  currentSubDecision = '';
-  document.querySelectorAll('input[name="subLinkDecisionRadio"]').forEach(r => {
-    r.checked = false;
-    r.disabled = false;
-  });
-  updateSubDecisionUI('');
+function unlockSubDecisionUI(defaultVal = '') {
+  currentSubDecision = defaultVal;
+  const rKeep = document.querySelector('input[name="subLinkDecisionRadio"][value="KEEP_EXISTING"]');
+  const rNew = document.querySelector('input[name="subLinkDecisionRadio"][value="CREATE_NEW"]');
+  if (rKeep) {
+    rKeep.disabled = false;
+    rKeep.checked = (defaultVal === 'KEEP_EXISTING');
+  }
+  if (rNew) {
+    rNew.disabled = false;
+    rNew.checked = (defaultVal === 'CREATE_NEW');
+  }
+  updateSubDecisionUI(defaultVal);
   const lblKeep = $('lblSubKeep');
   const lblNew = $('lblSubNew');
   if (lblKeep) {
-    lblKeep.classList.remove('pointer-events-none', 'opacity-70');
+    lblKeep.classList.remove('pointer-events-none', 'opacity-60', 'opacity-70');
     lblKeep.querySelectorAll('.sub-lock-icon').forEach(el => el.remove());
   }
   if (lblNew) {
-    lblNew.classList.remove('pointer-events-none', 'opacity-70');
+    lblNew.classList.remove('pointer-events-none', 'opacity-60', 'opacity-70');
     lblNew.querySelectorAll('.sub-lock-icon').forEach(el => el.remove());
   }
   const noticeEl = $('subDecisionLockNotice');
@@ -3035,6 +3062,11 @@ function populateTargetLinks(links) {
 }
 
 function onSubDecisionChange(val) {
+  if (val === 'KEEP_EXISTING' && existingCustomerLinks.length === 0) {
+    val = 'CREATE_NEW';
+    const rNew = document.querySelector('input[name="subLinkDecisionRadio"][value="CREATE_NEW"]');
+    if (rNew) rNew.checked = true;
+  }
   currentSubDecision = val;
   updateSubDecisionUI(val);
   const valEl = $('subDecisionValidationAlert');
@@ -3056,7 +3088,7 @@ async function checkEmailExistingLinks(email) {
     detectedRenewOf = '';
     $('subLinkLifecycleWrap')?.classList.remove('hidden');
     $('multiLinkSelectorWrap')?.classList.add('hidden');
-    lockSubDecisionUI('CREATE_NEW', 'Vui lòng nhập email để hệ thống kiểm tra lịch sử link sub.');
+    lockSubDecisionUI('CREATE_NEW', 'Vui lòng nhập email để hệ thống kiểm tra lịch sử link sub.', 'all');
     renderPaymentBox();
     return;
   }
@@ -3064,7 +3096,7 @@ async function checkEmailExistingLinks(email) {
   const seq = ++emailLookupSeq;
   emailLookupState = 'checking';
   $('subLinkLifecycleWrap')?.classList.remove('hidden');
-  lockSubDecisionUI('CREATE_NEW', 'Đang kiểm tra lịch sử đơn hàng và link sub của email...');
+  lockSubDecisionUI('CREATE_NEW', 'Đang kiểm tra lịch sử đơn hàng và link sub của email...', 'all');
   renderPaymentBox();
   try {
     const res = await wpost('/api/public/lookup', { q: targetEmail });
@@ -3079,19 +3111,18 @@ async function checkEmailExistingLinks(email) {
       const totalCount = Number(res.data.totalOrdersCount !== undefined ? res.data.totalOrdersCount : (res.data.found ? 1 : 0));
 
       if (res.data.found === false || totalCount === 0 || !res.data.order) {
-        // Tình huống 1: Email chưa từng tồn tại trong hệ thống -> Hiện cả 2 lựa chọn nhưng KHÓA cả 2, tự chọn CREATE_NEW
+        // Trường hợp D: Email mới chưa từng có đơn hàng -> Hiện cả 2, khóa riêng KEEP_EXISTING, CREATE_NEW mở
         existingCustomerLinks = [];
         detectedRenewOf = '';
         emailLookupState = 'none';
         $('subLinkLifecycleWrap')?.classList.remove('hidden');
         $('multiLinkSelectorWrap')?.classList.add('hidden');
-        lockSubDecisionUI('CREATE_NEW', 'Email mới chưa từng có đơn hàng trên hệ thống. Tự động chọn Cấp link mới.');
+        lockSubDecisionUI('CREATE_NEW', 'Email mới chưa từng có đơn hàng trên hệ thống. Tự động chọn Cấp link mới.', 'keep_only');
         renderPaymentBox();
         return;
       }
-      const ord = res.data.order;
 
-      // Chỉ nạp tham chiếu ORDER_REF từ existingLinks của Worker, TUYỆT ĐỐI không nạp chuỗi đại diện ord[currentSchemaField]
+      // Chỉ nạp tham chiếu ORDER_REF từ existingLinks của Worker theo đúng schemaField của website hiện tại
       const links = [];
       if (res.data.existingLinks && Array.isArray(res.data.existingLinks)) {
         res.data.existingLinks.forEach((el, idx) => {
@@ -3106,58 +3137,44 @@ async function checkEmailExistingLinks(email) {
       }
 
       if (activeCount >= 2) {
-        // Email có nhiều đơn còn hoạt động -> Tự động CREATE_NEW, khóa lựa chọn
+        // Trường hợp C: Email có từ 2 đơn hoạt động -> Tự động CREATE_NEW, khóa cả 2 lựa chọn theo chính sách cấp link độc lập
         existingCustomerLinks = links;
         detectedRenewOf = '';
         currentSubDecision = 'CREATE_NEW';
         emailLookupState = 'found';
         $('subLinkLifecycleWrap')?.classList.remove('hidden');
         $('multiLinkSelectorWrap')?.classList.add('hidden');
-        lockSubDecisionUI('CREATE_NEW', 'Email có nhiều gói cước đang hoạt động cùng lúc. Hệ thống tự động cấp link mới độc lập.');
+        lockSubDecisionUI('CREATE_NEW', 'Email có nhiều gói cước đang hoạt động cùng lúc. Hệ thống tự động cấp link mới độc lập.', 'all');
         renderPaymentBox();
         return;
       } else if (activeCount === 1) {
         existingCustomerLinks = links;
         detectedRenewOf = '';
         emailLookupState = 'found';
-        const searchParamWeb = (typeof location !== 'undefined') ? (new URLSearchParams(location.search).get('web') || new URLSearchParams(location.search).get('schema')) : null;
-        const forcedField = searchParamWeb ? (searchParamWeb.startsWith('info') ? searchParamWeb : ('info' + searchParamWeb)) : null;
-        const sField = res.data.schemaField || (ord && ord.schemaField) || forcedField || (location.hostname.includes('vpntrinhhg2') ? 'info2' : location.hostname.includes('vpntrinhhg3') ? 'info3' : 'info1');
-        const isSubWebsite = (sField === 'info2' || sField === 'info3');
+        $('subLinkLifecycleWrap')?.classList.remove('hidden');
 
-        if (isSubWebsite) {
-          // Quy tắc Website phụ: KHÔNG hiển thị lựa chọn
-          if (links.length > 0) {
-            currentSubDecision = 'KEEP_EXISTING';
-            lockSubDecisionUI('KEEP_EXISTING', 'Hệ thống tự động liên kết với Link Sub hiện tại của website này.');
-          } else {
-            currentSubDecision = 'CREATE_NEW';
-            lockSubDecisionUI('CREATE_NEW', 'Website này chưa có Link Sub. Hệ thống tự động cấp link mới.');
-          }
-          $('subLinkLifecycleWrap')?.classList.add('hidden');
+        if (links.length >= 1) {
+          // Trường hợp A: Có 1 đơn đang hoạt động VÀ website hiện tại có Link Sub -> Mở khóa cả 2 lựa chọn, mặc định KEEP_EXISTING
+          unlockSubDecisionUI('KEEP_EXISTING');
+          populateTargetLinks(links);
+          renderPaymentBox();
+          return;
+        } else {
+          // Trường hợp B: Có 1 đơn đang hoạt động nhưng website hiện tại CHƯA có Link Sub -> Mặc định CREATE_NEW, khóa riêng KEEP_EXISTING
+          $('multiLinkSelectorWrap')?.classList.add('hidden');
+          lockSubDecisionUI('CREATE_NEW', 'Website hiện tại chưa có Link Sub cũ để giữ. Tự động chọn Cấp link mới.', 'keep_only');
           renderPaymentBox();
           return;
         }
-
-        // Quy tắc Website mẹ (info1): Mở khóa cho phép khách tự chọn giữa Giữ link cũ hoặc Cấp link mới
-        $('subLinkLifecycleWrap')?.classList.remove('hidden');
-        unlockSubDecisionUI();
-        currentSubDecision = 'KEEP_EXISTING';
-        updateSubDecisionUI('KEEP_EXISTING');
-        const rKeep = document.querySelector('input[name="subLinkDecisionRadio"][value="KEEP_EXISTING"]');
-        if (rKeep) rKeep.checked = true;
-        populateTargetLinks(links);
-        renderPaymentBox();
-        return;
       } else {
-        // Không có đơn còn hạn -> Tự động CREATE_NEW, khóa lựa chọn
+        // Trường hợp D: Email có đơn cũ nhưng tất cả đã hết hạn -> Mặc định CREATE_NEW, khóa riêng KEEP_EXISTING
         existingCustomerLinks = links;
         detectedRenewOf = '';
         currentSubDecision = 'CREATE_NEW';
         emailLookupState = 'found';
         $('subLinkLifecycleWrap')?.classList.remove('hidden');
         $('multiLinkSelectorWrap')?.classList.add('hidden');
-        lockSubDecisionUI('CREATE_NEW', 'Email chưa có gói cước còn hạn. Hệ thống tự động cấp link mới.');
+        lockSubDecisionUI('CREATE_NEW', 'Email chưa có gói cước còn hạn. Không có link cũ để giữ.', 'keep_only');
         renderPaymentBox();
         return;
       }
@@ -3170,18 +3187,18 @@ async function checkEmailExistingLinks(email) {
       emailLookupState = 'none';
       $('subLinkLifecycleWrap')?.classList.remove('hidden');
       $('multiLinkSelectorWrap')?.classList.add('hidden');
-      lockSubDecisionUI('CREATE_NEW', 'Email mới chưa từng có đơn hàng trên hệ thống. Tự động chọn Cấp link mới.');
+      lockSubDecisionUI('CREATE_NEW', 'Email mới chưa từng có đơn hàng trên hệ thống. Tự động chọn Cấp link mới.', 'keep_only');
       renderPaymentBox();
       return;
     }
-    // Lỗi mạng hoặc server không phản hồi hợp lệ (status 500, 503, status 0, 404 HTML rác)
-    // TUYỆT ĐỐI không coi là email mới; giữ 2 lựa chọn HIỆN VÀ KHÓA, yêu cầu thử lại
+    // Trường hợp F: Lỗi mạng hoặc server không phản hồi hợp lệ (500, 503, status 0, v.v.)
+    // Giữ nguyên 2 lựa chọn HIỆN VÀ KHÓA CẢ HAI, không coi là email mới, yêu cầu thử lại
     existingCustomerLinks = [];
     detectedRenewOf = '';
     emailLookupState = 'error';
     $('subLinkLifecycleWrap')?.classList.remove('hidden');
     $('multiLinkSelectorWrap')?.classList.add('hidden');
-    lockSubDecisionUI('', 'Không thể xác minh lịch sử đơn hàng và Link Sub của email này. Hai lựa chọn đang khóa để tránh cấp nhầm link.');
+    lockSubDecisionUI('', 'Không thể xác minh lịch sử đơn hàng và Link Sub của email này. Hai lựa chọn đang khóa để tránh cấp nhầm link.', 'all');
     renderPaymentBox();
   } catch (e) {
     existingCustomerLinks = [];
@@ -3189,7 +3206,7 @@ async function checkEmailExistingLinks(email) {
     emailLookupState = 'error';
     $('subLinkLifecycleWrap')?.classList.remove('hidden');
     $('multiLinkSelectorWrap')?.classList.add('hidden');
-    lockSubDecisionUI('', 'Không thể xác minh lịch sử đơn hàng và Link Sub của email này. Hai lựa chọn đang khóa để tránh cấp nhầm link.');
+    lockSubDecisionUI('', 'Không thể xác minh lịch sử đơn hàng và Link Sub của email này. Hai lựa chọn đang khóa để tránh cấp nhầm link.', 'all');
     renderPaymentBox();
   }
 }
@@ -3236,6 +3253,10 @@ function submitOrder(e) {
     currentSubDecision = checkedRadio.value;
     const valEl = $('subDecisionValidationAlert');
     if (valEl) valEl.classList.add('hidden');
+    if (currentSubDecision === 'KEEP_EXISTING' && existingCustomerLinks.length === 0) {
+      showToast(lang === 'vi' ? 'Website hiện tại chưa có Link Sub cũ để giữ. Vui lòng chọn Cấp link mới!' : 'No existing subscription link found. Please choose Create new link!', 'error');
+      return;
+    }
     if (currentSubDecision === 'KEEP_EXISTING' && existingCustomerLinks.length > 1) {
       const targetSel = $('targetLinkSubSelect');
       if (!targetSel || !targetSel.value) {
@@ -3269,6 +3290,11 @@ async function confirmPaid() {
   if (isSubWrapVisible) {
     if (!decision || (decision !== 'KEEP_EXISTING' && decision !== 'CREATE_NEW')) {
       showToast(lang === 'vi' ? 'Vui lòng chọn Giữ link cũ hoặc Cấp link mới trước khi thanh toán!' : 'Please select Keep existing link or Create new link before paying!', 'error');
+      subWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    if (decision === 'KEEP_EXISTING' && existingCustomerLinks.length === 0) {
+      showToast(lang === 'vi' ? 'Website hiện tại chưa có Link Sub cũ để giữ. Vui lòng chọn Cấp link mới!' : 'No existing subscription link found. Please choose Create new link!', 'error');
       subWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
