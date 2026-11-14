@@ -2834,34 +2834,59 @@ function renderPaymentBox() {
     return;
   }
   const dispId = isUpgradeMode ? oCache.id : currentOrderId;
-  const dlBtnHtml = `<button type="button" onclick="downloadPaymentCard()" title="${l.download_qr || 'Tải ảnh thanh toán'}" aria-label="${l.download_qr || 'Tải ảnh thanh toán'}" class="export-ignore payment-dl-btn absolute top-3.5 left-3.5 z-20 w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-700 shadow-sm dark:bg-indigo-100 dark:hover:bg-white dark:text-indigo-950 dark:border-indigo-300 transition active:scale-90"><i class="fas fa-arrow-down-to-line"></i></button>`;
-  const paidBtnHtml = `<div class="mt-4 pt-3 border-t border-slate-100 dark:border-white/10 w-full"><button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center btn-heartbeat"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button></div>`;
-  const subDecisionRowHtml = currentSubDecision ? `<div class="payment-flat-row flex justify-between items-center py-2 text-xs border-b border-slate-100 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400 font-medium">Phương án link:</span><span class="font-extrabold text-indigo-600 dark:text-indigo-400 flex items-center gap-1"><i class="fas fa-circle-check text-xs"></i>${currentSubDecision === 'KEEP_EXISTING' ? 'Gia hạn Link cũ' : 'Cấp Link mới'}</span></div>` : '';
-  const memoHtml = (extra) => `<div class="my-3 p-3 rounded-xl border border-dashed border-indigo-200 dark:border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-950/20 text-center cursor-pointer transition hover:bg-indigo-50/80 dark:hover:bg-indigo-950/40" onclick="copyText('${dispId}')"><div class="flex items-center justify-between text-[11px] font-black uppercase text-indigo-700 dark:text-indigo-300 mb-1"><span>${l.copy_memo}</span><span class="text-[10px] font-normal lowercase opacity-80">${extra ? l.input_manual : l.click_copy}</span></div><div class="font-mono font-black text-xl md:text-2xl text-indigo-900 dark:text-white tracking-wider flex items-center justify-center gap-2"><span>${dispId}</span><i class="far fa-copy text-xs opacity-60"></i></div></div>`;
+  const dlBtnHtml = `<button type="button" onclick="downloadPaymentCard()" title="${l.download_qr || 'Tải ảnh thanh toán'}" aria-label="${l.download_qr || 'Tải ảnh thanh toán'}" class="export-ignore absolute left-0 top-1/2 -translate-y-1/2 w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/10 transition-all duration-200 active:scale-90"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" /></svg></button>`;
+  const decisionBadgeHtml = currentSubDecision ? `<div class="my-3 py-2.5 px-3 rounded-xl bg-[#eef2ff] dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 text-center text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1.5"><i class="fas fa-info-circle text-[#6366f1]"></i>Phương án link: <span class="text-[#4f46e5] dark:text-indigo-400 font-extrabold">${currentSubDecision === 'KEEP_EXISTING' ? 'Gia hạn Link cũ' : 'Cấp Link mới'}</span></div>` : '';
+  const paidBtnHtml = `<div class="mt-3 w-full"><button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full bg-[#16a34a] hover:bg-[#15803d] text-white font-black py-3.5 md:py-4 rounded-2xl text-sm md:text-base uppercase transition shadow-md flex justify-center items-center gap-2 btn-heartbeat"><i class="fas fa-check-circle mr-1"></i>${l.btn_paid}</button></div>`;
+  const memoHtml = (extra) => `<div class="bg-[#fef9c3] dark:bg-[#2e2609] border border-[#fef08a] dark:border-yellow-600/40 rounded-2xl p-4 text-center my-3.5 shadow-sm"><div class="text-[11px] md:text-xs font-black uppercase text-[#854d0e] dark:text-yellow-300 tracking-wider mb-2.5">${l.copy_memo}</div><div class="bg-white dark:bg-black rounded-xl border-2 border-yellow-300/80 dark:border-yellow-500/50 py-3 px-4 shadow-sm flex items-center justify-center gap-2.5 cursor-pointer transition hover:border-yellow-400 active:scale-[0.99]" onclick="copyText('${dispId}')"><span class="font-mono font-black text-2xl md:text-3xl text-slate-900 dark:text-white tracking-wider">${dispId}</span><i class="far fa-copy text-slate-400 text-lg"></i></div><div class="text-[11px] font-bold italic text-[#854d0e] dark:text-yellow-300/90 mt-2.5 tracking-wide">${extra ? l.input_manual : l.click_copy}</div></div>`;
 
   if (m === 'bank') {
     const vietQrSrc = `/api/vietqr-image?amount=${currentTotalVnd}&addInfo=${encodeURIComponent(dispId)}`;
     col.innerHTML = `<div class="w-full flex flex-col flex-1 h-full">
-      <div id="paymentReceiptCard" class="relative bg-white dark:bg-[#0a0a0a] p-4 md:p-6 rounded-3xl border border-slate-200 dark:border-white/10 w-full shadow-sm flex flex-col justify-between">
-        ${dlBtnHtml}
-        <div class="text-center pt-1 mb-2">
-          <h4 class="font-extrabold text-sm md:text-base text-slate-800 dark:text-white uppercase tracking-wider flex items-center justify-center gap-1.5"><i class="fas fa-qrcode text-indigo-600 dark:text-indigo-400"></i>Quét mã VietQR</h4>
+      <div id="paymentReceiptCard" class="relative bg-white dark:bg-[#0a0a0a] p-5 md:p-6 rounded-3xl border border-slate-200 dark:border-white/10 w-full shadow-sm text-center">
+        <div class="relative flex items-center justify-center min-h-[36px] mb-3">
+          ${dlBtnHtml}
+          <div class="font-extrabold text-base tracking-wide flex items-center justify-center gap-1.5"><span class="text-red-600 font-black">VIET</span><span class="text-blue-600 font-black">QR</span> <i class="fas fa-qrcode text-xs text-slate-400"></i></div>
         </div>
         <div class="my-2 flex justify-center">
-          <img id="paymentQrImg" src="${vietQrSrc}" class="w-48 h-48 md:w-56 md:h-56 rounded-xl object-contain mix-blend-multiply dark:mix-blend-normal">
+          <div class="bg-[#eef2ff] dark:bg-white/5 p-3.5 md:p-4 rounded-3xl inline-block shadow-sm">
+            <img id="paymentQrImg" src="${vietQrSrc}" class="w-48 h-48 md:w-56 md:h-56 rounded-2xl mx-auto object-contain mix-blend-multiply dark:mix-blend-normal">
+          </div>
         </div>
-        <div class="text-xs space-y-0 text-left my-2 divide-y divide-slate-100 dark:divide-white/10">
-          <div class="payment-flat-row flex justify-between items-center py-2"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_owner}</span><strong class="font-bold text-slate-800 dark:text-white">TRINH THI XUAN HUONG</strong></div>
-          <div class="payment-flat-row flex justify-between items-center py-2"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_name}</span><strong class="font-bold text-slate-800 dark:text-white">MB BANK</strong></div>
-          <div class="payment-flat-row flex justify-between items-center py-2"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_num}</span><strong class="text-indigo-600 dark:text-indigo-300 font-mono font-bold cursor-pointer hover:underline flex items-center gap-1" onclick="copyText('0917678211')">0917678211 <i class="far fa-copy text-[10px]"></i></strong></div>
-          <div class="payment-flat-row flex justify-between items-center py-2"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div>
-          ${subDecisionRowHtml}
+        <div class="text-left text-xs md:text-sm space-y-2.5 my-3.5 w-full">
+          <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_owner}</span><strong class="font-bold text-slate-900 dark:text-white uppercase tracking-wide">TRINH THI XUAN HUONG</strong></div>
+          <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_name}</span><strong class="font-bold text-slate-900 dark:text-white uppercase tracking-wide">MB BANK</strong></div>
+          <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_num}</span><strong class="text-[#2563eb] dark:text-indigo-400 font-mono font-bold cursor-pointer hover:underline flex items-center gap-1.5" onclick="copyText('0917678211')"><span>0917678211</span> <i class="far fa-copy text-xs opacity-75"></i></strong></div>
+          <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.copy_amount}</span><strong class="text-[#ef4444] font-black text-base md:text-lg tracking-tight">${fp}</strong></div>
         </div>
         ${memoHtml('')}
+        ${decisionBadgeHtml}
         ${paidBtnHtml}
       </div>
     </div>`;
   } else {
+    const ali = m === 'alipay';
+    const staticQrSrc = ali ? '/assets/qr/alipay.jpg' : '/assets/qr/weixin.jpg';
+    const headerTitleHtml = ali ? `<div class="font-extrabold text-base text-[#1677ff] dark:text-[#3b82f6] tracking-wide flex items-center justify-center gap-1.5"><i class="fab fa-alipay text-lg"></i><span>Alipay</span> <i class="fas fa-qrcode text-xs text-blue-400"></i></div>` : `<div class="font-extrabold text-base text-[#07c160] dark:text-[#10b981] tracking-wide flex items-center justify-center gap-1.5"><i class="fab fa-weixin text-lg"></i><span>Weixin</span> <i class="fas fa-qrcode text-xs text-emerald-400"></i></div>`;
+    col.innerHTML = `<div class="w-full flex flex-col flex-1 h-full">
+      <div id="paymentReceiptCard" class="relative bg-white dark:bg-[#0a0a0a] p-5 md:p-6 rounded-3xl border border-slate-200 dark:border-white/10 w-full shadow-sm text-center">
+        <div class="relative flex items-center justify-center min-h-[36px] mb-3">
+          ${dlBtnHtml}
+          ${headerTitleHtml}
+        </div>
+        <div class="my-2 flex justify-center">
+          <img id="paymentQrImg" src="${staticQrSrc}" class="w-52 max-w-full h-auto mx-auto rounded-2xl shadow-sm object-contain">
+        </div>
+        <div class="text-left text-xs md:text-sm space-y-2.5 my-3.5 w-full">
+          <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_owner}</span><strong class="font-bold text-slate-900 dark:text-white uppercase tracking-wide">TRINH THI XUAN HUONG</strong></div>
+          <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.copy_amount}</span><strong class="text-[#ef4444] font-black text-base md:text-lg tracking-tight">${fp}</strong></div>
+        </div>
+        ${memoHtml('uppercase')}
+        ${decisionBadgeHtml}
+        ${paidBtnHtml}
+      </div>
+    </div>`;
+  }
+  else {
     const ali = m === 'alipay';
     const staticQrSrc = ali ? '/assets/qr/alipay.jpg' : '/assets/qr/weixin.jpg';
     const methodTitle = ali ? 'Thanh toán Alipay' : 'Thanh toán WeChat Pay';
