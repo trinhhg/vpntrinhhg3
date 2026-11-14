@@ -2800,6 +2800,129 @@ function closePwaInstallGuideModal(fromPop) {
   if (!fromPop && history.state && history.state.modal === 'pwa_guide') history.back();
 }
 
+// ==================== PAYMENT RECEIPT CARD CACHE ====================
+let paymentCardCache = { key: '', blobUrl: '', generatingPromise: null };
+
+function getPaymentCardCacheKey() {
+  const m = $('payMethod')?.value || '';
+  const dispId = isUpgradeMode ? (oCache?.id || '') : (currentOrderId || '');
+  const amt = m === 'bank' ? currentTotalVnd : currentTotalCny;
+  const isDark = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+  return `${dispId}_${m}_${amt}_${currentSubDecision || ''}_${lang}_${isDark}`;
+}
+
+function invalidatePaymentCardCache() {
+  if (paymentCardCache.blobUrl) {
+    try {
+      URL.revokeObjectURL(paymentCardCache.blobUrl);
+    } catch (_) {}
+    paymentCardCache.blobUrl = '';
+  }
+  paymentCardCache.key = '';
+  paymentCardCache.generatingPromise = null;
+}
+
+async function preparePaymentCardSnapshot(expectedKey) {
+  if (!expectedKey) expectedKey = getPaymentCardCacheKey();
+  if (paymentCardCache.key === expectedKey && paymentCardCache.blobUrl) {
+    return paymentCardCache.blobUrl;
+  }
+  if (paymentCardCache.generatingPromise) {
+    return paymentCardCache.generatingPromise;
+  }
+
+  paymentCardCache.generatingPromise = (async () => {
+    try {
+      const card = document.getElementById('checkoutRightCol');
+      if (!card) return null;
+      const qrImg = card.querySelector('#paymentQrImg');
+      if (!qrImg || !qrImg.src) return null;
+
+      if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
+        try {
+          await document.fonts.ready;
+        } catch (_) {}
+      }
+
+      if (!qrImg.complete) {
+        await new Promise((resolve) => {
+          const onDone = () => {
+            qrImg.removeEventListener('load', onDone);
+            qrImg.removeEventListener('error', onDone);
+            resolve();
+          };
+          qrImg.addEventListener('load', onDone, { once: true });
+          qrImg.addEventListener('error', onDone, { once: true });
+        });
+      }
+
+      if (typeof qrImg.decode === 'function') {
+        try {
+          await qrImg.decode();
+        } catch (_) {}
+      }
+
+      if (!qrImg.naturalWidth || qrImg.naturalWidth <= 0) {
+        throw new Error('Ảnh QR chưa tải xong hoặc không hiển thị');
+      }
+
+      if (getPaymentCardCacheKey() !== expectedKey) return null;
+
+      const isDark = document.documentElement.classList.contains('dark');
+      const dataUrl = await domToPng(card, {
+        scale: 2,
+        backgroundColor: isDark ? '#0a0a0a' : '#ffffff',
+        filter: (node) => !node.classList?.contains('export-ignore')
+      });
+
+      if (!dataUrl || dataUrl.length < 200) {
+        throw new Error('Dữ liệu ảnh xuất ra không hợp lệ');
+      }
+
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const newBlobUrl = URL.createObjectURL(blob);
+
+      if (getPaymentCardCacheKey() !== expectedKey) {
+        URL.revokeObjectURL(newBlobUrl);
+        return null;
+      }
+
+      if (paymentCardCache.blobUrl) {
+        try {
+          URL.revokeObjectURL(paymentCardCache.blobUrl);
+        } catch (_) {}
+      }
+
+      paymentCardCache.blobUrl = newBlobUrl;
+      paymentCardCache.key = expectedKey;
+      return newBlobUrl;
+    } catch (e) {
+      console.warn('Lỗi chuẩn bị ảnh thanh toán nền:', e);
+      return null;
+    } finally {
+      paymentCardCache.generatingPromise = null;
+    }
+  })();
+
+  return paymentCardCache.generatingPromise;
+}
+
+if (typeof MutationObserver !== 'undefined' && typeof document !== 'undefined') {
+  const themeObserver = new MutationObserver(() => {
+    const col = $('checkoutRightCol');
+    if (col && (currentOrderId || isUpgradeMode)) {
+      invalidatePaymentCardCache();
+      setTimeout(() => {
+        if (currentOrderId || isUpgradeMode) {
+          preparePaymentCardSnapshot(getPaymentCardCacheKey());
+        }
+      }, 150);
+    }
+  });
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+}
+
 function renderPaymentBox() {
   const col = $('checkoutRightCol'), m = $('payMethod').value, btn = $('btnConfirm'), l = i18n[lang];
   const fp = m === 'bank' ? `${currentTotalVnd.toLocaleString('en-US')}VND` : m === 'alipay' || m === 'wechat' || m === 'weixin' ? `¥${currentTotalCny}` : `$${currentTotalUsd}`;
@@ -2833,60 +2956,68 @@ function renderPaymentBox() {
     col.innerHTML = `<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 dark:text-indigo-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4>${pkgSummaryHtml}<p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${guideHtml}</p></div>`;
     return;
   }
-  const dispId = isUpgradeMode ? oCache.id : currentOrderId;
-  const dlBtnHtml = `<button type="button" onclick="downloadPaymentCard()" title="${l.download_qr || 'Tải ảnh thanh toán'}" aria-label="${l.download_qr || 'Tải ảnh thanh toán'}" class="export-ignore absolute left-0 bottom-2 w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100/80 hover:bg-slate-200 text-slate-500 hover:text-indigo-600 dark:bg-white/10 dark:hover:bg-white/20 dark:text-slate-300 dark:hover:text-white transition-all duration-200 active:scale-90 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" /></svg></button>`;
-  const decisionBadgeHtml = currentSubDecision ? `<div class="my-3 py-2.5 px-3 rounded-xl bg-[#eef2ff] dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 text-center text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1.5"><i class="fas fa-info-circle text-[#6366f1]"></i>Phương án link: <span class="text-[#4f46e5] dark:text-indigo-400 font-extrabold">${currentSubDecision === 'KEEP_EXISTING' ? 'Gia hạn Link cũ' : 'Cấp Link mới'}</span></div>` : '';
-  const paidBtnHtml = `<div class="mt-3 w-full"><button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full bg-[#16a34a] hover:bg-[#15803d] text-white font-black py-3.5 md:py-4 rounded-2xl text-sm md:text-base uppercase transition shadow-md flex justify-center items-center gap-2 btn-heartbeat"><i class="fas fa-check-circle mr-1"></i>${l.btn_paid}</button></div>`;
-  const memoHtml = (extra) => `<div class="bg-[#fef08a] dark:bg-[#422006]/50 border-2 border-[#facc15] dark:border-yellow-600/50 rounded-2xl p-4 text-center my-3.5 shadow-sm"><div class="text-[11px] md:text-xs font-black uppercase text-[#854d0e] dark:text-yellow-300 tracking-wider mb-2.5">${l.copy_memo}</div><div class="bg-white dark:bg-black rounded-xl border-2 border-[#facc15] dark:border-yellow-500/60 py-3 px-4 shadow-sm flex items-center justify-center gap-2.5 cursor-pointer transition hover:border-yellow-500 active:scale-[0.99]" onclick="copyText('${dispId}')"><span class="font-bold text-2xl md:text-3xl text-[#713f12] dark:text-yellow-100 tracking-wider">${dispId}</span><i class="far fa-copy text-[#854d0e]/60 dark:text-yellow-400/80 text-xl"></i></div><div class="text-[11px] font-bold italic text-[#854d0e] dark:text-yellow-300/90 mt-2.5 tracking-wide">${extra ? l.input_manual : l.click_copy}</div></div>`;
+  const dispId = isUpgradeMode ? (oCache?.id || '') : (currentOrderId || '');
+  const dlBtnHtml = `<button type="button" onclick="downloadPaymentCard()" title="${l.download_qr || 'Tải ảnh thanh toán'}" aria-label="${l.download_qr || 'Tải ảnh thanh toán'}" class="export-ignore w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100/80 hover:bg-slate-200 text-slate-500 hover:text-indigo-600 dark:bg-white/10 dark:hover:bg-white/20 dark:text-slate-300 dark:hover:text-white transition-all duration-200 active:scale-90 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" /></svg></button>`;
+  const decisionBadgeHtml = currentSubDecision ? `<div class="my-2.5 py-2.5 px-3 rounded-xl bg-[#eef2ff] dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 text-center text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1.5"><i class="fas fa-info-circle text-[#6366f1]"></i>Phương án link: <span class="text-[#4f46e5] dark:text-indigo-400 font-extrabold">${currentSubDecision === 'KEEP_EXISTING' ? 'Gia hạn Link cũ' : 'Cấp Link mới'}</span></div>` : '';
+  const paidBtnHtml = `<div class="mt-2.5 w-full"><button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full bg-[#16a34a] hover:bg-[#15803d] text-white font-black py-3.5 md:py-4 rounded-2xl text-sm md:text-base uppercase transition shadow-md flex justify-center items-center gap-2 btn-heartbeat"><i class="fas fa-check-circle mr-1"></i>${l.btn_paid}</button></div>`;
+  const memoHtml = (extra) => `<div class="highlight-copy py-3.5 px-3 md:px-4 rounded-2xl text-center cursor-pointer my-3 shadow-sm" onclick="copyText('${dispId}')"><span class="block text-[11px] md:text-xs font-black mb-2 uppercase tracking-wider">${l.copy_memo}</span><strong class="block bg-white dark:bg-[#18181b] font-mono text-2xl md:text-3xl py-2.5 md:py-3 px-3 rounded-xl shadow-inner border-2 border-yellow-400 dark:border-yellow-500/70 text-[#713f12] dark:text-yellow-300 tracking-wider flex items-center justify-center gap-2">${dispId} <i class="far fa-copy text-xl text-[#713f12]/70 dark:text-yellow-400/80"></i></strong><p class="text-[10px] md:text-[11px] mt-2 italic font-bold opacity-85 tracking-wide">${extra ? l.input_manual : l.click_copy}</p></div>`;
 
   if (m === 'bank') {
     const vietQrSrc = `/api/vietqr-image?amount=${currentTotalVnd}&addInfo=${encodeURIComponent(dispId)}`;
-    col.innerHTML = `<div class="w-full flex flex-col flex-1 h-full">
-      <div id="paymentReceiptCard" class="relative bg-white dark:bg-[#0a0a0a] p-5 md:p-6 rounded-3xl border border-slate-200 dark:border-white/10 w-full shadow-sm text-center">
-        <div class="relative w-full flex justify-center items-end my-2">
-          ${dlBtnHtml}
+    col.innerHTML = `<div class="w-full flex flex-col flex-1 text-center">
+      <div class="grid grid-cols-[1fr_auto_1fr] items-center w-full my-2">
+        <div class="flex items-center justify-start">${dlBtnHtml}</div>
+        <div class="flex justify-center">
           <div class="bg-[#eef2ff] dark:bg-white/5 p-3.5 md:p-4 rounded-3xl inline-block shadow-sm">
             <img id="paymentQrImg" src="${vietQrSrc}" class="w-48 h-48 md:w-56 md:h-56 rounded-2xl mx-auto object-contain mix-blend-multiply dark:mix-blend-normal">
           </div>
         </div>
-        <div class="text-left text-xs md:text-sm space-y-2.5 my-3.5 w-full">
-          <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_owner}</span><strong class="font-bold text-slate-900 dark:text-white uppercase tracking-wide">TRINH THI XUAN HUONG</strong></div>
-          <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_name}</span><strong class="font-bold text-slate-900 dark:text-white uppercase tracking-wide">MB BANK</strong></div>
-          <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_num}</span><strong class="text-[#2563eb] dark:text-blue-400 font-bold text-sm md:text-base cursor-pointer hover:underline flex items-center gap-1.5" onclick="copyText('0917678211')"><span>0917678211</span> <i class="far fa-copy text-xs opacity-80"></i></strong></div>
-          <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.copy_amount}</span><strong class="text-[#ef4444] font-black text-base md:text-lg tracking-tight">${fp}</strong></div>
-        </div>
-        ${memoHtml('')}
-        ${decisionBadgeHtml}
-        ${paidBtnHtml}
+        <div class="pointer-events-none" aria-hidden="true"></div>
       </div>
+      <div class="text-left text-xs md:text-sm space-y-2.5 my-3 w-full">
+        <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_owner}</span><strong class="font-bold text-slate-900 dark:text-white uppercase tracking-wide">TRINH THI XUAN HUONG</strong></div>
+        <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_name}</span><strong class="font-bold text-slate-900 dark:text-white uppercase tracking-wide">MB BANK</strong></div>
+        <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_num}</span><strong class="text-indigo-600 dark:text-indigo-400 font-bold text-sm md:text-base cursor-pointer hover:underline flex items-center gap-1.5" onclick="copyText('0917678211')"><span>0917678211</span> <i class="far fa-copy text-xs text-indigo-500 dark:text-indigo-400"></i></strong></div>
+        <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.copy_amount}</span><strong class="text-[#ef4444] font-black text-base md:text-lg tracking-tight">${fp}</strong></div>
+      </div>
+      ${memoHtml('')}
+      ${decisionBadgeHtml}
+      ${paidBtnHtml}
     </div>`;
   } else {
     const ali = m === 'alipay';
     const staticQrSrc = ali ? '/assets/qr/alipay.jpg' : '/assets/qr/weixin.jpg';
-    const headerTitleHtml = ali ? `<div class="font-extrabold text-base text-[#1677ff] dark:text-[#3b82f6] tracking-wide flex items-center justify-center gap-1.5"><i class="fab fa-alipay text-lg"></i><span>Alipay</span> <i class="fas fa-qrcode text-xs text-blue-400"></i></div>` : `<div class="font-extrabold text-base text-[#07c160] dark:text-[#10b981] tracking-wide flex items-center justify-center gap-1.5"><i class="fab fa-weixin text-lg"></i><span>Weixin</span> <i class="fas fa-qrcode text-xs text-emerald-400"></i></div>`;
-    col.innerHTML = `<div class="w-full flex flex-col flex-1 h-full">
-      <div id="paymentReceiptCard" class="relative bg-white dark:bg-[#0a0a0a] p-5 md:p-6 rounded-3xl border border-slate-200 dark:border-white/10 w-full shadow-sm text-center">
-        <div class="relative flex items-center justify-center min-h-[36px] mb-2">
-          ${headerTitleHtml}
+    col.innerHTML = `<div class="w-full flex flex-col flex-1 text-center">
+      <div class="grid grid-cols-[1fr_auto_1fr] items-center w-full my-2">
+        <div class="flex items-center justify-start">${dlBtnHtml}</div>
+        <div class="flex justify-center">
+          <div class="bg-slate-50 dark:bg-white/5 p-2 rounded-2xl inline-block border border-slate-100 dark:border-white/10 shadow-sm">
+            <img id="paymentQrImg" src="${staticQrSrc}" class="w-48 md:w-52 max-w-full h-auto mx-auto rounded-xl object-contain">
+          </div>
         </div>
-        <div class="relative w-full flex justify-center items-end my-2">
-          ${dlBtnHtml}
-          <img id="paymentQrImg" src="${staticQrSrc}" class="w-52 max-w-full h-auto mx-auto rounded-2xl shadow-sm object-contain">
-        </div>
-        <div class="text-left text-xs md:text-sm space-y-2.5 my-3.5 w-full">
-          <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_owner}</span><strong class="font-bold text-slate-900 dark:text-white uppercase tracking-wide">TRINH THI XUAN HUONG</strong></div>
-          <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.copy_amount}</span><strong class="text-[#ef4444] font-black text-base md:text-lg tracking-tight">${fp}</strong></div>
-        </div>
-        ${memoHtml('uppercase')}
-        ${decisionBadgeHtml}
-        ${paidBtnHtml}
+        <div class="pointer-events-none" aria-hidden="true"></div>
       </div>
+      <div class="text-left text-xs md:text-sm space-y-2.5 my-3 w-full">
+        <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_owner}</span><strong class="font-bold text-slate-900 dark:text-white uppercase tracking-wide">TRINH THI XUAN HUONG</strong></div>
+        <div class="flex justify-between items-center bg-white dark:bg-[#121212] px-4 py-3 rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.copy_amount}</span><strong class="text-[#ef4444] font-black text-base md:text-lg tracking-tight">${fp}</strong></div>
+      </div>
+      ${memoHtml('uppercase')}
+      ${decisionBadgeHtml}
+      ${paidBtnHtml}
     </div>`;
   }
+
+  invalidatePaymentCardCache();
+  const nextKey = getPaymentCardCacheKey();
+  setTimeout(() => {
+    if (getPaymentCardCacheKey() === nextKey) {
+      preparePaymentCardSnapshot(nextKey);
+    }
+  }, 200);
 }
 
 async function downloadPaymentCard() {
-  const card = document.getElementById('paymentReceiptCard');
+  const card = document.getElementById('checkoutRightCol');
   if (!card) {
     showToast('Chưa có thẻ thanh toán để tải ảnh!', 'error');
     return;
@@ -2898,47 +3029,39 @@ async function downloadPaymentCard() {
     return;
   }
 
-  showToast('Đang tạo ảnh thanh toán...', 'info');
+  const currentKey = getPaymentCardCacheKey();
+  const filename = `${dispId || 'Payment'}_VPNTrinhHg.png`;
 
-  try {
-    // 1. Chờ ảnh QR tải và giải mã hoàn tất trong DOM
-    if (!qrImg.complete) {
-      await new Promise((resolve) => {
-        qrImg.onload = resolve;
-        qrImg.onerror = resolve;
-        setTimeout(resolve, 3000);
-      });
-    }
-    if (typeof qrImg.decode === 'function') {
-      try {
-        await qrImg.decode();
-      } catch (e) {
-        throw new Error('Không thể giải mã hình ảnh QR code');
-      }
-    }
-    if (!qrImg.naturalWidth || qrImg.naturalWidth <= 0) {
-      throw new Error('Ảnh QR chưa tải xong hoặc không hiển thị');
-    }
-
-    // 2. Xuất file PNG sắc nét x2 với modern-screenshot (lọc bỏ nút điều khiển và chọn nền theo Theme)
-    const isDark = document.documentElement.classList.contains('dark');
-    const dataUrl = await domToPng(card, {
-      scale: 2,
-      backgroundColor: isDark ? '#0a0a0a' : '#ffffff',
-      filter: (node) => !node.classList?.contains('export-ignore')
-    });
-
-    if (!dataUrl || dataUrl.length < 200) {
-      throw new Error('Dữ liệu ảnh xuất ra không hợp lệ');
-    }
-
+  const triggerDownload = (url) => {
     const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = `VPNTrinhHg_${dispId || 'Payment'}.png`;
+    a.href = url;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     showToast('Đã tải ảnh thanh toán thành công!', 'ok');
+  };
+
+  if (paymentCardCache.key === currentKey && paymentCardCache.blobUrl) {
+    triggerDownload(paymentCardCache.blobUrl);
+    return;
+  }
+
+  showToast('Đang tạo ảnh thanh toán...', 'info');
+
+  try {
+    let url = null;
+    if (paymentCardCache.generatingPromise) {
+      url = await paymentCardCache.generatingPromise;
+    }
+    if (!url || paymentCardCache.key !== currentKey || !paymentCardCache.blobUrl) {
+      url = await preparePaymentCardSnapshot(currentKey);
+    }
+    if (url) {
+      triggerDownload(url);
+    } else {
+      throw new Error('Không thể tạo file ảnh thanh toán');
+    }
   } catch (err) {
     console.error('Lỗi xuất ảnh thanh toán:', err);
     showToast('Không thể xuất ảnh tự động. Vui lòng chụp màn hình hoặc lưu ảnh QR!', 'error');
