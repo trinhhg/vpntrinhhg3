@@ -2885,28 +2885,6 @@ function renderPaymentBox() {
         ${paidBtnHtml}
       </div>
     </div>`;
-  } else {
-    const ali = m === 'alipay';
-    const staticQrSrc = ali ? '/assets/qr/alipay.jpg' : '/assets/qr/weixin.jpg';
-    const methodTitle = ali ? 'Thanh toán Alipay' : 'Thanh toán WeChat Pay';
-    col.innerHTML = `<div class="w-full flex flex-col flex-1 h-full">
-      <div id="paymentReceiptCard" class="relative bg-white dark:bg-[#0a0a0a] p-4 md:p-6 rounded-3xl border border-slate-200 dark:border-white/10 w-full shadow-sm flex flex-col justify-between">
-        ${dlBtnHtml}
-        <div class="text-center pt-1 mb-2">
-          <h4 class="font-extrabold text-sm md:text-base text-slate-800 dark:text-white uppercase tracking-wider flex items-center justify-center gap-1.5"><i class="fas fa-qrcode text-indigo-600 dark:text-indigo-400"></i>${methodTitle}</h4>
-        </div>
-        <div class="my-2 flex justify-center">
-          <img id="paymentQrImg" src="${staticQrSrc}" class="w-48 max-w-full h-auto mx-auto rounded-xl object-contain mix-blend-multiply dark:mix-blend-normal">
-        </div>
-        <div class="text-xs space-y-0 text-left my-2 divide-y divide-slate-100 dark:divide-white/10">
-          <div class="payment-flat-row flex justify-between items-center py-2"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.bank_owner}</span><strong class="font-bold text-slate-800 dark:text-white">TRINH THI XUAN HUONG</strong></div>
-          <div class="payment-flat-row flex justify-between items-center py-2"><span class="text-slate-500 dark:text-slate-400 font-medium">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div>
-          ${subDecisionRowHtml}
-        </div>
-        ${memoHtml('uppercase')}
-        ${paidBtnHtml}
-      </div>
-    </div>`;
   }
 }
 
