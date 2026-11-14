@@ -2885,8 +2885,7 @@ function renderPaymentBox() {
         ${paidBtnHtml}
       </div>
     </div>`;
-  }
-  else {
+  } else {
     const ali = m === 'alipay';
     const staticQrSrc = ali ? '/assets/qr/alipay.jpg' : '/assets/qr/weixin.jpg';
     const methodTitle = ali ? 'Thanh toán Alipay' : 'Thanh toán WeChat Pay';
