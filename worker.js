@@ -1,6 +1,5 @@
+// v7 — 2026-11-21 20:42 (UTC+7) — Vá relinkMap bỏ qua đơn đã có link hợp lệ ở ô info web hiện tại, hỗ trợ backupBeforeAction có điều kiện + khóa KV GLOBAL_FULFILL_LOCK trong /api/admin/relink, chuẩn hóa runTelegramBackup & trả isTest trong /api/admin/heal
 // v6 — 2026-11-21 19:05 (UTC+7) — Sửa lỗi PATCH xóa cột Supabase (cleanPartialOrderPatch + patchOrder), chặn thiếu subLinkDecision ở đơn 2 phương án, tách Web mẹ tự động / 2 Web vệ tinh bù link thủ công độc lập, khóa KV + single-field PATCH ở /api/admin/heal, vá auth /api/admin/test/* & fulfillment_config, bảo vệ link khách #1 khi dọn nguồn, sửa migrate_pkg/migrate_dates & SendPulse quota
-// v5 — 2026-11-08 22:30 (UTC+7) — Nâng cấp Portal DH-only, Bảo mật Link Sub 3 Toggles (Blur/Khóa/Kiểm tra), Xác minh Email TTL, Đồng bộ Remap HSD & Thông báo Đơn hàng Telegram riêng
-// v4 — 2026-11-04 21:00 (UTC+7)
 const getKV = (env) => env && (env.VPN_KV3 || env.VPN_KV || env.KV);
 
 // ====================================================================
@@ -536,13 +535,20 @@ async function sendTelegramMediaGroup(env, filesWithCaption) {
   });
 
   formData.append("media", JSON.stringify(mediaList));
-  const res = await fetch(`https://api.telegram.org/bot${(env.TELEGRAM_BOT_TOKEN || env.TG_BOT_TOKEN)}/sendMediaGroup`, { method: "POST", body: formData });
-  return res.json().catch(() => ({ ok: false }));
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${(env.TELEGRAM_BOT_TOKEN || env.TG_BOT_TOKEN)}/sendMediaGroup`, { method: "POST", body: formData });
+    return await res.json().catch(() => ({ ok: false, error: `HTTP ${res.status} từ Telegram` }));
+  } catch (e) {
+    return {
+      ok: false,
+      error: (e && e.message) || "Không kết nối được Telegram API"
+    };
+  }
 }
 
-async function runTelegramBackup(env, actionReason = "Admin gửi thủ công", detailDiff = "") {
+async function runTelegramBackup(env, actionReason = "Admin gửi thủ công", detailDiff = "", isTestOverride = null) {
   const KV = getKV(env);
-  const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
+  const isTest = isTestOverride !== null ? !!isTestOverride : (KV ? (await KV.get("TEST_MODE_ACTIVE")) === "1" : false);
   const sb = getSupabase(env, isTest);
   let orders = [];
   if (sb) {
@@ -571,12 +577,6 @@ async function runTelegramBackup(env, actionReason = "Admin gửi thủ công", 
     if (lastDate === dayKey) {
       stt = lastStt + 1;
     }
-    await KV.put(stateKey, JSON.stringify({
-      date: dayKey,
-      stt: stt,
-      count: orders.length,
-      lastTs: Date.now()
-    }));
   }
   const sttStr = String(stt).padStart(2, "0");
   const envTag = isTest ? "TEST" : "PROD";
@@ -621,7 +621,23 @@ async function runTelegramBackup(env, actionReason = "Admin gửi thủ công", 
   }]);
 
   const ok = !!(resGroup && resGroup.ok);
-  return { ok, count: orders.length, dateStr, keyTitle };
+  if (ok && KV) {
+    await KV.put(stateKey, JSON.stringify({
+      date: dayKey,
+      stt: stt,
+      count: orders.length,
+      lastTs: Date.now()
+    }));
+  }
+  const errMsg = !ok ? ((resGroup && (resGroup.error || resGroup.description)) || "Telegram Bot trả về lỗi khi gửi backup") : "";
+  return {
+    ok,
+    isTest,
+    count: orders.length,
+    dateStr,
+    keyTitle,
+    ...(errMsg ? { error: errMsg } : {})
+  };
 }
 
 async function runTelegramKvBackup(env) {
@@ -4318,7 +4334,13 @@ export default {
               log("ok", "heal", "Bù link cục bộ", `Xử lý ${ordersToProcess.length} đơn | Cấp bù ${me.field}: ${localCapped}`);
               await flushLog(KV, log);
             }
-            return J({ ok: true, field: me.field, count: ids.length, details });
+            return J({
+              ok: true,
+              isTest: st.isTest,
+              field: me.field,
+              count: ids.length,
+              details
+            });
           } finally {
             await KV.delete("GLOBAL_FULFILL_LOCK");
           }
@@ -4368,10 +4390,10 @@ export default {
           const b = await body();
           const actionReason = b.reason || "Admin gửi thủ công";
           const detailDiff = b.detail || "";
-          const res = await runTelegramBackup(env, actionReason, detailDiff);
+          const res = await runTelegramBackup(env, actionReason, detailDiff, reqIsTest);
           log(res.ok ? "ok" : "warn", "admin", "Bắn Backup Telegram", `${actionReason} · ${res.keyTitle}`);
           await flushLog(KV, log);
-          return J(res);
+          return J(res, res.ok ? 200 : 502);
         }
         if (p === "/api/admin/telegram/backup_kv_now" && m === "POST") {
           const res = await runTelegramKvBackup(env);
@@ -4421,77 +4443,134 @@ export default {
             includeManual: !!b.includeManual
           };
           const picks = new Set(arr(b.picks).map((x) => x.id + "|" + x.field)), apply = b.mode === "apply";
-          if (apply) {
-            const actionReason = b.action === "remap" ? "Áp dụng Map lại link" : "Áp dụng Làm sạch ô Info";
-            await runTelegramBackup(env, `${actionReason} (Cục bộ ${me.field})`);
+          if (!apply) {
+            if (b.action === "remap") {
+              const { items } = await relinkMap(env, url, st, me, opts);
+              return J({
+                ok: true,
+                isTest: st.isTest,
+                field: me.field,
+                items,
+                remoteOk: true
+              });
+            }
+            const { items } = await relinkScan(env, url, st, opts);
+            return J({
+              ok: true,
+              isTest: st.isTest,
+              field: me.field,
+              items,
+              remoteOk: true
+            });
           }
-          if (b.action === "remap") {
-            const { items } = await relinkMap(env, url, st, me, opts);
-            if (!apply) return J({ ok: true, items, remoteOk: true });
+
+          if (!st.sbOk) {
+            return J({
+              ok: false,
+              isTest: st.isTest,
+              error: st.sbError || "Lỗi kết nối Supabase, không thể áp dụng thay đổi"
+            }, 503);
+          }
+          if (!(await acquire(KV))) {
+            return J({
+              ok: false,
+              isTest: st.isTest,
+              error: "Hệ thống đang xử lý thao tác Quét / Map lại, vui lòng đợi vài giây rồi thử lại!"
+            }, 429);
+          }
+          try {
+            if (b.backupBeforeAction === true) {
+              const actionReason = b.action === "remap" ? "Áp dụng Map lại link" : "Áp dụng Làm sạch ô Info";
+              const bk = await runTelegramBackup(env, `${actionReason} (Cục bộ ${me.field})`, "", st.isTest);
+              if (!bk || !bk.ok) {
+                log("error", "admin", "Hủy Quét/Map lại do backup Telegram thất bại", (bk && bk.error) || "Lỗi Telegram");
+                await flushLog(KV, log);
+                return J({
+                  ok: false,
+                  isTest: st.isTest,
+                  backupFailed: true,
+                  error: (bk && bk.error) || "Gửi backup Telegram thất bại! Thao tác Làm sạch / Map lại đã bị chặn để bảo vệ dữ liệu."
+                }, 502);
+              }
+            }
+            if (b.action === "remap") {
+              const { items } = await relinkMap(env, url, st, me, opts);
+              let n = 0;
+              const appliedItems = [];
+              const sb = getSupabase(env, st.isTest);
+              for (const it of items) {
+                if (!picks.has(it.id + "|" + it.field)) continue;
+                const od = st.orders.find((x) => x && normId(x.id) === normId(it.id));
+                if (!od) continue;
+                od[it.field] = it.to;
+                if (od.lockInfo) delete od.lockInfo[it.field];
+                n++;
+                appliedItems.push({ id: od.id, field: it.field, to: it.to });
+                // v1 — 2026-11-06 20:15 (UTC+7) — Khôi phục cả origBackup2 cho Link Combo khi Map lại link
+                const lTarget = st.links.find(l => l && String(l.masked || "").trim() === it.to);
+                if (lTarget) {
+                  lTarget.orderId = od.id;
+                  if (od.expDate) {
+                    lTarget.expDate = isLifetime(od.expDate) ? "Vĩnh viễn" : od.expDate;
+                  }
+                  if (!isExpiredOrder(od, NOW()) && (lTarget.isLocked || lTarget.orig === LOCK_ORIG)) {
+                    lTarget.isLocked = false;
+                    if (lTarget.orig === LOCK_ORIG && lTarget.origBackup) {
+                      lTarget.orig = lTarget.origBackup;
+                      delete lTarget.origBackup;
+                    }
+                    if (lTarget.isCombo && !lTarget.orig2 && lTarget.origBackup2) {
+                      lTarget.orig2 = lTarget.origBackup2;
+                      delete lTarget.origBackup2;
+                    }
+                  }
+                  st.dL = true;
+                }
+                if (sb) await sb.patchOrder(od.id, {
+                  [it.field]: od[it.field],
+                  ...(od.lockInfo ? { lockInfo: od.lockInfo } : {})
+                });
+              }
+              if (st.dL) await persist(KV, st);
+              log("ok", "admin", "Map lại link vào đơn hàng (cục bộ)", `${n} ô`);
+              await flushLog(KV, log);
+              return J({
+                ok: true,
+                isTest: st.isTest,
+                applied: n,
+                field: me.field,
+                items: appliedItems
+              });
+            }
+            const { items } = await relinkScan(env, url, st, opts);
             let n = 0;
             const appliedItems = [];
-            const isTest = reqIsTest;
-            const sb = getSupabase(env, isTest);
+            const sb = getSupabase(env, st.isTest);
             for (const it of items) {
               if (!picks.has(it.id + "|" + it.field)) continue;
               const od = st.orders.find((x) => x && normId(x.id) === normId(it.id));
               if (!od) continue;
-              od[it.field] = it.to;
+              od[it.field] = "";
               if (od.lockInfo) delete od.lockInfo[it.field];
               n++;
-              appliedItems.push({ id: od.id, field: it.field, to: it.to });
-              // v1 — 2026-11-06 20:15 (UTC+7) — Khôi phục cả origBackup2 cho Link Combo khi Map lại link
-              const lTarget = st.links.find(l => l && l.masked === it.to);
-              if (lTarget) {
-                lTarget.orderId = od.id;
-                if (od.expDate) {
-                  lTarget.expDate = isLifetime(od.expDate) ? "Vĩnh viễn" : od.expDate;
-                }
-                if (!isExpiredOrder(od, NOW()) && lTarget.isLocked) {
-                  lTarget.isLocked = false;
-                  if (lTarget.orig === LOCK_ORIG && lTarget.origBackup) {
-                    lTarget.orig = lTarget.origBackup;
-                    delete lTarget.origBackup;
-                  }
-                  if (lTarget.isCombo && !lTarget.orig2 && lTarget.origBackup2) {
-                    lTarget.orig2 = lTarget.origBackup2;
-                    delete lTarget.origBackup2;
-                  }
-                }
-                st.dL = true;
-              }
+              appliedItems.push({ id: od.id, field: it.field, to: "" });
               if (sb) await sb.patchOrder(od.id, {
-                [it.field]: od[it.field],
+                [it.field]: "",
                 ...(od.lockInfo ? { lockInfo: od.lockInfo } : {})
               });
             }
-            if (st.dL) await persist(KV, st);
-            log("ok", "admin", "Map lại link vào đơn hàng (cục bộ)", `${n} ô`);
+            log("ok", "admin", "Làm sạch URL trong ô info của đơn (cục bộ)", `${n} ô`);
             await flushLog(KV, log);
-            return J({ ok: true, applied: n, field: me.field, items: appliedItems });
-          }
-          const { items } = await relinkScan(env, url, st, opts);
-          if (!apply) return J({ ok: true, items, remoteOk: true });
-          let n = 0;
-          const appliedItems = [];
-          const isTest = reqIsTest;
-          const sb = getSupabase(env, isTest);
-          for (const it of items) {
-            if (!picks.has(it.id + "|" + it.field)) continue;
-            const od = st.orders.find((x) => x && normId(x.id) === normId(it.id));
-            if (!od) continue;
-            od[it.field] = "";
-            if (od.lockInfo) delete od.lockInfo[it.field];
-            n++;
-            appliedItems.push({ id: od.id, field: it.field, to: "" });
-            if (sb) await sb.patchOrder(od.id, {
-              [it.field]: "",
-              ...(od.lockInfo ? { lockInfo: od.lockInfo } : {})
+            return J({
+              ok: true,
+              isTest: st.isTest,
+              applied: n,
+              field: me.field,
+              items: appliedItems
             });
+          } finally {
+            await KV.delete("GLOBAL_FULFILL_LOCK");
           }
-          log("ok", "admin", "Làm sạch URL trong ô info của đơn (cục bộ)", `${n} ô`);
-          await flushLog(KV, log);
-          return J({ ok: true, applied: n, field: me.field, items: appliedItems });
         }
 
         // Giao dịch D1 (worker giữ secret, trình duyệt không cần biết)
@@ -5414,9 +5493,10 @@ async function relinkScan(env, url, st, o) {
       const manual = !!(od.lockInfo && od.lockInfo[f]);
       if (manual && !o.includeManual) continue;
       const isUrl = /^https?:\/\//i.test(v);
-      const ownLink = st.links.find((l) => l && l.masked === v);
+      const ownLink = st.links.find((l) => l && String(l.masked || "").trim() === v);
+      const isLockedRec = !!(ownLink && (ownLink.isLocked || ownLink.orig === LOCK_ORIG));
       // Link coi là chết nếu: sai cú pháp URL, hoặc thuộc web này nhưng không có trong ALL_LINKS hoặc link đã bị khóa
-      const isDead = !isUrl || (f === me.field && (!ownLink || ownLink.isLocked));
+      const isDead = !isUrl || (f === me.field && (!ownLink || isLockedRec));
       if (o.scope === "dead" && !isDead) continue;
       items.push({
         id: od.id,
@@ -5426,7 +5506,7 @@ async function relinkScan(env, url, st, o) {
         expired,
         dead: isDead,
         manual,
-        isLocked: !!(ownLink && ownLink.isLocked)
+        isLocked: isLockedRec
       });
     }
   }
@@ -5435,20 +5515,24 @@ async function relinkScan(env, url, st, o) {
 
 // Tìm link còn sống khớp nhất cho 1 đơn: ưu tiên URL đang có trong ô info của đơn, rồi orderId trùng, rồi cùng email duy nhất không nhập nhằng.
 function matchLink(links, od, field, allOrders = []) {
+  const isLockedRec = (x) => !!(x && (x.isLocked || x.orig === LOCK_ORIG));
+  const canRecover = (x) => !!(x && /^https?:\/\//i.test(String(x.masked || "").trim()) && (!isLockedRec(x) || (x.origBackup && x.origBackup !== LOCK_ORIG)));
   const oid = normId(od.id);
   const curUrl = field ? String(od[field] || "").trim() : "";
   if (curUrl) {
-    const byUrl = links.find((x) => x && x.masked === curUrl);
+    const byUrl = links.find((x) => canRecover(x) && String(x.masked || "").trim() === curUrl);
     if (byUrl) return byUrl;
   }
-  const byOid = links.find((x) => x && x.orderId && normId(x.orderId) === oid);
+  const byOidAlive = links.find((x) => !isLockedRec(x) && /^https?:\/\//i.test(String(x && x.masked || "").trim()) && x.orderId && normId(x.orderId) === oid);
+  if (byOidAlive) return byOidAlive;
+  const byOid = links.find((x) => canRecover(x) && x.orderId && normId(x.orderId) === oid);
   if (byOid) return byOid;
 
   const em = String(od.email || "").trim().toLowerCase();
   if (!em) return null;
 
   // Chỉ ghép theo email khi không nhập nhằng: chỉ có 1 link ứng viên của email đó (chưa gắn cho đơn khác)
-  const candLinks = links.filter((x) => x && String(x.email || "").trim().toLowerCase() === em && (!x.orderId || normId(x.orderId) === oid));
+  const candLinks = links.filter((x) => canRecover(x) && String(x.email || "").trim().toLowerCase() === em && (!x.orderId || normId(x.orderId) === oid));
   if (candLinks.length === 1) {
     const sameEmailActiveOrders = arr(allOrders).filter((ord) => ord && normStatus(ord.status) === "success" && String(ord.email || "").trim().toLowerCase() === em);
     if (sameEmailActiveOrders.length <= 1) return candLinks[0];
@@ -5459,35 +5543,61 @@ function matchLink(links, od, field, allOrders = []) {
   return null;
 }
 
-// Map lại độc lập 100%: Tự động map lại nếu ô hiện tại bị rỗng, link bị khóa/chết HOẶC bản ghi link trong ALL_LINKS chưa gắn mã đơn / lệch HSD
+// Map lại độc lập 100%: Chỉ đưa vào danh sách cần map lại nếu ô info của web hiện tại đang trống, link sai định dạng, nằm trong danh sách chết/tombstone, hoặc bản ghi ALL_LINKS đang bị khóa. Nếu đã có link hợp lệ trong ô info của web hiện tại -> BỎ QUA ngay.
 async function relinkMap(env, url, st, me, o) {
+  const KV = getKV(env);
   const now = NOW(), fields = arr(o.fields).length ? o.fields.map(Number) : [1, 2, 3], items = [];
   const myNum = Number(me.field.slice(4));
   if (!fields.includes(myNum)) return { items: [], remoteOk: true };
+
+  const deadSet = new Set();
+  const tombIdSet = new Set();
+  if (KV) {
+    const [deadRaw, tbRaw] = await Promise.all([KV.get("DEAD_LINKS"), loadTombs(KV)]);
+    for (const d of arr(safeJson(deadRaw, []))) {
+      const m = d && (d.masked || d.url);
+      if (m) deadSet.add(String(m).trim());
+    }
+    for (const t of arr(tbRaw)) {
+      if (typeof t === "string") {
+        deadSet.add(t.trim());
+        tombIdSet.add(t.trim());
+      } else if (t && typeof t === "object") {
+        if (t.url) deadSet.add(String(t.url).trim());
+        if (t.id) tombIdSet.add(String(t.id).trim());
+      }
+    }
+  }
 
   for (const od of st.orders) {
     if (!od || normStatus(od.status) !== "success" || isExpiredOrder(od, now) || !od.email) continue;
     const f = me.field;
     if (!o.includeManual && od.lockInfo && od.lockInfo[f]) continue;
     const cur = String(od[f] || "").trim();
-    const wantExp = isLifetime(od.expDate) ? "Vĩnh viễn" : String(od.expDate || "").trim();
-    const curLinkRec = cur ? st.links.find((l) => l && l.masked === cur) : null;
+    const isUrl = /^https?:\/\//i.test(cur);
+    const curLinkRec = cur ? st.links.find((l) => l && String(l.masked || "").trim() === cur) : null;
+    const curLocked = !!(curLinkRec && (curLinkRec.isLocked || curLinkRec.orig === LOCK_ORIG));
+    const curDead = !!(cur && (deadSet.has(cur) || (curLinkRec && curLinkRec.id && tombIdSet.has(String(curLinkRec.id).trim()))));
 
-    // Nếu link hiện tại còn sống, không khóa, ĐÃ gắn đúng mã đơn DH và ĐÃ khớp HSD thì bỏ qua
-    if (curLinkRec && !curLinkRec.isLocked && normId(curLinkRec.orderId) === normId(od.id) && (!wantExp || curLinkRec.expDate === wantExp)) {
+    // Nếu ô info của Web hiện tại ĐÃ có link hợp lệ (không bị khóa, không thuộc DEAD_LINKS/tombstone) thì bỏ qua ngay, bất kể web khác rỗng hay orderId/HSD lệch
+    if (cur && isUrl && !curLocked && !curDead) {
       continue;
     }
 
     const l = matchLink(st.links, od, f, st.orders);
-    if (l && (l.masked !== cur || normId(l.orderId) !== normId(od.id) || (wantExp && l.expDate !== wantExp))) {
-      items.push({
-        id: od.id,
-        email: od.email,
-        field: f,
-        link: cur || "",
-        to: l.masked,
-        syncMetaOnly: l.masked === cur
-      });
+    if (l) {
+      const toUrl = String(l.masked || "").trim();
+      const targetLocked = !!(l.isLocked || l.orig === LOCK_ORIG);
+      if (toUrl && (toUrl !== cur || targetLocked)) {
+        items.push({
+          id: od.id,
+          email: od.email,
+          field: f,
+          link: cur || "",
+          to: toUrl,
+          syncMetaOnly: toUrl === cur
+        });
+      }
     }
   }
   return { items, remoteOk: true };
