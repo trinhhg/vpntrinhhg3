@@ -1,3 +1,4 @@
+<!-- v2.1 — 2026-11-21 19:05 (UTC+7) — Chuẩn hóa Tab Kiểm tra bù link độc lập theo từng web, sửa lỗi inline handler #mOEmail và Tab Soạn mail -->
 <!-- v2.0 - Admin (bản nâng cấp toàn diện theo kế hoạch calude_full_1): schema totalVnd/totalCny, form đơn hàng mới (đổi ID trực tiếp, ngày/tháng), Khóa fulfillment, Khóa thông tin hết hạn, nút gửi mail báo khách đưa lên đầu tab Đơn hàng, card đơn desktop/mobile, D1 (cột Xóa riêng), Doanh thu drill-down Alipay/Weixin, Dung lượng theo giá thực, Set Web chia block (Email/Cron/Khóa hạn/Vệ tinh/Routing-Blur/Icon Dock/Bảo trì Link Sub/Quota), Rà quét & Map lại (2 bảng), sửa lỗi xóa link quay lại, Mail Composer (Mẫu hệ thống 5 mẫu + Mẫu tự do, gradient editor), Hướng dẫn (bài viết, ảnh/video, Quick Link/Tab/Article, kéo thả tab) -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
@@ -71,10 +72,10 @@
           <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2"><i class="fas fa-clipboard-check text-purple-600"></i>Kiểm tra đơn chưa đủ 3 link <span id="checkBadgeCount" class="bg-purple-100 text-purple-700 text-xs font-black px-2 py-0.5 rounded-full">0</span></h2>
-                <p class="text-[11px] text-slate-500 mt-0.5">Chứa các đơn thành công còn hạn nhưng chưa đủ 3 link. Bấm nút bên dưới để kiểm tra, xin bù link và theo dõi log chi tiết.</p>
+                <h2 id="checkHeaderTitle" class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2"><i class="fas fa-clipboard-check text-purple-600"></i>Kiểm tra bù link <span id="checkBadgeCount" class="bg-purple-100 text-purple-700 text-xs font-black px-2 py-0.5 rounded-full">0</span></h2>
+                <p class="text-[11px] text-slate-500 mt-0.5">Chỉ kiểm tra duy nhất ô info của website hiện tại trên kho đơn chung. Đơn đã có link là hoàn thành; đơn còn trống hiển thị tại đây để Admin bù link thủ công độc lập.</p>
               </div>
-              <button id="btnHealAll" onclick="healAllMissingWithProgress()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5 shrink-0"> <i class="fas fa-bolt"></i>Kiểm tra & xin bù link tất cả </button>
+              <button id="btnHealAll" onclick="healAllMissingWithProgress()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5 shrink-0"> <i class="fas fa-bolt"></i>Bù link tất cả (Cục bộ) </button>
             </div>
             <!-- KHỐI TIẾN TRÌNH & LOG TERMINAL -->
             <div id="checkProgressBox" class="hidden border border-purple-200 bg-purple-50/40 rounded-xl p-3 space-y-2">
@@ -366,8 +367,8 @@
               <div class="text-[10px] font-bold text-slate-500 mb-1">Bấm biến để chèn vào vị trí con trỏ đang gõ</div>
               <div id="mcVarBtns" class="flex flex-wrap gap-1.5"></div>
             </div>
-            <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tiêu đề mail (subject)</label><input id="mcSubject" oninput="mc.subject=this.value" class="mc-ins w-full p-2 text-xs border border-slate-200 rounded-lg outline-none" placeholder="VPN Trinh Hg - ..."></div>
-            <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tiêu đề trên thanh màu (xuống dòng = 2 dòng)</label><textarea id="mcTitle" rows="2" oninput="mc.title=this.value;mcPreview()" class="mc-ins w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-bold uppercase"></textarea></div>
+            <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tiêu đề mail (subject)</label><input id="mcSubject" oninput="mcSetField('subject', this.value)" class="mc-ins w-full p-2 text-xs border border-slate-200 rounded-lg outline-none" placeholder="VPN Trinh Hg - ..."></div>
+            <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tiêu đề trên thanh màu (xuống dòng = 2 dòng)</label><textarea id="mcTitle" rows="2" oninput="mcSetField('title', this.value);mcPreview()" class="mc-ins w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-bold uppercase"></textarea></div>
             <div class="bg-slate-50 border border-slate-200 rounded-xl p-2 space-y-2">
               <div class="grid grid-cols-3 gap-2 items-end">
                 <div>
@@ -410,7 +411,7 @@
             <button onclick="mcScan()" class="bg-slate-100 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs hover:bg-slate-200"><i class="fas fa-search mr-1"></i>Quét danh sách</button>
           </div>
           <div id="mcRecs" class="text-xs text-slate-400 italic">Bấm "Quét danh sách" để lấy email còn hạn.</div>
-          <div class="flex flex-col sm:flex-row gap-2 mt-3"><button id="mcSendBtn" onclick="mcSend()" class="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-xl text-sm shadow-md hover:bg-indigo-700"><i class="fas fa-paper-plane mr-2"></i>XÁC NHẬN BẮN MAIL (từng người một)</button><button onclick="mcStop=true" class="bg-red-50 text-red-600 font-bold px-4 py-3 rounded-xl text-sm border border-red-100">Dừng</button></div>
+          <div class="flex flex-col sm:flex-row gap-2 mt-3"><button id="mcSendBtn" onclick="mcSend()" class="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-xl text-sm shadow-md hover:bg-indigo-700"><i class="fas fa-paper-plane mr-2"></i>XÁC NHẬN BẮN MAIL (từng người một)</button><button onclick="mcRequestStop()" class="bg-red-50 text-red-600 font-bold px-4 py-3 rounded-xl text-sm border border-red-100">Dừng</button></div>
           <div id="mcProg" class="mt-3 hidden">
             <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
               <div id="mcBar" class="h-full bg-indigo-500 transition-all" style="width:0%"></div>
@@ -1240,7 +1241,7 @@
               <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5"><i class="fas fa-user-tag text-indigo-400 mr-1"></i>Nickname</label><input id="mONickname" type="text" placeholder="VD: Anh Tuấn FB..." class="w-full p-2.5 text-xs border rounded-xl outline-none bg-yellow-50 border-yellow-200 font-medium"></div>
             </div>
             <div id="mOIdNote" class="hidden text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-2 mb-2"></div>
-            <div class="mb-2"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Email Khách</label><input id="mOEmail" type="text" onblur="autoFillNickname();if(modalNew)autoFillDays();" class="w-full p-2.5 text-xs border rounded-xl outline-none bg-slate-50 font-medium"></div>
+            <div class="mb-2"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Email Khách</label><input id="mOEmail" type="text" onblur="onOrdEmailBlur()" class="w-full p-2.5 text-xs border rounded-xl outline-none bg-slate-50 font-medium"></div>
             <div class="mb-2"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Gói VPN</label><select id="mOPkg" onchange="onPkgChange()" class="w-full p-2.5 text-xs border rounded-xl font-bold text-indigo-700 bg-indigo-50 outline-none"></select></div>
             <div class="grid grid-cols-3 gap-2 mb-2">
               <div>
