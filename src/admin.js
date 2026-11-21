@@ -1,3 +1,4 @@
+// v1 — 2026-11-21 19:05 (UTC+7) — Sửa Tab Kiểm tra bù link độc lập (chống bấm đúp, khớp mốc hết hạn, lockAuto), vá crash dmy/t-mail/t-cms/FAQ/Footer, chống xóa headerDrawer, sửa biểu đồ Doanh thu, sửa Đối soát D1, bảo vệ nguồn #1, gắn 401 redirect
 /**
  * src/admin.js — Toàn bộ nghiệp vụ quản trị VPNTrinhHg3 Admin Panel
  * Tách từ admin.html theo kiến trúc Giai đoạn 3
@@ -9,6 +10,7 @@ import {
   getAdminToken,
   setAdminToken,
   clearAdminToken,
+  setOnUnauthorized,
   api,
   aj
 } from './api.js';
@@ -202,7 +204,7 @@ const PKG_DB = {
 const getT = m => {
   try {
     const u = new URL(m);
-    return u.searchParams.get("top") || u.searchParams.get("liki") || u.searchParams.get("lidj") || u.searchParams.get("kidj") || u.searchParams.get("OwO") || u.searchParams.get("token") || u.searchParams.get("oos") || "";
+    return u.searchParams.get("top") || u.searchParams.get("liki") || u.searchParams.get("lidj") || u.searchParams.get("kidj") || u.searchParams.get("OwO") || u.searchParams.get("token") || u.searchParams.get("oos") || u.searchParams.get("hg") || "";
   } catch { return "";
   }
 };
@@ -1299,10 +1301,16 @@ async function saveOrd() {
   }
   btn.disabled = false;
 }
+function onOrdEmailBlur() {
+  autoFillNickname();
+  if (modalNew) autoFillDays();
+}
+window.onOrdEmailBlur = onOrdEmailBlur;
+
 async function delOrd(id) {
   if (!confirm("Xóa đơn " + id + "? Toàn bộ Link Sub của đơn này sẽ được khóa và chuyển sang tab Đã Xóa.")) return;
   try {
-    await api("/api/admin/order?id=" + id, { method: "DELETE" });
+    await aj("/api/admin/order?id=" + encodeURIComponent(id), { method: "DELETE" });
     ordersDb = ordersDb.filter(x => x.id !== id);
     lastSig.o = JSON.stringify(ordersDb);
     renderOrd();
@@ -1310,13 +1318,24 @@ async function delOrd(id) {
     fetchAll();
     toast("Đã xóa đơn & thu hồi toàn bộ link sub liên quan");
     triggerTelegramBackupNow(`Xóa đơn hàng #${id}`);
-  } catch (e) {}
+  } catch (e) {
+    toast("Lỗi xóa đơn: " + (e.message || String(e)), "err");
+  }
 }
 // ===================== TAB KIỂM TRA ĐƠN THIẾU LINK CỤC BỘ =====================
+const healingOrderIds = new Set();
+
+function isOrderStillActiveForHeal(o, now) {
+  if (!o.expDate || isLife(o.expDate)) return true;
+  const startOfExpDay = parseDmy(o.expDate);
+  if (!startOfExpDay) return expEnd(o.expDate) >= now;
+  return now < startOfExpDay;
+}
+
 function getMissingOrders() {
   const now = nowMs();
   const me = getMe();
-  return ordersDb.filter(o => o && normSt(o.status) === "success" && (!o.expDate || isLife(o.expDate) || (expEnd(o.expDate) >= now)) && !o[me.field]);
+  return ordersDb.filter(o => o && normSt(o.status) === "success" && isOrderStillActiveForHeal(o, now) && !String(o[me.field] || "").trim());
 }
 
 function updateCheckBadge() {
@@ -1351,14 +1370,13 @@ window.updateMoreBadge = updateMoreBadge;
 
 function renderCheckTab() {
   const me = getMe();
+  const list = getMissingOrders();
+  if ($("checkHeaderTitle")) $("checkHeaderTitle").innerHTML = `<i class="fas fa-clipboard-check text-indigo-600 mr-1.5"></i>Kiểm tra bù link (${me.field.toUpperCase()}) <span id="checkBadgeCount" class="bg-indigo-100 text-indigo-700 text-xs font-black px-2 py-0.5 rounded-full ml-1">${list.length}</span>`;
+  if ($("scanRoutingFieldTxt")) $("scanRoutingFieldTxt").textContent = me.field.toUpperCase();
   updateCheckBadge();
   const tb = $("checkBody");
   if (!tb) return;
 
-  if ($("checkHeaderTitle")) $("checkHeaderTitle").innerHTML = `<i class="fas fa-clipboard-check text-indigo-600 mr-1.5"></i>Kiểm tra bù link (${me.field.toUpperCase()}) <span id="checkBadgeCount" class="bg-indigo-100 text-indigo-700 text-xs font-black px-2 py-0.5 rounded-full ml-1">0</span>`;
-  if ($("scanRoutingFieldTxt")) $("scanRoutingFieldTxt").textContent = me.field.toUpperCase();
-
-  const list = getMissingOrders();
   if (!list.length) {
     tb.innerHTML = `<div class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-slate-200 shadow-sm font-bold">
      <i class="fas fa-circle-check text-emerald-500 text-3xl mb-2 block"></i>
@@ -1368,13 +1386,14 @@ function renderCheckTab() {
   }
 
   tb.innerHTML = list.map((o, idx) => {
+    const isBusy = healingOrderIds.has(normId(o.id));
     return `
    <div class="bg-white border-2 border-purple-200 rounded-2xl p-4 shadow-sm flex flex-col gap-3">
      <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-100 pb-3">
        <div>
          <div class="flex items-center gap-2 flex-wrap">
            <span class="text-xs font-bold text-slate-400">#${idx+1}</span>
-           <span class="font-mono font-black text-indigo-600 text-sm cp" onclick="cp('${o.id}')">${esc(o.id)}</span>
+           <span class="font-mono font-black text-indigo-600 text-sm cp" onclick="cp(${q(o.id)})">${esc(o.id)}</span>
            <span class="font-bold text-slate-700 text-xs">${esc(o.email || "—")}</span>
            ${o.nickname ? `<span class="bg-amber-100 text-amber-800 text-[10px] font-black px-1.5 py-0.5 rounded"><i class="fas fa-user-tag mr-0.5"></i>${esc(o.nickname)}</span>` : ""}
          </div>
@@ -1383,10 +1402,10 @@ function renderCheckTab() {
          </div>
        </div>
        <div class="flex gap-2 shrink-0">
-         <button onclick="healSingleOrder('${o.id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm transition flex items-center gap-1">
-           <i class="fas fa-bolt mr-1"></i>Bù link cục bộ
+         <button id="btnHeal_${esc(o.id)}" ${isBusy ? "disabled" : ""} onclick="healSingleOrder(${q(o.id)})" class="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm transition flex items-center gap-1">
+           <i class="fas ${isBusy ? "fa-spinner fa-spin" : "fa-bolt"} mr-1"></i>${isBusy ? "Đang xử lý..." : "Bù link cục bộ"}
          </button>
-         <button onclick="saveCheckManual('${o.id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm transition">
+         <button id="btnSaveChk_${esc(o.id)}" ${isBusy ? "disabled" : ""} onclick="saveCheckManual(${q(o.id)})" class="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm transition">
            <i class="fas fa-save mr-1"></i>Lưu link
          </button>
        </div>
@@ -1397,7 +1416,7 @@ function renderCheckTab() {
        <label class="block text-[10px] font-bold ${o[me.field] ? 'text-emerald-700' : 'text-purple-700'} mb-1">
          ${o[me.field] ? '<i class="fas fa-check-circle text-emerald-500 mr-1"></i>' : '<i class="fas fa-triangle-exclamation text-amber-500 mr-1"></i>'}Ô Link ${me.field.toUpperCase()} (Định tuyến của web này)
        </label>
-       <input type="text" id="chkLink_${o.id}" value="${esc(o[me.field] || '')}" placeholder="Dán link ${me.field.toUpperCase()} vào đây..." class="w-full p-2 text-xs border ${o[me.field] ? 'border-slate-200 bg-slate-50' : 'border-purple-300 bg-purple-50/30'} rounded-lg font-mono outline-none focus:border-indigo-500">
+       <input type="text" id="chkLink_${esc(o.id)}" value="${esc(o[me.field] || '')}" placeholder="Dán link ${me.field.toUpperCase()} vào đây..." class="w-full p-2 text-xs border ${o[me.field] ? 'border-slate-200 bg-slate-50' : 'border-purple-300 bg-purple-50/30'} rounded-lg font-mono outline-none focus:border-indigo-500">
      </div>
    </div>`;
   }).join("");
@@ -1407,12 +1426,22 @@ function renderCheckTab() {
 async function saveCheckManual(orderId) {
   const o = ordersDb.find(x => x.id === orderId);
   if (!o) return;
+  const key = normId(orderId);
+  if (healingOrderIds.has(key)) return;
   const me = getMe();
   const lk = ($("chkLink_" + orderId)?.value || "").trim();
 
+  healingOrderIds.add(key);
+  const btn = $("btnSaveChk_" + orderId);
+  if (btn) btn.disabled = true;
   toast("Đang lưu link sửa tay...");
   try {
-    const body = { id: o.id, [me.field]: lk, manualEdit: true };
+    const body = {
+      id: o.id,
+      [me.field]: lk,
+      manualEdit: true,
+      lockAuto: true
+    };
     const j = await aj("/api/admin/order", { method: "POST", body });
     const idx = ordersDb.findIndex(x => x.id === o.id);
     if (idx >= 0) ordersDb[idx] = j.order;
@@ -1422,12 +1451,23 @@ async function saveCheckManual(orderId) {
     toast(`Đã lưu link ${me.field.toUpperCase()} cho đơn ${o.id}!`);
   } catch (e) {
     toast("Lỗi lưu link: " + e.message, "err");
+  } finally {
+    healingOrderIds.delete(key);
+    renderCheckTab();
   }
 }
 
-// Bù link cục bộ cho 1 đơn cụ thể
+// Bù link cục bộ cho 1 đơn cụ thể (chống double-click / xử lý trùng)
 async function healSingleOrder(orderId) {
+  const key = normId(orderId);
+  if (healingOrderIds.has(key)) return;
   const me = getMe();
+  healingOrderIds.add(key);
+  const btn = $("btnHeal_" + orderId);
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Đang xử lý...';
+  }
   toast(`Đang cấp bù link ${me.field.toUpperCase()} cho đơn ${orderId}...`);
   try {
     const res = await aj("/api/admin/heal", { method: "POST", body: { orderIds: [orderId] } });
@@ -1436,14 +1476,16 @@ async function healSingleOrder(orderId) {
       const targetOrder = ordersDb.find(o => normId(o.id) === normId(item.id));
       if (targetOrder) targetOrder[item.field || me.field] = item.link;
       lastSig.o = JSON.stringify(ordersDb);
-      renderCheckTab();
-      renderOrd();
       toast(`Đã cấp bù link ${me.field.toUpperCase()} thành công!`);
     } else {
-      toast("Không thể cấp bù link (hết nguồn trống trong kho)!", "warn");
+      toast((item && item.error) || "Không thể cấp bù link (hết nguồn trống trong kho)!", "warn");
     }
   } catch (e) {
     toast("Lỗi: " + e.message, "err");
+  } finally {
+    healingOrderIds.delete(key);
+    renderCheckTab();
+    renderOrd();
   }
 }
 
@@ -2093,14 +2135,14 @@ function revOver(R, b) {
               tension: 0.3
             }, {
               label: 'Chi phí vốn',
-              data: keys.map(k => costSum(true).by[k] || 0),
+              data: keys.map(k => costSum(k).total || 0),
               borderColor: '#f97316',
               backgroundColor: 'transparent',
               borderDash: [4, 4],
               tension: 0.3
             }, {
               label: 'Lợi nhuận ròng',
-              data: keys.map(k => (mt[k].vnd || 0) - (costSum(true).by[k] || 0)),
+              data: keys.map(k => (mt[k].vnd || 0) - (costSum(k).total || 0)),
               borderColor: '#10b981',
               backgroundColor: 'rgba(16, 185, 129, 0.15)',
               fill: true,
@@ -2450,7 +2492,7 @@ function revPayDetail(b) {
 
 // SUB-TAB 3: QUẢN LÝ CHI PHÍ VỐN (GRID.JS & CURRENCY.JS)
 function revCost(R, b) {
-  const cs = costSum();
+  const cs = costSum(revMonth);
   const sum = R.reduce((a, x) => a + x.vnd, 0);
   const list = [...(cmsDb.costs || [])].filter(c => revMonth === "all" || monthInfo(c.ts).key === revMonth).sort((a, c) => c.ts - a.ts);
 
@@ -2667,6 +2709,28 @@ function mcRenderPresetOptions(keep) {
   $("mcPreset").innerHTML = mcTab === "sys" ? MC_SYS_KEYS.map(k => `<option value="sys:${k}">${esc(MC_SYS_NAMES[k])}${sys[k]?" · đã tùy chỉnh":""}</option>`).join("") : `<optgroup label="Mẫu có sẵn">${Object.keys(MC_PRESETS).map(k=>`<option value="builtin:${k}">${esc(MC_PRESETS[k].name)}</option>`).join("")}</optgroup>` + (Object.keys(fr).length ? `<optgroup label="Mẫu đã lưu">${Object.entries(fr).map(([id,f])=>`<option value="saved:${esc(id)}">${esc(f.name||id)}</option>`).join("")}</optgroup>` : "");
   if (keep && [...$("mcPreset").options].some(o => o.value === keep)) $("mcPreset").value = keep;
 }
+function mcSetField(field, value) {
+  if (mc && typeof mc === "object") mc[field] = value;
+  window.mc = mc;
+}
+function mcRequestStop() {
+  mcStop = true;
+}
+function mcToggleAllRecs(checked) {
+  mcRecs.forEach(r => {
+    r.sel = !!checked;
+  });
+  mcRenderRecs();
+}
+function mcToggleRec(idx, checked) {
+  if (mcRecs[idx]) mcRecs[idx].sel = !!checked;
+  mcRenderRecs();
+}
+window.mcSetField = mcSetField;
+window.mcRequestStop = mcRequestStop;
+window.mcToggleAllRecs = mcToggleAllRecs;
+window.mcToggleRec = mcToggleRec;
+
 function mcLoadPreset() {
   const v = $("mcPreset").value, i = v.indexOf(":"), kind = v.slice(0, i), key = v.slice(i + 1);
   mcCurKey = v;
@@ -2677,6 +2741,7 @@ function mcLoadPreset() {
     mc = tplToMc(f.tpl);
   }
   else mc = tplToMc(MC_PRESETS[key] || MC_PRESETS.info);
+  window.mc = mc;
   mcSel = -1;
   mcRenderEditor();
 }
@@ -2902,7 +2967,7 @@ function mcRenderRecs() {
     ok: '<i class="fas fa-circle-check text-emerald-500"></i>',
     err: '<i class="fas fa-circle-xmark text-red-500"></i>'
   };
-  el.innerHTML = `<label class="flex items-center gap-2 text-xs font-bold text-slate-700 mb-2"><input type="checkbox" ${n===mcRecs.length?"checked":""} onchange="mcRecs.forEach(r=>r.sel=this.checked);mcRenderRecs()" class="w-4 h-4 accent-indigo-600">Chọn tất cả (${n}/${mcRecs.length})</label><div class="max-h-64 overflow-y-auto border border-slate-100 rounded-xl divide-y divide-slate-100">${mcRecs.map((r,i)=>`<label class="flex items-center gap-2 px-3 py-2 text-xs cursor-pointer hover:bg-slate-50"><input type="checkbox" ${r.sel?"checked":""} onchange="mcRecs[${i}].sel=this.checked;mcRenderRecs()" class="w-4 h-4 accent-indigo-600"><span class="font-bold text-slate-700 truncate flex-1">${esc(r.email)}</span><span class="font-mono text-indigo-500">${esc(r.id)}</span><span class="text-slate-400 whitespace-nowrap">HSD ${esc(r.exp)}</span><span class="w-4 text-center">${ic[r.st]||""}</span></label>`).join("")}</div>`;
+  el.innerHTML = `<label class="flex items-center gap-2 text-xs font-bold text-slate-700 mb-2"><input type="checkbox" ${n===mcRecs.length?"checked":""} onchange="mcToggleAllRecs(this.checked)" class="w-4 h-4 accent-indigo-600">Chọn tất cả (${n}/${mcRecs.length})</label><div class="max-h-64 overflow-y-auto border border-slate-100 rounded-xl divide-y divide-slate-100">${mcRecs.map((r,i)=>`<label class="flex items-center gap-2 px-3 py-2 text-xs cursor-pointer hover:bg-slate-50"><input type="checkbox" ${r.sel?"checked":""} onchange="mcToggleRec(${i}, this.checked)" class="w-4 h-4 accent-indigo-600"><span class="font-bold text-slate-700 truncate flex-1">${esc(r.email)}</span><span class="font-mono text-indigo-500">${esc(r.id)}</span><span class="text-slate-400 whitespace-nowrap">HSD ${esc(r.exp)}</span><span class="w-4 text-center">${ic[r.st]||""}</span></label>`).join("")}</div>`;
 }
 async function mcSend() {
   if (mcSending) return;
@@ -3122,14 +3187,25 @@ async function loadTx(force) {
     mergeTx(list);
     txFails = 0;
     lastTxError = "";
+    const exCnt = txData.filter(t => /unmatched|review|mismatch/.test(t.status)).length;
+    const exB = $("txExceptionBadge");
+    if (exB) {
+      exB.textContent = exCnt;
+      exB.classList.toggle("hidden", exCnt === 0);
+    }
     if (!$("t-trans").classList.contains("hidden")) {
-      if (curTxTab !== "rev") renderTransactions();
+      if (curTxTab === "exception" && typeof renderExceptionsTab === "function") renderExceptionsTab();
+      else if (curTxTab !== "rev") renderTransactions();
     } else {
       const seen = +localStorage.getItem(SITE_KEY + "_txSeen") || 0;
       const n = txData.filter(t => /unmatched|review|mismatch/.test(t.status) && parseAny(t.created_at) > seen).length;
-      if (n) {
+      if ($("transBadge")) {
         $("transBadge").innerText = n;
-        $("transBadge").classList.remove("hidden");
+        $("transBadge").classList.toggle("hidden", n === 0);
+      }
+      if ($("transBadgeMobile")) {
+        $("transBadgeMobile").innerText = n;
+        $("transBadgeMobile").classList.toggle("hidden", n === 0);
       }
     }
   } catch (e) {
@@ -3139,9 +3215,9 @@ async function loadTx(force) {
   }
   const active = !$("t-trans").classList.contains("hidden");
   txPollT = setTimeout(() => {
-    if (document.hidden) return loadTx();
+    if (document.hidden) return;
     loadTx();
-  }, document.hidden ? 30000 : Math.min(30000, (active ? 5000 : 20000) * (1 + txFails)));
+  }, Math.min(30000, (active ? 5000 : 20000) * (1 + txFails)));
 }
 const kindBadge = k => k === "upgrade" ? `<span class="bg-purple-100 text-purple-700 border border-purple-200 px-2 py-0.5 rounded text-[9px] font-black uppercase ml-1">NÂNG CẤP</span>` : k === "renew" ? `<span class="bg-sky-100 text-sky-700 border border-sky-200 px-2 py-0.5 rounded text-[9px] font-black uppercase ml-1">GIA HẠN</span>` : `<span class="bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded text-[9px] font-black uppercase ml-1">MỚI</span>`;
 // Xóa thật trong D1 qua Worker (/api/admin/tx/:id/delete) — confirm, xóa server, rồi tải lại từ D1 (không chỉ xóa trên UI). Dùng chung cho bảng Đối soát và Giao dịch thô.
@@ -5372,8 +5448,14 @@ async function hardDeleteSource(id, url, url2) {
 }
 
 async function cleanUnusedSources() {
+  const isLegacyAnchor = (l) => l && !l.orderId && String(l.email || "").trim().toLowerCase() === "auto" && String(l.linkIndex) === "1";
   const unused = linkPoolDb.filter(p => {
-    const activeLinks = linksDb.filter(l => l && String(l.linkIndex) !== "1" && (l.orig === p.url || l.orig2 === p.url));
+    if (!p || !p.url || p.url === "Da_bi_khoa") return false;
+    const activeLinks = linksDb.filter(l => {
+      if (!l || isLegacyAnchor(l)) return false;
+      if (p.isCombo && p.url2) return (l.orig === p.url && l.orig2 === p.url2) || (l.orig === p.url2 && l.orig2 === p.url);
+      return l.orig === p.url || l.orig2 === p.url;
+    });
     return activeLinks.length === 0;
   });
   if (!unused.length) return toast("Tất cả link nguồn đều đang có link ẩn hoạt động!", "info");
@@ -5560,6 +5642,22 @@ function commitCms() {
   delete a.id;
   delete a.blocks;
 }
+function cmsUpdateTabField(tIdx, field, value) {
+  cmsEnsureTabs();
+  if (guides._tabs && guides._tabs[tIdx]) guides._tabs[tIdx][field] = value;
+}
+function cmsDelTabById(tabId) {
+  curCms = tabId;
+  cmsDelTab();
+}
+function artDelInTab(tabId, slug) {
+  curCms = tabId;
+  artDel(slug);
+}
+window.cmsUpdateTabField = cmsUpdateTabField;
+window.cmsDelTabById = cmsDelTabById;
+window.artDelInTab = artDelInTab;
+
 function setCms(dev) {
   commitCms();
   ensureArts();
@@ -5568,10 +5666,8 @@ function setCms(dev) {
   curCms = dev;
   curArt = null;
   curArtSlug = "";
-  curBlocks = [];
   curArtHtml = "";
   curArtWatermark = "";
-  cmsSel = -1;
   renderGuideAll();
 }
 function openArt(slug) {
@@ -6527,35 +6623,35 @@ function renderGuideCategoriesTree() {
        <div class="flex items-center gap-2 flex-1 min-w-[200px]">
          <span class="grip-cat cursor-grab text-slate-400 hover:text-indigo-600 px-1" title="Kéo thả đổi thứ tự"><i class="fas fa-grip-vertical text-lg"></i></span>
          ${tab.img ? `<img src="${esc(safeUrl(tab.img))}" class="w-6 h-6 rounded object-contain">` : `<i class="${esc(tab.ic||'fas fa-book')} ${esc(tab.col||'text-indigo-600')} text-lg"></i>`}
-         <input type="text" value="${esc(tab.name)}" oninput="tab.name=this.value;cmsEnsureTabs();guides._tabs[${tIdx}].name=this.value;" placeholder="Tên mục..." class="font-extrabold text-sm md:text-base text-slate-800 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-indigo-500 bg-white">
-         <span class="bg-indigo-50 text-indigo-700 font-bold text-xs px-2 py-0.5 rounded-full">${arts.length} bài</span>
-       </div>
-       <div class="flex items-center gap-2">
-         <input type="text" value="${esc(tab.img||'')}" oninput="tab.img=this.value;cmsEnsureTabs();guides._tabs[${tIdx}].img=this.value;" placeholder="URL icon (để trống = mặc định)" class="w-48 p-1.5 text-xs border border-slate-200 rounded-lg outline-none font-mono bg-slate-50">
-         <button type="button" onclick="addArticleToCategory('${esc(tab.id)}')" class="whitespace-nowrap shrink-0 bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1 shadow-sm">
-           <i class="fas fa-plus"></i>Thêm bài mới
-         </button>
-         ${isProtectedTab ? '' : `
-         <button type="button" onclick="curCms='${esc(tab.id)}';cmsDelTab()" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded-lg text-xs" title="Xóa danh mục"><i class="fas fa-trash"></i></button>
-         `}
-       </div>
-     </div>
+          <input type="text" value="${esc(tab.name)}" oninput="cmsUpdateTabField(${tIdx}, 'name', this.value)" placeholder="Tên mục..." class="font-extrabold text-sm md:text-base text-slate-800 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-indigo-500 bg-white">
+          <span class="bg-indigo-50 text-indigo-700 font-bold text-xs px-2 py-0.5 rounded-full">${arts.length} bài</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="text" value="${esc(tab.img||'')}" oninput="cmsUpdateTabField(${tIdx}, 'img', this.value)" placeholder="URL icon (để trống = mặc định)" class="w-48 p-1.5 text-xs border border-slate-200 rounded-lg outline-none font-mono bg-slate-50">
+          <button type="button" onclick="addArticleToCategory(${q(tab.id)})" class="whitespace-nowrap shrink-0 bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1 shadow-sm">
+            <i class="fas fa-plus"></i>Thêm bài mới
+          </button>
+          ${isProtectedTab ? '' : `
+          <button type="button" onclick="cmsDelTabById(${q(tab.id)})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded-lg text-xs" title="Xóa danh mục"><i class="fas fa-trash"></i></button>
+          `}
+        </div>
+      </div>
 
-     <!-- Danh sách các bài viết con thuộc mục này -->
-     <div class="space-y-2">
-       ${arts.map(a => {
-         const sl = a.slug || toSlug(a.name);
-         const timeStr = a.updated ? fmtBank(a.updated) : "Mới";
-         return `
-         <div onclick="openCmsEditorForArt('${esc(tab.id)}', '${esc(sl)}')" class="cursor-pointer bg-slate-50/70 hover:bg-indigo-50/40 border border-slate-200 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition">
-           <div class="min-w-0">
-             <div class="font-bold text-xs md:text-sm text-slate-800 break-words leading-snug">${esc(a.name || "(Chưa đặt tên)")}</div>
-             <div class="text-[10px] text-slate-500 mt-0.5">Được viết bởi: <b>${esc(a.author || "Admin")}</b> · Cập nhật lần cuối: ${timeStr}</div>
-           </div>
-           <div class="flex items-center justify-end sm:justify-start gap-1.5 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200/60" onclick="event.stopPropagation()">
-             <button type="button" onclick="copyArtDeepLink('${esc(tab.id)}', '${esc(sl)}')" class="whitespace-nowrap shrink-0 text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-emerald-600 hover:text-white transition"><i class="fas fa-link mr-1"></i>Link</button>
-             <button type="button" onclick="openCmsEditorForArt('${esc(tab.id)}', '${esc(sl)}')" class="whitespace-nowrap shrink-0 text-indigo-600 bg-white border border-indigo-200 px-3 py-1 rounded-lg text-xs font-bold hover:bg-indigo-600 hover:text-white transition"><i class="fas fa-pen mr-1"></i>Sửa bài</button>
-             <button type="button" onclick="curCms='${esc(tab.id)}';artDel('${esc(sl)}')" class="whitespace-nowrap shrink-0 text-red-500 bg-white border border-red-200 px-2 py-1 rounded-lg text-xs hover:bg-red-500 hover:text-white transition" title="Xóa bài viết"><i class="fas fa-trash"></i></button>
+      <!-- Danh sách các bài viết con thuộc mục này -->
+      <div class="space-y-2">
+        ${arts.map(a => {
+          const sl = a.slug || toSlug(a.name);
+          const timeStr = a.updated ? fmtBank(a.updated) : "Mới";
+          return `
+          <div onclick="openCmsEditorForArt(${q(tab.id)}, ${q(sl)})" class="cursor-pointer bg-slate-50/70 hover:bg-indigo-50/40 border border-slate-200 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition">
+            <div class="min-w-0">
+              <div class="font-bold text-xs md:text-sm text-slate-800 break-words leading-snug">${esc(a.name || "(Chưa đặt tên)")}</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">Được viết bởi: <b>${esc(a.author || "Admin")}</b> · Cập nhật lần cuối: ${timeStr}</div>
+            </div>
+            <div class="flex items-center justify-end sm:justify-start gap-1.5 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200/60" onclick="event.stopPropagation()">
+              <button type="button" onclick="copyArtDeepLink(${q(tab.id)}, ${q(sl)})" class="whitespace-nowrap shrink-0 text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-emerald-600 hover:text-white transition"><i class="fas fa-link mr-1"></i>Link</button>
+              <button type="button" onclick="openCmsEditorForArt(${q(tab.id)}, ${q(sl)})" class="whitespace-nowrap shrink-0 text-indigo-600 bg-white border border-indigo-200 px-3 py-1 rounded-lg text-xs font-bold hover:bg-indigo-600 hover:text-white transition"><i class="fas fa-pen mr-1"></i>Sửa bài</button>
+              <button type="button" onclick="artDelInTab(${q(tab.id)}, ${q(sl)})" class="whitespace-nowrap shrink-0 text-red-500 bg-white border border-red-200 px-2 py-1 rounded-lg text-xs hover:bg-red-500 hover:text-white transition" title="Xóa bài viết"><i class="fas fa-trash"></i></button>
            </div>
          </div>
          `;
@@ -6846,6 +6942,7 @@ function loadAdminFaqs() {
   } else {
     adminFaqsList = JSON.parse(JSON.stringify(DEFAULT_FAQS));
   }
+  window.adminFaqsList = adminFaqsList;
 }
 
 function renderFaqAdmin() {
@@ -7101,6 +7198,7 @@ function ftDelLink(ci, li) {
 function ftLoadTemplate() {
   if (ftCols.length && !confirm("Thay toàn bộ cột hiện tại bằng mẫu gợi ý? (chưa lưu cho tới khi bấm LƯU)")) return;
   ftCols = ftClone(FT_TEMPLATE);
+  window.ftCols = ftCols;
   renderFtCols();
 }
 
@@ -7117,11 +7215,12 @@ function loadFooterConfigUI() {
   if ($("ftDisclaimerText")) $("ftDisclaimerText").value = ft.disclaimer || "";
   if ($("ftRefundText")) $("ftRefundText").value = ft.refund || "";
   ftCols = ftColsFromDb(ft);
+  window.ftCols = ftCols;
   renderFtCols();
 }
 
 async function saveFooterConfig() {
-  await saveRoutesConfig();
+  if ($("rtOrder")) await saveRoutesConfig();
   const backups = [];
   for (let i = 1; i <= 3; i++) {
     const name = ($("ftBackupName" + i)?.value || "").trim();
@@ -7211,6 +7310,7 @@ function loadWebAdminUI() {
 
 function loadSettingsUI() {
   const s = (cmsDb && cmsDb.settings) || {};
+  loadDrawerSettingsUI();
   renderRouteRows();
   renderBlurRows();
   renderDockRows();
@@ -7939,6 +8039,7 @@ function startApp(fresh) {
     return;
   }
   started = true;
+  setOnUnauthorized(() => toLogin("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại"));
   buildTabs();
   const savedOrdTab = localStorage.getItem(SITE_KEY + "_curOrdTab");
   if (savedOrdTab) curOrdTab = savedOrdTab;
@@ -8398,9 +8499,8 @@ function renderCouponAdmin() {
     const maxUsage = Number(c.maxUsage || c.usageLimit) || 0;
     const usageText = maxUsage > 0 ? `${c.usedCount || 0}/${maxUsage}` : `${c.usedCount || 0}/∞`;
     const expStr = c.endDate || c.expiry;
-    const expText = expStr ? dmy(new Date(expStr).getTime()) : "Vĩnh viễn";
+    const expText = expStr ? dmyOf(new Date(expStr).getTime()) : "Vĩnh viễn";
     const active = c.enabled !== false;
-
     return `
       <tr class="hover:bg-slate-50 transition">
         <td class="px-3 py-2.5 font-mono font-black text-indigo-700">${esc(c.code)}</td>
@@ -8514,7 +8614,7 @@ function renderGiftRulesAdmin() {
 
     const bonusDaysText = Number(r.bonusDays) > 0 ? `+${r.bonusDays} ngày` : '0 ngày';
     const bonusTextDisplay = r.bonusText ? `"${esc(r.bonusText)}"` : '—';
-    const expText = (r.startDate || r.endDate) ? `${r.startDate ? dmy(new Date(r.startDate).getTime()) : 'Từ đầu'} → ${r.endDate ? dmy(new Date(r.endDate).getTime()) : 'Vô hạn'}` : 'Vô thời hạn';
+    const expText = (r.startDate || r.endDate) ? `${r.startDate ? dmyOf(new Date(r.startDate).getTime()) : 'Từ đầu'} → ${r.endDate ? dmyOf(new Date(r.endDate).getTime()) : 'Vô hạn'}` : 'Vô thời hạn';
     const active = r.enabled !== false;
 
     return `
@@ -8560,11 +8660,13 @@ function updateGiftRulePkgCheckboxes() {
     });
   });
 
+  const existingChecks = [...container.querySelectorAll('.gift-pkg-checkbox')];
+  const domSelectedIds = existingChecks.length ? new Set(existingChecks.filter(cb => cb.checked).map(cb => cb.value)) : null;
   const pkgs = Array.isArray(adminPkgsList) && adminPkgsList.length ? adminPkgsList : (cmsDb?.packages || []);
   container.innerHTML = pkgs.map(p => {
     const isConflict = conflictMap.has(p.id);
     const conflictRuleName = conflictMap.get(p.id);
-    const isChecked = curRule ? (curRule.packageIds || []).includes(p.id) : false;
+    const isChecked = domSelectedIds ? domSelectedIds.has(p.id) : (curRule ? (curRule.packageIds || []).includes(p.id) : false);
 
     return `
       <label class="flex items-center justify-between p-1.5 rounded-lg border ${isConflict ? 'border-slate-100 bg-slate-100/60 text-slate-400 cursor-not-allowed' : 'border-slate-200 bg-white hover:border-rose-300 cursor-pointer text-slate-700'}">
