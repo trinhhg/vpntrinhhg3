@@ -1,3 +1,4 @@
+// v3 — 2026-11-21 19:05 (UTC+7) — Bắt buộc chọn phương án Link Sub khi có 2 lựa chọn (không chọn mặc định), sửa lỗi parseVnDateLimit Flash Sale, sửa khóa email input & kiểm tra Upgrade
 // v2 — 2026-11-08 22:30 (UTC+7) — Nâng cấp Portal DH-only (/portal/order/:orderId), Bảo mật Link Sub 3 Toggles, Xác minh Email TTL & Tích hợp PWA
 /**
  * src/customer.js — Toàn bộ nghiệp vụ cổng khách hàng (VPNTrinhHg)
@@ -1742,6 +1743,25 @@ function disableUpgradeMode() {
   renderPackages('all');
 }
 
+function parseVnDateLimit(str, isEnd = false) {
+  if (!str) return isEnd ? Infinity : 0;
+  const raw = String(str).trim();
+  const mTime = raw.match(/[T\s](\d{1,2}):(\d{1,2})/);
+  const mIso = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  const mDmy = !mIso && raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  const m = mIso || mDmy;
+  if (m) {
+    const y = +(mIso ? m[1] : m[3]), mo = +m[2], d = +(mIso ? m[3] : m[1]);
+    const hh = mTime ? +mTime[1] : (isEnd ? 23 : 0);
+    const mm = mTime ? +mTime[2] : (isEnd ? 59 : 0);
+    const ss = isEnd && !mTime ? 59 : 0;
+    const ms = isEnd && !mTime ? 999 : 0;
+    return Date.UTC(y, mo - 1, d, hh - 7, mm, ss, ms);
+  }
+  const t = new Date(raw).getTime();
+  return isNaN(t) ? (isEnd ? Infinity : 0) : t;
+}
+
 function getActiveFlashSale() {
   const s = (cfgCache && (cfgCache.flashSale || (cfgCache.sales && cfgCache.sales.campaign))) || null;
   if (!s || !s.enabled) return null;
@@ -1762,7 +1782,6 @@ function getActiveFlashSale() {
     scope: s.scope || "all"
   };
 }
-
 // v1 — 2026-11-06 20:15 (UTC+7) — Đồng bộ kiểm tra scope Flash Sale (monthly/cycle và data/usage)
 function doesFlashSaleApply(pkg, sale) {
   if (!sale || !pkg || pkg.isCustom) return false;
@@ -2952,7 +2971,7 @@ function renderPaymentBox() {
   const pData = currentPackage ? (currentPackage.data || (currentPackage.vi && currentPackage.vi.data) || '') : '';
   const pkgSummaryHtml = currentPackage ? `<div class="mb-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 flex items-center justify-between text-xs"><div class="font-bold text-slate-700 dark:text-slate-200"><i class="fas fa-box text-indigo-500 mr-1.5"></i>${esc(pName)}${pData ? ' (' + esc(pData) + ')' : ''}</div><div class="font-extrabold text-indigo-600 dark:text-indigo-400 text-sm">${fp}</div></div>` : '';
 
-  if (!currentOrderId && !isUpgradeMode) {
+  if (!currentOrderId && !(isUpgradeMode && upgradeConfirmed)) {
     col.classList.remove('relative');
     col.innerHTML = `<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 dark:text-indigo-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4>${pkgSummaryHtml}<p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${guideHtml}</p></div>`;
     return;
@@ -3097,6 +3116,33 @@ function lockSubDecisionUI(selectedVal, reasonNotice = '', lockMode = 'all') {
   const iconCls = emailLookupState === 'error' ? 'fa-circle-exclamation text-rose-500' : 'fa-info-circle text-indigo-500';
   noticeEl.innerHTML = `<div class="flex items-center gap-1.5 flex-1 min-w-0"><i class="fas ${iconCls} shrink-0"></i><span class="break-words">${esc(reasonNotice)}</span></div>${retryBtnHtml}`;
   noticeEl.classList.toggle('hidden', !reasonNotice);
+  clearSubDecisionWarning();
+}
+
+function clearSubDecisionWarning() {
+  const subWrap = $('subLinkLifecycleWrap');
+  if (subWrap) {
+    subWrap.classList.remove('border-red-500', 'dark:border-red-500', 'ring-2', 'ring-red-200', 'dark:ring-red-900/40');
+  }
+  const valEl = $('subDecisionValidationAlert');
+  if (valEl) valEl.classList.add('hidden');
+}
+
+function showSubDecisionWarning(msg) {
+  const subWrap = $('subLinkLifecycleWrap');
+  if (!subWrap) return;
+  subWrap.classList.add('border-red-500', 'dark:border-red-500', 'ring-2', 'ring-red-200', 'dark:ring-red-900/40');
+  let valEl = $('subDecisionValidationAlert');
+  if (!valEl) {
+    valEl = document.createElement('div');
+    valEl.id = 'subDecisionValidationAlert';
+    valEl.className = 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 p-3 rounded-xl mt-2 flex items-start gap-2';
+    subWrap.appendChild(valEl);
+  }
+  const text = msg || (lang === 'vi' ? 'Vui lòng chọn 1 trong 2 phương án (Giữ link cũ hoặc Cấp link mới) trước khi tiếp tục thanh toán.' : 'Please select one of the two options (Keep existing link or Create new link) before continuing.');
+  valEl.innerHTML = `<i class="fas fa-exclamation-triangle text-red-500 mt-0.5 shrink-0"></i><p class="text-[11px] md:text-xs text-red-700 dark:text-red-400 font-bold m-0">${esc(text)}</p>`;
+  valEl.classList.remove('hidden');
+  subWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function unlockSubDecisionUI(defaultVal = '') {
@@ -3124,8 +3170,7 @@ function unlockSubDecisionUI(defaultVal = '') {
   }
   const noticeEl = $('subDecisionLockNotice');
   if (noticeEl) noticeEl.classList.add('hidden');
-  const valEl = $('subDecisionValidationAlert');
-  if (valEl) valEl.classList.add('hidden');
+  clearSubDecisionWarning();
 }
 
 function populateTargetLinks(links) {
@@ -3157,8 +3202,7 @@ function onSubDecisionChange(val) {
   }
   currentSubDecision = val;
   updateSubDecisionUI(val);
-  const valEl = $('subDecisionValidationAlert');
-  if (valEl) valEl.classList.add('hidden');
+  clearSubDecisionWarning();
   const multiWrap = $('multiLinkSelectorWrap');
   if (multiWrap) {
     multiWrap.classList.toggle('hidden', val !== 'KEEP_EXISTING' || existingCustomerLinks.length <= 1);
@@ -3242,8 +3286,8 @@ async function checkEmailExistingLinks(email) {
         $('subLinkLifecycleWrap')?.classList.remove('hidden');
 
         if (links.length >= 1) {
-          // Trường hợp A: Có 1 đơn đang hoạt động VÀ website hiện tại có Link Sub -> Mở khóa cả 2 lựa chọn, mặc định KEEP_EXISTING
-          unlockSubDecisionUI('KEEP_EXISTING');
+          // Trường hợp A: Có 1 đơn đang hoạt động VÀ website hiện tại có Link Sub -> Mở khóa cả 2 lựa chọn, KHÔNG chọn mặc định
+          unlockSubDecisionUI('');
           populateTargetLinks(links);
           renderPaymentBox();
           return;
@@ -3325,24 +3369,15 @@ function submitOrder(e) {
   if (isSubWrapVisible) {
     const checkedRadio = document.querySelector('input[name="subLinkDecisionRadio"]:checked');
     if (!checkedRadio || !checkedRadio.value) {
-      showToast(lang === 'vi' ? 'Vui lòng chọn Giữ link cũ hoặc Cấp link mới trước khi tạo đơn!' : 'Please select Keep existing link or Create new link before creating order!', 'error');
-      let valEl = $('subDecisionValidationAlert');
-      if (!valEl) {
-        valEl = document.createElement('div');
-        valEl.id = 'subDecisionValidationAlert';
-        valEl.className = 'mt-2 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border-2 border-rose-400 dark:border-rose-600 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center gap-2 animate-pulse';
-        subWrap.appendChild(valEl);
-      }
-      valEl.innerHTML = '<i class="fas fa-circle-exclamation text-rose-500 shrink-0"></i><span>Vui lòng chọn 1 trong 2 phương án (Giữ link cũ hoặc Cấp link mới) để tiếp tục tạo mã QR.</span>';
-      valEl.classList.remove('hidden');
-      subWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      showToast(lang === 'vi' ? 'Vui lòng chọn Giữ link cũ hoặc Cấp link mới trước khi thanh toán!' : 'Please select Keep existing link or Create new link before paying!', 'error');
+      showSubDecisionWarning();
       return;
     }
     currentSubDecision = checkedRadio.value;
-    const valEl = $('subDecisionValidationAlert');
-    if (valEl) valEl.classList.add('hidden');
+    clearSubDecisionWarning();
     if (currentSubDecision === 'KEEP_EXISTING' && existingCustomerLinks.length === 0) {
       showToast(lang === 'vi' ? 'Website hiện tại chưa có Link Sub cũ để giữ. Vui lòng chọn Cấp link mới!' : 'No existing subscription link found. Please choose Create new link!', 'error');
+      showSubDecisionWarning('Website hiện tại chưa có Link Sub cũ để giữ. Vui lòng chọn Cấp link mới.');
       return;
     }
     if (currentSubDecision === 'KEEP_EXISTING' && existingCustomerLinks.length > 1) {
@@ -3370,20 +3405,40 @@ async function confirmPaid() {
   if (!btn || btn.disabled) return;
   const l = i18n[lang];
 
+  if (!isUpgradeMode && !isRenewMode) {
+    const emVal = ($('cusEmail')?.value || '').trim();
+    if (!emVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emVal)) {
+      showToast(lang === 'vi' ? 'Vui lòng nhập Email hợp lệ trước khi thanh toán!' : 'Please enter a valid email before paying!', 'error');
+      $('cusEmail')?.focus();
+      $('emailBlock')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    if (emailLookupState === 'checking') {
+      showToast(lang === 'vi' ? 'Đang kiểm tra lịch sử link của email, vui lòng đợi trong giây lát...' : 'Checking email link history, please wait...', 'warn');
+      return;
+    }
+    if (emailLookupState === 'error') {
+      showToast(lang === 'vi' ? 'Không thể kiểm tra lịch sử email. Vui lòng bấm Thử lại!' : 'Cannot verify email history. Please click Retry!', 'error');
+      $('subLinkLifecycleWrap')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+  }
+
   const subWrap = $('subLinkLifecycleWrap');
   const isSubWrapVisible = subWrap && !subWrap.classList.contains('hidden');
   const checkedRadio = document.querySelector('input[name="subLinkDecisionRadio"]:checked');
-  const decision = isSubWrapVisible ? (checkedRadio?.value || currentSubDecision) : undefined;
+  const decision = isSubWrapVisible ? (checkedRadio ? checkedRadio.value : '') : undefined;
 
   if (isSubWrapVisible) {
     if (!decision || (decision !== 'KEEP_EXISTING' && decision !== 'CREATE_NEW')) {
       showToast(lang === 'vi' ? 'Vui lòng chọn Giữ link cũ hoặc Cấp link mới trước khi thanh toán!' : 'Please select Keep existing link or Create new link before paying!', 'error');
-      subWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      showSubDecisionWarning();
       return;
     }
+    clearSubDecisionWarning();
     if (decision === 'KEEP_EXISTING' && existingCustomerLinks.length === 0) {
       showToast(lang === 'vi' ? 'Website hiện tại chưa có Link Sub cũ để giữ. Vui lòng chọn Cấp link mới!' : 'No existing subscription link found. Please choose Create new link!', 'error');
-      subWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      showSubDecisionWarning('Website hiện tại chưa có Link Sub cũ để giữ. Vui lòng chọn Cấp link mới.');
       return;
     }
     if (decision === 'KEEP_EXISTING' && existingCustomerLinks.length > 1) {
@@ -4360,24 +4415,25 @@ window.onload = async function () {
   if (emInput) {
     let emailDebounce = null;
     emInput.addEventListener('input', () => {
-      currentSubDecision = 'CREATE_NEW';
+      const email = emInput.value.trim();
+      if (email && email.toLowerCase() === lastCheckedEmail.toLowerCase() && emailLookupState !== 'error' && emailLookupState !== 'idle') {
+        return;
+      }
+      currentSubDecision = '';
       detectedRenewOf = '';
       existingCustomerLinks = [];
       $('subLinkLifecycleWrap')?.classList.remove('hidden');
       $('multiLinkSelectorWrap')?.classList.add('hidden');
-      lockSubDecisionUI('CREATE_NEW', 'Đang nhập email...');
 
-      const email = emInput.value.trim();
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         lastCheckedEmail = '';
         emailLookupState = 'idle';
+        lockSubDecisionUI('CREATE_NEW', 'Vui lòng nhập email để hệ thống kiểm tra lịch sử link sub.', 'all');
         clearTimeout(emailDebounce);
         renderPaymentBox();
         return;
       }
-      if (email.toLowerCase() === lastCheckedEmail.toLowerCase() && emailLookupState !== 'error') {
-        return;
-      }
+      lockSubDecisionUI('CREATE_NEW', 'Đang nhập email...', 'all');
       emailLookupState = 'checking';
       renderPaymentBox();
       clearTimeout(emailDebounce);
