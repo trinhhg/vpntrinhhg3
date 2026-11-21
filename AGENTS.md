@@ -70,16 +70,16 @@
 
 ## 4. QUY TẮC KIỂM THỬ (Quy tắc 49 – 58)
 
-49. **Đề xuất cách kiểm tra, không tự sửa để chạy test:** Vì AI không được ghi code, hãy nêu lệnh kiểm tra phù hợp để Admin tự chạy sau khi dán. Chỉ chạy các kiểm tra read-only/an toàn nếu chúng không sửa file, không tạo artifact và không tác động hệ thống; phải báo đúng kết quả thực tế.
+49. **Được thử code trong sandbox tách biệt:** Agent được phép tạo/sửa bản thử trong workspace/sandbox tạm, chạy build/test và tạo artifact test; tuyệt đối không ghi thử nghiệm vào source repo/working tree chính thức. Chỉ trả code cuối dạng block replacement để Admin tự dán. Báo đúng môi trường và bằng chứng test.
 50. **Không được bỏ qua lỗi build hoặc lỗi import:** Bất kỳ cảnh báo nghiêm trọng hoặc lỗi build nào xuất hiện đều phải được giải quyết triệt để trước khi tạo commit.
 51. **Kiểm tra cả trang khách hàng và trang quản trị nếu thay đổi module dùng chung:** Khi sửa đổi trong `api.js` hoặc `shared.js`, phải kiểm thử cả `index.html` và `admin.html`.
 52. **Kiểm tra các chức năng liên quan trực tiếp đến thay đổi:** Lập danh sách các tính năng phụ thuộc và rà soát kỹ lưỡng sau khi sửa code.
 53. **Kiểm tra responsive trên desktop và mobile nếu thay đổi giao diện:** Đảm bảo trải nghiệm liền mạch trên cả màn hình điện thoại di động và máy tính để bàn.
 54. **Không chỉ kiểm tra giao diện; phải kiểm tra cả dữ liệu gửi và nhận từ API:** Kiểm tra Network Tab, payload gửi đi và phản hồi JSON trả về có đúng hợp đồng không.
-55. **Không dùng dữ liệu thật để thử các thao tác có thể gây thanh toán hoặc cấp phát VPN:** Tuyệt đối không tạo đơn hàng rác trên production database hoặc kích hoạt webhook chuyển tiền thật.
-56. **Sử dụng dữ liệu test hoặc môi trường Preview khi kiểm thử nghiệp vụ:** Tận dụng tham số `?test=1`, mock data hoặc nhánh preview độc lập để kiểm thử.
+55. **Không dùng tiền thật hoặc gây cấp phát dịch vụ thật:** Agent được phép mô phỏng đơn hàng, thanh toán và webhook gần giống luồng thật, nhưng phải chặn tiền thật, email thật, fulfillment/cấp link VPN thật và side effects không thể đảo ngược.
+56. **Test có kiểm soát:** Ưu tiên test mode, mock, Preview/staging hoặc test record cô lập. Nếu chỉ có production, chỉ test read-only; không ghi production khi chưa xác minh được cô lập và chặn side effects.
 57. **Nếu không thể chạy kiểm thử, phải nói rõ chưa kiểm thử phần nào:** Báo cáo trung thực các trường hợp biên chưa được kiểm thử trong báo cáo công việc.
-58. **Không được tự tuyên bố hoàn thành nếu chưa có bằng chứng build/test phù hợp:** Mọi tuyên bố thành công phải kèm theo log build hoặc kết quả test thực tế.
+58. **Code cuối phải được kiểm chứng:** Thử phương án sửa trong sandbox/test workspace, chạy test liên quan và regression, lặp tối ưu nếu thất bại. Không gọi là đã test nếu chỉ đọc/suy luận; nêu rõ test, kết quả và phần chưa xác minh.
 
 ---
 
@@ -223,7 +223,7 @@ Không suy đoán mục tiêu deploy từ tên file; mặc định không deploy
 
 81. **Tuyệt đối cấm xóa:** Không được tự ý xóa, reset hoặc detach bất kỳ Cloudflare binding, biến môi trường, secret, KV namespace, D1 database, bảng SQL hoặc dữ liệu sản xuất nào.
 82. **Cho phép thêm biến mới:** Khi phát triển tính năng mới, Agent được phép bổ sung biến môi trường, secret hoặc binding mới nếu cần, nhưng phải giữ nguyên 100% các biến và binding hiện hành.
-83. **Không clone cơ sở dữ liệu để test:** Không tự ý tạo các bảng giả lập, namespace giả lập (như ALL_ORDERS_TEST) hoặc dựng clone riêng; kiểm tra trực tiếp trên hệ thống hiện tại bằng các thao tác đọc/kiểm thử không phá hủy (non-destructive test).
+83. **Không tự tạo/copy database hoặc binding production:** Có thể dùng môi trường test, mock, fixture hoặc test record cô lập. Không tạo namespace/bảng/DB/binding mới trên production chỉ để test; mọi thay đổi hạ tầng phải xin xác nhận.
 84. **Xác minh bindings trước và sau deploy:** Khi deploy Worker, script deploy phải kiểm tra và kế thừa đầy đủ toàn bộ danh sách bindings từ phiên bản trước (bao gồm KV, D1, plain_text, secret_text) để đảm bảo không bị thiếu hụt sau khi kích hoạt 100% traffic.
 
 ---
@@ -240,3 +240,18 @@ Không suy đoán mục tiêu deploy từ tên file; mặc định không deploy
 92. **Không deploy hoặc thay đổi production nếu chưa yêu cầu:** Tuyệt đối không deploy lên Cloudflare Workers, Pages hoặc thay đổi hệ thống production nếu người dùng chưa yêu cầu rõ ràng trong lần hiện tại.
 93. **Phát hiện lỗi ngoài phạm vi chỉ ghi chú, không tự sửa:** Nếu phát hiện lỗi khác ngoài phạm vi của lần hiện tại, chỉ được phép ghi chú vào báo cáo để thông báo cho người dùng; tuyệt đối không tự ý sửa code.
 94. **Chủ động hỏi khi chưa rõ hoặc có rủi ro:** Nếu yêu cầu của người dùng chưa đủ rõ ràng hoặc có nguy cơ ảnh hưởng đến dữ liệu/hệ thống, Agent phải dừng lại và hỏi người dùng trước khi thực hiện.
+
+---
+
+## 11. QUYỀN RUNTIME TEST SÂU & KIỂM CHỨNG CODE TRƯỚC KHI ĐỀ XUẤT
+
+95. Agent được phép runtime test website production ở chế độ read-only: UI, responsive, điều hướng, console, Network, API read, validation và thao tác không ghi dữ liệu.
+96. Agent được phép tự chỉnh bản thử trong sandbox/workspace tạm (không phải repo/working tree chính thức), chạy build/unit/integration/E2E, thử nhiều phương án và tạo artifact test. Không ghi source chính, commit, push, PR, merge hoặc deploy.
+97. Code replacement cuối chỉ được đưa sau khi thử nghiệm phù hợp, xác minh lỗi mục tiêu và kiểm tra regression liên quan. Nếu không thể test runtime, phải nêu giới hạn rõ; không giả nhận đã xác minh.
+98. Cho phép giả lập thanh toán/webhook bằng payload dữ liệu giả có cấu trúc gần thật: mã đơn/giao dịch, nội dung chuyển khoản, số tiền, thời điểm, trạng thái; có thể thử sai mã, sai tiền, trùng giao dịch, webhook lặp hoặc trễ. Không sử dụng giao dịch/ngân hàng thật.
+99. Webhook test chỉ chạy qua mock, test endpoint hoặc môi trường cô lập đã xác minh. Không gửi webhook vào production nếu có thể kích hoạt fulfillment, gửi email, cấp link VPN, ghi giao dịch hoặc sửa đơn thật.
+100. Có thể test end-to-end order → webhook giả → đối soát → paid → fulfillment giả → Admin/customer, nhưng mọi record và downstream phải test-only; không thu tiền, gửi email, cấp link VPN hay thay đổi dữ liệu khách thật.
+101. Test data phải có dấu hiệu test rõ, ID riêng và không trùng dữ liệu thật. Chỉ dọn record do Agent tạo trong lần test khi chắc chắn nhận diện đúng record test và xóa an toàn; nếu không thì giữ nguyên và báo Admin.
+102. Báo cáo test phải nêu environment, test case, pass/fail, evidence console/network/API, regression, test chưa chạy và lý do; phân biệt đã test, đã phân tích và chưa xác minh.
+103. Payload giống ngân hàng thật không đồng nghĩa được phép gửi vào webhook production. Nếu không chứng minh được isolation, chỉ test mock/sandbox.
+104. Admin vẫn kiểm soát source: Agent chỉ trả block cũ nguyên văn và block mới đã thử (nếu có), file/vị trí, lý do và kết quả; Admin tự thay.
