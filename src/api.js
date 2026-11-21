@@ -1,3 +1,4 @@
+// v1 — 2026-11-21 20:42 (UTC+7) — Chặn rò rỉ cache vpn_portal_last_order từ trang khách sang /admin
 /**
  * src/api.js — Module giao tiếp API tập trung duy nhất của VPNTrinhHg3
  * Tuân thủ 100% hợp đồng API của Worker Backend và các quy tắc an toàn AGENTS.md
@@ -57,14 +58,16 @@ export function isTestMode() {
     if (adminTest === "0") return false;
   } catch {}
 
-  // 3. Nhận diện từ đơn hàng gần nhất trong session cache nếu là đơn test (không dùng tiền tố mã đơn DH_TEST_)
-  try {
-    const cached = localStorage.getItem("vpn_portal_last_order");
-    if (cached) {
-      const co = JSON.parse(cached);
-      if (co && co.isTest === true) return true;
-    }
-  } catch {}
+  // 3. Nhận diện từ đơn hàng gần nhất trong session cache nếu là đơn test (chỉ áp dụng cho trang khách, tránh rò rỉ sang /admin)
+  if (!/\/admin/i.test(location.pathname || "")) {
+    try {
+      const cached = localStorage.getItem("vpn_portal_last_order");
+      if (cached) {
+        const co = JSON.parse(cached);
+        if (co && co.isTest === true) return true;
+      }
+    } catch {}
+  }
 
   return false;
 }
