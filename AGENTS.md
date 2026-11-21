@@ -76,8 +76,8 @@
 52. **Kiểm tra các chức năng liên quan trực tiếp đến thay đổi:** Lập danh sách các tính năng phụ thuộc và rà soát kỹ lưỡng sau khi sửa code.
 53. **Kiểm tra responsive trên desktop và mobile nếu thay đổi giao diện:** Đảm bảo trải nghiệm liền mạch trên cả màn hình điện thoại di động và máy tính để bàn.
 54. **Không chỉ kiểm tra giao diện; phải kiểm tra cả dữ liệu gửi và nhận từ API:** Kiểm tra Network Tab, payload gửi đi và phản hồi JSON trả về có đúng hợp đồng không.
-55. **Không dùng tiền thật hoặc gây cấp phát dịch vụ thật:** Agent được phép mô phỏng đơn hàng, thanh toán và webhook gần giống luồng thật, nhưng phải chặn tiền thật, email thật, fulfillment/cấp link VPN thật và side effects không thể đảo ngược.
-56. **Test có kiểm soát:** Ưu tiên test mode, mock, Preview/staging hoặc test record cô lập. Nếu chỉ có production, chỉ test read-only; không ghi production khi chưa xác minh được cô lập và chặn side effects.
+55. **Được test mutation trên demo đã xác nhận:** Website, Admin, webhook và downstream được Admin xác nhận là demo/test chưa vận hành production có thể được Agent thao tác thật để test, gồm tạo/sửa test order, gửi webhook giả, cập nhật trạng thái và kiểm thử fulfillment nếu tất cả dịch vụ đích cũng là demo. Không giao dịch tiền thật, không gửi email hoặc cấp dịch vụ cho khách thật.
+56. **Xác minh môi trường trước test ghi:** Trước mutation, Agent phải xác minh URL website, Admin, webhook và downstream là demo/test được Admin xác nhận, không phải production. Nếu có dấu hiệu production hoặc không chắc, dừng mutation và hỏi Admin.
 57. **Nếu không thể chạy kiểm thử, phải nói rõ chưa kiểm thử phần nào:** Báo cáo trung thực các trường hợp biên chưa được kiểm thử trong báo cáo công việc.
 58. **Code cuối phải được kiểm chứng:** Thử phương án sửa trong sandbox/test workspace, chạy test liên quan và regression, lặp tối ưu nếu thất bại. Không gọi là đã test nếu chỉ đọc/suy luận; nêu rõ test, kết quả và phần chưa xác minh.
 
@@ -223,7 +223,7 @@ Không suy đoán mục tiêu deploy từ tên file; mặc định không deploy
 
 81. **Tuyệt đối cấm xóa:** Không được tự ý xóa, reset hoặc detach bất kỳ Cloudflare binding, biến môi trường, secret, KV namespace, D1 database, bảng SQL hoặc dữ liệu sản xuất nào.
 82. **Cho phép thêm biến mới:** Khi phát triển tính năng mới, Agent được phép bổ sung biến môi trường, secret hoặc binding mới nếu cần, nhưng phải giữ nguyên 100% các biến và binding hiện hành.
-83. **Không tự tạo/copy database hoặc binding production:** Có thể dùng môi trường test, mock, fixture hoặc test record cô lập. Không tạo namespace/bảng/DB/binding mới trên production chỉ để test; mọi thay đổi hạ tầng phải xin xác nhận.
+83. **Không tự ý tạo/copy DB hoặc binding:** Trong demo/test đã xác minh, được phép ghi test records vào database demo hiện có. Không tự tạo binding, namespace, DB hay bảng mới nếu chưa được cho phép riêng; tuyệt đối không ghi database production.
 84. **Xác minh bindings trước và sau deploy:** Khi deploy Worker, script deploy phải kiểm tra và kế thừa đầy đủ toàn bộ danh sách bindings từ phiên bản trước (bao gồm KV, D1, plain_text, secret_text) để đảm bảo không bị thiếu hụt sau khi kích hoạt 100% traffic.
 
 ---
@@ -245,13 +245,16 @@ Không suy đoán mục tiêu deploy từ tên file; mặc định không deploy
 
 ## 11. QUYỀN RUNTIME TEST SÂU & KIỂM CHỨNG CODE TRƯỚC KHI ĐỀ XUẤT
 
-95. Agent được phép runtime test website production ở chế độ read-only: UI, responsive, điều hướng, console, Network, API read, validation và thao tác không ghi dữ liệu.
+95. Agent được phép runtime test trực tiếp website/Admin demo bằng browser với thao tác thực tế, gồm đăng nhập Admin hợp lệ, điều hướng, nhập liệu, submit forms, tạo/sửa/xóa test records, UI/responsive, console, Network/API, validation và luồng nghiệp vụ. Mutation chỉ được thực hiện sau khi xác minh đúng demo/test và không chạm production.
 96. Agent được phép tự chỉnh bản thử trong sandbox/workspace tạm (không phải repo/working tree chính thức), chạy build/unit/integration/E2E, thử nhiều phương án và tạo artifact test. Không ghi source chính, commit, push, PR, merge hoặc deploy.
 97. Code replacement cuối chỉ được đưa sau khi thử nghiệm phù hợp, xác minh lỗi mục tiêu và kiểm tra regression liên quan. Nếu không thể test runtime, phải nêu giới hạn rõ; không giả nhận đã xác minh.
 98. Cho phép giả lập thanh toán/webhook bằng payload dữ liệu giả có cấu trúc gần thật: mã đơn/giao dịch, nội dung chuyển khoản, số tiền, thời điểm, trạng thái; có thể thử sai mã, sai tiền, trùng giao dịch, webhook lặp hoặc trễ. Không sử dụng giao dịch/ngân hàng thật.
-99. Webhook test chỉ chạy qua mock, test endpoint hoặc môi trường cô lập đã xác minh. Không gửi webhook vào production nếu có thể kích hoạt fulfillment, gửi email, cấp link VPN, ghi giao dịch hoặc sửa đơn thật.
-100. Có thể test end-to-end order → webhook giả → đối soát → paid → fulfillment giả → Admin/customer, nhưng mọi record và downstream phải test-only; không thu tiền, gửi email, cấp link VPN hay thay đổi dữ liệu khách thật.
+99. Trong demo/test đã xác minh, Agent được phép gửi webhook giả trực tiếp đến webhook demo đang chạy để kiểm tra runtime thật, gồm xác thực, parser, đối soát, dedup/idempotency, trạng thái và response. Không gửi giao dịch ngân hàng thật hoặc gọi endpoint production.
+100. Được test end-to-end trên demo: tạo order trong DB demo → webhook giả vào webhook demo → đối soát → cập nhật paid → fulfillment demo → kiểm tra Admin/customer và kết quả link demo. Downstream phải là test; không cấp dịch vụ cho khách thật, thu tiền hoặc gửi email thật.
 101. Test data phải có dấu hiệu test rõ, ID riêng và không trùng dữ liệu thật. Chỉ dọn record do Agent tạo trong lần test khi chắc chắn nhận diện đúng record test và xóa an toàn; nếu không thì giữ nguyên và báo Admin.
 102. Báo cáo test phải nêu environment, test case, pass/fail, evidence console/network/API, regression, test chưa chạy và lý do; phân biệt đã test, đã phân tích và chưa xác minh.
-103. Payload giống ngân hàng thật không đồng nghĩa được phép gửi vào webhook production. Nếu không chứng minh được isolation, chỉ test mock/sandbox.
+103. Payload giả có thể mô phỏng cấu trúc ngân hàng thật nhưng chỉ được gửi vào webhook demo/test đã xác minh. Nếu không chắc môi trường demo hay production, không gửi payload và hỏi Admin.
 104. Admin vẫn kiểm soát source: Agent chỉ trả block cũ nguyên văn và block mới đã thử (nếu có), file/vị trí, lý do và kết quả; Admin tự thay.
+
+105. **Đăng nhập Admin an toàn:** Agent được phép đăng nhập Admin demo bằng browser session được Admin ủy quyền hoặc credential qua cơ chế bảo mật của nền tảng. Không yêu cầu password/token nhạy cảm trong chat, không bypass đăng nhập, không lấy credential, không ghi credential vào repo/log/report. Nếu chưa có session hợp lệ, xin Admin thiết lập cách cấp quyền an toàn.
+106. **Test runtime thực, không chỉ mock UI:** Khi demo đã xác minh, ưu tiên thao tác browser thật, API đến demo, webhook giả gửi thật đến endpoint demo và xác nhận kết quả bằng Admin/UI/API/readback được phép. Ghi nhận side effects của test và chỉ dọn dữ liệu do chính lần test tạo nếu nhận diện chắc chắn.
