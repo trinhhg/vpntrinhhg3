@@ -1,3 +1,4 @@
+/* v1 — 2026-11-21 20:42 (UTC+7) — Sửa responsive mobile cho 3 tab trạng thái đơn .ord-tabs (320px–412px) */
 @import "@fontsource/plus-jakarta-sans/400.css";
 @import "@fontsource/plus-jakarta-sans/500.css";
 @import "@fontsource/plus-jakarta-sans/600.css";
@@ -307,10 +308,12 @@ body {
   gap: 4px;
   padding: 4px;
   width: 100%;
+  max-width: 100%;
   background: #e2e8f0;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .ord-sub-tab {
@@ -322,13 +325,14 @@ body {
   padding: 6px 8px;
   border: 1px solid transparent;
   border-radius: 10px;
+  box-sizing: border-box;
   color: #475569;
   background: transparent;
   font-size: 12px;
   font-weight: 700;
   line-height: 1.2;
   white-space: nowrap;
-  flex: 1 1 auto;
+  flex: 1 1 0%;
   min-width: 0;
   cursor: pointer;
   transition: background .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease;
@@ -337,10 +341,9 @@ body {
 .ord-sub-tab.active {
   color: #4338ca;
   background: #ffffff;
-  border-color: rgba(226, 232, 240, 0.6);
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  border-color: rgba(203, 213, 225, 0.9);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
   font-weight: 800;
-  padding: 6px 10px;
 }
 
 .ord-sub-tab .mac-dot {
@@ -352,6 +355,9 @@ body {
 
 .ord-tab-label {
   display: inline-block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -383,6 +389,72 @@ body {
 .ord-count-failed {
   color: #b91c1c;
   background: #fee2e2;
+}
+
+@media (max-width: 639px) {
+  .ord-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3px;
+    padding: 3px;
+    border-radius: 12px;
+  }
+
+  .ord-sub-tab {
+    width: 100%;
+    padding: 6px 4px;
+    gap: 4px;
+    min-height: 36px;
+    font-size: 11.5px;
+  }
+
+  .ord-sub-tab.active {
+    padding: 6px 4px;
+  }
+
+  .ord-sub-tab .mac-dot {
+    width: 7px;
+    height: 7px;
+    flex: 0 0 7px;
+  }
+
+  .ord-count {
+    min-width: 18px;
+    min-height: 18px;
+    padding: 2px 5px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 379px) {
+  .ord-tabs {
+    gap: 2px;
+    padding: 3px;
+  }
+
+  .ord-sub-tab {
+    padding: 5px 2px;
+    gap: 3px;
+    min-height: 34px;
+    font-size: 10.5px;
+  }
+
+  .ord-sub-tab.active {
+    padding: 5px 2px;
+  }
+
+  .ord-sub-tab .mac-dot {
+    width: 6px;
+    height: 6px;
+    flex: 0 0 6px;
+  }
+
+  .ord-count {
+    min-width: 16px;
+    min-height: 16px;
+    padding: 1px 4px;
+    font-size: 9.5px;
+  }
 }
 
 @media (min-width: 640px) {
@@ -1053,6 +1125,7 @@ hr.guide-hr,
   white-space: nowrap;
   flex-shrink: 0;
 }
+
 /* ===== TỐI ƯU GIAO DIỆN ADMIN TRÊN MOBILE (P2) ===== */
 @media (max-width: 639px) {
   /* 1. Khu vực Set Web: input full width, toggle không bị ép */
@@ -1063,6 +1136,7 @@ hr.guide-hr,
     width: 100% !important;
     max-width: 100% !important;
   }
+
   .toggle-wrap {
     flex-shrink: 0 !important;
   }
@@ -1078,9 +1152,11 @@ hr.guide-hr,
     padding-left: 0.5rem !important;
     padding-right: 0.5rem !important;
   }
+
   #hdr h1 {
     font-size: 0.95rem !important;
   }
+
   #hdrTestBadge {
     padding: 2px 6px !important;
     font-size: 8.5px !important;
