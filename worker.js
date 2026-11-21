@@ -1,3 +1,4 @@
+// v6 — 2026-11-21 19:05 (UTC+7) — Sửa lỗi PATCH xóa cột Supabase (cleanPartialOrderPatch + patchOrder), chặn thiếu subLinkDecision ở đơn 2 phương án, tách Web mẹ tự động / 2 Web vệ tinh bù link thủ công độc lập, khóa KV + single-field PATCH ở /api/admin/heal, vá auth /api/admin/test/* & fulfillment_config, bảo vệ link khách #1 khi dọn nguồn, sửa migrate_pkg/migrate_dates & SendPulse quota
 // v5 — 2026-11-08 22:30 (UTC+7) — Nâng cấp Portal DH-only, Bảo mật Link Sub 3 Toggles (Blur/Khóa/Kiểm tra), Xác minh Email TTL, Đồng bộ Remap HSD & Thông báo Đơn hàng Telegram riêng
 // v4 — 2026-11-04 21:00 (UTC+7)
 const getKV = (env) => env && (env.VPN_KV3 || env.VPN_KV || env.KV);
@@ -182,7 +183,30 @@ function getSupabase(env, isTest = false) {
       return Array.isArray(result) ? (result[0] || cleaned) : cleaned;
     },
     async updateOrder(id, fields) {
-      const cleaned = cleanOrderForSupabase(fields);
+      const cleaned = {};
+      const src = fields && typeof fields === "object" ? fields : {};
+      const STRIP_KEYS = new Set(["originalVnd", "discountVnd", "couponCode", "coupon", "bonusText", "giftName", "giftRuleId", "isTest", "subLinkDecision", "targetLink", "renewOf", "fulfillResult", "fallbackNew"]);
+      for (const [k, v] of Object.entries(src)) {
+        if (v === undefined || STRIP_KEYS.has(k)) continue;
+        if (k === "totalVnd") {
+          cleaned[k] = (v === "" || v === null || isNaN(Number(v))) ? null : Math.round(Number(v));
+        } else if (k === "totalCny") {
+          cleaned[k] = (v === "" || v === null || isNaN(Number(v))) ? null : Math.round(Number(v) * 100) / 100;
+        } else if (k === "bonusDays") {
+          cleaned[k] = Math.max(0, parseInt(v) || 0);
+        } else if (k === "expFinal" && typeof v === "boolean") {
+          cleaned[k] = v ? "true" : "false";
+        } else if (k === "lockInfo") {
+          if (v && typeof v === "object") {
+            cleaned[k] = Object.keys(v).length ? JSON.stringify(v) : null;
+          } else {
+            cleaned[k] = v ? String(v) : null;
+          }
+        } else {
+          cleaned[k] = v;
+        }
+      }
+      if (!Object.keys(cleaned).length) return {};
       const res = await fetch(`${url}/${table}?id=eq.${encodeURIComponent(id)}`, {
         method: "PATCH",
         headers: {
@@ -197,6 +221,9 @@ function getSupabase(env, isTest = false) {
       }
       const result = await res.json().catch(() => []);
       return Array.isArray(result) ? (result[0] || cleaned) : cleaned;
+    },
+    async patchOrder(id, fields) {
+      return this.updateOrder(id, fields);
     },
     async delete (id, rawId) {
       const query = rawId && rawId !== id ? `or=(id.eq.${encodeURIComponent(rawId)},id.eq.${encodeURIComponent(id)})` : `id=eq.${encodeURIComponent(id)}`;
@@ -1409,6 +1436,15 @@ function getMe(url, env, cms, request = null) {
   }
   if (!n) n = h.includes("doicucden") ? 1 : h.includes("onepiece") ? 2 : 3;
   return { n, field: "info" + n, PD: PDS[n] };
+}
+
+function isAutoFulfillDisabled(env, cms) {
+  const envRole = String((env && (env.AUTO_FULFILL_MODE || env.WEB_ROLE)) || "").trim().toLowerCase();
+  if (envRole === "manual" || envRole === "satellite" || envRole === "off" || envRole === "false") return true;
+  if (String((env && env.DISABLE_AUTO_FULFILL) || "").trim().toLowerCase() === "true") return true;
+  const s = (cms && cms.settings) || {};
+  if (s.lockFulfill === true) return true;
+  return false;
 }
 
 // ---------------------------------------------------------------- auth
@@ -2761,7 +2797,13 @@ export default {
         const expiresAt = Date.now() + ttlSeconds * 1000;
         await KV.put(`EMAIL_VERIFY_${oid}_${idx}_${token}`, JSON.stringify({ orderId: oid, infoIndex: idx, exp: expiresAt }), { expirationTtl: Math.max(60, ttlSeconds) });
 
-        return J({ ok: true, token, expiresAt, ttlSeconds, ttlHours: Math.round(ttlSeconds / 3600) });
+        return J({
+          ok: true,
+          token,
+          expiresAt,
+          ttlSeconds,
+          ttlHours: Math.round(ttlSeconds / 3600)
+        });
       }
 
       // Endpoint cấp Link Sub thật cho thao tác Copy (Kiểm tra Khóa > Quyền đơn > Xác minh Email trên Server)
@@ -2893,6 +2935,8 @@ export default {
       // Endpoint quản lý Cấu hình Mapping & Chính sách Failover Fulfillment
       if (p === "/api/admin/fulfillment_config") {
         if (m === "GET") {
+          const bad = need(admin);
+          if (bad) return bad;
           const cfg = safeJson(await KV.get("FULFILLMENT_CONFIG"), { mapping: {}, failover_pref: "lx" });
           return J({ ok: true, config: cfg });
         }
@@ -3181,16 +3225,7 @@ export default {
         const today0 = day0(now);
         const activeUserOrders = st.orders.filter(x => x && normStatus(x.status) === "success" && String(x.email || "").toLowerCase() === emLower && x.expDate && (isLifetime(x.expDate) || (parseDmy(x.expDate) > 0 && parseDmy(x.expDate) >= today0)));
 
-        const isLegitRenew = !!(
-          b.renewOf &&
-          renewSrc &&
-          normStatus(renewSrc.status) === "success" &&
-          String(renewSrc.email || "").toLowerCase() === emLower &&
-          activeUserOrders.length === 1 &&
-          normId(activeUserOrders[0].id) === normId(renewSrc.id) &&
-          renewSrc.expDate &&
-          !isLifetime(renewSrc.expDate)
-        );
+        const isLegitRenew = !!(b.renewOf && renewSrc && normStatus(renewSrc.status) === "success" && String(renewSrc.email || "").toLowerCase() === emLower && activeUserOrders.length === 1 && normId(activeUserOrders[0].id) === normId(renewSrc.id) && renewSrc.expDate && !isLifetime(renewSrc.expDate));
 
         if (!isLegitRenew) {
           renewSrc = null;
@@ -3207,16 +3242,24 @@ export default {
         } else if (activeUserOrders.length === 1) {
           const singleActiveOrd = activeUserOrders[0];
           const candidateLink = String(singleActiveOrd[f] || "").trim();
-          // Nếu khách chủ động chọn CREATE_NEW (Cấp link mới): Tôn trọng lựa chọn của khách
-          if (b.subLinkDecision === "CREATE_NEW") {
-            subLinkDecision = "CREATE_NEW";
-            targetLink = "";
-          } else if (candidateLink) {
-            // Khách chọn KEEP_EXISTING: chỉ giữ link cũ, KHÔNG biến thành đơn gia hạn và KHÔNG gắn renewSrc
-            subLinkDecision = "KEEP_EXISTING";
-            targetLink = candidateLink;
+          if (candidateLink) {
+            const rawDecision = String(b.subLinkDecision || "").trim();
+            if (rawDecision !== "KEEP_EXISTING" && rawDecision !== "CREATE_NEW") {
+              return J({
+                ok: false,
+                error: "Vui lòng chọn phương án Link Sub (Giữ link cũ hoặc Cấp link mới) trước khi tạo đơn."
+              }, 400);
+            }
+            if (rawDecision === "CREATE_NEW") {
+              subLinkDecision = "CREATE_NEW";
+              targetLink = "";
+            } else {
+              // Khách chủ động chọn KEEP_EXISTING: chỉ giữ link cũ, KHÔNG biến thành đơn gia hạn và KHÔNG gắn renewSrc
+              subLinkDecision = "KEEP_EXISTING";
+              targetLink = candidateLink;
+            }
           } else {
-            // Web này chưa có link trong đơn (web phụ phát hiện ô trống) -> Tự động cấp link mới riêng
+            // Web này chưa có link trong đơn (1 phương án duy nhất) -> Tự động cấp link mới riêng
             subLinkDecision = "CREATE_NEW";
             targetLink = "";
           }
@@ -3491,11 +3534,15 @@ export default {
       }
 
       if (p === "/api/admin/test/toggle" && m === "POST") {
+        const bad = need(admin);
+        if (bad) return bad;
         const b = await body();
         await KV.put("TEST_MODE_ACTIVE", b.active ? "1" : "0");
         return J({ ok: true, active: !!b.active });
       }
       if (p === "/api/admin/test/status" && m === "GET") {
+        const bad = need(admin);
+        if (bad) return bad;
         const active = (await KV.get("TEST_MODE_ACTIVE")) === "1";
         const [ping_prod, ping_test] = await Promise.all([pingSupabase(env, false), pingSupabase(env, true)]);
         return J({
@@ -3510,6 +3557,8 @@ export default {
         });
       }
       if (p === "/api/admin/test/fake_order" && m === "POST") {
+        const bad = need(admin);
+        if (bad) return bad;
         const sb = getSupabase(env, true);
         if (!sb) return J({ ok: false, error: "Chưa cấu hình Supabase" }, 500);
         const now = NOW();
@@ -3545,11 +3594,15 @@ export default {
         return J({ ok: true, order: fakeOrder });
       }
       if (p === "/api/admin/test/clone" && m === "POST") {
+        const bad = need(admin);
+        if (bad) return bad;
         const sb = getSupabase(env, true);
         const count = sb ? await sb.cloneProdToTest() : 0;
         return J({ ok: true, count });
       }
       if (p === "/api/admin/test/clear" && m === "POST") {
+        const bad = need(admin);
+        if (bad) return bad;
         const sb = getSupabase(env, true);
         if (!sb) return J({ ok: false, error: "Chưa cấu hình Supabase" }, 500);
         await sb.clearTest();
@@ -3727,20 +3780,44 @@ export default {
               }
               else log("warn", "upgrade", "D1 báo nâng gói nhưng không có yêu cầu chờ", oid, oid);
             }
-            const r = fulfillOrder(st, o, me, log);
-            if (r === "error") {
-              results.errors.push(oid);
-              continue;
+
+            const manualOnlyWeb = isAutoFulfillDisabled(env, st.cms);
+            let r = "skip_manual";
+            if (manualOnlyWeb) {
+              // 2 Web vệ tinh: KHÔNG tự động tạo Link Sub; chỉ chốt trạng thái thanh toán & HSD để đơn vào Tab Kiểm tra bù link
+              if (!o.expFinal) {
+                const calcNow = o.paidAt || NOW();
+                if (o.orderType || !o.expDate) o.expDate = computeExp(o, st.orders, calcNow, st.cms?.giftRules);
+                o.expFinal = true;
+                st.dO = true;
+              }
+              log("info", "fulfill", `Bỏ qua cấp link tự động trên ${me.field} (chế độ bù link thủ công vệ tinh)`, oid, oid);
+            } else {
+              r = fulfillOrder(st, o, me, log);
+              if (r === "error") {
+                results.errors.push(oid);
+                continue;
+              }
             }
-            // Cập nhật đơn vào đúng bảng Supabase đang chọn; nếu ghi Supabase thất bại thì báo lỗi để retry, không báo fulfilled ảo
+
+            // Lưu KV (ALL_LINKS/GLOBAL_ROUTER/LINK_POOL) trước khi PATCH Supabase để tránh link 404 nếu KV lỗi
+            if (st.dL || st.dP) {
+              await persist(KV, st);
+              st.dL = false;
+              st.dP = false;
+            }
+
+            // Chỉ PATCH đúng các cột thay đổi (tuyệt đối không upsert full row để không ghi đè info của web khác)
             const patchPayload = {
-              [me.field]: o[me.field],
               status: o.status,
               paidAt: o.paidAt,
               expDate: o.expDate,
-              expFinal: o.expFinal,
-              fulfilledAt: o.fulfilledAt
+              expFinal: o.expFinal
             };
+            if (!manualOnlyWeb) {
+              patchPayload[me.field] = o[me.field];
+              patchPayload.fulfilledAt = o.fulfilledAt;
+            }
             if (o.isUpgrade) {
               patchPayload.isUpgrade = true;
               patchPayload.upgradeStatus = o.upgradeStatus;
@@ -3755,19 +3832,10 @@ export default {
             }
             let sbSaved = false;
             try {
-              if (typeof sb.updateOrder === "function") {
-                await sb.updateOrder(o.id, patchPayload);
-              } else {
-                await sb.upsert(o);
-              }
+              await sb.patchOrder(o.id, patchPayload);
               sbSaved = true;
-            } catch {
-              try {
-                await sb.upsert(o);
-                sbSaved = true;
-              } catch (sbSaveErr) {
-                log("error", "fulfill", `Lỗi lưu kết quả fulfillment vào Supabase (${st.isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS"})`, `${oid}: ${sbSaveErr.message || String(sbSaveErr)}`, oid);
-              }
+            } catch (sbSaveErr) {
+              log("error", "fulfill", `Lỗi PATCH kết quả fulfillment vào Supabase (${st.isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS"})`, `${oid}: ${sbSaveErr.message || String(sbSaveErr)}`, oid);
             }
             if (!sbSaved) {
               results.errors.push(oid);
@@ -3775,12 +3843,11 @@ export default {
             }
 
             const mailKind = o.orderType === "renew" ? "renew" : "new";
-            if (r === "new" || r === "renew") {
+            if (!manualOnlyWeb && (r === "new" || r === "renew")) {
               results.fulfilled.push(oid);
               mailFor(ctx, env, st, o, mailKind, me);
               ctx.waitUntil(sendTelegramOrderActivationNotify(env, KV, st.cms, o, r, log));
-            }
-            else {
+            } else {
               results.already_fulfilled.push(oid);
               if (kind === "upgrade") mailFor(ctx, env, st, o, "upgrade", me);
             }
@@ -3861,17 +3928,30 @@ export default {
 
           st.pool = st.pool.filter(p => p !== poolItem && p.id !== targetId && !(p.url === pUrl1 && (!pUrl2 || p.url2 === pUrl2)));
 
-          // Xóa link neo #1 Auto tương ứng
-          st.links = st.links.filter(l => !(l && ((l.orig === pUrl1 && (!pUrl2 || l.orig2 === pUrl2)) || (pUrl2 && l.orig === pUrl2)) && String(l.linkIndex) === "1"));
+          // Chỉ xóa link neo kỹ thuật "auto" (tuyệt đối KHÔNG xóa link khách thật có linkIndex === "1")
+          const isLegacyAnchor = (l) => l && !l.orderId && String(l.email || "").trim().toLowerCase() === "auto" && String(l.linkIndex) === "1";
+          st.links = st.links.filter(l => !(isLegacyAnchor(l) && ((l.orig === pUrl1 && (!pUrl2 || l.orig2 === pUrl2)) || (pUrl2 && l.orig === pUrl2))));
 
-          // v1 — 2026-11-06 20:15 (UTC+7) — Dùng extractSourceToken xóa sạch token mọi nhà mạng trong GLOBAL_SUBS
-          // Xóa token trong GLOBAL_SUBS
+          // Chỉ xóa token trong GLOBAL_SUBS nếu không còn nguồn/link nào khác đang tham chiếu token đó
           let subsObj = safeJson(await KV.get("GLOBAL_SUBS"), {});
           const getTokSafe = (u) => extractSourceToken(u) || null;
+          const stillUsedTokens = new Set();
+          for (const rp of st.pool) {
+            if (!rp) continue;
+            const rt1 = getTokSafe(rp.url), rt2 = getTokSafe(rp.url2);
+            if (rt1) stillUsedTokens.add(rt1);
+            if (rt2) stillUsedTokens.add(rt2);
+          }
+          for (const rl of st.links) {
+            if (!rl) continue;
+            const lt1 = getTokSafe(rl.orig), lt2 = getTokSafe(rl.orig2);
+            if (lt1) stillUsedTokens.add(lt1);
+            if (lt2) stillUsedTokens.add(lt2);
+          }
           const tok1 = getTokSafe(pUrl1);
           const tok2 = getTokSafe(pUrl2);
-          if (tok1 && subsObj[tok1]) delete subsObj[tok1];
-          if (tok2 && subsObj[tok2]) delete subsObj[tok2];
+          if (tok1 && !stillUsedTokens.has(tok1) && subsObj[tok1]) delete subsObj[tok1];
+          if (tok2 && !stillUsedTokens.has(tok2) && subsObj[tok2]) delete subsObj[tok2];
           await KV.put("GLOBAL_SUBS", JSON.stringify(subsObj));
 
           st.dL = true;
@@ -3883,30 +3963,53 @@ export default {
           return J({ ok: true });
         }
 
-        // Dọn sạch toàn bộ link nguồn không còn link ẩn nào (count = 0)
+        // Dọn sạch toàn bộ link nguồn thực sự không còn bất kỳ link khách nào (bảo toàn link #1 khách thật & Da_bi_khoa)
         if (p === "/api/admin/source/clean_unused" && m === "POST") {
           const st = await st0();
           let subsObj = safeJson(await KV.get("GLOBAL_SUBS"), {});
           let deletedCount = 0;
 
           const getTokSafe = (u) => extractSourceToken(u) || null;
+          const isLegacyAnchor = (l) => l && !l.orderId && String(l.email || "").trim().toLowerCase() === "auto" && String(l.linkIndex) === "1";
           const unusedPool = st.pool.filter(p => {
-            if (!p || !p.url) return false;
-            const activeLinks = st.links.filter(l => l && String(l.linkIndex) !== "1" && (l.orig === p.url || l.orig2 === p.url));
+            if (!p || !p.url || p.url === LOCK_ORIG) return false;
+            const activeLinks = st.links.filter(l => {
+              if (!l || isLegacyAnchor(l)) return false;
+              if (p.isCombo && p.url2) {
+                return (l.orig === p.url && l.orig2 === p.url2) || (l.orig === p.url2 && l.orig2 === p.url);
+              }
+              return l.orig === p.url || l.orig2 === p.url;
+            });
             return activeLinks.length === 0;
           });
 
-          for (const p of unusedPool) {
-            deletedCount++;
-            st.links = st.links.filter(l => !(l && (l.orig === p.url || (p.url2 && l.orig2 === p.url2)) && String(l.linkIndex) === "1"));
-            const tok1 = getTokSafe(p.url);
-            const tok2 = getTokSafe(p.url2);
-            if (tok1 && subsObj[tok1]) delete subsObj[tok1];
-            if (tok2 && subsObj[tok2]) delete subsObj[tok2];
-          }
-
           const unusedSet = new Set(unusedPool);
           st.pool = st.pool.filter(p => !unusedSet.has(p));
+
+          for (const p of unusedPool) {
+            deletedCount++;
+            st.links = st.links.filter(l => !(isLegacyAnchor(l) && (l.orig === p.url || (p.url2 && l.orig2 === p.url2))));
+          }
+
+          const stillUsedTokens = new Set();
+          for (const rp of st.pool) {
+            if (!rp) continue;
+            const rt1 = getTokSafe(rp.url), rt2 = getTokSafe(rp.url2);
+            if (rt1) stillUsedTokens.add(rt1);
+            if (rt2) stillUsedTokens.add(rt2);
+          }
+          for (const rl of st.links) {
+            if (!rl) continue;
+            const lt1 = getTokSafe(rl.orig), lt2 = getTokSafe(rl.orig2);
+            if (lt1) stillUsedTokens.add(lt1);
+            if (lt2) stillUsedTokens.add(lt2);
+          }
+          for (const p of unusedPool) {
+            const tok1 = getTokSafe(p.url);
+            const tok2 = getTokSafe(p.url2);
+            if (tok1 && !stillUsedTokens.has(tok1) && subsObj[tok1]) delete subsObj[tok1];
+            if (tok2 && !stillUsedTokens.has(tok2) && subsObj[tok2]) delete subsObj[tok2];
+          }
 
           await KV.put("GLOBAL_SUBS", JSON.stringify(subsObj));
           st.dL = true;
@@ -4086,52 +4189,146 @@ export default {
           }
         }
 
-        // Endpoint bù link thủ công theo yêu cầu từ tab Kiểm tra (xử lý 100% cục bộ cho ô định tuyến của Web này)
+        // Endpoint bù link thủ công theo yêu cầu từ tab Kiểm tra (độc lập 100% cho duy nhất ô me.field của Web này)
         if (p === "/api/admin/heal" && m === "POST") {
-          const b = await body();
-          const ids = arr(b.orderIds).map(normId).filter(Boolean);
-          let details = [];
-          const st = await st0();
-          const me = getMe(url, env, st.cms);
-          if (ids.length) {
-            const isTest = reqIsTest;
-            const sb = getSupabase(env, isTest);
-            const idsSet = new Set(ids);
-            const ordersToProcess = st.orders.filter((x) => x && idsSet.has(normId(x.id)) && normStatus(x.status) === "success");
-            let localCapped = 0;
-            for (const o of ordersToProcess) {
-              let wasMissing = !o[me.field];
-              if (wasMissing) {
+          if (!(await acquire(KV))) {
+            return J({
+              ok: false,
+              error: "Hệ thống đang xử lý bù link, vui lòng đợi vài giây rồi thử lại!"
+            }, 429);
+          }
+          try {
+            const b = await body();
+            const ids = [...new Set(arr(b.orderIds).map(normId).filter(Boolean))];
+            let details = [];
+            const st = await st0();
+            const me = getMe(url, env, st.cms);
+            if (!st.sbOk) {
+              return J({
+                ok: false,
+                error: st.sbError || "Lỗi kết nối Supabase, không thể bù link"
+              }, 503);
+            }
+            if (ids.length) {
+              const sb = getSupabase(env, st.isTest);
+              if (!sb) return J({ ok: false, error: "Chưa cấu hình Supabase" }, 503);
+              const now = NOW();
+              const idsSet = new Set(ids);
+              const ordersToProcess = st.orders.filter((x) => x && idsSet.has(normId(x.id)) && normStatus(x.status) === "success");
+              let localCapped = 0;
+              for (const o of ordersToProcess) {
+                // Kiểm tra lại dữ liệu mới nhất trực tiếp trên Supabase để chống tạo trùng link khi thao tác song song / refresh
+                let freshOrd = null;
+                try {
+                  freshOrd = await sb.getOrder(o.id);
+                } catch (getErr) {
+                  details.push({
+                    id: o.id,
+                    email: o.email,
+                    field: me.field,
+                    success: false,
+                    link: "",
+                    wasMissing: true,
+                    error: "Lỗi đọc đơn từ Supabase"
+                  });
+                  continue;
+                }
+                if (!freshOrd || normStatus(freshOrd.status) !== "success") {
+                  details.push({
+                    id: o.id,
+                    email: o.email,
+                    field: me.field,
+                    success: false,
+                    link: "",
+                    wasMissing: false,
+                    error: "Đơn không ở trạng thái thành công"
+                  });
+                  continue;
+                }
+                const existingLink = String(freshOrd[me.field] || "").trim();
+                if (existingLink) {
+                  o[me.field] = existingLink;
+                  details.push({
+                    id: o.id,
+                    email: o.email,
+                    field: me.field,
+                    success: true,
+                    link: existingLink,
+                    wasMissing: false
+                  });
+                  continue;
+                }
+                if (isExpiredOrder(freshOrd, now)) {
+                  details.push({
+                    id: o.id,
+                    email: o.email,
+                    field: me.field,
+                    success: false,
+                    link: "",
+                    wasMissing: true,
+                    error: "Đơn đã hết hạn"
+                  });
+                  continue;
+                }
                 const r = fulfillOrder(st, o, me, log);
-                if (r === "new" || r === "renew" || o[me.field]) {
-                  localCapped++;
-                  st.dO = true;
-                  if (sb) await sb.upsert(o);
+                const newLink = String(o[me.field] || "").trim();
+                if ((r === "new" || r === "renew" || r === "already") && newLink) {
+                  // Lưu KV (ALL_LINKS/GLOBAL_ROUTER/LINK_POOL) TRƯỚC, rồi mới PATCH duy nhất 1 cột me.field lên Supabase
+                  if (st.dL || st.dP) {
+                    await persist(KV, st);
+                    st.dL = false;
+                    st.dP = false;
+                  }
+                  try {
+                    await sb.patchOrder(o.id, { [me.field]: newLink });
+                    localCapped++;
+                    details.push({
+                      id: o.id,
+                      email: o.email,
+                      field: me.field,
+                      success: true,
+                      link: newLink,
+                      wasMissing: true
+                    });
+                  } catch (patchErr) {
+                    log("error", "heal", `Lỗi PATCH ${me.field} lên Supabase`, `${o.id}: ${patchErr.message || String(patchErr)}`, o.id);
+                    details.push({
+                      id: o.id,
+                      email: o.email,
+                      field: me.field,
+                      success: false,
+                      link: "",
+                      wasMissing: true,
+                      error: "Lỗi ghi Supabase (có thể thử lại an toàn)"
+                    });
+                  }
+                } else {
+                  details.push({
+                    id: o.id,
+                    email: o.email,
+                    field: me.field,
+                    success: false,
+                    link: "",
+                    wasMissing: true,
+                    error: "Hết nguồn trống phù hợp trong kho"
+                  });
                 }
               }
-              details.push({
-                id: o.id,
-                email: o.email,
-                field: me.field,
-                success: !!o[me.field],
-                link: o[me.field] || "",
-                wasMissing
-              });
+              if (st.dL || st.dP) await persist(KV, st);
+              log("ok", "heal", "Bù link cục bộ", `Xử lý ${ordersToProcess.length} đơn | Cấp bù ${me.field}: ${localCapped}`);
+              await flushLog(KV, log);
             }
-            if (st.dO || st.dL) {
-              await persist(KV, st);
-            }
-            log("ok", "heal", "Bù link cục bộ", `Xử lý ${ordersToProcess.length} đơn | Cấp bù ${me.field}: ${localCapped}`);
-            await flushLog(KV, log);
+            return J({ ok: true, field: me.field, count: ids.length, details });
+          } finally {
+            await KV.delete("GLOBAL_FULFILL_LOCK");
           }
-          return J({ ok: true, field: me.field, count: ids.length, details });
         }
 
         // Endpoint nhận lệnh bắn mail từ Admin UI (nút thủ công, nút nhắc Zalo, nút gửi dung lượng...)
         if (p === "/api/admin/send_mail" && m === "POST") {
           const b = await body();
           const st = await st0();
-          ctx.waitUntil(sendMail(b.to, b.subject, b.html, env, st.cms));
+          ctx.waitUntil(sendMail(b.to, b.subject, b.html, env, st.cms, KV));
           return OK();
         }
 
@@ -4263,7 +4460,10 @@ export default {
                 }
                 st.dL = true;
               }
-              if (sb) await sb.upsert(od);
+              if (sb) await sb.patchOrder(od.id, {
+                [it.field]: od[it.field],
+                ...(od.lockInfo ? { lockInfo: od.lockInfo } : {})
+              });
             }
             if (st.dL) await persist(KV, st);
             log("ok", "admin", "Map lại link vào đơn hàng (cục bộ)", `${n} ô`);
@@ -4284,7 +4484,10 @@ export default {
             if (od.lockInfo) delete od.lockInfo[it.field];
             n++;
             appliedItems.push({ id: od.id, field: it.field, to: "" });
-            if (sb) await sb.upsert(od);
+            if (sb) await sb.patchOrder(od.id, {
+              [it.field]: "",
+              ...(od.lockInfo ? { lockInfo: od.lockInfo } : {})
+            });
           }
           log("ok", "admin", "Làm sạch URL trong ô info của đơn (cục bộ)", `${n} ô`);
           await flushLog(KV, log);
@@ -4385,7 +4588,7 @@ export default {
           let o = st.orders.find((x) => x && normId(x.id) === id);
           const isNew = !o;
           if (isNew && !/^DH[A-Z0-9]{10}$/.test(id)) return J({ ok: false, error: "Mã đơn phải dạng DH + 10 ký tự" }, 400);
-          const lockAuto = b.lockAuto === true, lockExp = !isNew && (b.lockExpiry === true || !!s.lockExpiry);
+          const lockAuto = b.lockAuto === true || isAutoFulfillDisabled(env, st.cms), lockExp = !isNew && (b.lockExpiry === true || !!s.lockExpiry);
           let renamedFrom = "", nid = id;
           if (!isNew && b.newId !== undefined && normId(b.newId) !== id) {
             nid = normId(b.newId);
@@ -4670,6 +4873,14 @@ export default {
           const drs = arr(safeJson(await KV.get("ALL_DATA_REQUESTS"), []));
           fix(drs, "Yêu cầu dung lượng", "date", "ts", fDate);
           if (apply) {
+            const sb = getSupabase(env, st.isTest);
+            if (sb && rep["Đơn hàng"] && rep["Đơn hàng"].changed > 0) {
+              for (const ord of st.orders) {
+                if (ord && ord.id && ord.date) {
+                  await sb.patchOrder(ord.id, { date: ord.date, createdTs: ord.createdTs }).catch(() => {});
+                }
+              }
+            }
             const tb = await loadTombs(KV);
             const links = notTomb(st.links, tb);
             await Promise.all([KV.put("ALL_LINKS", JSON.stringify(links)), KV.put("DEAD_LINKS", JSON.stringify(dead)), KV.put("ADMIN_DEVICES", JSON.stringify(devs)), KV.put("ALL_DATA_REQUESTS", JSON.stringify(drs))]);
@@ -4705,14 +4916,19 @@ export default {
             }
           }
           if (apply && modifiedOrders.length) {
-            const isTest = (await KV.get("TEST_MODE_ACTIVE")) === "1";
-            const sb = getSupabase(env, isTest);
+            const sb = getSupabase(env, st.isTest);
             if (sb) {
               for (const mo of modifiedOrders) {
-                await sb.upsert(mo).catch(() => {});
+                await sb.patchOrder(mo.id, {
+                  pkgId: mo.pkgId,
+                  pkg: mo.pkg,
+                  pkgName: mo.pkgName,
+                  pkgData: mo.pkgData,
+                  qty: mo.qty
+                }).catch(() => {});
               }
             }
-            log("ok", "admin", "Chuẩn hóa hiển thị gói", `Đã lưu ${modifiedOrders.length} đơn vào Supabase`);
+            log("ok", "admin", "Chuẩn hóa hiển thị gói", `Đã lưu ${modifiedOrders.length} đơn vào Supabase (${st.isTest ? "TEST" : "PROD"})`);
             await flushLog(KV, log);
           }
           return J({
