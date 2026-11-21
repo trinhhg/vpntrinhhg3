@@ -1,5 +1,5 @@
+<!-- v2.2 — 2026-11-21 20:42 (UTC+7) — Xếp dọc Bảng A/B Tab Quét & Map lại, thêm toggle Backup trước thao tác, chuyển Coupon/Gift Rule sang danh sách card, bổ sung nút/cờ Sửa & VIP modal, đóng </main> và hoàn thiện attachVaulPhysics -->
 <!-- v2.1 — 2026-11-21 19:05 (UTC+7) — Chuẩn hóa Tab Kiểm tra bù link độc lập theo từng web, sửa lỗi inline handler #mOEmail và Tab Soạn mail -->
-<!-- v2.0 - Admin (bản nâng cấp toàn diện theo kế hoạch calude_full_1): schema totalVnd/totalCny, form đơn hàng mới (đổi ID trực tiếp, ngày/tháng), Khóa fulfillment, Khóa thông tin hết hạn, nút gửi mail báo khách đưa lên đầu tab Đơn hàng, card đơn desktop/mobile, D1 (cột Xóa riêng), Doanh thu drill-down Alipay/Weixin, Dung lượng theo giá thực, Set Web chia block (Email/Cron/Khóa hạn/Vệ tinh/Routing-Blur/Icon Dock/Bảo trì Link Sub/Quota), Rà quét & Map lại (2 bảng), sửa lỗi xóa link quay lại, Mail Composer (Mẫu hệ thống 5 mẫu + Mẫu tự do, gradient editor), Hướng dẫn (bài viết, ảnh/video, Quick Link/Tab/Article, kéo thả tab) -->
 <!DOCTYPE html>
 <html lang="vi" class="scroll-smooth">
   <head>
@@ -105,11 +105,18 @@
               </div>
               <div id="scanHeaderBadge" class="bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-black px-3 py-1.5 rounded-xl flex items-center gap-1.5 shrink-0"><i class="fas fa-route"></i><span>Vị trí định tuyến: <b id="scanRoutingFieldTxt">INFO</b> (Cục bộ web này)</span></div>
             </div>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="mb-3 bg-indigo-50/70 border border-indigo-200 rounded-2xl p-3 flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <div class="text-xs font-extrabold text-slate-800 flex items-center gap-1.5 flex-wrap"><i class="fab fa-telegram text-sky-500"></i> <span>Backup trước thao tác</span> <span id="relinkBackupStatusLabel" class="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 shrink-0">BẬT</span></div>
+                <p class="text-[11px] text-slate-600 mt-0.5 leading-snug">Gửi backup dữ liệu lên Telegram trước khi làm sạch hoặc map lại.</p>
+              </div>
+              <div class="toggle-wrap shrink-0"><input type="checkbox" id="toggleRelinkBackup" checked onchange="toggleRelinkBackup(this.checked)"> <span class="toggle-slider"></span></div>
+            </div>
+            <div class="flex flex-col gap-4">
               <!-- BẢNG A: RÀ QUÉT & LÀM SẠCH Ô INFO -->
-              <div class="border-2 border-indigo-200 rounded-2xl p-4 bg-slate-50/60 space-y-3 flex flex-col justify-between">
-                <div class="space-y-3">
-                  <div class="flex items-center justify-between border-b border-indigo-100 pb-2"><span class="font-extrabold text-sm text-slate-800"><i class="fas fa-broom text-amber-500 mr-1.5"></i>A. RÀ QUÉT &amp; LÀM SẠCH Ô INFO</span> <span class="text-[10px] font-black px-2 py-0.5 rounded bg-indigo-100 text-indigo-700">Cục bộ web này</span></div>
+              <div class="border-2 border-indigo-200 rounded-2xl p-3.5 sm:p-4 bg-slate-50/60 space-y-3 flex flex-col justify-between min-w-0">
+                <div class="space-y-3 min-w-0">
+                  <div class="flex items-center justify-between gap-2 flex-wrap border-b border-indigo-100 pb-2"><span class="font-extrabold text-sm text-slate-800"><i class="fas fa-broom text-amber-500 mr-1.5"></i>A. RÀ QUÉT &amp; LÀM SẠCH Ô INFO</span> <span class="text-[10px] font-black px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 shrink-0">Cục bộ web này</span></div>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                     <div>
                       <label class="block font-bold text-slate-600 mb-1">Trạng thái đơn</label>
@@ -133,9 +140,9 @@
                 <button type="button" id="rsApply" onclick="relinkApply('scan')" class="hidden w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5 mt-2"> <i class="fas fa-trash-can"></i>XÁC NHẬN LÀM SẠCH CÁC Ô ĐÃ CHỌN </button>
               </div>
               <!-- BẢNG B: MAP LẠI LINK SỐNG VÀO ĐƠN -->
-              <div class="border-2 border-indigo-200 rounded-2xl p-4 bg-slate-50/60 space-y-3 flex flex-col justify-between">
-                <div class="space-y-3">
-                  <div class="flex items-center justify-between border-b border-indigo-100 pb-2"><span class="font-extrabold text-sm text-slate-800"><i class="fas fa-link text-indigo-600 mr-1.5"></i>B. MAP LẠI LINK SỐNG VÀO ĐƠN</span> <span class="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">Khớp Email &amp; HSD</span></div>
+              <div class="border-2 border-indigo-200 rounded-2xl p-3.5 sm:p-4 bg-slate-50/60 space-y-3 flex flex-col justify-between min-w-0">
+                <div class="space-y-3 min-w-0">
+                  <div class="flex items-center justify-between gap-2 flex-wrap border-b border-indigo-100 pb-2"><span class="font-extrabold text-sm text-slate-800"><i class="fas fa-link text-indigo-600 mr-1.5"></i>B. MAP LẠI LINK SỐNG VÀO ĐƠN</span> <span class="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 shrink-0">Khớp Email &amp; HSD</span></div>
                   <div class="text-xs">
                     <label class="flex items-center gap-2 font-bold text-slate-700 cursor-pointer py-1"> <input type="checkbox" id="rmManual" class="w-4 h-4 accent-indigo-600">Ghi đè cả ô đã Sửa tay </label>
                     <p class="text-[11px] text-slate-500 mt-1">Hệ thống quét kho link của web này tìm link đang sống khớp với Email và HSD của đơn để map lại.</p>
@@ -151,12 +158,12 @@
       </div>
       <!-- ===== ĐỐI SOÁT GIAO DỊCH MACRODROID & D1 ===== -->
       <div id="t-trans" class="hidden w-full min-w-0 space-y-3">
-        <div class="flex items-center justify-between gap-2 mb-2">
-          <div>
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <div class="min-w-0 flex-1">
             <h2 class="text-base sm:text-lg md:text-2xl font-bold text-slate-800 min-w-0 flex items-center gap-2"><i class="fas fa-file-invoice-dollar text-indigo-600"></i>Đối Soát Giao Dịch &amp; D1</h2>
             <p class="text-[11px] text-slate-500 mt-0.5">Giám sát SMS/App biến động số dư theo thời gian thực và xử lý thủ công các giao dịch ngoại lệ.</p>
           </div>
-          <button onclick="loadTx(true)" class="shrink-0 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs md:text-sm shadow-sm flex items-center gap-1 transition active:scale-95"> <i class="fas fa-sync mr-1"></i>Tải lại </button> <button type="button" onclick="clearAllTransactions()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-bold text-xs shadow-sm flex items-center gap-1.5 transition active:scale-95"> <i class="fas fa-trash-alt"></i><span class="whitespace-nowrap">Làm sạch</span> </button>
+          <div class="flex items-center gap-1.5 shrink-0"><button onclick="loadTx(true)" class="shrink-0 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-3 sm:px-4 py-2 rounded-xl font-bold text-xs md:text-sm shadow-sm flex items-center gap-1 transition active:scale-95"> <i class="fas fa-sync mr-1"></i>Tải lại </button> <button type="button" onclick="clearAllTransactions()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-3 py-2 md:px-4 md:py-2 rounded-xl font-bold text-xs md:text-sm shadow-sm flex items-center gap-1.5 transition active:scale-95"> <i class="fas fa-trash-alt"></i><span class="whitespace-nowrap">Làm sạch</span> </button></div>
         </div>
         <div class="w-full overflow-x-auto pb-1 scrollbar-none">
           <div class="inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 shrink-0 whitespace-nowrap mb-2"><button onclick="switchTxTab('giamsat')" id="tx-giamsat" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 active"><i class="fas fa-list-check mr-1.5"></i>Đối Soát D1</button> <button onclick="switchTxTab('exception')" id="tx-exception" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3"><i class="fas fa-triangle-exclamation mr-1.5 text-amber-500"></i>Ngoại Lệ &amp; Ghép Đơn <span id="txExceptionBadge" class="hidden ml-1 px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-600 text-white">0</span></button> <button onclick="switchTxTab('raw')" id="tx-raw" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3"><i class="fas fa-code mr-1.5"></i>Giao Dịch Thô</button></div>
@@ -562,25 +569,8 @@
               </div>
             </div>
             <!-- Danh sách Coupon hiện có -->
-            <div class="overflow-x-auto rounded-xl border border-slate-200">
-              <table class="w-full text-xs text-left">
-                <thead class="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] border-b border-slate-200">
-                  <tr>
-                    <th class="px-3 py-2.5">Mã Coupon</th>
-                    <th class="px-3 py-2.5">Mức giảm</th>
-                    <th class="px-3 py-2.5 text-center">Đơn tối thiểu</th>
-                    <th class="px-3 py-2.5 text-center">Lượt dùng</th>
-                    <th class="px-3 py-2.5 text-center">Hạn dùng</th>
-                    <th class="px-3 py-2.5 text-center">Trạng thái</th>
-                    <th class="px-3 py-2.5 text-right">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody id="couponListTbody" class="divide-y divide-slate-100">
-                  <tr>
-                    <td colspan="7" class="text-center py-4 text-slate-400 italic">Đang tải danh sách coupon...</td>
-                  </tr>
-                </tbody>
-              </table>
+            <div id="couponListTbody" class="space-y-2.5">
+              <div class="text-center py-6 text-slate-400 text-xs font-bold italic border border-slate-200 rounded-xl bg-slate-50">Đang tải danh sách coupon...</div>
             </div>
           </div>
           <!-- KHỐI 3: QUY TẮC QUÀ TẶNG THEO GÓI (GIFT RULES) -->
@@ -593,25 +583,8 @@
               <button onclick="openAddGiftRuleModal()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center gap-1.5 shrink-0"> <i class="fas fa-plus"></i>TẠO QUY TẮC QUÀ TẶNG </button>
             </div>
             <!-- Danh sách Quy tắc Quà tặng -->
-            <div class="overflow-x-auto rounded-xl border border-slate-200">
-              <table class="w-full text-xs text-left">
-                <thead class="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] border-b border-slate-200">
-                  <tr>
-                    <th class="px-3 py-2.5">Tên / Tem Quà</th>
-                    <th class="px-3 py-2.5">Chữ cạnh HSD</th>
-                    <th class="px-3 py-2.5 text-center">Ngày tặng</th>
-                    <th class="px-3 py-2.5">Gói cước áp dụng</th>
-                    <th class="px-3 py-2.5 text-center">Thời gian</th>
-                    <th class="px-3 py-2.5 text-center">Trạng thái</th>
-                    <th class="px-3 py-2.5 text-right">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody id="giftRuleListTbody" class="divide-y divide-slate-100">
-                  <tr>
-                    <td colspan="7" class="text-center py-4 text-slate-400 italic">Đang tải danh sách quy tắc quà tặng...</td>
-                  </tr>
-                </tbody>
-              </table>
+            <div id="giftRuleListTbody" class="space-y-2.5">
+              <div class="text-center py-6 text-slate-400 text-xs font-bold italic border border-slate-200 rounded-xl bg-slate-50">Đang tải danh sách quy tắc quà tặng...</div>
             </div>
           </div>
         </div>
@@ -1221,314 +1194,317 @@
           </div>
         </div>
       </div>
-      <!-- ===== MODAL ĐƠN HÀNG (VAUL BOTTOM SHEET ON MOBILE / CENTERED DIALOG ON DESKTOP) ===== -->
-      <div id="mOrd" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-300">
-        <div class="glass-card w-full sm:max-w-xl max-h-[92vh] sm:max-h-[90vh] rounded-t-[28px] sm:rounded-2xl border-t sm:border border-slate-200/80 shadow-2xl flex flex-col overflow-hidden pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:pb-0 transform transition-transform duration-300 ease-out">
-          <!-- Vaul Drag Handle (Affordance cho cử chỉ vuốt kéo) -->
-          <div class="w-full py-2.5 flex justify-center cursor-grab active:cursor-grabbing touch-none shrink-0 sm:hidden" id="mOrdHandle">
-            <div class="w-12 h-1.5 rounded-full bg-slate-300"></div>
+    </main>
+    <!-- ===== MODAL ĐƠN HÀNG (VAUL BOTTOM SHEET ON MOBILE / CENTERED DIALOG ON DESKTOP) ===== -->
+    <div id="mOrd" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-300">
+      <div class="glass-card w-full sm:max-w-xl max-h-[92vh] sm:max-h-[90vh] rounded-t-[28px] sm:rounded-2xl border-t sm:border border-slate-200/80 shadow-2xl flex flex-col overflow-hidden pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:pb-0 transform transition-transform duration-300 ease-out">
+        <!-- Vaul Drag Handle (Affordance cho cử chỉ vuốt kéo) -->
+        <div class="w-full py-2.5 flex justify-center cursor-grab active:cursor-grabbing touch-none shrink-0 sm:hidden" id="mOrdHandle">
+          <div class="w-12 h-1.5 rounded-full bg-slate-300"></div>
+        </div>
+        <div class="p-4 md:p-6 overflow-y-auto overscroll-contain flex-1 min-w-0">
+          <div class="flex justify-between items-start mb-3">
+            <h3 id="mOrdTtl" class="text-base md:text-xl font-black text-slate-800 tracking-tight">Đơn hàng</h3>
+            <div class="flex items-center gap-1 flex-wrap justify-end max-w-[60%]" id="upgChecks"></div>
           </div>
-          <div class="p-4 md:p-6 overflow-y-auto overscroll-contain flex-1 min-w-0">
-            <div class="flex justify-between items-start mb-3">
-              <h3 id="mOrdTtl" class="text-base md:text-xl font-black text-slate-800 tracking-tight">Đơn hàng</h3>
-              <div class="flex items-center gap-1 flex-wrap justify-end max-w-[60%]" id="upgChecks"></div>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <div>
+              <label class="block font-bold text-[10px] text-slate-600 mb-0.5">Mã đơn</label>
+              <div class="flex gap-1.5"><input id="mOId" type="text" maxlength="14" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" class="w-full p-2.5 text-xs border rounded-xl bg-slate-50 font-mono font-bold outline-none focus:border-indigo-500"> <button type="button" onclick="document.getElementById('mOId').value=genId()" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold px-3 rounded-xl text-xs transition active:scale-95 shadow-xs shrink-0" title="Tạo mã ngẫu nhiên"> <i class="fas fa-random"></i> </button></div>
             </div>
-            <div class="grid grid-cols-2 gap-2 mb-2">
-              <div>
-                <label class="block font-bold text-[10px] text-slate-600 mb-0.5">Mã đơn</label>
-                <div class="flex gap-1.5"><input id="mOId" type="text" maxlength="14" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" class="w-full p-2.5 text-xs border rounded-xl bg-slate-50 font-mono font-bold outline-none focus:border-indigo-500"> <button type="button" onclick="document.getElementById('mOId').value=genId()" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold px-3 rounded-xl text-xs transition active:scale-95 shadow-xs shrink-0" title="Tạo mã ngẫu nhiên"> <i class="fas fa-random"></i> </button></div>
-              </div>
-              <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5"><i class="fas fa-user-tag text-indigo-400 mr-1"></i>Nickname</label><input id="mONickname" type="text" placeholder="VD: Anh Tuấn FB..." class="w-full p-2.5 text-xs border rounded-xl outline-none bg-yellow-50 border-yellow-200 font-medium"></div>
+            <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5"><i class="fas fa-user-tag text-indigo-400 mr-1"></i>Nickname</label><input id="mONickname" type="text" placeholder="VD: Anh Tuấn FB..." class="w-full p-2.5 text-xs border rounded-xl outline-none bg-yellow-50 border-yellow-200 font-medium"></div>
+          </div>
+          <div id="mOIdNote" class="hidden text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-2 mb-2"></div>
+          <div class="mb-2"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Email Khách</label><input id="mOEmail" type="text" onblur="onOrdEmailBlur()" class="w-full p-2.5 text-xs border rounded-xl outline-none bg-slate-50 font-medium"></div>
+          <div class="mb-2"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Gói VPN</label><select id="mOPkg" onchange="onPkgChange()" class="w-full p-2.5 text-xs border rounded-xl font-bold text-indigo-700 bg-indigo-50 outline-none"></select></div>
+          <div class="grid grid-cols-3 gap-2 mb-2">
+            <div>
+              <label class="block font-bold text-[10px] text-slate-600 mb-0.5">Trạng thái</label>
+              <select id="mOStatus" onchange="togSF()" class="w-full p-2.5 text-xs border rounded-xl font-bold outline-none bg-white">
+                <option value="pending">Chờ duyệt</option>
+                <option value="success">Thành công</option>
+                <option value="failed">Từ chối</option>
+              </select>
             </div>
-            <div id="mOIdNote" class="hidden text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-2 mb-2"></div>
-            <div class="mb-2"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Email Khách</label><input id="mOEmail" type="text" onblur="onOrdEmailBlur()" class="w-full p-2.5 text-xs border rounded-xl outline-none bg-slate-50 font-medium"></div>
-            <div class="mb-2"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Gói VPN</label><select id="mOPkg" onchange="onPkgChange()" class="w-full p-2.5 text-xs border rounded-xl font-bold text-indigo-700 bg-indigo-50 outline-none"></select></div>
-            <div class="grid grid-cols-3 gap-2 mb-2">
+            <div>
+              <label class="block font-bold text-[10px] text-slate-600 mb-0.5">Thanh toán</label>
+              <select id="mOMethod" onchange="onMethodChange()" class="w-full p-2.5 text-xs border rounded-xl font-bold outline-none bg-white">
+                <option value="Ngân hàng VN">Bank VN</option>
+                <option value="Alipay">Alipay</option>
+                <option value="Weixin">Weixin</option>
+              </select>
+            </div>
+            <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">HSD</label><input id="mOExp" type="text" oninput="recalcDaysFromExp()" class="w-full p-2.5 text-xs border rounded-xl outline-none text-center font-bold bg-white" placeholder="DD/MM/YYYY"></div>
+          </div>
+          <!-- HÀNG 1: SĐT Zalo | Số ngày SD | Tặng -->
+          <div class="grid grid-cols-3 gap-2 mb-2">
+            <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">SĐT Zalo</label><input id="mOZalo" type="text" placeholder="0917..." class="w-full p-2.5 text-xs border rounded-xl outline-none bg-slate-50 font-medium"></div>
+            <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Số ngày SD</label><input id="mODays" type="number" min="0" placeholder="30" class="w-full p-2.5 text-xs border rounded-xl outline-none text-center bg-slate-50 font-bold" oninput="recalcExpFromDays()"></div>
+            <div><label class="block font-bold text-[10px] text-purple-700 mb-0.5">Tặng (+ngày)</label><input id="mOBonusDays" type="number" min="0" placeholder="0" class="w-full p-2.5 text-xs border border-purple-200 rounded-xl outline-none text-center bg-purple-50/50 text-purple-700 font-bold" oninput="recalcExpFromDays()"></div>
+          </div>
+          <!-- HÀNG 2: Thực số tiền thu (VND) – totalVnd | Số tháng -->
+          <div class="flex gap-2 mb-2 items-start">
+            <div class="flex-1 min-w-0">
+              <label id="mOAmountLbl" class="block font-bold text-[10px] text-slate-600 mb-0.5">Thực số tiền thu (VND) – totalVnd</label><input id="mOAmount" type="text" inputmode="decimal" class="w-full p-2.5 text-xs border rounded-xl outline-none bg-slate-50 font-bold">
+              <div id="mOAmountNote" class="text-[10px] text-slate-400 mt-0.5"></div>
+            </div>
+            <div class="w-24 shrink-0"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Số tháng</label><input id="mOMonths" type="text" readonly class="w-full p-2.5 text-xs border rounded-xl outline-none text-center bg-slate-100 text-slate-600 font-bold" placeholder="-"></div>
+          </div>
+          <div id="mOLockNote" class="hidden text-[10px] text-purple-700 bg-purple-50 border border-purple-200 rounded-xl p-2 mb-2"></div>
+          <div id="fSuc" class="hidden mb-3 p-3 border border-green-200 bg-green-50/70 rounded-2xl space-y-2.5">
+            <div><label class="block font-bold text-[10px] text-green-700 mb-0.5">Link 1 <span id="mOLkTag1"></span></label><input id="mOLink1" type="text" class="w-full p-2 text-[10px] border border-green-300 bg-white rounded-lg font-mono outline-none"><label id="mOUnlW1" class="hidden text-[10px] text-slate-600 font-bold"><input type="checkbox" id="mOUnl1" class="mr-1 accent-green-600">Mở khóa ô này (cho Worker/Cron tự cập nhật lại)</label></div>
+            <div><label class="block font-bold text-[10px] text-green-700 mb-0.5">Link 2 <span id="mOLkTag2"></span></label><input id="mOLink2" type="text" class="w-full p-2 text-[10px] border border-green-300 bg-white rounded-lg font-mono outline-none"><label id="mOUnlW2" class="hidden text-[10px] text-slate-600 font-bold"><input type="checkbox" id="mOUnl2" class="mr-1 accent-green-600">Mở khóa ô này</label></div>
+            <div><label class="block font-bold text-[10px] text-green-700 mb-0.5">Link 3 <span id="mOLkTag3"></span></label><input id="mOLink3" type="text" class="w-full p-2 text-[10px] border border-green-300 bg-white rounded-lg font-mono outline-none"><label id="mOUnlW3" class="hidden text-[10px] text-slate-600 font-bold"><input type="checkbox" id="mOUnl3" class="mr-1 accent-green-600">Mở khóa ô này</label></div>
+            <p class="text-[10px] text-green-700 leading-relaxed">Để trống ô = hệ thống tự tạo link ẩn cho ô đó (theo Định tuyến đã nhập; không áp dụng khi bật Khóa fulfillment). Ô bạn sửa tay sẽ bị khóa để Worker không ghi đè.</p>
+          </div>
+          <div id="fFail" class="hidden mb-3 p-2.5 border border-red-200 bg-red-50 rounded-xl"><label class="block font-bold text-[10px] text-red-700 mb-0.5">Lý do</label><input id="mOReason" type="text" class="w-full p-2 text-[10px] border border-red-300 bg-white rounded-lg outline-none"></div>
+          <div class="flex gap-2 pt-2"><button id="btnSaveOrd" onclick="saveOrd()" class="flex-1 min-h-[48px] bg-indigo-600 text-white font-bold py-3 sm:py-2.5 rounded-xl hover:bg-indigo-700 text-xs shadow-md active:scale-95 transition"><i class="fas fa-save mr-1.5"></i>LƯU ĐƠN HÀNG</button><button onclick="cm('mOrd')" class="min-h-[48px] bg-white border border-slate-200 text-slate-700 font-bold py-3 sm:py-2.5 px-5 rounded-xl hover:bg-slate-50 text-xs shadow-xs active:scale-95 transition">Hủy</button></div>
+        </div>
+      </div>
+    </div>
+    <!-- MODAL SỬA NGUỒN CẤP CỤM (VAUL BOTTOM SHEET ON MOBILE / CENTERED ON DESKTOP) -->
+    <div id="mRootEdit" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-300">
+      <div class="glass-card w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] rounded-t-[28px] sm:rounded-2xl border-t sm:border border-slate-200/80 shadow-2xl flex flex-col overflow-hidden pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:pb-0 transform transition-transform duration-300 ease-out">
+        <!-- Vaul Drag Handle -->
+        <div class="w-full py-2.5 flex justify-center cursor-grab active:cursor-grabbing touch-none shrink-0 sm:hidden" id="mRootEditHandle">
+          <div class="w-12 h-1.5 rounded-full bg-slate-300"></div>
+        </div>
+        <div class="p-5 overflow-y-auto overscroll-contain flex-1">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-black text-lg text-slate-800 tracking-tight">Sửa Nguồn Cấp Cụm</h3>
+            <span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800">Đầy đủ 2 chân</span>
+          </div>
+          <p class="text-[11px] text-slate-500 mb-3">Đổi link gốc &amp; thông số cụm (nhập 1 chân = Đơn, 2 chân = Trộn). <b>Token link ẩn của khách giữ nguyên 100%</b>.</p>
+          <input type="hidden" id="mREGroupKey"> <!-- BẢNG CHÂN 1 --> <!-- v1 — 2026-11-06 20:15 (UTC+7) — Bổ sung chọn Provider/Protocol độc lập cho 2 chân trong Modal Sửa Nguồn Cấp Cụm -->
+          <div class="border border-slate-200 rounded-2xl p-3.5 bg-slate-50/50 mb-3 space-y-2">
+            <div class="text-xs font-black text-slate-700 flex justify-between"><span>Thông số Chân 1</span> <span id="mREBadge1" class="badge-lx">Chân 1</span></div>
+            <div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link gốc 1</label> <input id="mREOrig1" type="text" oninput="onModalOrigInput(1)" placeholder="https://..." class="w-full p-2.5 text-xs border border-slate-300 rounded-xl font-mono outline-none bg-white"></div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
-                <label class="block font-bold text-[10px] text-slate-600 mb-0.5">Trạng thái</label>
-                <select id="mOStatus" onchange="togSF()" class="w-full p-2.5 text-xs border rounded-xl font-bold outline-none bg-white">
-                  <option value="pending">Chờ duyệt</option>
-                  <option value="success">Thành công</option>
-                  <option value="failed">Từ chối</option>
+                <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Nhà mạng Chân 1</label>
+                <select id="mREProv1" onchange="onModalProvChange(1)" class="w-full p-2 border rounded-xl bg-white text-xs font-bold text-slate-700">
+                  <option value="auto">🔍 Tự động nhận diện</option>
+                  <option value="lx">Liangxin (v1)</option>
+                  <option value="dj">DJJC (v2)</option>
+                  <option value="kt">Kitty (v3)</option>
+                  <option value="custom_v7">Custom 1 (v7)</option>
+                  <option value="custom_v8">Custom 2 (v8)</option>
                 </select>
               </div>
               <div>
-                <label class="block font-bold text-[10px] text-slate-600 mb-0.5">Thanh toán</label>
-                <select id="mOMethod" onchange="onMethodChange()" class="w-full p-2.5 text-xs border rounded-xl font-bold outline-none bg-white">
-                  <option value="Ngân hàng VN">Bank VN</option>
-                  <option value="Alipay">Alipay</option>
-                  <option value="Weixin">Weixin</option>
+                <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Giao thức / Route Chân 1</label>
+                <select id="mREProto1" class="w-full p-2 border rounded-xl bg-white text-xs font-bold text-slate-700">
+                  <option value="auto">⚙️ Tự động theo nhà mạng</option>
+                  <option value="v1">Route /v1 (?OwO=)</option>
+                  <option value="v2">Route /v2 (?token=)</option>
+                  <option value="v3">Route /v3 (?top=)</option>
+                  <option value="v7">Route /v7 (?hg= Custom 1)</option>
+                  <option value="v8">Route /v8 (?hg= Custom 2)</option>
                 </select>
               </div>
-              <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">HSD</label><input id="mOExp" type="text" oninput="recalcDaysFromExp()" class="w-full p-2.5 text-xs border rounded-xl outline-none text-center font-bold bg-white" placeholder="DD/MM/YYYY"></div>
             </div>
-            <!-- HÀNG 1: SĐT Zalo | Số ngày SD | Tặng -->
-            <div class="grid grid-cols-3 gap-2 mb-2">
-              <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">SĐT Zalo</label><input id="mOZalo" type="text" placeholder="0917..." class="w-full p-2.5 text-xs border rounded-xl outline-none bg-slate-50 font-medium"></div>
-              <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Số ngày SD</label><input id="mODays" type="number" min="0" placeholder="30" class="w-full p-2.5 text-xs border rounded-xl outline-none text-center bg-slate-50 font-bold" oninput="recalcExpFromDays()"></div>
-              <div><label class="block font-bold text-[10px] text-purple-700 mb-0.5">Tặng (+ngày)</label><input id="mOBonusDays" type="number" min="0" placeholder="0" class="w-full p-2.5 text-xs border border-purple-200 rounded-xl outline-none text-center bg-purple-50/50 text-purple-700 font-bold" oninput="recalcExpFromDays()"></div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB</label><input id="mREGb" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
+              <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB</label><input id="mRERemain" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
+              <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Hết hạn</label><input id="mREExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 border rounded-xl bg-white text-xs text-center font-bold"></div>
+              <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max thiết bị</label><input id="mREMax" type="number" min="1" placeholder="Chưa xác định" class="w-full p-2 border rounded-xl bg-white text-xs text-center font-bold"></div>
             </div>
-            <!-- HÀNG 2: Thực số tiền thu (VND) – totalVnd | Số tháng -->
-            <div class="flex gap-2 mb-2 items-start">
-              <div class="flex-1 min-w-0">
-                <label id="mOAmountLbl" class="block font-bold text-[10px] text-slate-600 mb-0.5">Thực số tiền thu (VND) – totalVnd</label><input id="mOAmount" type="text" inputmode="decimal" class="w-full p-2.5 text-xs border rounded-xl outline-none bg-slate-50 font-bold">
-                <div id="mOAmountNote" class="text-[10px] text-slate-400 mt-0.5"></div>
-              </div>
-              <div class="w-24 shrink-0"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Số tháng</label><input id="mOMonths" type="text" readonly class="w-full p-2.5 text-xs border rounded-xl outline-none text-center bg-slate-100 text-slate-600 font-bold" placeholder="-"></div>
-            </div>
-            <div id="mOLockNote" class="hidden text-[10px] text-purple-700 bg-purple-50 border border-purple-200 rounded-xl p-2 mb-2"></div>
-            <div id="fSuc" class="hidden mb-3 p-3 border border-green-200 bg-green-50/70 rounded-2xl space-y-2.5">
-              <div><label class="block font-bold text-[10px] text-green-700 mb-0.5">Link 1 <span id="mOLkTag1"></span></label><input id="mOLink1" type="text" class="w-full p-2 text-[10px] border border-green-300 bg-white rounded-lg font-mono outline-none"><label id="mOUnlW1" class="hidden text-[10px] text-slate-600 font-bold"><input type="checkbox" id="mOUnl1" class="mr-1 accent-green-600">Mở khóa ô này (cho Worker/Cron tự cập nhật lại)</label></div>
-              <div><label class="block font-bold text-[10px] text-green-700 mb-0.5">Link 2 <span id="mOLkTag2"></span></label><input id="mOLink2" type="text" class="w-full p-2 text-[10px] border border-green-300 bg-white rounded-lg font-mono outline-none"><label id="mOUnlW2" class="hidden text-[10px] text-slate-600 font-bold"><input type="checkbox" id="mOUnl2" class="mr-1 accent-green-600">Mở khóa ô này</label></div>
-              <div><label class="block font-bold text-[10px] text-green-700 mb-0.5">Link 3 <span id="mOLkTag3"></span></label><input id="mOLink3" type="text" class="w-full p-2 text-[10px] border border-green-300 bg-white rounded-lg font-mono outline-none"><label id="mOUnlW3" class="hidden text-[10px] text-slate-600 font-bold"><input type="checkbox" id="mOUnl3" class="mr-1 accent-green-600">Mở khóa ô này</label></div>
-              <p class="text-[10px] text-green-700 leading-relaxed">Để trống ô = hệ thống tự tạo link ẩn cho ô đó (theo Định tuyến đã nhập; không áp dụng khi bật Khóa fulfillment). Ô bạn sửa tay sẽ bị khóa để Worker không ghi đè.</p>
-            </div>
-            <div id="fFail" class="hidden mb-3 p-2.5 border border-red-200 bg-red-50 rounded-xl"><label class="block font-bold text-[10px] text-red-700 mb-0.5">Lý do</label><input id="mOReason" type="text" class="w-full p-2 text-[10px] border border-red-300 bg-white rounded-lg outline-none"></div>
-            <div class="flex gap-2 pt-2"><button id="btnSaveOrd" onclick="saveOrd()" class="flex-1 min-h-[48px] bg-indigo-600 text-white font-bold py-3 sm:py-2.5 rounded-xl hover:bg-indigo-700 text-xs shadow-md active:scale-95 transition"><i class="fas fa-save mr-1.5"></i>LƯU ĐƠN HÀNG</button><button onclick="cm('mOrd')" class="min-h-[48px] bg-white border border-slate-200 text-slate-700 font-bold py-3 sm:py-2.5 px-5 rounded-xl hover:bg-slate-50 text-xs shadow-xs active:scale-95 transition">Hủy</button></div>
           </div>
-        </div>
-      </div>
-      <!-- MODAL SỬA NGUỒN CẤP CỤM (VAUL BOTTOM SHEET ON MOBILE / CENTERED ON DESKTOP) -->
-      <div id="mRootEdit" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-300">
-        <div class="glass-card w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] rounded-t-[28px] sm:rounded-2xl border-t sm:border border-slate-200/80 shadow-2xl flex flex-col overflow-hidden pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:pb-0 transform transition-transform duration-300 ease-out">
-          <!-- Vaul Drag Handle -->
-          <div class="w-full py-2.5 flex justify-center cursor-grab active:cursor-grabbing touch-none shrink-0 sm:hidden" id="mRootEditHandle">
-            <div class="w-12 h-1.5 rounded-full bg-slate-300"></div>
-          </div>
-          <div class="p-5 overflow-y-auto overscroll-contain flex-1">
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="font-black text-lg text-slate-800 tracking-tight">Sửa Nguồn Cấp Cụm</h3>
-              <span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800">Đầy đủ 2 chân</span>
-            </div>
-            <p class="text-[11px] text-slate-500 mb-3">Đổi link gốc &amp; thông số cụm (nhập 1 chân = Đơn, 2 chân = Trộn). <b>Token link ẩn của khách giữ nguyên 100%</b>.</p>
-            <input type="hidden" id="mREGroupKey"> <!-- BẢNG CHÂN 1 --> <!-- v1 — 2026-11-06 20:15 (UTC+7) — Bổ sung chọn Provider/Protocol độc lập cho 2 chân trong Modal Sửa Nguồn Cấp Cụm -->
-            <div class="border border-slate-200 rounded-2xl p-3.5 bg-slate-50/50 mb-3 space-y-2">
-              <div class="text-xs font-black text-slate-700 flex justify-between"><span>Thông số Chân 1</span> <span id="mREBadge1" class="badge-lx">Chân 1</span></div>
-              <div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link gốc 1</label> <input id="mREOrig1" type="text" oninput="onModalOrigInput(1)" placeholder="https://..." class="w-full p-2.5 text-xs border border-slate-300 rounded-xl font-mono outline-none bg-white"></div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div>
-                  <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Nhà mạng Chân 1</label>
-                  <select id="mREProv1" onchange="onModalProvChange(1)" class="w-full p-2 border rounded-xl bg-white text-xs font-bold text-slate-700">
-                    <option value="auto">🔍 Tự động nhận diện</option>
-                    <option value="lx">Liangxin (v1)</option>
-                    <option value="dj">DJJC (v2)</option>
-                    <option value="kt">Kitty (v3)</option>
-                    <option value="custom_v7">Custom 1 (v7)</option>
-                    <option value="custom_v8">Custom 2 (v8)</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Giao thức / Route Chân 1</label>
-                  <select id="mREProto1" class="w-full p-2 border rounded-xl bg-white text-xs font-bold text-slate-700">
-                    <option value="auto">⚙️ Tự động theo nhà mạng</option>
-                    <option value="v1">Route /v1 (?OwO=)</option>
-                    <option value="v2">Route /v2 (?token=)</option>
-                    <option value="v3">Route /v3 (?top=)</option>
-                    <option value="v7">Route /v7 (?hg= Custom 1)</option>
-                    <option value="v8">Route /v8 (?hg= Custom 2)</option>
-                  </select>
-                </div>
-              </div>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB</label><input id="mREGb" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
-                <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB</label><input id="mRERemain" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
-                <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Hết hạn</label><input id="mREExp" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 border rounded-xl bg-white text-xs text-center font-bold"></div>
-                <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max thiết bị</label><input id="mREMax" type="number" min="1" placeholder="Chưa xác định" class="w-full p-2 border rounded-xl bg-white text-xs text-center font-bold"></div>
-              </div>
-            </div>
-            <!-- BẢNG CHÂN 2 -->
-            <div class="border border-indigo-200 rounded-2xl p-3.5 bg-indigo-50/30 mb-4 space-y-2">
-              <div class="text-xs font-black text-blue-700 flex justify-between"><span>Thông số Chân 2 (Để trống link nếu muốn chuyển về Link Đơn)</span> <span id="mREBadge2" class="badge-dj">Chân 2</span></div>
-              <div><label class="block text-[10px] font-bold text-indigo-700 mb-0.5">Link gốc 2</label> <input id="mREOrig2" type="text" oninput="onModalOrigInput(2)" placeholder="Để trống nếu là Link Đơn" class="w-full p-2.5 text-xs border border-indigo-300 rounded-xl font-mono outline-none bg-white"></div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div>
-                  <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Nhà mạng Chân 2</label>
-                  <select id="mREProv2" onchange="onModalProvChange(2)" class="w-full p-2 border rounded-xl bg-white text-xs font-bold text-slate-700">
-                    <option value="auto">🔍 Tự động nhận diện</option>
-                    <option value="lx">Liangxin (v1)</option>
-                    <option value="dj">DJJC (v2)</option>
-                    <option value="kt">Kitty (v3)</option>
-                    <option value="custom_v7">Custom 1 (v7)</option>
-                    <option value="custom_v8">Custom 2 (v8)</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Giao thức / Route Chân 2</label>
-                  <select id="mREProto2" class="w-full p-2 border rounded-xl bg-white text-xs font-bold text-slate-700">
-                    <option value="auto">⚙️ Tự động theo nhà mạng</option>
-                    <option value="v1">Route /v1 (?OwO=)</option>
-                    <option value="v2">Route /v2 (?token=)</option>
-                    <option value="v3">Route /v3 (?top=)</option>
-                    <option value="v7">Route /v7 (?hg= Custom 1)</option>
-                    <option value="v8">Route /v8 (?hg= Custom 2)</option>
-                  </select>
-                </div>
-              </div>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB 2</label><input id="mREGb2" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
-                <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB 2</label><input id="mRERemain2" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
-                <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Hết hạn 2</label><input id="mREExp2" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 border rounded-xl bg-white text-xs text-center font-bold"></div>
-                <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max thiết bị 2</label><input id="mREMax2" type="number" min="1" placeholder="Chưa xác định" class="w-full p-2 border rounded-xl bg-white text-xs text-center font-bold"></div>
-              </div>
-            </div>
-            <div class="flex gap-2 pt-2"><button onclick="saveRootEdit()" class="flex-1 min-h-[48px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 sm:py-2.5 rounded-xl text-xs shadow-md active:scale-95 transition">CẬP NHẬT CẢ CỤM LINK</button> <button onclick="cm('mRootEdit')" class="min-h-[48px] bg-white border border-slate-200 text-slate-700 font-bold py-3 sm:py-2.5 px-5 rounded-xl text-xs shadow-xs active:scale-95 transition">Hủy</button></div>
-          </div>
-        </div>
-      </div>
-      <!-- MODAL SỬA LINK SUB ẨN (VAUL BOTTOM SHEET ON MOBILE / CENTERED ON DESKTOP) -->
-      <div id="mLnk" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-300">
-        <div class="glass-card w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] rounded-t-[28px] sm:rounded-2xl border-t sm:border border-slate-200/80 shadow-2xl flex flex-col overflow-hidden pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:pb-0 transform transition-transform duration-300 ease-out">
-          <!-- Vaul Drag Handle -->
-          <div class="w-full py-2.5 flex justify-center cursor-grab active:cursor-grabbing touch-none shrink-0 sm:hidden" id="mLnkHandle">
-            <div class="w-12 h-1.5 rounded-full bg-slate-300"></div>
-          </div>
-          <div class="p-5 overflow-y-auto overscroll-contain flex-1">
-            <h3 class="font-black text-lg mb-3 text-slate-800 tracking-tight">Sửa Link Sub Ẩn</h3>
-            <input type="hidden" id="mLId">
-            <div class="mb-2"><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link gốc 1 (Liangxin hoặc DJJC)</label><input id="mLOrig" type="text" class="w-full p-2.5 text-xs border border-slate-300 rounded-xl font-mono outline-none bg-slate-50"></div>
-            <div class="mb-2"><label class="block text-[10px] font-bold text-indigo-700 mb-0.5"><i class="fas fa-shuffle mr-1"></i>Link gốc 2 (Nguồn thứ 2 - xóa trắng để chuyển về Link Đơn)</label><input id="mLOrig2" type="text" placeholder="Để trống nếu là Link Đơn" class="w-full p-2.5 text-xs border border-indigo-200 rounded-xl font-mono outline-none bg-indigo-50/30"></div>
-            <div class="mb-2"><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Email khách</label><input id="mLEmail" type="text" class="w-full p-2.5 text-xs border border-slate-300 rounded-xl outline-none bg-slate-50"></div>
-            <div class="grid grid-cols-2 gap-2 mb-4">
+          <!-- BẢNG CHÂN 2 -->
+          <div class="border border-indigo-200 rounded-2xl p-3.5 bg-indigo-50/30 mb-4 space-y-2">
+            <div class="text-xs font-black text-blue-700 flex justify-between"><span>Thông số Chân 2 (Để trống link nếu muốn chuyển về Link Đơn)</span> <span id="mREBadge2" class="badge-dj">Chân 2</span></div>
+            <div><label class="block text-[10px] font-bold text-indigo-700 mb-0.5">Link gốc 2</label> <input id="mREOrig2" type="text" oninput="onModalOrigInput(2)" placeholder="Để trống nếu là Link Đơn" class="w-full p-2.5 text-xs border border-indigo-300 rounded-xl font-mono outline-none bg-white"></div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
-                <label class="block text-[10px] font-bold text-slate-600 mb-0.5">HSD</label> <input id="mLEExp" type="text" placeholder="DD/MM/YYYY hoặc Vĩnh viễn" class="w-full p-2.5 text-xs border border-slate-300 rounded-xl outline-none text-center bg-slate-50 font-bold">
-                <div id="mLEExpSyncHint" class="text-[10px] text-slate-500 mt-1 font-medium empty:hidden"></div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Nhà mạng Chân 2</label>
+                <select id="mREProv2" onchange="onModalProvChange(2)" class="w-full p-2 border rounded-xl bg-white text-xs font-bold text-slate-700">
+                  <option value="auto">🔍 Tự động nhận diện</option>
+                  <option value="lx">Liangxin (v1)</option>
+                  <option value="dj">DJJC (v2)</option>
+                  <option value="kt">Kitty (v3)</option>
+                  <option value="custom_v7">Custom 1 (v7)</option>
+                  <option value="custom_v8">Custom 2 (v8)</option>
+                </select>
               </div>
-              <div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Số máy (Index)</label><input id="mLIdx" type="number" min="1" class="w-full p-2.5 text-xs border border-slate-300 rounded-xl outline-none text-center bg-slate-50 font-bold"></div>
-            </div>
-            <div class="flex gap-2 pt-2"><button onclick="saveLnkEdit()" class="flex-1 min-h-[48px] bg-indigo-600 text-white font-bold py-3 sm:py-2.5 rounded-xl text-xs shadow-md active:scale-95 transition">CẬP NHẬT</button><button onclick="cm('mLnk')" class="min-h-[48px] bg-white border border-slate-200 text-slate-700 font-bold py-3 sm:py-2.5 px-5 rounded-xl text-xs shadow-xs active:scale-95 transition">Hủy</button></div>
-          </div>
-        </div>
-      </div>
-      <script type="module" src="/src/admin.js"></script>
-      <!-- MODAL TẠO / SỬA MÃ GIẢM GIÁ (VAUL BOTTOM SHEET ON MOBILE / CENTERED DIALOG ON DESKTOP) -->
-      <div id="mCouponModal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-3 bg-black/60 backdrop-blur-xs transition-opacity duration-300">
-        <div class="bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-white/10 rounded-t-[28px] sm:rounded-2xl max-w-md w-full shadow-2xl flex flex-col overflow-hidden pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:pb-0 animate-scaleIn">
-          <!-- Vaul Drag Handle -->
-          <div class="w-full py-2.5 flex justify-center cursor-grab active:cursor-grabbing touch-none shrink-0 sm:hidden" id="mCouponModalHandle">
-            <div class="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600"></div>
-          </div>
-          <div class="p-5 space-y-4 overflow-y-auto overscroll-contain flex-1">
-            <div class="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
-              <h3 class="font-black text-base text-slate-800 dark:text-white flex items-center gap-2"><i class="fas fa-ticket text-purple-600"></i>Tạo Mã Giảm Giá Mới</h3>
-              <button type="button" onclick="closeCouponModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fas fa-times text-sm"></i></button>
-            </div>
-            <div class="space-y-3 text-xs">
-              <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Mã Coupon (Tự động in hoa):</label> <input type="text" id="couponModalCode" placeholder="VD: SALE2026, VIP10, HETGIA" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-black font-mono font-black text-indigo-600 dark:text-indigo-400 uppercase outline-none focus:border-purple-500"></div>
-              <div class="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Loại giảm giá:</label>
-                  <select id="couponModalType" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-slate-800 dark:text-white outline-none focus:border-purple-500">
-                    <option value="percent">Phần trăm (%)</option>
-                    <option value="fixed">Số tiền cố định (VND)</option>
-                  </select>
-                </div>
-                <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Mức giảm:</label> <input type="number" id="couponModalValue" min="1" placeholder="VD: 10 (%) hoặc 20000 (đ)" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-rose-600 outline-none focus:border-purple-500"></div>
-              </div>
-              <div class="grid grid-cols-2 gap-2.5">
-                <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Đơn tối thiểu (đ):</label> <input type="number" id="couponModalMinSpend" min="0" step="1000" placeholder="0 = Không có" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-slate-800 dark:text-white outline-none focus:border-purple-500"></div>
-                <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Số lượt dùng tối đa:</label> <input type="number" id="couponModalMaxUsage" min="0" placeholder="Để trống = Không giới hạn" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-slate-800 dark:text-white outline-none focus:border-purple-500"></div>
-              </div>
-              <div class="grid grid-cols-2 gap-2.5">
-                <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Bắt đầu từ:</label> <input type="datetime-local" id="couponModalStart" class="w-full p-2 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black text-slate-800 dark:text-white outline-none focus:border-purple-500 text-xs"></div>
-                <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Kết thúc vào:</label> <input type="datetime-local" id="couponModalEnd" class="w-full p-2 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black text-slate-800 dark:text-white outline-none focus:border-purple-500 text-xs"></div>
-              </div>
-              <div class="pt-1 flex items-center justify-between bg-slate-50 dark:bg-black/40 p-2.5 rounded-xl border border-slate-100 dark:border-white/5"><span class="font-bold text-slate-700 dark:text-slate-300">Trạng thái mã:</span> <label class="flex items-center gap-2 cursor-pointer font-bold text-emerald-600"> <input type="checkbox" id="couponModalEnabled" checked class="w-4 h-4 accent-emerald-600"> Hoạt động </label></div>
-            </div>
-            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-white/10"><button type="button" onclick="closeCouponModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition min-h-[44px]">Hủy</button> <button type="button" onclick="saveCouponModal()" class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs shadow-md transition active:scale-95 flex items-center gap-1.5 min-h-[44px]"><i class="fas fa-check"></i>LƯU MÃ COUPON</button></div>
-          </div>
-        </div>
-      </div>
-      <!-- MODAL QUẢN LÝ QUY TẮC QUÀ TẶNG (GIFT RULE MODAL) -->
-      <div id="mGiftRuleModal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-3 bg-black/60 backdrop-blur-xs transition-opacity duration-300">
-        <div class="fixed inset-0" onclick="closeGiftRuleModal()"></div>
-        <div class="relative bg-white dark:bg-[#18181b] w-full sm:max-w-xl max-h-[92vh] sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col z-10 transition-transform duration-300">
-          <div class="w-full py-2.5 flex justify-center cursor-grab active:cursor-grabbing touch-none shrink-0 sm:hidden" id="mGiftRuleModalHandle">
-            <div class="w-10 h-1 bg-slate-300 dark:bg-white/20 rounded-full"></div>
-          </div>
-          <div class="p-4 sm:p-6 space-y-4 overflow-y-auto">
-            <div class="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
-              <h3 class="font-black text-base text-slate-800 dark:text-white flex items-center gap-2"><i class="fas fa-gift text-rose-500"></i><span id="giftRuleModalTitle">Tạo Quy Tắc Quà Tặng Mới</span></h3>
-              <button type="button" onclick="closeGiftRuleModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 flex items-center justify-center min-h-[32px] min-w-[32px]"><i class="fas fa-times text-xs"></i></button>
-            </div>
-            <input type="hidden" id="giftRuleModalEditIdx" value="">
-            <div class="space-y-3 text-xs">
-              <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Tên / Tem quà tặng (Bắt buộc):</label> <input type="text" id="giftRuleModalName" placeholder="VD: +3 NGÀY hoặc KHUYẾN MÃI ĐẶC BIỆT" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-black text-rose-600 outline-none focus:border-rose-500"></div>
-              <div class="grid grid-cols-2 gap-2.5">
-                <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Số ngày tặng (+ vào HSD):</label> <input type="number" id="giftRuleModalBonusDays" min="0" max="365" placeholder="VD: 3" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-purple-700 outline-none focus:border-purple-500" oninput="updateGiftRulePkgCheckboxes()"></div>
-                <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Chữ cạnh HSD (Tùy chọn):</label> <input type="text" id="giftRuleModalBonusText" placeholder="VD: +3 ngày hoặc (Tặng 3 ngày)" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-indigo-700 outline-none focus:border-indigo-500"></div>
-              </div>
-              <!-- Danh sách chọn gói cước áp dụng -->
               <div>
-                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1 flex items-center justify-between"> <span>Áp dụng cho các gói cước:</span> <span class="text-[10px] text-slate-400 font-normal">Mỗi gói chỉ áp dụng tối đa 1 quy tắc</span> </label>
-                <div id="giftRuleModalPkgs" class="p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-black/40 space-y-2 max-h-48 overflow-y-auto"><!-- Checkbox danh sách gói cước được render động --></div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Giao thức / Route Chân 2</label>
+                <select id="mREProto2" class="w-full p-2 border rounded-xl bg-white text-xs font-bold text-slate-700">
+                  <option value="auto">⚙️ Tự động theo nhà mạng</option>
+                  <option value="v1">Route /v1 (?OwO=)</option>
+                  <option value="v2">Route /v2 (?token=)</option>
+                  <option value="v3">Route /v3 (?top=)</option>
+                  <option value="v7">Route /v7 (?hg= Custom 1)</option>
+                  <option value="v8">Route /v8 (?hg= Custom 2)</option>
+                </select>
               </div>
-              <div class="grid grid-cols-2 gap-2.5">
-                <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Bắt đầu từ (Tùy chọn):</label> <input type="datetime-local" id="giftRuleModalStart" class="w-full p-2 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black text-slate-800 dark:text-white outline-none focus:border-rose-500 text-xs"></div>
-                <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Kết thúc vào (Tùy chọn):</label> <input type="datetime-local" id="giftRuleModalEnd" class="w-full p-2 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black text-slate-800 dark:text-white outline-none focus:border-rose-500 text-xs"></div>
-              </div>
-              <div class="pt-1 flex items-center justify-between bg-slate-50 dark:bg-black/40 p-2.5 rounded-xl border border-slate-100 dark:border-white/5"><span class="font-bold text-slate-700 dark:text-slate-300">Trạng thái quy tắc:</span> <label class="flex items-center gap-2 cursor-pointer font-bold text-emerald-600"> <input type="checkbox" id="giftRuleModalEnabled" checked class="w-4 h-4 accent-emerald-600" onchange="updateGiftRulePkgCheckboxes()"> Hoạt động </label></div>
             </div>
-            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-white/10"><button type="button" onclick="closeGiftRuleModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition min-h-[44px]">Hủy</button> <button type="button" onclick="saveGiftRuleModal()" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md transition active:scale-95 flex items-center gap-1.5 min-h-[44px]"><i class="fas fa-check"></i>LƯU QUY TẮC QUÀ TẶNG</button></div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tổng GB 2</label><input id="mREGb2" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
+              <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Còn lại GB 2</label><input id="mRERemain2" type="number" placeholder="1000" class="w-full p-2 border rounded-xl bg-white text-xs font-medium"></div>
+              <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Hết hạn 2</label><input id="mREExp2" type="text" placeholder="DD/MM/YYYY" class="w-full p-2 border rounded-xl bg-white text-xs text-center font-bold"></div>
+              <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Max thiết bị 2</label><input id="mREMax2" type="number" min="1" placeholder="Chưa xác định" class="w-full p-2 border rounded-xl bg-white text-xs text-center font-bold"></div>
+            </div>
           </div>
+          <div class="flex gap-2 pt-2"><button onclick="saveRootEdit()" class="flex-1 min-h-[48px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 sm:py-2.5 rounded-xl text-xs shadow-md active:scale-95 transition">CẬP NHẬT CẢ CỤM LINK</button> <button onclick="cm('mRootEdit')" class="min-h-[48px] bg-white border border-slate-200 text-slate-700 font-bold py-3 sm:py-2.5 px-5 rounded-xl text-xs shadow-xs active:scale-95 transition">Hủy</button></div>
         </div>
       </div>
-      <!-- Konsta UI: iOS Fixed Bottom Navigation Bar (5 Slot Chuẩn: Đơn hàng + Link Sub + Bán hàng + Đối soát + Thêm) -->
-      <nav id="adminBottomNav" class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200/80 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-2px_10px_rgba(0,0,0,0.05)] transition-transform duration-300">
-        <div class="h-14 grid grid-cols-5 items-center px-1 text-center"><!-- Slot 1: Đơn hàng (BẮT BUỘC) --> <button type="button" id="bnav-t-ord" onclick="go('t-ord')" class="flex flex-col items-center justify-center text-indigo-600 transition-colors py-1 min-h-[44px]"> <i class="fas fa-box text-base"></i> <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Đơn hàng</span> </button> <!-- Slot 2: Link Sub (BẮT BUỘC) --> <button type="button" id="bnav-t-lnk" onclick="go('t-lnk')" class="flex flex-col items-center justify-center text-slate-400 transition-colors py-1 min-h-[44px]"> <i class="fas fa-link text-base"></i> <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Link Sub</span> </button> <!-- Slot 3: Kiểm tra (Thay thế Bán hàng) --> <button type="button" id="bnav-t-check" onclick="go('t-check')" class="flex flex-col items-center justify-center text-slate-400 transition-colors py-1 min-h-[44px] relative"> <i class="fas fa-clipboard-check text-base"></i> <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Kiểm tra</span> <span id="checkBadgeMobile" class="hidden absolute top-1 right-3 bg-purple-600 text-white text-[9px] min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center font-black">0</span> </button> <!-- Slot 4: Đối soát --> <button type="button" id="bnav-t-trans" onclick="go('t-trans')" class="flex flex-col items-center justify-center text-slate-400 transition-colors py-1 min-h-[44px] relative"> <i class="fas fa-file-invoice-dollar text-base"></i> <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Đối soát</span> <span id="transBadgeMobile" class="hidden absolute top-1 right-3 bg-red-500 text-white text-[9px] min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center font-black">!</span> </button> <!-- Slot 5: Thêm (Tất cả mục còn lại) --> <button type="button" id="bnav-t-more" onclick="go('t-more')" class="flex flex-col items-center justify-center text-slate-400 transition-colors py-1 min-h-[44px] relative"> <i class="fas fa-ellipsis-h text-base"></i> <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Thêm</span> <span id="moreBadgeMobile" class="hidden absolute top-1 right-3 bg-amber-500 text-white text-[9px] min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center font-black">!</span> </button></div>
-      </nav>
-      <!-- Vaul: Lightweight Gesture Physics Engine (Vuốt trượt kéo xuống để đóng Bottom Sheet) -->
-      <script>
-        (function () {
-          function attachVaulPhysics(overlayId, handleId) {
-            const overlay = document.getElementById(overlayId);
-            if (!overlay) return;
-            const sheet = overlay.querySelector('.glass-card') || overlay.firstElementChild;
-            const handle = document.getElementById(handleId) || sheet;
-            if (!sheet || !handle) return;
+    </div>
+    <!-- MODAL SỬA LINK SUB ẨN (VAUL BOTTOM SHEET ON MOBILE / CENTERED ON DESKTOP) -->
+    <div id="mLnk" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-300">
+      <div class="glass-card w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] rounded-t-[28px] sm:rounded-2xl border-t sm:border border-slate-200/80 shadow-2xl flex flex-col overflow-hidden pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:pb-0 transform transition-transform duration-300 ease-out">
+        <!-- Vaul Drag Handle -->
+        <div class="w-full py-2.5 flex justify-center cursor-grab active:cursor-grabbing touch-none shrink-0 sm:hidden" id="mLnkHandle">
+          <div class="w-12 h-1.5 rounded-full bg-slate-300"></div>
+        </div>
+        <div class="p-5 overflow-y-auto overscroll-contain flex-1">
+          <h3 class="font-black text-lg mb-3 text-slate-800 tracking-tight">Sửa Link Sub Ẩn</h3>
+          <input type="hidden" id="mLId">
+          <div class="mb-2"><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Link gốc 1 (Liangxin hoặc DJJC)</label><input id="mLOrig" type="text" class="w-full p-2.5 text-xs border border-slate-300 rounded-xl font-mono outline-none bg-slate-50"></div>
+          <div class="mb-2"><label class="block text-[10px] font-bold text-indigo-700 mb-0.5"><i class="fas fa-shuffle mr-1"></i>Link gốc 2 (Nguồn thứ 2 - xóa trắng để chuyển về Link Đơn)</label><input id="mLOrig2" type="text" placeholder="Để trống nếu là Link Đơn" class="w-full p-2.5 text-xs border border-indigo-200 rounded-xl font-mono outline-none bg-indigo-50/30"></div>
+          <div class="mb-2"><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Email khách</label><input id="mLEmail" type="text" class="w-full p-2.5 text-xs border border-slate-300 rounded-xl outline-none bg-slate-50"></div>
+          <div class="grid grid-cols-2 gap-2 mb-4">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">HSD</label> <input id="mLEExp" type="text" placeholder="DD/MM/YYYY hoặc Vĩnh viễn" class="w-full p-2.5 text-xs border border-slate-300 rounded-xl outline-none text-center bg-slate-50 font-bold">
+              <div id="mLEExpSyncHint" class="text-[10px] text-slate-500 mt-1 font-medium empty:hidden"></div>
+            </div>
+            <div><label class="block text-[10px] font-bold text-slate-600 mb-0.5">Số máy (Index)</label><input id="mLIdx" type="number" min="1" class="w-full p-2.5 text-xs border border-slate-300 rounded-xl outline-none text-center bg-slate-50 font-bold"></div>
+          </div>
+          <div class="flex gap-2 pt-2"><button onclick="saveLnkEdit()" class="flex-1 min-h-[48px] bg-indigo-600 text-white font-bold py-3 sm:py-2.5 rounded-xl text-xs shadow-md active:scale-95 transition">CẬP NHẬT</button><button onclick="cm('mLnk')" class="min-h-[48px] bg-white border border-slate-200 text-slate-700 font-bold py-3 sm:py-2.5 px-5 rounded-xl text-xs shadow-xs active:scale-95 transition">Hủy</button></div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/admin.js"></script>
+    <!-- MODAL TẠO / SỬA MÃ GIẢM GIÁ (VAUL BOTTOM SHEET ON MOBILE / CENTERED DIALOG ON DESKTOP) -->
+    <div id="mCouponModal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-3 bg-black/60 backdrop-blur-xs transition-opacity duration-300">
+      <div class="bg-white dark:bg-slate-900 border-t sm:border border-slate-200 dark:border-white/10 rounded-t-[28px] sm:rounded-2xl max-w-md w-full shadow-2xl flex flex-col overflow-hidden pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:pb-0 animate-scaleIn">
+        <!-- Vaul Drag Handle -->
+        <div class="w-full py-2.5 flex justify-center cursor-grab active:cursor-grabbing touch-none shrink-0 sm:hidden" id="mCouponModalHandle">
+          <div class="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600"></div>
+        </div>
+        <div class="p-5 space-y-4 overflow-y-auto overscroll-contain flex-1">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
+            <h3 class="font-black text-base text-slate-800 dark:text-white flex items-center gap-2"><i class="fas fa-ticket text-purple-600"></i><span id="couponModalTitle">Tạo Mã Giảm Giá Mới</span></h3>
+            <button type="button" onclick="closeCouponModal()" class="text-slate-400 hover:text-slate-600 p-1"><i class="fas fa-times text-sm"></i></button>
+          </div>
+          <input type="hidden" id="couponModalEditIdx" value="">
+          <div class="space-y-3 text-xs">
+            <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Mã Coupon (Tự động in hoa):</label> <input type="text" id="couponModalCode" placeholder="VD: SALE2026, VIP10, HETGIA" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-black font-mono font-black text-indigo-600 dark:text-indigo-400 uppercase outline-none focus:border-purple-500"></div>
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Loại giảm giá:</label>
+                <select id="couponModalType" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-slate-800 dark:text-white outline-none focus:border-purple-500">
+                  <option value="percent">Phần trăm (%)</option>
+                  <option value="fixed">Số tiền cố định (VND)</option>
+                </select>
+              </div>
+              <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Mức giảm:</label> <input type="number" id="couponModalValue" min="1" placeholder="VD: 10 (%) hoặc 20000 (đ)" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-rose-600 outline-none focus:border-purple-500"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5">
+              <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Đơn tối thiểu (đ):</label> <input type="number" id="couponModalMinSpend" min="0" step="1000" placeholder="0 = Không có" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-slate-800 dark:text-white outline-none focus:border-purple-500"></div>
+              <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Số lượt dùng tối đa:</label> <input type="number" id="couponModalMaxUsage" min="0" placeholder="Để trống = Không giới hạn" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-slate-800 dark:text-white outline-none focus:border-purple-500"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5">
+              <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Bắt đầu từ:</label> <input type="datetime-local" id="couponModalStart" class="w-full p-2 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black text-slate-800 dark:text-white outline-none focus:border-purple-500 text-xs"></div>
+              <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Kết thúc vào:</label> <input type="datetime-local" id="couponModalEnd" class="w-full p-2 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black text-slate-800 dark:text-white outline-none focus:border-purple-500 text-xs"></div>
+            </div>
+            <div class="pt-1 flex items-center justify-between bg-slate-50 dark:bg-black/40 p-2.5 rounded-xl border border-slate-100 dark:border-white/5"><span class="font-bold text-slate-700 dark:text-slate-300">Trạng thái mã:</span> <label class="flex items-center gap-2 cursor-pointer font-bold text-emerald-600"> <input type="checkbox" id="couponModalEnabled" checked class="w-4 h-4 accent-emerald-600"> Hoạt động </label></div>
+            <div class="pt-1 flex items-center justify-between bg-amber-50/70 dark:bg-black/40 p-2.5 rounded-xl border border-amber-200/70 dark:border-white/5"><span class="font-bold text-amber-800 dark:text-amber-300">Nhãn phân loại VIP:</span> <label class="flex items-center gap-2 cursor-pointer font-bold text-amber-700"> <input type="checkbox" id="couponModalVip" class="w-4 h-4 accent-amber-500"> Mã VIP </label></div>
+          </div>
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-white/10"><button type="button" onclick="closeCouponModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition min-h-[44px]">Hủy</button> <button type="button" onclick="saveCouponModal()" class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs shadow-md transition active:scale-95 flex items-center gap-1.5 min-h-[44px]"><i class="fas fa-check"></i>LƯU MÃ COUPON</button></div>
+        </div>
+      </div>
+    </div>
+    <!-- MODAL QUẢN LÝ QUY TẮC QUÀ TẶNG (GIFT RULE MODAL) -->
+    <div id="mGiftRuleModal" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-3 bg-black/60 backdrop-blur-xs transition-opacity duration-300">
+      <div class="fixed inset-0" onclick="closeGiftRuleModal()"></div>
+      <div class="relative bg-white dark:bg-[#18181b] w-full sm:max-w-xl max-h-[92vh] sm:max-h-[90vh] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col z-10 transition-transform duration-300">
+        <div class="w-full py-2.5 flex justify-center cursor-grab active:cursor-grabbing touch-none shrink-0 sm:hidden" id="mGiftRuleModalHandle">
+          <div class="w-10 h-1 bg-slate-300 dark:bg-white/20 rounded-full"></div>
+        </div>
+        <div class="p-4 sm:p-6 space-y-4 overflow-y-auto">
+          <div class="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
+            <h3 class="font-black text-base text-slate-800 dark:text-white flex items-center gap-2"><i class="fas fa-gift text-rose-500"></i><span id="giftRuleModalTitle">Tạo Quy Tắc Quà Tặng Mới</span></h3>
+            <button type="button" onclick="closeGiftRuleModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 flex items-center justify-center min-h-[32px] min-w-[32px]"><i class="fas fa-times text-xs"></i></button>
+          </div>
+          <input type="hidden" id="giftRuleModalEditIdx" value="">
+          <div class="space-y-3 text-xs">
+            <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Tên / Tem quà tặng (Bắt buộc):</label> <input type="text" id="giftRuleModalName" placeholder="VD: +3 NGÀY hoặc KHUYẾN MÃI ĐẶC BIỆT" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-black text-rose-600 outline-none focus:border-rose-500"></div>
+            <div class="grid grid-cols-2 gap-2.5">
+              <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Số ngày tặng (+ vào HSD):</label> <input type="number" id="giftRuleModalBonusDays" min="0" max="365" placeholder="VD: 3" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-purple-700 outline-none focus:border-purple-500" oninput="updateGiftRulePkgCheckboxes()"></div>
+              <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Chữ cạnh HSD (Tùy chọn):</label> <input type="text" id="giftRuleModalBonusText" placeholder="VD: +3 ngày hoặc (Tặng 3 ngày)" class="w-full p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black font-bold text-indigo-700 outline-none focus:border-indigo-500"></div>
+            </div>
+            <!-- Danh sách chọn gói cước áp dụng -->
+            <div>
+              <label class="block font-bold text-slate-700 dark:text-slate-200 mb-1 flex items-center justify-between"> <span>Áp dụng cho các gói cước:</span> <span class="text-[10px] text-slate-400 font-normal">Mỗi gói chỉ áp dụng tối đa 1 quy tắc</span> </label>
+              <div id="giftRuleModalPkgs" class="p-2.5 border border-slate-200 dark:border-white/10 rounded-xl bg-slate-50 dark:bg-black/40 space-y-2 max-h-48 overflow-y-auto"><!-- Checkbox danh sách gói cước được render động --></div>
+            </div>
+            <div class="grid grid-cols-2 gap-2.5">
+              <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Bắt đầu từ (Tùy chọn):</label> <input type="datetime-local" id="giftRuleModalStart" class="w-full p-2 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black text-slate-800 dark:text-white outline-none focus:border-rose-500 text-xs"></div>
+              <div><label class="block font-bold text-slate-700 dark:text-slate-200 mb-1">Kết thúc vào (Tùy chọn):</label> <input type="datetime-local" id="giftRuleModalEnd" class="w-full p-2 border border-slate-200 dark:border-white/10 rounded-xl bg-white dark:bg-black text-slate-800 dark:text-white outline-none focus:border-rose-500 text-xs"></div>
+            </div>
+            <div class="pt-1 flex items-center justify-between bg-slate-50 dark:bg-black/40 p-2.5 rounded-xl border border-slate-100 dark:border-white/5"><span class="font-bold text-slate-700 dark:text-slate-300">Trạng thái quy tắc:</span> <label class="flex items-center gap-2 cursor-pointer font-bold text-emerald-600"> <input type="checkbox" id="giftRuleModalEnabled" checked class="w-4 h-4 accent-emerald-600" onchange="updateGiftRulePkgCheckboxes()"> Hoạt động </label></div>
+          </div>
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-white/10"><button type="button" onclick="closeGiftRuleModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition min-h-[44px]">Hủy</button> <button type="button" onclick="saveGiftRuleModal()" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md transition active:scale-95 flex items-center gap-1.5 min-h-[44px]"><i class="fas fa-check"></i>LƯU QUY TẮC QUÀ TẶNG</button></div>
+        </div>
+      </div>
+    </div>
+    <!-- Konsta UI: iOS Fixed Bottom Navigation Bar (5 Slot Chuẩn: Đơn hàng + Link Sub + Bán hàng + Đối soát + Thêm) -->
+    <nav id="adminBottomNav" class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200/80 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-2px_10px_rgba(0,0,0,0.05)] transition-transform duration-300">
+      <div class="h-14 grid grid-cols-5 items-center px-1 text-center"><!-- Slot 1: Đơn hàng (BẮT BUỘC) --> <button type="button" id="bnav-t-ord" onclick="go('t-ord')" class="flex flex-col items-center justify-center text-indigo-600 transition-colors py-1 min-h-[44px]"> <i class="fas fa-box text-base"></i> <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Đơn hàng</span> </button> <!-- Slot 2: Link Sub (BẮT BUỘC) --> <button type="button" id="bnav-t-lnk" onclick="go('t-lnk')" class="flex flex-col items-center justify-center text-slate-400 transition-colors py-1 min-h-[44px]"> <i class="fas fa-link text-base"></i> <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Link Sub</span> </button> <!-- Slot 3: Kiểm tra (Thay thế Bán hàng) --> <button type="button" id="bnav-t-check" onclick="go('t-check')" class="flex flex-col items-center justify-center text-slate-400 transition-colors py-1 min-h-[44px] relative"> <i class="fas fa-clipboard-check text-base"></i> <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Kiểm tra</span> <span id="checkBadgeMobile" class="hidden absolute top-1 right-3 bg-purple-600 text-white text-[9px] min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center font-black">0</span> </button> <!-- Slot 4: Đối soát --> <button type="button" id="bnav-t-trans" onclick="go('t-trans')" class="flex flex-col items-center justify-center text-slate-400 transition-colors py-1 min-h-[44px] relative"> <i class="fas fa-file-invoice-dollar text-base"></i> <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Đối soát</span> <span id="transBadgeMobile" class="hidden absolute top-1 right-3 bg-red-500 text-white text-[9px] min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center font-black">!</span> </button> <!-- Slot 5: Thêm (Tất cả mục còn lại) --> <button type="button" id="bnav-t-more" onclick="go('t-more')" class="flex flex-col items-center justify-center text-slate-400 transition-colors py-1 min-h-[44px] relative"> <i class="fas fa-ellipsis-h text-base"></i> <span class="text-[10px] font-bold mt-0.5 whitespace-nowrap">Thêm</span> <span id="moreBadgeMobile" class="hidden absolute top-1 right-3 bg-amber-500 text-white text-[9px] min-w-[14px] h-3.5 px-0.5 rounded-full flex items-center justify-center font-black">!</span> </button></div>
+    </nav>
+    <!-- Vaul: Lightweight Gesture Physics Engine (Vuốt trượt kéo xuống để đóng Bottom Sheet) -->
+    <script>
+      (function () {
+        function attachVaulPhysics(overlayId, handleId) {
+          const overlay = document.getElementById(overlayId);
+          if (!overlay) return;
+          const sheet = overlay.querySelector('.glass-card') || overlay.firstElementChild;
+          const handle = document.getElementById(handleId) || sheet;
+          if (!sheet || !handle) return;
 
-            let startY = 0, currentY = 0, isDragging = false;
+          let startY = 0, currentY = 0, isDragging = false;
 
-            handle.addEventListener('touchstart', function (e) {
-              if (window.innerWidth >= 640) return;
-              startY = e.touches[0].clientY;
-              isDragging = true;
-              sheet.style.transition = 'none';
-            }, { passive: true });
+          handle.addEventListener('touchstart', function (e) {
+            if (window.innerWidth >= 640) return;
+            startY = e.touches[0].clientY;
+            currentY = startY;
+            isDragging = true;
+            sheet.style.transition = 'none';
+          }, { passive: true });
+          handle.addEventListener('touchmove', function (e) {
+            if (!isDragging) return;
+            currentY = e.touches[0].clientY;
+            const deltaY = currentY - startY;
+            if (deltaY > 0) {
+              sheet.style.transform = 'translateY(' + deltaY + 'px)';
+            }
+          }, { passive: true });
 
-            handle.addEventListener('touchmove', function (e) {
-              if (!isDragging) return;
-              currentY = e.touches[0].clientY;
-              const deltaY = currentY - startY;
-              if (deltaY > 0) {
-                sheet.style.transform = 'translateY(' + deltaY + 'px)';
-              }
-            }, { passive: true });
+          handle.addEventListener('touchend', function (e) {
+            if (!isDragging) return;
+            isDragging = false;
+            sheet.style.transition = 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)';
+            const deltaY = currentY - startY;
+            if (deltaY > 110) {
+              sheet.style.transform = 'translateY(100%)';
+              setTimeout(function () {
+                overlay.classList.add('hidden');
+                sheet.style.transform = '';
+              }, 220);
+            } else {
+              sheet.style.transform = 'translateY(0)';
+            }
+          }, { passive: true });
+        }
 
-            handle.addEventListener('touchend', function (e) {
-              if (!isDragging) return;
-              isDragging = false;
-              sheet.style.transition = 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)';
-              const deltaY = currentY - startY;
-              if (deltaY > 110) {
-                sheet.style.transform = 'translateY(100%)';
-                setTimeout(function () {
-                  overlay.classList.add('hidden');
-                  sheet.style.transform = '';
-                }, 220);
-              } else {
-                sheet.style.transform = 'translateY(0)';
-              }
-            }, { passive: true });
-          }
-
-          document.addEventListener('DOMContentLoaded', function () {
-            attachVaulPhysics('mOrd', 'mOrdHandle');
-            attachVaulPhysics('mRootEdit', 'mRootEditHandle');
-            attachVaulPhysics('mLnk', 'mLnkHandle');
-            attachVaulPhysics('mCouponModal', 'mCouponModalHandle');
-          });
-        })();
-      </script>
-    
+        document.addEventListener('DOMContentLoaded', function () {
+          attachVaulPhysics('mOrd', 'mOrdHandle');
+          attachVaulPhysics('mRootEdit', 'mRootEditHandle');
+          attachVaulPhysics('mLnk', 'mLnkHandle');
+          attachVaulPhysics('mCouponModal', 'mCouponModalHandle');
+          attachVaulPhysics('mGiftRuleModal', 'mGiftRuleModalHandle');
+        });
+      })();
+    </script>
   </body>
 </html>
