@@ -1,3 +1,4 @@
+// v2 — 2026-11-21 20:42 (UTC+7) — Vá chuyển kho Thật/Test theo warehouseEpoch, tuần tự hóa startApp, thêm toggle Backup trước thao tác, chuyển bảng Coupon/Gift Rule sang card dọc (hỗ trợ Sửa + Badge VIP), sửa live getters trên window
 // v1 — 2026-11-21 19:05 (UTC+7) — Sửa Tab Kiểm tra bù link độc lập (chống bấm đúp, khớp mốc hết hạn, lockAuto), vá crash dmy/t-mail/t-cms/FAQ/Footer, chống xóa headerDrawer, sửa biểu đồ Doanh thu, sửa Đối soát D1, bảo vệ nguồn #1, gắn 401 redirect
 /**
  * src/admin.js — Toàn bộ nghiệp vụ quản trị VPNTrinhHg3 Admin Panel
@@ -11,6 +12,7 @@ import {
   setAdminToken,
   clearAdminToken,
   setOnUnauthorized,
+  setServerTestMode,
   api,
   aj
 } from './api.js';
@@ -528,8 +530,74 @@ function healLinks() {
 }
 
 let lastSbError = null;
-function applyPoll(j) {
-  if (!j) return;
+let warehouseEpoch = 0;
+let switchingWarehouse = false;
+let relinkApplying = false;
+
+function getRelinkBackupEnabled() {
+  try {
+    return localStorage.getItem(SITE_KEY + "_relinkBackup") !== "0";
+  } catch (e) {
+    return true;
+  }
+}
+
+function syncRelinkBackupUI() {
+  const on = getRelinkBackupEnabled();
+  const tog = $("toggleRelinkBackup");
+  const lbl = $("relinkBackupStatusLabel");
+  if (tog) tog.checked = on;
+  if (lbl) {
+    lbl.className = on
+      ? "text-[11px] font-black px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 shrink-0"
+      : "text-[11px] font-black px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-600 shrink-0";
+    lbl.textContent = on ? "BẬT" : "TẮT";
+  }
+}
+
+function toggleRelinkBackup(checked) {
+  try {
+    localStorage.setItem(SITE_KEY + "_relinkBackup", checked ? "1" : "0");
+  } catch (e) {}
+  syncRelinkBackupUI();
+  toast(checked ? "Đã BẬT gửi backup Telegram trước khi Quét/Map lại" : "Đã TẮT backup trước khi Quét/Map lại", checked ? "info" : "warn");
+}
+
+function resetWarehouseScopedState(nextIsTest) {
+  warehouseEpoch++;
+  const active = !!nextIsTest;
+  isTestModeActive = active;
+  setServerTestMode(active);
+  try {
+    localStorage.setItem(SITE_KEY + "_testMode", active ? "1" : "0");
+    const url = new URL(window.location.href);
+    if (active) url.searchParams.set("test", "1");
+    else url.searchParams.delete("test");
+    window.history.replaceState({}, "", url.toString());
+  } catch (e) {}
+  if ($("toggleTestMode")) $("toggleTestMode").checked = active;
+  updateTestModeUI();
+  ordersDb = [];
+  lastSig.o = "";
+  if (typeof healingOrderIds !== "undefined") healingOrderIds.clear();
+  if (typeof rsItems !== "undefined") rsItems = [];
+  if (typeof rmItems !== "undefined") rmItems = [];
+  if (typeof rsLastBody !== "undefined") rsLastBody = null;
+  if (typeof rmLastBody !== "undefined") rmLastBody = null;
+  if ($("rsResult")) $("rsResult").innerHTML = '<div class="text-xs text-slate-400 italic">Đã chuyển kho. Bấm nút phía trên để kiểm tra ô info của kho hiện tại.</div>';
+  if ($("rmResult")) $("rmResult").innerHTML = '<div class="text-xs text-slate-400 italic">Đã chuyển kho. Bấm nút phía trên để tìm link map lại ở kho hiện tại.</div>';
+  if ($("rsApply")) $("rsApply").classList.add("hidden");
+  if ($("rmApply")) $("rmApply").classList.add("hidden");
+  if ($("checkProgressBox")) $("checkProgressBox").classList.add("hidden");
+  renderOrd();
+  renderCheckTab();
+}
+
+function applyPoll(j, expectedEpoch = null, expectedIsTest = null) {
+  if (!j) return false;
+  if (expectedEpoch !== null && expectedEpoch !== warehouseEpoch) return false;
+  if (expectedIsTest !== null && j.isTest !== undefined && Boolean(j.isTest) !== Boolean(expectedIsTest)) return false;
+  if (expectedEpoch === null && switchingWarehouse) return false;
   lastSbError = (j.sbOk === false || j.sbError) ? (j.sbError || "Không thể kết nối Supabase") : null;
   ordersDb = arr(j.orders);
   linksDb = arr(j.links);
@@ -538,6 +606,7 @@ function applyPoll(j) {
   dataReqDb = arr(j.data_requests);
   if (j.isTest !== undefined && typeof isTestModeActive !== "undefined") {
     isTestModeActive = !!j.isTest;
+    setServerTestMode(isTestModeActive);
     try {
       localStorage.setItem(SITE_KEY + "_testMode", isTestModeActive ? "1" : "0");
       const url = new URL(window.location.href);
@@ -548,12 +617,23 @@ function applyPoll(j) {
     if ($("toggleTestMode")) $("toggleTestMode").checked = isTestModeActive;
     updateTestModeUI();
   }
+  return true;
 }
-async function fetchAll(msg, throwOnError = false) {
+async function fetchAll(msg, throwOnError = false, explicitIsTest = undefined) {
+  const reqTest = explicitIsTest !== undefined ? !!explicitIsTest : isTestModeActive;
+  const myEpoch = warehouseEpoch;
   try {
-    const [poll, cms, dead, devs, g] = await Promise.all([aj("/api/admin/poll"), aj("/api/cms"), aj("/api/deadlinks"), aj("/api/devices"), aj("/api/guides")]);
+    const [poll, cms, dead, devs, g] = await Promise.all([
+      aj("/api/admin/poll", { isTest: reqTest }),
+      aj("/api/cms", { isTest: reqTest }),
+      aj("/api/deadlinks", { isTest: reqTest }),
+      aj("/api/devices", { isTest: reqTest }),
+      aj("/api/guides", { isTest: reqTest })
+    ]);
+    if (myEpoch !== warehouseEpoch) return null;
+    if (poll && poll.isTest !== undefined && Boolean(poll.isTest) !== reqTest) return null;
     deadDb = arr(dead);
-    applyPoll(poll);
+    if (!applyPoll(poll, myEpoch, reqTest)) return null;
     cmsDb = cms && typeof cms === "object" && !Array.isArray(cms) ? cms : {};
     cmsDb.settings = cmsDb.settings || {};
     cmsDb.link_origins = cmsDb.link_origins || {};
@@ -601,9 +681,13 @@ async function fetchAll(msg, throwOnError = false) {
 }
 const isLockedPoolUrl = u => u === "Da_bi_khoa";
 async function pollMain() {
-  if (document.hidden || !TOKEN || !$("mOrd").classList.contains("hidden")) return;
+  if (document.hidden || !TOKEN || switchingWarehouse || !$("mOrd").classList.contains("hidden")) return;
+  const myEpoch = warehouseEpoch;
+  const reqTest = isTestModeActive;
   try {
-    const j = await aj("/api/admin/poll");
+    const j = await aj("/api/admin/poll", { isTest: reqTest });
+    if (myEpoch !== warehouseEpoch || switchingWarehouse) return;
+    if (j && j.isTest !== undefined && Boolean(j.isTest) !== reqTest) return;
     const s = {
       o: JSON.stringify(arr(j.orders)),
       l: JSON.stringify(arr(j.links)),
@@ -611,11 +695,11 @@ async function pollMain() {
       d: JSON.stringify(arr(j.data_requests))
     };
     const oldPending = dataReqDb.filter(r => r.status === "pending").length;
-    applyPoll(j);
+    if (!applyPoll(j, myEpoch, reqTest)) return;
     if (s.o !== lastSig.o) {
       renderOrd();
       renderCheckTab();
-      if (!$("t-trans").classList.contains("hidden") && curTxTab === "rev") renderRevenue();
+      if ($("t-rev") && !$("t-rev").classList.contains("hidden")) renderRevenue();
     }
     if (s.l !== lastSig.l || s.p !== lastSig.p) renderLinks();
     if (s.d !== lastSig.d) {
@@ -1430,6 +1514,8 @@ async function saveCheckManual(orderId) {
   if (healingOrderIds.has(key)) return;
   const me = getMe();
   const lk = ($("chkLink_" + orderId)?.value || "").trim();
+  const myEpoch = warehouseEpoch;
+  const reqTest = isTestModeActive;
 
   healingOrderIds.add(key);
   const btn = $("btnSaveChk_" + orderId);
@@ -1442,7 +1528,8 @@ async function saveCheckManual(orderId) {
       manualEdit: true,
       lockAuto: true
     };
-    const j = await aj("/api/admin/order", { method: "POST", body });
+    const j = await aj("/api/admin/order", { method: "POST", body, isTest: reqTest });
+    if (myEpoch !== warehouseEpoch) return;
     const idx = ordersDb.findIndex(x => x.id === o.id);
     if (idx >= 0) ordersDb[idx] = j.order;
     lastSig.o = JSON.stringify(ordersDb);
@@ -1450,10 +1537,10 @@ async function saveCheckManual(orderId) {
     renderOrd();
     toast(`Đã lưu link ${me.field.toUpperCase()} cho đơn ${o.id}!`);
   } catch (e) {
-    toast("Lỗi lưu link: " + e.message, "err");
+    if (myEpoch === warehouseEpoch) toast("Lỗi lưu link: " + e.message, "err");
   } finally {
     healingOrderIds.delete(key);
-    renderCheckTab();
+    if (myEpoch === warehouseEpoch) renderCheckTab();
   }
 }
 
@@ -1462,6 +1549,8 @@ async function healSingleOrder(orderId) {
   const key = normId(orderId);
   if (healingOrderIds.has(key)) return;
   const me = getMe();
+  const myEpoch = warehouseEpoch;
+  const reqTest = isTestModeActive;
   healingOrderIds.add(key);
   const btn = $("btnHeal_" + orderId);
   if (btn) {
@@ -1470,7 +1559,8 @@ async function healSingleOrder(orderId) {
   }
   toast(`Đang cấp bù link ${me.field.toUpperCase()} cho đơn ${orderId}...`);
   try {
-    const res = await aj("/api/admin/heal", { method: "POST", body: { orderIds: [orderId] } });
+    const res = await aj("/api/admin/heal", { method: "POST", body: { orderIds: [orderId] }, isTest: reqTest });
+    if (myEpoch !== warehouseEpoch || (res && res.isTest !== undefined && Boolean(res.isTest) !== reqTest)) return;
     const item = res && res.details && res.details[0];
     if (item && item.success && item.link) {
       const targetOrder = ordersDb.find(o => normId(o.id) === normId(item.id));
@@ -1481,11 +1571,13 @@ async function healSingleOrder(orderId) {
       toast((item && item.error) || "Không thể cấp bù link (hết nguồn trống trong kho)!", "warn");
     }
   } catch (e) {
-    toast("Lỗi: " + e.message, "err");
+    if (myEpoch === warehouseEpoch) toast("Lỗi: " + e.message, "err");
   } finally {
     healingOrderIds.delete(key);
-    renderCheckTab();
-    renderOrd();
+    if (myEpoch === warehouseEpoch) {
+      renderCheckTab();
+      renderOrd();
+    }
   }
 }
 
@@ -1494,6 +1586,8 @@ async function healAllMissingWithProgress() {
   const list = getMissingOrders();
   const me = getMe();
   if (!list.length) return toast(`Tất cả đơn đã đủ link ${me.field.toUpperCase()}!`, "info");
+  const myEpoch = warehouseEpoch;
+  const reqTest = isTestModeActive;
   const btn = $("btnHealAll");
   btn.disabled = true;
   const box = $("checkProgressBox"), bar = $("checkProgressBar"), pTxt = $("checkProgressPercent"), sTxt = $("checkProgressStatus"), logEl = $("checkLogTerminal");
@@ -1508,7 +1602,8 @@ async function healAllMissingWithProgress() {
 
   try {
     const allIds = list.map(o => o.id);
-    const res = await aj("/api/admin/heal", { method: "POST", body: { orderIds: allIds } });
+    const res = await aj("/api/admin/heal", { method: "POST", body: { orderIds: allIds }, isTest: reqTest });
+    if (myEpoch !== warehouseEpoch || (res && res.isTest !== undefined && Boolean(res.isTest) !== reqTest)) return;
     bar.style.width = "75%";
     pTxt.textContent = "75%";
 
@@ -5173,6 +5268,8 @@ const rlPicks = cls => [...document.querySelectorAll("." + cls + ":checked")].ma
 const rlAll = (cls, on) => document.querySelectorAll("." + cls).forEach(el => el.checked = on);
 async function relinkScanRun() {
   const me = getMe();
+  const myEpoch = warehouseEpoch;
+  const reqTest = isTestModeActive;
   const body = {
     action: "scan",
     mode: "scan",
@@ -5184,22 +5281,25 @@ async function relinkScanRun() {
   $("rsResult").innerHTML = '<div class="text-xs text-slate-400"><i class="fas fa-spinner fa-spin mr-1"></i>Đang rà quét trên web này...</div>';
   $("rsApply").classList.add("hidden");
   try {
-    const j = await aj("/api/admin/relink", { method: "POST", body });
+    const j = await aj("/api/admin/relink", { method: "POST", body, isTest: reqTest });
+    if (myEpoch !== warehouseEpoch || (j && j.isTest !== undefined && Boolean(j.isTest) !== reqTest)) return;
     rsLastBody = body;
     rsItems = arr(j.items);
     if (!rsItems.length) {
       $("rsResult").innerHTML = '<div class="text-xs text-slate-400 italic">Không tìm thấy ô nào khớp bộ lọc.</div>';
       return;
     }
-    $("rsResult").innerHTML = `<div class="text-[11px] font-bold text-slate-500 mb-1 flex items-center justify-between"><span>${rsItems.length} mục khớp — bỏ chọn mục không muốn làm sạch</span><label class="flex items-center gap-1 font-bold text-indigo-700 cursor-pointer"><input type="checkbox" checked onchange="rlAll('rs-pick',this.checked)" class="accent-indigo-600">Tất cả</label></div><div class="border border-slate-200 rounded-xl max-h-72 overflow-y-auto divide-y divide-slate-100 bg-white">${rsItems.map(it=>`<label class="flex items-center gap-2 px-2 py-1.5 text-[11px] cursor-pointer hover:bg-slate-50"><input type="checkbox" class="rs-pick w-3.5 h-3.5 accent-indigo-600" data-id="${esc(it.id)}" data-field="${esc(it.field)}" checked><span class="font-mono font-bold text-indigo-600">${esc(it.id)}</span><span class="font-bold text-slate-500">${esc(it.field.toUpperCase())}</span><span class="text-slate-600 truncate flex-1" title="${esc(it.link)}">${esc(it.email||"")} · ${esc(String(it.link||"").slice(0,38))}</span>${it.dead?'<span class="bg-red-100 text-red-700 text-[9px] font-black px-1.5 py-0.5 rounded">CHẾT / KHÓA</span>':'<span class="bg-emerald-100 text-emerald-700 text-[9px] font-black px-1.5 py-0.5 rounded">SỐNG</span>'}${it.expired?'<span class="bg-slate-200 text-slate-600 text-[9px] font-black px-1.5 py-0.5 rounded">HẾT HẠN</span>':""}${it.manual?'<span class="bg-purple-100 text-purple-700 text-[9px] font-black px-1.5 py-0.5 rounded">SỬA TAY</span>':""}</label>`).join("")}</div>`;
+    $("rsResult").innerHTML = `<div class="text-[11px] font-bold text-slate-500 mb-1.5 flex items-center justify-between gap-2 flex-wrap"><span>${rsItems.length} mục khớp — bỏ chọn mục không muốn làm sạch</span><label class="flex items-center gap-1 font-bold text-indigo-700 cursor-pointer shrink-0"><input type="checkbox" checked onchange="rlAll('rs-pick',this.checked)" class="accent-indigo-600">Tất cả</label></div><div class="border border-slate-200 rounded-xl max-h-72 overflow-y-auto divide-y divide-slate-100 bg-white">${rsItems.map(it=>`<label class="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 px-2.5 py-2 text-[11px] cursor-pointer hover:bg-slate-50 min-w-0"><input type="checkbox" class="rs-pick w-3.5 h-3.5 accent-indigo-600 shrink-0" data-id="${esc(it.id)}" data-field="${esc(it.field)}" checked><span class="font-mono font-bold text-indigo-600 shrink-0">${esc(it.id)}</span><span class="font-bold text-slate-500 shrink-0">${esc(it.field.toUpperCase())}</span><span class="text-slate-600 truncate min-w-0 flex-1 basis-full sm:basis-auto" title="${esc(it.link)}">${esc(it.email||"")} · ${esc(String(it.link||"").slice(0,48))}</span><span class="flex items-center gap-1 shrink-0">${it.dead?'<span class="bg-red-100 text-red-700 text-[9px] font-black px-1.5 py-0.5 rounded">CHẾT / KHÓA</span>':'<span class="bg-emerald-100 text-emerald-700 text-[9px] font-black px-1.5 py-0.5 rounded">SỐNG</span>'}${it.expired?'<span class="bg-slate-200 text-slate-600 text-[9px] font-black px-1.5 py-0.5 rounded">HẾT HẠN</span>':""}${it.manual?'<span class="bg-purple-100 text-purple-700 text-[9px] font-black px-1.5 py-0.5 rounded">SỬA TAY</span>':""}</span></label>`).join("")}</div>`;
     $("rsApply").classList.remove("hidden");
   } catch (e) {
-    $("rsResult").innerHTML = `<span class="text-red-600 text-xs">Lỗi: ${esc(e.message)}</span>`;
+    if (myEpoch === warehouseEpoch) $("rsResult").innerHTML = `<span class="text-red-600 text-xs">Lỗi: ${esc(e.message)}</span>`;
   }
 }
 
 async function relinkMapRun() {
   const me = getMe();
+  const myEpoch = warehouseEpoch;
+  const reqTest = isTestModeActive;
   const body = {
     action: "remap",
     mode: "scan",
@@ -5209,36 +5309,47 @@ async function relinkMapRun() {
   $("rmResult").innerHTML = '<div class="text-xs text-slate-400"><i class="fas fa-spinner fa-spin mr-1"></i>Đang quét link còn sống trên web này...</div>';
   $("rmApply").classList.add("hidden");
   try {
-    const j = await aj("/api/admin/relink", { method: "POST", body });
+    const j = await aj("/api/admin/relink", { method: "POST", body, isTest: reqTest });
+    if (myEpoch !== warehouseEpoch || (j && j.isTest !== undefined && Boolean(j.isTest) !== reqTest)) return;
     rmLastBody = body;
     rmItems = arr(j.items);
     if (!rmItems.length) {
       $("rmResult").innerHTML = '<div class="text-xs text-slate-400 italic">Không có đơn còn hạn nào cần map lại trên web này.</div>';
       return;
     }
-    $("rmResult").innerHTML = `<div class="text-[11px] font-bold text-slate-500 mb-1 flex items-center justify-between"><span>${rmItems.length} ô sẽ được map lại</span><label class="flex items-center gap-1 font-bold text-indigo-700 cursor-pointer"><input type="checkbox" checked onchange="rlAll('rm-pick',this.checked)" class="accent-indigo-600">Tất cả</label></div><div class="border border-slate-200 rounded-xl max-h-72 overflow-y-auto divide-y divide-slate-100 bg-white">${rmItems.map(it=>{const od=ordersDb.find(o=>normId(o.id)===normId(it.id));return `<label class="flex items-center gap-2 px-2 py-1.5 text-[11px] cursor-pointer hover:bg-slate-50"><input type="checkbox" class="rm-pick w-3.5 h-3.5 accent-indigo-600" data-id="${esc(it.id)}" data-field="${esc(it.field)}" checked><span class="font-mono font-bold text-indigo-600">${esc(it.id)}</span><span class="text-slate-700 font-semibold truncate flex-1">${esc(it.email||"")}${od&&od.expDate?" · HSD "+esc(od.expDate):""}</span><span class="text-emerald-600 font-mono text-[10px] truncate max-w-[45%]" title="${esc(it.to||"")}">→ ${esc(String(it.to||"").slice(0,36))}…</span></label>`;}).join("")}</div>`;
+    $("rmResult").innerHTML = `<div class="text-[11px] font-bold text-slate-500 mb-1.5 flex items-center justify-between gap-2 flex-wrap"><span>${rmItems.length} ô sẽ được map lại</span><label class="flex items-center gap-1 font-bold text-indigo-700 cursor-pointer shrink-0"><input type="checkbox" checked onchange="rlAll('rm-pick',this.checked)" class="accent-indigo-600">Tất cả</label></div><div class="border border-slate-200 rounded-xl max-h-72 overflow-y-auto divide-y divide-slate-100 bg-white">${rmItems.map(it=>{const od=ordersDb.find(o=>normId(o.id)===normId(it.id));return `<label class="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2 px-2.5 py-2 text-[11px] cursor-pointer hover:bg-slate-50 min-w-0"><input type="checkbox" class="rm-pick w-3.5 h-3.5 accent-indigo-600 shrink-0" data-id="${esc(it.id)}" data-field="${esc(it.field)}" checked><span class="font-mono font-bold text-indigo-600 shrink-0">${esc(it.id)}</span><span class="text-slate-700 font-semibold truncate min-w-0 flex-1">${esc(it.email||"")}${od&&od.expDate?" · HSD "+esc(od.expDate):""}</span><span class="text-emerald-600 font-mono text-[10px] truncate max-w-full sm:max-w-[45%] basis-full sm:basis-auto pl-5 sm:pl-0" title="${esc(it.to||"")}">→ ${esc(String(it.to||"").slice(0,48))}</span></label>`;}).join("")}</div>`;
     $("rmApply").classList.remove("hidden");
   } catch (e) {
-    $("rmResult").innerHTML = `<span class="text-red-600 text-xs">Lỗi: ${esc(e.message)}</span>`;
+    if (myEpoch === warehouseEpoch) $("rmResult").innerHTML = `<span class="text-red-600 text-xs">Lỗi: ${esc(e.message)}</span>`;
   }
 }
 
 async function relinkApply(mode) {
+  if (relinkApplying) return;
   const picks = rlPicks(mode === "scan" ? "rs-pick" : "rm-pick");
   if (!picks.length) return toast("Chưa chọn mục nào", "err");
   if (!confirm(mode === "scan" ? `Làm sạch ${picks.length} ô Info? (chỉ xóa URL khỏi đơn, không xóa Link Sub / đơn / hạn)` : `Map lại ${picks.length} ô Info?`)) return;
   const base = mode === "scan" ? rsLastBody : rmLastBody;
+  const myEpoch = warehouseEpoch;
+  const reqTest = isTestModeActive;
+  const needBackup = getRelinkBackupEnabled();
+  const btn = $(mode === "scan" ? "rsApply" : "rmApply");
+  relinkApplying = true;
+  if (btn) btn.disabled = true;
   try {
     const j = await aj("/api/admin/relink", {
       method: "POST",
+      isTest: reqTest,
       body: {
         ...base,
         action: mode === "scan" ? "scan" : "remap",
         mode: "apply",
+        backupBeforeAction: needBackup,
         picks
       }
     });
-    toast(`Đã xử lý ${j.applied} mục`);
+    if (myEpoch !== warehouseEpoch || (j && j.isTest !== undefined && Boolean(j.isTest) !== reqTest)) return;
+    toast(`Đã xử lý ${j.applied} mục${needBackup ? " (đã backup Telegram)" : ""}`);
     logEvent("ok", "admin", mode === "scan" ? "Rà quét: làm sạch Info" : "Map lại link", "áp dụng " + j.applied + " mục");
 
     // Cập nhật ngay vào RAM ordersDb để Modal Đơn hàng có dữ liệu tức thì
@@ -5264,9 +5375,14 @@ async function relinkApply(mode) {
       $("rmResult").innerHTML = '<div class="text-xs text-slate-400 italic">Đã map lại thành công. Chuyển sang Tab Đơn hàng mở Modal đã có link!</div>';
       $("rmApply").classList.add("hidden");
     }
-    setTimeout(fetchAll, 2000);
+    setTimeout(() => {
+      if (myEpoch === warehouseEpoch) fetchAll(false, false, reqTest);
+    }, 2000);
   } catch (e) {
-    toast("Lỗi: " + e.message, "err");
+    if (myEpoch === warehouseEpoch) toast("Lỗi: " + e.message, "err");
+  } finally {
+    relinkApplying = false;
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -6703,6 +6819,7 @@ window.renderHealTab = renderHealTab;
 function renderScanTab() {
   const me = getMe();
   if ($("scanRoutingFieldTxt")) $("scanRoutingFieldTxt").textContent = me.field.toUpperCase();
+  syncRelinkBackupUI();
 }
 window.renderScanTab = renderScanTab;
 
@@ -7490,9 +7607,15 @@ async function loadStatus() {
     }
     return;
   }
+  const prevWebIndex = myWebIndex;
   if (j.web) {
     myWebIndex = j.web;
     if (PDS[j.web]) PD = PDS[j.web];
+    if (prevWebIndex !== myWebIndex) {
+      renderCheckTab();
+      renderScanTab();
+      renderOrd();
+    }
   }
   let bs = {};
   try {
@@ -8028,27 +8151,29 @@ async function saveFailoverPolicy() {
 
 // ===================== KHỞI ĐỘNG =====================
 let started = false;
-function startApp(fresh) {
+async function startApp(fresh) {
   $("loginWrap").classList.add("hidden");
   document.documentElement.classList.add("has-tok");
   $("hdr").classList.remove("hidden");
   $("hdr").style.display = "flex";
   $("main").classList.remove("hidden");
   if (started) {
-    fetchAll();
+    await checkTestModeStatus();
+    fetchAll(false, false, isTestModeActive);
     return;
   }
   started = true;
   setOnUnauthorized(() => toLogin("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại"));
   buildTabs();
+  syncRelinkBackupUI();
   const savedOrdTab = localStorage.getItem(SITE_KEY + "_curOrdTab");
   if (savedOrdTab) curOrdTab = savedOrdTab;
   go(localStorage.getItem(SITE_KEY + "_lastTab") || "t-ord");
   if (fresh) toast("Đăng nhập thành công!");
-  fetchAll();
+  await checkTestModeStatus();
+  fetchAll(false, false, isTestModeActive);
   loadTx(true);
   loadQuota();
-  checkTestModeStatus();
   setInterval(pollMain, 10000);
   setInterval(loadStatus, 120000);
   setInterval(tickClocks, 1000);
@@ -8168,10 +8293,13 @@ let isTestModeActive = (function () {
 })();
 
 async function checkTestModeStatus() {
+  const myEpoch = warehouseEpoch;
   try {
     const res = await aj("/api/admin/test/status");
+    if (myEpoch !== warehouseEpoch) return;
     if (res && res.active !== undefined) {
       isTestModeActive = !!res.active;
+      setServerTestMode(isTestModeActive);
       try {
         localStorage.setItem(SITE_KEY + "_testMode", isTestModeActive ? "1" : "0");
         const url = new URL(window.location.href);
@@ -8182,7 +8310,9 @@ async function checkTestModeStatus() {
       if ($("toggleTestMode")) $("toggleTestMode").checked = isTestModeActive;
       updateTestModeUI();
     }
-  } catch {}
+  } catch {
+    setServerTestMode(isTestModeActive);
+  }
 }
 
 function updateTestModeUI() {
@@ -8197,47 +8327,48 @@ function updateTestModeUI() {
 
 async function toggleTestMode(checked) {
   const toggleEl = $("toggleTestMode");
+  if (switchingWarehouse) {
+    if (toggleEl) toggleEl.checked = isTestModeActive;
+    return;
+  }
+  const nextTest = !!checked;
+  switchingWarehouse = true;
   if (toggleEl) toggleEl.disabled = true;
   try {
-    const res = await aj("/api/admin/test/toggle", { method: "POST", body: { active: checked } });
+    const res = await aj("/api/admin/test/toggle", { method: "POST", body: { active: nextTest }, isTest: nextTest });
     if (!res || res.ok === false) {
       throw new Error(res?.error || "Không nhận được phản hồi hợp lệ từ server");
     }
-    const statusRes = await aj("/api/admin/test/status");
+    const statusRes = await aj("/api/admin/test/status", { isTest: nextTest });
     const confirmedActive = !!statusRes?.active;
-    if (confirmedActive !== checked) {
-      throw new Error("Trạng thái trên server chưa đồng bộ (mong muốn: " + checked + ", thực tế: " + confirmedActive + ")");
+    if (confirmedActive !== nextTest) {
+      throw new Error("Trạng thái trên server chưa đồng bộ (mong muốn: " + nextTest + ", thực tế: " + confirmedActive + ")");
     }
-    isTestModeActive = checked;
-    try {
-      localStorage.setItem(SITE_KEY + "_testMode", checked ? "1" : "0");
-      const url = new URL(window.location.href);
-      if (checked) url.searchParams.set("test", "1");
-      else url.searchParams.delete("test");
-      window.history.replaceState({}, "", url.toString());
-    } catch (e) {}
+    resetWarehouseScopedState(nextTest);
 
-    const poll = await fetchAll(false, true);
+    const poll = await fetchAll(false, true, nextTest);
     if (!poll) {
       throw new Error("Không thể nạp dữ liệu từ server sau khi đổi chế độ");
     }
-    if (poll.isTest !== undefined && !!poll.isTest !== checked) {
-      throw new Error("Dữ liệu nạp từ server không khớp chế độ (mong muốn: " + (checked ? "Kho Test" : "Kho Thật") + ", thực tế nhận: " + (poll.isTest ? "Kho Test" : "Kho Thật") + ")");
+    if (poll.isTest !== undefined && !!poll.isTest !== nextTest) {
+      throw new Error("Dữ liệu nạp từ server không khớp chế độ (mong muốn: " + (nextTest ? "Kho Test" : "Kho Thật") + ", thực tế nhận: " + (poll.isTest ? "Kho Test" : "Kho Thật") + ")");
     }
 
     updateTestModeUI();
+    renderScanTab();
     try {
       const ch = new BroadcastChannel('vpn_trinhhg_sync');
-      ch.postMessage({ type: 'test_mode_change', isTest: checked });
+      ch.postMessage({ type: 'test_mode_change', isTest: nextTest });
     } catch (e) {}
     try {
       localStorage.setItem('vpn_last_config_sync', String(Date.now()));
     } catch (e) {}
-    toast(checked ? "Đã BẬT Chế độ Test (ALL_ORDERS_TEST) và nạp dữ liệu thành công" : "Đã chuyển về Kho Thật (ALL_ORDERS) và nạp dữ liệu thành công");
+    toast(nextTest ? "Đã BẬT Chế độ Test (ALL_ORDERS_TEST) và nạp dữ liệu thành công" : "Đã chuyển về Kho Thật (ALL_ORDERS) và nạp dữ liệu thành công");
   } catch (e) {
     await checkTestModeStatus();
     toast("Lỗi chuyển chế độ: " + e.message, "err");
   } finally {
+    switchingWarehouse = false;
     if (toggleEl) toggleEl.disabled = false;
   }
 }
@@ -8484,55 +8615,85 @@ window.saveFlashSaleConfig = saveFlashSaleConfig;
 function renderCouponAdmin() {
   if ($("couponCheckoutEnabledToggle")) $("couponCheckoutEnabledToggle").checked = (cmsDb && cmsDb.settings && cmsDb.settings.couponEnabled !== false);
   if ($("couponCheckoutStatusLabel")) $("couponCheckoutStatusLabel").textContent = (cmsDb && cmsDb.settings && cmsDb.settings.couponEnabled !== false) ? "BẬT" : "TẮT";
-  const tbody = $("couponListTbody");
-  if (!tbody) return;
+  const boxEl = $("couponListTbody");
+  if (!boxEl) return;
   const list = arr(cmsDb && cmsDb.coupons);
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400 font-bold italic">Chưa có mã giảm giá nào. Bấm "TẠO MÃ COUPON MỚI" ở trên để bắt đầu!</td></tr>';
+    boxEl.innerHTML = '<div class="text-center py-6 text-slate-400 text-xs font-bold italic border border-slate-200 rounded-xl bg-slate-50">Chưa có mã giảm giá nào. Bấm "TẠO MÃ COUPON MỚI" ở trên để bắt đầu!</div>';
     return;
   }
-  tbody.innerHTML = list.map((c, idx) => {
+  const now = nowMs();
+  boxEl.innerHTML = list.map((c, idx) => {
     const isPct = c.type === "percent";
-    const valText = isPct ? `${c.value}%` : `${fmtVnd(c.value)} đ`;
+    const valText = isPct ? `-${c.value}%` : `-${fmtVnd(c.value)} đ`;
     const minSpend = Number(c.minSpend || c.minOrder) || 0;
     const minText = minSpend > 0 ? `${fmtVnd(minSpend)} đ` : "Không có";
     const maxUsage = Number(c.maxUsage || c.usageLimit) || 0;
-    const usageText = maxUsage > 0 ? `${c.usedCount || 0}/${maxUsage}` : `${c.usedCount || 0}/∞`;
-    const expStr = c.endDate || c.expiry;
-    const expText = expStr ? dmyOf(new Date(expStr).getTime()) : "Vĩnh viễn";
+    const usedCount = Number(c.usedCount) || 0;
+    const usageText = maxUsage > 0 ? `${usedCount}/${maxUsage}` : `${usedCount}/∞`;
+    const startStr = c.startDate || "";
+    const expStr = c.endDate || c.expiry || "";
+    const startMs = startStr ? new Date(startStr).getTime() : 0;
+    const endMs = expStr ? new Date(expStr).getTime() : 0;
+    const expText = (startStr || expStr)
+      ? `${startMs && !isNaN(startMs) ? dmyOf(startMs) : 'Từ đầu'} → ${endMs && !isNaN(endMs) ? dmyOf(endMs) : 'Vô hạn'}`
+      : "Vĩnh viễn";
     const active = c.enabled !== false;
+    const isNotStarted = !!(startMs && !isNaN(startMs) && now < startMs);
+    const isExpired = !!(endMs && !isNaN(endMs) && now > endMs);
+    const isUsedUp = !!(maxUsage > 0 && usedCount >= maxUsage);
+    let condBadge = "";
+    if (!active) condBadge = "";
+    else if (isUsedUp) condBadge = '<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-rose-100 text-rose-700">HẾT LƯỢT</span>';
+    else if (isExpired) condBadge = '<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">HẾT HẠN</span>';
+    else if (isNotStarted) condBadge = '<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">CHƯA ĐẾN HẠN</span>';
+    const vipBadge = c.isVip ? '<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300"><i class="fas fa-crown mr-0.5"></i>VIP</span>' : '';
+
     return `
-      <tr class="hover:bg-slate-50 transition">
-        <td class="px-3 py-2.5 font-mono font-black text-indigo-700">${esc(c.code)}</td>
-        <td class="px-3 py-2.5 font-bold text-rose-600">${valText}</td>
-        <td class="px-3 py-2.5 text-center font-medium text-slate-600">${minText}</td>
-        <td class="px-3 py-2.5 text-center font-bold text-slate-700">${usageText}</td>
-        <td class="px-3 py-2.5 text-center text-slate-500">${expText}</td>
-        <td class="px-3 py-2.5 text-center">
-          <button type="button" onclick="toggleCouponStatus(${idx})" class="text-[10px] font-black px-2 py-0.5 rounded-full ${active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}">
+      <div class="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-xs space-y-2.5 hover:border-purple-200 transition">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2 min-w-0 flex-wrap">
+            <span class="font-mono font-black text-sm text-indigo-700 break-all cp" onclick="cp(${q(c.code)})">${esc(c.code)}</span>
+            ${vipBadge}
+            ${condBadge}
+          </div>
+          <button type="button" onclick="toggleCouponStatus(${idx})" class="text-[10px] font-black px-2.5 py-1 rounded-full shrink-0 transition ${active ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}">
             ${active ? 'HOẠT ĐỘNG' : 'ĐÃ TẮT'}
           </button>
-        </td>
-        <td class="px-3 py-2.5 text-right">
-          <button type="button" onclick="deleteCouponItem(${idx})" class="text-red-500 hover:text-red-700 p-1 font-bold text-xs" title="Xóa mã"><i class="fas fa-trash"></i></button>
-        </td>
-      </tr>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs bg-slate-50 rounded-xl p-2.5 border border-slate-100">
+          <div><span class="block text-[10px] text-slate-400 font-bold uppercase">Mức giảm</span><span class="font-black text-rose-600">${valText}</span></div>
+          <div><span class="block text-[10px] text-slate-400 font-bold uppercase">Đơn tối thiểu</span><span class="font-bold text-slate-700">${minText}</span></div>
+          <div><span class="block text-[10px] text-slate-400 font-bold uppercase">Lượt dùng</span><span class="font-bold text-slate-700">${usageText}</span></div>
+          <div><span class="block text-[10px] text-slate-400 font-bold uppercase">Hạn dùng</span><span class="font-semibold text-slate-600 break-words">${expText}</span></div>
+        </div>
+        <div class="flex items-center justify-end gap-2">
+          <button type="button" onclick="openAddCouponModal(${idx})" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center gap-1 transition"><i class="fas fa-edit"></i>Sửa</button>
+          <button type="button" onclick="deleteCouponItem(${idx})" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs flex items-center gap-1 transition"><i class="fas fa-trash"></i>Xóa</button>
+        </div>
+      </div>
     `;
   }).join("");
 }
 window.renderCouponAdmin = renderCouponAdmin;
 
-function openAddCouponModal() {
+function openAddCouponModal(editIdx = null) {
   const m = $("mCouponModal");
   if (!m) return;
-  if ($("couponModalCode")) $("couponModalCode").value = "";
-  if ($("couponModalType")) $("couponModalType").value = "percent";
-  if ($("couponModalValue")) $("couponModalValue").value = "";
-  if ($("couponModalMinSpend")) $("couponModalMinSpend").value = "";
-  if ($("couponModalMaxUsage")) $("couponModalMaxUsage").value = "";
-  if ($("couponModalStart")) $("couponModalStart").value = "";
-  if ($("couponModalEnd")) $("couponModalEnd").value = "";
-  if ($("couponModalEnabled")) $("couponModalEnabled").checked = true;
+  const list = arr(cmsDb && cmsDb.coupons);
+  const hasIdx = editIdx !== null && editIdx !== undefined && !isNaN(Number(editIdx)) && !!list[Number(editIdx)];
+  const c = hasIdx ? list[Number(editIdx)] : null;
+  if ($("couponModalEditIdx")) $("couponModalEditIdx").value = hasIdx ? String(Number(editIdx)) : "";
+  if ($("couponModalTitle")) $("couponModalTitle").textContent = hasIdx ? `Sửa Mã Coupon: ${c.code}` : "Tạo Mã Giảm Giá Mới";
+  if ($("couponModalCode")) $("couponModalCode").value = c ? (c.code || "") : "";
+  if ($("couponModalType")) $("couponModalType").value = c ? (c.type || "percent") : "percent";
+  if ($("couponModalValue")) $("couponModalValue").value = c ? (c.value ?? "") : "";
+  if ($("couponModalMinSpend")) $("couponModalMinSpend").value = c ? (c.minSpend || c.minOrder || "") : "";
+  if ($("couponModalMaxUsage")) $("couponModalMaxUsage").value = c ? (c.maxUsage || c.usageLimit || "") : "";
+  if ($("couponModalStart")) $("couponModalStart").value = c ? (c.startDate || "") : "";
+  if ($("couponModalEnd")) $("couponModalEnd").value = c ? (c.endDate || c.expiry || "") : "";
+  if ($("couponModalEnabled")) $("couponModalEnabled").checked = c ? (c.enabled !== false) : true;
+  if ($("couponModalVip")) $("couponModalVip").checked = !!(c && c.isVip);
   m.classList.remove("hidden");
 }
 window.openAddCouponModal = openAddCouponModal;
@@ -8558,9 +8719,17 @@ async function saveCouponModal() {
   const startDate = $("couponModalStart")?.value || "";
   const endDate = $("couponModalEnd")?.value || "";
   const enabled = $("couponModalEnabled") ? $("couponModalEnabled").checked : true;
+  const isVip = $("couponModalVip") ? !!$("couponModalVip").checked : false;
 
   cmsDb.coupons = arr(cmsDb.coupons);
-  const existIdx = cmsDb.coupons.findIndex(c => String(c.code).toUpperCase() === cleanCode);
+  const editIdxStr = $("couponModalEditIdx") ? $("couponModalEditIdx").value : "";
+  const editIdx = (editIdxStr !== "" && !isNaN(Number(editIdxStr))) ? Number(editIdxStr) : -1;
+  if (editIdx >= 0 && cmsDb.coupons.some((c, i) => i !== editIdx && String(c.code).toUpperCase() === cleanCode)) {
+    return toast(`Mã coupon "${cleanCode}" đã tồn tại ở dòng khác!`, "err");
+  }
+  const existIdx = editIdx >= 0 && cmsDb.coupons[editIdx]
+    ? editIdx
+    : cmsDb.coupons.findIndex(c => String(c.code).toUpperCase() === cleanCode);
   const couponObj = {
     code: cleanCode,
     type,
@@ -8573,7 +8742,8 @@ async function saveCouponModal() {
     startDate,
     endDate,
     expiry: endDate,
-    enabled
+    enabled,
+    isVip
   };
 
   if (existIdx >= 0) {
@@ -8599,44 +8769,60 @@ window.saveCouponModal = saveCouponModal;
 // ===================== QUẢN LÝ QUY TẮC QUÀ TẶNG THEO GÓI (GIFT RULES) =====================
 
 function renderGiftRulesAdmin() {
-  const tbody = $("giftRuleListTbody");
-  if (!tbody) return;
+  const boxEl = $("giftRuleListTbody");
+  if (!boxEl) return;
   const list = arr(cmsDb && cmsDb.giftRules);
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400 font-bold italic">Chưa có quy tắc quà tặng nào. Bấm "TẠO QUY TẮC QUÀ TẶNG" ở trên để tạo quy tắc mới!</td></tr>';
+    boxEl.innerHTML = '<div class="text-center py-6 text-slate-400 text-xs font-bold italic border border-slate-200 rounded-xl bg-slate-50">Chưa có quy tắc quà tặng nào. Bấm "TẠO QUY TẮC QUÀ TẶNG" ở trên để tạo quy tắc mới!</div>';
     return;
   }
-  tbody.innerHTML = list.map((r, idx) => {
-    const pkgLabels = (r.packageIds || []).map(pid => {
+  const now = nowMs();
+  boxEl.innerHTML = list.map((r, idx) => {
+    const pkgPills = (r.packageIds || []).map(pid => {
       const foundPkg = (adminPkgsList || []).find(p => p.id === pid);
-      return foundPkg ? (foundPkg.name || pid) : pid;
-    }).join(", ") || '<span class="text-slate-400 italic">Chưa chọn gói</span>';
+      const label = foundPkg ? (foundPkg.name || pid) : pid;
+      return `<span class="inline-block bg-indigo-50 text-indigo-700 border border-indigo-200/70 text-[10px] font-bold px-2 py-0.5 rounded-md">${esc(label)}</span>`;
+    }).join(" ") || '<span class="text-slate-400 italic text-[11px]">Chưa chọn gói</span>';
 
     const bonusDaysText = Number(r.bonusDays) > 0 ? `+${r.bonusDays} ngày` : '0 ngày';
     const bonusTextDisplay = r.bonusText ? `"${esc(r.bonusText)}"` : '—';
-    const expText = (r.startDate || r.endDate) ? `${r.startDate ? dmyOf(new Date(r.startDate).getTime()) : 'Từ đầu'} → ${r.endDate ? dmyOf(new Date(r.endDate).getTime()) : 'Vô hạn'}` : 'Vô thời hạn';
+    const startMs = r.startDate ? new Date(r.startDate).getTime() : 0;
+    const endMs = r.endDate ? new Date(r.endDate).getTime() : 0;
+    const expText = (r.startDate || r.endDate)
+      ? `${startMs && !isNaN(startMs) ? dmyOf(startMs) : 'Từ đầu'} → ${endMs && !isNaN(endMs) ? dmyOf(endMs) : 'Vô hạn'}`
+      : 'Vô thời hạn';
     const active = r.enabled !== false;
+    const isNotStarted = !!(startMs && !isNaN(startMs) && now < startMs);
+    const isExpired = !!(endMs && !isNaN(endMs) && now > endMs);
+    let timeBadge = "";
+    if (active && isExpired) timeBadge = '<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">HẾT HẠN</span>';
+    else if (active && isNotStarted) timeBadge = '<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">CHƯA ĐẾN HẠN</span>';
 
     return `
-      <tr class="hover:bg-slate-50 transition">
-        <td class="px-3 py-2.5 font-bold text-rose-600 flex items-center gap-1.5">
-          <i class="fas fa-gift text-xs"></i>
-          <span>${esc(r.name || r.sticker || '')}</span>
-        </td>
-        <td class="px-3 py-2.5 font-medium text-indigo-700">${bonusTextDisplay}</td>
-        <td class="px-3 py-2.5 text-center font-black text-purple-700">${bonusDaysText}</td>
-        <td class="px-3 py-2.5 text-slate-700 max-w-xs truncate" title="${esc(pkgLabels)}">${esc(pkgLabels)}</td>
-        <td class="px-3 py-2.5 text-center text-slate-500 text-[11px]">${expText}</td>
-        <td class="px-3 py-2.5 text-center">
-          <button type="button" onclick="toggleGiftRuleStatus(${idx})" class="text-[10px] font-black px-2.5 py-0.5 rounded-full ${active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}">
+      <div class="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-xs space-y-2.5 hover:border-rose-200 transition">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2 min-w-0 flex-wrap">
+            <span class="font-extrabold text-sm text-rose-600 flex items-center gap-1.5 break-words"><i class="fas fa-gift text-xs shrink-0"></i>${esc(r.name || r.sticker || '')}</span>
+            ${timeBadge}
+          </div>
+          <button type="button" onclick="toggleGiftRuleStatus(${idx})" class="text-[10px] font-black px-2.5 py-1 rounded-full shrink-0 transition ${active ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}">
             ${active ? 'HOẠT ĐỘNG' : 'ĐÃ TẮT'}
           </button>
-        </td>
-        <td class="px-3 py-2.5 text-right space-x-1.5 whitespace-nowrap">
-          <button type="button" onclick="openAddGiftRuleModal(${idx})" class="text-indigo-600 hover:text-indigo-800 p-1 font-bold text-xs" title="Chỉnh sửa"><i class="fas fa-edit"></i></button>
-          <button type="button" onclick="deleteGiftRuleItem(${idx})" class="text-red-500 hover:text-red-700 p-1 font-bold text-xs" title="Xóa quy tắc"><i class="fas fa-trash"></i></button>
-        </td>
-      </tr>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs bg-slate-50 rounded-xl p-2.5 border border-slate-100">
+          <div><span class="block text-[10px] text-slate-400 font-bold uppercase">Ngày tặng</span><span class="font-black text-purple-700">${bonusDaysText}</span></div>
+          <div><span class="block text-[10px] text-slate-400 font-bold uppercase">Chữ cạnh HSD</span><span class="font-medium text-indigo-700 break-words">${bonusTextDisplay}</span></div>
+          <div><span class="block text-[10px] text-slate-400 font-bold uppercase">Thời gian áp dụng</span><span class="font-semibold text-slate-600">${expText}</span></div>
+        </div>
+        <div class="text-xs flex flex-wrap items-center gap-1.5">
+          <span class="text-[10px] font-bold uppercase text-slate-400 mr-1">Gói áp dụng:</span>
+          ${pkgPills}
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-0.5">
+          <button type="button" onclick="openAddGiftRuleModal(${idx})" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center gap-1 transition"><i class="fas fa-edit"></i>Sửa</button>
+          <button type="button" onclick="deleteGiftRuleItem(${idx})" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs flex items-center gap-1 transition"><i class="fas fa-trash"></i>Xóa</button>
+        </div>
+      </div>
     `;
   }).join("");
 }
@@ -9053,7 +9239,11 @@ window.rejectTxItem = rejectTxItem;
 // Expose all admin functions and state to window for HTML inline event handlers
 if (typeof window !== 'undefined') {
   const _exposed = [['saveAllFuncSettings', typeof saveAllFuncSettings !== 'undefined' ? saveAllFuncSettings : undefined], ['renderGiftRulesAdmin', typeof renderGiftRulesAdmin !== 'undefined' ? renderGiftRulesAdmin : undefined], ['openAddGiftRuleModal', typeof openAddGiftRuleModal !== 'undefined' ? openAddGiftRuleModal : undefined], ['closeGiftRuleModal', typeof closeGiftRuleModal !== 'undefined' ? closeGiftRuleModal : undefined], ['saveGiftRuleModal', typeof saveGiftRuleModal !== 'undefined' ? saveGiftRuleModal : undefined], ['toggleGiftRuleStatus', typeof toggleGiftRuleStatus !== 'undefined' ? toggleGiftRuleStatus : undefined], ['deleteGiftRuleItem', typeof deleteGiftRuleItem !== 'undefined' ? deleteGiftRuleItem : undefined], ['updateGiftRulePkgCheckboxes', typeof updateGiftRulePkgCheckboxes !== 'undefined' ? updateGiftRulePkgCheckboxes : undefined], ['renderFlashSaleAdmin', typeof renderFlashSaleAdmin !== 'undefined' ? renderFlashSaleAdmin : undefined], ['saveFlashSaleConfig', typeof saveFlashSaleConfig !== 'undefined' ? saveFlashSaleConfig : undefined], ['renderCouponAdmin', typeof renderCouponAdmin !== 'undefined' ? renderCouponAdmin : undefined], ['toggleCouponStatus', typeof toggleCouponStatus !== 'undefined' ? toggleCouponStatus : undefined], ['deleteCouponItem', typeof deleteCouponItem !== 'undefined' ? deleteCouponItem : undefined], ['openAddCouponModal', typeof openAddCouponModal !== 'undefined' ? openAddCouponModal : undefined], ['closeCouponModal', typeof closeCouponModal !== 'undefined' ? closeCouponModal : undefined], ['saveCouponModal', typeof saveCouponModal !== 'undefined' ? saveCouponModal : undefined], ['saveRevRates', typeof saveRevRates !== 'undefined' ? saveRevRates : undefined], ['savePkgRates', typeof savePkgRates !== 'undefined' ? savePkgRates : undefined], ['syncRatesToPackages', typeof syncRatesToPackages !== 'undefined' ? syncRatesToPackages : undefined], ['syncPublicPackagesPayload', typeof syncPublicPackagesPayload !== 'undefined' ? syncPublicPackagesPayload : undefined], ['toggleCouponCheckoutInput', typeof toggleCouponCheckoutInput !== 'undefined' ? toggleCouponCheckoutInput : undefined], ['renderExceptionsTab', typeof renderExceptionsTab !== 'undefined' ? renderExceptionsTab : undefined], ['manualMatchTx', typeof manualMatchTx !== 'undefined' ? manualMatchTx : undefined], ['rejectTxItem', typeof rejectTxItem !== 'undefined' ? rejectTxItem : undefined], ['toast', typeof toast !== 'undefined' ? toast : undefined], ['autoGrow', typeof autoGrow !== 'undefined' ? autoGrow : undefined], ['parseAny', typeof parseAny !== 'undefined' ? parseAny : undefined], ['tickClocks', typeof tickClocks !== 'undefined' ? tickClocks : undefined], ['paintTimeUI', typeof paintTimeUI !== 'undefined' ? paintTimeUI : undefined], ['pickTz', typeof pickTz !== 'undefined' ? pickTz : undefined], ['applySim', typeof applySim !== 'undefined' ? applySim : undefined], ['clearSim', typeof clearSim !== 'undefined' ? clearSim : undefined], ['pkgOf', typeof pkgOf !== 'undefined' ? pkgOf : undefined], ['ordMonths', typeof ordMonths !== 'undefined' ? ordMonths : undefined], ['webLabel', typeof webLabel !== 'undefined' ? webLabel : undefined], ['getMe', typeof getMe !== 'undefined' ? getMe : undefined], ['linkBottom', typeof linkBottom !== 'undefined' ? linkBottom : undefined], ['api', typeof api !== 'undefined' ? api : undefined], ['toLogin', typeof toLogin !== 'undefined' ? toLogin : undefined], ['doLogin', typeof doLogin !== 'undefined' ? doLogin : undefined], ['doLogout', typeof doLogout !== 'undefined' ? doLogout : undefined], ['resetAndHardReload', typeof resetAndHardReload !== 'undefined' ? resetAndHardReload : undefined], ['setManualEdit', typeof setManualEdit !== 'undefined' ? setManualEdit : undefined], ['healLinks', typeof healLinks !== 'undefined' ? healLinks : undefined], ['applyPoll', typeof applyPoll !== 'undefined' ? applyPoll : undefined], ['fetchAll', typeof fetchAll !== 'undefined' ? fetchAll : undefined], ['pollMain', typeof pollMain !== 'undefined' ? pollMain : undefined], ['switchPkgSubTab', typeof switchPkgSubTab !== 'undefined' ? switchPkgSubTab : undefined], ['buildTabs', typeof buildTabs !== 'undefined' ? buildTabs : undefined], ['go', typeof go !== 'undefined' ? go : undefined], ['switchOrdTab', typeof switchOrdTab !== 'undefined' ? switchOrdTab : undefined], ['ordCard', typeof ordCard !== 'undefined' ? ordCard : undefined], ['renderOrd', typeof renderOrd !== 'undefined' ? renderOrd : undefined], ['updateOrderTogglesUI', typeof updateOrderTogglesUI !== 'undefined' ? updateOrderTogglesUI : undefined], ['toggleLockFulfillBtn', typeof toggleLockFulfillBtn !== 'undefined' ? toggleLockFulfillBtn : undefined], ['toggleMailOnSaveBtn', typeof toggleMailOnSaveBtn !== 'undefined' ? toggleMailOnSaveBtn : undefined], ['toggleManualEditBtn', typeof toggleManualEditBtn !== 'undefined' ? toggleManualEditBtn : undefined], ['autoFillNickname', typeof autoFillNickname !== 'undefined' ? autoFillNickname : undefined], ['updMonths', typeof updMonths !== 'undefined' ? updMonths : undefined], ['updAmountUi', typeof updAmountUi !== 'undefined' ? updAmountUi : undefined], ['fillAmount', typeof fillAmount !== 'undefined' ? fillAmount : undefined], ['getOrderAnchorTs', typeof getOrderAnchorTs !== 'undefined' ? getOrderAnchorTs : undefined], ['autoFillDays', typeof autoFillDays !== 'undefined' ? autoFillDays : undefined], ['onPkgChange', typeof onPkgChange !== 'undefined' ? onPkgChange : undefined], ['onMethodChange', typeof onMethodChange !== 'undefined' ? onMethodChange : undefined], ['recalcExpFromDays', typeof recalcExpFromDays !== 'undefined' ? recalcExpFromDays : undefined], ['recalcDaysFromExp', typeof recalcDaysFromExp !== 'undefined' ? recalcDaysFromExp : undefined], ['togSF', typeof togSF !== 'undefined' ? togSF : undefined], ['syncUpg', typeof syncUpg !== 'undefined' ? syncUpg : undefined], ['readModal', typeof readModal !== 'undefined' ? readModal : undefined], ['openOrdModal', typeof openOrdModal !== 'undefined' ? openOrdModal : undefined], ['saveOrd', typeof saveOrd !== 'undefined' ? saveOrd : undefined], ['delOrd', typeof delOrd !== 'undefined' ? delOrd : undefined], ['getMissingOrders', typeof getMissingOrders !== 'undefined' ? getMissingOrders : undefined], ['updateCheckBadge', typeof updateCheckBadge !== 'undefined' ? updateCheckBadge : undefined], ['renderCheckTab', typeof renderCheckTab !== 'undefined' ? renderCheckTab : undefined], ['saveCheckManual', typeof saveCheckManual !== 'undefined' ? saveCheckManual : undefined], ['healSingleOrder', typeof healSingleOrder !== 'undefined' ? healSingleOrder : undefined], ['healAllMissingWithProgress', typeof healAllMissingWithProgress !== 'undefined' ? healAllMissingWithProgress : undefined], ['mailRender', typeof mailRender !== 'undefined' ? mailRender : undefined], ['orderVars', typeof orderVars !== 'undefined' ? orderVars : undefined], ['sendExpMail', typeof sendExpMail !== 'undefined' ? sendExpMail : undefined], ['sendZaloMail', typeof sendZaloMail !== 'undefined' ? sendZaloMail : undefined], ['getCentralRates', typeof getCentralRates !== 'undefined' ? getCentralRates : undefined], ['revList', typeof revList !== 'undefined' ? revList : undefined], ['costSum', typeof costSum !== 'undefined' ? costSum : undefined], ['monthTotals', typeof monthTotals !== 'undefined' ? monthTotals : undefined], ['renderRevenue', typeof renderRevenue !== 'undefined' ? renderRevenue : undefined], ['revOver', typeof revOver !== 'undefined' ? revOver : undefined], ['revPay', typeof revPay !== 'undefined' ? revPay : undefined], ['saveCentralRates', typeof saveCentralRates !== 'undefined' ? saveCentralRates : undefined], ['revPayDetail', typeof revPayDetail !== 'undefined' ? revPayDetail : undefined], ['revCost', typeof revCost !== 'undefined' ? revCost : undefined], ['addCost', typeof addCost !== 'undefined' ? addCost : undefined], ['delCost', typeof delCost !== 'undefined' ? delCost : undefined], ['tplToMc', typeof tplToMc !== 'undefined' ? tplToMc : undefined], ['mcSampleVars', typeof mcSampleVars !== 'undefined' ? mcSampleVars : undefined], ['mcRenderTabs', typeof mcRenderTabs !== 'undefined' ? mcRenderTabs : undefined], ['mcRenderPresetOptions', typeof mcRenderPresetOptions !== 'undefined' ? mcRenderPresetOptions : undefined], ['mcLoadPreset', typeof mcLoadPreset !== 'undefined' ? mcLoadPreset : undefined], ['mcSwitchTab', typeof mcSwitchTab !== 'undefined' ? mcSwitchTab : undefined], ['renderMailComposer', typeof renderMailComposer !== 'undefined' ? renderMailComposer : undefined], ['mcInsertVar', typeof mcInsertVar !== 'undefined' ? mcInsertVar : undefined], ['mcRenderEditor', typeof mcRenderEditor !== 'undefined' ? mcRenderEditor : undefined], ['mcPreview', typeof mcPreview !== 'undefined' ? mcPreview : undefined], ['mcSet', typeof mcSet !== 'undefined' ? mcSet : undefined], ['mcAdd', typeof mcAdd !== 'undefined' ? mcAdd : undefined], ['mcMove', typeof mcMove !== 'undefined' ? mcMove : undefined], ['mcDel', typeof mcDel !== 'undefined' ? mcDel : undefined], ['mcPickColor', typeof mcPickColor !== 'undefined' ? mcPickColor : undefined], ['mcColorInput', typeof mcColorInput !== 'undefined' ? mcColorInput : undefined], ['mcGrad', typeof mcGrad !== 'undefined' ? mcGrad : undefined], ['mcSaveTemplate', typeof mcSaveTemplate !== 'undefined' ? mcSaveTemplate : undefined], ['mcExtraAction', typeof mcExtraAction !== 'undefined' ? mcExtraAction : undefined], ['mcScan', typeof mcScan !== 'undefined' ? mcScan : undefined], ['mcRenderRecs', typeof mcRenderRecs !== 'undefined' ? mcRenderRecs : undefined], ['mcSend', typeof mcSend !== 'undefined' ? mcSend : undefined], ['dataPriceLabel', typeof dataPriceLabel !== 'undefined' ? dataPriceLabel : undefined], ['renderDataRequests', typeof renderDataRequests !== 'undefined' ? renderDataRequests : undefined], ['sendDataReport', typeof sendDataReport !== 'undefined' ? sendDataReport : undefined], ['delDataRequest', typeof delDataRequest !== 'undefined' ? delDataRequest : undefined], ['clearDataRequests', typeof clearDataRequests !== 'undefined' ? clearDataRequests : undefined], ['toggleDataRequestSeen', typeof toggleDataRequestSeen !== 'undefined' ? toggleDataRequestSeen : undefined], ['markAllDataRequestsSeen', typeof markAllDataRequestsSeen !== 'undefined' ? markAllDataRequestsSeen : undefined], ['switchTxTab', typeof switchTxTab !== 'undefined' ? switchTxTab : undefined], ['mergeTx', typeof mergeTx !== 'undefined' ? mergeTx : undefined], ['loadTx', typeof loadTx !== 'undefined' ? loadTx : undefined], ['deleteTx', typeof deleteTx !== 'undefined' ? deleteTx : undefined], ['renderTransactions', typeof renderTransactions !== 'undefined' ? renderTransactions : undefined], ['approveTransaction', typeof approveTransaction !== 'undefined' ? approveTransaction : undefined], ['detectProvider', typeof detectProvider !== 'undefined' ? detectProvider : undefined], ['buildMasked', typeof buildMasked !== 'undefined' ? buildMasked : undefined], ['openRootEditModal', typeof openRootEditModal !== 'undefined' ? openRootEditModal : undefined], ['toggleClusterSpecs', typeof toggleClusterSpecs !== 'undefined' ? toggleClusterSpecs : undefined], ['renderLinks', typeof renderLinks !== 'undefined' ? renderLinks : undefined], ['saveRootEdit', typeof saveRootEdit !== 'undefined' ? saveRootEdit : undefined], ['createLink', typeof createLink !== 'undefined' ? createLink : undefined], ['openLnkModal', typeof openLnkModal !== 'undefined' ? openLnkModal : undefined], ['saveLnkEdit', typeof saveLnkEdit !== 'undefined' ? saveLnkEdit : undefined], ['toggleLock', typeof toggleLock !== 'undefined' ? toggleLock : undefined], ['delLink', typeof delLink !== 'undefined' ? delLink : undefined], ['sortAllLinks', typeof sortAllLinks !== 'undefined' ? sortAllLinks : undefined], ['triggerGitHub', typeof triggerGitHub !== 'undefined' ? triggerGitHub : undefined], ['runGC', typeof runGC !== 'undefined' ? runGC : undefined], ['rebuildAllMAP', typeof rebuildAllMAP !== 'undefined' ? rebuildAllMAP : undefined], ['getDefaultAdminPkgs', typeof getDefaultAdminPkgs !== 'undefined' ? getDefaultAdminPkgs : undefined], ['loadDrawerSettingsUI', typeof loadDrawerSettingsUI !== 'undefined' ? loadDrawerSettingsUI : undefined], ['updateHeaderDrawerPreview', typeof updateHeaderDrawerPreview !== 'undefined' ? updateHeaderDrawerPreview : undefined], ['toggleHeaderDrawer', typeof toggleHeaderDrawer !== 'undefined' ? toggleHeaderDrawer : undefined], ['saveHeaderDrawer', typeof saveHeaderDrawer !== 'undefined' ? saveHeaderDrawer : undefined], ['loadAdminPkgs', typeof loadAdminPkgs !== 'undefined' ? loadAdminPkgs : undefined], ['toggleHidePkg', typeof toggleHidePkg !== 'undefined' ? toggleHidePkg : undefined], ['renderPkgAdmin', typeof renderPkgAdmin !== 'undefined' ? renderPkgAdmin : undefined], ['toggleLifetimePkg', typeof toggleLifetimePkg !== 'undefined' ? toggleLifetimePkg : undefined], ['togglePkgCat', typeof togglePkgCat !== 'undefined' ? togglePkgCat : undefined], ['addNewCustomPkg', typeof addNewCustomPkg !== 'undefined' ? addNewCustomPkg : undefined], ['delPkg', typeof delPkg !== 'undefined' ? delPkg : undefined], ['saveAllPkgs', typeof saveAllPkgs !== 'undefined' ? saveAllPkgs : undefined], ['relinkScanRun', typeof relinkScanRun !== 'undefined' ? relinkScanRun : undefined], ['relinkMapRun', typeof relinkMapRun !== 'undefined' ? relinkMapRun : undefined], ['relinkApply', typeof relinkApply !== 'undefined' ? relinkApply : undefined], ['switchDeadSubTab', typeof switchDeadSubTab !== 'undefined' ? switchDeadSubTab : undefined], ['renderDead', typeof renderDead !== 'undefined' ? renderDead : undefined], ['renderDeadSources', typeof renderDeadSources !== 'undefined' ? renderDeadSources : undefined], ['hardDeleteSource', typeof hardDeleteSource !== 'undefined' ? hardDeleteSource : undefined], ['cleanUnusedSources', typeof cleanUnusedSources !== 'undefined' ? cleanUnusedSources : undefined], ['restoreLink', typeof restoreLink !== 'undefined' ? restoreLink : undefined], ['clearDeadLinks', typeof clearDeadLinks !== 'undefined' ? clearDeadLinks : undefined], ['cmsEnsureTabs', typeof cmsEnsureTabs !== 'undefined' ? cmsEnsureTabs : undefined], ['ensureArts', typeof ensureArts !== 'undefined' ? ensureArts : undefined], ['initGuides', typeof initGuides !== 'undefined' ? initGuides : undefined], ['renderGuideAll', typeof renderGuideAll !== 'undefined' ? renderGuideAll : undefined], ['copyArtDeepLink', typeof copyArtDeepLink !== 'undefined' ? copyArtDeepLink : undefined], ['getEditorHtml', typeof getEditorHtml !== 'undefined' ? getEditorHtml : undefined], ['commitCms', typeof commitCms !== 'undefined' ? commitCms : undefined], ['setCms', typeof setCms !== 'undefined' ? setCms : undefined], ['openArt', typeof openArt !== 'undefined' ? openArt : undefined], ['artAdd', typeof artAdd !== 'undefined' ? artAdd : undefined], ['artDel', typeof artDel !== 'undefined' ? artDel : undefined], ['renderArtList', typeof renderArtList !== 'undefined' ? renderArtList : undefined], ['renderCmsTabBtns', typeof renderCmsTabBtns !== 'undefined' ? renderCmsTabBtns : undefined], ['setupSortableCmsTabs', typeof setupSortableCmsTabs !== 'undefined' ? setupSortableCmsTabs : undefined], ['renderCmsTabEdit', typeof renderCmsTabEdit !== 'undefined' ? renderCmsTabEdit : undefined], ['cmsTabSet', typeof cmsTabSet !== 'undefined' ? cmsTabSet : undefined], ['cmsAddTab', typeof cmsAddTab !== 'undefined' ? cmsAddTab : undefined], ['cmsDelTab', typeof cmsDelTab !== 'undefined' ? cmsDelTab : undefined], ['bStyle', typeof bStyle !== 'undefined' ? bStyle : undefined], ['guideScroll', typeof guideScroll !== 'undefined' ? guideScroll : undefined], ['openLightbox', typeof openLightbox !== 'undefined' ? openLightbox : undefined], ['videoEmbed', typeof videoEmbed !== 'undefined' ? videoEmbed : undefined], ['renderBlocks', typeof renderBlocks !== 'undefined' ? renderBlocks : undefined], ['cmsGoto', typeof cmsGoto !== 'undefined' ? cmsGoto : undefined], ['cmsGotoArt', typeof cmsGotoArt !== 'undefined' ? cmsGotoArt : undefined], ['buildRichArticleView', typeof buildRichArticleView !== 'undefined' ? buildRichArticleView : undefined], ['scrollToHeadingText', typeof scrollToHeadingText !== 'undefined' ? scrollToHeadingText : undefined], ['cmsPrev', typeof cmsPrev !== 'undefined' ? cmsPrev : undefined], ['addArtFaqRow', typeof addArtFaqRow !== 'undefined' ? addArtFaqRow : undefined], ['delArtFaqRow', typeof delArtFaqRow !== 'undefined' ? delArtFaqRow : undefined], ['renderArtFaqsUI', typeof renderArtFaqsUI !== 'undefined' ? renderArtFaqsUI : undefined], ['toggleRelatedArtPick', typeof toggleRelatedArtPick !== 'undefined' ? toggleRelatedArtPick : undefined], ['renderCmsEditor', typeof renderCmsEditor !== 'undefined' ? renderCmsEditor : undefined], ['saveArtFaqsOnly', typeof saveArtFaqsOnly !== 'undefined' ? saveArtFaqsOnly : undefined], ['saveCms', typeof saveCms !== 'undefined' ? saveCms : undefined], ['closeCmsEditor', typeof closeCmsEditor !== 'undefined' ? closeCmsEditor : undefined], ['openCmsEditorForArt', typeof openCmsEditorForArt !== 'undefined' ? openCmsEditorForArt : undefined], ['addArticleToCategory', typeof addArticleToCategory !== 'undefined' ? addArticleToCategory : undefined], ['renderGuideCategoriesTree', typeof renderGuideCategoriesTree !== 'undefined' ? renderGuideCategoriesTree : undefined], ['switchCheckSubTab', typeof switchCheckSubTab !== 'undefined' ? switchCheckSubTab : undefined], ['switchSettingsTab', typeof switchSettingsTab !== 'undefined' ? switchSettingsTab : undefined], ['showCronLog', typeof showCronLog !== 'undefined' ? showCronLog : undefined], ['renderRouteRows', typeof renderRouteRows !== 'undefined' ? renderRouteRows : undefined], ['saveRouting', typeof saveRouting !== 'undefined' ? saveRouting : undefined], ['checkBlurValidity', typeof checkBlurValidity !== 'undefined' ? checkBlurValidity : undefined], ['renderBlurRows', typeof renderBlurRows !== 'undefined' ? renderBlurRows : undefined], ['saveBlur', typeof saveBlur !== 'undefined' ? saveBlur : undefined], ['renderDockRows', typeof renderDockRows !== 'undefined' ? renderDockRows : undefined], ['dockPv', typeof dockPv !== 'undefined' ? dockPv : undefined], ['readDockRows', typeof readDockRows !== 'undefined' ? readDockRows : undefined], ['addDockIcon', typeof addDockIcon !== 'undefined' ? addDockIcon : undefined], ['removeDockIcon', typeof removeDockIcon !== 'undefined' ? removeDockIcon : undefined], ['saveDock', typeof saveDock !== 'undefined' ? saveDock : undefined], ['loadAdminFaqs', typeof loadAdminFaqs !== 'undefined' ? loadAdminFaqs : undefined], ['renderFaqAdmin', typeof renderFaqAdmin !== 'undefined' ? renderFaqAdmin : undefined], ['addNewFaq', typeof addNewFaq !== 'undefined' ? addNewFaq : undefined], ['delFaq', typeof delFaq !== 'undefined' ? delFaq : undefined], ['moveFaq', typeof moveFaq !== 'undefined' ? moveFaq : undefined], ['saveFaqs', typeof saveFaqs !== 'undefined' ? saveFaqs : undefined], ['switchFaqSubTab', typeof switchFaqSubTab !== 'undefined' ? switchFaqSubTab : undefined], ['normRouteInput', typeof normRouteInput !== 'undefined' ? normRouteInput : undefined], ['loadRoutesConfigUI', typeof loadRoutesConfigUI !== 'undefined' ? loadRoutesConfigUI : undefined], ['saveRoutesConfig', typeof saveRoutesConfig !== 'undefined' ? saveRoutesConfig : undefined], ['ftColsFromDb', typeof ftColsFromDb !== 'undefined' ? ftColsFromDb : undefined], ['renderFtCols', typeof renderFtCols !== 'undefined' ? renderFtCols : undefined], ['ftAddCol', typeof ftAddCol !== 'undefined' ? ftAddCol : undefined], ['ftDelCol', typeof ftDelCol !== 'undefined' ? ftDelCol : undefined], ['ftMoveCol', typeof ftMoveCol !== 'undefined' ? ftMoveCol : undefined], ['ftAddLink', typeof ftAddLink !== 'undefined' ? ftAddLink : undefined], ['ftDelLink', typeof ftDelLink !== 'undefined' ? ftDelLink : undefined], ['ftLoadTemplate', typeof ftLoadTemplate !== 'undefined' ? ftLoadTemplate : undefined], ['loadFooterConfigUI', typeof loadFooterConfigUI !== 'undefined' ? loadFooterConfigUI : undefined], ['saveFooterConfig', typeof saveFooterConfig !== 'undefined' ? saveFooterConfig : undefined], ['saveQrExpireSeconds', typeof saveQrExpireSeconds !== 'undefined' ? saveQrExpireSeconds : undefined], ['switchWebAdminTab', typeof switchWebAdminTab !== 'undefined' ? switchWebAdminTab : undefined], ['loadWebAdminUI', typeof loadWebAdminUI !== 'undefined' ? loadWebAdminUI : undefined], ['loadSettingsUI', typeof loadSettingsUI !== 'undefined' ? loadSettingsUI : undefined], ['saveEmailPerm', typeof saveEmailPerm !== 'undefined' ? saveEmailPerm : undefined], ['initAdminNotifyUI', typeof initAdminNotifyUI !== 'undefined' ? initAdminNotifyUI : undefined], ['updateAdminNotifyStatusUI', typeof updateAdminNotifyStatusUI !== 'undefined' ? updateAdminNotifyStatusUI : undefined], ['saveAdminNotifyPerm', typeof saveAdminNotifyPerm !== 'undefined' ? saveAdminNotifyPerm : undefined], ['saveCronCfg', typeof saveCronCfg !== 'undefined' ? saveCronCfg : undefined], ['saveLockExpiry', typeof saveLockExpiry !== 'undefined' ? saveLockExpiry : undefined], ['runCronNow', typeof runCronNow !== 'undefined' ? runCronNow : undefined], ['loadStatus', typeof loadStatus !== 'undefined' ? loadStatus : undefined], ['qBar', typeof qBar !== 'undefined' ? qBar : undefined], ['mailProvCard', typeof mailProvCard !== 'undefined' ? mailProvCard : undefined], ['selectMailProvider', typeof selectMailProvider !== 'undefined' ? selectMailProvider : undefined], ['saveMailProvider', typeof saveMailProvider !== 'undefined' ? saveMailProvider : undefined], ['renderMailProvCards', typeof renderMailProvCards !== 'undefined' ? renderMailProvCards : undefined], ['loadQuota', typeof loadQuota !== 'undefined' ? loadQuota : undefined], ['loadLogs', typeof loadLogs !== 'undefined' ? loadLogs : undefined], ['renderLogs', typeof renderLogs !== 'undefined' ? renderLogs : undefined], ['renderDev', typeof renderDev !== 'undefined' ? renderDev : undefined], ['delDev', typeof delDev !== 'undefined' ? delDev : undefined], ['migrateDates', typeof migrateDates !== 'undefined' ? migrateDates : undefined], ['migratePkg', typeof migratePkg !== 'undefined' ? migratePkg : undefined], ['loadFulfillmentConfig', typeof loadFulfillmentConfig !== 'undefined' ? loadFulfillmentConfig : undefined], ['renderFulfillmentUI', typeof renderFulfillmentUI !== 'undefined' ? renderFulfillmentUI : undefined], ['selectFailoverPolicy', typeof selectFailoverPolicy !== 'undefined' ? selectFailoverPolicy : undefined], ['updateFailoverPolicyUI', typeof updateFailoverPolicyUI !== 'undefined' ? updateFailoverPolicyUI : undefined], ['saveFulfillmentMapping', typeof saveFulfillmentMapping !== 'undefined' ? saveFulfillmentMapping : undefined], ['saveFailoverPolicy', typeof saveFailoverPolicy !== 'undefined' ? saveFailoverPolicy : undefined], ['startApp', typeof startApp !== 'undefined' ? startApp : undefined], ['restoreAdminScroll', typeof restoreAdminScroll !== 'undefined' ? restoreAdminScroll : undefined], ['updateTestModeUI', typeof updateTestModeUI !== 'undefined' ? updateTestModeUI : undefined], ['testPingProd', typeof testPingProd !== 'undefined' ? testPingProd : undefined], ['testTelegramBot', typeof testTelegramBot !== 'undefined' ? testTelegramBot : undefined], ['triggerTelegramKvBackupNow', typeof triggerTelegramKvBackupNow !== 'undefined' ? triggerTelegramKvBackupNow : undefined], ['resetTelegramStt', typeof resetTelegramStt !== 'undefined' ? resetTelegramStt : undefined], ['triggerTelegramBackupNow', typeof triggerTelegramBackupNow !== 'undefined' ? triggerTelegramBackupNow : undefined], ['SITE_KEY', typeof SITE_KEY !== 'undefined' ? SITE_KEY : undefined], ['API', typeof API !== 'undefined' ? API : undefined], ['PDS', typeof PDS !== 'undefined' ? PDS : undefined], ['PD', typeof PD !== 'undefined' ? PD : undefined], ['GH_REPO', typeof GH_REPO !== 'undefined' ? GH_REPO : undefined], ['PKG_LIST', typeof PKG_LIST !== 'undefined' ? PKG_LIST : undefined], ['TABS', typeof TABS !== 'undefined' ? TABS : undefined], ['PKG_DB', typeof PKG_DB !== 'undefined' ? PKG_DB : undefined], ['$', typeof $ !== 'undefined' ? $ : undefined], ['arr', typeof arr !== 'undefined' ? arr : undefined], ['esc', typeof esc !== 'undefined' ? esc : undefined], ['q', typeof q !== 'undefined' ? q : undefined], ['cm', typeof cm !== 'undefined' ? cm : undefined], ['genId', typeof genId !== 'undefined' ? genId : undefined], ['genHex', typeof genHex !== 'undefined' ? genHex : undefined], ['normId', typeof normId !== 'undefined' ? normId : undefined], ['isLife', typeof isLife !== 'undefined' ? isLife : undefined], ['normSt', typeof normSt !== 'undefined' ? normSt : undefined], ['getT', typeof getT !== 'undefined' ? getT : undefined], ['trimNum', typeof trimNum !== 'undefined' ? trimNum : undefined], ['VND_SEP', typeof VND_SEP !== 'undefined' ? VND_SEP : undefined], ['fmtVnd', typeof fmtVnd !== 'undefined' ? fmtVnd : undefined], ['Toast', typeof Toast !== 'undefined' ? Toast : undefined], ['cp', typeof cp !== 'undefined' ? cp : undefined], ['sleep', typeof sleep !== 'undefined' ? sleep : undefined], ['off', typeof off !== 'undefined' ? off : undefined], ['TZN', typeof TZN !== 'undefined' ? TZN : undefined], ['nowMs', typeof nowMs !== 'undefined' ? nowMs : undefined], ['fmtBank', typeof fmtBank !== 'undefined' ? fmtBank : undefined], ['oTs', typeof oTs !== 'undefined' ? oTs : undefined], ['dmyOf', typeof dmyOf !== 'undefined' ? dmyOf : undefined], ['parseDmy', typeof parseDmy !== 'undefined' ? parseDmy : undefined], ['expEnd', typeof expEnd !== 'undefined' ? expEnd : undefined], ['monthInfo', typeof monthInfo !== 'undefined' ? monthInfo : undefined], ['fmtFull', typeof fmtFull !== 'undefined' ? fmtFull : undefined], ['OLD_BY_DATA', typeof OLD_BY_DATA !== 'undefined' ? OLD_BY_DATA : undefined], ['pkgLabel', typeof pkgLabel !== 'undefined' ? pkgLabel : undefined], ['fmtMonths', typeof fmtMonths !== 'undefined' ? fmtMonths : undefined], ['myWebIndex', typeof myWebIndex !== 'undefined' ? myWebIndex : undefined], ['payOf', typeof payOf !== 'undefined' ? payOf : undefined], ['TOKEN', typeof TOKEN !== 'undefined' ? TOKEN : undefined], ['myDev', typeof myDev !== 'undefined' ? myDev : undefined], ['aj', typeof aj !== 'undefined' ? aj : undefined], ['logEvent', typeof logEvent !== 'undefined' ? logEvent : undefined], ['ordersDb', typeof ordersDb !== 'undefined' ? ordersDb : undefined], ['curOrdTab', typeof curOrdTab !== 'undefined' ? curOrdTab : undefined], ['isMailMaster', typeof isMailMaster !== 'undefined' ? isMailMaster : undefined], ['expLocked', typeof expLocked !== 'undefined' ? expLocked : undefined], ['lockFulfillOn', typeof lockFulfillOn !== 'undefined' ? lockFulfillOn : undefined], ['mailOnSaveOn', typeof mailOnSaveOn !== 'undefined' ? mailOnSaveOn : undefined], ['manualEditOn', typeof manualEditOn !== 'undefined' ? manualEditOn : undefined], ['tombGet', typeof tombGet !== 'undefined' ? tombGet : undefined], ['tombSet', typeof tombSet !== 'undefined' ? tombSet : undefined], ['addTomb', typeof addTomb !== 'undefined' ? addTomb : undefined], ['rmTomb', typeof rmTomb !== 'undefined' ? rmTomb : undefined], ['isDeleted', typeof isDeleted !== 'undefined' ? isDeleted : undefined], ['isLockedPoolUrl', typeof isLockedPoolUrl !== 'undefined' ? isLockedPoolUrl : undefined], ['ordAmountTxt', typeof ordAmountTxt !== 'undefined' ? ordAmountTxt : undefined], ['curUpg', typeof curUpg !== 'undefined' ? curUpg : undefined], ['healAllMissing', typeof healAllMissing !== 'undefined' ? healAllMissing : undefined], ['htmlEscape', typeof htmlEscape !== 'undefined' ? htmlEscape : undefined], ['sendMailClient', typeof sendMailClient !== 'undefined' ? sendMailClient : undefined], ['mailGrad', typeof mailGrad !== 'undefined' ? mailGrad : undefined], ['mailShell', typeof mailShell !== 'undefined' ? mailShell : undefined], ['mailIdBox', typeof mailIdBox !== 'undefined' ? mailIdBox : undefined], ['mailPortal', typeof mailPortal !== 'undefined' ? mailPortal : undefined], ['mailBtn', typeof mailBtn !== 'undefined' ? mailBtn : undefined], ['mailSupport', typeof mailSupport !== 'undefined' ? mailSupport : undefined], ['TPL_THEME', typeof TPL_THEME !== 'undefined' ? TPL_THEME : undefined], ['P0', typeof P0 !== 'undefined' ? P0 : undefined], ['SYS_TPL', typeof SYS_TPL !== 'undefined' ? SYS_TPL : undefined], ['getTpl', typeof getTpl !== 'undefined' ? getTpl : undefined], ['subjVars', typeof subjVars !== 'undefined' ? subjVars : undefined], ['mailKeyOf', typeof mailKeyOf !== 'undefined' ? mailKeyOf : undefined], ['mailSuccess', typeof mailSuccess !== 'undefined' ? mailSuccess : undefined], ['mailFailed', typeof mailFailed !== 'undefined' ? mailFailed : undefined], ['mailExp', typeof mailExp !== 'undefined' ? mailExp : undefined], ['mailZalo', typeof mailZalo !== 'undefined' ? mailZalo : undefined], ['dataVars', typeof dataVars !== 'undefined' ? dataVars : undefined], ['mailData', typeof mailData !== 'undefined' ? mailData : undefined], ['revTab', typeof revTab !== 'undefined' ? revTab : undefined], ['REV_TABS', typeof REV_TABS !== 'undefined' ? REV_TABS : undefined], ['setRevTab', typeof setRevTab !== 'undefined' ? setRevTab : undefined], ['setRevPayView', typeof setRevPayView !== 'undefined' ? setRevPayView : undefined], ['setRevMonth', typeof setRevMonth !== 'undefined' ? setRevMonth : undefined], ['mcToHtml', typeof mcToHtml !== 'undefined' ? mcToHtml : undefined], ['addFaqRow', typeof addFaqRow !== 'undefined' ? addFaqRow : undefined], ['saveFaqAdmin', typeof saveFaqAdmin !== 'undefined' ? saveFaqAdmin : undefined], ['addFooterColumn', typeof addFooterColumn !== 'undefined' ? addFooterColumn : undefined], ['ftAddCol', typeof ftAddCol !== 'undefined' ? ftAddCol : undefined], ['ftDelCol', typeof ftDelCol !== 'undefined' ? ftDelCol : undefined], ['ftMoveCol', typeof ftMoveCol !== 'undefined' ? ftMoveCol : undefined], ['ftAddLink', typeof ftAddLink !== 'undefined' ? ftAddLink : undefined], ['ftDelLink', typeof ftDelLink !== 'undefined' ? ftDelLink : undefined], ['ftLoadTemplate', typeof ftLoadTemplate !== 'undefined' ? ftLoadTemplate : undefined], ['customCmsImageHandler', typeof customCmsImageHandler !== 'undefined' ? customCmsImageHandler : undefined], ['customCmsVideoHandler', typeof customCmsVideoHandler !== 'undefined' ? customCmsVideoHandler : undefined], ['recordAdminNav', typeof recordAdminNav !== 'undefined' ? recordAdminNav : undefined], ['closeCmsEditor', typeof closeCmsEditor !== 'undefined' ? closeCmsEditor : undefined], ['cnyRate', typeof cnyRate !== 'undefined' ? cnyRate : undefined], ['curVal', typeof curVal !== 'undefined' ? curVal : undefined], ['shortN', typeof shortN !== 'undefined' ? shortN : undefined], ['monthLbl', typeof monthLbl !== 'undefined' ? monthLbl : undefined], ['kpi', typeof kpi !== 'undefined' ? kpi : undefined], ['box', typeof box !== 'undefined' ? box : undefined], ['chartRevStacked', typeof chartRevStacked !== 'undefined' ? chartRevStacked : undefined], ['gridPkgTable', typeof gridPkgTable !== 'undefined' ? gridPkgTable : undefined], ['PAYLBL', typeof PAYLBL !== 'undefined' ? PAYLBL : undefined], ['MC_COLORS', typeof MC_COLORS !== 'undefined' ? MC_COLORS : undefined], ['MC_BT', typeof MC_BT !== 'undefined' ? MC_BT : undefined], ['MC_VARS_BASE', typeof MC_VARS_BASE !== 'undefined' ? MC_VARS_BASE : undefined], ['MC_VARS_SYS', typeof MC_VARS_SYS !== 'undefined' ? MC_VARS_SYS : undefined], ['MC_SYS_KEYS', typeof MC_SYS_KEYS !== 'undefined' ? MC_SYS_KEYS : undefined], ['MC_SYS_NAMES', typeof MC_SYS_NAMES !== 'undefined' ? MC_SYS_NAMES : undefined], ['MC_PRESETS', typeof MC_PRESETS !== 'undefined' ? MC_PRESETS : undefined], ['mc', typeof mc !== 'undefined' ? mc : undefined], ['mcColorName', typeof mcColorName !== 'undefined' ? mcColorName : undefined], ['mcClone', typeof mcClone !== 'undefined' ? mcClone : undefined], ['mcToTpl', typeof mcToTpl !== 'undefined' ? mcToTpl : undefined], ['extractOrder', typeof extractOrder !== 'undefined' ? extractOrder : undefined], ['kindBadge', typeof kindBadge !== 'undefined' ? kindBadge : undefined], ['delBtn', typeof delBtn !== 'undefined' ? delBtn : undefined], ['saveLinks', typeof saveLinks !== 'undefined' ? saveLinks : undefined], ['savePool', typeof savePool !== 'undefined' ? savePool : undefined], ['FIXED_PKG_IDS', typeof FIXED_PKG_IDS !== 'undefined' ? FIXED_PKG_IDS : undefined], ['adminPkgsList', typeof adminPkgsList !== 'undefined' ? adminPkgsList : undefined], ['sortablePkgsInstance', typeof sortablePkgsInstance !== 'undefined' ? sortablePkgsInstance : undefined], ['delCustomPkg', typeof delCustomPkg !== 'undefined' ? delCustomPkg : undefined], ['rsItems', typeof rsItems !== 'undefined' ? rsItems : undefined], ['rlPicks', typeof rlPicks !== 'undefined' ? rlPicks : undefined], ['rlAll', typeof rlAll !== 'undefined' ? rlAll : undefined], ['curDeadTab', typeof curDeadTab !== 'undefined' ? curDeadTab : undefined], ['deadLive', typeof deadLive !== 'undefined' ? deadLive : undefined], ['DEF_TABS', typeof DEF_TABS !== 'undefined' ? DEF_TABS : undefined], ['toSlug', typeof toSlug !== 'undefined' ? toSlug : undefined], ['curArtsReady', typeof curArtsReady !== 'undefined' ? curArtsReady : undefined], ['guideTabList', typeof guideTabList !== 'undefined' ? guideTabList : undefined], ['artsOf', typeof artsOf !== 'undefined' ? artsOf : undefined], ['curArtHtml', typeof curArtHtml !== 'undefined' ? curArtHtml : undefined], ['quillInst', typeof quillInst !== 'undefined' ? quillInst : undefined], ['sortableCmsTabs', typeof sortableCmsTabs !== 'undefined' ? sortableCmsTabs : undefined], ['safeUrl', typeof safeUrl !== 'undefined' ? safeUrl : undefined], ['bAlign', typeof bAlign !== 'undefined' ? bAlign : undefined], ['dAlign', typeof dAlign !== 'undefined' ? dAlign : undefined], ['SZ', typeof SZ !== 'undefined' ? SZ : undefined], ['bText', typeof bText !== 'undefined' ? bText : undefined], ['findTarget', typeof findTarget !== 'undefined' ? findTarget : undefined], ['saveCmsDb', typeof saveCmsDb !== 'undefined' ? saveCmsDb : undefined], ['curCheckSubTab', typeof curCheckSubTab !== 'undefined' ? curCheckSubTab : undefined], ['BLUR_RULES', typeof BLUR_RULES !== 'undefined' ? BLUR_RULES : undefined], ['DEFAULT_FAQS', typeof DEFAULT_FAQS !== 'undefined' ? DEFAULT_FAQS : undefined], ['adminFaqsList', typeof adminFaqsList !== 'undefined' ? adminFaqsList : undefined], ['DEFAULT_SYS_ROUTES', typeof DEFAULT_SYS_ROUTES !== 'undefined' ? DEFAULT_SYS_ROUTES : undefined], ['ftCols', typeof ftCols !== 'undefined' ? ftCols : undefined], ['FT_TEMPLATE', typeof FT_TEMPLATE !== 'undefined' ? FT_TEMPLATE : undefined], ['ftClone', typeof ftClone !== 'undefined' ? ftClone : undefined], ['yn', typeof yn !== 'undefined' ? yn : undefined], ['QL', typeof QL !== 'undefined' ? QL : undefined], ['MAIL_PROV_META', typeof MAIL_PROV_META !== 'undefined' ? MAIL_PROV_META : undefined], ['mailProvQuota', typeof mailProvQuota !== 'undefined' ? mailProvQuota : undefined], ['pickMailProvider', typeof pickMailProvider !== 'undefined' ? pickMailProvider : undefined], ['currentFulfillmentConfig', typeof currentFulfillmentConfig !== 'undefined' ? currentFulfillmentConfig : undefined], ['started', typeof started !== 'undefined' ? started : undefined], ['adminScrollTimer', typeof adminScrollTimer !== 'undefined' ? adminScrollTimer : undefined], ['isTestModeActive', typeof isTestModeActive !== 'undefined' ? isTestModeActive : undefined], ['toggleTestMode', typeof toggleTestMode !== 'undefined' ? toggleTestMode : undefined], ['testPingTest', typeof testPingTest !== 'undefined' ? testPingTest : undefined], ['createFakeTestOrder', typeof createFakeTestOrder !== 'undefined' ? createFakeTestOrder : undefined], ['cloneProdOrdersToTest', typeof cloneProdOrdersToTest !== 'undefined' ? cloneProdOrdersToTest : undefined], ['clearTestOrders', typeof clearTestOrders !== 'undefined' ? clearTestOrders : undefined], ['lastTxError', typeof lastTxError !== 'undefined' ? lastTxError : undefined],];
+['lastTxError', typeof lastTxError !== 'undefined' ? lastTxError : undefined],['getRelinkBackupEnabled', typeof getRelinkBackupEnabled !== 'undefined' ? getRelinkBackupEnabled : undefined],['toggleRelinkBackup', typeof toggleRelinkBackup !== 'undefined' ? toggleRelinkBackup : undefined],];
   _exposed.forEach(([k, v]) => {
     if (v !== undefined) window[k] = v;
   });
+  Object.defineProperty(window, 'isTestModeActive', { configurable: true, get: () => isTestModeActive, set: v => { isTestModeActive = !!v; } });
+  Object.defineProperty(window, 'myWebIndex', { configurable: true, get: () => myWebIndex, set: v => { myWebIndex = v; } });
+  Object.defineProperty(window, 'ordersDb', { configurable: true, get: () => ordersDb, set: v => { ordersDb = v; } });
 }
