@@ -1,23 +1,23 @@
 # AGENTS.md — BỘ 94 QUY TẮC AN TOÀN BẢO VỆ DỰ ÁN VPNTRINHHG3
 
 > **Dành cho tất cả AI Coding Agents tham gia bảo trì, phát triển và tái cấu trúc repository `vpntrinhhg3`.**  
-> **NGUYÊN TẮC TỐI THƯỢNG — READ-ONLY / ADMIN TỰ DÁN CODE:** AI được phép git clone/pull hoặc truy cập GitHub để đọc mã nguồn mới nhất và phân tích lỗi. AI tuyệt đối không được sửa trực tiếp file trong repo/working tree, tạo hoặc ghi file sửa, commit, push, mở PR, merge, hay deploy. Kết quả sửa chỉ được trình bày thành các block code cũ/mới để Admin tự Ctrl+F và replace thủ công. Cấm tự deploy trong mọi trường hợp; yêu cầu sửa code không đồng nghĩa yêu cầu deploy. Chỉ được phân tích đúng phạm vi task và các file phụ thuộc trực tiếp cần thiết; không âm thầm quét/đọc/phân tích hàng loạt file không liên quan.
+> **NGUYÊN TẮC TỐI THƯỢNG — SOURCE CÓ KIỂM SOÁT:** AI được phép đọc repo và chỉnh sửa trong sandbox/workspace tách biệt để sửa lỗi, refactor, tối ưu, loại bỏ code dư thừa và chạy build/test phù hợp. Mặc định không ghi trực tiếp GitHub, commit/push, tạo PR/merge hoặc deploy; chỉ làm khi Admin yêu cầu rõ trong task hiện tại. Không deploy nếu chưa yêu cầu. Bảo toàn contract/dữ liệu quan trọng, nhưng không giữ code trùng lặp, dead code, fallback/guard vô căn cứ hoặc cấu trúc gây phình chỉ vì nguyên tắc bảo toàn quá cứng. Chỉ đọc file liên quan và dependency cần thiết; không quét hàng loạt repo trong task nhỏ.
 
 ---
 
 ## 1. QUY TẮC CHỈNH SỬA MÃ NGUỒN (Quy tắc 1 – 25)
 
 1. **Đọc hướng dẫn trước khi phân tích:** Đọc `AGENTS.md` và chỉ tra cứu phần liên quan trong `PROJECT_MAP.md` khi cần định vị chức năng. Việc đọc hướng dẫn không cho phép quét toàn repo; tuân thủ phạm vi task hiện tại.
-2. **Tìm đúng module chứa chức năng cần sửa:** Chỉ can thiệp vào đúng module phụ trách chức năng đó (`api.js`, `shared.js`, `customer.js`, hoặc `admin.js`).
-3. **Không sửa file không liên quan:** Tuyệt đối không chạm vào các file hoặc chức năng ngoài phạm vi yêu cầu (ví dụ: sửa đơn hàng không chạm vào CMS hay giao diện khách hàng).
-4. **Không tự áp dụng sửa đổi:** AI chỉ đề xuất targeted edit dưới dạng block code cũ/mới. Admin là người duy nhất tự dán và lưu thay đổi. Không ghi file trực tiếp, kể cả trong clone/local workspace.
-5. **Không tạo module mới nếu module hiện tại vẫn phù hợp:** Tránh phân mảnh cấu trúc thành hàng chục file nhỏ không cần thiết.
-6. **Không tạo abstraction không cần thiết:** Không thêm các lớp wrapper, design patterns phức tạp, class kế thừa vô ích khi Vanilla JavaScript đơn giản đã đủ giải quyết vấn đề.
+2. **Tìm module và dependency liên quan:** Bắt đầu ở module chứa chức năng, nhưng được đọc và chỉnh các module/file phụ thuộc trực tiếp nếu cần để xử lý đúng, tách trách nhiệm hoặc cô lập lỗi. Không bó buộc fix trong một file nếu kiến trúc hiện tại gây coupling.
+3. **Giữ phạm vi có liên quan, không bị bó vào một file:** Không chỉnh nghiệp vụ ngoài task. Tuy nhiên, được sửa các file liên quan trực tiếp để đảm bảo module boundaries, shared contracts, Admin-to-Customer propagation, test hoặc giảm duplication/coupling.
+4. **Được sửa trong sandbox/workspace tách biệt:** AI được phép áp dụng patch, sửa code, refactor, xóa code dư thừa và thử nghiệm trong sandbox riêng. Không ghi trực tiếp repo/working tree chính hoặc GitHub trừ khi Admin yêu cầu rõ. Kết quả phải có diff dễ review; Admin kiểm soát việc áp dụng cuối.
+5. **Tách module theo trách nhiệm, không cực đoan:** Không giữ một file monolith chỉ vì muốn hạn chế số file. Khi file quá lớn, chứa nhiều nhóm nghiệp vụ độc lập, khó test hoặc dễ ảnh hưởng chéo, chủ động đánh giá tách module. Không tạo file nhỏ vụn chỉ chứa vài hàm; nhóm theo trách nhiệm nghiệp vụ rõ.
+6. **Abstraction phải giảm độ phức tạp thực tế:** Tránh wrapper, pattern hoặc tầng kiến trúc vô ích; nhưng được dùng shared helper/abstraction khi giúp loại bỏ duplication, tách trách nhiệm, giảm coupling hoặc cải thiện testability. Chọn giải pháp đơn giản nhất có hiệu quả lâu dài.
 7. **Không đổi API contract:** Không thay đổi URL endpoint, HTTP method, tên trường request payload hoặc response format mà backend đang mong đợi.
 8. **Không đổi database schema:** Không tự ý đổi kiểu dữ liệu, đổi tên trường hoặc thêm/bớt cấu trúc trường của KV, D1 hay Supabase.
 9. **Không đổi URL và cấu trúc routing:** Bảo toàn tất cả các đường dẫn công khai: `/`, `/admin`, `/admin.html`, `/portal/*`, các bài hướng dẫn và fallback routing.
 10. **Không đổi tên hoặc giá trị các localStorage/sessionStorage keys:** Các key phiên làm việc, token, theme, cache gói cước phải giữ nguyên để tương thích ngược.
-11. **Không xóa chức năng cũ:** Mọi tính năng đang có (kể cả các công cụ chẩn đoán, test mode, xuất báo cáo) phải được giữ nguyên vẹn trừ khi có lệnh xóa rõ ràng từ chủ dự án.
+11. **Bảo toàn behavior quan trọng, không bảo tồn code bằng mọi giá:** Không làm mất chức năng/nghiệp vụ, dữ liệu lịch sử, contract hoặc công cụ đang dùng nếu chưa có căn cứ. Được xóa dead code, code trùng, phiên bản cũ không còn được gọi, guard/fallback không cần thiết sau khi xác minh call sites, dependency và tests.
 12. **Không thay đổi giao diện nếu task không yêu cầu:** Giữ nguyên giao diện HTML/CSS, bố cục, icon và màu sắc đặc trưng của VPNTrinhHg.
 13. **Không thêm dependency mới nếu chưa chứng minh được lợi ích:** Mọi thư viện mới phải được cân nhắc kỹ, phải có lý do kỹ thuật thuyết phục và được chủ dự án thông qua.
 14. **Không sử dụng thư viện trả phí hoặc dịch vụ yêu cầu subscription:** Tuyệt đối chỉ sử dụng mã nguồn mở với giấy phép tương thích thương mại miễn phí (MIT, Apache 2.0, BSD).
@@ -27,9 +27,9 @@
 18. **Không tự ý đổi tên biến, tên trường dữ liệu hoặc cấu trúc JSON đang được backend sử dụng:** Giữ nguyên cấu trúc dữ liệu gửi và nhận (`totalVnd`, `totalCny`, `orig`, `masked`, `expDate`, `linkIndex`, v.v.).
 19. **Không thay đổi hành vi của các endpoint đang hoạt động:** Mọi tham số query, header hoặc body truyền qua proxy Worker phải được giữ tính tương thích 100%.
 20. **Không tự ý di chuyển, đổi tên hoặc xóa tài nguyên đang được tham chiếu bởi URL:** Giữ nguyên tên và đường dẫn file tĩnh: `manifest.json`, `manifestadmin.json`, `icon-192.png`, `icon-512.png`, `_worker.js`, `_redirects`.
-21. **Không thêm nhiều file nhỏ chỉ để chia code cho đẹp:** Tuân thủ kiến trúc tối giản: chỉ gom theo cụm nghiệp vụ lớn.
-22. **Ưu tiên tận dụng 4 module chính:** Mọi logic mới phải được đặt hợp lý vào `api.js`, `shared.js`, `customer.js`, hoặc `admin.js`.
-23. **Chỉ tách module khi có lý do kỹ thuật rõ ràng và phải cập nhật tài liệu:** Nếu một module vượt quá kích thước hợp lý hoặc có xung đột nghiêm trọng mới đề xuất tách và phải ghi nhận vào `PROJECT_MAP.md`.
+21. **Không để số file là mục tiêu tối ưu:** Ưu tiên ranh giới module rõ và giảm coupling. Được tách file khi module lớn, nhiều trách nhiệm, thay đổi thường xuyên hoặc dễ gây ảnh hưởng chéo; tránh cả monolith lẫn file vụn.
+22. **Không ép mọi logic vào 4 module chính:** `api.js`/`shared.js` chỉ giữ logic thật sự dùng chung. `customer.js`/`admin.js` là entry/điều phối nếu phù hợp; nghiệp vụ lớn có thể tách module riêng, tránh biến file chính thành nơi chứa tất cả logic.
+23. **Chủ động kiểm soát kích thước và coupling:** Không đợi xung đột nghiêm trọng mới tách. Nếu file phình, chứa nhiều chức năng độc lập, duplication, khó review/test hoặc thay đổi một phần gây rủi ro, đánh giá refactor/tách module. Cập nhật `PROJECT_MAP.md` khi thay đổi kiến trúc đáng kể.
 24. **Không sử dụng eval, new Function hoặc thực thi mã động không an toàn:** Tránh mọi nguy cơ injection và vi phạm chính sách Content Security Policy (CSP).
 25. **Không sử dụng innerHTML với dữ liệu không đáng tin cậy nếu chưa xử lý an toàn:** Dữ liệu do người dùng nhập hoặc từ query string phải được escape hoặc làm sạch qua DOMPurify.
 
@@ -70,7 +70,7 @@
 
 ## 4. QUY TẮC KIỂM THỬ (Quy tắc 49 – 58)
 
-49. **Được thử code trong sandbox tách biệt:** Agent được phép tạo/sửa bản thử trong workspace/sandbox tạm, chạy build/test và tạo artifact test; tuyệt đối không ghi thử nghiệm vào source repo/working tree chính thức. Chỉ trả code cuối dạng block replacement để Admin tự dán. Báo đúng môi trường và bằng chứng test.
+49. **Được thử và refactor trong sandbox:** Agent được phép sửa nhiều file trong workspace/sandbox tạm để kiểm chứng fix/refactor, chạy build/test và tạo artifact. Không ghi vào repo/working tree chính hoặc GitHub nếu chưa được Admin yêu cầu rõ.
 50. **Không được bỏ qua lỗi build hoặc lỗi import:** Bất kỳ cảnh báo nghiêm trọng hoặc lỗi build nào xuất hiện đều phải được giải quyết triệt để trước khi tạo commit.
 51. **Kiểm tra cả trang khách hàng và trang quản trị nếu thay đổi module dùng chung:** Khi sửa đổi trong `api.js` hoặc `shared.js`, phải kiểm thử cả `index.html` và `admin.html`.
 52. **Kiểm tra các chức năng liên quan trực tiếp đến thay đổi:** Lập danh sách các tính năng phụ thuộc và rà soát kỹ lưỡng sau khi sửa code.
@@ -79,13 +79,13 @@
 55. **Được test mutation trên demo đã xác nhận:** Website, Admin, webhook và downstream được Admin xác nhận là demo/test chưa vận hành production có thể được Agent thao tác thật để test, gồm tạo/sửa test order, gửi webhook giả, cập nhật trạng thái và kiểm thử fulfillment nếu tất cả dịch vụ đích cũng là demo. Không giao dịch tiền thật, không gửi email hoặc cấp dịch vụ cho khách thật.
 56. **Xác minh môi trường trước test ghi:** Trước mutation, Agent phải xác minh URL website, Admin, webhook và downstream là demo/test được Admin xác nhận, không phải production. Nếu có dấu hiệu production hoặc không chắc, dừng mutation và hỏi Admin.
 57. **Nếu không thể chạy kiểm thử, phải nói rõ chưa kiểm thử phần nào:** Báo cáo trung thực các trường hợp biên chưa được kiểm thử trong báo cáo công việc.
-58. **Code cuối phải được kiểm chứng:** Thử phương án sửa trong sandbox/test workspace, chạy test liên quan và regression, lặp tối ưu nếu thất bại. Không gọi là đã test nếu chỉ đọc/suy luận; nêu rõ test, kết quả và phần chưa xác minh.
+58. **Code cuối phải được kiểm chứng và không phình vô lý:** Thử trong sandbox, chạy test/build và regression phù hợp. Đánh giá correctness, duplication, coupling, complexity và kích thước diff; không dùng LOC làm KPI nhưng giải thích khi lượng code tăng mạnh. Không gọi là đã test nếu chỉ đọc/suy luận.
 
 ---
 
 ## 5. QUY TẮC GITHUB VÀ TRIỂN KHAI (Quy tắc 59 – 70)
 
-59. **Không ghi thay đổi lên Git:** AI chỉ được đọc GitHub hoặc clone/pull để lấy code mới nhất. Không chỉnh working tree, commit, push, tạo PR, merge hay ghi thay đổi lên bất kỳ branch nào.
+59. **Không ghi lên GitHub mặc định:** Sandbox/workspace được phép chỉnh sửa. Không ghi trực tiếp GitHub, commit, push, tạo PR, merge hoặc thay đổi lịch sử trừ khi Admin yêu cầu rõ trong task hiện tại.
 60. **Không tạo branch để áp dụng code:** Việc sửa code được cung cấp dưới dạng hướng dẫn block replacement; Admin tự thao tác trên repo của họ.
 61. **Không tự tạo commit:** Nếu hữu ích, AI có thể gợi ý nội dung commit để Admin tự dùng; không được tạo commit hoặc thay đổi lịch sử Git.
 62. **Không tạo hoặc merge Pull Request:** Chỉ Admin tự quản lý PR/merge nếu họ chọn quy trình đó.
@@ -144,12 +144,12 @@ Sau mỗi lần sửa mã nguồn hoặc hoàn thành một giai đoạn, AI ph�
 ### 8.1. Quyền được phép
 - Được truy cập GitHub, git clone hoặc git pull để đọc phiên bản mã nguồn mới nhất. Clone phải dùng để đọc/phân tích; không ghi sửa lên repo hoặc working tree.
 - Được đọc đúng file liên quan và các file phụ thuộc trực tiếp cần thiết để lần theo luồng gọi, contract hoặc nguyên nhân.
-- Được dùng tìm kiếm có mục tiêu trong phạm vi liên quan. Nếu cần mở rộng sang file khác, phải giải thích ngắn gọn vì sao file đó có liên quan.
-- Được trả lời bằng phân tích, block code đề xuất, và lệnh kiểm tra để Admin tự chạy.
+- Được tìm kiếm có mục tiêu và đọc dependency/call sites liên quan; có thể mở rộng sang file cần thiết để kiểm tra contract, module boundaries, duplication và tác động liên đới, nêu lý do khi mở rộng đáng kể.
+- Được sửa nhiều file trong sandbox/workspace, chạy kiểm tra phù hợp, rồi cung cấp diff dễ review cùng bằng chứng test.
 
 ### 8.2. Các hành vi bị cấm — không được tự thực hiện
-- Cấm sửa, tạo, xóa, format hoặc ghi bất kỳ file nào trong repo/clone/workspace; cấm áp dụng patch/diff tự động.
-- Cấm commit, push, tạo branch để ghi sửa, tạo PR, merge hoặc thay đổi lịch sử Git.
+- Không ghi trực tiếp vào repo/working tree chính hoặc GitHub nếu chưa được Admin yêu cầu rõ.
+- Không commit, push, tạo PR, merge hoặc thay đổi lịch sử Git nếu chưa được yêu cầu.
 - **Cấm tuyệt đối tự deploy** Cloudflare Pages, Workers, preview hay production; cấm chạy script deploy, Wrangler deploy, workflow release hoặc bất kỳ thao tác tương đương.
 - Cấm tự chạy migration, thao tác ghi/xóa dữ liệu, sửa binding/secret/env, hoặc kiểm thử có thể tạo đơn, thanh toán, fulfillment hay ảnh hưởng dịch vụ.
 - Cấm im lặng chạy tiến trình dài, quét toàn bộ repo hoặc phân tích hàng loạt file không liên quan. Nếu phát sinh nhu cầu mở rộng, phải nêu lý do và xin Admin xác nhận trước.
@@ -160,7 +160,7 @@ Sau mỗi lần sửa mã nguồn hoặc hoàn thành một giai đoạn, AI ph�
 2. Đọc phiên bản mới nhất của các file trực tiếp liên quan; ghi rõ file/commit/branch hoặc thời điểm truy cập nếu xác định được.
 3. Lần theo nguyên nhân bằng bằng chứng trong code. Phân biệt rõ **đã xác minh**, **giả thuyết**, và **chưa đủ dữ liệu**.
 4. Đưa phương án tối thiểu. Không tự mở rộng refactor hoặc sửa lỗi ngoài phạm vi; lỗi ngoài phạm vi chỉ ghi chú.
-5. Trả block replacement để Admin tự dán. Nói rõ AI chưa áp dụng thay đổi, chưa commit/push và chưa deploy.
+5. Áp dụng targeted fix/refactor trong sandbox nếu phù hợp, test và review diff. Nếu task chỉ yêu cầu tư vấn thì không sửa. Nêu rõ chưa ghi lên repo/GitHub, chưa commit/push và chưa deploy.
 6. Nếu không thể đọc chính xác block hiện hữu hoặc phiên bản code khác nhau, yêu cầu Admin gửi file/đoạn code phù hợp; không bịa block cũ.
 
 ### 8.4. Format bắt buộc cho code replacement
@@ -207,9 +207,9 @@ Tăng version theo lịch sử version note đang có; nếu không xác định
 
 ### 8.6. Kiểm tra và deploy
 - Nêu các lệnh build/test phù hợp để Admin tự chạy. Không báo “đã test/build thành công” nếu AI không có kết quả thực tế.
-- Không tự chạy command nào có thể ghi file, tạo artifact, thay đổi cấu hình, dữ liệu hoặc trạng thái dịch vụ. Nếu tác động của lệnh không rõ, không chạy; giải thích và đề xuất Admin tự thực hiện.
+- Có thể chạy lệnh build/test và tạo artifact trong sandbox/workspace tách biệt; không chạy lệnh tác động source chính, cấu hình, dữ liệu hoặc trạng thái dịch vụ. Nếu tác động không rõ, dừng và giải thích.
 - Nếu Admin hỏi cách deploy, có thể hướng dẫn theo đúng Worker/site đích đã xác nhận; không được tự chạy deploy.
-- Không được deploy trong cùng task chỉ vì đã đưa code replacement hoặc vì build/test được yêu cầu.
+- Không deploy trong cùng task chỉ vì đã sửa code hoặc build/test được yêu cầu.
 
 ### 8.7. Phân biệt các Worker
 1. `worker.js` ở thư mục gốc: Worker API chính.
@@ -230,12 +230,12 @@ Không suy đoán mục tiêu deploy từ tên file; mặc định không deploy
 
 ## 10. QUY TẮC XỬ LÝ THEO TỪNG LẦN GIAO VIỆC ("LẦN XX") & PHẠM VI TỐI THIỂU (Quy tắc 85 – 94)
 
-85. **Chỉ thực hiện yêu cầu trong lần hiện tại:** Khi người dùng giao một yêu cầu có ghi chú **"Lần XX"** (ví dụ: "Lần 1", "Lần 2", "Lần 03"...), Agent chỉ được phép xử lý đúng và duy nhất các nội dung được nêu rõ trong lần hiện tại đó.
+85. **Phạm vi task hiện tại:** Khi người dùng ghi “Lần XX”, chỉ làm mục được nêu; nhưng được đọc/sửa file phụ thuộc trực tiếp và refactor phần liên quan nếu cần sửa an toàn hoặc giảm coupling/duplication. Không mở rộng sang nghiệp vụ không liên quan.
 86. **Không tự động kéo dài hay mở rộng lần trước:** Tuyệt đối không tự động tiếp tục, sửa lại, làm tiếp hoặc mở rộng các yêu cầu từ những lần giao việc trước, trừ khi người dùng nhắc lại cụ thể trong nội dung của lần hiện tại.
-87. **Chỉ tìm, đọc, phân tích và sửa file liên quan trực tiếp:** Chỉ tìm kiếm, đọc, phân tích và sửa đúng những file có liên quan trực tiếp đến vấn đề đang xử lý.
-88. **Không tự đọc hoặc rà soát toàn bộ repo:** Tuyệt đối không tự ý đọc hoặc rà soát toàn bộ repo, toàn bộ code website, Worker Cloudflare hay hệ thống production để xử lý một yêu cầu nhỏ.
-89. **Chỉ mở rộng phạm vi đọc code khi thật sự cần và phải nêu lý do:** Chỉ mở rộng phạm vi đọc code khi thật sự cần thiết để hiểu hoặc sửa đúng vấn đề. Khi bắt buộc phải mở rộng phạm vi đọc, Agent phải nêu ngắn gọn lý do cho người dùng.
-90. **Không refactor, tối ưu hoặc đổi cấu trúc ngoài phạm vi:** Tuyệt đối không tự ý refactor, tối ưu hóa, dọn dẹp, thay đổi cấu trúc hoặc sửa lỗi nằm ngoài phạm vi yêu cầu của lần hiện tại.
+87. **Phạm vi file hợp lý:** Bắt đầu với file liên quan, nhưng có thể đọc/sửa module, caller, shared code, test và cấu hình phụ thuộc trực tiếp khi cần để hiểu, fix, modularize hoặc kiểm chứng. Không cấm mở rộng hợp lý chỉ vì task ban đầu nêu một file.
+88. **Không quét toàn repo cho task nhỏ:** Không rà hàng loạt không cần thiết. Tuy nhiên, nếu người dùng yêu cầu audit toàn repo hoặc refactor kiến trúc, được quét toàn bộ repo theo phạm vi đã yêu cầu.
+89. **Mở rộng theo dependency/evidence:** Khi cần theo dependency, call sites, duplicate hoặc ảnh hưởng liên đới, chủ động đọc thêm file cần thiết và giải thích ngắn lý do. Không cần xin phép cho mỗi file phụ thuộc trực tiếp hợp lý.
+90. **Không refactor ngoài phạm vi nghiệp vụ liên quan:** Không sửa phần không liên quan. Trong phạm vi task, được refactor/cleanup/tách module, loại duplication hoặc logic dư thừa nếu cần cho fix, ổn định, maintainability hoặc giảm code bloat; mô tả tác động và kiểm thử.
 91. **Không tự ý thay đổi hạ tầng, schema và dữ liệu:** Không tự ý thay đổi API, routes, schema dữ liệu (KV, D1, Supabase), Cloudflare bindings, environment variables, secrets, cấu hình Cloudflare hoặc dữ liệu production.
 92. **Không deploy hoặc thay đổi production nếu chưa yêu cầu:** Tuyệt đối không deploy lên Cloudflare Workers, Pages hoặc thay đổi hệ thống production nếu người dùng chưa yêu cầu rõ ràng trong lần hiện tại.
 93. **Phát hiện lỗi ngoài phạm vi chỉ ghi chú, không tự sửa:** Nếu phát hiện lỗi khác ngoài phạm vi của lần hiện tại, chỉ được phép ghi chú vào báo cáo để thông báo cho người dùng; tuyệt đối không tự ý sửa code.
@@ -254,7 +254,20 @@ Không suy đoán mục tiêu deploy từ tên file; mặc định không deploy
 101. Test data phải có dấu hiệu test rõ, ID riêng và không trùng dữ liệu thật. Chỉ dọn record do Agent tạo trong lần test khi chắc chắn nhận diện đúng record test và xóa an toàn; nếu không thì giữ nguyên và báo Admin.
 102. Báo cáo test phải nêu environment, test case, pass/fail, evidence console/network/API, regression, test chưa chạy và lý do; phân biệt đã test, đã phân tích và chưa xác minh.
 103. Payload giả có thể mô phỏng cấu trúc ngân hàng thật nhưng chỉ được gửi vào webhook demo/test đã xác minh. Nếu không chắc môi trường demo hay production, không gửi payload và hỏi Admin.
-104. Admin vẫn kiểm soát source: Agent chỉ trả block cũ nguyên văn và block mới đã thử (nếu có), file/vị trí, lý do và kết quả; Admin tự thay.
+104. Admin vẫn kiểm soát source: Agent cung cấp diff/block replacement đã review, nêu file/vị trí, lý do, test và rủi ro. Sandbox edits không tự áp dụng lên repo chính; Admin duyệt/applies changes trừ khi task hiện tại cho phép thao tác repo rõ ràng.
 
 105. **Đăng nhập Admin an toàn:** Agent được phép đăng nhập Admin demo bằng browser session được Admin ủy quyền hoặc credential qua cơ chế bảo mật của nền tảng. Không yêu cầu password/token nhạy cảm trong chat, không bypass đăng nhập, không lấy credential, không ghi credential vào repo/log/report. Nếu chưa có session hợp lệ, xin Admin thiết lập cách cấp quyền an toàn.
 106. **Test runtime thực, không chỉ mock UI:** Khi demo đã xác minh, ưu tiên thao tác browser thật, API đến demo, webhook giả gửi thật đến endpoint demo và xác nhận kết quả bằng Admin/UI/API/readback được phép. Ghi nhận side effects của test và chỉ dọn dữ liệu do chính lần test tạo nếu nhận diện chắc chắn.
+
+## 12. QUY TẮC CHỐNG CODE BLOAT, MODULARITY & FAILURE ISOLATION (BẮT BUỘC)
+
+107. **Không xem line count là mục tiêu, nhưng phải kiểm soát code bloat:** Ưu tiên behavior đúng, an toàn và dễ bảo trì. Không thêm code để xử lý giả định chưa có bằng chứng; trước khi thêm guard, fallback, retry, wrapper hoặc state mới, xác định case cụ thể và kiểm tra cơ chế hiện có.
+108. **Ưu tiên reuse trước khi nhân bản:** Trước khi viết chức năng tương tự, tìm helper/function/flow hiện có trong phạm vi liên quan. Nếu có thể dùng chung mà không tăng coupling/rủi ro, hãy reuse hoặc parameterize. Không copy cả bộ CRUD/modal/render/save/toggle/delete cho tính năng tương tự nếu dùng chung phần lõi hợp lý được.
+109. **Dọn code an toàn được phép:** Trong phạm vi task/refactor, được loại duplicate, dead code, unreachable branches, stale compatibility code, guard/fallback trùng hoặc không còn cần thiết sau khi kiểm tra call sites, dependency, contracts và tests. Không xóa chỉ dựa vào phỏng đoán.
+110. **Giữ diff cân đối:** Nếu tính năng nhỏ làm tăng hàng trăm dòng, phải xem lại reuse, giảm lặp, tách trách nhiệm hoặc đơn giản hóa. Không ép giảm LOC bằng cách rút gọn gây khó đọc, bỏ bảo mật, xóa xử lý lỗi thiết yếu hoặc mất behavior.
+111. **Tách module theo nghiệp vụ, tránh phụ thuộc chéo:** Module nên có trách nhiệm rõ, giao tiếp qua API/interface/event hoặc shared contract nhỏ ổn định. Tránh phụ thuộc vào nhiều biến/hàm nội bộ module khác, vòng import và global/window làm kênh kết nối mới nếu có lựa chọn module-level rõ ràng.
+112. **Failure isolation:** Các tính năng độc lập nên được khởi tạo và xử lý lỗi độc lập. Lỗi import/init/render/API/state của một feature không được làm toàn Admin/customer app ngừng hoạt động nếu có thể cô lập an toàn. Dùng error boundary theo feature và fallback UI phù hợp; không nuốt lỗi—ghi nhận/log có kiểm soát để phần còn lại tiếp tục.
+113. **Admin và trang khách hàng vẫn phải liên thông nghiệp vụ:** Tách module Admin không được làm mất khả năng cấu hình Admin tác động lên `index.html` theo thiết kế. Public config phải đi qua API/data contract/shared layer phù hợp (ví dụ Worker/API), không để `index.html` import trực tiếp code Admin hoặc phụ thuộc vào Admin runtime. Giữ đúng luồng cập nhật, schema, endpoint, storage và behavior hiện có; test cả Admin và Customer khi thay đổi dữ liệu chung.
+114. **Không kiến trúc hóa quá mức:** Ưu tiên module độc lập vừa đủ—ít file nhưng không monolith. Tránh tự tạo framework nội bộ, event bus, dependency injection hoặc abstraction mới nếu chưa chứng minh giúp giảm coupling/duplication và phù hợp quy mô.
+115. **Refactor có bản đồ tác động:** Xác định callers, globals, inline handlers, DOM IDs, shared state, API/storage contracts và feature liên quan trước khi di chuyển logic. Sau refactor, kiểm tra imports/exports, khởi tạo module, failure isolation, Admin-to-Customer propagation và regression phù hợp.
+116. **Báo cáo refactor:** Nêu file/LOC trước-sau khi có số liệu, duplication đã xử lý, module boundary/coupling thay đổi, behavior giữ lại, test đã chạy và rủi ro còn lại. Không tuyên bố modularity tốt hơn chỉ vì tạo thêm file.
