@@ -310,7 +310,9 @@ async function fetchOrderFromSource(env, cfg, orderId) {
         const j = await r.json();
         if (j && j.order) return { ...j.order, worker_url: j.order.workerUrl || w };
       }
-    } catch {}
+    } catch (e) {
+      console.warn("[payment-webhook] fetchOrderFromSource:", e && e.message || e);
+    }
   }
   return null;
 }
@@ -543,7 +545,9 @@ export default {
           try {
             // Tối ưu hóa: Dùng phép so khớp chính xác để tận dụng index idx_orders_pending_amt, giới hạn 5 ứng viên gần nhất
             candidateOrders = (await env.DB.prepare(`SELECT order_id, total_vnd, status, created_at FROM orders WHERE status = 'pending' AND total_vnd = ? ORDER BY id DESC LIMIT 5`).bind(r.amount).all()).results || [];
-          } catch {}
+          } catch (e) {
+            console.warn("[payment-webhook] candidateOrders query:", e && e.message || e);
+          }
         }
         const tx = {
           id: r.id,
@@ -921,9 +925,10 @@ export default {
           await adoptOrderFromSource(env, ko, ot.order_id, ot.amount);
           await logSys(env, "ok", "Cron phục hồi đơn D1 từ Supabase", ot.order_id, ot.order_id);
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn("[payment-webhook] orphanTx adopt:", ot.order_id, e && e.message || e);
+      }
     }
-
     // 1. Khớp tự động đơn pending bằng 1 câu INNER JOIN duy nhất (không lặp SELECT)
     const matchedPending = (await env.DB.prepare(`
       SELECT t.id AS tx_id, o.order_id, o.order_type
