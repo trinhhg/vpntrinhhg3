@@ -4,7 +4,7 @@ const getKV = (env) => env && (env.VPN_KV3 || env.VPN_KV || env.KV);
 
 // ====================================================================
 // SUPABASE CLIENT ĐẦY ĐỦ TÍNH NĂNG (RPC QUOTA & DATABASE)
-// ==================================================================== 
+// ====================================================================
 function cleanOrderForSupabase(o) {
   if (!o || typeof o !== "object") return o;
   const c = { ...o };
@@ -239,7 +239,7 @@ function getSupabase(env, isTest = false) {
       const startedAt = Date.now();
 
       try {
-        const res = await fetch(`${url}/${table}?select=id&limit=1`, { headers });
+        const res = await fetch(`${url}/${table}?select=id&limit=1`, { headers, signal: AbortSignal.timeout(8000) });
 
         if (!res.ok) {
           return {
@@ -249,7 +249,7 @@ function getSupabase(env, isTest = false) {
           };
         }
 
-        const countRes = await fetch(`${url}/${table}?select=count`, { headers: { ...headers, Prefer: "count=exact" } });
+        const countRes = await fetch(`${url}/${table}?select=count`, { headers: { ...headers, Prefer: "count=exact" }, signal: AbortSignal.timeout(8000) });
 
         let count = null;
 
@@ -554,7 +554,9 @@ async function runTelegramBackup(env, actionReason = "Admin gửi thủ công", 
   if (sb) {
     try {
       orders = await sb.getAll();
-    } catch {}
+    } catch (e) {
+      console.warn("[worker] sb.getAll fallback:", e && e.message || e);
+    }
   }
 
   const now = new Date(Date.now() + 7 * 36e5);
@@ -3560,6 +3562,15 @@ export default {
         const bad = need(admin);
         if (bad) return bad;
         const active = (await KV.get("TEST_MODE_ACTIVE")) === "1";
+        const fast = url.searchParams.get("fast") === "1";
+        if (fast) {
+          return J({
+            ok: true,
+            active,
+            isTest: active,
+            fast: true
+          });
+        }
         const [ping_prod, ping_test] = await Promise.all([pingSupabase(env, false), pingSupabase(env, true)]);
         return J({
           ok: true,
