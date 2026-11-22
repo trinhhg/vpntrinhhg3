@@ -271,3 +271,404 @@ Không suy đoán mục tiêu deploy từ tên file; mặc định không deploy
 114. **Không kiến trúc hóa quá mức:** Ưu tiên module độc lập vừa đủ—ít file nhưng không monolith. Tránh tự tạo framework nội bộ, event bus, dependency injection hoặc abstraction mới nếu chưa chứng minh giúp giảm coupling/duplication và phù hợp quy mô.
 115. **Refactor có bản đồ tác động:** Xác định callers, globals, inline handlers, DOM IDs, shared state, API/storage contracts và feature liên quan trước khi di chuyển logic. Sau refactor, kiểm tra imports/exports, khởi tạo module, failure isolation, Admin-to-Customer propagation và regression phù hợp.
 116. **Báo cáo refactor:** Nêu file/LOC trước-sau khi có số liệu, duplication đã xử lý, module boundary/coupling thay đổi, behavior giữ lại, test đã chạy và rủi ro còn lại. Không tuyên bố modularity tốt hơn chỉ vì tạo thêm file.
+## 13. SELF-TESTING & AUTO-FIX GATE — CODE PHẢI TỰ KIỂM CHỨNG TRƯỚC KHI BÀN GIAO
+
+**117. Test ngay trong quá trình code:** Không đợi hoàn thành toàn bộ task mới kiểm thử. Sau mỗi thay đổi logic hoặc mỗi nhóm thay đổi có ý nghĩa, Agent phải chạy kiểm tra phù hợp, phát hiện lỗi và xử lý trước khi chuyển sang phần tiếp theo.
+
+**118. Bắt buộc vòng lặp Auto-Fix:** Khi phát hiện lỗi từ build, test, Browser, API, workflow, console, network hoặc regression, Agent phải tự phân tích nguyên nhân, sửa code trong sandbox/workspace và chạy lại test. Không chỉ liệt kê lỗi rồi giao Admin tự sửa.
+
+**119. Không test trên Production bằng code chưa deploy:** Khi cần kiểm tra code mới bằng Browser, phải chạy code trong môi trường local preview/sandbox hoặc test environment phù hợp. Browser phải truy cập đúng phiên bản code đang sửa, không được nhầm website production đang chạy code cũ với code mới.
+
+**120. Local Preview & Browser Verification:** Với frontend Vite, chủ động sử dụng dev server hoặc preview server phù hợp để Browser kiểm tra phiên bản workspace. Phải xác nhận URL và phiên bản code thực tế đang được test. Không mặc định Browser đã đăng nhập production cũng có quyền đăng nhập local preview vì khác origin/session.
+
+**121. Tách biệt backend và dữ liệu test:** Local frontend không đồng nghĩa backend là test. Trước khi kiểm tra API, webhook, Admin, D1/KV, email, thanh toán, fulfillment, cấu hình hoặc bất kỳ mutation nào, phải xác định chính xác backend và downstream đang sử dụng. Không để localhost vô tình ghi vào production.
+
+**122. Cấm test mutation trên production:** Không tạo/sửa/xóa đơn thật, không gửi giao dịch ngân hàng, không thanh toán thật, không cấp VPN cho khách thật, không gửi email thật, không thay đổi dữ liệu/configuration production, không chạy migration thật để phục vụ test. Nếu chưa có test environment an toàn thì phải đánh dấu BLOCKED/NOT VERIFIED và đề xuất cách test thay thế.
+
+**123. Test theo workflow đầu-cuối:** Không coi test riêng từng button, function, API response hoặc toast là đủ. Phải kiểm tra workflow từ điểm bắt đầu đến kết quả cuối cùng, gồm dữ liệu, trạng thái, side effects, nơi hiển thị, persistence và readback sau reload nếu phù hợp.
+
+**124. Kiểm tra kết quả thực, không suy đoán:** Click thành công, toast success, HTTP 200, email log hoặc response thành công không tự chứng minh nghiệp vụ hoàn tất. Phải xác minh dữ liệu/state thực tế ở nguồn đích và các màn hình/feature liên quan trong phạm vi môi trường được phép.
+
+**125. Auto-Fix không được làm lệch task:** Khi sửa lỗi test, ưu tiên root cause và patch tối thiểu. Không làm giả test pass, không hạ assertion, không xóa test, không bỏ workflow, không mock kết quả thật để che lỗi, không vô hiệu hóa validation/security, không sửa expected result chỉ để khớp code sai.
+
+**126. Test lại sau mỗi lần sửa:** Mỗi bug fix phải chạy lại test case gây lỗi. Sau đó chạy regression tests cho chức năng liên quan, shared modules, Admin/Customer, API/data contracts và workflow có nguy cơ bị ảnh hưởng.
+
+**127. Lặp lại đến khi đạt hoặc bị blocker:** Agent phải chủ động tiếp tục chu trình phát hiện → phân tích → sửa → test lại → regression. Không được dừng ở lần test fail đầu tiên. Chỉ được kết thúc khi các test phù hợp đã PASS hoặc khi blocker thực sự không thể xử lý bằng quyền hạn, môi trường, dữ liệu hoặc công cụ hiện có. Không giới hạn tùy tiện số vòng fix khi vẫn có thể tiến hành an toàn.
+
+**128. Test gate trước khi bàn giao:** Không được đánh dấu task hoàn tất khi còn lỗi nghiêm trọng, build fail, workflow mục tiêu fail, regression fail hoặc test có thể thực hiện nhưng chưa chạy. Các phần không thể test phải được nêu riêng, không được tính PASS.
+
+**129. Báo cáo test có bằng chứng:** Phân loại kết quả `PASS`, `FAIL`, `BLOCKED`, `NOT VERIFIED`. Báo cáo phải nêu test nào đã chạy, môi trường, kết quả thực, bằng chứng phù hợp, bug đã sửa, test lại sau fix, regression và phần còn hạn chế.
+
+**130. Review gate — chờ Admin:** Khi test gate đạt, Agent chỉ được bàn giao code, diff, báo cáo và hướng dẫn review. Không tự commit, push, tạo PR, merge, deploy, publish hoặc kích hoạt production. Admin là người review và quyết định bước tiếp theo.
+
+**131. Không được tuyên bố hoàn tất giả:** Build pass không có nghĩa workflow pass; test mock không có nghĩa runtime pass; test frontend không có nghĩa backend pass. Mỗi kết luận chỉ được ghi ở mức đã thực sự kiểm chứng. Nếu thiếu môi trường, công cụ hoặc quyền truy cập, phải báo trung thực và dừng phần test bị chặn.
+# SELF-TESTING & AUTO-FIX MODE — VPNTRINHHG
+
+Đọc `AGENTS.md` trước khi thực hiện. Task này yêu cầu mày chủ động phát triển code, tự kiểm thử, tìm lỗi, sửa lỗi và kiểm thử lại trước khi bàn giao.
+
+## MỤC TIÊU
+
+Không chỉ viết code theo yêu cầu.
+
+Mày phải làm việc như một Developer + QA Engineer:
+
+**Phân tích → Code → Test → Phát hiện lỗi → Tìm nguyên nhân → Auto-Fix → Retest → Regression → Review → Bàn giao.**
+
+Tao không muốn nhận code mới chỉ được đọc qua hoặc build thành công nhưng chưa kiểm tra workflow thực tế.
+
+---
+
+## PHASE 1 — PHÂN TÍCH TASK VÀ LẬP TEST PLAN
+
+Trước khi code:
+
+1. Xác định yêu cầu và behavior mong muốn.
+2. Kiểm tra code hiện tại, module liên quan, caller, dependency, API contract và dữ liệu liên quan.
+3. Xác định chức năng nào bị ảnh hưởng trực tiếp và gián tiếp.
+4. Xác định những workflow có thể bị hỏng sau thay đổi.
+5. Xác định cách kiểm thử từng workflow.
+6. Phân loại:
+   - Test được hoàn toàn bằng unit test.
+   - Test được bằng integration/API test.
+   - Phải test bằng Browser.
+   - Cần backend hoặc test data.
+   - Bị giới hạn do không có môi trường test an toàn.
+
+Không lập test plan chỉ để hoàn thành thủ tục. Test case phải phản ánh nghiệp vụ thật của task.
+
+Không mở rộng sửa các chức năng ngoài phạm vi nếu không cần thiết.
+
+---
+
+## PHASE 2 — CODE VÀ TEST LIÊN TỤC
+
+Trong quá trình code, không đợi hoàn thành toàn bộ task mới test.
+
+Thực hiện theo từng nhóm thay đổi:
+
+1. Sửa một nhóm logic.
+2. Chạy kiểm tra liên quan ngay.
+3. Nếu test fail, phân tích lỗi.
+4. Sửa root cause.
+5. Chạy lại test.
+6. Khi đạt, tiếp tục nhóm thay đổi tiếp theo.
+
+Ưu tiên test sớm để tránh tích lũy nhiều lỗi khiến khó xác định nguyên nhân.
+
+Không chỉ đọc code và tự suy luận rằng code đúng.
+
+---
+
+## PHASE 3 — TỰ ĐỘNG BUILD VÀ KIỂM TRA CODE
+
+Tự xác định các công cụ test phù hợp với project hiện tại.
+
+Thực hiện nếu có thể:
+
+- Build.
+- Kiểm tra syntax và module imports.
+- Unit tests.
+- Integration tests.
+- Kiểm tra API contract.
+- Kiểm tra lỗi runtime.
+- Kiểm tra dependency và circular imports.
+- Kiểm tra các function/call sites liên quan.
+- Kiểm tra dữ liệu input, output, validation và edge cases.
+- Kiểm tra code mới có gây duplication, coupling hoặc code bloat không.
+
+Nếu phát hiện lỗi:
+
+**Không dừng ở việc báo lỗi. Tự sửa rồi chạy lại.**
+
+Không được:
+
+- Xóa test đang fail để làm test suite pass.
+- Hạ tiêu chuẩn assertion.
+- Bỏ qua lỗi bằng catch rỗng.
+- Giả lập thành công khi nghiệp vụ thực tế thất bại.
+- Thay đổi behavior không liên quan để làm test dễ hơn.
+
+---
+
+## PHASE 4 — CHẠY LOCAL PREVIEW VÀ TEST BẰNG BROWSER
+
+Nếu task ảnh hưởng giao diện hoặc workflow web, bắt buộc sử dụng Browser để kiểm tra phiên bản code mới khi môi trường cho phép.
+
+### Quy trình
+
+1. Chạy code mới từ workspace/sandbox.
+2. Khởi động local server hoặc preview server phù hợp.
+3. Xác định URL preview thực tế.
+4. Mở Browser tại URL đó.
+5. Xác nhận Browser đang sử dụng code mới, không phải production cũ.
+6. Thực hiện thao tác UI thật.
+7. Quan sát kết quả, trạng thái, dữ liệu và side effects.
+8. Kiểm tra console, network/API errors nếu có thể.
+9. Reload trang để kiểm tra persistence.
+10. Kiểm tra các màn hình liên quan.
+
+Ví dụ Vite:
+
+`npm run dev -- --host 127.0.0.1`
+
+Chỉ sử dụng nếu phù hợp với scripts/configuration hiện tại của repository.
+
+Không được test code mới bằng cách thao tác website Production đang chạy code cũ rồi kết luận code workspace đã đạt.
+
+Nếu local preview không chạy được, phải tìm và xử lý nguyên nhân trong phạm vi cho phép. Không được giả nhận đã test Browser.
+
+---
+
+## PHASE 5 — KIỂM TRA WORKFLOW ĐẦU-CUỐI (E2E)
+
+Không kiểm tra mỗi button hoặc function riêng lẻ.
+
+Phải test workflow từ đầu đến cuối, tùy phạm vi task.
+
+Ví dụ:
+
+### Đặt hàng
+
+- Mở trang khách hàng.
+- Chọn gói.
+- Nhập thông tin.
+- Tạo đơn.
+- Xác nhận mã đơn.
+- Kiểm tra đơn đã được lưu đúng nguồn dữ liệu.
+- Kiểm tra đơn xuất hiện ở Admin.
+- Reload và xác nhận dữ liệu còn tồn tại.
+- Kiểm tra các trường dữ liệu không bị sai hoặc mất.
+
+### Thanh toán và đối soát
+
+Trong môi trường test đã xác minh:
+
+- Tạo order test.
+- Kiểm tra order được lưu.
+- Giả lập nội dung giao dịch.
+- Gửi webhook test nếu có endpoint test an toàn.
+- Kiểm tra parser.
+- Kiểm tra match mã đơn.
+- Kiểm tra match số tiền.
+- Kiểm tra deduplication.
+- Kiểm tra giao dịch trùng.
+- Kiểm tra webhook lặp.
+- Kiểm tra giao dịch sai tiền hoặc sai mã.
+- Kiểm tra trạng thái paid.
+- Kiểm tra Transactions.
+- Kiểm tra All Orders.
+- Kiểm tra fulfillment nếu downstream hoàn toàn là test.
+- Reload Admin và kiểm tra persistence.
+
+Email, thanh toán, webhook và fulfillment chỉ test qua môi trường giả lập/test đã xác minh.
+
+### Admin → Customer
+
+Nếu task ảnh hưởng cấu hình Admin:
+
+- Thay đổi cấu hình bằng Admin test.
+- Kiểm tra dữ liệu được lưu đúng.
+- Kiểm tra API trả về đúng contract.
+- Mở hoặc reload Customer.
+- Xác nhận Customer nhận cấu hình mới.
+- Kiểm tra cache, polling và persistence nếu có.
+- Đảm bảo Customer không phụ thuộc vào Admin runtime.
+
+### CRUD
+
+Nếu task ảnh hưởng CRUD:
+
+- Create.
+- Read.
+- Update.
+- Delete chỉ trên dữ liệu test.
+- Kiểm tra validation.
+- Kiểm tra duplicate.
+- Kiểm tra lỗi API.
+- Kiểm tra reload.
+- Kiểm tra dữ liệu không bị ghi đè ngoài ý muốn.
+
+Chỉ test các workflow liên quan đến task, không cần test toàn bộ project một cách máy móc.
+
+---
+
+## PHASE 6 — KHI TEST FAIL: AUTO-FIX LOOP
+
+Khi bất kỳ test nào fail, thực hiện chu trình sau:
+
+### A. Thu thập evidence
+
+Ghi nhận:
+
+- Test case bị fail.
+- Expected result.
+- Actual result.
+- Console error.
+- Network/API request và response nếu có.
+- File/function liên quan.
+- State/data thực tế.
+- Bug có tái hiện được không.
+
+### B. Tìm root cause
+
+Không sửa dựa trên phỏng đoán khi có thể trace.
+
+Phân biệt:
+
+- Lỗi frontend.
+- Lỗi backend.
+- Lỗi API contract.
+- Lỗi data persistence.
+- Lỗi state/cache.
+- Lỗi async/race condition.
+- Lỗi authentication/authorization.
+- Lỗi module initialization.
+- Lỗi test environment.
+
+### C. Fix
+
+- Sửa nguyên nhân gốc.
+- Ưu tiên patch nhỏ và đúng phạm vi.
+- Không workaround để che triệu chứng.
+- Không làm suy yếu bảo mật hoặc validation.
+- Không tạo thêm duplication không cần thiết.
+
+### D. Retest
+
+Sau khi sửa:
+
+1. Chạy lại test case fail.
+2. Xác nhận bug đã hết.
+3. Test edge cases liên quan.
+4. Test regression những chức năng có thể bị ảnh hưởng.
+5. Nếu tiếp tục fail, quay lại thu thập evidence và fix tiếp.
+
+**Lặp lại chu trình này cho đến khi đạt hoặc gặp blocker thực sự. Không được dừng chỉ vì đã thử sửa một lần.**
+
+---
+
+## PHASE 7 — REGRESSION TEST
+
+Sau khi các lỗi mục tiêu đã được fix, kiểm tra lại những chức năng có nguy cơ bị ảnh hưởng.
+
+Ưu tiên:
+
+- Các workflow liên quan trực tiếp.
+- Các module dùng chung.
+- Import/export và initialization.
+- API contract.
+- Data schema.
+- Admin và Customer.
+- Persistence.
+- Authentication và authorization.
+- UI state và reload.
+- Các chức năng trước đây đang hoạt động có liên quan.
+
+Nếu task là refactor hoặc module splitting, phải kiểm tra callers, inline handlers, globals, shared state, dependency, circular imports và failure isolation.
+
+Nếu một feature gặp lỗi, các feature độc lập còn lại phải tiếp tục hoạt động khi có thể.
+
+---
+
+## PHASE 8 — TEST GATE
+
+Chỉ được đánh dấu READY FOR REVIEW khi:
+
+- [ ] Code đã sửa đúng yêu cầu.
+- [ ] Build thành công nếu project có build.
+- [ ] Không còn lỗi syntax/import nghiêm trọng.
+- [ ] Test mục tiêu đã PASS.
+- [ ] Workflow đầu-cuối liên quan đã PASS khi có môi trường.
+- [ ] Các bug phát hiện trong quá trình test đã được sửa.
+- [ ] Test lỗi sau fix đã chạy lại.
+- [ ] Regression test phù hợp đã PASS.
+- [ ] API/data contract được giữ nguyên.
+- [ ] Không gây side effects ngoài ý muốn.
+- [ ] Không có production mutation.
+- [ ] Diff được kiểm tra lại.
+- [ ] Không thêm code dư thừa hoặc abstraction không cần thiết.
+
+Nếu test không thể chạy vì thiếu môi trường hoặc quyền truy cập, không được giả nhận đã đạt. Phải phân loại BLOCKED hoặc NOT VERIFIED.
+
+---
+
+## PHASE 9 — BÁO CÁO CUỐI
+
+Sau khi hoàn thành, báo cáo:
+
+### 1. Task
+Tóm tắt yêu cầu và những gì đã xử lý.
+
+### 2. Files changed
+Danh sách file đã sửa/tạo/xóa và mục đích.
+
+### 3. Root causes
+Những lỗi phát hiện, nguyên nhân thực tế và cách khắc phục.
+
+### 4. Testing results
+
+| Test | Kết quả | Evidence |
+|---|---|---|
+| Build | PASS/FAIL/BLOCKED | Output |
+| Unit | PASS/FAIL/BLOCKED | Test report |
+| Integration/API | PASS/FAIL/BLOCKED | Request/response |
+| Browser/UI | PASS/FAIL/BLOCKED | Browser result |
+| E2E workflow | PASS/FAIL/BLOCKED | Workflow evidence |
+| Regression | PASS/FAIL/BLOCKED | Test result |
+
+Chỉ liệt kê những test thực sự chạy.
+
+### 5. Auto-fix history
+- Bug đã phát hiện.
+- Root cause.
+- Fix đã áp dụng.
+- Kết quả retest.
+
+### 6. Regression impact
+Những chức năng đã test lại và những chức năng có nguy cơ liên đới.
+
+### 7. Unverified / Blocked
+Những phần chưa test được và lý do cụ thể.
+
+### 8. Diff review
+Đánh giá thay đổi:
+
+- Code có tăng bất hợp lý không?
+- Có duplicate không?
+- Có dead code không?
+- Có thêm abstraction không cần thiết không?
+- Có coupling mới không?
+- Có thể đơn giản hơn không?
+- Có thay đổi ngoài phạm vi không?
+
+### 9. Production safety
+Xác nhận rõ:
+
+- Không commit.
+- Không push.
+- Không tạo PR.
+- Không merge.
+- Không deploy.
+- Không ghi dữ liệu production.
+- Không gửi giao dịch/email thật.
+- Không thay đổi dịch vụ khách hàng thật.
+
+### 10. Trạng thái bàn giao
+
+Chỉ chọn một:
+
+- **READY FOR REVIEW** — các test có thể thực hiện đã đạt, còn giới hạn nào được nêu rõ.
+- **BLOCKED** — chưa thể hoàn thành do blocker cụ thể.
+- **FAILED** — còn lỗi chưa giải quyết được.
+
+Không dùng READY FOR REVIEW nếu workflow mục tiêu còn FAIL hoặc test khả thi nhưng chưa chạy.
+
+---
+
+## NGUYÊN TẮC CUỐI
+
+Tao không cần mày chỉ viết code nhanh.
+
+Tao cần code đúng, workflow thực sự hoạt động, lỗi được tự phát hiện và sửa, regression được kiểm tra, diff hợp lý và an toàn trước khi tao nhận để review.
+
+**Hãy chủ động làm việc, tự test, tự fix và tự retest. Chỉ bàn giao khi có kết quả kiểm chứng. Không deploy. Không đẩy code lên GitHub. Không tác động Production.**
