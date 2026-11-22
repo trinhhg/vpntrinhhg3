@@ -1283,22 +1283,25 @@ function pubGotoArt(tab, name) {
 
 async function loadConfig() {
   try {
-    const [r, pkgRes] = await Promise.all([fetch(WORKER_URL + '/api/public/config?_t=' + Date.now(), { cache: 'no-store' }), fetch(WORKER_URL + '/api/packages?_t=' + Date.now(), { cache: 'no-store' }).catch(() => null)]);
+    const r = await fetch(WORKER_URL + '/api/public/config?_t=' + Date.now(), { cache: 'no-store' });
     if (r.ok) {
       cfgCache = await r.json();
       if (typeof cfgCache.isTest === 'boolean') {
         setServerTestMode(cfgCache.isTest);
       }
-      if (pkgRes && pkgRes.ok) {
-        try {
-          const extra = await pkgRes.json();
-          if (extra.flashSale) cfgCache.flashSale = extra.flashSale;
-          if (Array.isArray(extra.coupons)) cfgCache.coupons = extra.coupons;
-          if (extra.couponEnabled !== undefined) cfgCache.couponEnabled = extra.couponEnabled;
-          if (Array.isArray(extra.packages) && extra.packages.length && (!cfgCache.packages || !cfgCache.packages.length)) {
-            cfgCache.packages = extra.packages;
-          }
-        } catch (e) {}
+      if (!Array.isArray(cfgCache.packages) || !cfgCache.packages.length) {
+        const pkgRes = await fetch(WORKER_URL + '/api/packages?_t=' + Date.now(), { cache: 'no-store' }).catch(() => null);
+        if (pkgRes && pkgRes.ok) {
+          try {
+            const extra = await pkgRes.json();
+            if (extra.flashSale && !cfgCache.flashSale) cfgCache.flashSale = extra.flashSale;
+            if (Array.isArray(extra.coupons) && !Array.isArray(cfgCache.coupons)) cfgCache.coupons = extra.coupons;
+            if (extra.couponEnabled !== undefined && cfgCache.couponEnabled === undefined) cfgCache.couponEnabled = extra.couponEnabled;
+            if (Array.isArray(extra.packages) && extra.packages.length) {
+              cfgCache.packages = extra.packages;
+            }
+          } catch (e) {}
+        }
       }
       if (cfgCache.headerDrawer) {
         if (cfgCache.headerDrawer.flashSale && !cfgCache.flashSale) cfgCache.flashSale = cfgCache.headerDrawer.flashSale;
@@ -4618,35 +4621,54 @@ window.dismissAnnouncement = dismissAnnouncement;
 // Lắng nghe sự kiện đồng bộ từ Admin & Polling cấu hình đa thiết bị (Cập nhật tức thì không cần F5)
 (function initAdminRealtimeSync() {
   let isSyncing = false;
+  let lastSyncAt = 0;
+  const safeStep = (name, fn) => {
+    try {
+      return fn();
+    } catch (e) {
+      console.warn('[Customer sync]', name, e && e.message || e);
+    }
+  };
   const syncHandler = async () => {
     if (isSyncing) return;
     isSyncing = true;
     try {
       await loadConfig();
-      if (typeof renderPackages === 'function') renderPackages('all');
-      if (typeof renderDock === 'function') renderDock();
-      if (typeof renderGiftSticker === 'function') renderGiftSticker();
-      if (typeof renderHeaderDrawer === 'function') renderHeaderDrawer();
-      if (typeof renderAnnouncementBanner === 'function') renderAnnouncementBanner();
-      const cWrap = $('couponBlockWrap');
-      if (cWrap) {
-        const ce = (cfgCache && (cfgCache.couponEnabled !== undefined ? cfgCache.couponEnabled : (cfgCache.cms && cfgCache.cms.settings && cfgCache.cms.settings.couponEnabled))) !== false;
-        cWrap.classList.toggle('hidden', !ce);
-      }
+      if (typeof renderPackages === 'function') safeStep('renderPackages', () => renderPackages('all'));
+      if (typeof renderDock === 'function') safeStep('renderDock', () => renderDock());
+      if (typeof renderGiftSticker === 'function') safeStep('renderGiftSticker', () => renderGiftSticker());
+      if (typeof renderHeaderDrawer === 'function') safeStep('renderHeaderDrawer', () => renderHeaderDrawer());
+      if (typeof renderAnnouncementBanner === 'function') safeStep('renderAnnouncementBanner', () => renderAnnouncementBanner());
+      safeStep('couponBlockWrap', () => {
+        const cWrap = $('couponBlockWrap');
+        if (cWrap) {
+          const ce = (cfgCache && (cfgCache.couponEnabled !== undefined ? cfgCache.couponEnabled : (cfgCache.cms && cfgCache.cms.settings && cfgCache.cms.settings.couponEnabled))) !== false;
+          cWrap.classList.toggle('hidden', !ce);
+        }
+      });
       // Bảo toàn mã coupon và thông tin checkout khi đồng bộ giá
       if ($('view-checkout')?.classList.contains('active') && typeof renderPaymentBox === 'function') {
-        renderPaymentBox();
+        safeStep('renderPaymentBox', () => renderPaymentBox());
       }
       if (oCache) {
-        if (typeof fillDashboard === 'function') fillDashboard(oCache);
-        if (typeof refreshOrder === 'function') await refreshOrder();
+        if (typeof fillDashboard === 'function') safeStep('fillDashboard', () => fillDashboard(oCache));
+        if (typeof refreshOrder === 'function') {
+          try {
+            await refreshOrder();
+          } catch (e) {
+            console.warn('[Customer sync] refreshOrder', e && e.message || e);
+          }
+        }
       }
-    } catch (e) {} finally {
+      lastSyncAt = Date.now();
+    } catch (e) {
+      console.warn('[Customer sync]', e && e.message || e);
+    } finally {
       isSyncing = false;
     }
   };
 
-  // 1. Đồng bộ giữa các tab cùng trình duyệt
+  // 1. Đồng bộ giữa các tab cùng trình duyệt (bỏ qua cooldown để cập nhật tức thì)
   try {
     const ch = new BroadcastChannel('vpn_trinhhg_sync');
     ch.onmessage = () => syncHandler();
@@ -4657,20 +4679,23 @@ window.dismissAnnouncement = dismissAnnouncement;
     }
   });
 
-  // 2. Polling định kỳ mỗi 20 giây khi tab đang hiển thị (xử lý thiết bị di động/máy tính khác)
+  // 2. Polling định kỳ mỗi 60 giây khi tab đang hiển thị (xử lý thiết bị di động/máy tính khác)
   setInterval(() => {
     if (!document.hidden) {
       syncHandler();
     }
-  }, 20000);
+  }, 60000);
 
-  // 3. Làm mới ngay khi người dùng quay lại tab hoặc mở khóa màn hình
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
+  // 3. Làm mới khi quay lại tab hoặc focus (có cooldown 5s tránh bắn request liên tục)
+  const syncWithCooldown = () => {
+    if (Date.now() - lastSyncAt >= 5000) {
       syncHandler();
     }
+  };
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      syncWithCooldown();
+    }
   });
-  window.addEventListener('focus', () => {
-    syncHandler();
-  });
+  window.addEventListener('focus', syncWithCooldown);
 })();
