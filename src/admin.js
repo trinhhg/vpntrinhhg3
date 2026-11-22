@@ -37,15 +37,16 @@ class CtaButtonBlot extends BlockEmbed {
     const node = super.create();
     node.setAttribute('contenteditable', 'false');
     const v = typeof val === 'object' ? val : (typeof val === 'string' && val.startsWith('{') ? JSON.parse(val) : { text: val });
-    const url = v.url || '#';
-    const text = v.text || 'Tải App';
-    const icon = v.icon || 'fas fa-download';
-    const styleClass = v.styleClass || 'cta-indigo';
-    const align = v.align || 'left';
+    const rawUrl = String(v.url || '#').trim();
+    const url = /^https?:\/\//i.test(rawUrl) ? rawUrl : '#';
+    const text = String(v.text || 'Tải App');
+    const icon = String(v.icon || 'fas fa-download');
+    const styleClass = String(v.styleClass || 'cta-indigo');
+    const align = ['left', 'center', 'right'].includes(v.align) ? v.align : 'left';
     node.setAttribute('data-cta-json', JSON.stringify({ url, text, icon, styleClass, align }));
     node.style.textAlign = align;
     node.className = 'ql-cta-wrap ql-cta-' + align;
-    node.innerHTML = `<a href="${url}" target="_blank" rel="noopener noreferrer" data-cta="1" class="guide-cta-btn ${styleClass}"><i class="${icon} mr-1.5"></i><span>${text}</span></a>`;
+    node.innerHTML = `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer" data-cta="1" class="guide-cta-btn ${esc(styleClass)}"><i class="${esc(icon)} mr-1.5"></i><span>${esc(text)}</span></a>`;
     return node;
   }
 
@@ -498,10 +499,6 @@ const expLocked = () => !!(cmsDb.settings && cmsDb.settings.lockExpiry);
 const lockFulfillOn = () => !!(cmsDb.settings && cmsDb.settings.lockFulfill);
 const mailOnSaveOn = () => localStorage.getItem(SITE_KEY + "_mailOnSave") !== "0";
 const manualEditOn = () => localStorage.getItem(SITE_KEY + "_manualEdit") === "1";
-function setManualEdit(v) {
-  localStorage.setItem(SITE_KEY + "_manualEdit", v ? "1" : "0");
-  toast(v ? "Đã BẬT Sửa tay — cho phép sửa 3 ô định tuyến, lưu xong không bị ghi đè" : "Đã TẮT Sửa tay — 3 ô link định tuyến ở chế độ chỉ đọc");
-}
 
 // Link đã xóa KHÔNG được quay lại: mọi link có id nằm trong "Đã xóa" (server) hoặc trong tombstone cục bộ đều bị loại khỏi danh sách active
 // trước khi hiển thị / trước khi ghi ngược lên ALL_LINKS (tự chữa nếu Worker/Cron/nguồn cũ ghi đè lại).
@@ -617,21 +614,64 @@ function applyPoll(j, expectedEpoch = null, expectedIsTest = null) {
   }
   return true;
 }
+function safeRun(label, fn) {
+  try {
+    return fn();
+  } catch (e) {
+    console.warn("[Admin UI]", label, e);
+  }
+}
+
 async function fetchAll(msg, throwOnError = false, explicitIsTest = undefined) {
   const reqTest = explicitIsTest !== undefined ? !!explicitIsTest : isTestModeActive;
   const myEpoch = warehouseEpoch;
   try {
-    const [poll, cms, dead, devs, g] = await Promise.all([aj("/api/admin/poll", { isTest: reqTest }), aj("/api/cms", { isTest: reqTest }), aj("/api/deadlinks", { isTest: reqTest }), aj("/api/devices", { isTest: reqTest }), aj("/api/guides", { isTest: reqTest })]);
+    const [pollRes, cmsRes, deadRes, devsRes, gRes] = await Promise.allSettled([aj("/api/admin/poll", { isTest: reqTest }), aj("/api/cms", { isTest: reqTest }), aj("/api/deadlinks", { isTest: reqTest }), aj("/api/devices", { isTest: reqTest }), aj("/api/guides", { isTest: reqTest })]);
     if (myEpoch !== warehouseEpoch) return null;
+    if (pollRes.status !== "fulfilled") {
+      throw pollRes.reason || new Error("Không tải được dữ liệu chính (/api/admin/poll)");
+    }
+    const poll = pollRes.value;
     if (poll && poll.isTest !== undefined && Boolean(poll.isTest) !== reqTest) return null;
-    deadDb = arr(dead);
+
+    const failedParts = [];
+    if (deadRes.status === "fulfilled") {
+      deadDb = arr(deadRes.value);
+    } else {
+      failedParts.push("deadlinks");
+      console.warn("[fetchAll] deadlinks failed:", deadRes.reason);
+    }
+
     if (!applyPoll(poll, myEpoch, reqTest)) return null;
-    cmsDb = cms && typeof cms === "object" && !Array.isArray(cms) ? cms : {};
-    cmsDb.settings = cmsDb.settings || {};
-    cmsDb.link_origins = cmsDb.link_origins || {};
-    devicesDb = arr(devs);
-    guides = g && typeof g === "object" ? g : {};
-    const healed = arr(poll && poll.links).length - linksDb.length;
+
+    if (cmsRes.status === "fulfilled") {
+      const cms = cmsRes.value;
+      cmsDb = cms && typeof cms === "object" && !Array.isArray(cms) ? cms : {};
+      cmsDb.settings = cmsDb.settings || {};
+      cmsDb.link_origins = cmsDb.link_origins || {};
+    } else {
+      failedParts.push("cms");
+      cmsDb = cmsDb && typeof cmsDb === "object" ? cmsDb : {};
+      cmsDb.settings = cmsDb.settings || {};
+      cmsDb.link_origins = cmsDb.link_origins || {};
+      console.warn("[fetchAll] cms failed:", cmsRes.reason);
+    }
+
+    if (devsRes.status === "fulfilled") {
+      devicesDb = arr(devsRes.value);
+    } else {
+      failedParts.push("devices");
+      console.warn("[fetchAll] devices failed:", devsRes.reason);
+    }
+
+    if (gRes.status === "fulfilled") {
+      const g = gRes.value;
+      guides = g && typeof g === "object" ? g : {};
+    } else {
+      failedParts.push("guides");
+      console.warn("[fetchAll] guides failed:", gRes.reason);
+    }
+
     // AGENTS.md Quy tắc 40 & 44: fetchAll chỉ đọc dữ liệu hiển thị, không tự ý ghi KV khi vừa tải trang
     linksDb.forEach(l => {
       if (l.orig && l.orig !== "Da_bi_khoa" && !linkPoolDb.find(p => p.url === l.orig) && !isLockedPoolUrl(l.orig)) {
@@ -651,19 +691,20 @@ async function fetchAll(msg, throwOnError = false, explicitIsTest = undefined) {
       p: JSON.stringify(linkPoolDb),
       d: JSON.stringify(dataReqDb)
     };
-    renderOrd();
-    renderCheckTab();
-    renderDataRequests();
-    renderLinks();
-    renderDead();
-    renderDev();
-    loadSettingsUI();
-    renderCouponAdmin();
-    renderFlashSaleAdmin();
-    renderGiftRulesAdmin();
-    if (!curArtsReady) initGuides();
-    loadStatus();
-    if (msg) toast("Đã làm mới dữ liệu!");
+    safeRun("renderOrd", renderOrd);
+    safeRun("renderCheckTab", renderCheckTab);
+    safeRun("renderDataRequests", renderDataRequests);
+    safeRun("renderLinks", renderLinks);
+    safeRun("renderDead", renderDead);
+    safeRun("renderDev", renderDev);
+    safeRun("loadSettingsUI", loadSettingsUI);
+    safeRun("renderCouponAdmin", renderCouponAdmin);
+    safeRun("renderFlashSaleAdmin", renderFlashSaleAdmin);
+    safeRun("renderGiftRulesAdmin", renderGiftRulesAdmin);
+    if (!curArtsReady && gRes.status === "fulfilled") safeRun("initGuides", initGuides);
+    safeRun("loadStatus", loadStatus);
+    if (failedParts.length) toast("Một số mục tải lỗi: " + failedParts.join(", "), "warn");
+    else if (msg) toast("Đã làm mới dữ liệu!");
     return poll;
   } catch (e) {
     if (e.message !== "401") toast("Lỗi tải dữ liệu: " + e.message, "err");
@@ -672,8 +713,10 @@ async function fetchAll(msg, throwOnError = false, explicitIsTest = undefined) {
   }
 }
 const isLockedPoolUrl = u => u === "Da_bi_khoa";
+let isPolling = false;
 async function pollMain() {
-  if (document.hidden || !TOKEN || switchingWarehouse || !$("mOrd").classList.contains("hidden")) return;
+  if (isPolling || document.hidden || !TOKEN || switchingWarehouse || !$("mOrd").classList.contains("hidden")) return;
+  isPolling = true;
   const myEpoch = warehouseEpoch;
   const reqTest = isTestModeActive;
   try {
@@ -689,17 +732,21 @@ async function pollMain() {
     const oldPending = dataReqDb.filter(r => r.status === "pending").length;
     if (!applyPoll(j, myEpoch, reqTest)) return;
     if (s.o !== lastSig.o) {
-      renderOrd();
-      renderCheckTab();
-      if ($("t-rev") && !$("t-rev").classList.contains("hidden")) renderRevenue();
+      safeRun("poll:renderOrd", renderOrd);
+      safeRun("poll:renderCheckTab", renderCheckTab);
+      if ($("t-rev") && !$("t-rev").classList.contains("hidden")) safeRun("poll:renderRevenue", renderRevenue);
     }
-    if (s.l !== lastSig.l || s.p !== lastSig.p) renderLinks();
+    if (s.l !== lastSig.l || s.p !== lastSig.p) safeRun("poll:renderLinks", renderLinks);
     if (s.d !== lastSig.d) {
-      renderDataRequests();
+      safeRun("poll:renderDataRequests", renderDataRequests);
       if (dataReqDb.filter(r => r.status === "pending").length > oldPending) toast("Có yêu cầu dung lượng mới!", "warn");
     }
     lastSig = s;
-  } catch (e) {}
+  } catch (e) {
+    if (e && e.message !== "401") console.warn("[pollMain]", e.message || e);
+  } finally {
+    isPolling = false;
+  }
 }
 
 // ===================== TAB NAVIGATION =====================
@@ -1374,8 +1421,9 @@ async function saveOrd() {
     }
   } catch (e) {
     if (e.message !== "401") toast("Lỗi lưu đơn: " + e.message, "err");
+  } finally {
+    btn.disabled = false;
   }
-  btn.disabled = false;
 }
 function onOrdEmailBlur() {
   autoFillNickname();
@@ -3310,7 +3358,7 @@ async function loadTx(force) {
     loadTx();
   }, Math.min(30000, (active ? 5000 : 20000) * (1 + txFails)));
 }
-const kindBadge = k => k === "upgrade" ? `<span class="bg-purple-100 text-purple-700 border border-purple-200 px-2 py-0.5 rounded text-[9px] font-black uppercase ml-1">NÂNG CẤP</span>` : k === "renew" ? `<span class="bg-sky-100 text-sky-700 border border-sky-200 px-2 py-0.5 rounded text-[9px] font-black uppercase ml-1">GIA HẠN</span>` : `<span class="bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded text-[9px] font-black uppercase ml-1">MỚI</span>`;
+
 // Xóa thật trong D1 qua Worker (/api/admin/tx/:id/delete) — confirm, xóa server, rồi tải lại từ D1 (không chỉ xóa trên UI). Dùng chung cho bảng Đối soát và Giao dịch thô.
 async function deleteTx(id) {
   if (!confirm(`Xóa hẳn giao dịch #${id} khỏi D1? Hành động này không thể hoàn tác.`)) return;
@@ -3801,9 +3849,6 @@ const saveLinks = () => {
     lastSig.l = JSON.stringify(linksDb);
   });
 };
-const savePool = () => aj("/api/link_pool", { method: "POST", body: linkPoolDb }).then(() => {
-  lastSig.p = JSON.stringify(linkPoolDb);
-});
 
 // Hàm chuyển đổi ẩn/hiện bảng thông số chi tiết (Icon con mắt) của từng cụm
 function toggleClusterSpecs(idx) {
@@ -3960,13 +4005,13 @@ function renderLinks() {
 
       <!-- URL LINK GỐC: KHUNG ĐẬM NỔI BẬT PHÂN BIỆT RÕ VỚI CARD LINK CON -->
       <div class="bg-slate-900 border border-slate-800 p-2.5 rounded-xl space-y-1.5 shadow-inner">
-        <div class="font-mono text-[11px] font-semibold text-emerald-300 break-all cp flex items-start gap-2" onclick="cp('${g.orig}')">
+        <div class="font-mono text-[11px] font-semibold text-emerald-300 break-all cp flex items-start gap-2" onclick="cp(${q(g.orig)})">
           <span class="bg-emerald-950 text-emerald-400 border border-emerald-800 text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 uppercase">Nguồn 1</span>
           <span class="hover:underline flex-1">${esc(g.orig)}</span>
           <i class="far fa-copy text-slate-400 text-xs shrink-0 mt-0.5"></i>
         </div>
         ${g.orig2 ? `
-        <div class="font-mono text-[11px] font-semibold text-sky-300 break-all cp flex items-start gap-2 pt-1.5 border-t border-slate-800" onclick="cp('${g.orig2}')">
+        <div class="font-mono text-[11px] font-semibold text-sky-300 break-all cp flex items-start gap-2 pt-1.5 border-t border-slate-800" onclick="cp(${q(g.orig2)})">
           <span class="bg-sky-950 text-sky-400 border border-sky-800 text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 uppercase">Nguồn 2</span>
           <span class="hover:underline flex-1">${esc(g.orig2)}</span>
           <i class="far fa-copy text-slate-400 text-xs shrink-0 mt-0.5"></i>
@@ -4481,7 +4526,9 @@ async function toggleLock(tok, locked) {
   try {
     await saveLinks();
     toast(locked ? "Đã mở khóa" : "Đã khóa");
-  } catch (e) {}
+  } catch (e) {
+    if (e && e.message !== "401") toast("Lỗi lưu khóa link: " + e.message, "err");
+  }
 }
 
 async function delLink(id) {
@@ -4572,8 +4619,11 @@ async function sortAllLinks() {
   try {
     await saveLinks();
     toast("Đã sắp xếp lại Index từ gần nhất (#1) đến xa nhất");
-  } catch (e) {}
-  b.disabled = false;
+  } catch (e) {
+    if (e && e.message !== "401") toast("Lỗi lưu thứ tự link: " + e.message, "err");
+  } finally {
+    b.disabled = false;
+  }
 }
 
 async function triggerGitHub() {
@@ -5489,7 +5539,7 @@ function renderDeadSources() {
 
     // Nút Xóa hẳn: ẨN HOÀN TOÀN với node Da_bi_khoa
     const deleteBtn = isLockedNode ? '' : `
-     <button onclick="hardDeleteSource('${p.id}', '${p.url}', '${p.url2 || ''}')" title="Xóa vĩnh viễn khỏi toàn bộ KV" class="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 font-bold px-3 py-1 rounded-xl text-xs shadow-sm transition active:scale-95 flex items-center gap-1">
+     <button onclick="hardDeleteSource(${q(p.id)}, ${q(p.url)}, ${q(p.url2 || '')})" title="Xóa vĩnh viễn khỏi toàn bộ KV" class="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 font-bold px-3 py-1 rounded-xl text-xs shadow-sm transition active:scale-95 flex items-center gap-1">
        <i class="fas fa-trash-can text-xs"></i>Xóa hẳn khỏi KV
      </button>
    `;
@@ -5531,9 +5581,9 @@ function renderDeadSources() {
      </div>
 
      <!-- URL Nguồn -->
-     <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl font-mono text-[11px] text-emerald-300 break-all cp space-y-1" onclick="cp('${p.url}')">
+     <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl font-mono text-[11px] text-emerald-300 break-all cp space-y-1" onclick="cp(${q(p.url)})">
        <div class="flex items-start gap-1.5"><span class="bg-emerald-950 text-emerald-400 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0">Nguồn 1</span><span class="flex-1">${esc(p.url)}</span></div>
-       ${p.url2 ? `<div class="flex items-start gap-1.5 pt-1 border-t border-slate-800 text-sky-300" onclick="event.stopPropagation();cp('${p.url2}')"><span class="bg-sky-950 text-sky-400 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0">Nguồn 2</span><span class="flex-1">${esc(p.url2)}</span></div>` : ''}
+       ${p.url2 ? `<div class="flex items-start gap-1.5 pt-1 border-t border-slate-800 text-sky-300" onclick="event.stopPropagation();cp(${q(p.url2)})"><span class="bg-sky-950 text-sky-400 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0">Nguồn 2</span><span class="flex-1">${esc(p.url2)}</span></div>` : ''}
      </div>
 
      <!-- Thông số GB / HSD -->
@@ -5610,7 +5660,9 @@ async function clearDeadLinks() {
   try {
     await api("/api/deadlinks", { method: "DELETE" });
     toast("Đã xóa lịch sử");
-  } catch (e) {}
+  } catch (e) {
+    if (e && e.message !== "401") toast("Lỗi xóa lịch sử: " + e.message, "err");
+  }
 }
 
 // ===================== HƯỚNG DẪN: tab (kéo thả) → bài viết → khối =====================
@@ -6042,10 +6094,7 @@ function cmsGoto(tab, artId, detail) {
   const list = artsOf(tab), a = list.find(x => x.id === artId) || list[0];
   if (!a) return;
   openArt(a.id);
-  if (detail) {
-    const i = findTarget(curBlocks, detail);
-    if (i >= 0) setTimeout(() => guideScroll(`g-${curCms}-${curArt}-${i}`), 80);
-  }
+  if (detail) setTimeout(() => scrollToHeadingText(detail), 80);
 }
 function cmsGotoArt(tab, name) {
   let t = tab, a = artsOf(t).find(x => x.name === name);
@@ -6783,7 +6832,9 @@ function renderGuideCategoriesTree() {
         try {
           await aj("/api/guides", { method: "POST", body: guides });
           toast("Đã lưu thứ tự danh mục thành công!");
-        } catch (e) {}
+        } catch (e) {
+          if (e && e.message !== "401") toast("Lỗi lưu thứ tự danh mục: " + e.message, "err");
+        }
       }
     });
   }
@@ -8165,6 +8216,9 @@ async function startApp(fresh) {
   const savedOrdTab = localStorage.getItem(SITE_KEY + "_curOrdTab");
   if (savedOrdTab) curOrdTab = savedOrdTab;
   go(localStorage.getItem(SITE_KEY + "_lastTab") || "t-ord");
+  if (!ordersDb.length && $("ordBody")) {
+    $("ordBody").innerHTML = '<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold"><i class="fas fa-spinner fa-spin mr-2 text-indigo-500"></i>Đang tải dữ liệu...</div>';
+  }
   if (fresh) toast("Đăng nhập thành công!");
   await checkTestModeStatus();
   fetchAll(false, false, isTestModeActive);
@@ -8340,6 +8394,9 @@ async function toggleTestMode(checked) {
       throw new Error("Trạng thái trên server chưa đồng bộ (mong muốn: " + nextTest + ", thực tế: " + confirmedActive + ")");
     }
     resetWarehouseScopedState(nextTest);
+    if ($("ordBody")) {
+      $("ordBody").innerHTML = '<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold"><i class="fas fa-spinner fa-spin mr-2 text-indigo-500"></i>Đang nạp dữ liệu kho...</div>';
+    }
 
     const poll = await fetchAll(false, true, nextTest);
     if (!poll) {
@@ -8509,13 +8566,18 @@ async function testTelegramOrderAlert() {
 }
 window.testTelegramOrderAlert = testTelegramOrderAlert;
 
-window.onload = () => {
+function bootAdmin() {
   if (TOKEN) startApp(false);
   else {
     buildTabs();
     $("loginWrap").classList.remove("hidden");
   }
-};
+}
+if (document.readyState !== "loading") {
+  bootAdmin();
+} else {
+  document.addEventListener("DOMContentLoaded", bootAdmin);
+}
 
 async function syncPublicPackagesPayload() {
   const pkgs = adminPkgsList && adminPkgsList.length ? adminPkgsList : (cmsDb && cmsDb.packages) || [];
