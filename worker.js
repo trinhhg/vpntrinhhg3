@@ -1,7 +1,7 @@
+// v8 — 2026-11-23 18:55 (UTC+7) — Đồng bộ Flash Sale & Coupon sang totalCny/amountCny (Alipay/Weixin min ¥0.5), đồng bộ fs.scope & parseVnBoundary trong /api/public/upgrade, trả pkgRates trong /api/public/config, hỗ trợ partial merge (_partial) & dọn cache trùng trong POST /api/cms
 // v7 — 2026-11-21 20:42 (UTC+7) — Vá relinkMap bỏ qua đơn đã có link hợp lệ ở ô info web hiện tại, hỗ trợ backupBeforeAction có điều kiện + khóa KV GLOBAL_FULFILL_LOCK trong /api/admin/relink, chuẩn hóa runTelegramBackup & trả isTest trong /api/admin/heal
 // v6 — 2026-11-21 19:05 (UTC+7) — Sửa lỗi PATCH xóa cột Supabase (cleanPartialOrderPatch + patchOrder), chặn thiếu subLinkDecision ở đơn 2 phương án, tách Web mẹ tự động / 2 Web vệ tinh bù link thủ công độc lập, khóa KV + single-field PATCH ở /api/admin/heal, vá auth /api/admin/test/* & fulfillment_config, bảo vệ link khách #1 khi dọn nguồn, sửa migrate_pkg/migrate_dates & SendPulse quota
 const getKV = (env) => env && (env.VPN_KV3 || env.VPN_KV || env.KV);
-
 // ====================================================================
 // SUPABASE CLIENT ĐẦY ĐỦ TÍNH NĂNG (RPC QUOTA & DATABASE)
 // ====================================================================
@@ -249,7 +249,10 @@ function getSupabase(env, isTest = false) {
           };
         }
 
-        const countRes = await fetch(`${url}/${table}?select=count`, { headers: { ...headers, Prefer: "count=exact" }, signal: AbortSignal.timeout(8000) });
+        const countRes = await fetch(`${url}/${table}?select=count`, {
+          headers: { ...headers, Prefer: "count=exact" },
+          signal: AbortSignal.timeout(8000)
+        });
 
         let count = null;
 
@@ -2767,7 +2770,8 @@ export default {
           couponEnabled,
           coupons,
           flashSale,
-          giftRules
+          giftRules,
+          pkgRates: s.pkgRates || s.rates || null
         });
       }
 
@@ -3303,11 +3307,13 @@ export default {
         const baseDays = pk.m === 0 ? 0 : (pk.m === 12 ? 365 : 30 * pk.m) * qty;
         const totalDays = baseDays > 0 ? (baseDays + totalBonusDays) : (pk.m === 0 ? "" : totalBonusDays);
 
-        // TÍNH TOÁN GIÁ TIỀN AUTHORITATIVE PHÍA SERVER (ĐỒNG BỘ 100% VỚI FRONTEND: MIN 2.000đ, LÀM TRÒN 1đ)
+        // TÍNH TOÁN GIÁ TIỀN AUTHORITATIVE PHÍA SERVER (ĐỒNG BỘ 100% VỚI FRONTEND: VND MIN 2.000đ, CNY MIN ¥0.5)
         let baseVnd = pk.vnd * qty;
         let finalVnd = baseVnd;
+        let finalCny = Math.round(Number(pk.cny || 0) * qty * 100) / 100;
         let appliedCouponCode = "";
         let discountVnd = 0;
+        let discountCny = 0;
 
         // 1. Áp dụng Flash Sale nếu có hiệu lực và khớp phạm vi gói (scope) - chuẩn múi giờ UTC+7
         const fs = (st.cms && st.cms.sales && st.cms.sales.campaign) || (st.cms && st.cms.settings && st.cms.settings.flashSale);
@@ -3323,6 +3329,9 @@ export default {
               const discountPct = Math.min(90, Math.max(1, Number(fs.discountPercent)));
               const unitDiscountedVnd = Math.max(2000, Math.round(Number(pk.vnd || 0) * (100 - discountPct) / 100));
               finalVnd = unitDiscountedVnd * qty;
+              const rawCny = Number(pk.cny || 0);
+              const unitDiscountedCny = rawCny > 0 ? Math.max(0.5, Math.round(rawCny * (100 - discountPct) / 10) / 10) : 0;
+              finalCny = Math.round(unitDiscountedCny * qty * 100) / 100;
             }
           }
         }
@@ -3353,6 +3362,26 @@ export default {
                 discountVnd = Math.max(0, finalVnd - 2000);
               }
               finalVnd = Math.max(2000, finalVnd - discountVnd);
+
+              // Quy đổi & áp dụng coupon cho cổng thanh toán CNY (Alipay / Weixin) đồng bộ với frontend
+              if (finalCny > 0) {
+                const vndCnyRate = Math.max(100, Number(st.cms?.settings?.pkgRates?.vndCny || st.cms?.settings?.rates?.vndCny || st.cms?.settings?.cnyRate) || 4000);
+                if (foundC.type === "percent") {
+                  discountCny = Math.round((finalCny * (Number(foundC.value) || 0) / 100) * 100) / 100;
+                  if (Number(foundC.maxDiscount) > 0) {
+                    const maxDiscCny = Math.round((Number(foundC.maxDiscount) / vndCnyRate) * 100) / 100;
+                    if (discountCny > maxDiscCny) discountCny = maxDiscCny;
+                  }
+                } else {
+                  const cappedFixedVnd = Number(foundC.maxDiscount) > 0 ? Math.min(Number(foundC.value) || 0, Number(foundC.maxDiscount)) : (Number(foundC.value) || 0);
+                  discountCny = Math.round((cappedFixedVnd / vndCnyRate) * 100) / 100;
+                }
+                if (discountCny > finalCny - 0.5) {
+                  discountCny = Math.max(0, Math.round((finalCny - 0.5) * 100) / 100);
+                }
+                finalCny = Math.max(0.5, Math.round((finalCny - discountCny) * 100) / 100);
+              }
+
               // Ghi nhận số lượt dùng coupon
               foundC.usedCount = curUsage + 1;
               ctx.waitUntil(KV.put("ALL_CMS", JSON.stringify(st.cms)));
@@ -3372,7 +3401,7 @@ export default {
           pkg: pkgStr(pk),
           // Schema tiền chuẩn hóa (không rỗng): Bank VN lưu totalVnd, Cổng CNY lưu totalCny
           totalVnd: bank ? finalVnd : 0,
-          totalCny: bank ? 0 : Math.round(pk.cny * qty * 100) / 100,
+          totalCny: bank ? 0 : finalCny,
           days: totalDays,
           bonusDays: totalBonusDays,
           needSupport: !!b.needSupport,
@@ -3449,23 +3478,29 @@ export default {
         const baseCurVnd = cur ? Number(cur.vnd || 0) : (Number(o.totalVnd) > 0 ? Math.round(Number(o.totalVnd) / Math.max(1, Number(o.qty) || 1)) : 0);
         const baseCurCny = cur ? Number(cur.cny || 0) : (Number(o.totalCny) > 0 ? Number(o.totalCny) / Math.max(1, Number(o.qty) || 1) : 0);
 
-        // Tính giá gói đích chuẩn hóa (Áp dụng giảm giá Flash Sale nếu gói đích thỏa điều kiện fs.scope)
-        let targetVnd = tg.vnd;
+        // Tính giá gói đích chuẩn hóa (Áp dụng giảm giá Flash Sale theo UTC+7 cho cả VND và CNY)
+        let targetVnd = Number(tg.vnd || 0);
+        let targetCny = Number(tg.cny || 0);
         const fs = (st.cms && st.cms.sales && st.cms.sales.campaign) || (st.cms && st.cms.settings && st.cms.settings.flashSale);
         if (fs && fs.enabled && Number(fs.discountPercent) > 0) {
-          const fsStart = fs.startDate ? new Date(fs.startDate).getTime() : 0;
-          const fsEnd = fs.endDate ? new Date(fs.endDate).getTime() : Infinity;
+          const fsStart = parseVnBoundary(fs.startDate, false);
+          const fsEnd = parseVnBoundary(fs.endDate, true);
           const nowMs = NOW();
           if (nowMs >= fsStart && nowMs <= fsEnd) {
             let matchScope = false;
             const sc = fs.scope || "all";
             const pkgTime = tg.time !== undefined ? tg.time : (tg.m === 0 ? "lifetime" : (tg.m || 1));
+            const isCyclePkg = tg.m !== 0 && pkgTime !== "lifetime" && (!tg.category || !tg.category.includes("usage"));
+            const isDataPkg = tg.m === 0 || pkgTime === "lifetime" || (tg.category && tg.category.includes("usage"));
             if (sc === "all") matchScope = true;
+            else if ((sc === "monthly" || sc === "cycle") && isCyclePkg) matchScope = true;
+            else if ((sc === "data" || sc === "usage") && isDataPkg) matchScope = true;
             else if (sc === "pkg" && Array.isArray(fs.pkgIds) && fs.pkgIds.includes(b.pkgId)) matchScope = true;
             else if (sc === "time" && Array.isArray(fs.times) && fs.times.map(String).includes(String(pkgTime))) matchScope = true;
             if (matchScope) {
               const pct = Math.min(90, Math.max(1, Number(fs.discountPercent)));
-              targetVnd = Math.max(2000, Math.round(Number(tg.vnd || 0) * (100 - pct) / 100));
+              targetVnd = Math.max(2000, Math.round(targetVnd * (100 - pct) / 100));
+              if (targetCny > 0) targetCny = Math.max(0.5, Math.round(targetCny * (100 - pct) / 10) / 10);
             }
           }
         }
@@ -3478,7 +3513,7 @@ export default {
           targetPkgData: tg.d,
           targetPkgId: b.pkgId,
           amount: diff * qty,
-          amountCny: Math.round(Math.max(0, tg.cny - baseCurCny) * qty * 100) / 100,
+          amountCny: Math.round(Math.max(0, targetCny - baseCurCny) * qty * 100) / 100,
           qty,
           method: String(b.method || "Ngân hàng VN")
         };
@@ -3564,12 +3599,7 @@ export default {
         const active = (await KV.get("TEST_MODE_ACTIVE")) === "1";
         const fast = url.searchParams.get("fast") === "1";
         if (fast) {
-          return J({
-            ok: true,
-            active,
-            isTest: active,
-            fast: true
-          });
+          return J({ ok: true, active, isTest: active, fast: true });
         }
         const [ping_prod, ping_test] = await Promise.all([pingSupabase(env, false), pingSupabase(env, true)]);
         return J({
@@ -5109,12 +5139,35 @@ export default {
           if (m === "GET") return RAW((await KV.get(key)) || def);
           if (m === "POST") {
             const text = await request.text();
+            let parsed;
             try {
-              JSON.parse(text);
+              parsed = JSON.parse(text);
             } catch { return J({ error: "JSON không hợp lệ" }, 400);
             }
-            await KV.put(key, text);
-            if (p === "/api/cms") applySimFromSettingsText(text);
+            let finalText = text;
+            if (p === "/api/cms" && parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+              let outObj = { ...parsed };
+              if (parsed._partial === true) {
+                const cur = safeJson(await KV.get(key), {}) || {};
+                const { _partial, ...patch } = parsed;
+                outObj = { ...cur };
+                for (const [pk, pv] of Object.entries(patch)) {
+                  if ((pk === "settings" || pk === "sales" || pk === "footer") && pv && typeof pv === "object" && !Array.isArray(pv)) {
+                    outObj[pk] = {
+                      ...(cur[pk] && typeof cur[pk] === "object" ? cur[pk] : {}),
+                      ...pv
+                    };
+                  } else {
+                    outObj[pk] = pv;
+                  }
+                }
+              }
+              delete outObj.guides;
+              delete outObj.packages;
+              finalText = JSON.stringify(outObj);
+            }
+            await KV.put(key, finalText);
+            if (p === "/api/cms") applySimFromSettingsText(finalText);
             return OK();
           }
           if (m === "DELETE") {
