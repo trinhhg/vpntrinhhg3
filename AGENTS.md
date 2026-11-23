@@ -41,16 +41,20 @@ Before acting, understand the requested outcome, identify affected workflows, an
 - Update `PROJECT_MAP.md` after a material architectural/module-boundary change, not after every small edit.
 - Keep diffs reviewable. If a small task causes large code growth, investigate reuse, duplication, formatting churn, or scope creep; do not reduce code at the expense of readability, safety, or behavior.
 
-## 4. UI and design rules
+## 4. UI, design systems, and mobile touch interactions
 
 - Preserve the current UI, layout, icons, and visual identity when the task is not asking for a UI/design change.
-- For UI redesign, UI audit, styling, accessibility, responsive behavior, or visual-quality tasks, **this preservation rule does not block improvements**. Discover and use relevant design/UI skills; assess the current interface and make changes within the requested scope.
-- Check desktop and mobile/responsive layouts when the change affects UI.
-- Keep the project compatible with its current stack (currently vanilla HTML/CSS/JavaScript and Vite unless source/config says otherwise). Do not introduce a framework just because a skill's example uses one; adapt the applicable principles to the existing stack.
-- No dependency is forbidden categorically, but do not add one casually. Evaluate whether it is necessary, compatible, maintainable, license-safe, and worth its size/runtime cost. Prefer free/open-source options with permissive licenses (MIT, Apache-2.0, BSD). Obtain project-owner approval before introducing a new runtime dependency or external service.
+- For UI redesign, UI audit, styling, accessibility, responsive behavior, visual quality, or interaction tasks, **the preservation rule does not block improvements**. Discover and use applicable UI/design/interaction skills; assess the current interface and make scoped improvements.
+- **Skills are not limited by framework compatibility:** if a skill is React, Radix, Tailwind, or component-library-specific, do not import its components blindly into this Vanilla HTML/CSS/JS project. Still apply relevant design principles, UX heuristics, interaction patterns, audit criteria, and ideas, then implement with the existing stack where practical. Stack incompatibility is a reason to adapt implementation—not to ignore an otherwise useful skill.
+- For mobile-first Admin improvements, actively consider touch ergonomics and interaction patterns: thumb-reachable controls, larger touch targets, swipe actions only where discoverable, drag/reorder when it improves a workflow, drawers/bottom sheets, collapsible panels, sticky action bars, contextual menus, gesture affordances, and clear touch feedback. Choose patterns based on actual task needs; do not add gestures for decoration.
+- **Gesture safety:** do not hijack normal page scrolling, text selection, browser back/forward, or native touch behavior unnecessarily. Avoid accidental destructive swipe actions; require confirmation or provide undo for risky actions. Prefer Pointer Events or an appropriate native mechanism; handle touch, mouse, and stylus consistently where applicable. Respect `prefers-reduced-motion`, keyboard accessibility, focus management, Escape/close behavior, and screen-reader labels.
+- For drawers, sheets, overlays, and popovers implemented without a compatible library, ensure backdrop/close handling, body-scroll management, safe-area insets, stacking/focus, and cleanup of event listeners. Do not reproduce a React-only component dependency just to imitate its behavior.
+- Evaluate the current design system rather than assuming existing CSS tokens are untouchable. Improve or consolidate tokens only when requested or when the task warrants it; avoid needless global redesign.
+- Check desktop and mobile/responsive layouts when the change affects UI; specifically test touch flows on a mobile viewport/device when feasible, and report what was or was not tested.
+- Keep the project compatible with its current stack (currently Vanilla HTML/CSS/JavaScript and Vite unless source/config says otherwise). Do not introduce a framework just because a skill's example uses one; adapt applicable principles.
+- No dependency is forbidden categorically, but do not add one casually. Evaluate necessity, compatibility, maintainability, license, and size/runtime cost. Prefer free/open-source options with permissive licenses (MIT, Apache-2.0, BSD). Obtain project-owner approval before introducing a new runtime dependency or external service.
 - Avoid paid services, subscriptions, trials that can auto-charge, and services requiring a payment card unless the owner explicitly approves.
 - Pin dependency/CDN versions; never use floating `latest` versions.
-
 ## 5. Security, privacy, and secrets
 
 - Never add credentials, API tokens, passwords, private keys, webhook secrets, or other sensitive values to source code, public repository files, frontend bundles, logs, or screenshots.
