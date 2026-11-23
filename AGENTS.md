@@ -39,10 +39,42 @@ Before acting, understand the requested outcome, identify affected workflows, an
 - **Manual patch format (mandatory):** briefly describe finding/severity, exact file/location, issue, current vs expected behavior, and evidence. Then present each proposed fix separately and numbered, labeled MANUAL CHANGE — NOT APPLIED. Use the Find/Replace presentation below exactly, with full verified code and anchor context; do not add a different patch format. Explain briefly what the fix changes and which regression to retest.
 - Never use ellipses, placeholders, pseudo-code, “same as above,” partial snippets, or invented source to represent code that the owner must paste. Keep the original indentation and surrounding syntax. If exact original code cannot be verified, provide no paste-ready patch and label the instruction **NOT VERIFIED** with the reason.
 - Use these formats exactly:
-  - Template examples only (replace with exact source snippets in real patches):
-  - **INSERT (keep anchor):** Find block ABC; Replace block D, E, ABC (each on its own line).
-  - **DELETE (keep surrounding anchors):** Find block A, B, C, D, E; Replace block A, B, E (each on its own line).
-  - **EDIT:** Find the exact old code block; Replace it with the exact new code block.
+  - Template examples below are illustrative; use verified complete source snippets in real patches, never placeholder text.
+  - **INSERT (keep anchor):**
+    **Find:**
+    ```
+    ABC
+    ```
+    **Replace:**
+    ```
+    D
+    E
+    ABC
+    ```
+  - **DELETE (keep surrounding anchors):**
+    **Find:**
+    ```
+    A
+    B
+    C
+    D
+    E
+    ```
+    **Replace:**
+    ```
+    A
+    B
+    E
+    ```
+  - **EDIT:**
+    **Find:**
+    ```
+    [exact old code]
+    ```
+    **Replace:**
+    ```
+    [exact new code]
+    ```
 - If a target block is long, provide separate small patches only when each search block is exact and unique; never abbreviate source with ellipses. If the patch cannot be safely expressed this way, say so and ask before proposing a risky manual edit.
 - Do not provide vague instructions such as “change the color”, “add aria”, or “fix the button” without the exact source and replacement. If the code cannot be located/verified, report the file/section and mark the patch `NOT VERIFIED`; do not invent old code.
 - **After owner-applied manual edits:** When the owner requests a re-audit, compare the actual source to the proposed patches, confirm which were applied, then test those changes. Do not assume they were applied correctly.
@@ -51,7 +83,7 @@ Before acting, understand the requested outcome, identify affected workflows, an
 
 - **Read source code before browser testing.** First read `AGENTS.md`, then inspect the relevant project entry points, HTML, JavaScript modules, styles, API/backend integration, state/storage, and callers. Follow code paths far enough to understand actual behavior; do not infer functionality from filenames, labels, or function names alone.
 - **Discover the feature inventory yourself.** Create a `Feature Inventory` from functions and flows actually found in source. Identify controls/actions, prerequisites, state transitions, API calls, expected outcomes, validation, loading/empty/error/success states, and cross-module dependencies. The user's checklist is only a starting point; add features discovered from the code and do not omit unmentioned functionality.
-- **Derive the test plan from the inventory.** Design prioritized test cases (normal, edge, invalid input, failure, navigation, persistence/reload, and cross-feature workflow cases as applicable) before executing tests. Map each test to a feature and record its expected result. Do not merely click controls without checking their resulting behavior.
+- **Derive and execute comprehensive test plans.** Cover every feature discovered in source plus normal/boundary/invalid input, failure cases, authorization, navigation, persistence/reload, cross-feature flows, and desktop/mobile. Do not arbitrarily limit the test set; list anything left untested.
 - **Browser E2E must be direct browser interaction.** Use Browser Subagent (or the environment's clearly equivalent browser subagent) to open the real website/build and interact with it using actual browser UI actions—click, type, scroll, navigation, reload, keyboard, and viewport resizing as applicable. Observe rendered results and inspect browser Console/Network when needed. Test real end-to-end flows across customer and admin interfaces, not just isolated screens.
 - **Playwright is prohibited for this audit workflow.** Do not use Playwright, Playwright Test, Playwright scripts, or Playwright-powered browser automation. Do not replace real browser interaction with DOM-only simulation, code inspection, unit tests, or mocked flows. Those may be reported separately, but they are not real-browser E2E evidence.
 - **Browser capability fallback:** If Browser Subagent/direct browser access is unavailable, clearly report `BLOCKED` for browser E2E and explain what capability is missing. Do not silently switch to Playwright or claim a browser test passed.
@@ -122,9 +154,9 @@ Test in an isolated workspace or a test environment. **Local frontend preview do
 
 ### Audit runtime and stopping rules
 For audits (UI/UX, accessibility, performance, security, functional, or code quality), keep the work bounded and resumable:
-- **Default time budget:** aim to finish the audit + scoped fixes + verification within 8 minutes. If a task genuinely needs longer, explain why and request/continue in clearly separated stages; do not silently run an unbounded browser session.
+- **No arbitrary time cap on coverage:** work in checkpoints and continue comprehensive testing in stages as needed. Clearly report completed and unfinished tests; do not stop at a small sample just to meet an artificial time budget.
 - Avoid launching many browser instances, parallel heavy workflows, exhaustive viewport permutations, repeated screenshots, or full suites when targeted tests will answer the question.
-- Prefer one browser instance and sequential testing. Use a small representative matrix (typically desktop + one or two mobile sizes) and expand only when evidence reveals a specific risk.
+- Prefer one browser instance and sequential testing to avoid waste, but run the full relevant test matrix across desktop/mobile and feature workflows; do not use a small representative sample as a coverage substitute.
 - Keep checkpoints: after inspection, after findings, after fixes, and after verification, save/report concise progress so the task can resume without repeating completed work.
 - If browser automation is slow or stuck, stop the current operation safely, preserve findings, identify the exact unfinished test, and continue with a smaller targeted test. Do not repeatedly restart the entire audit or require the owner to prompt “continue” for obvious next steps.
 - For web UI/E2E audits, use the available **Browser Subagent to operate an actual browser directly**, like a real user/admin. Do not use Playwright, Playwright Test, Playwright scripts, or Playwright-based browser automation for this audit. If Browser Subagent is unavailable, mark browser E2E as `BLOCKED`; do not substitute Playwright or claim E2E passed. State clearly if another non-browser test was run separately.
