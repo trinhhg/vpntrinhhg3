@@ -23,6 +23,35 @@ body {
   overflow-x: hidden;
 }
 
+.skip-link {
+  position: fixed;
+  left: -9999px;
+  top: 0.5rem;
+  z-index: 100000;
+  background: var(--color-primary, #4f46e5);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.875rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25);
+}
+
+.skip-link:focus {
+  left: 0.75rem;
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+:is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-primary, #4f46e5);
+  outline-offset: 2px;
+}
+
+html.dark :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline-color: #818cf8;
+}
+
 .view-section {
   display: none;
   animation: fadeUp .4s ease-out forwards;
@@ -66,10 +95,12 @@ details > summary::-webkit-details-marker {
     border-color: #fde047;
     box-shadow: 0 0 0 0 rgba(253, 224, 71, .7);
   }
+
   70% {
     border-color: #eab308;
     box-shadow: 0 0 0 10px rgba(253, 224, 71, 0);
   }
+
   100% {
     border-color: #fde047;
     box-shadow: 0 0 0 0 rgba(253, 224, 71, 0);
@@ -81,10 +112,12 @@ details > summary::-webkit-details-marker {
     border-color: rgba(255, 255, 255, .22);
     box-shadow: 0 0 0 0 rgba(255, 255, 255, .12);
   }
+
   70% {
     border-color: rgba(255, 255, 255, .4);
     box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
   }
+
   100% {
     border-color: rgba(255, 255, 255, .22);
     box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
@@ -110,10 +143,12 @@ html.dark .highlight-copy {
     box-shadow: 0 0 0 0 rgba(22, 163, 74, .6);
     transform: scale(1);
   }
+
   50% {
     box-shadow: 0 0 0 12px rgba(22, 163, 74, 0);
     transform: scale(1.02);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
     transform: scale(1);
@@ -320,16 +355,18 @@ html.dark #guideText a.word-link {
   will-change: transform;
 }
 
-.dock-icon:hover {
-  transform: scale(1.35) translateY(-6px);
-  z-index: 20;
-  box-shadow: 0 14px 28px rgba(0, 0, 0, .35);
-}
+@media (hover: hover) and (pointer: fine) {
+  .dock-icon:hover {
+    transform: scale(1.35) translateY(-6px);
+    z-index: 20;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, .35);
+  }
 
-.dock-icon:has(+ .dock-icon:hover),
-.dock-icon:hover + .dock-icon {
-  transform: scale(1.15) translateY(-3px);
-  z-index: 10;
+  .dock-icon:has(+ .dock-icon:hover),
+  .dock-icon:hover + .dock-icon {
+    transform: scale(1.15) translateY(-3px);
+    z-index: 10;
+  }
 }
 
 .bg-fb {
@@ -1057,7 +1094,7 @@ html.dark .swal2-popup.swal2-toast .swal2-title {
 }
 
 .guide-cta-btn.cta-amber {
-  background: linear-gradient(135deg, #d97706, #f59e0b) !important;
+  background: linear-gradient(135deg, #92400e, #b45309) !important;
   color: #ffffff !important;
 }
 
@@ -1085,11 +1122,47 @@ html.dark .guide-content hr {
   border-top-color: rgba(255, 255, 255, 0.15) !important;
 }
 
-/* Header Announcement Banner Animation & Accessibility */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  #view-portal {
+    padding-bottom: 6.5rem;
+  }
+
+  #footerArea button,
+  #footerArea a {
+    height: auto !important;
+    min-height: 44px !important;
+    max-height: none !important;
+  }
+
+  #mainNav #langBtnMobile,
+  #mainNav #pwaHeaderBtnMobile,
+  #mainNav #themeToggleMobile,
+  #mainNav #userMenuMobile button,
+  #linkBoxes button,
+  #portalActionButtons button,
+  #btnRequestData {
+    min-height: 44px !important;
+  }
+}
+
+/* Reduced motion support: tắt animation lặp vô hạn nhưng giữ feedback trạng thái (BUG-NEW-07) */
 @media (prefers-reduced-motion: reduce) {
-  #headerAnnouncementDrawer,
-  #headerAnnouncementDrawer * {
-    transition: none !important;
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  .dock-marquee,
+  .animate-bounce,
+  .animate-pulse,
+  .btn-heartbeat,
+  .loader-ring,
+  .highlight-copy {
     animation: none !important;
   }
 }
