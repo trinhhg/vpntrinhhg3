@@ -1,6 +1,6 @@
 # AGENTS.md — VPNTrinhHg3 AI Agent Guidelines
 
-> Applies to AI coding agents working on `trinhhg/vpntrinhhg3`. Read this file before making changes. These guidelines protect the live service while allowing useful engineering work; they should not be interpreted as a reason to avoid applicable skills, tools, testing, or necessary refactoring.
+> Applies to AI coding agents working on the test repository `trinhhg/vpntrinhhg3`. Read this file before making changes. Thorough real-browser testing is expected in verified test environments; protect production and any real downstream integrations from accidental effects.
 
 ## 1. Operating principles and precedence
 
