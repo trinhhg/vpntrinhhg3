@@ -1,3 +1,4 @@
+// v4 — 2026-11-23 19:00 (UTC+7) — Bỏ USD (EN & ZH dùng CNY ¥, VI dùng VND), đồng bộ giảm giá Coupon & Flash Sale cho Alipay/Weixin, vá deadlock Nâng gói KEEP_EXISTING, sửa cuộn về đầu bài viết hướng dẫn
 // v3 — 2026-11-21 19:05 (UTC+7) — Bắt buộc chọn phương án Link Sub khi có 2 lựa chọn (không chọn mặc định), sửa lỗi parseVnDateLimit Flash Sale, sửa khóa email input & kiểm tra Upgrade
 // v2 — 2026-11-08 22:30 (UTC+7) — Nâng cấp Portal DH-only (/portal/order/:orderId), Bảo mật Link Sub 3 Toggles, Xác minh Email TTL & Tích hợp PWA
 /**
@@ -115,8 +116,8 @@ function updateAppRoutes(customRoutes) {
     localStorage.setItem('vpn_routes_cache', JSON.stringify(appRoutes));
   } catch (e) {}
 }
-let currentTotalVnd = 0, currentTotalCny = 0, currentTotalUsd = 0, currentDurationMode = 1;
-let isUpgradeMode = false, isRenewMode = false, upgradeConfirmed = false, baseOrderPriceVnd = 0, baseOrderPriceUsd = 0, baseOrderPriceCny = 0;
+let currentTotalVnd = 0, currentTotalCny = 0, currentDurationMode = 1;
+let isUpgradeMode = false, isRenewMode = false, upgradeConfirmed = false, baseOrderPriceVnd = 0, baseOrderPriceCny = 0;
 let lastScrollY = 0, pollT = null, tickT = null, skew = 0, lastSig = '';
 let emailLookupState = 'idle', emailLookupSeq = 0, currentSubDecision = '', existingCustomerLinks = [], detectedRenewOf = '', lastCheckedEmail = '';
 // $ imported from ./shared.js
@@ -589,9 +590,8 @@ let pkgs = [{
   id: 't1',
   category: ['cycle', 'travel'],
   vi: { name: 'Gói 1 tháng', price: '60,000VND' },
-  en: { name: '1 Month', price: '$2.50' },
+  en: { name: '1 Month', price: '¥15.5' },
   zh: { name: '1个月', price: '¥15.5' },
-  usd: 2.5,
   vnd: 60000,
   cny: 15.5,
   data: '100GB',
@@ -603,9 +603,8 @@ let pkgs = [{
   id: 't2',
   category: ['cycle', 'travel'],
   vi: { name: 'Gói 1 tháng', price: '70,000VND' },
-  en: { name: '1 Month', price: '$3.00' },
+  en: { name: '1 Month', price: '¥18' },
   zh: { name: '1个月', price: '¥18' },
-  usd: 3,
   vnd: 70000,
   cny: 18,
   data: '500GB',
@@ -617,9 +616,8 @@ let pkgs = [{
   id: 'c1',
   category: ['cycle', 'travel'],
   vi: { name: 'Gói 1 tháng', price: '80,000VND' },
-  en: { name: '1 Month', price: '$3.50' },
+  en: { name: '1 Month', price: '¥20.5' },
   zh: { name: '1个月', price: '¥20.5' },
-  usd: 3.5,
   vnd: 80000,
   cny: 20.5,
   data: '1000GB',
@@ -631,9 +629,8 @@ let pkgs = [{
   id: 'c2',
   category: ['cycle'],
   vi: { name: 'Gói Cao Cấp', price: '200,000VND' },
-  en: { name: 'Premium', price: '$8.00' },
+  en: { name: 'Premium', price: '¥50' },
   zh: { name: '高级套餐', price: '¥50' },
-  usd: 8,
   vnd: 200000,
   cny: 50,
   data: '3000GB',
@@ -643,9 +640,8 @@ let pkgs = [{
   id: 'c3',
   category: ['cycle'],
   vi: { name: 'Gói 1 Năm', price: '799,000VND' },
-  en: { name: '1 Year', price: '$30.00' },
+  en: { name: '1 Year', price: '¥199' },
   zh: { name: '包年', price: '¥199' },
-  usd: 30,
   vnd: 799000,
   cny: 199,
   data: '300GB/tháng',
@@ -656,9 +652,8 @@ let pkgs = [{
   id: 'd1',
   category: ['usage'],
   vi: { name: 'Không Giới Hạn', price: '200,000VND' },
-  en: { name: 'Unlimited', price: '$8.00' },
+  en: { name: 'Unlimited', price: '¥52' },
   zh: { name: '不限时', price: '¥52' },
-  usd: 8,
   vnd: 200000,
   cny: 52,
   data: '200GB',
@@ -668,9 +663,8 @@ let pkgs = [{
   id: 'd2',
   category: ['usage'],
   vi: { name: 'Không Giới Hạn', price: '399,000VND' },
-  en: { name: 'Unlimited', price: '$16.00' },
+  en: { name: 'Unlimited', price: '¥102' },
   zh: { name: '不限时', price: '¥102' },
-  usd: 16,
   vnd: 399000,
   cny: 102,
   data: '1000GB',
@@ -680,9 +674,8 @@ let pkgs = [{
   id: 'd3',
   category: ['usage'],
   vi: { name: 'Không Giới Hạn', price: '999,000VND' },
-  en: { name: 'Unlimited', price: '$40.00' },
+  en: { name: 'Unlimited', price: '¥256' },
   zh: { name: '不限时', price: '¥256' },
-  usd: 40,
   vnd: 999000,
   cny: 256,
   data: '5000GB',
@@ -695,7 +688,6 @@ let pkgs = [{
   vi: { name: 'Gói Tùy Chọn', price: 'Liên hệ Admin' },
   en: { name: 'Custom', price: 'Contact Admin' },
   zh: { name: '自定义', price: '联系管理员' },
-  usd: 0,
   vnd: 0,
   cny: 0,
   data: '100GB - 100,000GB',
@@ -1127,7 +1119,11 @@ async function openGuideArticle(tabId, slug, skipPush) {
   }
 
   $('guideText').innerHTML = mainBody + faqBlockHtml + relBlockHtml;
-  $('view-portal').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (typeof window.scrollTo === 'function') {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  } else {
+    $('view-portal').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 function pubScrollToHeadingText(txt) {
@@ -1331,13 +1327,12 @@ async function loadConfig() {
             },
             en: {
               name: p.name || p.en?.name || 'VPN Plan',
-              price: p.isCustom ? 'Contact Admin' : ('$' + (p.usd || 0))
+              price: p.isCustom ? 'Contact Admin' : ('¥' + (p.cny || 0))
             },
             zh: {
               name: p.name || p.zh?.name || 'VPN套餐',
               price: p.isCustom ? '联系管理员' : ('¥' + (p.cny || 0))
             },
-            usd: Number(p.usd) || 0,
             vnd: Number(p.vnd) || 0,
             cny: Number(p.cny) || 0,
             promo_sticker: p.promo_sticker || '',
@@ -1680,8 +1675,8 @@ async function changeLanguage(val) {
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => el.placeholder = i18n[lang][el.getAttribute('data-i18n-placeholder')] || el.placeholder);
   renderPackages('all');
   if (!$('checkoutSection').classList.contains('hidden') && currentPackage) {
-    $('selectedPackageName').innerText = currentPackage[lang].name;
-    $('selectedPackagePrice').innerText = currentPackage[lang].price;
+    const rawPkg = pkgs.find(p => p.id === currentPackage.id) || currentPackage;
+    renderCheckoutPackageSummary(rawPkg, currentPackage);
     calculateTotal();
   }
   $('pendingWaitText').innerText = i18n[lang].pending_wait;
@@ -1742,7 +1737,7 @@ function disableUpgradeMode() {
   isUpgradeMode = false;
   isRenewMode = false;
   upgradeConfirmed = false;
-  baseOrderPriceVnd = baseOrderPriceUsd = baseOrderPriceCny = 0;
+  baseOrderPriceVnd = baseOrderPriceCny = 0;
   renderPackages('all');
 }
 
@@ -1797,6 +1792,60 @@ function doesFlashSaleApply(pkg, sale) {
   return true; // 'all'
 }
 
+function getVndCnyRate() {
+  return Math.max(100, Number(cfgCache?.pkgRates?.vndCny || cfgCache?.rates?.vndCny) || 4000);
+}
+
+function formatPkgDisplayPrice(pkg, withUnitSpan = false) {
+  if (!pkg) return '';
+  if (pkg.isCustom) return pkg[lang]?.price || pkg.vi?.price || '';
+  if (lang === 'en' || lang === 'zh') return `¥${Number(pkg.cny || 0)}`;
+  const vnd = Number(pkg.vnd || 0).toLocaleString('en-US');
+  return withUnitSpan ? `${vnd}<span class="text-sm md:text-base font-bold ml-0.5">VND</span>` : `${vnd}VND`;
+}
+
+function renderCheckoutPackageSummary(rawPkg, effPkg) {
+  if (!effPkg) return;
+  const pkgName = effPkg[lang]?.name || effPkg.vi?.name || effPkg.name || 'Gói VPN';
+  const pkgData = effPkg.data || '';
+  const hasSale = !!effPkg.isFlashSale;
+  const currPrice = formatPkgDisplayPrice(effPkg, false);
+  const origPrice = formatPkgDisplayPrice(rawPkg || effPkg, false);
+  const summaryEl = $('checkoutPackageCardSummary');
+  if (summaryEl) {
+    if (hasSale) {
+      summaryEl.innerHTML = `
+       <div class="flex flex-col gap-1.5 w-full">
+         <div class="flex items-center justify-between gap-2">
+           <span id="selectedPackageName" class="text-sm md:text-base font-black text-slate-800 dark:text-white uppercase truncate">${esc(pkgName)}</span>
+           <span id="selectedPackagePrice" class="text-base md:text-lg font-black text-indigo-600 dark:text-indigo-300 shrink-0 whitespace-nowrap">${currPrice}</span>
+         </div>
+         <div class="flex items-center justify-between gap-2">
+           <span id="selectedPackageData" class="text-xs font-bold text-slate-500 dark:text-slate-300 truncate">${esc(pkgData)}</span>
+           <span class="text-xs md:text-sm font-semibold line-through text-slate-400 dark:text-slate-500 shrink-0 whitespace-nowrap">${origPrice}</span>
+         </div>
+       </div>
+     `;
+    } else {
+      summaryEl.innerHTML = `
+       <div class="flex justify-between items-center w-full">
+         <div class="min-w-0 pr-2">
+           <p id="selectedPackageName" class="text-sm md:text-base font-black text-slate-800 dark:text-white uppercase truncate">${esc(pkgName)}</p>
+           <p id="selectedPackageData" class="text-xs font-bold text-slate-500 dark:text-slate-200 mt-0.5">${esc(pkgData)}</p>
+         </div>
+         <p id="selectedPackagePrice" class="text-lg md:text-xl font-black text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.8)] shrink-0 whitespace-nowrap">${currPrice}</p>
+       </div>
+     `;
+    }
+  } else {
+    if ($('selectedPackageName')) $('selectedPackageName').innerText = pkgName;
+    if ($('selectedPackageData')) $('selectedPackageData').innerText = pkgData;
+    if ($('selectedPackagePrice')) {
+      $('selectedPackagePrice').innerHTML = hasSale ? `<span class="text-indigo-600 dark:text-indigo-400 font-black">${currPrice}</span> <span class="text-xs line-through text-slate-400 font-normal ml-1.5">${origPrice}</span>` : currPrice;
+    }
+  }
+}
+
 function getEffectivePkg(pkg) {
   if (!pkg) return pkg;
   const sale = getActiveFlashSale();
@@ -1804,8 +1853,8 @@ function getEffectivePkg(pkg) {
   const pct = sale.percent;
   const factor = (100 - pct) / 100;
   const discountedVnd = Math.max(2000, Math.round(Number(pkg.vnd || 0) * factor));
-  const discountedCny = Math.round((Number(pkg.cny || 0) * factor) * 10) / 10;
-  const discountedUsd = Math.round((Number(pkg.usd || 0) * factor) * 10) / 10;
+  const rawCny = Number(pkg.cny || 0);
+  const discountedCny = rawCny > 0 ? Math.max(0.5, Math.round((rawCny * factor) * 10) / 10) : 0;
   return {
     ...pkg,
     isFlashSale: true,
@@ -1813,7 +1862,6 @@ function getEffectivePkg(pkg) {
     flashSalePercent: pct,
     vnd: discountedVnd,
     cny: discountedCny,
-    usd: discountedUsd,
     originalVnd: Number(pkg.vnd || 0)
   };
 }
@@ -1840,14 +1888,7 @@ function genHTML(rawPkg) {
 
   const isDisabled = isUpgradeMode && (pkg.vnd <= baseOrderPriceVnd || (oCache && pkg.id === oCache.pkgId)) && !pkg.isCustom;
 
-  let realPriceDisplay = '';
-  if (lang === 'zh') {
-    realPriceDisplay = `¥${pkg.cny || 0}`;
-  } else if (lang === 'en') {
-    realPriceDisplay = `$${pkg.usd || 0}`;
-  } else {
-    realPriceDisplay = `${Number(pkg.vnd || 0).toLocaleString('en-US')}<span class="text-sm md:text-base font-bold ml-0.5">VND</span>`;
-  }
+  let realPriceDisplay = formatPkgDisplayPrice(pkg, true);
 
   // Nút hành động đăng ký / liên hệ
   const btn = isDisabled ? `<button disabled class="w-full bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 font-bold py-3 rounded-xl text-sm cursor-not-allowed">Không khả dụng</button>` : pkg.isCustom ? `<a href="#footerArea" class="w-full block text-center bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-bold py-3 rounded-xl text-sm hover:bg-red-600 hover:text-white transition">Liên hệ Admin</a>` : `<button onclick="openCheckout('${pkg.id}')" class="w-full bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-bold py-3 rounded-xl text-sm hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white dark:hover:shadow-[0_0_15px_rgba(99,102,241,0.5)] transition">Đăng ký Gói Này</button>`;
@@ -1900,10 +1941,8 @@ function genHTML(rawPkg) {
 
   let originalPriceDisplay = '';
   if (pkg.isFlashSale) {
-    if (lang === 'zh') {
+    if (lang === 'zh' || lang === 'en') {
       originalPriceDisplay = `<span class="text-xs md:text-sm font-semibold line-through text-slate-400 dark:text-slate-500 ml-2">¥${rawPkg.cny || 0}</span>`;
-    } else if (lang === 'en') {
-      originalPriceDisplay = `<span class="text-xs md:text-sm font-semibold line-through text-slate-400 dark:text-slate-500 ml-2">$${rawPkg.usd || 0}</span>`;
     } else {
       originalPriceDisplay = `<span class="text-xs md:text-sm font-semibold line-through text-slate-400 dark:text-slate-500 ml-2">${Number(rawPkg.vnd || 0).toLocaleString('en-US')} VND</span>`;
     }
@@ -1993,7 +2032,6 @@ function startUpgrade() {
   upgradeConfirmed = false;
   const cur = pkgs.find(p => p.id === oCache.pkgId) || pkgs.find(p => p.vi.name === oCache.pkgName && p.data === oCache.pkgData);
   baseOrderPriceVnd = cur ? cur.vnd : (Number(oCache.totalVnd) > 0 ? Number(oCache.totalVnd) / Math.max(1, Number(oCache.qty) || 1) : 0);
-  baseOrderPriceUsd = cur ? cur.usd : 0;
   baseOrderPriceCny = cur ? cur.cny : (Number(oCache.totalCny) > 0 ? Number(oCache.totalCny) / Math.max(1, Number(oCache.qty) || 1) : 0);
   switchPortalTab('p-store', true);
   renderPackages('all');
@@ -2015,46 +2053,7 @@ function openCheckout(id) {
   else $('view-store').appendChild(co);
   co.classList.remove('hidden');
   co.scrollIntoView({ behavior: 'smooth' });
-  const pkgName = currentPackage[lang]?.name || currentPackage.name || 'Gói VPN';
-  const pkgData = currentPackage.data || '';
-  const hasSale = !!currentPackage.isFlashSale;
-  const currVnd = `${Number(currentPackage.vnd || 0).toLocaleString('en-US')}VND`;
-  const origVnd = `${Number(raw?.vnd || 0).toLocaleString('en-US')}VND`;
-
-  const summaryEl = $('checkoutPackageCardSummary');
-  if (summaryEl) {
-    if (hasSale) {
-      summaryEl.innerHTML = `
-       <div class="flex flex-col gap-1.5 w-full">
-         <div class="flex items-center justify-between gap-2">
-           <span id="selectedPackageName" class="text-sm md:text-base font-black text-slate-800 dark:text-white uppercase truncate">${esc(pkgName)}</span>
-           <span id="selectedPackagePrice" class="text-base md:text-lg font-black text-indigo-600 dark:text-indigo-300 shrink-0 whitespace-nowrap">${currVnd}</span>
-         </div>
-         <div class="flex items-center justify-between gap-2">
-           <span id="selectedPackageData" class="text-xs font-bold text-slate-500 dark:text-slate-300 truncate">${esc(pkgData)}</span>
-           <span class="text-xs md:text-sm font-semibold line-through text-slate-400 dark:text-slate-500 shrink-0 whitespace-nowrap">${origVnd}</span>
-         </div>
-       </div>
-     `;
-    } else {
-      const normalPrice = currentPackage[lang]?.price || currVnd;
-      summaryEl.innerHTML = `
-       <div class="flex justify-between items-center w-full">
-         <div class="min-w-0 pr-2">
-           <p id="selectedPackageName" class="text-sm md:text-base font-black text-slate-800 dark:text-white uppercase truncate">${esc(pkgName)}</p>
-           <p id="selectedPackageData" class="text-xs font-bold text-slate-500 dark:text-slate-200 mt-0.5">${esc(pkgData)}</p>
-         </div>
-         <p id="selectedPackagePrice" class="text-lg md:text-xl font-black text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.8)] shrink-0 whitespace-nowrap">${normalPrice}</p>
-       </div>
-     `;
-    }
-  } else {
-    if ($('selectedPackageName')) $('selectedPackageName').innerText = pkgName;
-    if ($('selectedPackageData')) $('selectedPackageData').innerText = pkgData;
-    if ($('selectedPackagePrice')) {
-      $('selectedPackagePrice').innerHTML = hasSale ? `<span class="text-indigo-600 dark:text-indigo-400 font-black">${currVnd}</span> <span class="text-xs line-through text-slate-400 font-normal ml-1.5">${origVnd}</span>` : (currentPackage[lang]?.price || currVnd);
-    }
-  }
+  renderCheckoutPackageSummary(raw, currentPackage);
 
   const hideEmail = isUpgradeMode || isRenewMode;
   $('emailBlock').classList.toggle('hidden', hideEmail);
@@ -2081,7 +2080,7 @@ function openCheckout(id) {
   const subWrap = $('subLinkLifecycleWrap');
   if (subWrap) {
     subWrap.classList.remove('hidden');
-    if (isRenewMode && oCache) {
+    if ((isRenewMode || isUpgradeMode) && oCache) {
       const eff = getEffectiveSubLink(oCache);
       const links = [{
         index: eff.index,
@@ -2091,9 +2090,7 @@ function openCheckout(id) {
       }];
       existingCustomerLinks = links;
       populateTargetLinks(links);
-      lockSubDecisionUI('KEEP_EXISTING', 'Gia hạn chính gói cước và link sub này trong portal (Tự động giữ link cũ)');
-    } else if (isUpgradeMode && oCache) {
-      lockSubDecisionUI('KEEP_EXISTING', 'Nâng cấp dung lượng trên cùng link sub hiện tại (Không đổi link)');
+      lockSubDecisionUI('KEEP_EXISTING', isUpgradeMode ? 'Nâng cấp dung lượng trên cùng link sub hiện tại (Không đổi link)' : 'Gia hạn chính gói cước và link sub này trong portal (Tự động giữ link cũ)');
     } else {
       // Mặc định luôn hiện sẵn cả hai lựa chọn ở trạng thái KHÓA khi mới mở checkout
       lockSubDecisionUI('CREATE_NEW', 'Vui lòng nhập email để hệ thống kiểm tra lịch sử link sub.');
@@ -2311,45 +2308,25 @@ function calculateTotal() {
   if (!currentPackage) return;
   currentMultiplier = currentDurationMode === 'custom' ? Math.max(1, Math.min(120, parseInt($('customDurInput')?.value) || 1)) : currentDurationMode;
   const m = $('payMethod').value;
+  const isCnyPay = m === 'alipay' || m === 'wechat' || m === 'weixin';
   const pCalc = $('priceCalculation');
   if (isUpgradeMode) {
     currentTotalVnd = Math.max(0, (currentPackage.vnd - baseOrderPriceVnd) * currentMultiplier);
     currentTotalCny = parseFloat((Math.max(0, currentPackage.cny - baseOrderPriceCny) * currentMultiplier).toFixed(2));
-    currentTotalUsd = parseFloat((Math.max(0, currentPackage.usd - baseOrderPriceUsd) * currentMultiplier).toFixed(2));
-    const dpVnd = currentPackage.vnd - baseOrderPriceVnd, dpCny = parseFloat((Math.max(0, currentPackage.cny - baseOrderPriceCny)).toFixed(2)), dpUsd = parseFloat((Math.max(0, currentPackage.usd - baseOrderPriceUsd)).toFixed(2));
-    let noteStr = '', calcStr = '';
-    if (m === 'bank') {
-      noteStr = `${dpVnd.toLocaleString('en-US')}VND`;
-      calcStr = `${currentTotalVnd.toLocaleString('en-US')}VND`;
-    }
-    else if (m === 'alipay' || m === 'wechat' || m === 'weixin') {
-      noteStr = `¥${dpCny}`;
-      calcStr = `¥${currentTotalCny}`;
-    }
-    else {
-      noteStr = `${dpUsd}`;
-      calcStr = `${currentTotalUsd}`;
-    }
+    const dpVnd = currentPackage.vnd - baseOrderPriceVnd;
+    const dpCny = parseFloat((Math.max(0, currentPackage.cny - baseOrderPriceCny)).toFixed(2));
+    const noteStr = isCnyPay ? `¥${dpCny}` : `${dpVnd.toLocaleString('en-US')}VND`;
+    const calcStr = isCnyPay ? `¥${currentTotalCny}` : `${currentTotalVnd.toLocaleString('en-US')}VND`;
     const upNote = $('upgradePriceNote');
     if (upNote) upNote.innerHTML = `Đơn giá nâng cấp: <b>${noteStr} / Tháng</b>`;
     if (pCalc) pCalc.innerText = `Thanh toán chênh lệch (${currentMultiplier} tháng): ${calcStr}`;
   } else {
     currentTotalVnd = currentPackage.vnd * currentMultiplier;
     currentTotalCny = parseFloat((currentPackage.cny * currentMultiplier).toFixed(2));
-    currentTotalUsd = parseFloat((currentPackage.usd * currentMultiplier).toFixed(2));
-    let calcStr = '';
     const isOneTime = currentPackage.time === 12 || currentPackage.time === 'lifetime';
-    if (m === 'bank') {
-      calcStr = isOneTime ? `${currentTotalVnd.toLocaleString('en-US')}VND` : `${currentPackage.vnd.toLocaleString('en-US')}VND × ${currentMultiplier} = ${currentTotalVnd.toLocaleString('en-US')}VND`;
-      if (currentPackage.isFlashSale) {
-        calcStr += ` <span class="text-[11px] font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-800 ml-1.5 inline-flex items-center gap-1"><i class="fas fa-bolt text-[9px]"></i>-${currentPackage.flashSalePercent}%</span>`;
-      }
-    }
-    else if (m === 'alipay' || m === 'wechat' || m === 'weixin') {
-      calcStr = isOneTime ? `¥${currentTotalCny}` : `¥${currentPackage.cny} × ${currentMultiplier} = ¥${currentTotalCny}`;
-    }
-    else {
-      calcStr = isOneTime ? `${currentTotalUsd}` : `${currentPackage.usd} × ${currentMultiplier} = ${currentTotalUsd}`;
+    let calcStr = isCnyPay ? (isOneTime ? `¥${currentTotalCny}` : `¥${currentPackage.cny} × ${currentMultiplier} = ¥${currentTotalCny}`) : (isOneTime ? `${currentTotalVnd.toLocaleString('en-US')}VND` : `${currentPackage.vnd.toLocaleString('en-US')}VND × ${currentMultiplier} = ${currentTotalVnd.toLocaleString('en-US')}VND`);
+    if (currentPackage.isFlashSale) {
+      calcStr += ` <span class="text-[11px] font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-800 ml-1.5 inline-flex items-center gap-1"><i class="fas fa-bolt text-[9px]"></i>-${currentPackage.flashSalePercent}%</span>`;
     }
 
     if (currentAppliedCoupon) {
@@ -2358,11 +2335,29 @@ function calculateTotal() {
       if (currentAppliedCoupon.maxDiscount && disc > currentAppliedCoupon.maxDiscount) disc = currentAppliedCoupon.maxDiscount;
       if (disc > currentTotalVnd - 2000) disc = Math.max(0, currentTotalVnd - 2000);
       currentTotalVnd = Math.max(2000, currentTotalVnd - disc);
-      if (pCalc) {
-        if (m === 'bank') {
-          pCalc.innerHTML = `${calcStr}<br><span class="text-emerald-600 dark:text-emerald-400 font-black text-xs md:text-sm mt-1.5 block">Đã áp dụng mã ${esc(currentAppliedCoupon.code)} (-${disc.toLocaleString('en-US')}đ) → Thực thu: <b>${currentTotalVnd.toLocaleString('en-US')}VND</b></span>`;
+
+      const vndCnyRate = getVndCnyRate();
+      let discCny = 0;
+      if (currentTotalCny > 0) {
+        if (isPct) {
+          discCny = Math.round((currentTotalCny * (Number(currentAppliedCoupon.value) || 0) / 100) * 100) / 100;
+          if (Number(currentAppliedCoupon.maxDiscount) > 0) {
+            const maxDiscCny = Math.round((Number(currentAppliedCoupon.maxDiscount) / vndCnyRate) * 100) / 100;
+            if (discCny > maxDiscCny) discCny = maxDiscCny;
+          }
         } else {
-          pCalc.innerHTML = `${calcStr} <span class="text-emerald-600 font-bold">(Mã ${esc(currentAppliedCoupon.code)})</span>`;
+          const cappedFixedVnd = Number(currentAppliedCoupon.maxDiscount) > 0 ? Math.min(Number(currentAppliedCoupon.value) || 0, Number(currentAppliedCoupon.maxDiscount)) : (Number(currentAppliedCoupon.value) || 0);
+          discCny = Math.round((cappedFixedVnd / vndCnyRate) * 100) / 100;
+        }
+        if (discCny > currentTotalCny - 0.5) discCny = Math.max(0, Math.round((currentTotalCny - 0.5) * 100) / 100);
+        currentTotalCny = Math.max(0.5, Math.round((currentTotalCny - discCny) * 100) / 100);
+      }
+
+      if (pCalc) {
+        if (isCnyPay) {
+          pCalc.innerHTML = `${calcStr}<br><span class="text-emerald-600 dark:text-emerald-400 font-black text-xs md:text-sm mt-1.5 block">Đã áp dụng mã ${esc(currentAppliedCoupon.code)} (-¥${discCny}) → Thực thu: <b>¥${currentTotalCny}</b></span>`;
+        } else {
+          pCalc.innerHTML = `${calcStr}<br><span class="text-emerald-600 dark:text-emerald-400 font-black text-xs md:text-sm mt-1.5 block">Đã áp dụng mã ${esc(currentAppliedCoupon.code)} (-${disc.toLocaleString('en-US')}đ) → Thực thu: <b>${currentTotalVnd.toLocaleString('en-US')}VND</b></span>`;
         }
       }
     } else {
@@ -2947,7 +2942,7 @@ if (typeof MutationObserver !== 'undefined' && typeof document !== 'undefined') 
 
 function renderPaymentBox() {
   const col = $('checkoutRightCol'), m = $('payMethod').value, btn = $('btnConfirm'), l = i18n[lang];
-  const fp = m === 'bank' ? `${currentTotalVnd.toLocaleString('en-US')}VND` : m === 'alipay' || m === 'wechat' || m === 'weixin' ? `¥${currentTotalCny}` : `$${currentTotalUsd}`;
+  const fp = m === 'bank' ? `${currentTotalVnd.toLocaleString('en-US')}VND` : `¥${currentTotalCny}`;
   btn.innerHTML = l.btn_create_order;
 
   // Mục 3 hướng dẫn thanh toán: chuẩn hóa theo chính sách nghiệp vụ, loại bỏ hoàn toàn nội dung trùng lặp với cột trái
@@ -3589,7 +3584,8 @@ const sc = t => t ? t.charAt(0) + t.slice(1).toLowerCase() : '';
 function pkgLine(o) {
   const p = pkgs.find(x => x.id === o.pkgId) || pkgs.find(x => x.vi.name === o.pkgName && x.data === o.pkgData);
   if (!p) return o.pkgName ? tx(sc(o.pkgName)) : tx('Gói VPN');
-  return `${tx(sc(p.vi.name))} – ${p.vnd.toLocaleString('en-US')}VND`;
+  const priceStr = (lang === 'en' || lang === 'zh') ? `¥${p.cny || 0}` : `${Number(p.vnd || 0).toLocaleString('en-US')}VND`;
+  return `${tx(sc(p.vi.name))} – ${priceStr}`;
 }
 
 function getEffectiveSubLink(o, optIndex) {
