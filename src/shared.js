@@ -106,7 +106,10 @@ function ensureToastContainer() {
   if (!c) {
     c = document.createElement('div');
     c.id = 'toastStackContainer';
-    c.className = 'fixed top-4 right-4 z-[999999] flex flex-col gap-2 pointer-events-none px-3 sm:px-0 items-end max-w-full';
+    c.setAttribute('role', 'status');
+    c.setAttribute('aria-live', 'polite');
+    c.setAttribute('aria-atomic', 'false');
+    c.className = 'fixed bottom-20 sm:bottom-auto sm:top-20 right-3 sm:right-4 z-[999999] flex flex-col gap-2 pointer-events-none px-2 sm:px-0 items-end max-w-[calc(100vw-1.5rem)]';
     document.body.appendChild(c);
   }
   return c;
@@ -127,7 +130,7 @@ export function toast(msg, type = 'ok') {
   el.className = 'pointer-events-auto inline-flex items-center gap-2.5 py-2 px-3.5 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-lg border ' + borderClass + ' text-slate-800 dark:text-slate-100 text-xs sm:text-sm font-semibold transition-all duration-300 transform translate-x-4 opacity-0 ml-auto';
   el.style.cssText = 'width: fit-content !important; max-width: calc(100vw - 2rem); display: inline-flex !important; align-items: center !important;';
 
-  el.innerHTML = '<i class="fas ' + iconClass + ' text-base shrink-0 flex items-center justify-center"></i>' + '<div class="leading-snug break-words whitespace-normal flex items-center">' + msg + '</div>' + '<button type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 ml-2.5 shrink-0 p-0.5 inline-flex items-center justify-center" aria-label="Close">' + '<i class="fas fa-times text-xs"></i>' + '</button>';
+  el.innerHTML = '<i class="fas ' + iconClass + ' text-base shrink-0 flex items-center justify-center" aria-hidden="true"></i>' + '<div class="leading-snug break-words whitespace-normal flex items-center">' + msg + '</div>' + '<button type="button" class="text-slate-600 hover:text-slate-800 dark:text-slate-300 dark:hover:text-white ml-1.5 shrink-0 w-9 h-9 rounded-lg inline-flex items-center justify-center" aria-label="Đóng thông báo">' + '<i class="fas fa-times text-xs" aria-hidden="true"></i>' + '</button>';
 
   const closeBtn = el.querySelector('button');
   const dismiss = () => {
@@ -237,4 +240,118 @@ export function autoGrow(el) {
   if (!el) return;
   el.style.height = "auto";
   el.style.height = (el.scrollHeight + 2) + "px";
+}
+
+// ==================== VAUL SHEET PHYSICS & DIALOG A11Y ====================
+export function bindVaulDialog(overlayId, options = {}) {
+  if (typeof document === "undefined") return;
+  const overlay = $(overlayId);
+  if (!overlay || overlay.dataset.vaulBound === "1") return;
+  overlay.dataset.vaulBound = "1";
+
+  const {
+    handleId = "",
+    closeFn = null,
+    breakpointPx = 768,
+    scrollableSelector = ""
+  } = options;
+  const handle = handleId ? $(handleId) : null;
+  const sheet = (handle && handle.parentElement) || overlay.querySelector(".glass-card") || overlay.firstElementChild;
+  if (!sheet) return;
+
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+
+  const dragTarget = handle || sheet;
+  let startY = 0;
+  let currentY = 0;
+  let dragging = false;
+  let activePointerId = null;
+
+  const isReducedMotion = () => typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const canStartAt = (target) => {
+    if (typeof window !== "undefined" && window.innerWidth >= breakpointPx) return false;
+    if (!handle && target && target.closest && target.closest("button, a, input, textarea, select, [role='button']")) return false;
+    if (scrollableSelector && target && target.closest) {
+      const scrollable = target.closest(scrollableSelector);
+      if (scrollable && scrollable.scrollTop > 0) return false;
+    }
+    if (!handle && sheet.scrollTop > 0) return false;
+    return true;
+  };
+
+  const beginDrag = (clientY) => {
+    startY = clientY;
+    currentY = clientY;
+    dragging = true;
+    sheet.style.transition = "none";
+  };
+
+  const moveDrag = (clientY) => {
+    if (!dragging) return;
+    currentY = clientY;
+    const deltaY = currentY - startY;
+    if (deltaY > 0) {
+      sheet.style.transform = `translateY(${deltaY}px)`;
+    } else {
+      sheet.style.transform = "translateY(0)";
+    }
+  };
+
+  const finishDrag = (cancelled = false) => {
+    if (!dragging) return;
+    dragging = false;
+    activePointerId = null;
+    const deltaY = cancelled ? 0 : (currentY - startY);
+    sheet.style.transition = isReducedMotion() ? "none" : "transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)";
+    if (!cancelled && deltaY > 96) {
+      sheet.style.transform = "translateY(100%)";
+      const finishDelay = isReducedMotion() ? 0 : 200;
+      setTimeout(() => {
+        if (typeof closeFn === "function") closeFn();
+        else overlay.classList.add("hidden");
+        sheet.style.transform = "";
+      }, finishDelay);
+    } else {
+      sheet.style.transform = deltaY > 0 ? "translateY(0)" : "";
+    }
+  };
+
+  // Support both Pointer Events and Touch Events cleanly without double-firing
+  if (typeof window !== "undefined" && "PointerEvent" in window) {
+    dragTarget.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "mouse") return;
+      if (!canStartAt(e.target)) return;
+      activePointerId = e.pointerId;
+      beginDrag(e.clientY);
+    }, { passive: true });
+    window.addEventListener("pointermove", (e) => {
+      if (dragging && e.pointerId === activePointerId) moveDrag(e.clientY);
+    }, { passive: true });
+    window.addEventListener("pointerup", (e) => {
+      if (dragging && e.pointerId === activePointerId) finishDrag(false);
+    }, { passive: true });
+    window.addEventListener("pointercancel", (e) => {
+      if (dragging && e.pointerId === activePointerId) finishDrag(true);
+    }, { passive: true });
+  }
+
+  dragTarget.addEventListener("touchstart", (e) => {
+    if (dragging) return;
+    if (!canStartAt(e.target)) return;
+    if (e.touches && e.touches[0]) beginDrag(e.touches[0].clientY);
+  }, { passive: true });
+  dragTarget.addEventListener("touchmove", (e) => {
+    if (!dragging || activePointerId !== null) return;
+    if (e.touches && e.touches[0]) moveDrag(e.touches[0].clientY);
+  }, { passive: true });
+  dragTarget.addEventListener("touchend", () => {
+    if (!dragging || activePointerId !== null) return;
+    finishDrag(false);
+  }, { passive: true });
+  dragTarget.addEventListener("touchcancel", () => {
+    if (!dragging || activePointerId !== null) return;
+    finishDrag(true);
+  }, { passive: true });
 }
