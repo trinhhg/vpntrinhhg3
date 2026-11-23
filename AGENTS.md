@@ -4,7 +4,7 @@
 
 ## 1. Operating principles and precedence
 
-- **Work locally/in an isolated workspace by default.** Agents may inspect relevant files, edit code, refactor, remove verified dead code, and run safe tests in the workspace.
+- **Audit-only by default.** Unless the owner explicitly asks the agent to implement/edit code, agents may inspect files, test, diagnose, and prepare exact manual patch instructions—but MUST NOT edit, create, delete, rename, format, or otherwise modify any project file, including in the local workspace. An audit, review, test, or request to find/fix issues is not permission to modify code.
 - **Production safety is the default.** Do not write directly to GitHub, commit, push, create/merge PRs, publish, deploy, release, or mutate production unless the current task explicitly authorizes that exact action. An instruction to fix code is not permission to deploy.
 - **Protect behavior and contracts, not obsolete implementation.** Keep user-facing behavior and important integrations unless the task calls for a change or evidence supports removal. Do not preserve dead code, duplication, needless guards/fallbacks, or bad architecture merely because they already exist.
 - **Scope work to the task.** Read the entry point and relevant modules/dependencies. Expand the scope only when needed for root cause, shared contracts, isolation, tests, or a safe complete fix. Avoid repository-wide scans for small tasks.
@@ -25,10 +25,24 @@ Before acting, understand the requested outcome, identify affected workflows, an
 ### Work stages
 1. **Inspect:** Read this file; check `PROJECT_MAP.md` when useful; inspect relevant source, callers, dependencies, state, API, and tests.
 2. **Plan:** Establish expected behavior, risks, impacted paths, and test strategy. Keep the plan lightweight for small changes.
-3. **Implement:** Make a focused fix or design change. Use skills and tools when applicable. Do not stop at a superficial workaround if root cause can be safely fixed.
-4. **Verify continuously:** Run checks after meaningful changes, not only at the end. See Testing below.
-5. **Review:** Examine the diff for correctness, regressions, duplication, unnecessary complexity, security, and scope.
-6. **Report:** Clearly state changes and actual verification status. Hand off for Admin review; do not publish/deploy.
+3. **Propose fixes (audit-only default):** Do not modify files. Prepare exact, copy/paste manual patch instructions in the required format below. Only implement changes if the owner explicitly says to edit/implement in the current task.
+4. **Verify:** For audit-only tasks, test the current unchanged code and clearly separate confirmed failures from inferred issues. After the owner manually applies changes, verify the updated code only when asked to do the follow-up audit.
+5. **Review:** If implementation was explicitly authorized, examine the diff for correctness, regressions, duplication, unnecessary complexity, security, and scope. If not authorized, review proposed patches for completeness and safety without applying them.
+6. **Report:** Clearly state whether any files were changed. Audit-only tasks must report `Files changed: 0` and hand off manual instructions; do not publish/deploy.
+
+## 2A. Audit-only default and manual patch format (mandatory)
+
+- **Audit/review/test/fix-finding requests are not permission to edit code.** Default to audit-only: inspect source, run safe read-only checks, identify and validate issues, and provide proposed fixes for the owner to apply manually.
+- Do not modify any file in the workspace: no edits, auto-formatting, generated-file changes, file creation/deletion/renaming, dependency installation that changes lockfiles, or scripted patching. Keep the workspace unchanged.
+- The only exception is when the owner explicitly authorizes code implementation/editing in the current task (e.g. “implement these fixes”, “edit the files”). If authorized, scope permission to that task only; it does not imply commit, push, deploy, or production writes.
+- Every proposed code fix must be given as an exact manual patch that can be located with Ctrl+F. Do not use ellipses (`...`) or omit lines inside the search block. Include enough unchanged surrounding lines to make the match unique and safe.
+- Use these formats exactly:
+  - **Insert (keep anchor):** `Find: [exact original anchor/block] → Replace with: [complete replacement block, including the original anchor and inserted lines]`
+  - **Delete (keep surrounding anchors):** `Find: [exact original block] → Replace with: [complete remaining block with deleted lines removed]`
+  - **Edit:** `Find: [exact original code] → Replace with: [exact new code]`
+- If a target block is long, provide separate small patches only when each search block is exact and unique; never abbreviate source with ellipses. If the patch cannot be safely expressed this way, say so and ask before proposing a risky manual edit.
+- Do not provide vague instructions such as “change the color”, “add aria”, or “fix the button” without the exact source and replacement. If the code cannot be located/verified, report the file/section and mark the patch `NOT VERIFIED`; do not invent old code.
+- **After owner-applied manual edits:** When the owner requests a re-audit, compare the actual source to the proposed patches, confirm which were applied, then test those changes. Do not assume they were applied correctly.
 
 ## 3. Code structure and maintainability
 
@@ -112,8 +126,8 @@ Choose tests appropriate to the task. When applicable:
 - Responsive desktop/mobile checks.
 - Regression tests for affected shared modules, Admin↔Customer propagation, security, and data paths.
 
-### Auto-fix loop
-When a test fails, collect evidence, trace root cause, patch in the workspace, rerun the failing test, then run relevant regression checks. Continue while safely possible; do not stop after the first failed test. Do not remove/disable tests, weaken assertions/validation/security, fake results, or conceal failures to force a pass.
+### Diagnosis and fix loop (audit-only unless explicitly authorized)
+When a test fails, collect evidence and trace root cause. In audit-only mode, do not patch files; provide exact manual patch instructions using the mandatory Ctrl+F format, then test the unchanged code and clearly label the fix as proposed—not applied. If the owner explicitly authorized implementation in the current task, make a focused patch, rerun the failing test, and run relevant regression checks. Do not remove/disable tests, weaken assertions/validation/security, fake results, or conceal failures to force a pass.
 
 ### Gate and truthful status
 - Do not hand off as ready while a feasible relevant test remains unrun or a serious failure remains unresolved.
@@ -165,8 +179,9 @@ Clearly explain how the score was derived; do not use fake precision. If there i
 
 ### File-by-file change ledger (mandatory)
 List **every file inspected that was relevant to the audit** and classify it:
-- `CHANGED`: path — what changed, why, and which finding(s) it addresses.
-- `NO CHANGE`: path — reviewed, no edit; state whether it passed or why an edit was not needed.
+- `CHANGED`: path — only if code edits were explicitly authorized; what changed, why, and which finding(s) it addresses.
+- `NO CHANGE`: path — reviewed, no edit; state whether it passed or why.
+- For default audit-only work, the `CHANGED` list must be empty. List proposed patches separately and label them `PROPOSED MANUAL FIX — NOT APPLIED`.
 - `ADDED` / `DELETED`: path — purpose and reason.
 Group files by area if the list is long. Avoid vague descriptions such as “UI improvements”; name the concrete change.
 If a file was not inspected, do not imply it was.
