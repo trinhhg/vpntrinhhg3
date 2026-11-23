@@ -199,9 +199,9 @@ describe('tests/business.test.js — Nghiệp vụ Tính toán, Phân bổ & CMS
     });
   });
 
-  describe('Tách Biệt Bảng Tỷ Giá: Doanh Thu vs Gói Cước', () => {
+  describe('Tách Biệt Bảng Tỷ Giá: Doanh Thu vs Gói Cước (VND & CNY)', () => {
     it('quy đổi doanh thu thực thu theo tỷ giá Báo cáo Doanh thu', () => {
-      const revRates = { alipayCny: 3500, wechatCny: 3500, usd: 25400 };
+      const revRates = { alipayCny: 3500, wechatCny: 3500 };
       const orders = [
         { pay: 'Alipay', cny: 10 },
         { pay: 'Weixin', cny: 20 }
@@ -215,15 +215,13 @@ describe('tests/business.test.js — Nghiệp vụ Tính toán, Phân bổ & CMS
       expect(totalVndConverted).toBe(105000); // 10*3500 + 20*3500 = 105.000 đ
     });
 
-    it('tính toán giá niêm yết CNY và USD cho gói cước theo tỷ giá Bán hàng', () => {
-      const pkgRates = { vndCny: 3400, vndUsd: 25400 };
+    it('tính toán giá niêm yết CNY (dùng cho cả EN và ZH) từ VND theo tỷ giá Bán hàng', () => {
+      const pkgRates = { vndCny: 3400 };
       const pkgVnd = 70000;
 
       const cnyPrice = Math.round((pkgVnd / pkgRates.vndCny) * 2) / 2; // làm tròn 0.5
-      const usdPrice = Math.round((pkgVnd / pkgRates.vndUsd) * 2) / 2;
 
       expect(cnyPrice).toBe(20.5); // 70000 / 3400 = 20.588 -> 20.5
-      expect(usdPrice).toBe(3);    // 70000 / 25400 = 2.75 -> 3.0
     });
   });
 });
