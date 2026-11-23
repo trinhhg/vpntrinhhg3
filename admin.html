@@ -1,3 +1,4 @@
+<!-- v2.3 — 2026-11-23 19:05 (UTC+7) — Sửa wrap thanh editor #cmsAddBtns trên mobile 20:9, thêm onchange="mcLoadPreset()" cho #mcPreset, làm rõ mô tả Bật mờ/Kiểm tra, sửa target sheet attachVaulPhysics & pop modal history khi vuốt đóng -->
 <!-- v2.2 — 2026-11-21 20:42 (UTC+7) — Xếp dọc Bảng A/B Tab Quét & Map lại, thêm toggle Backup trước thao tác, chuyển Coupon/Gift Rule sang danh sách card, bổ sung nút/cờ Sửa & VIP modal, đóng </main> và hoàn thiện attachVaulPhysics -->
 <!-- v2.1 — 2026-11-21 19:05 (UTC+7) — Chuẩn hóa Tab Kiểm tra bù link độc lập theo từng web, sửa lỗi inline handler #mOEmail và Tab Soạn mail -->
 <!DOCTYPE html>
@@ -6,7 +7,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VPN Trinh Hg — Admin Panel</title>
-    <link rel="manifest" href="/manifestadmin.json"> 
+    <link rel="manifest" href="/manifestadmin.json">
     <meta name="theme-color" content="#ffffff">
     <link rel="apple-touch-icon" href="/icon-192.png">
     <link rel="stylesheet" href="/src/admin.css">
@@ -350,7 +351,7 @@
             </div>
             <!-- Khung soạn thảo Word Quill toàn màn hình -->
             <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-              <div class="bg-slate-50 p-2.5 border-b border-slate-200 flex justify-between items-center" id="cmsAddBtns"></div>
+              <div class="bg-slate-50 p-2.5 border-b border-slate-200 flex flex-wrap justify-between items-center gap-2" id="cmsAddBtns"></div>
               <div class="bg-white min-h-[460px] p-2">
                 <div id="quillEditor" class="text-sm text-slate-800 leading-relaxed min-h-[420px]"></div>
               </div>
@@ -369,7 +370,7 @@
         <p id="mcHint" class="text-[11px] text-slate-500 mb-4"></p>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
           <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
-            <div class="flex gap-2 flex-wrap"><select id="mcPreset" class="flex-1 min-w-[140px] p-2 border border-slate-200 rounded-lg text-xs bg-white font-bold"></select> <button onclick="mcLoadPreset()" class="bg-indigo-50 text-indigo-600 font-bold px-3 py-2 rounded-lg text-xs hover:bg-indigo-100">Nạp mẫu</button> <button onclick="mcSaveTemplate()" class="bg-emerald-50 text-emerald-700 font-bold px-3 py-2 rounded-lg text-xs hover:bg-emerald-100"><i class="fas fa-floppy-disk mr-1"></i>Lưu mẫu</button> <button id="mcExtraBtn" onclick="mcExtraAction()" class="bg-slate-100 text-slate-600 font-bold px-3 py-2 rounded-lg text-xs hover:bg-slate-200"></button></div>
+            <div class="flex gap-2 flex-wrap"><select id="mcPreset" onchange="mcLoadPreset()" class="flex-1 min-w-[140px] p-2 border border-slate-200 rounded-lg text-xs bg-white font-bold"></select> <button onclick="mcLoadPreset()" class="bg-indigo-50 text-indigo-600 font-bold px-3 py-2 rounded-lg text-xs hover:bg-indigo-100">Nạp mẫu</button> <button onclick="mcSaveTemplate()" class="bg-emerald-50 text-emerald-700 font-bold px-3 py-2 rounded-lg text-xs hover:bg-emerald-100"><i class="fas fa-floppy-disk mr-1"></i>Lưu mẫu</button> <button id="mcExtraBtn" onclick="mcExtraAction()" class="bg-slate-100 text-slate-600 font-bold px-3 py-2 rounded-lg text-xs hover:bg-slate-200"></button></div>
             <div>
               <div class="text-[10px] font-bold text-slate-500 mb-1">Bấm biến để chèn vào vị trí con trỏ đang gõ</div>
               <div id="mcVarBtns" class="flex flex-wrap gap-1.5"></div>
@@ -666,7 +667,7 @@
                 </div>
                 <div class="bg-white border border-purple-200 rounded-2xl shadow-sm p-4 md:p-5 space-y-2">
                   <div class="font-bold text-sm text-purple-800 flex items-center justify-between"><span><i class="fas fa-eye-slash text-purple-500 mr-1.5"></i>Cấu hình Làm mờ / Khóa / Kiểm tra (Web này)</span><span class="text-[10px] font-black px-2 py-0.5 rounded bg-purple-100 text-purple-700">Chỉ web này</span></div>
-                  <p class="text-[11px] text-slate-500">Nhập đúng từ khóa domain để mở quyền cấu hình 3 công tắc độc lập cho từng ô Link Sub. Cài đặt chỉ áp dụng trên chính web này.</p>
+                  <p class="text-[11px] text-slate-500">Nhập đúng từ khóa domain để mở quyền cấu hình 3 công tắc độc lập cho từng ô Link Sub. Cài đặt chỉ áp dụng trên chính web này. Lưu ý: Khi <b>Kiểm tra</b> bật, hệ thống luôn mask dấu chấm (••••••••) trước khi xác minh email kể cả khi tắt Bật mờ.</p>
                   <div id="blurRows" class="space-y-2"></div>
                   <button onclick="saveBlur()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md mt-1">LƯU CẤU HÌNH LÀM MỜ / KHÓA / KIỂM TRA</button> <!-- Accordion Ma trận hoạt động 8 trường hợp -->
                   <details class="mt-3 pt-2 border-t border-purple-100 text-xs text-slate-600">
@@ -710,7 +711,7 @@
                             <td class="p-1.5 text-slate-400">OFF</td>
                             <td class="p-1.5 text-slate-400">OFF</td>
                             <td class="p-1.5 text-amber-600 font-bold">ON</td>
-                            <td class="p-1.5">Không blur, yêu cầu xác minh email trước khi Copy/QR</td>
+                            <td class="p-1.5">Không làm mờ CSS (khi đã mở khóa vẫn hiện rõ), mask 40 dấu chấm &amp; yêu cầu xác minh email trước khi Copy/QR</td>
                           </tr>
                           <tr class="bg-purple-50/30">
                             <td class="p-1.5 text-indigo-600 font-bold">ON</td>
@@ -1458,20 +1459,21 @@
         function attachVaulPhysics(overlayId, handleId) {
           const overlay = document.getElementById(overlayId);
           if (!overlay) return;
-          const sheet = overlay.querySelector('.glass-card') || overlay.firstElementChild;
-          const handle = document.getElementById(handleId) || sheet;
-          if (!sheet || !handle) return;
+          const handle = document.getElementById(handleId);
+          const sheet = (handle && handle.parentElement) || overlay.querySelector('.glass-card') || overlay.firstElementChild;
+          if (!sheet || !(handle || sheet)) return;
+          const dragTarget = handle || sheet;
 
           let startY = 0, currentY = 0, isDragging = false;
 
-          handle.addEventListener('touchstart', function (e) {
+          dragTarget.addEventListener('touchstart', function (e) {
             if (window.innerWidth >= 640) return;
             startY = e.touches[0].clientY;
             currentY = startY;
             isDragging = true;
             sheet.style.transition = 'none';
           }, { passive: true });
-          handle.addEventListener('touchmove', function (e) {
+          dragTarget.addEventListener('touchmove', function (e) {
             if (!isDragging) return;
             currentY = e.touches[0].clientY;
             const deltaY = currentY - startY;
@@ -1480,7 +1482,7 @@
             }
           }, { passive: true });
 
-          handle.addEventListener('touchend', function (e) {
+          dragTarget.addEventListener('touchend', function (e) {
             if (!isDragging) return;
             isDragging = false;
             sheet.style.transition = 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)';
@@ -1488,7 +1490,8 @@
             if (deltaY > 110) {
               sheet.style.transform = 'translateY(100%)';
               setTimeout(function () {
-                overlay.classList.add('hidden');
+                if (typeof window.cm === 'function') window.cm(overlayId);
+                else overlay.classList.add('hidden');
                 sheet.style.transform = '';
               }, 220);
             } else {
