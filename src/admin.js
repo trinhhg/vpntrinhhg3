@@ -1,3 +1,4 @@
+// v3 — 2026-11-23 19:05 (UTC+7) — Bỏ USD khỏi tỷ giá/bảng giá (chỉ VND & CNY), dùng _partial payload cho saveCmsDb & tách trùng guides/packages khỏi ALL_CMS, sửa curArt* ReferenceError, vá popstate #mGiftRuleModal & modal history stack, sửa wrap nút Lưu bài viết mobile 20:9, đồng bộ loadAdminFaqs trong fetchAll & cuộn đầu tab Cài đặt
 // v2 — 2026-11-21 20:42 (UTC+7) — Vá chuyển kho Thật/Test theo warehouseEpoch, tuần tự hóa startApp, thêm toggle Backup trước thao tác, chuyển bảng Coupon/Gift Rule sang card dọc (hỗ trợ Sửa + Badge VIP), sửa live getters trên window
 // v1 — 2026-11-21 19:05 (UTC+7) — Sửa Tab Kiểm tra bù link độc lập (chống bấm đúp, khớp mốc hết hạn, lockAuto), vá crash dmy/t-mail/t-cms/FAQ/Footer, chống xóa headerDrawer, sửa biểu đồ Doanh thu, sửa Đối soát D1, bảo vệ nguồn #1, gắn 401 redirect
 /**
@@ -131,7 +132,7 @@ const PDS = {
 };
 let PD = /pages\.dev$/.test(location.hostname) ? location.origin : PDS[3];
 const GH_REPO = "trinhhg/vpntrinhhg3";
-const PKG_LIST = [["t1", "Gói 1 tháng - 60,000VND / $2.5 / ¥15.5 (100GB)", 30], ["t2", "Gói 1 tháng - 70,000VND / $3 / ¥18 (500GB)", 30], ["c1", "Gói 1 tháng - 80,000VND / $3.5 / ¥20.5 (1000GB)", 30], ["c2", "Gói Cao Cấp - 200,000VND / $8 / ¥50 (3000GB)", 30], ["c3", "Gói 1 Năm - 799,000VND / $30 / ¥199 (300GB/tháng)", 365], ["d1", "Không Giới Hạn - 200,000VND / $8 / ¥52 (200GB)", 0], ["d2", "Không Giới Hạn - 399,000VND / $16 / ¥102 (1000GB)", 0], ["d3", "Không Giới Hạn - 999,000VND / $40 / ¥256 (5000GB)", 0], ["o1", "[Giá cũ] Gói 1 tháng - 50,000VND / ¥12.5 (100GB)", 30], ["o2", "[Giá cũ] Gói 1 tháng - 60,000VND / ¥15 (500GB)", 30], ["o3", "[Giá cũ] Gói 1 tháng - 70,000VND / ¥17.5 (1000GB)", 30]];
+const PKG_LIST = [["t1", "Gói 1 tháng - 60,000VND / ¥15.5 (100GB)", 30], ["t2", "Gói 1 tháng - 70,000VND / ¥18 (500GB)", 30], ["c1", "Gói 1 tháng - 80,000VND / ¥20.5 (1000GB)", 30], ["c2", "Gói Cao Cấp - 200,000VND / ¥50 (3000GB)", 30], ["c3", "Gói 1 Năm - 799,000VND / ¥199 (300GB/tháng)", 365], ["d1", "Không Giới Hạn - 200,000VND / ¥52 (200GB)", 0], ["d2", "Không Giới Hạn - 399,000VND / ¥102 (1000GB)", 0], ["d3", "Không Giới Hạn - 999,000VND / ¥256 (5000GB)", 0], ["o1", "[Giá cũ] Gói 1 tháng - 50,000VND / ¥12.5 (100GB)", 30], ["o2", "[Giá cũ] Gói 1 tháng - 60,000VND / ¥15 (500GB)", 30], ["o3", "[Giá cũ] Gói 1 tháng - 70,000VND / ¥17.5 (1000GB)", 30]];
 const TABS = [["t-ord", "fa-box", "Đơn hàng"], ["t-func", "fa-sliders", "Chức năng"], ["t-pkg", "fa-tags", "Bán hàng"], ["t-rev", "fa-chart-pie", "Doanh thu"], ["t-trans", "fa-file-invoice-dollar", "Đối soát"], ["t-check", "fa-clipboard-check", "Kiểm tra"], ["t-lnk", "fa-link", "Link Sub"], ["t-dead", "fa-ban", "Đã xóa"], ["t-mail", "fa-envelope", "Soạn mail"], ["t-cms", "fa-book", "H.Dẫn"], ["t-settings", "fa-cog", "Cài đặt"], ["t-more", "fa-ellipsis-h", "Thêm"]];
 // PKG_DB: giá hiện tại + giá cũ (o1/o2/o3) để nhận diện dữ liệu lịch sử — TUYỆT ĐỐI không quy đổi totalVnd của đơn cũ sang giá mới.
 const PKG_DB = {
@@ -276,7 +277,7 @@ async function pickTz(k) {
   cmsDb.settings.tz = k;
   paintTimeUI();
   try {
-    await saveCmsDb();
+    await saveCmsDb({ settings: { tz: k } });
     renderOrd();
     renderLinks();
     toast("Đã chọn múi giờ " + (k === "CN" ? "Trung Quốc (UTC+8)" : "Việt Nam (UTC+7)"));
@@ -291,7 +292,7 @@ async function applySim() {
   s.simMode = true;
   s.simOffset = target - Date.now();
   try {
-    await saveCmsDb();
+    await saveCmsDb({ settings: { simMode: true, simOffset: s.simOffset } });
     paintTimeUI();
     renderOrd();
     renderLinks();
@@ -306,7 +307,7 @@ async function clearSim() {
   s.simMode = false;
   s.simOffset = 0;
   try {
-    await saveCmsDb();
+    await saveCmsDb({ settings: { simMode: false, simOffset: 0 } });
     $("simInput").value = "";
     paintTimeUI();
     renderOrd();
@@ -649,6 +650,7 @@ async function fetchAll(msg, throwOnError = false, explicitIsTest = undefined) {
       cmsDb = cms && typeof cms === "object" && !Array.isArray(cms) ? cms : {};
       cmsDb.settings = cmsDb.settings || {};
       cmsDb.link_origins = cmsDb.link_origins || {};
+      if (typeof loadAdminFaqs === "function") loadAdminFaqs();
     } else {
       failedParts.push("cms");
       cmsDb = cmsDb && typeof cmsDb === "object" ? cmsDb : {};
@@ -874,10 +876,11 @@ function go(id, fromHistory) {
     console.error("go(" + id + ") lỗi:", e);
     toast("Lỗi mở tab: " + e.message, "err");
   }
-  restoreAdminScroll(id);
+  restoreAdminScroll(id, !!fromHistory);
 }
 
 let isNavigatingFromHistory = false;
+let skipModalPop = false;
 function recordAdminNav(state) {
   if (isNavigatingFromHistory || typeof window === 'undefined') return;
   try {
@@ -888,11 +891,43 @@ function recordAdminNav(state) {
 }
 window.recordAdminNav = recordAdminNav;
 
+function pushAdminModalState(modalId) {
+  if (isNavigatingFromHistory || typeof window === 'undefined') return;
+  try {
+    const cur = history.state && typeof history.state === 'object' ? history.state : { tab: localStorage.getItem(SITE_KEY + "_lastTab") || "t-ord" };
+    if (cur.modal === modalId) return;
+    history.pushState({ ...cur, modal: modalId }, '', location.href);
+  } catch (e) {}
+}
+
+function closeAdminModal(id) {
+  const el = $(id);
+  if (el) {
+    el.classList.add("hidden");
+    const sheet = el.querySelector('.glass-card') || el.querySelector('[id$="Handle"]')?.parentElement;
+    if (sheet) sheet.style.transform = '';
+  }
+  if (!isNavigatingFromHistory && typeof window !== 'undefined' && history.state && history.state.modal === id) {
+    skipModalPop = true;
+    try {
+      history.back();
+    } catch (e) {
+      skipModalPop = false;
+    }
+  }
+}
+
 window.addEventListener('popstate', (event) => {
+  if (skipModalPop) {
+    skipModalPop = false;
+    return;
+  }
   // Khi vuốt quay lại hoặc bấm back: Ưu tiên đóng Modal đang mở trước
-  const openModal = document.querySelector('#mOrd:not(.hidden), #mRootEdit:not(.hidden), #mLnk:not(.hidden), #mCouponModal:not(.hidden)');
+  const openModal = document.querySelector('#mOrd:not(.hidden), #mRootEdit:not(.hidden), #mLnk:not(.hidden), #mCouponModal:not(.hidden), #mGiftRuleModal:not(.hidden)');
   if (openModal) {
     openModal.classList.add('hidden');
+    const sheet = openModal.querySelector('.glass-card') || openModal.querySelector('[id$="Handle"]')?.parentElement;
+    if (sheet) sheet.style.transform = '';
     return;
   }
 
@@ -1077,7 +1112,9 @@ async function saveAllFuncSettings() {
   cmsDb.settings.lockExpiry = draftLockExpiry;
 
   try {
-    await saveCmsDb();
+    await saveCmsDb({
+      settings: { lockFulfill: draftLockFulfill, lockExpiry: draftLockExpiry }
+    });
     localStorage.setItem(SITE_KEY + "_mailOnSave", draftMailOnSave ? "1" : "0");
     localStorage.setItem(SITE_KEY + "_manualEdit", draftManualEdit ? "1" : "0");
     toast("Đã lưu tất cả cấu hình chức năng!");
@@ -1350,6 +1387,7 @@ function openOrdModal(id) {
   modalInit = readModal();
   upgInit = curUpg();
   $("mOrd").classList.remove("hidden");
+  pushAdminModalState("mOrd");
 }
 
 async function saveOrd() {
@@ -1405,7 +1443,7 @@ async function saveOrd() {
     else ordersDb.unshift(o);
     lastSig.o = JSON.stringify(ordersDb);
     renderOrd();
-    cm("mOrd");
+    closeAdminModal("mOrd");
     toast("Đã lưu" + ((j.kind === "new" || j.kind === "renew") && !lockFulfillOn() ? " & đã cấp link" : ""));
     if (modalNew) {
       triggerTelegramBackupNow(`Đơn hàng mới #${o.id} (${o.email || "Khách"})`);
@@ -2402,24 +2440,21 @@ function getRevRates() {
 function getPkgRates() {
   const s = (cmsDb && cmsDb.settings) || {};
   const r = s.pkgRates || s.rates || {};
-  return {
-    vndCny: Number(r.vndCny) || Number(s.cnyRate) || 3500,
-    cnyUsd: Number(r.cnyUsd) || 7.25,
-    vndUsd: Number(r.vndUsd) || 25500
-  };
+  return { vndCny: Number(r.vndCny) || Number(s.cnyRate) || 3500 };
 }
 
 async function saveRevRates() {
   const vndCny = Number($("revRateVndCny") ? $("revRateVndCny").value : 0) || 0;
-  const vndUsd = Number($("revRateVndUsd") ? $("revRateVndUsd").value : 0) || 0;
-  if (vndCny <= 0 || vndUsd <= 0) return toast("Vui lòng nhập tỷ giá doanh thu lớn hơn 0", "warn");
+  if (vndCny <= 0) return toast("Vui lòng nhập tỷ giá doanh thu lớn hơn 0", "warn");
   cmsDb.settings = cmsDb.settings || {};
-  cmsDb.settings.revRates = { vndCny, vndUsd };
+  cmsDb.settings.revRates = { ...(cmsDb.settings.revRates || {}), vndCny };
   cmsDb.settings.cnyRate = vndCny; // fallback
   try {
-    await saveCmsDb();
+    await saveCmsDb({
+      settings: { revRates: cmsDb.settings.revRates, cnyRate: vndCny }
+    });
     toast("Đã lưu Bảng Tỷ Giá Quy Đổi Doanh Thu thành công!");
-    logEvent("ok", "Tỷ giá doanh thu", `VND/CNY: ${vndCny} · VND/USD: ${vndUsd}`);
+    logEvent("ok", "Tỷ giá doanh thu", `VND/CNY: ${vndCny}`);
     renderRevenue();
   } catch (e) {
     toast("Lỗi: " + e.message, "err");
@@ -2429,15 +2464,13 @@ window.saveRevRates = saveRevRates;
 
 async function savePkgRates() {
   const vndCny = Number($("pkgRateVndCny") ? $("pkgRateVndCny").value : 0) || 0;
-  const cnyUsd = Number($("pkgRateCnyUsd") ? $("pkgRateCnyUsd").value : 0) || 0;
-  const vndUsd = Number($("pkgRateVndUsd") ? $("pkgRateVndUsd").value : 0) || 0;
-  if (vndCny <= 0 || cnyUsd <= 0 || vndUsd <= 0) return toast("Vui lòng nhập đủ 3 tỷ giá định giá gói lớn hơn 0", "warn");
+  if (vndCny <= 0) return toast("Vui lòng nhập tỷ giá định giá gói lớn hơn 0", "warn");
   cmsDb.settings = cmsDb.settings || {};
-  cmsDb.settings.pkgRates = { vndCny, cnyUsd, vndUsd };
+  cmsDb.settings.pkgRates = { ...(cmsDb.settings.pkgRates || {}), vndCny };
   try {
-    await saveCmsDb();
+    await saveCmsDb({ settings: { pkgRates: cmsDb.settings.pkgRates } });
     toast("Đã lưu Bảng Tỷ Giá Định Giá Gói Cước thành công!");
-    logEvent("ok", "Tỷ giá gói cước", `VND/CNY: ${vndCny} · CNY/USD: ${cnyUsd} · VND/USD: ${vndUsd}`);
+    logEvent("ok", "Tỷ giá gói cước", `VND/CNY: ${vndCny}`);
   } catch (e) {
     toast("Lỗi: " + e.message, "err");
   }
@@ -2451,7 +2484,6 @@ async function syncRatesToPackages() {
     if (p.isCustom) return;
     if (p.vnd > 0) {
       p.cny = Math.round((p.vnd / r.vndCny) * 2) / 2;
-      p.usd = Math.round((p.vnd / r.vndUsd) * 2) / 2;
     }
   });
   try {
@@ -2460,7 +2492,7 @@ async function syncRatesToPackages() {
     try {
       if (Array.isArray(cmsDb.coupons)) localStorage.setItem('vpn_coupons_cache', JSON.stringify(cmsDb.coupons));
     } catch (e) {}
-    toast("Đã tự động quy đổi và đồng bộ giá CNY & USD cho toàn bộ gói cước!");
+    toast("Đã tự động quy đổi và đồng bộ giá CNY cho toàn bộ gói cước!");
     if (!$("t-pkg").classList.contains("hidden")) renderPkgAdmin();
   } catch (e) {
     toast("Lỗi đồng bộ gói cước: " + e.message, "err");
@@ -2510,14 +2542,14 @@ function revPay(R, b) {
           <div class="font-black text-sm md:text-base text-emerald-950 flex items-center gap-2">
             <i class="fas fa-file-invoice-dollar text-emerald-600 text-base"></i>1. Bảng Tỷ Giá Báo Cáo Doanh Thu (Áp Quy Đổi Tính Tiền Doanh Thu)
           </div>
-          <p class="text-[11px] text-slate-500 mt-0.5">Dùng để quy đổi các đơn Alipay, WeChat, USD sang VND thực thu trong báo cáo và biểu đồ doanh thu.</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Dùng để quy đổi các đơn Alipay, WeChat (CNY) sang VND thực thu trong báo cáo và biểu đồ doanh thu.</p>
         </div>
         <button type="button" onclick="saveRevRates()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-2 rounded-xl text-xs shadow-sm flex items-center gap-1.5 transition active:scale-95 whitespace-nowrap">
           <i class="fas fa-save"></i>LƯU TỶ GIÁ DOANH THU
         </button>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+      <div class="grid grid-cols-1 gap-3 text-xs">
         <div class="bg-white p-3.5 rounded-xl border border-emerald-100 shadow-sm">
           <label class="block font-bold text-slate-700 mb-1">Tỷ giá Thực thu CNY ⟷ VND (Alipay / WeChat):</label>
           <div class="relative">
@@ -2525,15 +2557,6 @@ function revPay(R, b) {
             <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">VND/¥</span>
           </div>
           <span class="text-[10px] text-slate-400 mt-1 block">1 CNY nhận = ${fmtVnd(revR.vndCny)} VND doanh thu</span>
-        </div>
-
-        <div class="bg-white p-3.5 rounded-xl border border-emerald-100 shadow-sm">
-          <label class="block font-bold text-slate-700 mb-1">Tỷ giá Thực thu USD ⟷ VND (Cổng USD):</label>
-          <div class="relative">
-            <input type="number" id="revRateVndUsd" step="100" value="${revR.vndUsd}" placeholder="VD: 26100" class="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold text-emerald-700 outline-none pr-14 text-sm">
-            <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">VND/$</span>
-          </div>
-          <span class="text-[10px] text-slate-400 mt-1 block">1 USD nhận = ${fmtVnd(revR.vndUsd)} VND doanh thu</span>
         </div>
       </div>
     </div>
@@ -2543,46 +2566,28 @@ function revPay(R, b) {
       <div class="flex items-center justify-between flex-wrap gap-2 border-b border-indigo-100 pb-2.5">
         <div>
           <div class="font-black text-sm md:text-base text-indigo-950 flex items-center gap-2">
-            <i class="fas fa-tags text-indigo-600 text-base"></i>2. Bảng Tỷ Giá Định Giá Gói Cước (Tự Quy Đổi VND, CNY, USD Cho Gói)
+            <i class="fas fa-tags text-indigo-600 text-base"></i>2. Bảng Tỷ Giá Định Giá Gói Cước (Tự Quy Đổi VND ⟷ CNY Cho Gói)
           </div>
-          <p class="text-[11px] text-slate-500 mt-0.5">Dùng để tự động tính toán giá niêm yết CNY và USD từ giá VND gốc của toàn bộ gói cước.</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Dùng để tự động tính toán giá niêm yết CNY từ giá VND gốc của toàn bộ gói cước (hiển thị cho tiếng Trung &amp; tiếng Anh).</p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           <button type="button" onclick="savePkgRates()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm flex items-center gap-1 transition active:scale-95 whitespace-nowrap">
             <i class="fas fa-save mr-1"></i>LƯU TỶ GIÁ GÓI
           </button>
-          <button type="button" onclick="syncRatesToPackages()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm flex items-center gap-1 transition active:scale-95 whitespace-nowrap" title="Tự động tính lại giá VND, CNY, USD cho toàn bộ gói cước">
+          <button type="button" onclick="syncRatesToPackages()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm flex items-center gap-1 transition active:scale-95 whitespace-nowrap" title="Tự động tính lại giá CNY từ VND cho toàn bộ gói cước">
             <i class="fas fa-rotate mr-1"></i>ĐỒNG BỘ VÀO GÓI CƯỚC
           </button>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+      <div class="grid grid-cols-1 gap-3 text-xs">
         <div class="bg-white p-3 rounded-xl border border-indigo-100 shadow-sm">
           <label class="block font-bold text-slate-700 mb-1">Tỷ giá VND ⟷ CNY (Giá bán):</label>
           <div class="relative">
-            <input type="number" id="pkgRateVndCny" step="10" value="${pkgR.vndCny}" placeholder="VD: 3500" class="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold text-indigo-700 outline-none pr-12 text-sm">
+            <input type="number" id="pkgRateVndCny" step="10" value="${pkgR.vndCny}" placeholder="VD: 3500" class="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold text-indigo-700 outline-none pr-14 text-sm">
             <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">VND/¥</span>
           </div>
           <span class="text-[10px] text-slate-400 mt-1 block">1 CNY = ${fmtVnd(pkgR.vndCny)} VND</span>
-        </div>
-
-        <div class="bg-white p-3 rounded-xl border border-indigo-100 shadow-sm">
-          <label class="block font-bold text-slate-700 mb-1">Tỷ giá CNY ⟷ USD (Tỷ lệ):</label>
-          <div class="relative">
-            <input type="number" id="pkgRateCnyUsd" step="0.01" value="${pkgR.cnyUsd}" placeholder="VD: 7.25" class="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold text-purple-700 outline-none pr-12 text-sm">
-            <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">¥/$</span>
-          </div>
-          <span class="text-[10px] text-slate-400 mt-1 block">1 USD = ${pkgR.cnyUsd} CNY</span>
-        </div>
-
-        <div class="bg-white p-3 rounded-xl border border-indigo-100 shadow-sm">
-          <label class="block font-bold text-slate-700 mb-1">Tỷ giá VND ⟷ USD (Giá bán):</label>
-          <div class="relative">
-            <input type="number" id="pkgRateVndUsd" step="100" value="${pkgR.vndUsd}" placeholder="VD: 25500" class="w-full p-2 border border-slate-200 rounded-lg font-mono font-bold text-pink-700 outline-none pr-12 text-sm">
-            <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">VND/$</span>
-          </div>
-          <span class="text-[10px] text-slate-400 mt-1 block">1 USD = ${fmtVnd(pkgR.vndUsd)} VND</span>
         </div>
       </div>
     </div>
@@ -2648,7 +2653,6 @@ function revCost(R, b) {
         <select id="cCur" class="p-2 border border-slate-200 rounded-xl bg-white font-bold text-slate-700 outline-none">
           <option value="VND">VND (đ)</option>
           <option value="CNY">CNY (¥)</option>
-          <option value="USD">USD ($)</option>
         </select>
         <input id="cDate" placeholder="DD/MM/YYYY" value="${dmyOf(nowMs())}" class="p-2 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:border-indigo-500 text-center">
         <input id="cNote" placeholder="Ghi chú chi phí" class="col-span-2 p-2 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:border-indigo-500">
@@ -2710,7 +2714,7 @@ async function addCost() {
     note: $("cNote").value.trim()
   });
   try {
-    await saveCmsDb();
+    await saveCmsDb({ costs: cmsDb.costs });
     toast("Đã thêm khoản chi phí vốn thành công!");
     logEvent("ok", "Chi phí vốn", `${src} · ${qty} x ${unit} ${$("cCur").value}`);
     renderRevenue();
@@ -2723,7 +2727,7 @@ async function delCost(id) {
   if (!confirm("Bạn có chắc muốn xóa khoản chi phí vốn này?")) return;
   cmsDb.costs = arr(cmsDb.costs).filter(c => c.id !== id);
   try {
-    await saveCmsDb();
+    await saveCmsDb({ costs: cmsDb.costs });
     toast("Đã xóa khoản chi phí thành công!");
     renderRevenue();
   } catch (e) {
@@ -3022,7 +3026,7 @@ async function mcSaveTemplate() {
     cmsDb.mailSys[key] = mcToTpl();
     if (!cmsDb.mailSys[key].subject) cmsDb.mailSys[key].subject = SYS_TPL[key].subject;
     try {
-      await saveCmsDb();
+      await saveCmsDb({ mailSys: cmsDb.mailSys });
       toast("Đã lưu — trở thành mẫu production mặc định cho \"" + MC_SYS_NAMES[key].replace(/^\d\.\s/, "") + "\"");
       logEvent("ok", "Soạn mail", "Lưu mẫu hệ thống: " + key);
       mcRenderPresetOptions(mcCurKey);
@@ -3038,7 +3042,7 @@ async function mcSaveTemplate() {
   cmsDb.mailFree = cmsDb.mailFree || {};
   cmsDb.mailFree[id] = { name: name.trim(), tpl: mcToTpl(), ts: nowMs() };
   try {
-    await saveCmsDb();
+    await saveCmsDb({ mailFree: cmsDb.mailFree });
     toast("Đã lưu mẫu \"" + name.trim() + "\"");
     mcCurKey = "saved:" + id;
     mcRenderPresetOptions(mcCurKey);
@@ -3053,7 +3057,7 @@ async function mcExtraAction() {
     if (!confirm("Khôi phục mẫu này về mặc định của hệ thống?")) return;
     delete cmsDb.mailSys[key];
     try {
-      await saveCmsDb();
+      await saveCmsDb({ mailSys: cmsDb.mailSys });
       toast("Đã khôi phục mặc định");
       mcRenderPresetOptions(mcCurKey);
       mcLoadPreset();
@@ -3066,7 +3070,7 @@ async function mcExtraAction() {
   if (!confirm("Xóa mẫu đã lưu này?")) return;
   delete cmsDb.mailFree[key];
   try {
-    await saveCmsDb();
+    await saveCmsDb({ mailFree: cmsDb.mailFree });
     toast("Đã xóa mẫu");
     mcRenderPresetOptions();
     mcLoadPreset();
@@ -3841,6 +3845,7 @@ function openRootEditModal(groupKey) {
   onModalOrigInput(2);
 
   $("mRootEdit").classList.remove("hidden");
+  pushAdminModalState("mRootEdit");
 }
 
 const saveLinks = () => {
@@ -4191,7 +4196,7 @@ async function saveRootEdit() {
     });
   }
 
-  cm("mRootEdit");
+  closeAdminModal("mRootEdit");
   await aj("/api/admin/save_links_and_pool", { method: "POST", body: { links: linksDb, pool: linkPoolDb } });
   renderLinks();
   if (!isSupportedCombo) {
@@ -4428,6 +4433,7 @@ function openLnkModal(id) {
   $("mLEmail").value = l.email || "";
   $("mLIdx").value = l.linkIndex || l.machine || "";
   $("mLnk").classList.remove("hidden");
+  pushAdminModalState("mLnk");
 }
 
 // 7. Bút chì con: Sửa Email, HSD, Index VÀ SỬA LINK GỐC / CHUYỂN ĐƠN <-> COMBO cho riêng link đó (bảo toàn manual metadata)
@@ -4507,7 +4513,7 @@ async function saveLnkEdit() {
   }
   delete l.machine;
 
-  cm("mLnk");
+  closeAdminModal("mLnk");
   renderLinks();
   try {
     await saveLinks();
@@ -4686,7 +4692,6 @@ function getDefaultAdminPkgs() {
     time: 1,
     vnd: 60000,
     cny: 15.5,
-    usd: 2.5,
     promo_sticker: "+3 NGÀY",
     bonus_days: 3,
     data: "100GB",
@@ -4707,7 +4712,6 @@ function getDefaultAdminPkgs() {
     time: 1,
     vnd: 70000,
     cny: 18.0,
-    usd: 3.0,
     promo_sticker: "",
     bonus_days: 0,
     data: "500GB",
@@ -4728,7 +4732,6 @@ function getDefaultAdminPkgs() {
     time: 1,
     vnd: 80000,
     cny: 20.5,
-    usd: 3.5,
     promo_sticker: "",
     bonus_days: 0,
     data: "1000GB",
@@ -4749,7 +4752,6 @@ function getDefaultAdminPkgs() {
     time: 1,
     vnd: 200000,
     cny: 50.0,
-    usd: 8.0,
     promo_sticker: "",
     bonus_days: 0,
     data: "3000GB",
@@ -4770,7 +4772,6 @@ function getDefaultAdminPkgs() {
     time: 12,
     vnd: 799000,
     cny: 199.0,
-    usd: 30.0,
     promo_sticker: "",
     bonus_days: 0,
     data: "300GB/tháng",
@@ -4791,7 +4792,6 @@ function getDefaultAdminPkgs() {
     time: "lifetime",
     vnd: 200000,
     cny: 52.0,
-    usd: 8.0,
     promo_sticker: "",
     bonus_days: 0,
     data: "200GB",
@@ -4812,7 +4812,6 @@ function getDefaultAdminPkgs() {
     time: "lifetime",
     vnd: 399000,
     cny: 102.0,
-    usd: 16.0,
     promo_sticker: "",
     bonus_days: 0,
     data: "1000GB",
@@ -4833,7 +4832,6 @@ function getDefaultAdminPkgs() {
     time: "lifetime",
     vnd: 999000,
     cny: 256.0,
-    usd: 40.0,
     promo_sticker: "",
     bonus_days: 0,
     data: "5000GB",
@@ -4854,7 +4852,6 @@ function getDefaultAdminPkgs() {
     time: 1,
     vnd: 0,
     cny: 0,
-    usd: 0,
     isCustom: true,
     data: "100GB - 100,000GB",
     dev: "Tùy chọn",
@@ -4996,7 +4993,7 @@ async function saveHeaderDrawer() {
   cmsDb.settings = cmsDb.settings || {};
   cmsDb.settings.headerDrawer = getHeaderDrawerFromForm();
   try {
-    await saveCmsDb();
+    await saveCmsDb({ settings: { headerDrawer: cmsDb.settings.headerDrawer } });
     broadcastAdminSync('header_drawer_update', { headerDrawer: cmsDb.settings.headerDrawer });
     toast("Đã lưu cấu hình thanh thông báo đỉnh web thành công!");
     logEvent("ok", "admin", "Lưu thông báo đỉnh web Pro");
@@ -5008,21 +5005,19 @@ async function saveHeaderDrawer() {
 
 async function loadAdminPkgs() {
   try {
-    if (Array.isArray(cmsDb?.packages) && cmsDb.packages.length) {
+    const j = await aj("/api/packages").catch(() => null);
+    if (Array.isArray(j?.packages) && j.packages.length) {
+      adminPkgsList = j.packages;
+      window.adminPkgsList = adminPkgsList;
+    } else if (Array.isArray(j) && j.length) {
+      adminPkgsList = j;
+      window.adminPkgsList = adminPkgsList;
+    } else if (Array.isArray(cmsDb?.packages) && cmsDb.packages.length) {
       adminPkgsList = cmsDb.packages;
       window.adminPkgsList = adminPkgsList;
     } else {
-      const j = await aj("/api/packages").catch(() => null);
-      if (Array.isArray(j?.packages) && j.packages.length) {
-        adminPkgsList = j.packages;
-        window.adminPkgsList = adminPkgsList;
-      } else if (Array.isArray(j) && j.length) {
-        adminPkgsList = j;
-        window.adminPkgsList = adminPkgsList;
-      } else {
-        adminPkgsList = getDefaultAdminPkgs();
-        window.adminPkgsList = adminPkgsList;
-      }
+      adminPkgsList = getDefaultAdminPkgs();
+      window.adminPkgsList = adminPkgsList;
     }
   } catch { adminPkgsList = getDefaultAdminPkgs();
   }
@@ -5092,22 +5087,17 @@ function renderPkgAdmin() {
           <span><i class="fas fa-tag text-emerald-600 mr-1.5"></i>Bảng Giá Bán Thực Thu:</span>
           <span class="text-[10px] text-slate-400 font-normal">Giá gói chính thức áp dụng thanh toán</span>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <div class="bg-white p-2.5 rounded-xl border border-emerald-300 shadow-xs">
             <label class="block text-[10px] font-bold text-emerald-700 mb-0.5">VND Thực Thu</label>
             <input type="number" step="1000" value="${p.vnd || 0}" ${p.isCustom ? 'disabled' : ''} class="inp-vnd w-full p-1.5 border border-emerald-300 rounded-lg font-black text-emerald-700 bg-emerald-50/40 text-xs" oninput="adminPkgsList[${idx}].vnd = Number(this.value)||0">
           </div>
           <div class="bg-white p-2.5 rounded-xl border border-blue-300 shadow-xs">
-            <label class="block text-[10px] font-bold text-blue-700 mb-0.5">CNY (¥)</label>
+            <label class="block text-[10px] font-bold text-blue-700 mb-0.5">CNY (¥) · Tiếng Trung &amp; Tiếng Anh</label>
             <input type="number" step="0.5" value="${p.cny || 0}" ${p.isCustom ? 'disabled' : ''} class="inp-cny w-full p-1.5 border border-blue-300 rounded-lg font-black text-blue-700 bg-blue-50/40 text-xs" oninput="adminPkgsList[${idx}].cny = Number(this.value)||0">
-          </div>
-          <div class="bg-white p-2.5 rounded-xl border border-indigo-300 shadow-xs">
-            <label class="block text-[10px] font-bold text-indigo-700 mb-0.5">USD ($)</label>
-            <input type="number" step="0.5" value="${p.usd || 0}" ${p.isCustom ? 'disabled' : ''} class="inp-usd w-full p-1.5 border border-indigo-300 rounded-lg font-black text-indigo-700 bg-indigo-50/40 text-xs" oninput="adminPkgsList[${idx}].usd = Number(this.value)||0">
           </div>
         </div>
       </div>
-
       <!-- (Đã chuyển cấu hình quà tặng sang khối Quản lý Quy Tắc Quà Tặng trong subtab Sale & Mã) -->
 
       <!-- HÀNG 4: THÔNG SỐ GÓI -->
@@ -5221,7 +5211,6 @@ function addCustomPkg() {
     time: 1,
     vnd: 50000,
     cny: 15,
-    usd: 2,
     promo_sticker: "",
     bonus_days: 0,
     bonus_text: "",
@@ -5266,8 +5255,6 @@ async function saveAllPkgs() {
     if (vndInp) targetPkg.vnd = Number(vndInp.value) || 0;
     const cnyInp = card.querySelector(".inp-cny");
     if (cnyInp) targetPkg.cny = Number(cnyInp.value) || 0;
-    const usdInp = card.querySelector(".inp-usd");
-    if (usdInp) targetPkg.usd = Number(usdInp.value) || 0;
     // Không đọc promo_sticker / bonus_days / bonus_text từ card gói nữa (đã chuyển sang Gift Rules)
 
     // Quét trực tiếp các checkbox Category (Bộ lọc)
@@ -5289,14 +5276,13 @@ async function saveAllPkgs() {
     }
   });
 
-  // Lưu cấu hình Banner Header Drawer vào cmsDb
+  // Lưu cấu hình Banner Header Drawer vào cmsDb & danh sách gói vào /api/packages (ALL_PACKAGES)
   cmsDb.settings = cmsDb.settings || {};
   cmsDb.settings.headerDrawer = getHeaderDrawerFromForm();
-  // Lưu danh sách gói cước vào cả cmsDb.packages để bảo đảm đồng bộ 100%
-  cmsDb.packages = adminPkgsList;
+  delete cmsDb.packages;
 
   try {
-    await Promise.all([saveCmsDb(), aj("/api/packages", { method: "POST", body: { packages: adminPkgsList } }).catch(() => null)]);
+    await Promise.all([saveCmsDb({ settings: { headerDrawer: cmsDb.settings.headerDrawer } }), aj("/api/packages", { method: "POST", body: { packages: adminPkgsList } }).catch(() => null)]);
     toast(`Đã lưu toàn bộ cấu hình Cửa hàng & ${adminPkgsList.length} gói cước thành công!`);
     renderPkgAdmin();
   } catch (e) {
@@ -6265,11 +6251,11 @@ function renderCmsEditor() {
   </div></div></details>`;
   setTimeout(renderArtFaqsUI, 20);
   $("cmsAddBtns").innerHTML = `
-  <div class="flex items-center gap-2">
+  <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 min-w-0 flex-1">
    <span class="font-extrabold text-xs text-slate-700"><i class="fas fa-pen-nib text-indigo-600 mr-1.5"></i>Trình soạn thảo chuẩn Word (Quill.js)</span>
    <span class="text-[10px] text-slate-400 font-medium">Bấm Ctrl+S để lưu nhanh · H2/H3 tự động lên mục lục</span>
   </div>
-  <button type="button" onclick="saveCms()" class="tb-btn !bg-indigo-600 !text-white !border-indigo-600 hover:!bg-indigo-700 shadow-sm text-xs font-bold px-3"><i class="fas fa-floppy-disk mr-1"></i>Lưu bài viết</button>
+  <button type="button" onclick="saveCms()" class="tb-btn shrink-0 whitespace-nowrap !h-auto py-1.5 !bg-indigo-600 !text-white !border-indigo-600 hover:!bg-indigo-700 shadow-sm text-xs font-bold px-3"><i class="fas fa-floppy-disk mr-1"></i>Lưu bài viết</button>
  `;
 
   if (typeof Quill !== "undefined" && $("quillEditor")) {
@@ -6365,12 +6351,7 @@ async function saveCms(silent = false) {
     delete a.blocks;
   }
   try {
-    await Promise.all([aj("/api/guides", { method: "POST", body: guides }), (async () => {
-      if (typeof cmsDb === "object" && cmsDb) {
-        cmsDb.guides = guides;
-        await saveCmsDb().catch(() => null);
-      }
-    })()]);
+    await aj("/api/guides", { method: "POST", body: guides });
     if (!silent) toast("Đã lưu toàn bộ bài viết, FAQ riêng và cài đặt thành công!");
     logEvent("ok", "admin", "Lưu bài viết hướng dẫn", `${curCms} / ${curArtName||curArtSlug}`);
     if (a) {
@@ -6767,14 +6748,13 @@ function renderGuideCategoriesTree() {
 function prepareCmsDbSync() {
   if (!cmsDb || typeof cmsDb !== 'object') return;
   cmsDb.settings = cmsDb.settings || {};
-  cmsDb.settings.headerDrawer = getHeaderDrawerFromForm();
-  if (Array.isArray(adminPkgsList) && adminPkgsList.length) {
-    cmsDb.packages = adminPkgsList;
-  }
+  delete cmsDb.guides;
+  delete cmsDb.packages;
 }
-const saveCmsDb = async () => {
+const saveCmsDb = async (patch = null) => {
   prepareCmsDbSync();
-  const res = await aj("/api/cms", { method: "POST", body: cmsDb });
+  const body = (patch && typeof patch === 'object') ? { _partial: true, ...patch } : cmsDb;
+  const res = await aj("/api/cms", { method: "POST", body });
   try {
     broadcastAdminSync('cms_update', { ts: Date.now() });
   } catch (e) {}
@@ -6846,11 +6826,14 @@ function renderRouteRows() {
 
 async function saveRouting() {
   const s = cmsDb.settings;
+  const routePatch = {};
   [1, 2, 3].forEach(i => {
-    s["routeWeb" + i] = $("routeWeb" + i).value.trim();
+    const val = $("routeWeb" + i).value.trim();
+    s["routeWeb" + i] = val;
+    routePatch["routeWeb" + i] = val;
   });
   try {
-    await saveCmsDb();
+    await saveCmsDb({ settings: routePatch });
     toast("Đã lưu Định tuyến Gốc");
     logEvent("ok", "Lưu cấu hình", "Định tuyến Gốc");
     renderRouteRows();
@@ -6928,6 +6911,7 @@ function renderBlurRows() {
 
 async function saveBlur() {
   const s = cmsDb.settings;
+  const blurPatch = {};
   [1, 2, 3].forEach(i => {
     const val = String($("blurRoute" + i)?.value || "").trim();
     const isValid = val.toLowerCase().includes(BLUR_RULES[i]);
@@ -6935,10 +6919,14 @@ async function saveBlur() {
     s["blurOn" + i] = isValid ? !!$("blurOn" + i)?.checked : false;
     s["lockOn" + i] = isValid ? !!$("lockOn" + i)?.checked : false;
     s["verifyOn" + i] = isValid ? !!$("verifyOn" + i)?.checked : false;
+    blurPatch["blurRoute" + i] = s["blurRoute" + i];
+    blurPatch["blurOn" + i] = s["blurOn" + i];
+    blurPatch["lockOn" + i] = s["lockOn" + i];
+    blurPatch["verifyOn" + i] = s["verifyOn" + i];
   });
   try {
     // Chỉ lưu vào KV của web này, KHÔNG bắn đồng bộ đi đâu cả!
-    await saveCmsDb();
+    await saveCmsDb({ settings: blurPatch });
     toast("Đã lưu cấu hình Làm mờ / Khóa / Kiểm tra cho web này");
     logEvent("ok", "Lưu cấu hình", "Làm mờ / Khóa / Kiểm tra cục bộ");
     renderBlurRows();
@@ -6991,7 +6979,7 @@ async function saveDock() {
   const a = readDockRows().filter(it => /^https?:\/\//i.test(it.img || ""));
   cmsDb.settings.dock = a;
   try {
-    await saveCmsDb();
+    await saveCmsDb({ settings: { dock: a } });
     toast("Đã lưu Icon Dock (" + a.length + " icon tùy chỉnh)");
     logEvent("ok", "Lưu cấu hình", "Icon Dock");
     renderDockRows();
@@ -7100,7 +7088,7 @@ function moveFaq(idx, dir) {
 async function saveFaqs() {
   cmsDb.faqs = JSON.parse(JSON.stringify(adminFaqsList));
   try {
-    await saveCmsDb();
+    await saveCmsDb({ faqs: cmsDb.faqs });
     toast(`Đã lưu ${adminFaqsList.length} câu hỏi FAQ và đồng bộ sang Trang chủ thành công!`);
     logEvent("ok", "FAQ", `Lưu ${adminFaqsList.length} câu hỏi`);
   } catch (e) {
@@ -7174,7 +7162,7 @@ async function saveRoutesConfig() {
   if ($("rtPolicy")) $("rtPolicy").value = pol === DEFAULT_SYS_ROUTES.policy ? "" : pol;
 
   try {
-    await saveCmsDb();
+    await saveCmsDb({ settings: { routes: cmsDb.settings.routes } });
     toast("Đã lưu Cấu hình Đường dẫn Hệ thống thành công!");
     logEvent("ok", "Routes", `Cấu hình routes: ${o}, ${p}, ${g}, ${pol}`);
   } catch (e) {
@@ -7323,7 +7311,7 @@ async function saveFooterConfig() {
     refund: ($("ftRefundText")?.value || "").trim()
   };
   try {
-    await saveCmsDb();
+    await saveCmsDb({ footer: cmsDb.footer });
     toast("Đã lưu toàn bộ cấu hình Footer & Đường dẫn thành công!");
     logEvent("ok", "Footer", "Lưu cấu hình Footer & Routes");
   } catch (e) {
@@ -7336,7 +7324,7 @@ async function saveQrExpireSeconds() {
   cmsDb.settings.qrExpireSeconds = val;
   if ($("qrExpireSecondsInp")) $("qrExpireSecondsInp").value = val;
   try {
-    await saveCmsDb();
+    await saveCmsDb({ settings: { qrExpireSeconds: val } });
     toast(`Đã lưu thời gian tự hủy mã QR: ${val} giây!`);
     logEvent("ok", "Lưu cấu hình", `Thời gian tự hủy QR: ${val}s`);
   } catch (e) {
@@ -7354,7 +7342,12 @@ async function saveEmailVerifyTtl() {
   cmsDb.settings.emailVerifyTtlHours = Math.round(val / 3600);
   if ($("emailVerifyTtlSecondsInp")) $("emailVerifyTtlSecondsInp").value = val;
   try {
-    await saveCmsDb();
+    await saveCmsDb({
+      settings: {
+        emailVerifyTtlSeconds: val,
+        emailVerifyTtlHours: cmsDb.settings.emailVerifyTtlHours
+      }
+    });
     toast(`Đã lưu thời gian hiệu lực xác minh email: ${val} giây!`);
   } catch (e) {
     toast("Lỗi lưu thời gian hiệu lực: " + e.message, "err");
@@ -7433,7 +7426,9 @@ async function saveEmailPerm() {
     toast("Slave không gửi mail — đã tắt Auto Mail", "warn");
   }
   try {
-    await saveCmsDb();
+    await saveCmsDb({
+      settings: { emailRole: s.emailRole, autoMailEnabled: s.autoMailEnabled }
+    });
     const be = await aj("/api/cms"), bs = (be && be.settings) || {};
     if (bs.emailRole !== s.emailRole || !!bs.autoMailEnabled !== !!s.autoMailEnabled) toast("Backend chưa nhận đúng cấu hình — thử lưu lại", "err");
     else toast("Đã lưu — Worker xác nhận: " + (s.emailRole === "master" ? "Master" : "Slave"));
@@ -7500,7 +7495,7 @@ async function saveAdminNotifyPerm() {
   cmsDb.settings.adminNotifyRole = role;
   cmsDb.settings.adminNotifyEvents = events;
   try {
-    await saveCmsDb();
+    await saveCmsDb({ settings: { adminNotifyRole: role, adminNotifyEvents: events } });
     updateAdminNotifyStatusUI();
     toast("Đã lưu cấu hình Báo Mail Admin: " + (role === "master" ? "Master" : "Slave"));
     logEvent("ok", "Lưu cấu hình", `Báo Mail Admin: ${role.toUpperCase()}`);
@@ -7511,7 +7506,7 @@ async function saveAdminNotifyPerm() {
 async function saveCronCfg() {
   cmsDb.settings.autoMigrateNode = $("toggleAutoMigrate").checked;
   try {
-    await saveCmsDb();
+    await saveCmsDb({ settings: { autoMigrateNode: cmsDb.settings.autoMigrateNode } });
     toast("Đã lưu cấu hình Cron");
     logEvent("ok", "Lưu cấu hình", "Auto Migrate " + (cmsDb.settings.autoMigrateNode ? "bật" : "tắt"));
     loadStatus();
@@ -7756,7 +7751,7 @@ async function saveMailProvider() {
   }
 
   try {
-    await saveCmsDb();
+    await saveCmsDb({ settings: { mailProvider: target } });
     selectedMailProv = null;
     const shortName = ({
       google: "Google app script",
@@ -8158,7 +8153,14 @@ window.addEventListener("scroll", () => {
   }, 150);
 });
 
-function restoreAdminScroll(tabId) {
+function restoreAdminScroll(tabId, fromHistory = false) {
+  if (!fromHistory && tabId === "t-settings") {
+    try {
+      sessionStorage.setItem("adm_scroll_t-settings", "0");
+    } catch (e) {}
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'instant' }), 60);
+    return;
+  }
   const saved = sessionStorage.getItem("adm_scroll_" + tabId);
   if (saved !== null && !isNaN(Number(saved))) {
     setTimeout(() => window.scrollTo({ top: Number(saved), behavior: 'instant' }), 60);
@@ -8444,7 +8446,12 @@ async function saveTgOrderAlertSetting() {
     cmsDb.settings.telegramOrderPortalDomain = selDomain.value;
   }
   try {
-    await saveCmsDb();
+    const tgPatch = {
+      telegramOrderLinkField: selField,
+      ...(chk ? { tgOrderAlert: chk.checked } : {}),
+      ...(selDomain && validDomains.includes(selDomain.value) ? { telegramOrderPortalDomain: selDomain.value } : {})
+    };
+    await saveCmsDb({ settings: tgPatch });
     const savedLbl = $("tgOrderNotifySavedFieldText");
     if (savedLbl) {
       savedLbl.innerHTML = `Nguồn Link Sub đã lưu: <span class="text-emerald-700 font-mono font-black">${esc(selField)}</span>`;
@@ -8542,7 +8549,10 @@ async function toggleFlashSale(checked) {
   cmsDb.settings.flashSale = cmsDb.sales.campaign;
   if ($("saleCampaignActive")) $("saleCampaignActive").checked = checked;
   try {
-    await saveCmsDb();
+    await saveCmsDb({
+      sales: cmsDb.sales,
+      settings: { flashSale: cmsDb.settings.flashSale }
+    });
     await syncPublicPackagesPayload();
     broadcastAdminSync('flash_sale_toggle', { flashSale: cmsDb.sales.campaign });
     toast(checked ? "Đã BẬT chiến dịch Flash Sale" : "Đã TẮT chiến dịch Flash Sale");
@@ -8570,7 +8580,7 @@ async function saveFlashSaleConfig() {
   cmsDb.settings.flashSale = c;
 
   try {
-    await saveCmsDb();
+    await saveCmsDb({ sales: cmsDb.sales, settings: { flashSale: c } });
     await syncPublicPackagesPayload();
     broadcastAdminSync('flash_sale_update', { flashSale: c });
     toast("Đã lưu chiến dịch Flash Sale thành công!");
@@ -8664,12 +8674,12 @@ function openAddCouponModal(editIdx = null) {
   if ($("couponModalEnabled")) $("couponModalEnabled").checked = c ? (c.enabled !== false) : true;
   if ($("couponModalVip")) $("couponModalVip").checked = !!(c && c.isVip);
   m.classList.remove("hidden");
+  pushAdminModalState("mCouponModal");
 }
 window.openAddCouponModal = openAddCouponModal;
 
 function closeCouponModal() {
-  const m = $("mCouponModal");
-  if (m) m.classList.add("hidden");
+  closeAdminModal("mCouponModal");
 }
 window.closeCouponModal = closeCouponModal;
 
@@ -8720,7 +8730,7 @@ async function saveCouponModal() {
   }
 
   try {
-    await saveCmsDb();
+    await saveCmsDb({ coupons: cmsDb.coupons });
     await syncPublicPackagesPayload();
     broadcastAdminSync('coupon_update', { coupons: cmsDb.coupons });
     closeCouponModal();
@@ -8850,12 +8860,12 @@ function openAddGiftRuleModal(editIdx = null) {
 
   updateGiftRulePkgCheckboxes();
   m.classList.remove("hidden");
+  pushAdminModalState("mGiftRuleModal");
 }
 window.openAddGiftRuleModal = openAddGiftRuleModal;
 
 function closeGiftRuleModal() {
-  const m = $("mGiftRuleModal");
-  if (m) m.classList.add("hidden");
+  closeAdminModal("mGiftRuleModal");
 }
 window.closeGiftRuleModal = closeGiftRuleModal;
 
@@ -8905,7 +8915,7 @@ async function saveGiftRuleModal() {
   }
 
   try {
-    await saveCmsDb();
+    await saveCmsDb({ giftRules: cmsDb.giftRules });
     await syncPublicPackagesPayload();
     renderGiftRulesAdmin();
     closeGiftRuleModal();
@@ -8924,7 +8934,7 @@ async function toggleGiftRuleStatus(idx) {
   const cur = cmsDb.giftRules[idx];
   cur.enabled = cur.enabled === false ? true : false;
   try {
-    await saveCmsDb();
+    await saveCmsDb({ giftRules: cmsDb.giftRules });
     await syncPublicPackagesPayload();
     renderGiftRulesAdmin();
     broadcastAdminSync('gift_rules_toggle', { giftRules: cmsDb.giftRules });
@@ -8943,7 +8953,7 @@ async function deleteGiftRuleItem(idx) {
   if (!confirm(`Bạn có chắc chắn muốn xóa quy tắc quà tặng "${name}"?`)) return;
   const removed = cmsDb.giftRules.splice(idx, 1);
   try {
-    await saveCmsDb();
+    await saveCmsDb({ giftRules: cmsDb.giftRules });
     await syncPublicPackagesPayload();
     renderGiftRulesAdmin();
     broadcastAdminSync('gift_rules_delete', { giftRules: cmsDb.giftRules });
@@ -8960,7 +8970,7 @@ async function toggleCouponStatus(idx) {
   if (!cmsDb.coupons[idx]) return;
   cmsDb.coupons[idx].enabled = cmsDb.coupons[idx].enabled === false ? true : false;
   try {
-    await saveCmsDb();
+    await saveCmsDb({ coupons: cmsDb.coupons });
     await syncPublicPackagesPayload();
     broadcastAdminSync('coupon_toggle', { coupons: cmsDb.coupons });
     renderCouponAdmin();
@@ -8977,7 +8987,7 @@ async function deleteCouponItem(idx) {
   if (!confirm(`Xác nhận xóa mã coupon ${code}?`)) return;
   cmsDb.coupons.splice(idx, 1);
   try {
-    await saveCmsDb();
+    await saveCmsDb({ coupons: cmsDb.coupons });
     await syncPublicPackagesPayload();
     broadcastAdminSync('coupon_delete', { coupons: cmsDb.coupons });
     renderCouponAdmin();
@@ -8994,7 +9004,7 @@ async function toggleCouponCheckout(checked) {
   cmsDb.settings.couponEnabled = checked;
   if ($("couponCheckoutStatusLabel")) $("couponCheckoutStatusLabel").textContent = checked ? "BẬT" : "TẮT";
   try {
-    await saveCmsDb();
+    await saveCmsDb({ settings: { couponEnabled: checked } });
     await syncPublicPackagesPayload();
     broadcastAdminSync('coupon_toggle', { couponEnabled: checked });
     toast(checked ? "Đã BẬT ô nhập mã giảm giá tại trang thanh toán" : "Đã TẮT ô nhập mã giảm giá tại trang thanh toán");
@@ -9227,6 +9237,64 @@ if (typeof window !== 'undefined') {
     get: () => ordersDb,
     set: v => {
       ordersDb = v;
+    }
+  });
+  Object.defineProperties(window, {
+    curArtSlug: {
+      configurable: true,
+      get: () => curArtSlug,
+      set: v => {
+        curArtSlug = v;
+      }
+    },
+    curArtName: {
+      configurable: true,
+      get: () => curArtName,
+      set: v => {
+        curArtName = v;
+      }
+    },
+    curArtAuthor: {
+      configurable: true,
+      get: () => curArtAuthor,
+      set: v => {
+        curArtAuthor = v;
+      }
+    },
+    curArtWatermark: {
+      configurable: true,
+      get: () => curArtWatermark,
+      set: v => {
+        curArtWatermark = v;
+      }
+    },
+    curArtWmOpacity: {
+      configurable: true,
+      get: () => curArtWmOpacity,
+      set: v => {
+        curArtWmOpacity = Number(v) || 12;
+      }
+    },
+    curArtShowToc: {
+      configurable: true,
+      get: () => curArtShowToc,
+      set: v => {
+        curArtShowToc = !!v;
+      }
+    },
+    curArtShowFaqs: {
+      configurable: true,
+      get: () => curArtShowFaqs,
+      set: v => {
+        curArtShowFaqs = !!v;
+      }
+    },
+    curArtShowRelated: {
+      configurable: true,
+      get: () => curArtShowRelated,
+      set: v => {
+        curArtShowRelated = !!v;
+      }
     }
   });
 }
