@@ -8,7 +8,56 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+/* ===== DESIGN SYSTEM TOKENS (PRIMITIVE -> SEMANTIC -> COMPONENT) ===== */
+:root {
+  --adm-indigo-500: #6366f1;
+  --adm-indigo-600: #4f46e5;
+  --adm-indigo-700: #4338ca;
+  --adm-slate-50: #f8fafc;
+  --adm-slate-100: #f1f5f9;
+  --adm-slate-200: #e2e8f0;
+  --adm-slate-600: #475569;
+  --adm-slate-800: #1e293b;
+  --adm-slate-900: #0f172a;
+  --adm-bg: var(--adm-slate-50);
+  --adm-surface: #ffffff;
+  --adm-surface-subtle: var(--adm-slate-100);
+  --adm-border: var(--adm-slate-200);
+  --adm-text-1: var(--adm-slate-900);
+  --adm-text-2: var(--adm-slate-600);
+  --adm-accent: var(--adm-indigo-600);
+  --adm-accent-hover: var(--adm-indigo-700);
+  --adm-radius-card: 1.125rem;
+  --adm-radius-control: 0.75rem;
+  --adm-shadow-card: 0 2px 8px -2px rgba(15, 23, 42, 0.05), 0 1px 4px -1px rgba(15, 23, 42, 0.03);
+  --adm-focus-ring: 0 0 0 2px #ffffff, 0 0 0 4px var(--adm-indigo-600);
+}
+
+.skip-link {
+  position: fixed;
+  left: -9999px;
+  top: 0.5rem;
+  z-index: 100000;
+  background: var(--adm-accent);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.875rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25);
+}
+
+.skip-link:focus {
+  left: 0.75rem;
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+:is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--adm-accent);
+  outline-offset: 2px;
+}
+
 * {
   box-sizing: border-box;
   touch-action: manipulation;
@@ -27,15 +76,15 @@ textarea {
 
 body {
   font-weight: 600;
-  background: #f8fafc;
-  color: #0f172a;
+  background: var(--adm-bg);
+  color: var(--adm-text-1);
   margin: 0;
   overflow-x: hidden;
 }
 
 .glass-card {
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
   box-shadow: 0 10px 40px -10px rgba(0, 0, 0, .05);
   border-radius: 1.25rem;
 }
@@ -150,7 +199,7 @@ body {
 
 .badge-kt {
   background: #fdf2f8;
-  color: #db2777;
+  color: #be185d;
   border: 1px solid #fbcfe8;
   font-size: .65rem;
   font-weight: 800;
@@ -382,7 +431,7 @@ body {
 }
 
 .ord-count-pending {
-  color: #a16207;
+  color: #854d0e;
   background: #fef3c7;
 }
 
@@ -619,19 +668,24 @@ body {
 }
 
 .settings-sub-tab {
-  padding: 6px 16px;
+  padding: 8px 14px;
+  min-height: 40px;
   border-radius: 8px;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  color: #64748b;
+  color: #475569;
   white-space: nowrap;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color .15s ease, color .15s ease, box-shadow .15s ease;
 }
 
 .settings-sub-tab.active {
   background: white;
-  color: #4f46e5;
+  color: #4338ca;
   box-shadow: 0 1px 4px rgba(0, 0, 0, .1);
 }
 
@@ -1071,7 +1125,7 @@ textarea.autog {
 }
 
 .guide-cta-btn.cta-amber {
-  background: linear-gradient(135deg, #d97706, #f59e0b) !important;
+  background: linear-gradient(135deg, #92400e, #b45309) !important;
   color: #ffffff !important;
 }
 
@@ -1094,41 +1148,8 @@ hr.guide-hr,
   height: 0 !important;
 }
 
-/* Month Header & Month Count khôi phục nguyên bản từ Admin Cũ - tự do trên đường kẻ */
-.month-header {
-  font-size: 14px;
-  font-weight: 900;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 2px 8px !important;
-  margin-bottom: 12px !important;
-  border: none !important;
-  border-bottom: 2px solid #e2e8f0 !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  background: transparent !important;
-  color: #1e1b4b;
-}
-
-.month-count {
-  font-size: 11px;
-  font-weight: 900;
-  background: #4f46e5;
-  color: #ffffff;
-  border-radius: 9999px;
-  padding: 2.5px 9px;
-  min-height: 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-/* ===== TỐI ƯU GIAO DIỆN ADMIN TRÊN MOBILE (P2) ===== */
+/* ===== TỐI ƯU GIAO DIỆN ADMIN TRÊN MOBILE & REDUCED MOTION ===== */
 @media (max-width: 639px) {
-  /* 1. Khu vực Set Web: input full width, toggle không bị ép */
   #settings-view-setweb input[type="text"],
   #settings-view-setweb input[type="password"],
   #settings-view-setweb input[type="number"],
@@ -1141,16 +1162,47 @@ hr.guide-hr,
     flex-shrink: 0 !important;
   }
 
-  /* 2. Sub-tabs trên mobile: linh hoạt xuống dòng, không bị ép cuộn */
-  .settings-sub-tab {
-    padding: 6px 10px !important;
-    font-size: 11px !important;
+  /* Tránh iOS tự zoom khi chạm vào ô nhập liệu nhỏ */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px !important;
   }
 
-  /* 3. Header Admin: thu gọn khoảng cách trên màn hình nhỏ */
+  /* Vùng chạm >= 44px cho thanh điều hướng, nút hành động đơn hàng, header & sub-tabs */
+  #hdr button,
+  .ord-sub-tab,
+  .settings-sub-tab,
+  .view-btn,
+  #ordBody button,
+  #t-ord > div:first-child button,
+  #t-more button,
+  #t-pkg button,
+  #t-check button,
+  #t-trans button,
+  #t-rev button,
+  #t-lnk button,
+  #t-dead button,
+  #t-cms button,
+  #t-settings button,
+  #t-func button {
+    min-height: 44px !important;
+  }
+
+  #ordBody button {
+    min-width: 44px !important;
+    padding-left: 0.625rem !important;
+    padding-right: 0.625rem !important;
+  }
+
+  .settings-sub-tab {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+
   #hdr {
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
+    padding-left: 0.625rem !important;
+    padding-right: 0.625rem !important;
   }
 
   #hdr h1 {
@@ -1159,6 +1211,98 @@ hr.guide-hr,
 
   #hdrTestBadge {
     padding: 2px 6px !important;
-    font-size: 8.5px !important;
+    font-size: 9px !important;
+  }
+
+  /* Biến bảng có data-label (Fulfillment, Log, Cost) thành thẻ dọc trên Mobile */
+  .log-table.log-table-cards thead {
+    display: none;
+  }
+
+  .log-table.log-table-cards,
+  .log-table.log-table-cards tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .log-table.log-table-cards tr {
+    display: block;
+    background: var(--adm-surface);
+    border: 1px solid var(--adm-border);
+    border-radius: 1rem;
+    padding: 0.75rem;
+    margin-bottom: 0.625rem;
+    box-shadow: var(--adm-shadow-card);
+  }
+
+  .log-table.log-table-cards td {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.375rem 0;
+    border-bottom: 1px dashed var(--adm-border);
+    background: transparent !important;
+    text-align: right;
+    width: 100% !important;
+  }
+
+  .log-table.log-table-cards td:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .log-table.log-table-cards td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--adm-text-2);
+    text-transform: uppercase;
+    text-align: left;
+    flex-shrink: 0;
+    padding-top: 2px;
+  }
+
+  .log-table.log-table-cards td[colspan] {
+    display: block;
+    text-align: center;
+  }
+
+  .log-table.log-table-cards td[colspan]::before {
+    content: none;
+  }
+
+  .log-table.log-table-cards td.fulfill-select-cell {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: left;
+    gap: 0.375rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .ord-sub-tab {
+    min-height: 44px;
+    padding: 6px 4px;
+    gap: 4px;
+    font-size: 11px;
+  }
+
+  .ord-count {
+    padding: 2px 5px;
+    font-size: 10px;
+  }
+}
+
+/* Reduced motion: tắt animation lặp cảnh báo, giữ chuyển trạng thái phản hồi (BUG-NEW-07) */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  .card-expiring,
+  .animate-pulse,
+  .animate-bounce {
+    animation: none !important;
   }
 }
