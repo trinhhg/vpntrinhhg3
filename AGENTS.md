@@ -36,19 +36,18 @@ Before acting, understand the requested outcome, identify affected workflows, an
 - Do not modify any file in the workspace: no edits, auto-formatting, generated-file changes, file creation/deletion/renaming, dependency installation that changes lockfiles, or scripted patching. Keep the workspace unchanged.
 - The only exception is when the owner explicitly authorizes code implementation/editing in the current task (e.g. “implement these fixes”, “edit the files”). If authorized, scope permission to that task only; it does not imply commit, push, deploy, or production writes.
 - Every proposed code fix must be given as an exact manual patch that can be located with Ctrl+F. Do not use ellipses (`...`) or omit lines inside the search block. Include enough unchanged surrounding lines to make the match unique and safe.
-- **Manual-patch presentation (mandatory):** For each finding, first show the finding ID/severity, affected file path, exact location (line numbers if available), a plain-language explanation of what is wrong and why, current behavior, expected behavior, and test evidence. Then present the patch in a clearly labeled **MANUAL CHANGE — NOT APPLIED** section.
-- Present each patch as a separate numbered change. Label its operation as **EDIT**, **INSERT**, or **DELETE**; state the exact Ctrl+F search anchor; and show the full replacement block in a fenced code block with the correct language where known. For INSERT/DELETE, include all required unchanged anchor lines in the replacement so the owner can safely locate and preserve context. Do not combine unrelated fixes into one patch.
-- After each patch, briefly explain what it changes and any relevant side effect/regression check. If more than one file is needed, provide a separate patch for each file in the correct order.
+- **Manual patch format (mandatory):** briefly describe finding/severity, exact file/location, issue, current vs expected behavior, and evidence. Then present each proposed fix separately and numbered, labeled MANUAL CHANGE — NOT APPLIED. Use the Find/Replace presentation below exactly, with full verified code and anchor context; do not add a different patch format. Explain briefly what the fix changes and which regression to retest.
 - Never use ellipses, placeholders, pseudo-code, “same as above,” partial snippets, or invented source to represent code that the owner must paste. Keep the original indentation and surrounding syntax. If exact original code cannot be verified, provide no paste-ready patch and label the instruction **NOT VERIFIED** with the reason.
 - Use these formats exactly:
-  - **Insert (keep anchor):** `Find: [exact original anchor/block] → Replace with: [complete replacement block, including the original anchor and inserted lines]`
-  - **Delete (keep surrounding anchors):** `Find: [exact original block] → Replace with: [complete remaining block with deleted lines removed]`
-  - **Edit:** `Find: [exact original code] → Replace with: [exact new code]`
+  - Template examples only (replace with exact source snippets in real patches):
+  - **INSERT (keep anchor):** Find block ABC; Replace block D, E, ABC (each on its own line).
+  - **DELETE (keep surrounding anchors):** Find block A, B, C, D, E; Replace block A, B, E (each on its own line).
+  - **EDIT:** Find the exact old code block; Replace it with the exact new code block.
 - If a target block is long, provide separate small patches only when each search block is exact and unique; never abbreviate source with ellipses. If the patch cannot be safely expressed this way, say so and ask before proposing a risky manual edit.
 - Do not provide vague instructions such as “change the color”, “add aria”, or “fix the button” without the exact source and replacement. If the code cannot be located/verified, report the file/section and mark the patch `NOT VERIFIED`; do not invent old code.
 - **After owner-applied manual edits:** When the owner requests a re-audit, compare the actual source to the proposed patches, confirm which were applied, then test those changes. Do not assume they were applied correctly.
 
-## 2B. Source-led feature discovery and real-browser E2E audit (mandatory)
+## 2B. Source-led feature discovery and full real-browser E2E audit (mandatory)
 
 - **Read source code before browser testing.** First read `AGENTS.md`, then inspect the relevant project entry points, HTML, JavaScript modules, styles, API/backend integration, state/storage, and callers. Follow code paths far enough to understand actual behavior; do not infer functionality from filenames, labels, or function names alone.
 - **Discover the feature inventory yourself.** Create a `Feature Inventory` from functions and flows actually found in source. Identify controls/actions, prerequisites, state transitions, API calls, expected outcomes, validation, loading/empty/error/success states, and cross-module dependencies. The user's checklist is only a starting point; add features discovered from the code and do not omit unmentioned functionality.
@@ -56,7 +55,7 @@ Before acting, understand the requested outcome, identify affected workflows, an
 - **Browser E2E must be direct browser interaction.** Use Browser Subagent (or the environment's clearly equivalent browser subagent) to open the real website/build and interact with it using actual browser UI actions—click, type, scroll, navigation, reload, keyboard, and viewport resizing as applicable. Observe rendered results and inspect browser Console/Network when needed. Test real end-to-end flows across customer and admin interfaces, not just isolated screens.
 - **Playwright is prohibited for this audit workflow.** Do not use Playwright, Playwright Test, Playwright scripts, or Playwright-powered browser automation. Do not replace real browser interaction with DOM-only simulation, code inspection, unit tests, or mocked flows. Those may be reported separately, but they are not real-browser E2E evidence.
 - **Browser capability fallback:** If Browser Subagent/direct browser access is unavailable, clearly report `BLOCKED` for browser E2E and explain what capability is missing. Do not silently switch to Playwright or claim a browser test passed.
-- **Safe test data:** Use a confirmed isolated/test backend and non-production test data for write operations. Never place real payments, customer orders, fulfillment, emails, or production mutations at risk. When the environment cannot be verified as safe, test read-only UI flows and mark write flows `BLOCKED`.
+- **Verified test environment and full test usage:** Confirm site/build, Admin, APIs, database, webhooks, and downstream services are isolated test/staging, not production. Once verified, exercise all safe real UI workflows—including test create/edit/delete, sandbox checkout/payments, test webhook triggers, dummy VPN activation/renewal/fulfillment, and email to controlled inboxes—without artificial scope restrictions. Never create real orders/payments, grant actual customer VPN, send mail to real recipients, or affect production. If isolation is uncertain, continue read-only testing and mark only mutation-dependent flows BLOCKED.
 - **Report distinctions:** Separate code-derived feature inventory, tests actually executed in a browser, code-only checks, mock/stub tests, and inferred/unverified behavior. Record actual browser, environment/URL/build, viewport, and evidence where available. Do not overstate coverage.
 
 ## 3. Code structure and maintainability
@@ -117,8 +116,8 @@ If a requested change needs to alter a protected invariant, first trace impact a
 Test in an isolated workspace or a test environment. **Local frontend preview does not make its configured backend safe**—verify the backend and downstream services before any write.
 
 ### Safety
-- Production mutation is prohibited during testing: no real orders, payments, bank transactions/webhooks, customer VPN fulfillment, real email, production data/config changes, or production migrations.
-- Only perform test mutations when the owner has clearly identified and verified the website, Admin, API, webhook, and downstream services as non-production/test. If uncertain, stop writes and mark the test blocked.
+- No production or real-world side effects: do not create real orders/payments, bank transactions tied to real accounts, issue actual customer VPN access, send emails to real recipients, or mutate production data/config/services.
+- After verifying the website, Admin, API, webhook, database, and downstream integrations are isolated test systems, fully test the real UI actions and safe test write flows with disposable test data, sandbox integrations, dummy assets, and controlled inboxes. If isolation is not confirmed, keep writes blocked but continue all read-only tests.
 - Use mocks only for appropriate unit/isolation tests; do not use mock success to claim a real workflow passed.
 
 ### Audit runtime and stopping rules
