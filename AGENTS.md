@@ -92,6 +92,16 @@ Test in an isolated workspace or a test environment. **Local frontend preview do
 - Only perform test mutations when the owner has clearly identified and verified the website, Admin, API, webhook, and downstream services as non-production/test. If uncertain, stop writes and mark the test blocked.
 - Use mocks only for appropriate unit/isolation tests; do not use mock success to claim a real workflow passed.
 
+### Audit runtime and stopping rules
+For audits (UI/UX, accessibility, performance, security, functional, or code quality), keep the work bounded and resumable:
+- **Default time budget:** aim to finish the audit + scoped fixes + verification within 8 minutes. If a task genuinely needs longer, explain why and request/continue in clearly separated stages; do not silently run an unbounded browser session.
+- Avoid launching many browser instances, parallel heavy workflows, exhaustive viewport permutations, repeated screenshots, or full suites when targeted tests will answer the question.
+- Prefer one browser instance and sequential testing. Use a small representative matrix (typically desktop + one or two mobile sizes) and expand only when evidence reveals a specific risk.
+- Keep checkpoints: after inspection, after findings, after fixes, and after verification, save/report concise progress so the task can resume without repeating completed work.
+- If browser automation is slow or stuck, stop the current operation safely, preserve findings, identify the exact unfinished test, and continue with a smaller targeted test. Do not repeatedly restart the entire audit or require the owner to prompt “continue” for obvious next steps.
+- Do not use direct mouse/desktop control unless it is necessary and supported by the available environment. Prefer deterministic browser automation; if manual UI control is used, state that plainly in the report.
+- An audit may be partial: clearly label coverage and blockers; do not inflate scores or claim full coverage.
+
 ### Verification
 Choose tests appropriate to the task. When applicable:
 - Build and syntax/import checks.
@@ -130,7 +140,64 @@ When a test fails, collect evidence, trace root cause, patch in the workspace, r
 - Before recommending or introducing a new service/dependency, state its license (if relevant), pricing, free-tier limits, card/billing risk, and why the current stack is insufficient. Owner approval is required before adoption.
 - Avoid unnecessary builds, workflows, polling, and requests. Respect free-tier limits and keep quota usage visible when it matters.
 
-## 10. Task handoff report
+## 10. Audit report format (owner-friendly)
+For every audit, end with a **clear, action-oriented summary**. The owner should not need to read raw logs or guess what to fix.
+
+### Required top summary
+- **Audit type + scope** (what was examined, and what was intentionally excluded).
+- **Overall score: X/100** and **coverage: Y%**. These are different: score measures observed quality; coverage is the proportion of the planned audit checklist actually tested/reviewed. Explain the coverage denominator briefly (e.g., 18 of 20 checks).
+- **Before → after score** only if both were actually measured using the same criteria. If no fixes were applied, say “audit only; no changes made.”
+- **Fix status:** number of findings total, fixed, remaining, blocked, and not verified.
+- Give a plain-language verdict in 2–4 sentences: is it safe to proceed, what is the biggest issue, and what should the owner do next?
+
+### Score breakdown
+Provide a table with criteria, weight, score earned, and one-line explanation. Weights must total 100; scores must use the same criteria between before/after when comparing. Example categories (adapt to audit type; do not force irrelevant categories):
+| Category | Weight | Score | Brief reason |
+|---|---:|---:|---|
+| Core functionality/workflows | 20 | 16/20 | ... |
+| UX/layout/responsiveness | 20 | 14/20 | ... |
+| Accessibility | 15 | 10/15 | ... |
+| Reliability/security | 15 | 12/15 | ... |
+| Performance/maintainability | 15 | 11/15 | ... |
+| Visual consistency/polish | 15 | 12/15 | ... |
+| **Total** | **100** | **75/100** | ... |
+Clearly explain how the score was derived; do not use fake precision. If there is no reliable baseline, do not invent a before-score.
+
+### File-by-file change ledger (mandatory)
+List **every file inspected that was relevant to the audit** and classify it:
+- `CHANGED`: path — what changed, why, and which finding(s) it addresses.
+- `NO CHANGE`: path — reviewed, no edit; state whether it passed or why an edit was not needed.
+- `ADDED` / `DELETED`: path — purpose and reason.
+Group files by area if the list is long. Avoid vague descriptions such as “UI improvements”; name the concrete change.
+If a file was not inspected, do not imply it was.
+
+### Findings and next actions (mandatory)
+Use severity labels `P0` (critical), `P1` (high), `P2` (medium), `P3` (minor):
+- **FIXED:** finding → exact file(s) → what changed → retest result.
+- **REMAINING:** finding → exact file(s)/location → what is wrong → recommended next action. Explain in simple, non-technical wording first, with technical details after if useful.
+- **BLOCKED / NOT VERIFIED:** what could not be tested, why, and what evidence or permission/tool is needed.
+Show a short ordered checklist of the remaining work (highest priority first). Do not leave the owner with only a score and generic caveats.
+
+### Verification evidence
+Summarize the tests by status (`PASS`, `FAIL`, `BLOCKED`, `NOT VERIFIED`) with counts and key examples. Distinguish:
+- tests actually executed in browser vs code inspection;
+- real backend/API behavior vs mocked/stubbed responses;
+- automated mouse/keyboard/touch actions vs visual-only inspection;
+- tests that completed vs those stopped due time/resource limits.
+Include relevant screenshot names/paths or concise evidence when available, but do not dump logs.
+
+### Final owner-facing format
+1. One-line verdict + overall score and coverage.
+2. Score breakdown table (weights total 100).
+3. **Files changed / files reviewed with no changes** ledger.
+4. **What was fixed** (plain language, linked to files).
+5. **What still needs fixing** (prioritized checklist, exact location, recommended action).
+6. Verification summary and blocked/not-verified items.
+7. Safety confirmation: no production writes, no commit/push/PR/merge/deploy unless authorized.
+
+Keep this readable and concise. Avoid large raw metrics dumps; translate them into specific user-visible problems and actions. A score is a summary—not a substitute for listing remaining issues.
+
+## 12. Task handoff report
 
 For code changes, provide a concise but evidence-based report:
 1. **Outcome:** what was requested and implemented.
@@ -146,6 +213,6 @@ Do not report a test, skill, tool, review, or result as completed unless it actu
 
 ---
 
-## 11. Living document
+## 13. Living document
 
 These guidelines are intentionally organized by topic rather than a large sequential list of overlapping rules. If a task reveals a gap, propose a focused edit to this file instead of appending another block of rules. Keep this document concise, consistent, and free of duplicate/conflicting instructions.
