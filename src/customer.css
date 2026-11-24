@@ -939,8 +939,8 @@ html.dark .loader-ring.amber i {
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08) !important;
   display: flex !important;
   align-items: center !important;
-  margin-top: 16px !important;
-  margin-right: 16px !important;
+  margin-top: var(--toast-top-offset, 68px) !important;
+  margin-right: 12px !important;
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
 }
@@ -1094,7 +1094,7 @@ html.dark .swal2-popup.swal2-toast .swal2-title {
 }
 
 .guide-cta-btn.cta-amber {
-  background: linear-gradient(135deg, #92400e, #b45309) !important;
+  background: linear-gradient(135deg, #d97706, #f59e0b) !important;
   color: #ffffff !important;
 }
 
@@ -1123,31 +1123,8 @@ html.dark .guide-content hr {
 }
 
 @media (max-width: 767px) {
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-  select,
-  textarea {
-    font-size: 16px !important;
-  }
-
   #view-portal {
-    padding-bottom: 6.5rem;
-  }
-
-  #footerArea button,
-  #footerArea a {
-    height: auto !important;
-    min-height: 44px !important;
-    max-height: none !important;
-  }
-
-  #mainNav #langBtnMobile,
-  #mainNav #pwaHeaderBtnMobile,
-  #mainNav #themeToggleMobile,
-  #mainNav #userMenuMobile button,
-  #linkBoxes button,
-  #portalActionButtons button,
-  #btnRequestData {
-    min-height: 44px !important;
+    padding-bottom: 5.5rem;
   }
 }
 
