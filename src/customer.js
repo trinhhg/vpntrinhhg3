@@ -13,7 +13,7 @@ import {
   cp,
   toast,
   showToast,
-  paintThemeIcon,
+  paintThemeIcon, 
   toggleTheme,
   initTheme,
   bindVaulDialog
