@@ -62,6 +62,17 @@ function closeImageLightbox() {
   document.body.style.overflow = '';
 }
 document.addEventListener('click', (e) => {
+  const actionEl = e.target.closest('#guideText [data-guide-action]');
+  if (actionEl) {
+    e.preventDefault();
+    const act = actionEl.getAttribute('data-guide-action');
+    if (act === 'scroll') guideScroll(actionEl.getAttribute('data-guide-id') || '');
+    else if (act === 'anchor') pubScrollToHeadingText(actionEl.getAttribute('data-guide-anchor') || '');
+    else if (act === 'gototab') pubGoto(actionEl.getAttribute('data-guide-tab') || '', actionEl.getAttribute('data-guide-art') || '', actionEl.getAttribute('data-guide-target') || '');
+    else if (act === 'gotoart') pubGotoArt(actionEl.getAttribute('data-guide-tab') || '', actionEl.getAttribute('data-guide-art') || '');
+    else if (act === 'openart') openGuideArticle('', actionEl.getAttribute('data-guide-slug') || '');
+    return;
+  }
   const img = e.target.closest('#guideText img, #guideContent img, .guide-content img');
   if (img && img.src) {
     e.preventDefault();
@@ -928,7 +939,7 @@ function renderBlocks(bl, gid) {
     }
     else if (b.t === 'toc') {
       const items = bl.map((x, i) => ({ x, i })).filter(o => o.x.t === 'header' || o.x.t === 'sub');
-      h += `<div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 my-4 shadow-sm"><div class="font-extrabold text-indigo-600 dark:text-indigo-400 mb-2.5 text-base flex items-center gap-2"><i class="fas fa-list-ul"></i><span>${esc(b.x||'Xem nhanh')}</span></div><div class="space-y-1.5">${items.map(o=>`<a onclick="guideScroll('g-${g}-${o.i}')" class="block cursor-pointer py-1 text-sm hover:text-indigo-500 dark:hover:text-indigo-400 transition ${o.x.t==='sub'?'pl-4 text-slate-600 dark:text-slate-400 font-semibold':'text-indigo-800 dark:text-indigo-300 font-extrabold'}"><i class="fas fa-angle-right mr-1.5 text-indigo-400"></i>${esc(o.x.x)}</a>`).join('')||'<span class="text-xs text-slate-400">Chưa có mục nào</span>'}</div></div>`;
+      h += `<div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 my-4 shadow-sm"><div class="font-extrabold text-indigo-600 dark:text-indigo-400 mb-2.5 text-base flex items-center gap-2"><i class="fas fa-list-ul"></i><span>${esc(b.x||'Xem nhanh')}</span></div><div class="space-y-1.5">${items.map(o=>`<a href="#g-${esc(g)}-${o.i}" data-guide-action="scroll" data-guide-id="g-${esc(g)}-${o.i}" class="block cursor-pointer py-1 text-sm hover:text-indigo-500 dark:hover:text-indigo-400 transition ${o.x.t==='sub'?'pl-4 text-slate-600 dark:text-slate-400 font-semibold':'text-indigo-800 dark:text-indigo-300 font-extrabold'}"><i class="fas fa-angle-right mr-1.5 text-indigo-400"></i>${esc(o.x.x)}</a>`).join('')||'<span class="text-xs text-slate-400">Chưa có mục nào</span>'}</div></div>`;
     }
     else if (b.t === 'btn') {
       const mt = Number(b.mt ?? 12), mb = Number(b.mb ?? 12), ml = Number(b.ml ?? 0), mr = Number(b.mr ?? 0);
@@ -938,7 +949,7 @@ function renderBlocks(bl, gid) {
       // Ảnh luôn căn giữa màn hình, có caption bên dưới, click là zoom to, click cái nữa là đóng
       h += `<div id="${aid}" class="my-4 scroll-mt-24 text-center">
      <div class="inline-block max-w-full">
-       <img src="${esc(safeUrl(b.u))}" referrerpolicy="no-referrer" loading="lazy" onclick="openLightbox('${esc(safeUrl(b.u))}')" title="Bấm để phóng to ảnh" class="max-h-[380px] w-auto max-w-full object-contain rounded-2xl border border-slate-200 dark:border-slate-700 shadow-md cursor-zoom-in transition-transform duration-200 hover:scale-[1.01] mx-auto" />
+       <img src="${esc(safeUrl(b.u))}" referrerpolicy="no-referrer" loading="lazy" title="Bấm để phóng to ảnh" class="max-h-[380px] w-auto max-w-full object-contain rounded-2xl border border-slate-200 dark:border-slate-700 shadow-md cursor-zoom-in transition-transform duration-200 hover:scale-[1.01] mx-auto" />
        ${String(b.x||'').trim()!==''?`<div class="text-center text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-2 font-medium italic">${bText(b)}</div>`:''}
      </div>
    </div>`;
@@ -954,13 +965,13 @@ function renderBlocks(bl, gid) {
     }
     else if (b.t === 'qlink') {
       const ti = findTarget(bl, b.target);
-      h += `<div class="my-2 text-${al}"><a ${ti>=0?`onclick="guideScroll('g-${g}-${ti}')"`:''} class="word-link text-base ${ti>=0?'cursor-pointer':'cursor-not-allowed opacity-50'}">${esc(b.x||'Liên kết nhanh')}</a></div>`;
+      h += `<div class="my-2 text-${al}"><a ${ti>=0?`href="#g-${esc(g)}-${ti}" data-guide-action="scroll" data-guide-id="g-${esc(g)}-${ti}"`:''} class="word-link text-base ${ti>=0?'cursor-pointer':'cursor-not-allowed opacity-50'}">${esc(b.x||'Liên kết nhanh')}</a></div>`;
     }
     else if (b.t === 'qtab') {
-      h += `<div class="my-2 text-${al}"><a onclick="pubGoto('${esc(b.tab||'')}','${esc(b.art||'')}','${esc(b.target||'')}')" class="word-link text-base cursor-pointer">${esc(b.x||'Chuyển tab')}</a></div>`;
+      h += `<div class="my-2 text-${al}"><a href="#" data-guide-action="gototab" data-guide-tab="${esc(b.tab||'')}" data-guide-art="${esc(b.art||'')}" data-guide-target="${esc(b.target||'')}" class="word-link text-base cursor-pointer">${esc(b.x||'Chuyển tab')}</a></div>`;
     }
     else if (b.t === 'qart') {
-      h += `<div class="my-2 text-${al}"><a onclick="pubGotoArt('${esc(b.tab||'')}','${esc(b.art||'')}')" class="word-link text-base cursor-pointer">${esc(b.x||'Mở bài viết')}</a></div>`;
+      h += `<div class="my-2 text-${al}"><a href="#" data-guide-action="gotoart" data-guide-tab="${esc(b.tab||'')}" data-guide-art="${esc(b.art||'')}" class="word-link text-base cursor-pointer">${esc(b.x||'Mở bài viết')}</a></div>`;
     }
     else if (b.t === 'spacer') h += `<div style="height:${Math.max(4,Math.min(200,parseInt(b.h)||16))}px"></div>`;
     else if (b.t === 'divider') h += `<hr class="border-0 border-t border-slate-200 dark:border-slate-700 my-4">`;
@@ -1108,7 +1119,7 @@ async function openGuideArticle(tabId, slug, skipPush) {
           </h4>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             ${otherList.map(item => `
-              <div onclick="openGuideArticle('', '${esc(item.slug || toSlug(item.name))}')" class="cursor-pointer bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-xl p-3 flex items-center justify-between gap-2 transition hover:-translate-y-0.5 shadow-sm">
+              <div role="button" tabindex="0" data-guide-action="openart" data-guide-slug="${esc(item.slug || toSlug(item.name))}" class="cursor-pointer bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-xl p-3 flex items-center justify-between gap-2 transition hover:-translate-y-0.5 shadow-sm">
                 <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">${esc(item.name || item.slug)}</span>
                 <i class="fas fa-arrow-right text-xs text-indigo-500 shrink-0"></i>
               </div>
@@ -1138,9 +1149,17 @@ function pubScrollToHeadingText(txt) {
   }
 }
 
+const GUIDE_PURIFY_CONFIG = {
+  ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'del', 'a', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'img', 'iframe', 'div', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'details', 'summary'],
+  ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style', 'id', 'target', 'rel', 'width', 'height', 'allow', 'allowfullscreen', 'frameborder', 'referrerpolicy', 'data-cta', 'data-guide-action', 'data-guide-id', 'data-guide-anchor', 'data-guide-tab', 'data-guide-art', 'data-guide-target', 'data-guide-slug'],
+  ALLOW_DATA_ATTR: false,
+  ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel):|#|\/)/i
+};
+
 function renderRichGuideHtml(rawHtml, showToc, gid) {
   const temp = document.createElement('div');
-  temp.innerHTML = rawHtml || '';
+  const sanitizedHtml = typeof DOMPurify?.sanitize === 'function' ? DOMPurify.sanitize(rawHtml || '', GUIDE_PURIFY_CONFIG) : '';
+  temp.innerHTML = sanitizedHtml;
   const headings = [];
   let h2Count = 0, h3Count = 0;
   temp.querySelectorAll('h2, h3').forEach((el, idx) => {
@@ -1164,8 +1183,6 @@ function renderRichGuideHtml(rawHtml, showToc, gid) {
     headings.push({ id: hid, tag, label: numLabel + cleanTxt });
   });
   temp.querySelectorAll('img').forEach(img => {
-    const src = img.getAttribute('src') || '';
-    img.setAttribute('onclick', `openImageLightbox('${esc(src)}')`);
     img.classList.add('cursor-zoom-in');
     img.setAttribute('referrerpolicy', 'no-referrer');
     img.setAttribute('loading', 'lazy');
@@ -1175,8 +1192,14 @@ function renderRichGuideHtml(rawHtml, showToc, gid) {
     if (src.includes('youtube.com') || src.includes('youtu.be')) {
       const ytMatch = src.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/i);
       if (ytMatch && ytMatch[1]) {
-        ifr.setAttribute('src', `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?rel=0`);
+        src = `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?rel=0`;
+        ifr.setAttribute('src', src);
       }
+    }
+    const isAllowedEmbed = /^https:\/\/(?:www\.)?(?:youtube\.com|youtube-nocookie\.com|player\.vimeo\.com)\//i.test(src);
+    if (!isAllowedEmbed) {
+      ifr.remove();
+      return;
     }
     ifr.setAttribute('frameborder', '0');
     ifr.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
@@ -1187,19 +1210,40 @@ function renderRichGuideHtml(rawHtml, showToc, gid) {
     const href = a.getAttribute('href') || '';
     if (!a.getAttribute('data-cta') && !a.classList.contains('guide-cta-btn')) a.classList.add('word-link');
     if (href.startsWith('#anchor:')) {
-      const tgTxt = decodeURIComponent(href.slice(8));
-      a.removeAttribute('href');
-      a.setAttribute('onclick', `pubScrollToHeadingText('${esc(tgTxt)}')`);
+      let tgTxt = href.slice(8);
+      try {
+        tgTxt = decodeURIComponent(tgTxt);
+      } catch (e) {}
+      a.setAttribute('href', '#');
+      a.setAttribute('data-guide-action', 'anchor');
+      a.setAttribute('data-guide-anchor', tgTxt);
     } else if (href.startsWith('#gototab:')) {
       const parts = href.slice(9).split(':');
-      const tb = decodeURIComponent(parts[0] || ''), ar = decodeURIComponent(parts[1] || '');
-      a.removeAttribute('href');
-      a.setAttribute('onclick', `pubGoto('${esc(tb)}','${esc(ar)}','')`);
+      let tb = parts[0] || '', ar = parts[1] || '';
+      try {
+        tb = decodeURIComponent(tb);
+      } catch (e) {}
+      try {
+        ar = decodeURIComponent(ar);
+      } catch (e) {}
+      a.setAttribute('href', '#');
+      a.setAttribute('data-guide-action', 'gototab');
+      a.setAttribute('data-guide-tab', tb);
+      a.setAttribute('data-guide-art', ar);
+      a.setAttribute('data-guide-target', '');
     } else if (href.startsWith('#gotoart:')) {
       const parts = href.slice(9).split(':');
-      const tb = decodeURIComponent(parts[0] || ''), ar = decodeURIComponent(parts[1] || '');
-      a.removeAttribute('href');
-      a.setAttribute('onclick', `pubGotoArt('${esc(tb)}','${esc(ar)}')`);
+      let tb = parts[0] || '', ar = parts[1] || '';
+      try {
+        tb = decodeURIComponent(tb);
+      } catch (e) {}
+      try {
+        ar = decodeURIComponent(ar);
+      } catch (e) {}
+      a.setAttribute('href', '#');
+      a.setAttribute('data-guide-action', 'gotoart');
+      a.setAttribute('data-guide-tab', tb);
+      a.setAttribute('data-guide-art', ar);
     } else if (/^https?:\/\//i.test(href)) {
       a.setAttribute('target', '_blank');
       a.setAttribute('rel', 'noopener');
@@ -1209,9 +1253,9 @@ function renderRichGuideHtml(rawHtml, showToc, gid) {
   if (showToc && headings.length > 0) {
     tocHtml = `<div class="bg-[#f8faff] dark:bg-[#14151a] border border-slate-200 dark:border-white/10 rounded-2xl p-4 md:p-5 mb-5 shadow-sm"><div class="flex items-center gap-2 mb-3"><i class="fas fa-list-ul text-indigo-600 text-sm"></i><span class="font-extrabold text-indigo-700 dark:text-indigo-400 text-sm md:text-base">Xem nhanh</span></div><div class="flex flex-col gap-2">${headings.map(h=>{
    if(h.tag==='h2'){
-     return `<a onclick="guideScroll('${h.id}')" class="cursor-pointer text-indigo-950 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 font-black text-xs md:text-sm flex items-start gap-2 leading-relaxed"><span class="text-indigo-600 font-bold text-sm shrink-0">❯</span><span>${esc(h.label)}</span></a>`;
+     return `<a href="#${esc(h.id)}" data-guide-action="scroll" data-guide-id="${esc(h.id)}" class="cursor-pointer text-indigo-950 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400 font-black text-xs md:text-sm flex items-start gap-2 leading-relaxed"><span class="text-indigo-600 font-bold text-sm shrink-0">❯</span><span>${esc(h.label)}</span></a>`;
    }
-   return `<a onclick="guideScroll('${h.id}')" class="cursor-pointer text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-semibold text-xs md:text-[13px] pl-5 flex items-start gap-2 leading-relaxed"><span class="text-indigo-500 font-bold text-xs shrink-0">❯</span><span>${esc(h.label)}</span></a>`;
+   return `<a href="#${esc(h.id)}" data-guide-action="scroll" data-guide-id="${esc(h.id)}" class="cursor-pointer text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-semibold text-xs md:text-[13px] pl-5 flex items-start gap-2 leading-relaxed"><span class="text-indigo-500 font-bold text-xs shrink-0">❯</span><span>${esc(h.label)}</span></a>`;
   }).join('')}</div></div>`;
   }
   return tocHtml + temp.innerHTML;
@@ -1459,11 +1503,21 @@ function toggleHeaderDrawerDetail() {
   setTimeout(updateDrawerOffsets, 30);
 }
 
+function closeHeaderDrawer() {
+  isHeaderDrawerClosed = true;
+  headerDrawerDetailOpen = false;
+  const d = $('headerAnnouncementDrawer');
+  if (d) d.classList.add('hidden');
+  const b = $('siteAnnouncementBanner');
+  if (b) b.classList.add('hidden');
+  updateDrawerOffsets();
+}
+
 function renderHeaderDrawer(drawerCfg) {
   const d = $('headerAnnouncementDrawer');
   if (!d) return;
   const cfg = drawerCfg || (cfgCache && (cfgCache.headerDrawer || (cfgCache.settings && cfgCache.settings.headerDrawer))) || {};
-  if (!cfg || !cfg.enabled) {
+  if (!cfg || !cfg.enabled || isHeaderDrawerClosed) {
     d.classList.add('hidden');
     updateDrawerOffsets();
     return;
@@ -1678,11 +1732,15 @@ function restoreIndexScroll() {
 }
 
 async function changeLanguage(val) {
+  const nextLang = ['vi', 'en', 'zh'].includes(val) ? val : 'vi';
   const cy = window.scrollY;
-  lang = val;
-  $('langSelectMobile').value = val;
-  $('langSelectDesktop').value = val;
-  paintLangButtons(val);
+  lang = nextLang;
+  try {
+    localStorage.setItem('vpn_lang', nextLang);
+  } catch (e) {}
+  $('langSelectMobile').value = nextLang;
+  $('langSelectDesktop').value = nextLang;
+  paintLangButtons(nextLang);
   document.querySelectorAll('[data-i18n]').forEach(el => el.innerHTML = i18n[lang][el.getAttribute('data-i18n')] || el.innerHTML);
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => el.placeholder = i18n[lang][el.getAttribute('data-i18n-placeholder')] || el.placeholder);
   renderPackages('all');
@@ -1700,7 +1758,7 @@ async function changeLanguage(val) {
   $('securityAlertDesc').innerHTML = i18n[lang].security_desc;
   if (oCache) updatePortalInfo(oCache);
   window.scrollTo(0, cy);
-  await applyLangSafe(val);
+  await applyLangSafe(nextLang);
   window.scrollTo(0, cy);
 }
 
@@ -4395,8 +4453,13 @@ function setupAppRoutes() {
 }
 
 window.onload = async function () {
-  paintLangButtons('vi');
-  changeLanguage('vi');
+  let savedLang = 'vi';
+  try {
+    const storedLang = localStorage.getItem('vpn_lang');
+    if (['vi', 'en', 'zh'].includes(storedLang)) savedLang = storedLang;
+  } catch (e) {}
+  paintLangButtons(savedLang);
+  changeLanguage(savedLang);
   renderDock();
 
   // Dọn dẹp triệt để dữ liệu session 24h & cache đơn hàng cũ (không lưu Link Sub hay session 24h trong localStorage)
@@ -4643,7 +4706,6 @@ window.dismissAnnouncement = dismissAnnouncement;
       if (typeof renderDock === 'function') safeStep('renderDock', () => renderDock());
       if (typeof renderGiftSticker === 'function') safeStep('renderGiftSticker', () => renderGiftSticker());
       if (typeof renderHeaderDrawer === 'function') safeStep('renderHeaderDrawer', () => renderHeaderDrawer());
-      if (typeof renderAnnouncementBanner === 'function') safeStep('renderAnnouncementBanner', () => renderAnnouncementBanner());
       safeStep('couponBlockWrap', () => {
         const cWrap = $('couponBlockWrap');
         if (cWrap) {
