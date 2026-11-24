@@ -1489,27 +1489,26 @@ function renderHeaderDrawer(drawerCfg) {
   const toggleBtn = $('headerDrawerToggleBtn');
   const closeBtn = $('headerDrawerCloseBtn');
 
-  // Đổi màu background & tương phản chữ (độ tương phản >= 4.5:1 ở cả Light & Dark Mode)
   const themeTokens = type === 'warning' ? {
-    wrap: 'bg-amber-50 dark:bg-amber-950/95 border-amber-200 dark:border-amber-900/60 text-amber-950 dark:text-amber-100',
-    badge: 'bg-amber-200/80 dark:bg-amber-900/70 text-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-700',
+    wrap: 'bg-amber-50 dark:bg-amber-950/90 border-amber-200 dark:border-amber-900/60 text-amber-950 dark:text-amber-100',
+    badge: 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700',
     icon: 'fas fa-triangle-exclamation',
     label: 'Cảnh báo',
-    btn: 'bg-amber-700 hover:bg-amber-800 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm transition active:scale-95 whitespace-nowrap flex items-center gap-1 shrink-0 min-h-[32px]',
+    btn: 'bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm transition active:scale-95 whitespace-nowrap flex items-center gap-1 shrink-0',
     textTone: 'text-amber-950 dark:text-amber-100'
   } : type === 'info' ? {
-    wrap: 'bg-indigo-50 dark:bg-indigo-950/95 border-indigo-200 dark:border-indigo-900/60 text-indigo-950 dark:text-indigo-100',
-    badge: 'bg-indigo-100 dark:bg-indigo-900/70 text-indigo-900 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-700',
+    wrap: 'bg-indigo-50 dark:bg-indigo-950/90 border-indigo-200 dark:border-indigo-900/60 text-indigo-950 dark:text-indigo-100',
+    badge: 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700',
     icon: 'fas fa-circle-info',
     label: 'Thông tin',
-    btn: 'bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm transition active:scale-95 whitespace-nowrap flex items-center gap-1 shrink-0 min-h-[32px]',
+    btn: 'bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm transition active:scale-95 whitespace-nowrap flex items-center gap-1 shrink-0',
     textTone: 'text-indigo-950 dark:text-indigo-100'
   } : {
-    wrap: 'bg-rose-50 dark:bg-rose-950/95 border-rose-200 dark:border-rose-900/60 text-rose-950 dark:text-rose-100',
-    badge: 'bg-rose-100 dark:bg-rose-900/70 text-rose-900 dark:text-rose-200 border border-rose-300 dark:border-rose-700',
+    wrap: 'bg-rose-50 dark:bg-rose-950/90 border-rose-200 dark:border-rose-900/60 text-rose-950 dark:text-rose-100',
+    badge: 'bg-rose-100 dark:bg-rose-900/60 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-700',
     icon: 'fas fa-fire',
     label: 'Khuyến mãi',
-    btn: 'bg-rose-700 hover:bg-rose-800 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm transition active:scale-95 whitespace-nowrap flex items-center gap-1 shrink-0 min-h-[32px]',
+    btn: 'bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm transition active:scale-95 whitespace-nowrap flex items-center gap-1 shrink-0',
     textTone: 'text-rose-950 dark:text-rose-100'
   };
 
@@ -1518,8 +1517,8 @@ function renderHeaderDrawer(drawerCfg) {
   if (badgeIcon) badgeIcon.className = themeTokens.icon;
   if (badgeText) badgeText.textContent = themeTokens.label;
   if (btnLinkEl) btnLinkEl.className = themeTokens.btn;
-  if (toggleBtn) toggleBtn.className = `flex items-center gap-1.5 cursor-pointer select-none text-left min-w-0 min-h-[36px] md:min-h-[28px] ${themeTokens.textTone}`;
-  if (closeBtn) closeBtn.className = `w-9 h-9 rounded-full opacity-80 hover:opacity-100 flex items-center justify-center transition shrink-0 ${themeTokens.textTone}`;
+  if (toggleBtn) toggleBtn.className = `flex items-center gap-1.5 cursor-pointer select-none text-left min-w-0 ${themeTokens.textTone}`;
+  if (closeBtn) closeBtn.className = `w-7 h-7 rounded-full opacity-75 hover:opacity-100 flex items-center justify-center transition shrink-0 ${themeTokens.textTone}`;
   if (detailEl) detailEl.className = `hidden mt-1 text-[11.5px] sm:text-xs leading-relaxed font-medium whitespace-pre-wrap ${themeTokens.textTone}`;
 
   // Tiêu đề ngắn
@@ -1623,7 +1622,7 @@ window.addEventListener('scroll', () => {
         mbg.style.transform = 'translateY(24px)';
       } else {
         mbg.style.opacity = '1';
-        mbg.style.pointerEvents = 'auto';
+        mbg.style.pointerEvents = 'none';
         mbg.style.transform = 'translateY(0)';
       }
     } else if (mnw) {
@@ -1908,15 +1907,15 @@ function genHTML(rawPkg) {
   // Nút hành động đăng ký / liên hệ
   const btn = isDisabled ? `<button disabled class="w-full bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 font-bold py-3 rounded-xl text-sm cursor-not-allowed">Không khả dụng</button>` : pkg.isCustom ? `<a href="#footerArea" class="w-full block text-center bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-bold py-3 rounded-xl text-sm hover:bg-red-600 hover:text-white transition">Liên hệ Admin</a>` : `<button onclick="openCheckout('${pkg.id}')" class="w-full bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-bold py-3 rounded-xl text-sm hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-500 dark:hover:text-white dark:hover:shadow-[0_0_15px_rgba(99,102,241,0.5)] transition">Đăng ký Gói Này</button>`;
 
-  // Bố cục các Tag góc thẻ: Góc Trái và Góc Phải độc lập (tăng tương phản WCAG AA)
-  const leftBadges = [pkg.tag2 ? `<span class="bg-blue-700 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag2[lang] || pkg.tag2.vi || pkg.tag2)}</span>` : '', pkg.tag4 ? `<span class="bg-purple-700 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag4[lang] || pkg.tag4.vi || pkg.tag4)}</span>` : ''].filter(Boolean).join('');
+  // Bố cục các Tag góc thẻ: Góc Trái và Góc Phải độc lập
+  const leftBadges = [pkg.tag2 ? `<span class="bg-blue-500 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag2[lang] || pkg.tag2.vi || pkg.tag2)}</span>` : '', pkg.tag4 ? `<span class="bg-purple-600 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag4[lang] || pkg.tag4.vi || pkg.tag4)}</span>` : ''].filter(Boolean).join('');
 
-  const rightBadges = [pkg.tag1 ? `<span class="bg-red-700 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag1[lang] || pkg.tag1.vi || pkg.tag1)}</span>` : '', pkg.tag3 ? `<span class="bg-amber-700 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag3[lang] || pkg.tag3.vi || pkg.tag3)}</span>` : ''].filter(Boolean).join('');
+  const rightBadges = [pkg.tag1 ? `<span class="bg-red-500 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag1[lang] || pkg.tag1.vi || pkg.tag1)}</span>` : '', pkg.tag3 ? `<span class="bg-amber-500 text-white text-[10px] px-2.5 py-0.5 rounded-full font-black shadow-sm">${esc(pkg.tag3[lang] || pkg.tag3.vi || pkg.tag3)}</span>` : ''].filter(Boolean).join('');
 
   const hasCornerBadges = leftBadges || rightBadges;
 
   // Badge Flash Sale: Hiệu ứng heartbeat xung quanh, không nhấp nháy mờ rõ
-  const flashSaleBadge = pkg.isFlashSale ? `<div class="inline-flex items-center gap-1 bg-gradient-to-r from-red-700 via-rose-700 to-amber-700 text-white font-black text-[10px] md:text-[11px] px-2.5 py-0.5 rounded-full shadow-md btn-heartbeat shrink-0"><i class="fas fa-bolt text-[9px] text-yellow-200" aria-hidden="true"></i><span>${esc(pkg.flashSaleTitle || 'Flash Sale')} -${pkg.flashSalePercent}%</span></div>` : '';
+  const flashSaleBadge = pkg.isFlashSale ? `<div class="inline-flex items-center gap-1 bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white font-black text-[10px] md:text-[11px] px-2.5 py-0.5 rounded-full shadow-md btn-heartbeat shrink-0"><i class="fas fa-bolt text-[9px] text-yellow-300" aria-hidden="true"></i><span>${esc(pkg.flashSaleTitle || 'Flash Sale')} -${pkg.flashSalePercent}%</span></div>` : '';
 
   // Tra cứu Gift Rule đang có hiệu lực cho gói này từ cfgCache (dùng chung parseVnDateLimit cấp module)
   const giftRules = Array.isArray(cfgCache?.giftRules) ? cfgCache.giftRules : [];
@@ -1932,33 +1931,33 @@ function genHTML(rawPkg) {
 
   // Tem sticker quà tặng (Ưu tiên Gift Rule -> fallback dữ liệu cũ nếu có)
   const promoStickerText = matchedGift ? (matchedGift.sticker || matchedGift.name) : (pkg.promo_sticker || '');
-  const promoStickerBadge = promoStickerText ? `<div class="inline-flex items-center gap-1 bg-rose-700 text-white font-black text-[10px] md:text-[11px] px-2.5 py-0.5 rounded-full shadow-sm shrink-0"><i class="fas fa-gift text-[9px]" aria-hidden="true"></i><span>${esc(promoStickerText)}</span></div>` : '';
+  const promoStickerBadge = promoStickerText ? `<div class="inline-flex items-center gap-1 bg-gradient-to-r from-rose-500 to-pink-500 text-white font-black text-[10px] md:text-[11px] px-2.5 py-0.5 rounded-full shadow-sm shrink-0"><i class="fas fa-gift text-[9px]" aria-hidden="true"></i><span>${esc(promoStickerText)}</span></div>` : '';
 
   const inlineBadges = (flashSaleBadge || promoStickerBadge) ? `<div class="flex items-center gap-1.5 flex-wrap justify-end mb-1">${flashSaleBadge}${promoStickerBadge}</div>` : '';
 
   let originalPriceDisplay = '';
   if (pkg.isFlashSale) {
     if (lang === 'zh' || lang === 'en') {
-      originalPriceDisplay = `<span class="text-xs md:text-sm font-semibold line-through text-slate-500 dark:text-slate-400 ml-2">¥${rawPkg.cny || 0}</span>`;
+      originalPriceDisplay = `<span class="text-xs md:text-sm font-semibold line-through text-slate-400 dark:text-slate-500 ml-2">¥${rawPkg.cny || 0}</span>`;
     } else {
-      originalPriceDisplay = `<span class="text-xs md:text-sm font-semibold line-through text-slate-500 dark:text-slate-400 ml-2">${Number(rawPkg.vnd || 0).toLocaleString('en-US')} VND</span>`;
+      originalPriceDisplay = `<span class="text-xs md:text-sm font-semibold line-through text-slate-400 dark:text-slate-500 ml-2">${Number(rawPkg.vnd || 0).toLocaleString('en-US')} VND</span>`;
     }
   }
 
-  const priceHTML = pkg.isCustom ? `<div class="text-xl font-black text-red-600 dark:text-red-400 mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${p.price || ''}</div>` : `<div class="mb-4 border-b border-slate-100 dark:border-white/10 pb-3 mt-1.5 flex flex-wrap items-baseline"><span class="text-2xl md:text-3xl font-black text-indigo-700 dark:text-white price-glow">${realPriceDisplay}</span>${originalPriceDisplay}</div>`;
+  const priceHTML = pkg.isCustom ? `<div class="text-xl font-black text-red-600 dark:text-red-400 mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${p.price || ''}</div>` : `<div class="mb-4 border-b border-slate-100 dark:border-white/10 pb-3 mt-1.5 flex flex-wrap items-baseline"><span class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-white price-glow">${realPriceDisplay}</span>${originalPriceDisplay}</div>`;
 
   // Chữ hiển thị cạnh thời hạn: Ưu tiên Gift Rule
   let bonusLabel = '';
   if (matchedGift) {
     if (matchedGift.bonusText) {
-      bonusLabel = ` <span class="text-rose-700 dark:text-rose-400 font-extrabold text-xs">(${esc(matchedGift.bonusText)})</span>`;
+      bonusLabel = ` <span class="text-rose-500 dark:text-rose-400 font-extrabold text-xs">(${esc(matchedGift.bonusText)})</span>`;
     } else if (Number(matchedGift.bonusDays) > 0) {
-      bonusLabel = ` <span class="text-rose-700 dark:text-rose-400 font-extrabold text-xs">(+${matchedGift.bonusDays} ngày)</span>`;
+      bonusLabel = ` <span class="text-rose-500 dark:text-rose-400 font-extrabold text-xs">(+${matchedGift.bonusDays} ngày)</span>`;
     }
   } else if (pkg.bonus_text) {
-    bonusLabel = ` <span class="text-rose-700 dark:text-rose-400 font-extrabold text-xs">(${esc(pkg.bonus_text)})</span>`;
+    bonusLabel = ` <span class="text-rose-500 dark:text-rose-400 font-extrabold text-xs">(${esc(pkg.bonus_text)})</span>`;
   } else if (Number(pkg.bonus_days) > 0 && !pkg.promo_sticker) {
-    bonusLabel = ` <span class="text-rose-700 dark:text-rose-400 font-extrabold text-xs">(+${pkg.bonus_days} ngày)</span>`;
+    bonusLabel = ` <span class="text-rose-500 dark:text-rose-400 font-extrabold text-xs">(+${pkg.bonus_days} ngày)</span>`;
   }
 
   const extraFeats = Array.isArray(pkg.features) && pkg.features.length ? pkg.features : ['Băng thông lên đến 3Gbps'];
@@ -3643,8 +3642,8 @@ function fillDashboard(o) {
   const mm = String(o.expDate || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
   if (!life && mm) exp = Date.now() + skew >= Date.UTC(+mm[3], mm[2] - 1, +mm[1]) - 7 * 36e5;
   $('displayStatus').innerText = exp ? L.expired_lbl : L.active;
-  $('displayStatus').className = 'text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap ' + (exp ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400');
-  let ut = L.upg_none, uc = 'bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300';
+  $('displayStatus').className = 'text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap ' + (exp ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400');
+  let ut = L.upg_none, uc = 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400';
   if (o.pendingUpgrade) {
     ut = L.upg_pending;
     uc = 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400';
@@ -3672,14 +3671,14 @@ function fillDashboard(o) {
       </div>
       <div class="flex flex-col sm:flex-row gap-2 w-full items-stretch">
         <div class="relative w-full sm:flex-1 flex items-center overflow-hidden rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]">
-          <input type="text" id="subLink${i}" aria-label="Subscription URL #${i}" readonly placeholder="" class="w-full bg-transparent text-green-700 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl select-none">
+          <input type="text" id="subLink${i}" aria-label="Subscription URL #${i}" readonly placeholder="" class="w-full bg-transparent text-green-600 dark:text-green-400 p-2.5 md:p-3 font-mono font-bold text-[10px] md:text-sm outline-none rounded-xl select-none">
           <div id="subBlurOverlay${i}" onclick="copyToClipboard('subLink${i}')" class="hidden absolute inset-0 z-10 flex items-center justify-start pl-3.5 pr-3 bg-white/25 dark:bg-black/30 backdrop-blur-[2px] cursor-not-allowed select-none">
             <span class="text-red-600 dark:text-amber-300 font-extrabold text-[11px] md:text-xs text-left leading-tight">Link này sẽ được admin mở khi website thực hiện bảo trì. Xin cảm ơn!</span>
           </div>
         </div>
         <div class="flex gap-2 shrink-0 w-full sm:w-auto">
-          <button type="button" id="btnCopySub${i}" onclick="copyToClipboard('subLink${i}')" class="flex-1 sm:flex-none sm:w-[105px] bg-green-700 hover:bg-green-800 text-white font-extrabold px-2.5 sm:px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center gap-1.5 z-10 shadow-sm min-h-[44px]"><i class="fas fa-copy" aria-hidden="true"></i><span>COPY</span></button>
-          <button type="button" id="btnQrSub${i}" onclick="openQrModal('subLink${i}', ${i})" class="flex-1 sm:flex-none sm:w-[105px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-2.5 sm:px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm min-h-[44px]"><i class="fas fa-qrcode mr-1" aria-hidden="true"></i>LẤY QR</button>
+          <button type="button" id="btnCopySub${i}" onclick="copyToClipboard('subLink${i}')" class="flex-1 sm:flex-none sm:w-[105px] bg-green-600 hover:bg-green-700 text-white font-extrabold px-2.5 sm:px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center gap-1.5 z-10 shadow-sm"><i class="fas fa-copy" aria-hidden="true"></i><span>COPY</span></button>
+          <button type="button" id="btnQrSub${i}" onclick="openQrModal('subLink${i}', ${i})" class="flex-1 sm:flex-none sm:w-[105px] bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-2.5 sm:px-3 py-2 rounded-2xl text-xs md:text-sm transition flex items-center justify-center z-10 shadow-sm"><i class="fas fa-qrcode mr-1" aria-hidden="true"></i>LẤY QR</button>
         </div>
       </div>
     </div>
@@ -3687,10 +3686,10 @@ function fillDashboard(o) {
 
   $('linkBoxes').innerHTML = fallbackNoticeHtml + slotBoxesHtml;
 
-  // Đưa 2 nút Nâng gói và Gia hạn ra ngoài khối linkBoxes (tăng tương phản WCAG AA >= 4.5:1)
+  // Đưa 2 nút Nâng gói và Gia hạn ra ngoài khối linkBoxes
   const actBtns = $('portalActionButtons');
   if (actBtns) {
-    actBtns.innerHTML = `<button onclick="startUpgrade()" class="w-full min-h-[44px] bg-amber-700 hover:bg-amber-800 text-white font-extrabold py-3 rounded-xl text-xs md:text-sm transition flex items-center justify-center shadow-md active:scale-95"><i class="fas fa-arrow-up mr-1.5" aria-hidden="true"></i> NÂNG GÓI</button><button onclick="startRenew()" class="w-full min-h-[44px] bg-sky-700 hover:bg-sky-800 text-white font-extrabold py-3 rounded-xl text-xs md:text-sm transition flex items-center justify-center shadow-md active:scale-95"><i class="fas fa-redo-alt mr-1.5" aria-hidden="true"></i> ${L.btn_renew||'GIA HẠN'}</button>`;
+    actBtns.innerHTML = `<button onclick="startUpgrade()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-3 rounded-xl text-xs md:text-sm transition flex items-center justify-center shadow-md active:scale-95"><i class="fas fa-arrow-up mr-1.5" aria-hidden="true"></i> NÂNG GÓI</button><button onclick="startRenew()" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-extrabold py-3 rounded-xl text-xs md:text-sm transition flex items-center justify-center shadow-md active:scale-95"><i class="fas fa-redo-alt mr-1.5" aria-hidden="true"></i> ${L.btn_renew||'GIA HẠN'}</button>`;
   }
 
   [1, 2, 3].forEach(i => {
