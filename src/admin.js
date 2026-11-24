@@ -8053,8 +8053,8 @@ function renderLogs() {
     ts: parseAny(x.created_at),
     lvl: x.level || "info",
     src: "d1",
-    act: x.action,
-    msg: x.details,
+    act: fixMojibake(x.action),
+    msg: fixMojibake(x.details),
     ref: x.ref
   }))]
     .filter(r => r.ts && (now - r.ts <= sevenDays))
