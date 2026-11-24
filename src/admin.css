@@ -8,7 +8,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* ===== DESIGN SYSTEM TOKENS (PRIMITIVE -> SEMANTIC -> COMPONENT) ===== */
+/* ===== DESIGN SYSTEM TOKENS (PRIMITIVE -> SEMANTIC -> COMPONENT) ===== */ 
 :root {
   --adm-indigo-500: #6366f1;
   --adm-indigo-600: #4f46e5;
