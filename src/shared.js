@@ -107,8 +107,7 @@ function calcToastTopOffset() {
   let bottom = 0;
   ['#headerAnnouncementDrawer', '#siteAnnouncementBanner', '#mainNav', '#hdr', '#tabBar'].forEach((sel) => {
     const el = document.querySelector(sel);
-    if (!el || el.classList.con
-      tains('hidden') || el.classList.contains('nav-hidden')) return;
+    if (!el || el.classList.contains('hidden') || el.classList.contains('nav-hidden')) return;
     const st = window.getComputedStyle ? window.getComputedStyle(el) : null;
     if (st && (st.display === 'none' || st.visibility === 'hidden')) return;
     const rect = el.getBoundingClientRect();
