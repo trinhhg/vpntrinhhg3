@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import DOMPurify from 'dompurify';
+import fs from 'node:fs';
+import path from 'node:path';
 
 describe('CMS Guide & Video / Lightbox / CTA Features', () => {
   const CMS_PURIFY_CONFIG = {
@@ -41,5 +43,32 @@ describe('CMS Guide & Video / Lightbox / CTA Features', () => {
 
     expect(shouldShowFaqs).toBe(true);
     expect(shouldShowRelated).toBe(false);
+  });
+
+  it('loại bỏ script, event handler on* và javascript: URI qua GUIDE_PURIFY_CONFIG', () => {
+    const GUIDE_PURIFY_CONFIG = {
+      ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'strong', 'b', 'em', 'i', 'u', 's', 'del', 'a', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'img', 'iframe', 'div', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'details', 'summary'],
+      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style', 'id', 'target', 'rel', 'width', 'height', 'allow', 'allowfullscreen', 'frameborder', 'referrerpolicy', 'data-cta', 'data-guide-action', 'data-guide-id', 'data-guide-anchor', 'data-guide-tab', 'data-guide-art', 'data-guide-target', 'data-guide-slug'],
+      ALLOW_DATA_ATTR: false,
+      ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel):|#|\/)/i
+    };
+    const malicious = '<p onclick="alert(1)">Hello</p><script>alert(2)</script><img src="https://example.com/a\');alert(3);//.png" onerror="alert(4)"><a href="javascript:alert(5)">Bad</a><iframe src="https://evil.example.com/x"></iframe>';
+    const cleaned = DOMPurify.sanitize(malicious, GUIDE_PURIFY_CONFIG);
+    expect(cleaned).not.toContain('<script');
+    expect(cleaned).not.toContain('onclick=');
+    expect(cleaned).not.toContain('onerror=');
+    expect(cleaned).not.toContain('javascript:');
+  });
+
+  it('đảm bảo closeHeaderDrawer, lưu vpn_lang, DOMPurify guide và openWechatModal có mặt trong source', () => {
+    const customerJs = fs.readFileSync(path.resolve(process.cwd(), 'src/customer.js'), 'utf8');
+    const indexHtml = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf8');
+    expect(customerJs).toContain('function closeHeaderDrawer()');
+    expect(customerJs).toContain("localStorage.setItem('vpn_lang'");
+    expect(customerJs).toContain("localStorage.getItem('vpn_lang')");
+    expect(customerJs).toContain('DOMPurify.sanitize(rawHtml');
+    expect(customerJs).not.toContain("img.setAttribute('onclick'");
+    expect(indexHtml).toContain('onclick="openWechatModal()"');
+    expect(indexHtml).not.toContain("document.getElementById('wechatModal').classList.remove('hidden')");
   });
 });
