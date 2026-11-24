@@ -100,7 +100,31 @@ export function cp(text, customToastMsg) {
   toast(customToastMsg || `Đã copy: ${preview}`);
 }
 
-// ==================== STACKED TOAST NOTIFICATIONS (TOP-RIGHT) ====================
+// ==================== STACKED TOAST NOTIFICATIONS (TOP-RIGHT BELOW HEADER) ====================
+let toastOffsetListenerBound = false;
+function calcToastTopOffset() {
+  if (typeof document === 'undefined' || typeof window === 'undefined') return 16;
+  let bottom = 0;
+  ['#headerAnnouncementDrawer', '#siteAnnouncementBanner', '#mainNav', '#hdr'].forEach((sel) => {
+    const el = document.querySelector(sel);
+    if (!el || el.classList.contains('hidden') || el.classList.contains('nav-hidden')) return;
+    const st = window.getComputedStyle ? window.getComputedStyle(el) : null;
+    if (st && (st.display === 'none' || st.visibility === 'hidden')) return;
+    const rect = el.getBoundingClientRect();
+    if (rect && rect.height > 0 && rect.bottom > bottom) bottom = rect.bottom;
+  });
+  const top = bottom > 0 ? Math.ceil(bottom + 8) : 16;
+  return Math.min(top, Math.max(16, Math.floor((window.innerHeight || 640) * 0.45)));
+}
+
+function syncToastTopPosition() {
+  if (typeof document === 'undefined') return;
+  const topPx = calcToastTopOffset();
+  document.documentElement.style.setProperty('--toast-top-offset', topPx + 'px');
+  const c = document.getElementById('toastStackContainer');
+  if (c) c.style.top = topPx + 'px';
+}
+
 function ensureToastContainer() {
   let c = document.getElementById('toastStackContainer');
   if (!c) {
@@ -109,8 +133,14 @@ function ensureToastContainer() {
     c.setAttribute('role', 'status');
     c.setAttribute('aria-live', 'polite');
     c.setAttribute('aria-atomic', 'false');
-    c.className = 'fixed bottom-20 sm:bottom-auto sm:top-20 right-3 sm:right-4 z-[999999] flex flex-col gap-2 pointer-events-none px-2 sm:px-0 items-end max-w-[calc(100vw-1.5rem)]';
+    c.className = 'fixed right-3 sm:right-4 z-[999999] flex flex-col gap-2 pointer-events-none items-end max-w-[calc(100vw-1.5rem)] sm:max-w-sm';
     document.body.appendChild(c);
+  }
+  syncToastTopPosition();
+  if (!toastOffsetListenerBound && typeof window !== 'undefined') {
+    toastOffsetListenerBound = true;
+    window.addEventListener('resize', syncToastTopPosition, { passive: true });
+    window.addEventListener('scroll', syncToastTopPosition, { passive: true });
   }
   return c;
 }
@@ -118,6 +148,7 @@ function ensureToastContainer() {
 export function toast(msg, type = 'ok') {
   if (typeof document === 'undefined') return;
   const c = ensureToastContainer();
+  syncToastTopPosition();
   const el = document.createElement('div');
 
   const isErr = type === 'err' || type === 'error';
@@ -127,10 +158,10 @@ export function toast(msg, type = 'ok') {
   const iconClass = isErr ? 'fa-circle-xmark text-red-500' : isWarn ? 'fa-triangle-exclamation text-amber-500' : isInfo ? 'fa-circle-info text-blue-500' : 'fa-circle-check text-emerald-500';
   const borderClass = isErr ? 'border-red-200 dark:border-red-900/60' : isWarn ? 'border-amber-200 dark:border-amber-900/60' : isInfo ? 'border-blue-200 dark:border-blue-900/60' : 'border-emerald-200 dark:border-emerald-900/60';
 
-  el.className = 'pointer-events-auto inline-flex items-center gap-2.5 py-2 px-3.5 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-lg border ' + borderClass + ' text-slate-800 dark:text-slate-100 text-xs sm:text-sm font-semibold transition-all duration-300 transform translate-x-4 opacity-0 ml-auto';
-  el.style.cssText = 'width: fit-content !important; max-width: calc(100vw - 2rem); display: inline-flex !important; align-items: center !important;';
+  el.className = 'pointer-events-auto inline-flex items-center gap-2 py-2 px-3 rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-lg border ' + borderClass + ' text-slate-800 dark:text-slate-100 text-xs sm:text-[13px] font-semibold transition-all duration-300 transform translate-x-4 opacity-0 ml-auto';
+  el.style.cssText = 'width: fit-content !important; max-width: calc(100vw - 1.5rem); display: inline-flex !important; align-items: center !important;';
 
-  el.innerHTML = '<i class="fas ' + iconClass + ' text-base shrink-0 flex items-center justify-center" aria-hidden="true"></i>' + '<div class="leading-snug break-words whitespace-normal flex items-center">' + msg + '</div>' + '<button type="button" class="text-slate-600 hover:text-slate-800 dark:text-slate-300 dark:hover:text-white ml-1.5 shrink-0 w-9 h-9 rounded-lg inline-flex items-center justify-center" aria-label="Đóng thông báo">' + '<i class="fas fa-times text-xs" aria-hidden="true"></i>' + '</button>';
+  el.innerHTML = '<i class="fas ' + iconClass + ' text-sm shrink-0 flex items-center justify-center" aria-hidden="true"></i>' + '<div class="leading-snug break-words whitespace-normal flex items-center">' + msg + '</div>' + '<button type="button" class="text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white ml-1 shrink-0 w-6 h-6 rounded-md inline-flex items-center justify-center transition" aria-label="Đóng thông báo">' + '<i class="fas fa-times text-[11px]" aria-hidden="true"></i>' + '</button>';
 
   const closeBtn = el.querySelector('button');
   const dismiss = () => {
