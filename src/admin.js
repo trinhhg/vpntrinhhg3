@@ -8241,6 +8241,65 @@ async function saveFailoverPolicy() {
   }
 }
 
+function mcSetMobilePane(mode) {
+  const isPreview = mode === 'preview';
+  const editCol = $('mailEditCol');
+  const prevCol = $('mailPreviewCol');
+  const btnEdit = $('btnMailMobEdit');
+  const btnPrev = $('btnMailMobPreview');
+  if (editCol) {
+    editCol.classList.add('lg:block');
+    editCol.classList.toggle('hidden', isPreview);
+  }
+  if (prevCol) {
+    prevCol.classList.toggle('hidden', !isPreview);
+  }
+  if (btnEdit) {
+    btnEdit.classList.toggle('active', !isPreview);
+    btnEdit.setAttribute('aria-pressed', String(!isPreview));
+  }
+  if (btnPrev) {
+    btnPrev.classList.toggle('active', isPreview);
+    btnPrev.setAttribute('aria-pressed', String(isPreview));
+  }
+  if (isPreview && typeof mcPreview === 'function') mcPreview();
+}
+
+let adminModalA11yBound = false;
+function initAdminModalAccessibility() {
+  if (typeof document === 'undefined' || adminModalA11yBound) return;
+  adminModalA11yBound = true;
+
+  const modalSpecs = [['mOrd', 'mOrdHandle', () => closeAdminModal('mOrd')], ['mRootEdit', 'mRootEditHandle', () => closeAdminModal('mRootEdit')], ['mLnk', 'mLnkHandle', () => closeAdminModal('mLnk')], ['mCouponModal', 'mCouponModalHandle', () => closeCouponModal()], ['mGiftRuleModal', 'mGiftRuleModalHandle', () => closeGiftRuleModal()]];
+  modalSpecs.forEach(([overlayId, handleId, closeFn]) => {
+    bindVaulDialog(overlayId, { handleId, closeFn, breakpointPx: 640 });
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const active = modalSpecs.find(([overlayId]) => {
+      const el = $(overlayId);
+      return el && !el.classList.contains('hidden');
+    });
+    if (!active) return;
+    const overlay = $(active[0]);
+    if (document.activeElement && overlay && overlay.contains(document.activeElement)) {
+      try {
+        document.activeElement.blur();
+      } catch (_) {}
+    }
+    active[2]();
+  });
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAdminModalAccessibility, { once: true });
+  } else {
+    initAdminModalAccessibility();
+  }
+}
+
 // ===================== KHỞI ĐỘNG =====================
 let started = false;
 async function startApp(fresh) {
@@ -9350,65 +9409,6 @@ async function rejectTxItem(txId) {
   }
 }
 window.rejectTxItem = rejectTxItem;
-
-function mcSetMobilePane(mode) {
-  const isPreview = mode === 'preview';
-  const editCol = $('mailEditCol');
-  const prevCol = $('mailPreviewCol');
-  const btnEdit = $('btnMailMobEdit');
-  const btnPrev = $('btnMailMobPreview');
-  if (editCol) {
-    editCol.classList.add('lg:block');
-    editCol.classList.toggle('hidden', isPreview);
-  }
-  if (prevCol) {
-    prevCol.classList.toggle('hidden', !isPreview);
-  }
-  if (btnEdit) {
-    btnEdit.classList.toggle('active', !isPreview);
-    btnEdit.setAttribute('aria-pressed', String(!isPreview));
-  }
-  if (btnPrev) {
-    btnPrev.classList.toggle('active', isPreview);
-    btnPrev.setAttribute('aria-pressed', String(isPreview));
-  }
-  if (isPreview && typeof mcPreview === 'function') mcPreview();
-}
-
-let adminModalA11yBound = false;
-function initAdminModalAccessibility() {
-  if (typeof document === 'undefined' || adminModalA11yBound) return;
-  adminModalA11yBound = true;
-
-  const modalSpecs = [['mOrd', 'mOrdHandle', () => closeAdminModal('mOrd')], ['mRootEdit', 'mRootEditHandle', () => closeAdminModal('mRootEdit')], ['mLnk', 'mLnkHandle', () => closeAdminModal('mLnk')], ['mCouponModal', 'mCouponModalHandle', closeCouponModal], ['mGiftRuleModal', 'mGiftRuleModalHandle', closeGiftRuleModal]];
-  modalSpecs.forEach(([overlayId, handleId, closeFn]) => {
-    bindVaulDialog(overlayId, { handleId, closeFn, breakpointPx: 640 });
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape') return;
-    const active = modalSpecs.find(([overlayId]) => {
-      const el = $(overlayId);
-      return el && !el.classList.contains('hidden');
-    });
-    if (!active) return;
-    const overlay = $(active[0]);
-    if (document.activeElement && overlay && overlay.contains(document.activeElement)) {
-      try {
-        document.activeElement.blur();
-      } catch (_) {}
-    }
-    active[2]();
-  });
-}
-
-if (typeof document !== 'undefined') {
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initAdminModalAccessibility, { once: true });
-  } else {
-    initAdminModalAccessibility();
-  }
-}
 
 // Expose all admin functions and state to window for HTML inline event handlers
 if (typeof window !== 'undefined') {
