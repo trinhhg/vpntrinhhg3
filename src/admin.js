@@ -823,24 +823,29 @@ function go(id, fromHistory) {
     const btn = $('bnav-' + k);
     if (!btn) return;
     btn.classList.remove('text-indigo-700', 'text-indigo-600', 'active');
-    btn.classList.add('text-slate-600');
+    btn.classList.add('text-slate-400');
   });
   const activeBtn = $('bnav-' + activeSlot);
   if (activeBtn) {
-    activeBtn.classList.add('text-indigo-700', 'active');
-    activeBtn.classList.remove('text-slate-600', 'text-slate-400');
+    activeBtn.classList.add('text-indigo-600', 'active');
+    activeBtn.classList.remove('text-slate-400', 'text-slate-600');
   }
 
   const backBtn = $('hdrBackBtn');
+  const brandWrap = $('hdrBrandWrap');
   const subTitle = $('hdrSubTitle');
   const isDeepSubPage = moreSubTabs.includes(id) && id !== 't-more';
   if (backBtn) {
     backBtn.classList.toggle('hidden', !isDeepSubPage);
     backBtn.classList.toggle('inline-flex', isDeepSubPage);
   }
+  if (brandWrap) {
+    brandWrap.classList.toggle('hidden', isDeepSubPage);
+    brandWrap.classList.add('md:block');
+  }
   if (subTitle) {
     const tabMeta = TABS.find(t => t[0] === id);
-    subTitle.textContent = isDeepSubPage && tabMeta ? `· ${tabMeta[2]}` : '';
+    subTitle.textContent = isDeepSubPage && tabMeta ? tabMeta[2] : '';
     subTitle.classList.toggle('hidden', !isDeepSubPage);
   }
 
@@ -981,8 +986,8 @@ window.addEventListener('popstate', (event) => {
     if (s.tab) {
       go(s.tab, true);
       if (s.tab === 't-check' && s.checkSub) switchCheckSubTab(s.checkSub, true);
-      if (s.tab === 't-trans') {
-        if (s.txSub) switchTxTab(s.txSub, true);
+      if (s.tab === 't-trans' && s.txSub) switchTxTab(s.txSub, true);
+      if (s.tab === 't-rev') {
         if (s.revTab) setRevTab(s.revTab, true);
         if (s.revMonth) {
           revMonth = s.revMonth;
@@ -1010,12 +1015,10 @@ window.addEventListener('popstate', (event) => {
 });
 
 // ===================== ĐƠN HÀNG =====================
-function switchOrdTab(t) {
-  curOrdTab = t || "success";
-  try {
-    localStorage.setItem(SITE_KEY + "_curOrdTab", curOrdTab);
-  } catch (e) {}
-  ["success", "pending", "failed"].forEach(x => {
+const VALID_ORD_TABS = ["success", "pending", "failed"];
+function syncOrdTabButtons() {
+  if (!VALID_ORD_TABS.includes(curOrdTab)) curOrdTab = "success";
+  VALID_ORD_TABS.forEach(x => {
     const el = $("otab-" + x);
     if (el) {
       const isAct = x === curOrdTab;
@@ -1023,6 +1026,13 @@ function switchOrdTab(t) {
       el.setAttribute("aria-selected", isAct ? "true" : "false");
     }
   });
+}
+function switchOrdTab(t) {
+  curOrdTab = VALID_ORD_TABS.includes(t) ? t : "success";
+  try {
+    localStorage.setItem(SITE_KEY + "_curOrdTab", curOrdTab);
+  } catch (e) {}
+  syncOrdTabButtons();
   renderOrd();
 }
 const ordAmountTxt = o => {
@@ -1080,7 +1090,7 @@ function ordCard(o, ro) {
   const amtBadge = `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded text-[10px] font-bold">Thực nhận: ${esc(ordAmountTxt(o))}</span>`;
   const mBadge = `<span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded text-[10px] font-bold">${pkgOf(o)&&pkgOf(o).m===0?"Vĩnh viễn":ordMonths(o)+" tháng"}</span>`;
 
-  const acts = ro ? "" : `<div class="flex gap-1.5">${st==="success"&&o.expDate&&!expired&&!isLife(o.expDate)?`<button type="button" onclick="sendExpMail(${q(o.id)})" title="Nhắc hết hạn" aria-label="Nhắc hết hạn đơn ${esc(o.id)}" class="text-amber-700 font-bold px-2.5 py-2 sm:py-1.5 bg-amber-50 border border-amber-200 rounded-xl sm:rounded-lg text-xs hover:bg-amber-600 hover:text-white inline-flex items-center justify-center transition"><i class="fas fa-clock" aria-hidden="true"></i></button>`:""}<button type="button" onclick="sendZaloMail(${q(o.id)})" title="Nhắc hỗ trợ cài đặt (Zalo)" aria-label="Nhắc hỗ trợ Zalo đơn ${esc(o.id)}" class="text-blue-700 font-bold px-2.5 py-2 sm:py-1.5 bg-blue-50 border border-blue-200 rounded-xl sm:rounded-lg text-xs hover:bg-blue-600 hover:text-white inline-flex items-center justify-center transition"><i class="fas fa-comment-dots" aria-hidden="true"></i></button><button type="button" onclick="openOrdModal(${q(o.id)})" title="Sửa" aria-label="Sửa đơn ${esc(o.id)}" class="text-indigo-700 font-bold px-3 py-2 sm:py-1.5 bg-indigo-50 border border-indigo-200 rounded-xl sm:rounded-lg text-xs hover:bg-indigo-600 hover:text-white inline-flex items-center justify-center transition"><i class="fas fa-pen md:mr-1" aria-hidden="true"></i><span class="hidden md:inline">Sửa</span></button><button type="button" onclick="delOrd(${q(o.id)})" title="Xóa" aria-label="Xóa đơn ${esc(o.id)}" class="text-red-700 font-bold px-2.5 py-2 sm:py-1.5 bg-red-50 border border-red-200 rounded-xl sm:rounded-lg text-xs hover:bg-red-600 hover:text-white inline-flex items-center justify-center transition"><i class="fas fa-trash" aria-hidden="true"></i></button></div>`;
+  const acts = ro ? "" : `<div class="flex gap-1.5">${st==="success"&&o.expDate&&!expired&&!isLife(o.expDate)?`<button type="button" onclick="sendExpMail(${q(o.id)})" title="Nhắc hết hạn" aria-label="Nhắc hết hạn đơn ${esc(o.id)}" class="text-amber-500 font-bold px-2.5 py-1.5 bg-amber-50 border border-amber-100 rounded-lg text-xs hover:bg-amber-500 hover:text-white inline-flex items-center justify-center transition"><i class="fas fa-clock" aria-hidden="true"></i></button>`:""}<button type="button" onclick="sendZaloMail(${q(o.id)})" title="Nhắc hỗ trợ cài đặt (Zalo)" aria-label="Nhắc hỗ trợ Zalo đơn ${esc(o.id)}" class="text-blue-500 font-bold px-2.5 py-1.5 bg-blue-50 border border-blue-100 rounded-lg text-xs hover:bg-blue-500 hover:text-white inline-flex items-center justify-center transition"><i class="fas fa-comment-dots" aria-hidden="true"></i></button><button type="button" onclick="openOrdModal(${q(o.id)})" title="Sửa" aria-label="Sửa đơn ${esc(o.id)}" class="text-indigo-600 font-bold px-3 py-1.5 bg-indigo-50 border border-indigo-100 rounded-lg text-xs hover:bg-indigo-600 hover:text-white inline-flex items-center justify-center transition"><i class="fas fa-pen md:mr-1" aria-hidden="true"></i><span class="hidden md:inline">Sửa</span></button><button type="button" onclick="delOrd(${q(o.id)})" title="Xóa" aria-label="Xóa đơn ${esc(o.id)}" class="text-red-500 font-bold px-2.5 py-1.5 bg-red-50 border border-red-100 rounded-lg text-xs hover:bg-red-500 hover:text-white inline-flex items-center justify-center transition"><i class="fas fa-trash" aria-hidden="true"></i></button></div>`;
 
   return `<div class="${card} rounded-xl p-3 shadow-sm flex flex-col md:flex-row md:items-stretch justify-between gap-2 md:gap-3 w-full min-w-0"><div class="flex-1 min-w-0">
   <div class="flex items-center gap-2 mb-1 flex-wrap">${dot}<span class="font-bold text-[10px] text-slate-400">#${ordersDb.indexOf(o)+1}</span><span class="font-mono font-extrabold text-indigo-600 text-xs md:text-base cp order-id-text" onclick="cp(${q(o.id)})">${esc(o.id)}</span>${nick}${kind}${st==="pending"?`<span class="bg-yellow-100 text-yellow-800 text-[10px] font-bold px-1.5 py-0.5 rounded ml-1">Chưa xác nhận CK</span>`:""}${bu}${lkb}${expired?`<span class="text-[10px] font-black bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded ml-1">ĐÃ HẾT HẠN</span>`:""}</div>
@@ -1090,6 +1100,7 @@ function ordCard(o, ro) {
   <div class="flex flex-row md:flex-col items-center md:items-end justify-between gap-2 shrink-0 border-t border-slate-100 md:border-0 pt-2 md:pt-0"><span class="text-[10px] md:text-xs text-slate-400 font-semibold whitespace-nowrap">${esc(o.date || fmtBank(o.createdTs || 0))}</span>${acts}</div></div>`;
 }
 function renderOrd() {
+  syncOrdTabButtons();
   const counts = { success: 0, pending: 0, failed: 0 };
   ordersDb.forEach(o => {
     const s = normSt(o.status);
@@ -2110,8 +2121,7 @@ function setRevTab(k, fromHistory = false) {
   revPayView = null;
   renderRevenue();
   if (!fromHistory && typeof recordAdminNav === "function") recordAdminNav({
-    tab: "t-trans",
-    txSub: "rev",
+    tab: "t-rev",
     revTab,
     revMonth,
     revPayView: null
@@ -2123,8 +2133,7 @@ function setRevPayView(k, fromHistory = false) {
   revPayView = k;
   renderRevenue();
   if (!fromHistory && typeof recordAdminNav === "function") recordAdminNav({
-    tab: "t-trans",
-    txSub: "rev",
+    tab: "t-rev",
     revTab,
     revMonth,
     revPayView: k
@@ -2727,7 +2736,7 @@ function revCost(R, b) {
             <div class="text-xs font-extrabold text-slate-900 truncate">${esc(c.item || c.src || "-")}</div>
             <div class="text-[11px] font-semibold text-slate-600 mt-0.5">${esc(dmyOf(c.ts))} · ${esc(c.src || "-")} · SL: ${Number(c.qty || 0)}</div>
           </div>
-          <button type="button" onclick="delCost('${c.id}')" aria-label="Xóa chi phí ${esc(c.item || c.src || c.id)}" class="min-w-[44px] min-h-[44px] shrink-0 inline-flex items-center justify-center rounded-xl bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border border-rose-200 transition text-xs font-bold">
+          <button type="button" onclick="delCost('${c.id}')" aria-label="Xóa chi phí ${esc(c.item || c.src || c.id)}" class="w-8 h-8 shrink-0 inline-flex items-center justify-center rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 transition text-xs font-bold">
             <i class="fas fa-trash" aria-hidden="true"></i>
           </button>
         </div>
@@ -2978,7 +2987,7 @@ function mcInsertVar(v) {
 }
 function mcRenderEditor() {
   const vars = mcTab === "sys" ? [...MC_VARS_BASE, ...MC_VARS_SYS] : MC_VARS_BASE;
-  $("mcVarBtns").innerHTML = vars.map(([v, l]) => `<button type="button" onmousedown="event.preventDefault()" onclick="mcInsertVar('${v}')" class="bg-indigo-50 text-indigo-700 font-mono font-bold text-[11px] px-2.5 py-1.5 min-h-[34px] rounded-lg hover:bg-indigo-100" title="${esc(l)}">${v}</button>`).join("");
+  $("mcVarBtns").innerHTML = vars.map(([v, l]) => `<button type="button" onmousedown="event.preventDefault()" onclick="mcInsertVar('${v}')" class="bg-indigo-50 text-indigo-600 font-mono font-bold text-[10px] px-2 py-1 rounded hover:bg-indigo-100" title="${esc(l)}">${v}</button>`).join("");
   $("mcSubject").value = mc.subject;
   $("mcTitle").value = mc.title;
   $("mcColor").value = mc.color;
@@ -2988,7 +2997,7 @@ function mcRenderEditor() {
   $("mcStopV").textContent = mc.stop;
   $("mcAng").value = mc.ang;
   $("mcAngV").textContent = mc.ang;
-  $("mcAddBtns").innerHTML = `<span class="text-[11px] font-bold text-slate-600 px-1">THÊM KHỐI:</span>` + MC_BT.map(([t, l, ic]) => `<button type="button" onclick="mcAdd('${t}')" class="bg-white border shadow-sm px-2.5 py-1.5 min-h-[36px] rounded-lg text-[11px] font-bold text-slate-700 hover:bg-slate-50"><i class="fas ${ic} mr-1" aria-hidden="true"></i>${l}</button>`).join("");
+  $("mcAddBtns").innerHTML = `<span class="text-[10px] font-bold text-slate-400 px-1">THÊM KHỐI:</span>` + MC_BT.map(([t, l, ic]) => `<button type="button" onclick="mcAdd('${t}')" class="bg-white border shadow-sm px-2 py-1 rounded text-[11px] font-bold text-slate-700 hover:bg-slate-50"><i class="fas ${ic} mr-1" aria-hidden="true"></i>${l}</button>`).join("");
   const tb = (i, k, on, ic) => `<button onclick="mcSet(${i},'${k}',${on?0:1},true)" class="w-6 h-6 rounded border text-[10px] ${on?"bg-indigo-600 text-white border-indigo-600":"bg-white text-slate-500"}"><i class="fas ${ic}"></i></button>`;
   $("mcList").innerHTML = mc.blocks.map((b, i) => {
     const nm = (MC_BT.find(x => x[0] === b.t) || [b.t, b.t])[1], txt = b.t === "text" || b.t === "box", ab = (txt || b.t === "img") ? [["l", "fa-align-left"], ["c", "fa-align-center"], ["r", "fa-align-right"]].map(([a, ic]) => `<button onclick="mcSet(${i},'al','${a}',true)" class="w-6 h-6 rounded border text-[10px] ${(b.al||"l")===a?"bg-indigo-600 text-white border-indigo-600":"bg-white text-slate-500"}"><i class="fas ${ic}"></i></button>`).join("") : "";
@@ -3542,8 +3551,8 @@ function renderTransactions() {
           </div>
           ${tx.review_note ? `<div class="text-[11px] text-rose-700 font-semibold bg-rose-50 border border-rose-200 rounded-lg px-2.5 py-1.5">${esc(fixMojibake(tx.review_note))}</div>` : ''}
           <div class="flex items-center gap-2 pt-1 border-t border-slate-100">
-            ${m.canApprove ? `<button type="button" onclick="approveTransaction(${tx.id})" class="flex-1 min-h-[44px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95"><i class="fas fa-bolt" aria-hidden="true"></i>Khớp giao dịch</button>` : `<span class="flex-1 text-[11px] text-slate-500 font-bold">Đã xử lý</span>`}
-            <button type="button" onclick="deleteTx(${tx.id})" aria-label="Xóa giao dịch #${tx.id}" class="min-w-[44px] min-h-[44px] px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold rounded-xl text-xs flex items-center justify-center transition"><i class="fas fa-trash" aria-hidden="true"></i></button>
+            ${m.canApprove ? `<button type="button" onclick="approveTransaction(${tx.id})" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-xs shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95"><i class="fas fa-bolt" aria-hidden="true"></i>Khớp giao dịch</button>` : `<span class="flex-1 text-[11px] text-slate-500 font-bold">Đã xử lý</span>`}
+            <button type="button" onclick="deleteTx(${tx.id})" aria-label="Xóa giao dịch #${tx.id}" class="w-9 h-8 bg-rose-50 hover:bg-rose-500 text-rose-600 hover:text-white border border-rose-200 font-bold rounded-lg text-xs flex items-center justify-center transition"><i class="fas fa-trash" aria-hidden="true"></i></button>
           </div>
         </div>`;
       }).join("");
@@ -3560,7 +3569,7 @@ function renderTransactions() {
           </div>
           <div class="font-mono text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-xl p-2.5 break-all">${esc(tx.notification||tx.content||"—")}</div>
           <div class="flex justify-end pt-1">
-            <button type="button" onclick="deleteTx(${tx.id})" aria-label="Xóa giao dịch thô #${tx.id}" class="min-w-[44px] min-h-[44px] px-3 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"><i class="fas fa-trash" aria-hidden="true"></i>Xóa</button>
+            <button type="button" onclick="deleteTx(${tx.id})" aria-label="Xóa giao dịch thô #${tx.id}" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-500 text-rose-600 hover:text-white border border-rose-200 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition"><i class="fas fa-trash" aria-hidden="true"></i>Xóa</button>
           </div>
         </div>`).join("");
     }
@@ -5208,10 +5217,10 @@ function renderPkgAdmin() {
           ${isHidden ? '<span class="bg-amber-100 text-amber-800 border border-amber-300 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">ĐÃ ẨN INDEX</span>' : ''}
         </div>
         <div class="flex items-center gap-1.5 ml-auto">
-          <button type="button" onclick="toggleHidePkg(${idx})" class="font-bold text-[11px] px-3 py-1.5 min-h-[38px] rounded-lg border transition ${isHidden ? 'bg-amber-700 text-white border-amber-700 hover:bg-amber-800' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'}">
+          <button type="button" onclick="toggleHidePkg(${idx})" class="font-bold text-[11px] px-2.5 py-1 rounded-lg border transition ${isHidden ? 'bg-amber-500 text-white border-amber-500 hover:bg-amber-600' : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'}">
             <i class="fas ${isHidden ? 'fa-eye' : 'fa-eye-slash'} mr-1" aria-hidden="true"></i>${isHidden ? 'Hiện gói' : 'Ẩn gói'}
           </button>
-          <button type="button" onclick="delPkg(${idx})" class="text-red-700 hover:text-red-800 font-bold text-[11px] bg-red-50 hover:bg-red-100 px-3 py-1.5 min-h-[38px] rounded-lg border border-red-200 transition">
+          <button type="button" onclick="delPkg(${idx})" class="text-red-500 hover:text-red-700 font-bold text-[11px] bg-red-50 hover:bg-red-100 px-2 py-1 rounded-lg border border-red-200 transition">
             <i class="fas fa-trash mr-1" aria-hidden="true"></i>Xóa
           </button>
         </div>
@@ -6935,7 +6944,13 @@ function switchSettingsTab(t) {
     const view = $("settings-view-" + x);
     const btn = $("stab-" + x);
     if (view) view.classList.toggle("hidden", x !== t);
-    if (btn) btn.classList.toggle("active", x === t);
+    if (btn) {
+      btn.classList.toggle("active", x === t);
+      btn.setAttribute("aria-selected", x === t ? "true" : "false");
+      if (x === t) {
+        try { btn.scrollIntoView({ inline: "nearest", block: "nearest", behavior: "smooth" }); } catch (_) {}
+      }
+    }
   });
   if (t === "webadmin") loadWebAdminUI();
   if (t === "setweb") loadSettingsUI();
@@ -8149,7 +8164,7 @@ function renderFulfillmentUI() {
         <td data-label="Thời hạn" class="text-xs font-semibold text-slate-700">${timeStr}</td>
         <td data-label="Nguồn cấp tự động" class="fulfill-select-cell">
           <!-- v1 — 2026-11-06 20:15 (UTC+7) — Bổ sung tùy chọn nguồn mở rộng Custom V7/V8 trong Fulfillment Mapping -->
-          <select id="sel_fulfill_${p.id}" ${isHidden ? 'disabled' : ''} aria-label="Nguồn cấp tự động cho gói ${esc(p.name || p.id)}" class="w-full p-2 min-h-[40px] sm:min-h-0 text-xs border border-slate-200 rounded-lg ${isHidden ? 'bg-slate-200 text-slate-600 cursor-not-allowed' : 'bg-white font-bold text-slate-800 outline-none focus:border-indigo-500'}">
+          <select id="sel_fulfill_${p.id}" ${isHidden ? 'disabled' : ''} aria-label="Nguồn cấp tự động cho gói ${esc(p.name || p.id)}" class="w-full p-2 text-xs border border-slate-200 rounded-lg ${isHidden ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-white font-bold text-slate-700 outline-none focus:border-indigo-500'}">
             <option value="single_lx" ${curVal === "single_lx" || !curVal ? "selected" : ""}>Link đơn Liangxin (Mặc định - v1)</option>
             <option value="single_dj" ${curVal === "single_dj" ? "selected" : ""}>Link đơn DJJC (v2)</option>
             <option value="single_kt" ${curVal === "single_kt" ? "selected" : ""}>Link đơn Kitty (v3)</option>
@@ -8322,7 +8337,8 @@ async function startApp(fresh) {
   buildTabs();
   syncRelinkBackupUI();
   const savedOrdTab = localStorage.getItem(SITE_KEY + "_curOrdTab");
-  if (savedOrdTab) curOrdTab = savedOrdTab;
+  const initOrdTab = fresh ? "success" : (VALID_ORD_TABS.includes(savedOrdTab) ? savedOrdTab : "success");
+  switchOrdTab(initOrdTab);
   go(localStorage.getItem(SITE_KEY + "_lastTab") || "t-ord");
   if (!ordersDb.length && $("ordBody")) {
     $("ordBody").innerHTML = '<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold"><i class="fas fa-spinner fa-spin mr-2 text-indigo-500"></i>Đang tải dữ liệu...</div>';
