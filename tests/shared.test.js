@@ -14,7 +14,8 @@ import {
   setTimezone,
   getTz,
   toggleTheme,
-  initTheme
+  initTheme,
+  toast
 } from '../src/shared.js';
 
 describe('src/shared.js — Tiện ích cốt lõi & Định dạng', () => {
@@ -158,6 +159,21 @@ describe('src/shared.js — Tiện ích cốt lõi & Định dạng', () => {
       window.localStorage?.setItem('vpn_theme', 'dark');
       initTheme();
       expect(document.documentElement.classList.contains('dark')).toBe(true);
+    });
+  });
+
+  describe('Toast Offset vs Admin #tabBar (toast)', () => {
+    it('tính offset top dưới #tabBar khi thanh tab đang hiển thị để không che nút', () => {
+      document.body.innerHTML = '<header id="hdr"></header><div id="tabBar"></div>';
+      const hdr = document.getElementById('hdr');
+      const tabBar = document.getElementById('tabBar');
+      hdr.getBoundingClientRect = () => ({ top: 0, bottom: 50, height: 50 });
+      tabBar.getBoundingClientRect = () => ({ top: 56, bottom: 112, height: 56 });
+      toast('Đã làm mới');
+      const c = document.getElementById('toastStackContainer');
+      expect(c).not.toBeNull();
+      expect(parseInt(c.style.top, 10)).toBeGreaterThanOrEqual(120);
+      document.body.innerHTML = '';
     });
   });
 });
