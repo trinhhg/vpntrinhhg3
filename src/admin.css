@@ -647,6 +647,12 @@ body {
   background: #f1f5f9;
 }
 
+.log-table.log-table-compact th,
+.log-table.log-table-compact td {
+  padding: 9px 7px;
+  font-size: 12px;
+}
+
 .log-table th.col-x,
 .log-table td.col-x {
   width: 64px;
