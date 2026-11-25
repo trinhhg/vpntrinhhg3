@@ -60,10 +60,15 @@ describe('CMS Guide & Video / Lightbox / CTA Features', () => {
     expect(cleaned).not.toContain('javascript:');
   });
 
-  it('đảm bảo closeHeaderDrawer, lưu vpn_lang, DOMPurify guide và openWechatModal có mặt trong source', () => {
+  it('đảm bảo dismissTopNoticeBar mới (không còn code drawer cũ), lưu vpn_lang, DOMPurify guide và openWechatModal có mặt trong source', () => {
     const customerJs = fs.readFileSync(path.resolve(process.cwd(), 'src/customer.js'), 'utf8');
     const indexHtml = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf8');
-    expect(customerJs).toContain('function closeHeaderDrawer()');
+    expect(customerJs).toContain('function dismissTopNoticeBar()');
+    expect(customerJs).toContain('function renderTopNoticeBar(');
+    expect(customerJs).not.toContain('function closeHeaderDrawer()');
+    expect(indexHtml).toContain('id="topNoticeBar"');
+    expect(indexHtml).not.toContain('id="headerAnnouncementDrawer"');
+    expect(indexHtml).not.toContain('id="siteAnnouncementBanner"');
     expect(customerJs).toContain("localStorage.setItem('vpn_lang'");
     expect(customerJs).toContain("localStorage.getItem('vpn_lang')");
     expect(customerJs).toContain('DOMPurify.sanitize(rawHtml');

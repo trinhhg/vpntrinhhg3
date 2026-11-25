@@ -10,6 +10,8 @@ import { WORKER_URL, wpost, wpostRetry, setServerTestMode, isTestMode } from './
 import {
   $,
   esc,
+  normId,
+  normSt,
   cp,
   toast,
   showToast,
@@ -131,6 +133,7 @@ function updateAppRoutes(customRoutes) {
 let currentTotalVnd = 0, currentTotalCny = 0, currentDurationMode = 1;
 let isUpgradeMode = false, isRenewMode = false, upgradeConfirmed = false, baseOrderPriceVnd = 0, baseOrderPriceCny = 0;
 let lastScrollY = 0, pollT = null, tickT = null, skew = 0, lastSig = '';
+let pendingChildOrder = null, childPollT = null;
 let emailLookupState = 'idle', emailLookupSeq = 0, currentSubDecision = '', existingCustomerLinks = [], detectedRenewOf = '', lastCheckedEmail = '';
 // $ imported from ./shared.js
 // esc imported from ./shared.js
@@ -146,6 +149,7 @@ const i18n = {
     tab_p_home: "Bảng điều khiển",
     tab_p_store: "Cửa hàng",
     tab_p_guide: "Hướng dẫn",
+    btn_install_app: "Cài App",
     hero_title: "Chặn thì vượt. <span class='text-indigo-600 dark:text-indigo-400'>Lướt mượt như gió.</span>",
     hero_desc: "Hệ thống VPN tự động hóa 100%. Nhận Link VPN chỉ trong <b class='text-indigo-600 dark:text-indigo-400 font-black'>5 phút</b> không cần đợi Admin duyệt.",
     feat_1: "Mở khóa mọi nền tảng",
@@ -170,7 +174,7 @@ const i18n = {
     email_warning: "Vui lòng nhập đúng Email — mail kích hoạt sẽ gửi về đây.",
     guide_title: "Hướng dẫn Thanh toán",
     guide_desc: "1. Điền Email, chọn thời gian & phương thức, sau đó tạo đơn để lấy mã QR.<br><br>2. Không áp dụng hoàn tiền, khách hàng vui lòng đọc kỹ điều kiện này khi mua hàng.",
-    guide_desc_upgrade: "3. Nâng gói chỉ nâng số GB và giới hạn thiết bị, không kéo dài hạn sử dụng.",
+    guide_desc_upgrade: "Nâng gói chỉ nâng số GB và giới hạn thiết bị, không kéo dài hạn sử dụng.",
     guide_empty: "<p class='text-center py-8 text-slate-400'>Đang cập nhật hướng dẫn...</p>",
     promo_title: "🚀 Kết Nối Mượt Mà, Lướt Web Thoải Mái!",
     promo_desc: "Hỗ trợ: <b class='text-yellow-300'>Facebook, Messenger, Instagram, Threads, Telegram, Zalo, YouTube...</b>",
@@ -848,8 +852,12 @@ function paintLangButtons(val) {
   if (bm) bm.innerHTML = `<img src="${m.flag}" class="w-4 h-3 object-cover rounded-[2px] shadow-sm"><i class="fas fa-chevron-down text-[9px] opacity-70 ml-0.5"></i>`;
   if (bd) bd.innerHTML = `<img src="${m.flag}" class="w-5 h-3.5 object-cover rounded-[2px] shadow-sm"><span>${m.full}</span><i class="fas fa-chevron-down text-[10px] opacity-70 ml-0.5"></i>`;
 }
-function toggleLangMenu(kind) {
-  const el = $(kind === 'mobile' ? 'langMenuMobile' : 'langMenuDesktop');
+function toggleLangMenu(kind, ev) {
+  if (ev) ev.stopPropagation();
+  const isMob = kind === 'mobile';
+  const el = $(isMob ? 'langMenuMobile' : 'langMenuDesktop');
+  const other = $(isMob ? 'langMenuDesktop' : 'langMenuMobile');
+  if (other) other.classList.add('hidden');
   if (el) el.classList.toggle('hidden');
 }
 function pickLangOption(val) {
@@ -1407,7 +1415,7 @@ async function loadConfig() {
         updateAppRoutes(cfgCache.routes);
       }
       renderDynamicFooter(cfgCache.footer && typeof cfgCache.footer === 'object' ? cfgCache.footer : {});
-      renderHeaderDrawer(cfgCache.headerDrawer || (cfgCache.settings && cfgCache.settings.headerDrawer));
+      renderTopNoticeBar(cfgCache.headerDrawer || (cfgCache.settings && cfgCache.settings.headerDrawer));
     }
   } catch (e) {}
 }
@@ -1474,154 +1482,167 @@ function renderDynamicFooter(ft) {
   if (bc) bc.style.display = 'none';
 }
 
-let isHeaderDrawerClosed = false;
-let headerDrawerDetailOpen = false;
+let topNoticeDetailOpen = false;
+let topHeaderObserverBound = false;
 
-function updateDrawerOffsets() {
-  const d = $('headerAnnouncementDrawer');
-  const nav = $('mainNav');
-  if (!d || !nav) return;
-  if (d.classList.contains('hidden') || isHeaderDrawerClosed) {
-    nav.style.top = '0px';
-    document.body.style.paddingTop = '0px';
-  } else {
-    const h = d.offsetHeight || 36;
-    nav.style.top = h + 'px';
-    document.body.style.paddingTop = h + 'px';
-  }
+function syncTopHeaderSpacer() {
+  const hdr = $('siteTopHeader');
+  const sp = $('topHeaderSpacer');
+  if (!hdr || !sp) return;
+  const h = hdr.offsetHeight;
+  if (h > 0) sp.style.height = h + 'px';
 }
 
-function toggleHeaderDrawerDetail() {
-  const det = $('headerDrawerDetail');
-  const ic = $('headerDrawerChevronIcon');
-  const btn = $('headerDrawerToggleBtn');
+function getTopNoticeSig(cfg) {
+  const t = String(cfg?.title || '').trim();
+  const m = String(cfg?.text || '').trim();
+  const tp = String(cfg?.type || 'promo');
+  return 'top_notice_closed_' + tp + '_' + t.slice(0, 40) + '_' + m.slice(0, 60);
+}
+
+function dismissTopNoticeBar() {
+  const cfg = (cfgCache && (cfgCache.headerDrawer || (cfgCache.settings && cfgCache.settings.headerDrawer))) || {};
+  try {
+    sessionStorage.setItem(getTopNoticeSig(cfg), '1');
+  } catch (e) {}
+  topNoticeDetailOpen = false;
+  $('topNoticeBar')?.classList.add('hidden');
+  $('topNoticeDetail')?.classList.add('hidden');
+  syncTopHeaderSpacer();
+}
+
+function toggleTopNoticeDetail() {
+  const det = $('topNoticeDetail');
+  const btn = $('topNoticeExpandBtn');
   if (!det) return;
-  headerDrawerDetailOpen = !headerDrawerDetailOpen;
-  det.classList.toggle('hidden', !headerDrawerDetailOpen);
-  if (btn) btn.setAttribute('aria-expanded', headerDrawerDetailOpen ? 'true' : 'false');
-  if (ic) ic.style.transform = headerDrawerDetailOpen ? 'rotate(180deg)' : 'none';
-  setTimeout(updateDrawerOffsets, 30);
+  topNoticeDetailOpen = !topNoticeDetailOpen;
+  det.classList.toggle('hidden', !topNoticeDetailOpen);
+  if (btn) {
+    btn.setAttribute('aria-expanded', topNoticeDetailOpen ? 'true' : 'false');
+    btn.textContent = topNoticeDetailOpen ? 'Thu gọn' : 'Chi tiết';
+  }
+  requestAnimationFrame(syncTopHeaderSpacer);
 }
 
-function closeHeaderDrawer() {
-  isHeaderDrawerClosed = true;
-  headerDrawerDetailOpen = false;
-  const d = $('headerAnnouncementDrawer');
-  if (d) d.classList.add('hidden');
-  const b = $('siteAnnouncementBanner');
-  if (b) b.classList.add('hidden');
-  updateDrawerOffsets();
-}
+function renderTopNoticeBar(noticeCfg) {
+  const bar = $('topNoticeBar');
+  if (!bar) return;
 
-function renderHeaderDrawer(drawerCfg) {
-  const d = $('headerAnnouncementDrawer');
-  if (!d) return;
-  const cfg = drawerCfg || (cfgCache && (cfgCache.headerDrawer || (cfgCache.settings && cfgCache.settings.headerDrawer))) || {};
-  if (!cfg || !cfg.enabled || isHeaderDrawerClosed) {
-    d.classList.add('hidden');
-    updateDrawerOffsets();
+  if (!topHeaderObserverBound && typeof ResizeObserver !== 'undefined' && $('siteTopHeader')) {
+    topHeaderObserverBound = true;
+    new ResizeObserver(syncTopHeaderSpacer).observe($('siteTopHeader'));
+  }
+
+  const cfg = noticeCfg || (cfgCache && (cfgCache.headerDrawer || (cfgCache.settings && cfgCache.settings.headerDrawer))) || {};
+  const title = String(cfg.title || '').trim();
+  const text = String(cfg.text || '').trim();
+  let dismissed = false;
+  try {
+    dismissed = sessionStorage.getItem(getTopNoticeSig(cfg)) === '1';
+  } catch (e) {}
+
+  if (!cfg.enabled || (!title && !text) || dismissed) {
+    bar.classList.add('hidden');
+    syncTopHeaderSpacer();
     return;
   }
 
-  // Tự động ẩn nếu thông báo đã hết hạn
   if (cfg.endTime) {
     const endT = new Date(cfg.endTime).getTime();
     if (!isNaN(endT) && Date.now() > endT) {
-      d.classList.add('hidden');
-      updateDrawerOffsets();
+      bar.classList.add('hidden');
+      syncTopHeaderSpacer();
       return;
     }
   }
 
-  const type = cfg.type || 'promo';
-  const badgeEl = $('headerDrawerBadge');
-  const badgeIcon = $('headerDrawerBadgeIcon');
-  const badgeText = $('headerDrawerBadgeText');
-  const btnLinkEl = $('headerDrawerBtnLink');
-  const detailEl = $('headerDrawerDetail');
-  const titleEl = $('headerDrawerTitleText');
-  const toggleBtn = $('headerDrawerToggleBtn');
-  const closeBtn = $('headerDrawerCloseBtn');
+  const type = cfg.type === 'warning' || cfg.type === 'info' ? cfg.type : 'promo';
+  const palette = {
+    promo: {
+      bar: 'bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 text-white border-indigo-400/30',
+      badge: 'bg-white/20 text-white border border-white/25',
+      icon: 'fas fa-bolt text-[9px]',
+      label: 'Ưu đãi',
+      cta: 'bg-white text-indigo-700 hover:bg-indigo-50 shadow-xs'
+    },
+    info: {
+      bar: 'bg-indigo-50/95 dark:bg-[#0d1124]/95 text-indigo-950 dark:text-indigo-100 border-indigo-200/80 dark:border-white/10 backdrop-blur-md',
+      badge: 'bg-indigo-600 text-white',
+      icon: 'fas fa-circle-info text-[9px]',
+      label: 'Thông báo',
+      cta: 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-xs'
+    },
+    warning: {
+      bar: 'bg-amber-50/95 dark:bg-amber-950/95 text-amber-950 dark:text-amber-100 border-amber-200/80 dark:border-amber-700/40 backdrop-blur-md',
+      badge: 'bg-amber-500 text-white',
+      icon: 'fas fa-triangle-exclamation text-[9px]',
+      label: 'Lưu ý',
+      cta: 'bg-amber-600 text-white hover:bg-amber-700 shadow-xs'
+    }
+  }[type];
 
-  const themeTokens = type === 'warning' ? {
-    wrap: 'bg-amber-50 dark:bg-amber-950/90 border-amber-200 dark:border-amber-900/60 text-amber-950 dark:text-amber-100',
-    badge: 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700',
-    icon: 'fas fa-triangle-exclamation',
-    label: 'Cảnh báo',
-    btn: 'bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm transition active:scale-95 whitespace-nowrap flex items-center gap-1 shrink-0',
-    textTone: 'text-amber-950 dark:text-amber-100'
-  } : type === 'info' ? {
-    wrap: 'bg-indigo-50 dark:bg-indigo-950/90 border-indigo-200 dark:border-indigo-900/60 text-indigo-950 dark:text-indigo-100',
-    badge: 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-700',
-    icon: 'fas fa-circle-info',
-    label: 'Thông tin',
-    btn: 'bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm transition active:scale-95 whitespace-nowrap flex items-center gap-1 shrink-0',
-    textTone: 'text-indigo-950 dark:text-indigo-100'
-  } : {
-    wrap: 'bg-rose-50 dark:bg-rose-950/90 border-rose-200 dark:border-rose-900/60 text-rose-950 dark:text-rose-100',
-    badge: 'bg-rose-100 dark:bg-rose-900/60 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-700',
-    icon: 'fas fa-fire',
-    label: 'Khuyến mãi',
-    btn: 'bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1 rounded-full text-[11px] shadow-sm transition active:scale-95 whitespace-nowrap flex items-center gap-1 shrink-0',
-    textTone: 'text-rose-950 dark:text-rose-100'
-  };
+  bar.className = `w-full border-b transition-colors duration-200 ${palette.bar}`;
+  const badgeEl = $('topNoticeBadge');
+  const badgeIcon = $('topNoticeBadgeIcon');
+  const badgeLabel = $('topNoticeBadgeLabel');
+  const headlineEl = $('topNoticeHeadline');
+  const detailEl = $('topNoticeDetail');
+  const expandBtn = $('topNoticeExpandBtn');
+  const ctaEl = $('topNoticeCta');
+  const ctaTextEl = $('topNoticeCtaText');
+  const closeBtn = $('topNoticeCloseBtn');
 
-  d.className = `fixed top-0 left-0 w-full z-[80] text-xs py-2 px-3 md:px-6 shadow-md border-b transition-all duration-300 ${themeTokens.wrap}`;
-  if (badgeEl) badgeEl.className = `inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black shrink-0 uppercase tracking-wider ${themeTokens.badge}`;
-  if (badgeIcon) badgeIcon.className = themeTokens.icon;
-  if (badgeText) badgeText.textContent = themeTokens.label;
-  if (btnLinkEl) btnLinkEl.className = themeTokens.btn;
-  if (toggleBtn) toggleBtn.className = `flex items-center gap-1.5 cursor-pointer select-none text-left min-w-0 ${themeTokens.textTone}`;
-  if (closeBtn) closeBtn.className = `w-7 h-7 rounded-full opacity-75 hover:opacity-100 flex items-center justify-center transition shrink-0 ${themeTokens.textTone}`;
-  if (detailEl) detailEl.className = `hidden mt-1 text-[11.5px] sm:text-xs leading-relaxed font-medium whitespace-pre-wrap ${themeTokens.textTone}`;
+  if (badgeEl) badgeEl.className = `inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shrink-0 ${palette.badge}`;
+  if (badgeIcon) badgeIcon.className = palette.icon;
+  if (badgeLabel) badgeLabel.textContent = palette.label;
 
-  // Tiêu đề ngắn
-  if (titleEl) {
-    titleEl.className = `font-extrabold truncate text-xs sm:text-sm ${themeTokens.textTone}`;
-    titleEl.textContent = (cfg.title || 'Thông báo từ hệ thống').trim();
-  }
-
-  // Nội dung chi tiết trong dropdown xổ ra
+  const hasSeparateDetail = !!(title && text && title !== text);
+  if (headlineEl) headlineEl.textContent = title || text;
   if (detailEl) {
-    detailEl.textContent = (cfg.text || cfg.title || '').trim();
+    detailEl.textContent = hasSeparateDetail ? text : '';
+    if (!hasSeparateDetail) {
+      topNoticeDetailOpen = false;
+      detailEl.classList.add('hidden');
+    } else {
+      detailEl.classList.toggle('hidden', !topNoticeDetailOpen);
+    }
+  }
+  if (expandBtn) {
+    expandBtn.classList.toggle('hidden', !hasSeparateDetail);
+    expandBtn.setAttribute('aria-expanded', topNoticeDetailOpen ? 'true' : 'false');
+    expandBtn.textContent = topNoticeDetailOpen ? 'Thu gọn' : 'Chi tiết';
   }
 
-  // Nút CTA: Tùy chọn hiển thị (chỉ hiện khi showCta !== false && btnText có giá trị)
-  const btnTextEl = $('headerDrawerBtnText');
   const hasCta = cfg.showCta !== false && String(cfg.btnText || '').trim() !== '';
-  if (btnLinkEl) {
+  if (ctaEl) {
     if (hasCta) {
-      btnLinkEl.classList.remove('hidden');
-      if (btnTextEl) btnTextEl.textContent = cfg.btnText.trim();
-      const rawLink = (cfg.link || '#packages').trim();
-      btnLinkEl.onclick = (e) => {
+      const rawLink = String(cfg.link || '#packages').trim() || '#packages';
+      ctaEl.className = `inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full text-[11px] font-extrabold whitespace-nowrap transition active:scale-95 ${palette.cta}`;
+      if (ctaTextEl) ctaTextEl.textContent = cfg.btnText.trim();
+      ctaEl.href = rawLink;
+      ctaEl.onclick = (e) => {
         if (rawLink.startsWith('#')) {
           e.preventDefault();
-          const target = $(rawLink.slice(1));
-          if (target) target.scrollIntoView({ behavior: 'smooth' });
+          $(rawLink.slice(1))?.scrollIntoView({ behavior: 'smooth' });
         } else if (rawLink.startsWith('/')) {
           e.preventDefault();
           if (typeof router !== 'undefined') router.navigate(rawLink);
           else location.pathname = rawLink;
         } else {
-          // http / https link
-          btnLinkEl.href = rawLink;
-          btnLinkEl.target = '_blank';
+          ctaEl.target = '_blank';
+          ctaEl.rel = 'noopener noreferrer';
         }
       };
     } else {
-      btnLinkEl.classList.add('hidden');
+      ctaEl.className = 'hidden';
     }
   }
 
-  if (closeBtn) {
-    closeBtn.classList.toggle('hidden', cfg.closeable === false);
-  }
-
-  d.classList.remove('hidden');
-  updateDrawerOffsets();
+  if (closeBtn) closeBtn.classList.toggle('hidden', cfg.closeable === false);
+  bar.classList.remove('hidden');
+  requestAnimationFrame(syncTopHeaderSpacer);
 }
-window.addEventListener('resize', updateDrawerOffsets);
+window.addEventListener('resize', syncTopHeaderSpacer);
 
 // Network and toast helpers imported from ./api.js and ./shared.js
 
@@ -1652,9 +1673,10 @@ window.addEventListener('scroll', () => {
     const r = co.getBoundingClientRect();
     if (r.top < window.innerHeight - 60 && r.bottom > 100) inCheckout = true;
   }
-  if (nav) {
-    if (inCheckout) nav.classList.add('nav-hidden');
-    else nav.classList.remove('nav-hidden');
+  const hdr = $('siteTopHeader') || $('mainNav');
+  if (hdr) {
+    if (inCheckout) hdr.classList.add('nav-hidden');
+    else hdr.classList.remove('nav-hidden');
   }
   lastScrollY = sc;
 
@@ -1759,6 +1781,18 @@ async function changeLanguage(val) {
   if (oCache) updatePortalInfo(oCache);
   window.scrollTo(0, cy);
   await applyLangSafe(nextLang);
+  if (nextLang !== 'vi') {
+    const phFallback = {
+      en: { search_placeholder: 'Enter Order ID (DH...)...', btn_install_app: 'Install App' },
+      zh: { search_placeholder: '输入订单号 (DH...)...', btn_install_app: '安装应用' }
+    }[nextLang];
+    if (phFallback) {
+      const li = $('loginInput');
+      if (li && hasVi(li.placeholder)) li.placeholder = phFallback.search_placeholder;
+      const pwaSpan = document.querySelector('#pwaHeaderBtnDesktop [data-i18n="btn_install_app"]');
+      if (pwaSpan && hasVi(pwaSpan.textContent)) pwaSpan.textContent = phFallback.btn_install_app;
+    }
+  }
   window.scrollTo(0, cy);
 }
 
@@ -2110,6 +2144,14 @@ function openCheckout(id) {
   renderCheckoutPackageSummary(raw, currentPackage);
 
   const hideEmail = isUpgradeMode || isRenewMode;
+  if (!hideEmail) {
+    $('orderForm')?.reset();
+    if ($('cusEmail')) $('cusEmail').value = '';
+    if ($('cusZalo')) $('cusZalo').value = '';
+    if ($('needSupport')) $('needSupport').checked = false;
+    if ($('payMethod')) $('payMethod').value = 'bank';
+    clearSubDecisionWarning();
+  }
   $('emailBlock').classList.toggle('hidden', hideEmail);
   $('cusEmail').required = !hideEmail;
   $('checkoutTitle').innerText = isUpgradeMode ? i18n[lang].upgrade_confirm_title : (isRenewMode ? (i18n[lang].renew_confirm_title || 'Xác nhận gia hạn') : i18n[lang].checkout_title);
@@ -2121,6 +2163,7 @@ function openCheckout(id) {
   if ($('couponAppliedMsg')) $('couponAppliedMsg').classList.add('hidden');
 
   // Reset và thiết lập trạng thái khối lựa chọn vòng đời link sub
+  emailLookupSeq++;
   emailLookupState = isRenewMode ? 'found' : 'idle';
   currentSubDecision = '';
   detectedRenewOf = (isRenewMode && oCache) ? oCache.id : '';
@@ -2429,7 +2472,7 @@ function calculateTotal() {
       if (pCalc) pCalc.innerHTML = calcStr;
     }
   }
-  if (currentOrderId || (isUpgradeMode && upgradeConfirmed)) renderPaymentBox();
+  renderPaymentBox();
 }
 
 function toggleZalo() {
@@ -3555,10 +3598,10 @@ async function confirmPaid() {
     return;
   }
   const o = res.data.order;
+  const wasInActiveSuccessPortal = !isUpgradeMode && oCache && normSt(oCache.status) === 'success' && $('view-portal')?.classList.contains('active');
   showToast(lang === 'vi' ? `Đã ghi nhận đơn hàng #${o.id}! Vui lòng lưu lại Mã đơn hàng này.` : `Order #${o.id} recorded!`);
   $('checkoutSection').classList.add('hidden');
   $('orderForm').reset();
-  $('loginInput').value = o.id;
   document.body.classList.remove('checkout-active');
   isUpgradeMode = false;
   isRenewMode = false;
@@ -3569,6 +3612,17 @@ async function confirmPaid() {
   existingCustomerLinks = [];
   emailLookupState = 'idle';
   if ($('subLinkLifecycleWrap')) lockSubDecisionUI('CREATE_NEW', 'Vui lòng nhập email để hệ thống kiểm tra lịch sử link sub.');
+  if (wasInActiveSuccessPortal) {
+    btn.innerHTML = orig;
+    btn.disabled = false;
+    pendingChildOrder = o;
+    switchPortalTab('p-home', false, true);
+    updatePortalInfo(oCache);
+    pollChildOrderLoop();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+  $('loginInput').value = o.id;
   try {
     localStorage.removeItem(SESSION_KEY);
     localStorage.removeItem(CACHE_KEY);
@@ -3628,22 +3682,72 @@ function updatePortalInfo(o) {
   updatePwaVisibility();
   fillDashboard(o);
   const up = o.pendingUpgrade;
-  if (up) {
-    const upManual = /alipay|weixin|wechat/i.test(up.method || o.method || '');
-    if (upManual) {
-      $('portalContentManual').classList.remove('hidden');
-    }
-    else {
-      const end = up.ts + 300000;
-      if (now < end) {
-        $('portalContentPending').classList.remove('hidden');
-        $('pendingTitleUI').innerText = L.checking_upgrade;
-        $('pendingActiveState').classList.remove('hidden');
-        startTick(end, true);
-      }
-    }
+  const activePendingOrder = pendingChildOrder && normId(pendingChildOrder.id) !== normId(o.id) ? pendingChildOrder : null;
+  if (activePendingOrder) {
+    renderPendingStatusBlock(activePendingOrder, now, L, false);
+  } else if (up) {
+    renderPendingStatusBlock({
+      id: o.id,
+      status: 'pending',
+      method: up.method || o.method,
+      createdTs: up.ts
+    }, now, L, true);
   }
   if (o.upgradeStatus === 'success' && o.upgradedAt && now - o.upgradedAt < 864e5) $('upgradeSuccessBadge').classList.remove('hidden');
+}
+
+function renderPendingStatusBlock(targetOrd, now, L, isUpg) {
+  const manual = /alipay|weixin|wechat/i.test(targetOrd.method || '');
+  const st = normSt(targetOrd.status);
+  if (st === 'failed') {
+    $('portalContentFailed').classList.remove('hidden');
+    $('failReasonText').innerText = targetOrd.reason || L.admin_rejected;
+    return;
+  }
+  if (manual) {
+    $('portalContentManual').classList.remove('hidden');
+    return;
+  }
+  $('portalContentPending').classList.remove('hidden');
+  $('pendingTitleUI').innerText = isUpg ? L.checking_upgrade : `${L.checking_tx} (#${targetOrd.id})`;
+  const startTs = Number(targetOrd.createdTs) || Date.now();
+  const end = startTs + 300000;
+  if (now >= end) {
+    if (!isUpg) $('pendingTimeoutState').classList.remove('hidden');
+    else $('portalContentPending').classList.add('hidden');
+  } else {
+    $('pendingActiveState').classList.remove('hidden');
+    startTick(end, isUpg);
+  }
+}
+
+async function pollChildOrderLoop() {
+  clearTimeout(childPollT);
+  if (!pendingChildOrder || !oCache) return;
+  try {
+    if (!document.hidden) {
+      const r = await wpost('/api/public/lookup', { q: pendingChildOrder.id, mode: 'portal' });
+      if (r && r.ok && r.data && r.data.order) {
+        const co = r.data.order;
+        if (r.data.schemaField && !co.schemaField) co.schemaField = r.data.schemaField;
+        const st = normSt(co.status);
+        if (st === 'success') {
+          pendingChildOrder = null;
+          showToast(i18n[lang].active + ` #${co.id} ✔`);
+          enterPortal(co, false);
+          router.navigate(`/portal/order/${encodeURIComponent(normOrderIdClean(co.id))}`);
+          return;
+        }
+        pendingChildOrder = co;
+        if (oCache) updatePortalInfo(oCache);
+        if (st === 'failed') {
+          pendingChildOrder = null;
+          return;
+        }
+      }
+    }
+  } catch (e) {}
+  childPollT = setTimeout(pollChildOrderLoop, 3000);
 }
 
 const sc = t => t ? t.charAt(0) + t.slice(1).toLowerCase() : '';
@@ -4141,9 +4245,11 @@ function logout() {
     localStorage.removeItem(CACHE_KEY);
   } catch (e) {}
   oCache = null;
+  pendingChildOrder = null;
   currentUrlOrderId = '';
   setServerTestMode(null);
   clearTimeout(pollT);
+  clearTimeout(childPollT);
   stopTick();
   closeQrModal(true);
   closeEmailVerifyModal(true);
@@ -4572,7 +4678,8 @@ const EXPOSED_FNS = {
   changeLanguage: typeof changeLanguage !== 'undefined' ? changeLanguage : undefined,
   closeGuideArticle: typeof closeGuideArticle !== 'undefined' ? closeGuideArticle : undefined,
   closeGuideAuthModal: typeof closeGuideAuthModal !== 'undefined' ? closeGuideAuthModal : undefined,
-  closeHeaderDrawer: typeof closeHeaderDrawer !== 'undefined' ? closeHeaderDrawer : undefined,
+  dismissTopNoticeBar: typeof dismissTopNoticeBar !== 'undefined' ? dismissTopNoticeBar : undefined,
+  toggleTopNoticeDetail: typeof toggleTopNoticeDetail !== 'undefined' ? toggleTopNoticeDetail : undefined,
   closePolicyModal: typeof closePolicyModal !== 'undefined' ? closePolicyModal : undefined,
   applyCouponCode: typeof applyCouponCode !== 'undefined' ? applyCouponCode : undefined,
   closeQrModal: typeof closeQrModal !== 'undefined' ? closeQrModal : undefined,
@@ -4606,7 +4713,6 @@ const EXPOSED_FNS = {
   submitGuideAuth: typeof submitGuideAuth !== 'undefined' ? submitGuideAuth : undefined,
   submitOrder: typeof submitOrder !== 'undefined' ? submitOrder : undefined,
   switchPortalTab: typeof switchPortalTab !== 'undefined' ? switchPortalTab : undefined,
-  toggleHeaderDrawerDetail: typeof toggleHeaderDrawerDetail !== 'undefined' ? toggleHeaderDrawerDetail : undefined,
   toggleLangMenu: typeof toggleLangMenu !== 'undefined' ? toggleLangMenu : undefined,
   toggleMobileFab: typeof toggleMobileFab !== 'undefined' ? toggleMobileFab : undefined,
   toggleTheme: typeof toggleTheme !== 'undefined' ? toggleTheme : undefined,
@@ -4629,63 +4735,6 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// ==================== SITE ANNOUNCEMENT BANNER ====================
-function renderAnnouncementBanner() {
-  const d = cfgCache.headerDrawer || {};
-  const banner = $('siteAnnouncementBanner');
-  if (!banner) return;
-  if (!d.enabled) {
-    banner.classList.add('hidden');
-    return;
-  }
-
-  const bannerKey = 'dismiss_ann_' + (d.title || d.text || 'default');
-  if (sessionStorage.getItem(bannerKey) === '1') {
-    banner.classList.add('hidden');
-    return;
-  }
-
-  const type = d.type || 'promo';
-  const typeStyles = {
-    promo: 'bg-gradient-to-r from-indigo-900 via-purple-900 to-indigo-950 text-white border-purple-800/50',
-    info: 'bg-sky-50 dark:bg-sky-950/40 text-sky-900 dark:text-sky-200 border-sky-200 dark:border-sky-800/50',
-    warning: 'bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-amber-200 dark:border-amber-800/50',
-    alert: 'bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 border-rose-200 dark:border-rose-800/50'
-  };
-  const typeIcons = { promo: '🔥', info: 'ℹ️', warning: '⚠️', alert: '🚨' };
-
-  banner.className = `fixed top-0 inset-x-0 z-[75] transition-all duration-300 shadow-sm border-b ${typeStyles[type] || typeStyles.promo}`;
-  if ($('announcementIcon')) $('announcementIcon').textContent = typeIcons[type] || '📢';
-  if ($('announcementText')) $('announcementText').innerHTML = (d.title ? `<strong>${esc(d.title)}:</strong> ` : '') + esc(d.text || '');
-
-  const cta = $('announcementCta');
-  if (cta) {
-    if (d.showCta !== false && d.link) {
-      cta.classList.remove('hidden');
-      cta.href = esc(d.link);
-      cta.textContent = d.btnText || 'Xem ngay';
-      cta.className = type === 'promo' ? 'bg-white text-indigo-900 font-bold px-3 py-1 rounded-lg text-xs hover:bg-slate-100 shadow-xs' : 'bg-indigo-600 text-white font-bold px-3 py-1 rounded-lg text-xs hover:bg-indigo-700 shadow-xs';
-    } else {
-      cta.classList.add('hidden');
-    }
-  }
-
-  banner.classList.remove('hidden');
-  const mainNav = $('mainNav');
-  if (mainNav) mainNav.style.top = banner.offsetHeight + 'px';
-}
-
-function dismissAnnouncement() {
-  const d = cfgCache.headerDrawer || {};
-  const bannerKey = 'dismiss_ann_' + (d.title || d.text || 'default');
-  sessionStorage.setItem(bannerKey, '1');
-  const banner = $('siteAnnouncementBanner');
-  if (banner) banner.classList.add('hidden');
-  const mainNav = $('mainNav');
-  if (mainNav) mainNav.style.top = '0px';
-}
-window.dismissAnnouncement = dismissAnnouncement;
-
 // Lắng nghe sự kiện đồng bộ từ Admin & Polling cấu hình đa thiết bị (Cập nhật tức thì không cần F5)
 (function initAdminRealtimeSync() {
   let isSyncing = false;
@@ -4705,7 +4754,7 @@ window.dismissAnnouncement = dismissAnnouncement;
       if (typeof renderPackages === 'function') safeStep('renderPackages', () => renderPackages('all'));
       if (typeof renderDock === 'function') safeStep('renderDock', () => renderDock());
       if (typeof renderGiftSticker === 'function') safeStep('renderGiftSticker', () => renderGiftSticker());
-      if (typeof renderHeaderDrawer === 'function') safeStep('renderHeaderDrawer', () => renderHeaderDrawer());
+      if (typeof renderTopNoticeBar === 'function') safeStep('renderTopNoticeBar', () => renderTopNoticeBar());
       safeStep('couponBlockWrap', () => {
         const cWrap = $('couponBlockWrap');
         if (cWrap) {

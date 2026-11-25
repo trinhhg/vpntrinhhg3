@@ -74,12 +74,17 @@ textarea {
   -moz-osx-font-smoothing: grayscale;
 }
 
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 body {
   font-weight: 600;
   background: var(--adm-bg);
   color: var(--adm-text-1);
   margin: 0;
-  overflow-x: hidden;
 }
 
 .glass-card {
@@ -1098,8 +1103,28 @@ textarea.autog {
   -webkit-tap-highlight-color: transparent;
 }
 
+#adminBottomNav button.active {
+  background: rgba(79, 70, 229, 0.1);
+  color: #4f46e5;
+}
+
 #adminBottomNav button:active {
-  opacity: 0.7;
+  opacity: 0.72;
+  transform: scale(0.96);
+}
+
+/* Chống bẻ chữ nút bấm thành 2-4 dòng trên Mobile 20:9 (360px) */
+@media (max-width: 639px) {
+  main#main button {
+    white-space: nowrap;
+  }
+
+  main#main button.whitespace-normal,
+  main#main #t-more button,
+  main#main #cmsCategoriesTree button,
+  main#main .mc-btn-wrap {
+    white-space: normal;
+  }
 }
 
 .ql-align-center {

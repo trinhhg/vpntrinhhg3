@@ -18,9 +18,14 @@ textarea {
   -moz-osx-font-smoothing: grayscale; 
 }
 
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 body {
   font-weight: 600;
-  overflow-x: hidden;
 }
 
 .skip-link {

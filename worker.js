@@ -5226,21 +5226,26 @@ async function runCron(env, ctx, opt) {
   const hr = vn(now).h, today = dmy(now);
   let locked = 0, migrated = 0, delNodes = 0, mails = 0, d1Retry = 0, deadDel = 0;
 
-  // Đồng bộ HSD chuẩn từ Supabase vào st.links theo orderId trước khi quét hạn (chỉ chạy khi Supabase trả dữ liệu thành công)
+  // Đồng bộ HSD chuẩn từ Supabase vào st.links theo orderId (hoặc fallback theo link masked) trước khi quét hạn
   if (st.sbOk && st.orders.length > 0) {
     const orderMap = new Map();
+    const orderByLink = new Map();
     for (const o of st.orders) {
       if (o && o.id) orderMap.set(normId(o.id), o);
+      if (o) {
+        ["info1", "info2", "info3"].forEach((kf) => {
+          if (o[kf]) orderByLink.set(String(o[kf]).trim(), o);
+        });
+      }
     }
     for (const l of st.links) {
-      if (l && l.orderId) {
-        const od = orderMap.get(normId(l.orderId));
-        if (od && od.expDate !== undefined) {
-          const odExp = isLifetime(od.expDate) ? "Vĩnh viễn" : String(od.expDate || "").trim();
-          if (l.expDate !== odExp) {
-            l.expDate = odExp;
-            st.dL = true;
-          }
+      if (!l) continue;
+      const od = (l.orderId && orderMap.get(normId(l.orderId))) || (l.masked && orderByLink.get(String(l.masked).trim()));
+      if (od && od.expDate !== undefined) {
+        const odExp = isLifetime(od.expDate) ? "Vĩnh viễn" : String(od.expDate || "").trim();
+        if (l.expDate !== odExp) {
+          l.expDate = odExp;
+          st.dL = true;
         }
       }
     }
