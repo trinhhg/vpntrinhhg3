@@ -1133,6 +1133,26 @@ html.dark .guide-content hr {
   }
 }
 
+/* Chống tràn ngang table/pre/code trong bài viết hướng dẫn trên Mobile */
+#guideText pre,
+.guide-content pre {
+  max-width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+#guideText table,
+.guide-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+#selectedPackageName,
+.neon-animated-card h3 {
+  text-decoration: none !important;
+}
+
 /* Reduced motion support: tắt animation lặp vô hạn nhưng giữ feedback trạng thái (BUG-NEW-07) */
 @media (prefers-reduced-motion: reduce) {
   html {

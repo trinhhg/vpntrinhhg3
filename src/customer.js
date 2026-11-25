@@ -444,20 +444,143 @@ function buildPat(l) {
   }
   TRPAT[l] = a;
 }
+const FALLBACK_TR = {
+  en: {
+    [keyOf('Gói 1 Tháng')]: '1 Month Plan',
+    [keyOf('Gói 1 tháng')]: '1 Month Plan',
+    [keyOf('Gói 3 Tháng')]: '3 Months Plan',
+    [keyOf('Gói 3 tháng')]: '3 Months Plan',
+    [keyOf('Gói 6 Tháng')]: '6 Months Plan',
+    [keyOf('Gói 6 tháng')]: '6 Months Plan',
+    [keyOf('Gói 1 Năm')]: '1 Year Plan',
+    [keyOf('Gói 1 năm')]: '1 Year Plan',
+    [keyOf('Gói Vĩnh Viễn')]: 'Lifetime Plan',
+    [keyOf('Tốc độ cao')]: 'High Speed',
+    [keyOf('Băng thông lên đến 3Gbps')]: 'Bandwidth up to 3Gbps',
+    [keyOf('Đa dạng máy chủ tối ưu mượt')]: 'Multiple optimized high-speed servers',
+    [keyOf('Việt Nam mượt mọi nền tảng')]: 'Optimized for Vietnam across all platforms',
+    [keyOf('Mọi quốc gia khác')]: 'All other countries',
+    [keyOf('Dùng quốc tế siêu mượt')]: 'Ultra-smooth international use',
+    [keyOf('1000GB/tháng')]: '1000GB/month',
+    [keyOf('Không giới hạn')]: 'Unlimited',
+    [keyOf('Đăng ký Gói Này')]: 'Subscribe to This Plan',
+    [keyOf('Không khả dụng')]: 'Unavailable',
+    [keyOf('Liên hệ Admin')]: 'Contact Admin',
+    [keyOf('Dung lượng:')]: 'Data:',
+    [keyOf('Giới hạn thiết bị:')]: 'Device limit:',
+    [keyOf('Quay lại trang chủ')]: 'Back to Home',
+    [keyOf('Mục lục xem nhanh')]: 'Quick Table of Contents',
+    [keyOf('Chính sách sử dụng dịch vụ')]: 'Terms of Service',
+    [keyOf('Miễn trừ trách nhiệm pháp lý')]: 'Legal Disclaimer',
+    [keyOf('Quy định hoàn tiền')]: 'Refund Policy',
+    [keyOf('Chính Sách & Pháp Lý')]: 'Policies & Legal',
+    [keyOf('Các điều khoản, quy định sử dụng và chính sách hoàn tiền chính thức của VPN Trinh Hg.')]: 'Official terms, usage policies and refund rules of VPN Trinh Hg.',
+    [keyOf('Xử lý link sub')]: 'Sub Link Option',
+    [keyOf('Giữ link cũ')]: 'Keep existing link',
+    [keyOf('Cấp link mới')]: 'Issue new link',
+    [keyOf('3. Chọn phương án Link Sub (nếu khả dụng)')]: '3. Choose Sub Link option (if available)',
+    [keyOf('Vui lòng nhập Email để hệ thống kiểm tra lịch sử và hiển thị phương án Link Sub phù hợp.')]: 'Please enter your Email so the system can check your history and display the suitable Sub Link option.',
+    [keyOf('1. Điền Email, chọn thời gian & phương thức, sau đó tạo đơn để lấy mã QR.')]: '1. Enter your Email, choose duration & payment method, then create an order to get the QR code.',
+    [keyOf('2. Không áp dụng hoàn tiền, khách hàng vui lòng đọc kỹ điều kiện này khi mua hàng.')]: '2. No refunds apply; please review this policy carefully before purchasing.'
+  },
+  zh: {
+    [keyOf('Gói 1 Tháng')]: '1个月套餐',
+    [keyOf('Gói 1 tháng')]: '1个月套餐',
+    [keyOf('Gói 3 Tháng')]: '3个月套餐',
+    [keyOf('Gói 3 tháng')]: '3个月套餐',
+    [keyOf('Gói 6 Tháng')]: '6个月套餐',
+    [keyOf('Gói 6 tháng')]: '6个月套餐',
+    [keyOf('Gói 1 Năm')]: '1年套餐',
+    [keyOf('Gói 1 năm')]: '1年套餐',
+    [keyOf('Gói Vĩnh Viễn')]: '永久套餐',
+    [keyOf('Tốc độ cao')]: '高速节点',
+    [keyOf('Băng thông lên đến 3Gbps')]: '带宽高达 3Gbps',
+    [keyOf('Đa dạng máy chủ tối ưu mượt')]: '多线优化高速服务器',
+    [keyOf('Việt Nam mượt mọi nền tảng')]: '越南全平台流畅',
+    [keyOf('Mọi quốc gia khác')]: '其他所有国家',
+    [keyOf('Dùng quốc tế siêu mượt')]: '国际网络超流畅',
+    [keyOf('1000GB/tháng')]: '1000GB/月',
+    [keyOf('Không giới hạn')]: '不限流量',
+    [keyOf('Đăng ký Gói Này')]: '立即订阅此套餐',
+    [keyOf('Không khả dụng')]: '暂不可用',
+    [keyOf('Liên hệ Admin')]: '联系管理员',
+    [keyOf('Dung lượng:')]: '流量：',
+    [keyOf('Giới hạn thiết bị:')]: '设备限制：',
+    [keyOf('Quay lại trang chủ')]: '返回首页',
+    [keyOf('Mục lục xem nhanh')]: '快速目录',
+    [keyOf('Chính sách sử dụng dịch vụ')]: '服务条款',
+    [keyOf('Miễn trừ trách nhiệm pháp lý')]: '免责声明',
+    [keyOf('Quy định hoàn tiền')]: '退款政策',
+    [keyOf('Chính Sách & Pháp Lý')]: '政策与法律条款',
+    [keyOf('Các điều khoản, quy định sử dụng và chính sách hoàn tiền chính thức của VPN Trinh Hg.')]: 'VPN Trinh Hg 官方服务条款、免责声明与退款政策。',
+    [keyOf('Xử lý link sub')]: '订阅链接处理方式',
+    [keyOf('Giữ link cũ')]: '保留旧链接',
+    [keyOf('Cấp link mới')]: '生成新链接',
+    [keyOf('3. Chọn phương án Link Sub (nếu khả dụng)')]: '3. 选择订阅链接方式（如可用）',
+    [keyOf('Vui lòng nhập Email để hệ thống kiểm tra lịch sử và hiển thị phương án Link Sub phù hợp.')]: '请输入邮箱，系统将自动查询历史订单并显示合适的订阅链接选项。',
+    [keyOf('1. Điền Email, chọn thời gian & phương thức, sau đó tạo đơn để lấy mã QR.')]: '1. 填写邮箱并选择时长和支付方式，然后生成订单二维码。',
+    [keyOf('2. Không áp dụng hoàn tiền, khách hàng vui lòng đọc kỹ điều kiện này khi mua hàng.')]: '2. 本服务不支持退款，购买前请仔细阅读相关条款。'
+  }
+};
+
+function normalizeTrString(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/<\/?(?:s|del|strike)\b[^>]*>/gi, '')
+    .replace(/(\d)\s*[-\u2010-\u2015\u2212]\s*(Month|Months|Year|Years|Day|Days|Week|Weeks)\b/gi, '$1 $2')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function formatPkgDataLabel(dataStr, targetLang = lang) {
+  const raw = String(dataStr || '').trim();
+  if (!raw) return '';
+  if (targetLang === 'en') {
+    return raw
+      .replace(/\/th[aá]ng/gi, '/month')
+      .replace(/\/ng[aà]y/gi, '/day')
+      .replace(/\/n[aă]m/gi, '/year')
+      .replace(/kh[oô]ng\s*gi[oớ]i\s*h[aạ]n/gi, 'Unlimited');
+  }
+  if (targetLang === 'zh') {
+    return raw
+      .replace(/\/th[aá]ng/gi, '/月')
+      .replace(/\/ng[aà]y/gi, '/天')
+      .replace(/\/n[aă]m/gi, '/年')
+      .replace(/kh[oô]ng\s*gi[oớ]i\s*h[aạ]n/gi, '不限流量');
+  }
+  return raw;
+}
+
+function resolvePkgDisplayName(pkg, targetLang = lang) {
+  if (!pkg) return 'Gói VPN';
+  const rawVi = String(pkg.vi?.name || pkg.name || 'Gói VPN').trim();
+  const direct = pkg[targetLang]?.name ? normalizeTrString(pkg[targetLang].name) : '';
+  if (direct) {
+    return (targetLang !== 'vi' && hasVi(direct)) ? normalizeTrString(tx(direct)) : direct;
+  }
+  return normalizeTrString(tx(rawVi));
+}
+
 function lookup(text) {
   const L = TR[lang];
-  if (!L) return null;
   const k = keyOf(text);
-  if (L[k]) return L[k];
-  if (!TRPAT[lang]) buildPat(lang);
-  for (const p of TRPAT[lang]) {
-    const m = text.match(p.re);
-    if (m) return p.t.replace(/\{(\d+)\}/g, (_, i) => {
-      const q = p.idx.indexOf(+i);
-      return q < 0 ? '' : (m[q + 1] || '');
-    });
+  if (L && Object.prototype.hasOwnProperty.call(L, k) && L[k]) return normalizeTrString(L[k]);
+  if (L) {
+    if (!TRPAT[lang]) buildPat(lang);
+    for (const p of TRPAT[lang]) {
+      const m = text.match(p.re);
+      if (m) {
+        return normalizeTrString(p.t.replace(/\{(\d+)\}/g, (_, i) => {
+          const q = p.idx.indexOf(+i);
+          return q < 0 ? '' : (m[q + 1] || '');
+        }));
+      }
+    }
   }
-  return null;
+  const fbMap = FALLBACK_TR[lang];
+  const fb = fbMap && Object.prototype.hasOwnProperty.call(fbMap, k) ? fbMap[k] : null;
+  return fb ? normalizeTrString(fb) : null;
 }
 /* tx('chữ tiếng Việt') -> chữ theo ngôn ngữ hiện tại (dùng cho input.value, alert... nơi DOM không tự dịch được) */
 const tx = s => {
@@ -1139,10 +1262,12 @@ async function openGuideArticle(tabId, slug, skipPush) {
   }
 
   $('guideText').innerHTML = mainBody + faqBlockHtml + relBlockHtml;
-  if (typeof window.scrollTo === 'function') {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  } else {
-    $('view-portal').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (!skipPush) {
+    if (typeof window.scrollTo === 'function') {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } else {
+      $('view-portal').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 }
 
@@ -1284,7 +1409,7 @@ async function closeGuideArticle(skipPush) {
   $('guideDetailView').classList.add('hidden');
   $('guideCategoryList').classList.remove('hidden');
   $('guideText').innerHTML = '';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (!skipPush) window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 function showGuide(dev, slug) {
@@ -1648,14 +1773,69 @@ window.addEventListener('resize', syncTopHeaderSpacer);
 
 let indexScrollTimer = null;
 let curActiveIndexTab = 'p-home';
-const tabScrollPositions = {};
+let curActiveRouteKey = '/';
+const routeScrollPositions = {};
 let isRestoringScroll = false;
+let isPopstateNav = false;
+
+function getNormRouteKey(pathStr) {
+  const raw = pathStr !== undefined ? String(pathStr || '/') : (typeof location !== 'undefined' ? (location.pathname || '/') : '/');
+  const clean = raw.split('#')[0].split('?')[0].replace(/\/+$/, '');
+  return clean || '/';
+}
+
+function recordRouteScroll(routeKey) {
+  const k = getNormRouteKey(routeKey !== undefined ? routeKey : curActiveRouteKey);
+  const y = typeof window !== 'undefined' ? (window.scrollY || 0) : 0;
+  routeScrollPositions[k] = y;
+  try {
+    sessionStorage.setItem('idx_route_scroll_' + k, String(y));
+  } catch (e) {}
+}
+
+function consumePopstateNav() {
+  const flag = isPopstateNav;
+  isPopstateNav = false;
+  return flag;
+}
+
+function applyRouteScroll(routeKey, fromPopstate = false) {
+  const nextKey = getNormRouteKey(routeKey);
+  curActiveRouteKey = nextKey;
+  let targetPos = 0;
+  if (fromPopstate) {
+    if (routeScrollPositions[nextKey] !== undefined) {
+      targetPos = routeScrollPositions[nextKey];
+    } else {
+      try {
+        const stored = Number(sessionStorage.getItem('idx_route_scroll_' + nextKey));
+        if (!isNaN(stored) && stored > 0) targetPos = stored;
+      } catch (e) {}
+    }
+  }
+  isRestoringScroll = true;
+  if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+    window.scrollTo({ top: targetPos, behavior: 'instant' });
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: targetPos, behavior: 'instant' });
+      setTimeout(() => {
+        isRestoringScroll = false;
+      }, 60);
+    });
+  } else {
+    isRestoringScroll = false;
+  }
+}
 
 // Quy tắc Phase 4: Khi F5 reload, ép buộc scroll về đỉnh trang (0, 0)
 if (typeof history !== 'undefined' && 'scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
 }
+window.addEventListener('popstate', () => {
+  isPopstateNav = true;
+}, true);
 window.addEventListener('DOMContentLoaded', () => {
+  curActiveRouteKey = getNormRouteKey();
   const isReload = (performance.getEntriesByType && performance.getEntriesByType('navigation')[0]?.type === 'reload') || (performance.navigation && performance.navigation.type === 1);
   if (isReload) {
     window.scrollTo(0, 0);
@@ -1682,11 +1862,8 @@ window.addEventListener('scroll', () => {
 
   clearTimeout(indexScrollTimer);
   indexScrollTimer = setTimeout(() => {
-    if (!isRestoringScroll && curActiveIndexTab) {
-      tabScrollPositions[curActiveIndexTab] = window.scrollY;
-      try {
-        sessionStorage.setItem('idx_scroll_' + curActiveIndexTab, String(window.scrollY));
-      } catch (e) {}
+    if (!isRestoringScroll) {
+      recordRouteScroll(curActiveRouteKey);
     }
   }, 120);
 
@@ -1728,29 +1905,12 @@ window.addEventListener('scroll', () => {
 });
 
 function saveAndSwitchTabScroll(newTabId) {
-  if (curActiveIndexTab && !isRestoringScroll) {
-    tabScrollPositions[curActiveIndexTab] = window.scrollY;
-  }
+  recordRouteScroll(curActiveRouteKey);
   curActiveIndexTab = newTabId;
-  const targetPos = tabScrollPositions[newTabId] !== undefined ? tabScrollPositions[newTabId] : 0;
-  isRestoringScroll = true;
-  requestAnimationFrame(() => {
-    window.scrollTo({ top: targetPos, behavior: 'instant' });
-    setTimeout(() => {
-      isRestoringScroll = false;
-    }, 60);
-  });
 }
 
 function restoreIndexScroll() {
-  const targetPos = tabScrollPositions[curActiveIndexTab] !== undefined ? tabScrollPositions[curActiveIndexTab] : 0;
-  isRestoringScroll = true;
-  requestAnimationFrame(() => {
-    window.scrollTo({ top: targetPos, behavior: 'instant' });
-    setTimeout(() => {
-      isRestoringScroll = false;
-    }, 60);
-  });
+  applyRouteScroll(curActiveRouteKey, false);
 }
 
 async function changeLanguage(val) {
@@ -1781,6 +1941,11 @@ async function changeLanguage(val) {
   if (oCache) updatePortalInfo(oCache);
   window.scrollTo(0, cy);
   await applyLangSafe(nextLang);
+  if (!$('checkoutSection').classList.contains('hidden') && currentPackage) {
+    const rawPkg = pkgs.find(p => p.id === currentPackage.id) || currentPackage;
+    renderCheckoutPackageSummary(rawPkg, currentPackage);
+    calculateTotal();
+  }
   if (nextLang !== 'vi') {
     const phFallback = {
       en: { search_placeholder: 'Enter Order ID (DH...)...', btn_install_app: 'Install App' },
@@ -1912,8 +2077,8 @@ function formatPkgDisplayPrice(pkg, withUnitSpan = false, payMethodOverride = ''
 function renderCheckoutPackageSummary(rawPkg, effPkg) {
   if (!effPkg) return;
   const activeMethod = $('payMethod')?.value || 'bank';
-  const pkgName = effPkg[lang]?.name || effPkg.vi?.name || effPkg.name || 'Gói VPN';
-  const pkgData = effPkg.data || '';
+  const pkgName = resolvePkgDisplayName(effPkg, lang);
+  const pkgData = formatPkgDataLabel(effPkg.data || '', lang);
   const hasSale = !!effPkg.isFlashSale;
   const currPrice = formatPkgDisplayPrice(effPkg, false, activeMethod);
   const origPrice = formatPkgDisplayPrice(rawPkg || effPkg, false, activeMethod);
@@ -1923,7 +2088,7 @@ function renderCheckoutPackageSummary(rawPkg, effPkg) {
       summaryEl.innerHTML = `
        <div class="flex flex-col gap-1.5 w-full">
          <div class="flex items-center justify-between gap-2">
-           <span id="selectedPackageName" class="text-sm md:text-base font-black text-slate-800 dark:text-white uppercase truncate">${esc(pkgName)}</span>
+           <span id="selectedPackageName" class="text-sm md:text-base font-black text-slate-800 dark:text-white uppercase truncate no-underline">${esc(pkgName)}</span>
            <span id="selectedPackagePrice" class="text-base md:text-lg font-black text-indigo-600 dark:text-indigo-300 shrink-0 whitespace-nowrap">${currPrice}</span>
          </div>
          <div class="flex items-center justify-between gap-2">
@@ -1936,7 +2101,7 @@ function renderCheckoutPackageSummary(rawPkg, effPkg) {
       summaryEl.innerHTML = `
        <div class="flex justify-between items-center w-full">
          <div class="min-w-0 pr-2">
-           <p id="selectedPackageName" class="text-sm md:text-base font-black text-slate-800 dark:text-white uppercase truncate">${esc(pkgName)}</p>
+           <p id="selectedPackageName" class="text-sm md:text-base font-black text-slate-800 dark:text-white uppercase truncate no-underline">${esc(pkgName)}</p>
            <p id="selectedPackageData" class="text-xs font-bold text-slate-500 dark:text-slate-200 mt-0.5">${esc(pkgData)}</p>
          </div>
          <p id="selectedPackagePrice" class="text-lg md:text-xl font-black text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.8)] shrink-0 whitespace-nowrap">${currPrice}</p>
@@ -1975,8 +2140,8 @@ function getEffectivePkg(pkg) {
 function genHTML(rawPkg) {
   const pkg = getEffectivePkg(rawPkg);
   const l = i18n[lang], p = pkg[lang] || pkg.vi;
-  const pkgRawName = String(pkg.vi?.name || pkg.name || 'Gói VPN').trim();
-  const pkgDisplayName = tx(pkgRawName);
+  const pkgDisplayName = resolvePkgDisplayName(pkg, lang);
+  const pkgDataDisplay = formatPkgDataLabel(pkg.data || '', lang);
 
   let displayTime = pkg.time === 'lifetime' ? tx('Vĩnh viễn') : `${pkg.time} ${tx('Tháng')}`;
   if ((pkg.category || []).includes('usage') && !pkg.isCustom) displayTime = tx('Vĩnh viễn');
@@ -2039,17 +2204,18 @@ function genHTML(rawPkg) {
   const priceHTML = pkg.isCustom ? `<div class="text-xl font-black text-red-600 dark:text-red-400 mb-4 border-b border-slate-100 dark:border-white/10 pb-4 mt-2">${p.price || ''}</div>` : `<div class="mb-4 border-b border-slate-100 dark:border-white/10 pb-3 mt-1.5 flex flex-wrap items-baseline"><span class="text-2xl md:text-3xl font-black text-indigo-600 dark:text-white price-glow">${realPriceDisplay}</span>${originalPriceDisplay}</div>`;
 
   // Chữ hiển thị cạnh thời hạn: Ưu tiên Gift Rule
+  const fmtBonusDays = d => `(+${d} ${lang === 'en' ? (Number(d) === 1 ? 'day' : 'days') : lang === 'zh' ? '天' : 'ngày'})`;
   let bonusLabel = '';
   if (matchedGift) {
     if (matchedGift.bonusText) {
       bonusLabel = ` <span class="text-rose-500 dark:text-rose-400 font-extrabold text-xs">(${esc(matchedGift.bonusText)})</span>`;
     } else if (Number(matchedGift.bonusDays) > 0) {
-      bonusLabel = ` <span class="text-rose-500 dark:text-rose-400 font-extrabold text-xs">(+${matchedGift.bonusDays} ngày)</span>`;
+      bonusLabel = ` <span class="text-rose-500 dark:text-rose-400 font-extrabold text-xs">${fmtBonusDays(matchedGift.bonusDays)}</span>`;
     }
   } else if (pkg.bonus_text) {
     bonusLabel = ` <span class="text-rose-500 dark:text-rose-400 font-extrabold text-xs">(${esc(pkg.bonus_text)})</span>`;
   } else if (Number(pkg.bonus_days) > 0 && !pkg.promo_sticker) {
-    bonusLabel = ` <span class="text-rose-500 dark:text-rose-400 font-extrabold text-xs">(+${pkg.bonus_days} ngày)</span>`;
+    bonusLabel = ` <span class="text-rose-500 dark:text-rose-400 font-extrabold text-xs">${fmtBonusDays(pkg.bonus_days)}</span>`;
   }
 
   const extraFeats = Array.isArray(pkg.features) && pkg.features.length ? pkg.features : ['Băng thông lên đến 3Gbps'];
@@ -2066,7 +2232,7 @@ function genHTML(rawPkg) {
    ${rightBadges ? `<div class="absolute -top-3 right-4 flex items-center gap-1.5 z-10">${rightBadges}</div>` : ''}
    <div class="${hasCornerBadges ? 'pt-2' : ''}">
     <div class="flex items-center justify-between gap-2 mb-1">
-      <h3 class="font-extrabold text-lg md:text-xl dark:text-white truncate leading-snug flex-1">${esc(pkgDisplayName)}</h3>
+      <h3 class="font-extrabold text-lg md:text-xl dark:text-white truncate leading-snug flex-1 no-underline">${esc(pkgDisplayName)}</h3>
       <div class="shrink-0 flex items-center justify-end min-h-[22px]">
         ${flashSaleBadge || ''}
       </div>
@@ -2082,7 +2248,7 @@ function genHTML(rawPkg) {
        <!-- TÁCH RỜI NHÃN VÀ GIÁ TRỊ THÀNH 2 THẺ ĐỘC LẬP ĐỂ KHÔNG BỊ LỖI BĂM THẺ [[1]] -->
        <li class="flex items-center gap-2">
          <i class="fas fa-check-circle text-green-500 shrink-0"></i>
-         <span>Dung lượng:</span> <b class="dark:text-white font-black">${esc(pkg.data)}</b>
+         <span>Dung lượng:</span> <b class="dark:text-white font-black">${esc(pkgDataDisplay)}</b>
        </li>
        <li class="flex items-center gap-2">
          <i class="fas fa-check-circle text-green-500 shrink-0"></i>
@@ -2133,14 +2299,15 @@ function startRenew() {
   showToast(i18n[lang].select_renew_pkg, 'info');
 }
 
-function openCheckout(id) {
-  const raw = pkgs.find(p => p.id === id);
+function openCheckout(id, overridePkgs) {
+  const pkgList = Array.isArray(overridePkgs) ? overridePkgs : pkgs;
+  const raw = pkgList.find(p => p.id === id);
   currentPackage = getEffectivePkg(raw) || raw;
   const co = $('checkoutSection');
-  if ($('view-portal').classList.contains('active')) $('p-store').appendChild(co);
-  else $('view-store').appendChild(co);
-  co.classList.remove('hidden');
-  co.scrollIntoView({ behavior: 'smooth' });
+  if ($('view-portal')?.classList.contains('active')) $('p-store')?.appendChild(co);
+  else $('view-store')?.appendChild(co);
+  co?.classList.remove('hidden');
+  co?.scrollIntoView({ behavior: 'smooth' });
   renderCheckoutPackageSummary(raw, currentPackage);
 
   const hideEmail = isUpgradeMode || isRenewMode;
@@ -2148,7 +2315,7 @@ function openCheckout(id) {
     $('orderForm')?.reset();
     if ($('cusEmail')) $('cusEmail').value = '';
     if ($('cusZalo')) $('cusZalo').value = '';
-    if ($('needSupport')) $('needSupport').checked = false;
+    if ($('needSupport')) $('needSupport').checked = true;
     if ($('payMethod')) $('payMethod').value = 'bank';
     clearSubDecisionWarning();
   }
@@ -2203,11 +2370,7 @@ function openCheckout(id) {
 
   renderDurationSelector(currentPackage);
   selectDuration(1);
-  const z = $('cusZalo');
-  const showZalo = $('needSupport').checked;
-  z.classList.toggle('hidden', !showZalo);
-  z.disabled = !showZalo;
-  z.required = showZalo && !hideEmail;
+  toggleZalo();
   document.body.classList.add('checkout-active');
   renderPaymentBox();
 }
@@ -2476,10 +2639,13 @@ function calculateTotal() {
 }
 
 function toggleZalo() {
+  const cb = $('needSupport');
   const z = $('cusZalo');
-  const isHidden = z.classList.toggle('hidden');
-  z.disabled = isHidden;
-  z.required = !isHidden && !(isUpgradeMode || isRenewMode);
+  if (!z) return;
+  const showZalo = cb ? !!cb.checked : !z.classList.contains('hidden');
+  z.classList.toggle('hidden', !showZalo);
+  z.disabled = !showZalo;
+  z.required = showZalo && !(isUpgradeMode || isRenewMode);
 }
 
 async function copyText(t) {
@@ -3074,13 +3240,14 @@ function renderPaymentBox() {
 
   let guideHtml = l.guide_desc + step3Html;
 
-  const pName = currentPackage ? (currentPackage[lang]?.name || currentPackage.name || (currentPackage.vi && currentPackage.vi.name) || 'Gói VPN') : '';
-  const pData = currentPackage ? (currentPackage.data || (currentPackage.vi && currentPackage.vi.data) || '') : '';
+  const pName = resolvePkgDisplayName(currentPackage, lang);
+  const pData = currentPackage ? formatPkgDataLabel(currentPackage.data || (currentPackage.vi && currentPackage.vi.data) || '', lang) : '';
   const pkgSummaryHtml = currentPackage ? `<div class="mb-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 flex items-center justify-between text-xs"><div class="font-bold text-slate-700 dark:text-slate-200"><i class="fas fa-box text-indigo-500 mr-1.5"></i>${esc(pName)}${pData ? ' (' + esc(pData) + ')' : ''}</div><div class="font-extrabold text-indigo-600 dark:text-indigo-400 text-sm">${fp}</div></div>` : '';
 
   if (!currentOrderId && !(isUpgradeMode && upgradeConfirmed)) {
     col.classList.remove('relative');
     col.innerHTML = `<div><h4 class="font-extrabold text-base mb-2 text-indigo-700 dark:text-indigo-400 border-b dark:border-slate-700 pb-2"><i class="fas fa-info-circle mr-2"></i>${l.guide_title}</h4>${pkgSummaryHtml}<p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${guideHtml}</p></div>`;
+    if (lang !== 'vi' && typeof walkTr === 'function') walkTr(col);
     return;
   }
   col.classList.add('relative');
@@ -3098,6 +3265,7 @@ function renderPaymentBox() {
     const staticQrSrc = ali ? '/assets/qr/alipay.jpg' : '/assets/qr/weixin.jpg';
     col.innerHTML = `${dlBtnHtml}<div class="text-center w-full flex flex-col flex-1 justify-between h-full"><div><div id="paymentExportArea"><div class="bg-slate-50 dark:bg-white p-2 rounded-xl inline-block mb-4 border border-slate-100 dark:border-transparent shadow-sm"><img id="paymentQrImg" src="${staticQrSrc}" class="w-48 max-w-full h-auto mx-auto rounded-lg object-contain mix-blend-multiply dark:mix-blend-normal"></div><div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div></div>${memo('text-2xl', 'uppercase')}</div>${decisionBadgeHtml}</div>${paidBtnHtml}</div>`;
   }
+  if (lang !== 'vi' && typeof walkTr === 'function') walkTr(col);
 
   invalidatePaymentCardCache();
   const nextKey = getPaymentCardCacheKey();
@@ -3602,6 +3770,8 @@ async function confirmPaid() {
   showToast(lang === 'vi' ? `Đã ghi nhận đơn hàng #${o.id}! Vui lòng lưu lại Mã đơn hàng này.` : `Order #${o.id} recorded!`);
   $('checkoutSection').classList.add('hidden');
   $('orderForm').reset();
+  if ($('needSupport')) $('needSupport').checked = true;
+  toggleZalo();
   document.body.classList.remove('checkout-active');
   isUpgradeMode = false;
   isRenewMode = false;
@@ -3976,6 +4146,12 @@ document.addEventListener('visibilitychange', () => {
 
 // ===== HỆ THỐNG ĐỊNH TUYẾN CLEAN PATH ROUTER (NAVIGO) =====
 const router = new Navigo('/', { hash: false });
+const _origRouterNavigate = router.navigate.bind(router);
+router.navigate = function (to, options) {
+  if (!isRestoringScroll) recordRouteScroll(curActiveRouteKey);
+  isPopstateNav = false;
+  return _origRouterNavigate(to, options);
+};
 if (typeof window !== 'undefined') window.router = router;
 let currentUrlOrderId = '';
 
@@ -4164,11 +4340,6 @@ function showPolicyPage(targetSection, skipPush = false) {
   if ($('policyBodyTerms')) $('policyBodyTerms').innerHTML = ft.terms ? `<p class="whitespace-pre-line leading-relaxed">${esc(ft.terms)}</p>` : "<p>Quý khách sử dụng dịch vụ VPN vui lòng tuân thủ quy định pháp luật nước sở tại, không sử dụng dịch vụ vào các mục đích vi phạm pháp luật.</p>";
   if ($('policyBodyDisclaimer')) $('policyBodyDisclaimer').innerHTML = ft.disclaimer ? `<p class="whitespace-pre-line leading-relaxed">${esc(ft.disclaimer)}</p>` : "<p>Chúng tôi chỉ cung cấp giải pháp mạng kỹ thuật. Khách hàng chịu toàn bộ trách nhiệm về các hoạt động và nội dung truy cập cá nhân.</p>";
   if ($('policyBodyRefund')) $('policyBodyRefund').innerHTML = ft.refund ? `<p class="whitespace-pre-line leading-relaxed">${esc(ft.refund)}</p>` : "<p>Website không áp dụng chính sách hoàn tiền cho các đơn hàng đã thanh toán và kích hoạt thành công. Quý khách vui lòng lưu ý và cân nhắc trước khi thanh toán.</p>";
-
-  if (targetSection) {
-    const targetId = targetSection.startsWith('policy-') ? targetSection : `policy-${targetSection}`;
-    setTimeout(() => scrollToPolicySection(targetId), 60);
-  } else {}
 }
 
 function switchPortalTab(tabId, fromUpgrade = false, skipPush = false) {
@@ -4359,26 +4530,32 @@ function clickFooterGuideLink(tabName) {
 window.addEventListener('popstate', () => {
   const lb = document.querySelector('.lb-overlay-active');
   if (lb && lb.__closeLb) {
+    isPopstateNav = false;
     lb.__closeLb();
     return;
   }
   if ($('emailVerifyModal') && !$('emailVerifyModal').classList.contains('hidden')) {
+    isPopstateNav = false;
     closeEmailVerifyModal(true);
     return;
   }
   if ($('pwaInstallGuideModal') && !$('pwaInstallGuideModal').classList.contains('hidden')) {
+    isPopstateNav = false;
     closePwaInstallGuideModal(true);
     return;
   }
   if (!$('qrSubModal').classList.contains('hidden')) {
+    isPopstateNav = false;
     closeQrModal(true);
     return;
   }
   if (!$('wechatModal').classList.contains('hidden')) {
+    isPopstateNav = false;
     closeWechatModal(true);
     return;
   }
   if (!$('guideAuthModal').classList.contains('hidden')) {
+    isPopstateNav = false;
     closeGuideAuthModal(true);
     return;
   }
@@ -4387,8 +4564,9 @@ window.addEventListener('popstate', () => {
 // KHAI BÁO CÁC ROUTE ĐỘNG TRÊN NAVIGO (ĐỊNH DANH ĐƠN BẰNG /portal/order/:orderId, BỎ SESSION 24H)
 function setupAppRoutes() {
   router.on('/', () => {
+    const isPop = consumePopstateNav();
     showLandingPage();
-    restoreIndexScroll();
+    applyRouteScroll('/', isPop);
   });
 
   // Tuyệt đối không dùng /packages lẻ bên ngoài -> Tự động chuyển về trang chủ /
@@ -4398,31 +4576,40 @@ function setupAppRoutes() {
 
   // 1. Tuyến đường chuẩn: Cửa hàng /portal/order/DHXXXXXXXXXX/packages
   router.on(/^\/?portal\/order\/(DH[A-Za-z0-9_-]{6,25})\/packages$/, async (match) => {
+    const isPop = consumePopstateNav();
     const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
     const cleanId = normOrderIdClean(rawOid);
     if (!cleanId) return router.navigate('/');
+    const routeKey = `/portal/order/${cleanId}/packages`;
     if (oCache && normOrderIdClean(oCache.id) === cleanId) {
       enterPortal(oCache, true);
       switchPortalTab('p-store', false, true);
+      applyRouteScroll(routeKey, isPop);
       return;
     }
     const ok = await openPortalByOrderId(cleanId, false);
-    if (ok) switchPortalTab('p-store', false, true);
+    if (ok) {
+      switchPortalTab('p-store', false, true);
+      applyRouteScroll(routeKey, isPop);
+    }
   });
 
   // 2. Tuyến đường chuẩn: Bài viết hướng dẫn /portal/order/DHXXXXXXXXXX/guide/:category/:slug
   router.on(/^\/?portal\/order\/(DH[A-Za-z0-9_-]{6,25})\/guide\/([A-Za-z0-9_-]+)\/(.+)$/, async (match) => {
+    const isPop = consumePopstateNav();
     const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
     const cat = match && match.data && match.data[1] ? decodeURIComponent(match.data[1]) : '';
     const slug = match && match.data && match.data[2] ? decodeURIComponent(match.data[2]) : '';
     const cleanId = normOrderIdClean(rawOid);
     if (!cleanId) return router.navigate('/');
+    const routeKey = `/portal/order/${cleanId}/guide/${cat}/${slug}`;
     const setupArticleView = async () => {
       enablePortalFrame();
       document.querySelectorAll('.portal-tab-content').forEach(el => el.classList.remove('active'));
       $('p-guide').classList.add('active');
       highlightNavBtns('p-guide');
       await openGuideArticle(cat, slug, true);
+      applyRouteScroll(routeKey, isPop);
     };
     if (oCache && normOrderIdClean(oCache.id) === cleanId) {
       enterPortal(oCache, true);
@@ -4435,18 +4622,21 @@ function setupAppRoutes() {
 
   // 3. Tuyến đường chuẩn: Danh mục hướng dẫn /portal/order/DHXXXXXXXXXX/guide/:category
   router.on(/^\/?portal\/order\/(DH[A-Za-z0-9_-]{6,25})\/guide\/([A-Za-z0-9_-]+)$/, async (match) => {
+    const isPop = consumePopstateNav();
     const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
     const cat = match && match.data && match.data[1] ? decodeURIComponent(match.data[1]) : '';
     const cleanId = normOrderIdClean(rawOid);
     if (!cleanId) return router.navigate('/');
     curGuide = cat || 'android';
     curGuideSlug = '';
+    const routeKey = `/portal/order/${cleanId}/guide/${curGuide}`;
     const setupGuideView = () => {
       enablePortalFrame();
       document.querySelectorAll('.portal-tab-content').forEach(el => el.classList.remove('active'));
       $('p-guide').classList.add('active');
       highlightNavBtns('p-guide');
       showGuide(curGuide);
+      applyRouteScroll(routeKey, isPop);
     };
     if (oCache && normOrderIdClean(oCache.id) === cleanId) {
       enterPortal(oCache, true);
@@ -4459,30 +4649,42 @@ function setupAppRoutes() {
 
   // 4. Tuyến đường chuẩn: Hướng dẫn tổng quan /portal/order/DHXXXXXXXXXX/guide
   router.on(/^\/?portal\/order\/(DH[A-Za-z0-9_-]{6,25})\/guide$/, async (match) => {
+    const isPop = consumePopstateNav();
     const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
     const cleanId = normOrderIdClean(rawOid);
     if (!cleanId) return router.navigate('/');
+    const routeKey = `/portal/order/${cleanId}/guide`;
     if (oCache && normOrderIdClean(oCache.id) === cleanId) {
       enterPortal(oCache, true);
       switchPortalTab('p-guide', false, true);
+      applyRouteScroll(routeKey, isPop);
       return;
     }
     const ok = await openPortalByOrderId(cleanId, false);
-    if (ok) switchPortalTab('p-guide', false, true);
+    if (ok) {
+      switchPortalTab('p-guide', false, true);
+      applyRouteScroll(routeKey, isPop);
+    }
   });
 
   // 5. Tuyến đường chuẩn: Dashboard /portal/order/DHXXXXXXXXXX
   router.on(/^\/?portal\/order\/(DH[A-Za-z0-9_-]{6,25})$/, async (match) => {
+    const isPop = consumePopstateNav();
     const rawOid = match && match.data && match.data[0] ? decodeURIComponent(match.data[0]) : '';
     const cleanId = normOrderIdClean(rawOid);
     if (!cleanId) return router.navigate('/');
+    const routeKey = `/portal/order/${cleanId}`;
     if (oCache && normOrderIdClean(oCache.id) === cleanId) {
       enterPortal(oCache, true);
       switchPortalTab('p-home', false, true);
+      applyRouteScroll(routeKey, isPop);
       return;
     }
     const ok = await openPortalByOrderId(cleanId, false);
-    if (ok) switchPortalTab('p-home', false, true);
+    if (ok) {
+      switchPortalTab('p-home', false, true);
+      applyRouteScroll(routeKey, isPop);
+    }
   });
 
   // Tuyến đường trung gian /DH...: Điều hướng nội bộ sang route Portal chuẩn /portal/order/DH...
@@ -4496,7 +4698,9 @@ function setupAppRoutes() {
 
   const bindPackagesRoute = (path) => {
     router.on(path, () => {
+      const isPop = consumePopstateNav();
       switchPortalTab('p-store', false, true);
+      applyRouteScroll(path, isPop);
     });
   };
   bindPackagesRoute(appRoutes.packages);
@@ -4504,11 +4708,14 @@ function setupAppRoutes() {
 
   const bindGuideRoutes = (basePath) => {
     router.on(basePath, () => {
+      const isPop = consumePopstateNav();
       curGuideSlug = '';
       switchPortalTab('p-guide', false, true);
+      applyRouteScroll(basePath, isPop);
     });
 
     router.on(`${basePath}/:category`, (match) => {
+      const isPop = consumePopstateNav();
       const cat = match && match.data && match.data.category;
       curGuide = cat || 'android';
       curGuideSlug = '';
@@ -4517,15 +4724,11 @@ function setupAppRoutes() {
       $('p-guide').classList.add('active');
       highlightNavBtns('p-guide');
       showGuide(curGuide);
-      if (cat) {
-        setTimeout(() => {
-          const catEl = document.getElementById(`guide-cat-${cat}`);
-          if (catEl) catEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 120);
-      }
+      applyRouteScroll(`${basePath}/${curGuide}`, isPop);
     });
 
     router.on(`${basePath}/:category/:slug`, async (match) => {
+      const isPop = consumePopstateNav();
       const cat = match && match.data && match.data.category;
       const sl = match && match.data && match.data.slug;
       enablePortalFrame();
@@ -4533,6 +4736,7 @@ function setupAppRoutes() {
       $('p-guide').classList.add('active');
       highlightNavBtns('p-guide');
       await openGuideArticle(cat, decodeURIComponent(sl), true);
+      applyRouteScroll(`${basePath}/${cat}/${sl}`, isPop);
     });
   };
   bindGuideRoutes(appRoutes.guide);
@@ -4541,11 +4745,18 @@ function setupAppRoutes() {
 
   const bindPolicyRoutes = (basePath) => {
     router.on(basePath, () => {
+      const isPop = consumePopstateNav();
       showPolicyPage('terms', true);
+      applyRouteScroll(basePath, isPop);
     });
     router.on(`${basePath}/:type`, (match) => {
+      const isPop = consumePopstateNav();
       const tp = match && match.data && match.data.type;
       showPolicyPage(tp || 'terms', true);
+      applyRouteScroll(`${basePath}/${tp || 'terms'}`, isPop);
+      if (!isPop && tp && tp !== 'terms') {
+        setTimeout(() => scrollToPolicySection(tp.startsWith('policy-') ? tp : `policy-${tp}`), 80);
+      }
     });
   };
   bindPolicyRoutes(appRoutes.policy);
@@ -4763,7 +4974,8 @@ if (typeof window !== 'undefined') {
         }
       });
       // Bảo toàn mã coupon và thông tin checkout khi đồng bộ giá
-      if ($('view-checkout')?.classList.contains('active') && typeof renderPaymentBox === 'function') {
+      const checkoutEl = $('checkoutSection');
+      if (checkoutEl && !checkoutEl.classList.contains('hidden') && typeof renderPaymentBox === 'function') {
         safeStep('renderPaymentBox', () => renderPaymentBox());
       }
       if (oCache) {
@@ -4856,3 +5068,18 @@ if (typeof window !== 'undefined') {
     }
   });
 })();
+
+export {
+  normalizeTrString,
+  formatPkgDataLabel,
+  resolvePkgDisplayName,
+  getNormRouteKey,
+  recordRouteScroll,
+  applyRouteScroll,
+  changeLanguage,
+  openCheckout,
+  toggleZalo,
+  renderCheckoutPackageSummary,
+  genHTML,
+  EXPOSED_FNS
+};

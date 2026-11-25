@@ -777,10 +777,105 @@ async function pollMain() {
 }
 
 // ===================== TAB NAVIGATION =====================
-function switchPkgSubTab(tab) {
+const MOBILE_MAIN_TABS = ['t-ord', 't-lnk', 't-check', 't-trans', 't-more'];
+const MORE_SUB_TABS = ['t-func', 't-pkg', 't-rev', 't-dead', 't-mail', 't-cms', 't-settings', 't-more'];
+let curSettingsTab = "setweb";
+let curWebSubTab = "ui";
+let adminEntryWasMore = false;
+
+function saveAdminSubTab(tabId, val) {
   try {
-    localStorage.setItem(SITE_KEY + "_subTab_t-pkg", tab);
+    if (tabId && val !== undefined) localStorage.setItem(SITE_KEY + "_subTab_" + tabId, String(val));
   } catch (e) {}
+}
+function getAdminSubTab(tabId, fallback = "") {
+  try {
+    return localStorage.getItem(SITE_KEY + "_subTab_" + tabId) || fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+function getAdminSwipeTargetTab(curTabId, dir) {
+  const idx = MOBILE_MAIN_TABS.indexOf(curTabId);
+  if (idx < 0) return null;
+  if (dir === 'left' && idx < MOBILE_MAIN_TABS.length - 1) return MOBILE_MAIN_TABS[idx + 1];
+  if (dir === 'right' && idx > 0) return MOBILE_MAIN_TABS[idx - 1];
+  return null;
+}
+function buildAdminHistoryState(tabId) {
+  const st = { tab: tabId || getCurrentAdminTab() };
+  st.checkSub = curCheckSubTab;
+  st.txSub = curTxTab;
+  st.revTab = typeof revTab !== 'undefined' ? revTab : getAdminSubTab('t-rev', 'over');
+  if (typeof revMonth !== 'undefined') st.revMonth = revMonth;
+  if (typeof revPayView !== 'undefined') st.revPayView = revPayView;
+  st.pkgSub = getAdminSubTab('t-pkg', 'cards');
+  st.deadSub = curDeadTab;
+  st.mailSub = mcTab;
+  st.settingsSub = getAdminSubTab('t-settings', curSettingsTab || 'setweb');
+  st.webSub = getAdminSubTab('t-settings_web', curWebSubTab || 'ui');
+  if (st.tab === 't-cms') {
+    st.cmsTab = curCms;
+    st.inEditor = !!(curArt && $("cmsEditorWrap") && !$("cmsEditorWrap").classList.contains("hidden"));
+    st.cmsArt = st.inEditor ? (curArt || '') : '';
+  }
+  return st;
+}
+function replaceCurrentAdminNav(tabId) {
+  if (isNavigatingFromHistory || typeof window === 'undefined' || !history?.replaceState) return;
+  try {
+    history.replaceState(buildAdminHistoryState(tabId), '', location.href);
+  } catch (e) {}
+}
+function getCurrentAdminTab() {
+  const active = TABS.find(([t]) => $(t) && !$(t).classList.contains("hidden"));
+  return active ? active[0] : (localStorage.getItem(SITE_KEY + "_lastTab") || "t-ord");
+}
+function adminBackFromDeepTab() {
+  const inCmsEditor = $("cmsEditorWrap") && !$("cmsEditorWrap").classList.contains("hidden");
+  if (adminEntryWasMore && !inCmsEditor && !history.state?.inEditor && typeof window !== 'undefined' && history.length > 1) {
+    history.back();
+    return;
+  }
+  go('t-more');
+}
+window.adminBackFromDeepTab = adminBackFromDeepTab;
+
+let adminSwipeBound = false;
+function initAdminMobileSwipe() {
+  if (adminSwipeBound || typeof document === 'undefined' || typeof window === 'undefined') return;
+  const host = $('main');
+  if (!host) return;
+  adminSwipeBound = true;
+  let sx = 0, sy = 0, st = 0, ignore = false;
+  host.addEventListener('touchstart', (e) => {
+    ignore = true;
+    if (window.innerWidth >= 768 || e.touches.length !== 1) return;
+    if (document.querySelector('#mOrd:not(.hidden), #mRootEdit:not(.hidden), #mLnk:not(.hidden), #mCouponModal:not(.hidden), #mGiftRuleModal:not(.hidden)')) return;
+    const t0 = e.touches[0];
+    if (t0.clientX < 24 || t0.clientX > window.innerWidth - 24) return;
+    const tgt = e.target;
+    if (tgt && tgt.closest && tgt.closest('input, textarea, select, [contenteditable="true"], .ql-editor, .ql-toolbar, .overflow-x-auto, table, .grip, .grip-cat')) return;
+    sx = t0.clientX;
+    sy = t0.clientY;
+    st = Date.now();
+    ignore = false;
+  }, { passive: true });
+  host.addEventListener('touchend', (e) => {
+    if (ignore || !e.changedTouches || !e.changedTouches.length) return;
+    ignore = true;
+    if (Date.now() - st > 650) return;
+    const t1 = e.changedTouches[0];
+    const dx = t1.clientX - sx;
+    const dy = t1.clientY - sy;
+    if (Math.abs(dx) < 68 || Math.abs(dx) < Math.abs(dy) * 1.8) return;
+    const nextTab = getAdminSwipeTargetTab(getCurrentAdminTab(), dx < 0 ? 'left' : 'right');
+    if (nextTab) go(nextTab);
+  }, { passive: true });
+}
+
+function switchPkgSubTab(tab, fromHistory = false) {
+  saveAdminSubTab("t-pkg", tab);
   $("pane-pkg-cards").classList.toggle("hidden", tab !== "cards");
   if ($("pane-pkg-salecoupon")) $("pane-pkg-salecoupon").classList.toggle("hidden", tab !== "salecoupon" && tab !== "sale" && tab !== "coupon");
   if ($("pane-pkg-sale")) $("pane-pkg-sale").classList.toggle("hidden", tab !== "salecoupon" && tab !== "sale");
@@ -799,6 +894,7 @@ function switchPkgSubTab(tab) {
     renderGiftRulesAdmin();
   }
   if (tab === "fulfill") loadFulfillmentConfig();
+  if (!fromHistory) replaceCurrentAdminNav("t-pkg");
 }
 window.switchPkgSubTab = switchPkgSubTab;
 
@@ -816,6 +912,10 @@ function buildTabs() {
 function go(id, fromHistory) {
   if (id === "t-sales") id = "t-pkg";
   if (!TABS.some(t => t[0] === id)) id = "t-ord";
+  const prevTab = getCurrentAdminTab();
+  if (!fromHistory && prevTab !== id) {
+    adminEntryWasMore = prevTab === 't-more' && MORE_SUB_TABS.includes(id) && id !== 't-more';
+  }
   TABS.forEach(([t]) => {
     const el = $(t);
     if (el) el.classList.add("hidden");
@@ -833,11 +933,9 @@ function go(id, fromHistory) {
     a.classList.remove("bg-white", "text-slate-600");
   }
 
-  // Đồng bộ thanh điều hướng đáy Mobile (4 tab chính + 1 tab Thêm) & nút Back ngữ cảnh trên header
-  const navItems = ['t-ord', 't-lnk', 't-check', 't-trans', 't-more'];
-  const moreSubTabs = ['t-func', 't-pkg', 't-rev', 't-dead', 't-mail', 't-cms', 't-settings', 't-more'];
-  const activeSlot = moreSubTabs.includes(id) ? 't-more' : id;
-  navItems.forEach(k => {
+  // Đồng bộ thanh điều hướng đáy Mobile (4 tab chính + 1 tab Thêm ngang hàng) & nút Back ngữ cảnh trên header
+  const activeSlot = MORE_SUB_TABS.includes(id) ? 't-more' : id;
+  MOBILE_MAIN_TABS.forEach(k => {
     const btn = $('bnav-' + k);
     if (!btn) return;
     btn.classList.remove('text-indigo-700', 'text-indigo-600', 'active');
@@ -852,7 +950,7 @@ function go(id, fromHistory) {
   const backBtn = $('hdrBackBtn');
   const brandWrap = $('hdrBrandWrap');
   const subTitle = $('hdrSubTitle');
-  const isDeepSubPage = moreSubTabs.includes(id) && id !== 't-more';
+  const isDeepSubPage = MORE_SUB_TABS.includes(id) && id !== 't-more';
   if (backBtn) {
     backBtn.classList.toggle('hidden', !isDeepSubPage);
     backBtn.classList.toggle('inline-flex', isDeepSubPage);
@@ -869,55 +967,64 @@ function go(id, fromHistory) {
 
   localStorage.setItem(SITE_KEY + "_lastTab", id);
 
-  if (!fromHistory) {
-    const hName = '#' + id.replace('t-', '');
-    if (location.hash !== hName) {
-      history.pushState({ tab: id }, '', hName);
-    }
-  }
-
   try {
     if (id === "t-pkg") {
       loadAdminPkgs();
       loadFulfillmentConfig();
-      const savedSub = localStorage.getItem(SITE_KEY + "_subTab_t-pkg") || "cards";
-      switchPkgSubTab(savedSub);
+      const savedSub = getAdminSubTab("t-pkg", "cards");
+      switchPkgSubTab(savedSub, true);
     }
     if (id === "t-check") {
       renderCheckTab();
-      const savedSub = localStorage.getItem(SITE_KEY + "_subTab_t-check") || "data";
+      const savedSub = getAdminSubTab("t-check", "data");
       switchCheckSubTab(savedSub, true);
     }
     if (id === "t-func") {
       updateOrderTogglesUI();
       if ($("toggleLockExpiry")) $("toggleLockExpiry").checked = !!(cmsDb.settings && cmsDb.settings.lockExpiry);
     }
-    if (id === "t-dead") renderDead();
+    if (id === "t-dead") {
+      const savedDead = getAdminSubTab("t-dead", curDeadTab || "links");
+      switchDeadSubTab(savedDead, true);
+    }
     if (id === "t-lnk") renderLinks();
     if (id === "t-settings") {
       loadSettingsUI();
       loadStatus();
       loadQuota();
-      let savedSub = localStorage.getItem(SITE_KEY + "_subTab_t-settings");
-      if (!savedSub || savedSub === "webadmin") savedSub = "setweb";
-      switchSettingsTab(savedSub);
+      const savedSub = getAdminSubTab("t-settings", "setweb");
+      switchSettingsTab(savedSub, true);
     }
-    if (id === "t-rev") renderRevenue();
+    if (id === "t-rev") {
+      const savedRev = getAdminSubTab("t-rev", revTab || "over");
+      if (REV_TABS.some(x => x[0] === savedRev)) revTab = savedRev;
+      renderRevenue();
+    }
     if (id === "t-trans") {
       localStorage.setItem(SITE_KEY + "_txSeen", Date.now());
       const tb = $("transBadge");
       if (tb) tb.classList.add("hidden");
       const tbm = $("transBadgeMobile");
       if (tbm) tbm.classList.add("hidden");
+      const savedTx = getAdminSubTab("t-trans", curTxTab || "giamsat");
+      switchTxTab(savedTx, true);
       if (!txData.length) loadTx(true);
-      if (curTxTab === "exception") renderExceptionsTab();
-      else renderTransactions();
     }
     if (id === "t-mail") renderMailComposer();
     if (id === "t-cms" && curArtsReady) renderGuideAll();
   } catch (e) {
     console.error("go(" + id + ") lỗi:", e);
     toast("Lỗi mở tab: " + e.message, "err");
+  }
+
+  if (!fromHistory && typeof history !== 'undefined' && history.pushState) {
+    const hName = '#' + id.replace('t-', '');
+    const st = buildAdminHistoryState(id);
+    if (location.hash !== hName || !history.state || history.state.tab !== id) {
+      history.pushState(st, '', hName);
+    } else {
+      history.replaceState(st, '', hName);
+    }
   }
   restoreAdminScroll(id, !!fromHistory);
 }
@@ -983,14 +1090,13 @@ window.addEventListener('popstate', (event) => {
     return;
   }
 
-  // Khi đang sửa bài viết CMS: Ưu tiên đóng trình soạn thảo quay về danh sách bài viết
-  const cmsEditor = $("cmsEditorWrap");
-  if (cmsEditor && !cmsEditor.classList.contains("hidden")) {
-    closeCmsEditor();
-    return;
-  }
-
-  if (!event.state) {
+  const s = event.state;
+  if (!s) {
+    const cmsEditor = $("cmsEditorWrap");
+    if (cmsEditor && !cmsEditor.classList.contains("hidden")) {
+      closeCmsEditor(true);
+      return;
+    }
     const hash = location.hash.replace('#', '');
     const tabId = hash ? 't-' + hash : 't-ord';
     if (TABS.some(t => t[0] === tabId)) {
@@ -1000,11 +1106,16 @@ window.addEventListener('popstate', (event) => {
   }
   isNavigatingFromHistory = true;
   try {
-    const s = event.state;
     if (s.tab) {
+      if (s.checkSub) saveAdminSubTab('t-check', s.checkSub);
+      if (s.txSub) saveAdminSubTab('t-trans', s.txSub);
+      if (s.revTab) saveAdminSubTab('t-rev', s.revTab);
+      if (s.pkgSub) saveAdminSubTab('t-pkg', s.pkgSub);
+      if (s.deadSub) saveAdminSubTab('t-dead', s.deadSub);
+      if (s.mailSub) saveAdminSubTab('t-mail', s.mailSub);
+      if (s.settingsSub) saveAdminSubTab('t-settings', s.settingsSub);
+      if (s.webSub) saveAdminSubTab('t-settings_web', s.webSub);
       go(s.tab, true);
-      if (s.tab === 't-check' && s.checkSub) switchCheckSubTab(s.checkSub, true);
-      if (s.tab === 't-trans' && s.txSub) switchTxTab(s.txSub, true);
       if (s.tab === 't-rev') {
         if (s.revTab) setRevTab(s.revTab, true);
         if (s.revMonth) {
@@ -1016,15 +1127,18 @@ window.addEventListener('popstate', (event) => {
           renderRevenue();
         }
       }
-      if (s.tab === 't-pkg' && s.pkgSub) switchPkgSubTab(s.pkgSub, true);
       if (s.tab === 't-mail' && s.mailSub) mcSwitchTab(s.mailSub, true);
       if (s.tab === 't-settings') {
         if (s.settingsSub) switchSettingsTab(s.settingsSub, true);
         if (s.webSub) switchWebAdminTab(s.webSub, true);
         if (s.faqSub) switchFaqSubTab(s.faqSub, true);
       }
-      if (s.tab === 't-guide') {
-        if (!s.guideArt) closeCmsEditor(true);
+      if (s.tab === 't-cms' || s.tab === 't-guide') {
+        if (s.inEditor && s.cmsArt) {
+          openCmsEditorForArt(s.cmsTab || curCms, s.cmsArt, true);
+        } else {
+          closeCmsEditor(true);
+        }
       }
     }
   } finally {
@@ -1363,7 +1477,7 @@ function openOrdModal(id) {
     success: 'bg-green-50 text-green-800 border-green-200 accent-green-600',
     reject: 'bg-red-50 text-red-800 border-red-200 accent-red-600'
   };
-  $("upgChecks").innerHTML = [["Verify", "verify", "Đang xác minh"], ["Success", "success", "Thành công"], ["Reject", "reject", "Từ chối"]].map(([n, k, l]) => `<label class="flex items-center ${upgStyles[k]} px-2.5 py-1 rounded-full cursor-pointer border"><input type="checkbox" id="mOUpg${n}" onchange="syncUpg('${k}')" class="w-3.5 h-3.5 mr-1"><span class="text-[10px] font-bold">${l}</span></label>`).join("");
+  $("upgChecks").innerHTML = [["Verify", "verify", "Đang xác minh"], ["Success", "success", "Thành công"], ["Reject", "reject", "Từ chối"]].map(([n, k, l]) => `<label class="flex items-center justify-center ${upgStyles[k]} px-2 sm:px-2.5 py-1.5 sm:py-1 rounded-xl sm:rounded-full cursor-pointer border whitespace-nowrap text-center"><input type="checkbox" id="mOUpg${n}" onchange="syncUpg('${k}')" class="w-3.5 h-3.5 mr-1 shrink-0"><span class="text-[10px] font-bold whitespace-nowrap">${l}</span></label>`).join("");
   $("mOrdTtl").textContent = o ? "Sửa đơn" : "Tạo thủ công";
   $("mOId").value = o ? o.id : genId();
   $("mOIdNote").classList.toggle("hidden", !o);
@@ -2141,20 +2255,16 @@ function monthTotals() {
 function setRevMonth(val) {
   revMonth = val;
   renderRevenue();
-  if (typeof recordAdminNav === "function") recordAdminNav({ tab: "t-trans", txSub: "rev", revTab, revMonth, revPayView });
+  replaceCurrentAdminNav("t-rev");
 }
 window.setRevMonth = setRevMonth;
 
 function setRevTab(k, fromHistory = false) {
   revTab = k;
+  saveAdminSubTab("t-rev", k);
   revPayView = null;
   renderRevenue();
-  if (!fromHistory && typeof recordAdminNav === "function") recordAdminNav({
-    tab: "t-rev",
-    revTab,
-    revMonth,
-    revPayView: null
-  });
+  if (!fromHistory) replaceCurrentAdminNav("t-rev");
 }
 window.setRevTab = setRevTab;
 
@@ -2988,16 +3098,19 @@ function mcLoadPreset() {
   mcSel = -1;
   mcRenderEditor();
 }
-function mcSwitchTab(t) {
+function mcSwitchTab(t, fromHistory = false) {
   mcTab = t;
+  saveAdminSubTab("t-mail", t);
   mcRenderTabs();
   mcRenderPresetOptions();
   mcLoadPreset();
+  if (!fromHistory) replaceCurrentAdminNav("t-mail");
 }
 function renderMailComposer() {
   if (!mcInited) {
     mcInited = true;
-    mcTab = "sys";
+    const saved = getAdminSubTab("t-mail", "sys");
+    mcTab = saved === "free" ? "free" : "sys";
     mcRenderTabs();
     mcRenderPresetOptions();
     mcLoadPreset();
@@ -3386,12 +3499,13 @@ async function clearDataRequests() {
   toast("Đã dọn sạch");
 }
 // ===================== GIAO DỊCH D1 (qua Worker) =====================
-function switchTxTab(t) {
+function switchTxTab(t, fromHistory = false) {
   if (t === "rev") {
     go("t-rev");
     return;
   }
   curTxTab = t;
+  saveAdminSubTab("t-trans", t);
   document.querySelectorAll("#t-trans .settings-sub-tab").forEach(b => b.classList.remove("active"));
   const btn = $("tx-" + t);
   if (btn) btn.classList.add("active");
@@ -3401,6 +3515,7 @@ function switchTxTab(t) {
   if ($("txExceptionWrap")) $("txExceptionWrap").classList.toggle("hidden", !isExc);
   if (isExc) renderExceptionsTab();
   else renderTransactions();
+  if (!fromHistory) replaceCurrentAdminNav("t-trans");
 }
 window.switchTxTab = switchTxTab;
 const extractOrder = raw => {
@@ -4596,7 +4711,7 @@ function openLnkModal(id) {
   }
   const hintEl = $("mLEExpSyncHint");
   if (hintEl) {
-    hintEl.innerHTML = ord ? `<span class="text-indigo-600 font-bold"><i class="fas fa-link mr-1"></i>Đang đồng bộ theo đơn <b>${esc(ord.id)}</b> (${esc(effectiveExp)}). Muốn đổi HSD, vui lòng sửa tại tab Đơn hàng.</span>` : "";
+    hintEl.innerHTML = ord ? `<span class="text-indigo-700 font-semibold"><i class="fas fa-link mr-1"></i>Đang đồng bộ theo đơn <b>${esc(ord.id)}</b> (${esc(effectiveExp)}). Muốn đổi HSD, vui lòng sửa tại tab Đơn hàng.</span>` : "";
   }
   $("mLId").value = id;
   $("mLOrig").value = l.orig || "";
@@ -5605,13 +5720,15 @@ async function relinkApply(mode) {
 
 // ===================== ĐÃ XÓA (SUB-TAB LINK ĐÃ XÓA & QUẢN LÝ LINK NGUỒN) =====================
 let curDeadTab = "links";
-function switchDeadSubTab(t) {
+function switchDeadSubTab(t, fromHistory = false) {
   curDeadTab = t;
+  saveAdminSubTab("t-dead", t);
   $("pane-dead-links").classList.toggle("hidden", t !== "links");
   $("pane-dead-sources").classList.toggle("hidden", t !== "sources");
   $("btn-dead-links").classList.toggle("active", t === "links");
   $("btn-dead-sources").classList.toggle("active", t === "sources");
   renderDead();
+  if (!fromHistory) replaceCurrentAdminNav("t-dead");
 }
 
 const deadLive = () => deadDb.filter(l => nowMs() - (Number(l.deadTs) || parseAny(l.deadDate) || nowMs()) <= 48 * 36e5);
@@ -5683,7 +5800,7 @@ function renderDeadSources() {
 
     let netTag = "";
     if (isLockedNode) {
-      netTag = `<span class="bg-slate-200 text-slate-800 font-black px-2.5 py-0.5 rounded-full text-xs border border-slate-300">🔒 Node Kỹ Thuật (Khóa Link Hệ Thống)</span>`;
+      netTag = `<span class="bg-slate-200 text-slate-800 font-black px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs border border-slate-300 whitespace-nowrap inline-flex items-center gap-1 shrink-0">🔒 Node Kỹ Thuật (Khóa Hệ Thống)</span>`;
     } else if (isCombo) {
       const p1 = detectProvider(p.url), p2 = detectProvider(p.url2);
       const s = new Set([p1, p2]);
@@ -5977,9 +6094,24 @@ function commitCms() {
   delete a.id;
   delete a.blocks;
 }
+let cmsTabSyncTimer = null;
+async function cmsPersistGuideTabs(silent = true) {
+  try {
+    cmsEnsureTabs();
+    ensureArts();
+    await aj("/api/guides", { method: "POST", body: guides });
+    if (!silent) toast("Đã đồng bộ danh mục Hướng dẫn!");
+  } catch (e) {
+    toast("Lỗi đồng bộ danh mục: " + (e.message || e), "err");
+  }
+}
 function cmsUpdateTabField(tIdx, field, value) {
   cmsEnsureTabs();
-  if (guides._tabs && guides._tabs[tIdx]) guides._tabs[tIdx][field] = value;
+  if (guides._tabs && guides._tabs[tIdx]) {
+    guides._tabs[tIdx][field] = value;
+    clearTimeout(cmsTabSyncTimer);
+    cmsTabSyncTimer = setTimeout(() => { cmsPersistGuideTabs(true); }, 500);
+  }
 }
 function cmsDelTabById(tabId) {
   curCms = tabId;
@@ -6071,8 +6203,10 @@ function renderArtList() {
   return `<div onclick="openArt(${q(s)})" class="cursor-pointer border-2 ${on?"border-indigo-500 bg-indigo-50":"border-slate-200 hover:border-indigo-300 bg-white"} rounded-xl p-2.5 flex items-center justify-between gap-2"><div class="min-w-0"><div class="flex items-center gap-1.5"><span class="font-bold text-sm text-slate-800 truncate">${esc(a.name||"(chưa đặt tên)")}</span></div><div class="text-[10px] text-slate-500 mt-0.5">Cập nhật: ${a.updated?fmtBank(a.updated):"chưa lưu"} · Tác giả: ${esc(a.author||"—")}</div></div><div class="flex gap-1 shrink-0"><button title="Copy Link trực tiếp tới bài viết này" onclick="event.stopPropagation();copyArtDeepLink(${q(curCms)},${q(s)})" class="text-emerald-600 bg-emerald-50 border border-emerald-200 hover:bg-emerald-600 hover:text-white px-2.5 py-1 rounded-lg text-xs font-bold transition"><i class="fas fa-link mr-1"></i>Link</button><button onclick="event.stopPropagation();openArt(${q(s)})" class="text-indigo-600 bg-white border border-indigo-100 px-2 py-1 rounded-lg text-xs"><i class="fas fa-pen"></i></button><button onclick="event.stopPropagation();artDel(${q(s)})" class="text-red-500 bg-white border border-red-100 px-2 py-1 rounded-lg text-xs"><i class="fas fa-trash"></i></button></div></div>`;}).join("")}</div>`;
 }
 function renderCmsTabBtns() {
+  const host = $("cmsDevBtns");
+  if (!host) return;
   const tabs = guideTabList();
-  $("cmsDevBtns").innerHTML = tabs.map((t, i) => {
+  host.innerHTML = tabs.map((t, i) => {
     const on = t.id === curCms;
     const ic = t.img ? `<img src="${esc(safeUrl(t.img))}" class="w-5 h-5 mr-2 rounded object-contain">` : `<i class="${esc(t.ic||"fas fa-book")} ${on?"":esc(t.col||"")} mr-2"></i>`;
     return `<div data-tabid="${esc(t.id)}" class="flex items-center border-2 rounded-xl transition ${on?"bg-indigo-600 text-white border-indigo-600 shadow-lg":"bg-white border-slate-200 text-slate-600"}"><span class="grip cursor-grab px-2 py-2 ${on?"text-indigo-200":"text-slate-400"}" title="Kéo để đổi thứ tự"><i class="fas fa-grip-vertical"></i></span><button onclick="setCms(${q(t.id)})" class="pr-3 py-1.5 font-bold text-xs flex items-center">${ic}${esc(t.name)}${i===0?`<span class="ml-2 text-[9px] font-black px-1.5 py-0.5 rounded ${on?"bg-white/25":"bg-emerald-100 text-emerald-700"}">Mặc định</span>`:""}</button></div>`;
@@ -6106,8 +6240,10 @@ function setupSortableCmsTabs() {
   });
 }
 function renderCmsTabEdit() {
+  const host = $("cmsTabEdit");
+  if (!host) return;
   const tabs = guideTabList(), t = tabs.find(x => x.id === curCms) || tabs[0], isDef = DEF_TABS.some(d => d.id === t.id);
-  $("cmsTabEdit").innerHTML = `<div class="sm:col-span-2"><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tên tab đang sửa</label><input value="${esc(t.name)}" oninput="cmsTabSet('name',this.value)" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div><div class="sm:col-span-2"><div class="flex items-end gap-2"><div class="flex-1"><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Link ảnh làm icon tab (để trống = icon mặc định)</label><input value="${esc(t.img||"")}" oninput="cmsTabSet('img',this.value)" placeholder="https://..." class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-mono"></div>${isDef?"":`<button onclick="cmsDelTab()" title="Xóa tab này" class="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white font-bold py-2 px-3.5 rounded-lg text-xs border border-red-200 transition shrink-0"><i class="fas fa-trash mr-1"></i>Xóa</button>`}</div></div>`;
+  host.innerHTML = `<div class="sm:col-span-2"><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tên tab đang sửa</label><input value="${esc(t.name)}" oninput="cmsTabSet('name',this.value)" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div><div class="sm:col-span-2"><div class="flex items-end gap-2"><div class="flex-1"><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Link ảnh làm icon tab (để trống = icon mặc định)</label><input value="${esc(t.img||"")}" oninput="cmsTabSet('img',this.value)" placeholder="https://..." class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-mono"></div>${isDef?"":`<button onclick="cmsDelTab()" title="Xóa tab này" class="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white font-bold py-2 px-3.5 rounded-lg text-xs border border-red-200 transition shrink-0"><i class="fas fa-trash mr-1"></i>Xóa</button>`}</div></div>`;
 }
 function cmsTabSet(k, v) {
   cmsEnsureTabs();
@@ -6117,7 +6253,7 @@ function cmsTabSet(k, v) {
     renderCmsTabBtns();
   }
 }
-function cmsAddTab() {
+async function cmsAddTab() {
   const name = prompt("Tên tab mới:", "");
   if (!name || !name.trim()) return;
   commitCms();
@@ -6137,15 +6273,18 @@ function cmsAddTab() {
     watermark: ""
   }];
   setCms(id);
+  await cmsPersistGuideTabs(false);
 }
-function cmsDelTab() {
-  if (!confirm("Xóa tab này và toàn bộ bài viết của nó?")) return;
+async function cmsDelTab() {
   cmsEnsureTabs();
+  if (guides._tabs.length <= 1) return toast("Phải giữ lại ít nhất 1 danh mục!", "err");
+  if (!confirm("Xóa tab này và toàn bộ bài viết của nó?")) return;
   guides._tabs = guides._tabs.filter(x => x.id !== curCms);
   delete guides[curCms];
   if (guides._articles) delete guides._articles[curCms];
   curArt = null;
   setCms(guides._tabs[0].id);
+  await cmsPersistGuideTabs(false);
 }
 
 // ---- nội dung khối
@@ -6384,13 +6523,19 @@ function renderCmsEditor() {
   const a = artsOf(curCms).find(x => (x.slug || toSlug(x.name)) === curArt);
   const deepLink = `${PD.replace(/\/$/,"")}/portal/guide/${encodeURIComponent(curCms)}/${encodeURIComponent(curArtSlug||curArt)}`;
   $("cmsArtMeta").innerHTML = `
-  <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tên bài viết</label><input id="cmsArtNameInp" value="${esc(curArtName)}" oninput="curArtName=this.value;if(!curArtSlug||curArtSlug.startsWith('bai-viet-moi-')){$('cmsArtSlugInp').value=toSlug(this.value);curArtSlug=toSlug(this.value);}" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-bold"></div>
-  <div><label class="block text-[10px] font-bold text-indigo-600 mb-0.5">Slug URL (không dấu, cách nhau dấu -)</label><input id="cmsArtSlugInp" value="${esc(curArtSlug||curArt)}" oninput="this.value=toSlug(this.value);curArtSlug=this.value;" class="w-full p-2 text-xs border border-indigo-200 rounded-lg outline-none font-mono font-bold bg-indigo-50/30"></div>
-  <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tác giả</label><input id="cmsArtAuthorInp" value="${esc(curArtAuthor)}" oninput="curArtAuthor=this.value" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none"></div>
-  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:col-span-2">
+  <div class="sm:col-span-2 lg:col-span-2"><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tên bài viết</label><input id="cmsArtNameInp" value="${esc(curArtName)}" oninput="curArtName=this.value;if(!curArtSlug||curArtSlug.startsWith('bai-viet-moi-')){$('cmsArtSlugInp').value=toSlug(this.value);curArtSlug=toSlug(this.value);}" class="w-full p-2 text-xs border border-slate-200 rounded-xl outline-none focus:border-indigo-500 font-bold"></div>
+  <div><label class="block text-[10px] font-bold text-indigo-600 mb-0.5">Slug URL (không dấu, cách nhau -)</label><input id="cmsArtSlugInp" value="${esc(curArtSlug||curArt)}" oninput="this.value=toSlug(this.value);curArtSlug=this.value;" class="w-full p-2 text-xs border border-indigo-200 rounded-xl outline-none focus:border-indigo-500 font-mono font-bold bg-indigo-50/30"></div>
+  <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tác giả</label><input id="cmsArtAuthorInp" value="${esc(curArtAuthor)}" oninput="curArtAuthor=this.value" class="w-full p-2 text-xs border border-slate-200 rounded-xl outline-none focus:border-indigo-500"></div>
+  <div class="sm:col-span-2 lg:col-span-4 flex items-center gap-2 bg-slate-50 p-2 sm:p-2.5 rounded-xl border border-slate-200 min-w-0">
+   <span class="text-[11px] font-bold text-slate-600 shrink-0 whitespace-nowrap"><i class="fas fa-link text-indigo-600 mr-1"></i>Link:</span>
+   <code class="text-[11px] bg-white text-indigo-700 px-2.5 py-1.5 rounded-lg border border-slate-200 truncate min-w-0 flex-1 font-mono">${esc(deepLink)}</code>
+   <button type="button" onclick="copyArtDeepLink(${q(curCms)},${q(curArtSlug||curArt)})" class="bg-indigo-600 text-white hover:bg-indigo-700 font-bold px-3 py-1.5 rounded-lg text-xs transition shrink-0 whitespace-nowrap shadow-xs flex items-center justify-center gap-1.5"><i class="fas fa-copy"></i><span>Copy</span></button>
+  </div>
+  <details class="sm:col-span-2 lg:col-span-4 border-t border-slate-100 pt-2" ${curArtShowFaqs || curArtShowRelated || curArtWatermark ? "open" : ""}><summary class="cursor-pointer select-none text-xs font-extrabold text-indigo-900 py-1 flex items-center justify-between gap-2"><span><i class="fas fa-sliders text-indigo-600 mr-1.5"></i>Tùy chọn: Mục lục, Watermark, FAQ riêng &amp; Bài liên quan</span><span class="text-[10px] text-slate-400 font-semibold whitespace-nowrap shrink-0">Bấm để mở/thu gọn</span></summary><div class="space-y-3 pt-2.5">
+   <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
     <div class="sm:col-span-2">
       <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Watermark nền</label>
-      <input id="cmsArtWatermarkInp" value="${esc(curArtWatermark)}" oninput="curArtWatermark=this.value;cmsPrev();" placeholder="VD: VPNTrinhHg" class="w-full p-2 text-xs border border-slate-200 rounded-lg outline-none">
+      <input id="cmsArtWatermarkInp" value="${esc(curArtWatermark)}" oninput="curArtWatermark=this.value;cmsPrev();" placeholder="VD: VPNTrinhHg" class="w-full p-2 text-xs border border-slate-200 rounded-xl outline-none">
     </div>
     <div>
       <label class="block text-[10px] font-bold text-slate-500 mb-0.5 flex justify-between">
@@ -6399,35 +6544,27 @@ function renderCmsEditor() {
       </label>
       <input type="range" id="cmsArtWmOpacityInp" min="5" max="60" step="1" value="${curArtWmOpacity || 12}" oninput="curArtWmOpacity=Number(this.value);$('wmOpacityVal').innerText=this.value+'%';cmsPrev();" class="w-full accent-indigo-600 h-8 cursor-pointer">
     </div>
-  </div>
-  <div class="sm:col-span-4 flex flex-col sm:flex-row sm:items-center gap-2 pt-2 border-t border-slate-100 mt-1 bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
-   <span class="text-[11px] font-bold text-slate-600 dark:text-slate-300 shrink-0"><i class="fas fa-link text-indigo-600 mr-1"></i>Link riêng bài viết:</span>
-   <code class="text-[11px] bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-400 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 truncate flex-1 font-mono">${esc(deepLink)}</code>
-   <button type="button" onclick="copyArtDeepLink(${q(curCms)},${q(curArtSlug||curArt)})" class="bg-indigo-600 text-white hover:bg-indigo-700 font-bold px-3 py-1.5 rounded-lg text-xs transition shrink-0 shadow-sm flex items-center justify-center gap-1.5"><i class="fas fa-copy"></i>Copy Link</button>
-  </div>
-  <div class="sm:col-span-4 pt-1">
-   <label class="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer"><input type="checkbox" id="chkArtShowToc" ${curArtShowToc?"checked":""} onchange="curArtShowToc=this.checked" class="w-4 h-4 accent-indigo-600">Tự động hiện khung Mục lục (từ H2, H3)</label>
-  </div>
-  <details class="sm:col-span-4 border-t border-slate-100 pt-2" ${curArtShowFaqs || curArtShowRelated ? "open" : ""}><summary class="cursor-pointer select-none text-xs font-extrabold text-indigo-900 py-1"><i class="fas fa-sliders text-indigo-600 mr-1.5"></i>Nâng cao: FAQ riêng &amp; Bài viết liên quan (bấm để mở)</summary><div class="space-y-3 pt-2">
+   </div>
+   <label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer"><input type="checkbox" id="chkArtShowToc" ${curArtShowToc?"checked":""} onchange="curArtShowToc=this.checked" class="w-4 h-4 accent-indigo-600 shrink-0"><span>Tự động hiện khung Mục lục (từ H2, H3)</span></label>
    <!-- KHỐI FAQ RIÊNG CỦA BÀI VIẾT -->
-  <div class="sm:col-span-4 border-t border-slate-100 pt-3 space-y-2">
-   <div class="flex items-center justify-between">
-    <label class="flex items-center gap-2 font-extrabold text-xs text-indigo-900 cursor-pointer"><input type="checkbox" id="chkArtShowFaqs" ${curArtShowFaqs?"checked":""} onchange="curArtShowFaqs=this.checked;$('artFaqsContainerWrap').classList.toggle('hidden',!this.checked);commitCms();saveCms(true);cmsPrev();" class="accent-indigo-600 w-4 h-4"><span><i class="fas fa-circle-question text-indigo-600 mr-1"></i>Bật FAQ riêng cho bài viết này</span></label>
-    <div class="flex items-center gap-1.5"><button type="button" onclick="addArtFaqRow()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold px-2.5 py-1 rounded-lg text-[11px] transition"><i class="fas fa-plus mr-1"></i>Thêm câu hỏi</button><button type="button" onclick="saveArtFaqsOnly()" class="bg-indigo-600 text-white hover:bg-indigo-700 font-bold px-2.5 py-1 rounded-lg text-[11px] transition shadow-sm"><i class="fas fa-save mr-1"></i>Lưu FAQ riêng</button></div>
+  <div class="border-t border-slate-100 pt-3 space-y-2">
+   <div class="flex flex-wrap items-center justify-between gap-2">
+    <label class="flex items-center gap-2 font-extrabold text-xs text-indigo-900 cursor-pointer"><input type="checkbox" id="chkArtShowFaqs" ${curArtShowFaqs?"checked":""} onchange="curArtShowFaqs=this.checked;$('artFaqsContainerWrap').classList.toggle('hidden',!this.checked);commitCms();saveCms(true);cmsPrev();" class="accent-indigo-600 w-4 h-4 shrink-0"><span><i class="fas fa-circle-question text-indigo-600 mr-1"></i>FAQ riêng bài viết</span></label>
+    <div class="flex items-center gap-1.5 shrink-0"><button type="button" onclick="addArtFaqRow()" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-bold px-2.5 py-1.5 rounded-lg text-[11px] whitespace-nowrap transition"><i class="fas fa-plus mr-1"></i>Thêm câu hỏi</button><button type="button" onclick="saveArtFaqsOnly()" class="bg-indigo-600 text-white hover:bg-indigo-700 font-bold px-2.5 py-1.5 rounded-lg text-[11px] whitespace-nowrap transition shadow-xs"><i class="fas fa-save mr-1"></i>Lưu FAQ</button></div>
    </div>
    <div id="artFaqsContainerWrap" class="${curArtShowFaqs?'':'hidden'} space-y-2">
     <div id="artFaqsContainer" class="space-y-2"></div>
    </div>
   </div>
   <!-- KHỐI CHỌN BÀI VIẾT LIÊN QUAN -->
-  <div class="sm:col-span-4 border-t border-slate-100 pt-3 space-y-2">
-   <label class="flex items-center gap-2 font-extrabold text-xs text-slate-800 cursor-pointer"><input type="checkbox" id="chkArtShowRelated" ${curArtShowRelated?"checked":""} onchange="curArtShowRelated=this.checked;$('artRelatedContainerWrap').classList.toggle('hidden',!this.checked);cmsPrev();commitCms();saveCms(true);" class="accent-indigo-600 w-4 h-4"><span><i class="fas fa-newspaper text-indigo-600 mr-1"></i>Bật Mục bài viết khác (Khách bấm vào sẽ nhảy sang link bài đó)</span></label>
+  <div class="border-t border-slate-100 pt-3 space-y-2">
+   <label class="flex items-center gap-2 font-extrabold text-xs text-slate-800 cursor-pointer"><input type="checkbox" id="chkArtShowRelated" ${curArtShowRelated?"checked":""} onchange="curArtShowRelated=this.checked;$('artRelatedContainerWrap').classList.toggle('hidden',!this.checked);cmsPrev();commitCms();saveCms(true);" class="accent-indigo-600 w-4 h-4 shrink-0"><span><i class="fas fa-newspaper text-indigo-600 mr-1"></i>Hiện Mục bài viết liên quan</span></label>
    <div id="artRelatedContainerWrap" class="${curArtShowRelated?'':'hidden'}">
     <div class="max-h-36 overflow-y-auto border border-slate-200 rounded-xl p-2 bg-slate-50 space-y-1.5 scroll-hide">
     ${guideTabList().flatMap(t=>artsOf(t.id).filter(x=>(x.slug||toSlug(x.name))!==curArt).map(other=>`
       <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white p-1.5 rounded-lg border border-slate-100 cursor-pointer hover:bg-indigo-50/50">
-       <input type="checkbox" data-slug="${esc(other.slug||toSlug(other.name))}" value="${esc(other.slug||toSlug(other.name))}" ${curArtRelated.includes(other.slug||toSlug(other.name))?'checked':''} onchange="toggleRelatedArtPick('${esc(other.slug||toSlug(other.name))}', this.checked)" class="accent-indigo-600 w-4 h-4">
-       <span class="text-[10px] font-bold text-slate-400">[${esc(t.name)}]</span>
+       <input type="checkbox" data-slug="${esc(other.slug||toSlug(other.name))}" value="${esc(other.slug||toSlug(other.name))}" ${curArtRelated.includes(other.slug||toSlug(other.name))?'checked':''} onchange="toggleRelatedArtPick('${esc(other.slug||toSlug(other.name))}', this.checked)" class="accent-indigo-600 w-4 h-4 shrink-0">
+       <span class="text-[10px] font-bold text-slate-400 shrink-0">[${esc(t.name)}]</span>
        <span class="truncate flex-1">${esc(other.name||other.slug)}</span>
       </label>
     `)).join('') || '<div class="text-[11px] text-slate-400 italic">Chưa có bài viết khác trên website.</div>'}
@@ -6436,11 +6573,10 @@ function renderCmsEditor() {
   </div></div></details>`;
   setTimeout(renderArtFaqsUI, 20);
   $("cmsAddBtns").innerHTML = `
-  <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 min-w-0 flex-1">
-   <span class="font-extrabold text-xs text-slate-700"><i class="fas fa-pen-nib text-indigo-600 mr-1.5"></i>Trình soạn thảo chuẩn Word (Quill.js)</span>
-   <span class="text-[10px] text-slate-400 font-medium">Bấm Ctrl+S để lưu nhanh · H2/H3 tự động lên mục lục</span>
+  <div class="flex items-center gap-2 min-w-0 flex-1">
+   <span class="font-extrabold text-xs text-slate-700 truncate"><i class="fas fa-pen-nib text-indigo-600 mr-1.5"></i>Soạn thảo Quill (H2/H3 tự tạo mục lục)</span>
   </div>
-  <button type="button" onclick="saveCms()" class="tb-btn shrink-0 whitespace-nowrap !h-auto py-1.5 !bg-indigo-600 !text-white !border-indigo-600 hover:!bg-indigo-700 shadow-sm text-xs font-bold px-3"><i class="fas fa-floppy-disk mr-1"></i>Lưu bài viết</button>
+  <button type="button" onclick="saveCms()" class="tb-btn shrink-0 whitespace-nowrap !h-auto py-1.5 !bg-indigo-600 !text-white !border-indigo-600 hover:!bg-indigo-700 shadow-xs text-xs font-bold px-3"><i class="fas fa-floppy-disk mr-1"></i>Lưu</button>
  `;
 
   if (typeof Quill !== "undefined" && $("quillEditor")) {
@@ -6550,13 +6686,18 @@ async function saveCms(silent = false) {
   }
 }
 
-function closeCmsEditor() {
+function closeCmsEditor(fromHistory = false) {
   commitCms();
   curArt = null;
   curArtSlug = "";
-  $("cmsEditorWrap").classList.add("hidden");
-  $("cmsCategoriesView").classList.remove("hidden");
+  $("cmsEditorWrap")?.classList.add("hidden");
+  $("cmsCategoriesView")?.classList.remove("hidden");
   renderGuideCategoriesTree();
+  if (!fromHistory && typeof history !== 'undefined' && history.replaceState) {
+    try {
+      history.replaceState(buildAdminHistoryState('t-cms'), '', '#cms');
+    } catch (e) {}
+  }
 }
 
 async function customCmsImageHandler() {
@@ -6846,7 +6987,7 @@ function openCmsEditorForArt(tabId, slug, fromHistory = false) {
   $("cmsCategoriesView").classList.add("hidden");
   $("cmsEditorWrap").classList.remove("hidden");
   if (!fromHistory && typeof history !== 'undefined') {
-    history.pushState({ tab: 't-cms', inEditor: true, cmsTab: tabId, artSlug: slug }, '', '#cms-edit');
+    history.pushState({ ...buildAdminHistoryState('t-cms'), inEditor: true, cmsTab: tabId, cmsArt: slug }, '', '#cms-edit');
   }
 }
 
@@ -6855,6 +6996,9 @@ function addArticleToCategory(tabId) {
   artAdd();
   $("cmsCategoriesView").classList.add("hidden");
   $("cmsEditorWrap").classList.remove("hidden");
+  if (typeof history !== 'undefined' && history.pushState) {
+    history.pushState({ ...buildAdminHistoryState('t-cms'), inEditor: true, cmsTab: tabId, cmsArt: curArt || '' }, '', '#cms-edit');
+  }
 }
 
 function renderGuideCategoriesTree() {
@@ -6868,45 +7012,45 @@ function renderGuideCategoriesTree() {
     const arts = artsOf(tab.id);
     const isProtectedTab = DEF_TABS.some(d => d.id === tab.id) || /lưu ý chung|tiktok/i.test(tab.name || '') || ['tmuamybok', 'tmubcksib', 't_general', 't_tiktok'].includes(tab.id);
     return `
-   <div data-tabid="${esc(tab.id)}" class="cms-cat-box bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
-     <!-- Header Mục / Danh mục lớn -->
-     <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
-       <div class="flex items-center gap-2 flex-1 min-w-[200px]">
-         <span class="grip-cat cursor-grab text-slate-400 hover:text-indigo-600 px-1" title="Kéo thả đổi thứ tự"><i class="fas fa-grip-vertical text-lg"></i></span>
-         ${tab.img ? `<img src="${esc(safeUrl(tab.img))}" class="w-6 h-6 rounded object-contain">` : `<i class="${esc(tab.ic||'fas fa-book')} ${esc(tab.col||'text-indigo-600')} text-lg"></i>`}
-          <input type="text" value="${esc(tab.name)}" oninput="cmsUpdateTabField(${tIdx}, 'name', this.value)" placeholder="Tên mục..." class="font-extrabold text-sm md:text-base text-slate-800 border border-slate-200 rounded-lg px-2 py-1 outline-none focus:border-indigo-500 bg-white">
-          <span class="bg-indigo-50 text-indigo-700 font-bold text-xs px-2 py-0.5 rounded-full">${arts.length} bài</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <input type="text" value="${esc(tab.img||'')}" oninput="cmsUpdateTabField(${tIdx}, 'img', this.value)" placeholder="URL icon (để trống = mặc định)" class="w-48 p-1.5 text-xs border border-slate-200 rounded-lg outline-none font-mono bg-slate-50">
-          <button type="button" onclick="addArticleToCategory(${q(tab.id)})" class="whitespace-nowrap shrink-0 bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1 shadow-sm">
-            <i class="fas fa-plus"></i>Thêm bài mới
-          </button>
-          ${isProtectedTab ? '' : `
-          <button type="button" onclick="cmsDelTabById(${q(tab.id)})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded-lg text-xs" title="Xóa danh mục"><i class="fas fa-trash"></i></button>
-          `}
-        </div>
-      </div>
+   <div data-tabid="${esc(tab.id)}" class="cms-cat-box bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 shadow-sm space-y-2.5 sm:space-y-3">
+     <!-- Header Mục / Danh mục lớn (2 hàng gọn cho Mobile 1 tay, 1 hàng trên Desktop) -->
+     <div class="border-b border-slate-100 pb-2.5 space-y-2">
+       <div class="flex items-center gap-2 min-w-0">
+         <span class="grip-cat cursor-grab text-slate-400 hover:text-indigo-600 px-1 py-1 shrink-0" title="Kéo thả đổi thứ tự"><i class="fas fa-grip-vertical text-base sm:text-lg"></i></span>
+         ${tab.img ? `<img src="${esc(safeUrl(tab.img))}" class="w-5 h-5 sm:w-6 sm:h-6 rounded object-contain shrink-0">` : `<i class="${esc(tab.ic||'fas fa-book')} ${esc(tab.col||'text-indigo-600')} text-base sm:text-lg shrink-0"></i>`}
+         <input type="text" value="${esc(tab.name)}" oninput="cmsUpdateTabField(${tIdx}, 'name', this.value)" placeholder="Tên mục..." class="flex-1 min-w-0 font-extrabold text-xs sm:text-sm md:text-base text-slate-800 border border-slate-200 rounded-lg px-2.5 py-1.5 outline-none focus:border-indigo-500 bg-white">
+         <span class="bg-indigo-50 text-indigo-700 font-bold text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">${arts.length} bài</span>
+         ${isProtectedTab ? '' : `
+         <button type="button" onclick="cmsDelTabById(${q(tab.id)})" class="text-red-500 hover:text-white hover:bg-red-500 bg-red-50 px-2.5 py-1.5 rounded-lg text-xs shrink-0 whitespace-nowrap transition" title="Xóa danh mục"><i class="fas fa-trash"></i></button>
+         `}
+       </div>
+       <div class="flex items-center gap-2 min-w-0">
+         <input type="text" value="${esc(tab.img||'')}" oninput="cmsUpdateTabField(${tIdx}, 'img', this.value)" placeholder="URL icon (để trống = mặc định)" class="flex-1 min-w-0 px-2.5 py-1.5 text-[11px] sm:text-xs border border-slate-200 rounded-lg outline-none focus:border-indigo-500 font-mono bg-slate-50">
+         <button type="button" onclick="addArticleToCategory(${q(tab.id)})" class="whitespace-nowrap shrink-0 bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1 shadow-xs">
+           <i class="fas fa-plus"></i><span>Bài mới</span>
+         </button>
+       </div>
+     </div>
 
-      <!-- Danh sách các bài viết con thuộc mục này -->
-      <div class="space-y-2">
-        ${arts.map(a => {
-          const sl = a.slug || toSlug(a.name);
-          const timeStr = a.updated ? fmtBank(a.updated) : "Mới";
-          return `
-          <div onclick="openCmsEditorForArt(${q(tab.id)}, ${q(sl)})" class="cursor-pointer bg-slate-50/70 hover:bg-indigo-50/40 border border-slate-200 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 transition">
-            <div class="min-w-0">
-              <div class="font-bold text-xs md:text-sm text-slate-800 break-words leading-snug">${esc(a.name || "(Chưa đặt tên)")}</div>
-              <div class="text-[10px] text-slate-500 mt-0.5">Được viết bởi: <b>${esc(a.author || "Admin")}</b> · Cập nhật lần cuối: ${timeStr}</div>
-            </div>
-            <div class="flex items-center justify-end sm:justify-start gap-1.5 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200/60" onclick="event.stopPropagation()">
-              <button type="button" onclick="copyArtDeepLink(${q(tab.id)}, ${q(sl)})" class="whitespace-nowrap shrink-0 text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-emerald-600 hover:text-white transition"><i class="fas fa-link mr-1"></i>Link</button>
-              <button type="button" onclick="openCmsEditorForArt(${q(tab.id)}, ${q(sl)})" class="whitespace-nowrap shrink-0 text-indigo-600 bg-white border border-indigo-200 px-3 py-1 rounded-lg text-xs font-bold hover:bg-indigo-600 hover:text-white transition"><i class="fas fa-pen mr-1"></i>Sửa bài</button>
-              <button type="button" onclick="artDelInTab(${q(tab.id)}, ${q(sl)})" class="whitespace-nowrap shrink-0 text-red-500 bg-white border border-red-200 px-2 py-1 rounded-lg text-xs hover:bg-red-500 hover:text-white transition" title="Xóa bài viết"><i class="fas fa-trash"></i></button>
+     <!-- Danh sách các bài viết con thuộc mục này -->
+     <div class="space-y-2">
+       ${arts.map(a => {
+         const sl = a.slug || toSlug(a.name);
+         const timeStr = a.updated ? fmtBank(a.updated) : "Mới";
+         return `
+         <div onclick="openCmsEditorForArt(${q(tab.id)}, ${q(sl)})" class="cursor-pointer bg-slate-50/70 hover:bg-indigo-50/40 border border-slate-200 rounded-xl p-2.5 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 transition">
+           <div class="min-w-0">
+             <div class="font-bold text-xs md:text-sm text-slate-800 break-words leading-snug">${esc(a.name || "(Chưa đặt tên)")}</div>
+             <div class="text-[10px] text-slate-500 mt-0.5 truncate">Tác giả: <b>${esc(a.author || "Admin")}</b> · Cập nhật: ${timeStr}</div>
            </div>
-         </div>
-         `;
-       }).join('') || '<div class="text-[11px] text-slate-400 italic py-2">Chưa có bài viết nào trong mục này. Bấm "+ Thêm bài mới" để tạo bài đầu tiên.</div>'}
+           <div class="flex items-center justify-end sm:justify-start gap-1.5 shrink-0 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-slate-200/60" onclick="event.stopPropagation()">
+             <button type="button" onclick="copyArtDeepLink(${q(tab.id)}, ${q(sl)})" class="whitespace-nowrap shrink-0 text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-600 hover:text-white transition"><i class="fas fa-link mr-1"></i>Link</button>
+             <button type="button" onclick="openCmsEditorForArt(${q(tab.id)}, ${q(sl)})" class="whitespace-nowrap shrink-0 text-indigo-600 bg-white border border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-indigo-600 hover:text-white transition"><i class="fas fa-pen mr-1"></i>Sửa</button>
+             <button type="button" onclick="artDelInTab(${q(tab.id)}, ${q(sl)})" class="whitespace-nowrap shrink-0 text-red-500 bg-white border border-red-200 px-2.5 py-1.5 rounded-lg text-xs hover:bg-red-500 hover:text-white transition" title="Xóa bài viết"><i class="fas fa-trash"></i></button>
+          </div>
+        </div>
+        `;
+       }).join('') || '<div class="text-[11px] text-slate-400 italic py-2">Chưa có bài viết nào trong mục này. Bấm "+ Bài mới" để tạo bài đầu tiên.</div>'}
      </div>
    </div>
    `;
@@ -6961,6 +7105,7 @@ window.renderScanTab = renderScanTab;
 
 function switchCheckSubTab(tab, fromHistory = false) {
   curCheckSubTab = tab;
+  saveAdminSubTab("t-check", tab);
   ['data', 'heal', 'scan'].forEach(t => {
     const btn = $('btn-chk-' + t);
     const pane = $('check-pane-' + t);
@@ -6970,15 +7115,14 @@ function switchCheckSubTab(tab, fromHistory = false) {
   if (tab === 'data') renderDataRequests();
   else if (tab === 'heal') renderHealTab();
   else if (tab === 'scan') renderScanTab();
-  if (!fromHistory && typeof recordAdminNav === "function") recordAdminNav({ tab: "t-check", checkSub: tab });
+  if (!fromHistory) replaceCurrentAdminNav("t-check");
 }
 window.switchCheckSubTab = switchCheckSubTab;
 
 // Điều hướng đúng chuẩn 5 Sub-tab trong Cài đặt - Khớp 100% ID HTML, triệt tiêu lỗi TypeError classList of null
-function switchSettingsTab(t) {
-  try {
-    localStorage.setItem(SITE_KEY + "_subTab_t-settings", t);
-  } catch (e) {}
+function switchSettingsTab(t, fromHistory = false) {
+  curSettingsTab = t;
+  saveAdminSubTab("t-settings", t);
   const tabs = ["webadmin", "setweb", "log", "dev", "time"];
   tabs.forEach(x => {
     const view = $("settings-view-" + x);
@@ -6997,6 +7141,7 @@ function switchSettingsTab(t) {
   if (t === "log") loadLogs();
   if (t === "dev") renderDev();
   if (t === "time") paintTimeUI();
+  if (!fromHistory) replaceCurrentAdminNav("t-settings");
 }
 function showCronLog() {
   switchSettingsTab("log");
@@ -7546,6 +7691,8 @@ async function saveEmailVerifyTtl() {
 }
 window.saveEmailVerifyTtl = saveEmailVerifyTtl;
 function switchWebAdminTab(tab, fromHistory = false) {
+  curWebSubTab = tab;
+  saveAdminSubTab("t-settings_web", tab);
   $("wpane-ui").classList.toggle("hidden", tab !== "ui");
   $("wpane-footer").classList.toggle("hidden", tab !== "footer");
   $("wtab-ui").classList.toggle("active", tab === "ui");
@@ -7554,9 +7701,7 @@ function switchWebAdminTab(tab, fromHistory = false) {
     renderFaqAdmin();
     loadFooterConfigUI();
   }
-  if (!fromHistory && typeof recordAdminNav === "function") {
-    recordAdminNav({ tab: 't-settings', settingsSub: 'webadmin', webSub: tab });
-  }
+  if (!fromHistory) replaceCurrentAdminNav("t-settings");
 }
 window.switchWebAdminTab = switchWebAdminTab;
 
@@ -7572,6 +7717,7 @@ function loadWebAdminUI() {
   renderDockRows();
   renderFaqAdmin();
   loadFooterConfigUI();
+  switchWebAdminTab(getAdminSubTab("t-settings_web", "ui"), true);
 }
 
 function loadSettingsUI() {
@@ -8113,7 +8259,7 @@ function renderLogs() {
     warn: "Cảnh báo",
     error: "Lỗi"
   };
-  $("logBody").innerHTML = f.length ? f.slice(0, 300).map(r => `<tr><td data-label="Thời gian" class="text-xs whitespace-nowrap text-slate-600">${fmtBank(r.ts)}</td><td data-label="Mức"><span class="${col[r.lvl]||col.info} px-2 py-0.5 rounded text-[10px] font-bold">${nm[r.lvl]||"Thông tin"}</span></td><td data-label="Nguồn" class="text-xs font-bold text-slate-700">${esc(r.src)}</td><td data-label="Hành động" class="text-xs font-bold text-slate-800">${esc(r.act)}</td><td data-label="Chi tiết" class="text-xs text-slate-700 break-words md:min-w-[200px]">${esc(r.msg||"")}${r.ref?` <button type="button" class="font-mono text-indigo-700 font-bold underline decoration-dotted cp" onclick="cp(${q(r.ref)})">${esc(r.ref)}</button>`:""}</td></tr>`).join("") : `<tr><td colspan="5" class="text-center py-8 text-slate-600 italic">Chưa có nhật ký</td></tr>`;
+  $("logBody").innerHTML = f.length ? f.slice(0, 300).map(r => `<tr><td data-label="Thời gian" class="text-xs whitespace-nowrap text-slate-600">${fmtBank(r.ts)}</td><td data-label="Mức"><span class="${col[r.lvl]||col.info} px-2 py-0.5 rounded text-[10px] font-bold">${nm[r.lvl]||"Thông tin"}</span></td><td data-label="Nguồn" class="text-xs font-bold text-slate-700">${esc(r.src)}</td><td data-label="Hành động" class="text-xs font-bold text-slate-800">${esc(r.act)}</td><td data-label="Chi tiết" class="text-xs text-slate-700 break-words min-w-0 md:min-w-[200px]">${esc(r.msg||"")}${r.ref?` <button type="button" class="whitespace-normal break-all text-left max-w-full font-mono text-indigo-700 font-bold underline decoration-dotted cp" onclick="cp(${q(r.ref)})">${esc(r.ref)}</button>`:""}</td></tr>`).join("") : `<tr><td colspan="5" class="text-center py-8 text-slate-600 italic">Chưa có nhật ký</td></tr>`;
 }
 
 // ---- thiết bị
@@ -8376,11 +8522,18 @@ async function startApp(fresh) {
   started = true;
   setOnUnauthorized(() => toLogin("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại"));
   buildTabs();
+  initAdminMobileSwipe();
   syncRelinkBackupUI();
   const savedOrdTab = localStorage.getItem(SITE_KEY + "_curOrdTab");
   const initOrdTab = fresh ? "success" : (VALID_ORD_TABS.includes(savedOrdTab) ? savedOrdTab : "success");
   switchOrdTab(initOrdTab);
-  go(localStorage.getItem(SITE_KEY + "_lastTab") || "t-ord");
+  const initTab = localStorage.getItem(SITE_KEY + "_lastTab") || "t-ord";
+  go(initTab, true);
+  if (typeof history !== 'undefined' && history.replaceState) {
+    try {
+      history.replaceState(buildAdminHistoryState(initTab), '', '#' + initTab.replace('t-', ''));
+    } catch (e) {}
+  }
   if (!ordersDb.length && $("ordBody")) {
     $("ordBody").innerHTML = '<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold"><i class="fas fa-spinner fa-spin mr-2 text-indigo-500"></i>Đang tải dữ liệu...</div>';
   }
@@ -9470,7 +9623,7 @@ window.rejectTxItem = rejectTxItem;
 // Expose all admin functions and state to window for HTML inline event handlers
 if (typeof window !== 'undefined') {
   const _exposed = [['mcSetMobilePane', typeof mcSetMobilePane !== 'undefined' ? mcSetMobilePane : undefined], ['closeAdminModal', typeof closeAdminModal !== 'undefined' ? closeAdminModal : undefined], ['saveAllFuncSettings', typeof saveAllFuncSettings !== 'undefined' ? saveAllFuncSettings : undefined], ['renderGiftRulesAdmin', typeof renderGiftRulesAdmin !== 'undefined' ? renderGiftRulesAdmin : undefined], ['openAddGiftRuleModal', typeof openAddGiftRuleModal !== 'undefined' ? openAddGiftRuleModal : undefined], ['closeGiftRuleModal', typeof closeGiftRuleModal !== 'undefined' ? closeGiftRuleModal : undefined], ['saveGiftRuleModal', typeof saveGiftRuleModal !== 'undefined' ? saveGiftRuleModal : undefined], ['toggleGiftRuleStatus', typeof toggleGiftRuleStatus !== 'undefined' ? toggleGiftRuleStatus : undefined], ['deleteGiftRuleItem', typeof deleteGiftRuleItem !== 'undefined' ? deleteGiftRuleItem : undefined], ['updateGiftRulePkgCheckboxes', typeof updateGiftRulePkgCheckboxes !== 'undefined' ? updateGiftRulePkgCheckboxes : undefined], ['renderFlashSaleAdmin', typeof renderFlashSaleAdmin !== 'undefined' ? renderFlashSaleAdmin : undefined], ['saveFlashSaleConfig', typeof saveFlashSaleConfig !== 'undefined' ? saveFlashSaleConfig : undefined], ['renderCouponAdmin', typeof renderCouponAdmin !== 'undefined' ? renderCouponAdmin : undefined], ['toggleCouponStatus', typeof toggleCouponStatus !== 'undefined' ? toggleCouponStatus : undefined], ['deleteCouponItem', typeof deleteCouponItem !== 'undefined' ? deleteCouponItem : undefined], ['openAddCouponModal', typeof openAddCouponModal !== 'undefined' ? openAddCouponModal : undefined], ['closeCouponModal', typeof closeCouponModal !== 'undefined' ? closeCouponModal : undefined], ['saveCouponModal', typeof saveCouponModal !== 'undefined' ? saveCouponModal : undefined], ['saveRevRates', typeof saveRevRates !== 'undefined' ? saveRevRates : undefined], ['savePkgRates', typeof savePkgRates !== 'undefined' ? savePkgRates : undefined], ['syncRatesToPackages', typeof syncRatesToPackages !== 'undefined' ? syncRatesToPackages : undefined], ['syncPublicPackagesPayload', typeof syncPublicPackagesPayload !== 'undefined' ? syncPublicPackagesPayload : undefined], ['toggleCouponCheckoutInput', typeof toggleCouponCheckoutInput !== 'undefined' ? toggleCouponCheckoutInput : undefined], ['renderExceptionsTab', typeof renderExceptionsTab !== 'undefined' ? renderExceptionsTab : undefined], ['manualMatchTx', typeof manualMatchTx !== 'undefined' ? manualMatchTx : undefined], ['rejectTxItem', typeof rejectTxItem !== 'undefined' ? rejectTxItem : undefined], ['toast', typeof toast !== 'undefined' ? toast : undefined], ['autoGrow', typeof autoGrow !== 'undefined' ? autoGrow : undefined], ['parseAny', typeof parseAny !== 'undefined' ? parseAny : undefined], ['tickClocks', typeof tickClocks !== 'undefined' ? tickClocks : undefined], ['paintTimeUI', typeof paintTimeUI !== 'undefined' ? paintTimeUI : undefined], ['pickTz', typeof pickTz !== 'undefined' ? pickTz : undefined], ['applySim', typeof applySim !== 'undefined' ? applySim : undefined], ['clearSim', typeof clearSim !== 'undefined' ? clearSim : undefined], ['pkgOf', typeof pkgOf !== 'undefined' ? pkgOf : undefined], ['ordMonths', typeof ordMonths !== 'undefined' ? ordMonths : undefined], ['webLabel', typeof webLabel !== 'undefined' ? webLabel : undefined], ['getMe', typeof getMe !== 'undefined' ? getMe : undefined], ['linkBottom', typeof linkBottom !== 'undefined' ? linkBottom : undefined], ['api', typeof api !== 'undefined' ? api : undefined], ['toLogin', typeof toLogin !== 'undefined' ? toLogin : undefined], ['doLogin', typeof doLogin !== 'undefined' ? doLogin : undefined], ['doLogout', typeof doLogout !== 'undefined' ? doLogout : undefined], ['resetAndHardReload', typeof resetAndHardReload !== 'undefined' ? resetAndHardReload : undefined], ['healLinks', typeof healLinks !== 'undefined' ? healLinks : undefined], ['applyPoll', typeof applyPoll !== 'undefined' ? applyPoll : undefined], ['fetchAll', typeof fetchAll !== 'undefined' ? fetchAll : undefined], ['pollMain', typeof pollMain !== 'undefined' ? pollMain : undefined], ['switchPkgSubTab', typeof switchPkgSubTab !== 'undefined' ? switchPkgSubTab : undefined], ['buildTabs', typeof buildTabs !== 'undefined' ? buildTabs : undefined], ['go', typeof go !== 'undefined' ? go : undefined], ['switchOrdTab', typeof switchOrdTab !== 'undefined' ? switchOrdTab : undefined], ['ordCard', typeof ordCard !== 'undefined' ? ordCard : undefined], ['renderOrd', typeof renderOrd !== 'undefined' ? renderOrd : undefined], ['updateOrderTogglesUI', typeof updateOrderTogglesUI !== 'undefined' ? updateOrderTogglesUI : undefined], ['toggleLockFulfillBtn', typeof toggleLockFulfillBtn !== 'undefined' ? toggleLockFulfillBtn : undefined], ['toggleMailOnSaveBtn', typeof toggleMailOnSaveBtn !== 'undefined' ? toggleMailOnSaveBtn : undefined], ['toggleManualEditBtn', typeof toggleManualEditBtn !== 'undefined' ? toggleManualEditBtn : undefined], ['autoFillNickname', typeof autoFillNickname !== 'undefined' ? autoFillNickname : undefined], ['updMonths', typeof updMonths !== 'undefined' ? updMonths : undefined], ['updAmountUi', typeof updAmountUi !== 'undefined' ? updAmountUi : undefined], ['fillAmount', typeof fillAmount !== 'undefined' ? fillAmount : undefined], ['getOrderAnchorTs', typeof getOrderAnchorTs !== 'undefined' ? getOrderAnchorTs : undefined], ['autoFillDays', typeof autoFillDays !== 'undefined' ? autoFillDays : undefined], ['onPkgChange', typeof onPkgChange !== 'undefined' ? onPkgChange : undefined], ['onMethodChange', typeof onMethodChange !== 'undefined' ? onMethodChange : undefined], ['recalcExpFromDays', typeof recalcExpFromDays !== 'undefined' ? recalcExpFromDays : undefined], ['recalcDaysFromExp', typeof recalcDaysFromExp !== 'undefined' ? recalcDaysFromExp : undefined], ['togSF', typeof togSF !== 'undefined' ? togSF : undefined], ['syncUpg', typeof syncUpg !== 'undefined' ? syncUpg : undefined], ['readModal', typeof readModal !== 'undefined' ? readModal : undefined], ['openOrdModal', typeof openOrdModal !== 'undefined' ? openOrdModal : undefined], ['saveOrd', typeof saveOrd !== 'undefined' ? saveOrd : undefined], ['delOrd', typeof delOrd !== 'undefined' ? delOrd : undefined], ['getMissingOrders', typeof getMissingOrders !== 'undefined' ? getMissingOrders : undefined], ['updateCheckBadge', typeof updateCheckBadge !== 'undefined' ? updateCheckBadge : undefined], ['renderCheckTab', typeof renderCheckTab !== 'undefined' ? renderCheckTab : undefined], ['saveCheckManual', typeof saveCheckManual !== 'undefined' ? saveCheckManual : undefined], ['healSingleOrder', typeof healSingleOrder !== 'undefined' ? healSingleOrder : undefined], ['healAllMissingWithProgress', typeof healAllMissingWithProgress !== 'undefined' ? healAllMissingWithProgress : undefined], ['mailRender', typeof mailRender !== 'undefined' ? mailRender : undefined], ['orderVars', typeof orderVars !== 'undefined' ? orderVars : undefined], ['sendExpMail', typeof sendExpMail !== 'undefined' ? sendExpMail : undefined], ['sendZaloMail', typeof sendZaloMail !== 'undefined' ? sendZaloMail : undefined], ['getCentralRates', typeof getCentralRates !== 'undefined' ? getCentralRates : undefined], ['revList', typeof revList !== 'undefined' ? revList : undefined], ['costSum', typeof costSum !== 'undefined' ? costSum : undefined], ['monthTotals', typeof monthTotals !== 'undefined' ? monthTotals : undefined], ['renderRevenue', typeof renderRevenue !== 'undefined' ? renderRevenue : undefined], ['revOver', typeof revOver !== 'undefined' ? revOver : undefined], ['revPay', typeof revPay !== 'undefined' ? revPay : undefined], ['saveCentralRates', typeof saveCentralRates !== 'undefined' ? saveCentralRates : undefined], ['revPayDetail', typeof revPayDetail !== 'undefined' ? revPayDetail : undefined], ['revCost', typeof revCost !== 'undefined' ? revCost : undefined], ['addCost', typeof addCost !== 'undefined' ? addCost : undefined], ['delCost', typeof delCost !== 'undefined' ? delCost : undefined], ['tplToMc', typeof tplToMc !== 'undefined' ? tplToMc : undefined], ['mcSampleVars', typeof mcSampleVars !== 'undefined' ? mcSampleVars : undefined], ['mcRenderTabs', typeof mcRenderTabs !== 'undefined' ? mcRenderTabs : undefined], ['mcRenderPresetOptions', typeof mcRenderPresetOptions !== 'undefined' ? mcRenderPresetOptions : undefined], ['mcLoadPreset', typeof mcLoadPreset !== 'undefined' ? mcLoadPreset : undefined], ['mcSwitchTab', typeof mcSwitchTab !== 'undefined' ? mcSwitchTab : undefined], ['renderMailComposer', typeof renderMailComposer !== 'undefined' ? renderMailComposer : undefined], ['mcInsertVar', typeof mcInsertVar !== 'undefined' ? mcInsertVar : undefined], ['mcRenderEditor', typeof mcRenderEditor !== 'undefined' ? mcRenderEditor : undefined], ['mcPreview', typeof mcPreview !== 'undefined' ? mcPreview : undefined], ['mcSet', typeof mcSet !== 'undefined' ? mcSet : undefined], ['mcAdd', typeof mcAdd !== 'undefined' ? mcAdd : undefined], ['mcMove', typeof mcMove !== 'undefined' ? mcMove : undefined], ['mcDel', typeof mcDel !== 'undefined' ? mcDel : undefined], ['mcPickColor', typeof mcPickColor !== 'undefined' ? mcPickColor : undefined], ['mcColorInput', typeof mcColorInput !== 'undefined' ? mcColorInput : undefined], ['mcGrad', typeof mcGrad !== 'undefined' ? mcGrad : undefined], ['mcSaveTemplate', typeof mcSaveTemplate !== 'undefined' ? mcSaveTemplate : undefined], ['mcExtraAction', typeof mcExtraAction !== 'undefined' ? mcExtraAction : undefined], ['mcScan', typeof mcScan !== 'undefined' ? mcScan : undefined], ['mcRenderRecs', typeof mcRenderRecs !== 'undefined' ? mcRenderRecs : undefined], ['mcSend', typeof mcSend !== 'undefined' ? mcSend : undefined], ['dataPriceLabel', typeof dataPriceLabel !== 'undefined' ? dataPriceLabel : undefined], ['renderDataRequests', typeof renderDataRequests !== 'undefined' ? renderDataRequests : undefined], ['sendDataReport', typeof sendDataReport !== 'undefined' ? sendDataReport : undefined], ['delDataRequest', typeof delDataRequest !== 'undefined' ? delDataRequest : undefined], ['clearDataRequests', typeof clearDataRequests !== 'undefined' ? clearDataRequests : undefined], ['toggleDataRequestSeen', typeof toggleDataRequestSeen !== 'undefined' ? toggleDataRequestSeen : undefined], ['markAllDataRequestsSeen', typeof markAllDataRequestsSeen !== 'undefined' ? markAllDataRequestsSeen : undefined], ['switchTxTab', typeof switchTxTab !== 'undefined' ? switchTxTab : undefined], ['mergeTx', typeof mergeTx !== 'undefined' ? mergeTx : undefined], ['loadTx', typeof loadTx !== 'undefined' ? loadTx : undefined], ['deleteTx', typeof deleteTx !== 'undefined' ? deleteTx : undefined], ['renderTransactions', typeof renderTransactions !== 'undefined' ? renderTransactions : undefined], ['approveTransaction', typeof approveTransaction !== 'undefined' ? approveTransaction : undefined], ['detectProvider', typeof detectProvider !== 'undefined' ? detectProvider : undefined], ['buildMasked', typeof buildMasked !== 'undefined' ? buildMasked : undefined], ['openRootEditModal', typeof openRootEditModal !== 'undefined' ? openRootEditModal : undefined], ['toggleClusterSpecs', typeof toggleClusterSpecs !== 'undefined' ? toggleClusterSpecs : undefined], ['renderLinks', typeof renderLinks !== 'undefined' ? renderLinks : undefined], ['saveRootEdit', typeof saveRootEdit !== 'undefined' ? saveRootEdit : undefined], ['createLink', typeof createLink !== 'undefined' ? createLink : undefined], ['openLnkModal', typeof openLnkModal !== 'undefined' ? openLnkModal : undefined], ['saveLnkEdit', typeof saveLnkEdit !== 'undefined' ? saveLnkEdit : undefined], ['toggleLock', typeof toggleLock !== 'undefined' ? toggleLock : undefined], ['delLink', typeof delLink !== 'undefined' ? delLink : undefined], ['sortAllLinks', typeof sortAllLinks !== 'undefined' ? sortAllLinks : undefined], ['triggerGitHub', typeof triggerGitHub !== 'undefined' ? triggerGitHub : undefined], ['runGC', typeof runGC !== 'undefined' ? runGC : undefined], ['rebuildAllMAP', typeof rebuildAllMAP !== 'undefined' ? rebuildAllMAP : undefined], ['getDefaultAdminPkgs', typeof getDefaultAdminPkgs !== 'undefined' ? getDefaultAdminPkgs : undefined], ['hydrateTopNoticeForm', typeof hydrateTopNoticeForm !== 'undefined' ? hydrateTopNoticeForm : undefined], ['renderTopNoticeAdminPreview', typeof renderTopNoticeAdminPreview !== 'undefined' ? renderTopNoticeAdminPreview : undefined], ['onTopNoticeToggle', typeof onTopNoticeToggle !== 'undefined' ? onTopNoticeToggle : undefined], ['saveTopNotice', typeof saveTopNotice !== 'undefined' ? saveTopNotice : undefined], ['loadAdminPkgs', typeof loadAdminPkgs !== 'undefined' ? loadAdminPkgs : undefined], ['toggleHidePkg', typeof toggleHidePkg !== 'undefined' ? toggleHidePkg : undefined], ['renderPkgAdmin', typeof renderPkgAdmin !== 'undefined' ? renderPkgAdmin : undefined], ['toggleLifetimePkg', typeof toggleLifetimePkg !== 'undefined' ? toggleLifetimePkg : undefined], ['togglePkgCat', typeof togglePkgCat !== 'undefined' ? togglePkgCat : undefined], ['addNewCustomPkg', typeof addNewCustomPkg !== 'undefined' ? addNewCustomPkg : undefined], ['delPkg', typeof delPkg !== 'undefined' ? delPkg : undefined], ['saveAllPkgs', typeof saveAllPkgs !== 'undefined' ? saveAllPkgs : undefined], ['relinkScanRun', typeof relinkScanRun !== 'undefined' ? relinkScanRun : undefined], ['relinkMapRun', typeof relinkMapRun !== 'undefined' ? relinkMapRun : undefined], ['relinkApply', typeof relinkApply !== 'undefined' ? relinkApply : undefined], ['switchDeadSubTab', typeof switchDeadSubTab !== 'undefined' ? switchDeadSubTab : undefined], ['renderDead', typeof renderDead !== 'undefined' ? renderDead : undefined], ['renderDeadSources', typeof renderDeadSources !== 'undefined' ? renderDeadSources : undefined], ['hardDeleteSource', typeof hardDeleteSource !== 'undefined' ? hardDeleteSource : undefined], ['cleanUnusedSources', typeof cleanUnusedSources !== 'undefined' ? cleanUnusedSources : undefined], ['restoreLink', typeof restoreLink !== 'undefined' ? restoreLink : undefined], ['clearDeadLinks', typeof clearDeadLinks !== 'undefined' ? clearDeadLinks : undefined], ['cmsEnsureTabs', typeof cmsEnsureTabs !== 'undefined' ? cmsEnsureTabs : undefined], ['ensureArts', typeof ensureArts !== 'undefined' ? ensureArts : undefined], ['initGuides', typeof initGuides !== 'undefined' ? initGuides : undefined], ['renderGuideAll', typeof renderGuideAll !== 'undefined' ? renderGuideAll : undefined], ['copyArtDeepLink', typeof copyArtDeepLink !== 'undefined' ? copyArtDeepLink : undefined], ['getEditorHtml', typeof getEditorHtml !== 'undefined' ? getEditorHtml : undefined], ['commitCms', typeof commitCms !== 'undefined' ? commitCms : undefined], ['setCms', typeof setCms !== 'undefined' ? setCms : undefined], ['openArt', typeof openArt !== 'undefined' ? openArt : undefined], ['artAdd', typeof artAdd !== 'undefined' ? artAdd : undefined], ['artDel', typeof artDel !== 'undefined' ? artDel : undefined], ['renderArtList', typeof renderArtList !== 'undefined' ? renderArtList : undefined], ['renderCmsTabBtns', typeof renderCmsTabBtns !== 'undefined' ? renderCmsTabBtns : undefined], ['setupSortableCmsTabs', typeof setupSortableCmsTabs !== 'undefined' ? setupSortableCmsTabs : undefined], ['renderCmsTabEdit', typeof renderCmsTabEdit !== 'undefined' ? renderCmsTabEdit : undefined], ['cmsTabSet', typeof cmsTabSet !== 'undefined' ? cmsTabSet : undefined], ['cmsAddTab', typeof cmsAddTab !== 'undefined' ? cmsAddTab : undefined], ['cmsDelTab', typeof cmsDelTab !== 'undefined' ? cmsDelTab : undefined], ['bStyle', typeof bStyle !== 'undefined' ? bStyle : undefined], ['guideScroll', typeof guideScroll !== 'undefined' ? guideScroll : undefined], ['openLightbox', typeof openLightbox !== 'undefined' ? openLightbox : undefined], ['cmsGoto', typeof cmsGoto !== 'undefined' ? cmsGoto : undefined], ['cmsGotoArt', typeof cmsGotoArt !== 'undefined' ? cmsGotoArt : undefined], ['buildRichArticleView', typeof buildRichArticleView !== 'undefined' ? buildRichArticleView : undefined], ['scrollToHeadingText', typeof scrollToHeadingText !== 'undefined' ? scrollToHeadingText : undefined], ['cmsPrev', typeof cmsPrev !== 'undefined' ? cmsPrev : undefined], ['addArtFaqRow', typeof addArtFaqRow !== 'undefined' ? addArtFaqRow : undefined], ['delArtFaqRow', typeof delArtFaqRow !== 'undefined' ? delArtFaqRow : undefined], ['renderArtFaqsUI', typeof renderArtFaqsUI !== 'undefined' ? renderArtFaqsUI : undefined], ['toggleRelatedArtPick', typeof toggleRelatedArtPick !== 'undefined' ? toggleRelatedArtPick : undefined], ['renderCmsEditor', typeof renderCmsEditor !== 'undefined' ? renderCmsEditor : undefined], ['saveArtFaqsOnly', typeof saveArtFaqsOnly !== 'undefined' ? saveArtFaqsOnly : undefined], ['saveCms', typeof saveCms !== 'undefined' ? saveCms : undefined], ['closeCmsEditor', typeof closeCmsEditor !== 'undefined' ? closeCmsEditor : undefined], ['openCmsEditorForArt', typeof openCmsEditorForArt !== 'undefined' ? openCmsEditorForArt : undefined], ['addArticleToCategory', typeof addArticleToCategory !== 'undefined' ? addArticleToCategory : undefined], ['renderGuideCategoriesTree', typeof renderGuideCategoriesTree !== 'undefined' ? renderGuideCategoriesTree : undefined], ['switchCheckSubTab', typeof switchCheckSubTab !== 'undefined' ? switchCheckSubTab : undefined], ['switchSettingsTab', typeof switchSettingsTab !== 'undefined' ? switchSettingsTab : undefined], ['showCronLog', typeof showCronLog !== 'undefined' ? showCronLog : undefined], ['renderRouteRows', typeof renderRouteRows !== 'undefined' ? renderRouteRows : undefined], ['saveRouting', typeof saveRouting !== 'undefined' ? saveRouting : undefined], ['checkBlurValidity', typeof checkBlurValidity !== 'undefined' ? checkBlurValidity : undefined], ['renderBlurRows', typeof renderBlurRows !== 'undefined' ? renderBlurRows : undefined], ['saveBlur', typeof saveBlur !== 'undefined' ? saveBlur : undefined], ['renderDockRows', typeof renderDockRows !== 'undefined' ? renderDockRows : undefined], ['dockPv', typeof dockPv !== 'undefined' ? dockPv : undefined], ['readDockRows', typeof readDockRows !== 'undefined' ? readDockRows : undefined], ['addDockIcon', typeof addDockIcon !== 'undefined' ? addDockIcon : undefined], ['removeDockIcon', typeof removeDockIcon !== 'undefined' ? removeDockIcon : undefined], ['saveDock', typeof saveDock !== 'undefined' ? saveDock : undefined], ['loadAdminFaqs', typeof loadAdminFaqs !== 'undefined' ? loadAdminFaqs : undefined], ['renderFaqAdmin', typeof renderFaqAdmin !== 'undefined' ? renderFaqAdmin : undefined], ['addNewFaq', typeof addNewFaq !== 'undefined' ? addNewFaq : undefined], ['delFaq', typeof delFaq !== 'undefined' ? delFaq : undefined], ['moveFaq', typeof moveFaq !== 'undefined' ? moveFaq : undefined], ['saveFaqs', typeof saveFaqs !== 'undefined' ? saveFaqs : undefined], ['switchFaqSubTab', typeof switchFaqSubTab !== 'undefined' ? switchFaqSubTab : undefined], ['normRouteInput', typeof normRouteInput !== 'undefined' ? normRouteInput : undefined], ['loadRoutesConfigUI', typeof loadRoutesConfigUI !== 'undefined' ? loadRoutesConfigUI : undefined], ['saveRoutesConfig', typeof saveRoutesConfig !== 'undefined' ? saveRoutesConfig : undefined], ['ftColsFromDb', typeof ftColsFromDb !== 'undefined' ? ftColsFromDb : undefined], ['renderFtCols', typeof renderFtCols !== 'undefined' ? renderFtCols : undefined], ['ftAddCol', typeof ftAddCol !== 'undefined' ? ftAddCol : undefined], ['ftDelCol', typeof ftDelCol !== 'undefined' ? ftDelCol : undefined], ['ftMoveCol', typeof ftMoveCol !== 'undefined' ? ftMoveCol : undefined], ['ftAddLink', typeof ftAddLink !== 'undefined' ? ftAddLink : undefined], ['ftDelLink', typeof ftDelLink !== 'undefined' ? ftDelLink : undefined], ['loadFooterConfigUI', typeof loadFooterConfigUI !== 'undefined' ? loadFooterConfigUI : undefined], ['saveFooterConfig', typeof saveFooterConfig !== 'undefined' ? saveFooterConfig : undefined], ['saveQrExpireSeconds', typeof saveQrExpireSeconds !== 'undefined' ? saveQrExpireSeconds : undefined], ['switchWebAdminTab', typeof switchWebAdminTab !== 'undefined' ? switchWebAdminTab : undefined], ['loadWebAdminUI', typeof loadWebAdminUI !== 'undefined' ? loadWebAdminUI : undefined], ['loadSettingsUI', typeof loadSettingsUI !== 'undefined' ? loadSettingsUI : undefined], ['saveEmailPerm', typeof saveEmailPerm !== 'undefined' ? saveEmailPerm : undefined], ['initAdminNotifyUI', typeof initAdminNotifyUI !== 'undefined' ? initAdminNotifyUI : undefined], ['updateAdminNotifyStatusUI', typeof updateAdminNotifyStatusUI !== 'undefined' ? updateAdminNotifyStatusUI : undefined], ['saveAdminNotifyPerm', typeof saveAdminNotifyPerm !== 'undefined' ? saveAdminNotifyPerm : undefined], ['saveCronCfg', typeof saveCronCfg !== 'undefined' ? saveCronCfg : undefined], ['runCronNow', typeof runCronNow !== 'undefined' ? runCronNow : undefined], ['loadStatus', typeof loadStatus !== 'undefined' ? loadStatus : undefined], ['qBar', typeof qBar !== 'undefined' ? qBar : undefined], ['mailProvCard', typeof mailProvCard !== 'undefined' ? mailProvCard : undefined], ['selectMailProvider', typeof selectMailProvider !== 'undefined' ? selectMailProvider : undefined], ['saveMailProvider', typeof saveMailProvider !== 'undefined' ? saveMailProvider : undefined], ['renderMailProvCards', typeof renderMailProvCards !== 'undefined' ? renderMailProvCards : undefined], ['loadQuota', typeof loadQuota !== 'undefined' ? loadQuota : undefined], ['loadLogs', typeof loadLogs !== 'undefined' ? loadLogs : undefined], ['renderLogs', typeof renderLogs !== 'undefined' ? renderLogs : undefined], ['renderDev', typeof renderDev !== 'undefined' ? renderDev : undefined], ['delDev', typeof delDev !== 'undefined' ? delDev : undefined], ['migrateDates', typeof migrateDates !== 'undefined' ? migrateDates : undefined], ['migratePkg', typeof migratePkg !== 'undefined' ? migratePkg : undefined], ['loadFulfillmentConfig', typeof loadFulfillmentConfig !== 'undefined' ? loadFulfillmentConfig : undefined], ['renderFulfillmentUI', typeof renderFulfillmentUI !== 'undefined' ? renderFulfillmentUI : undefined], ['selectFailoverPolicy', typeof selectFailoverPolicy !== 'undefined' ? selectFailoverPolicy : undefined], ['updateFailoverPolicyUI', typeof updateFailoverPolicyUI !== 'undefined' ? updateFailoverPolicyUI : undefined], ['saveFulfillmentMapping', typeof saveFulfillmentMapping !== 'undefined' ? saveFulfillmentMapping : undefined], ['saveFailoverPolicy', typeof saveFailoverPolicy !== 'undefined' ? saveFailoverPolicy : undefined], ['startApp', typeof startApp !== 'undefined' ? startApp : undefined], ['restoreAdminScroll', typeof restoreAdminScroll !== 'undefined' ? restoreAdminScroll : undefined], ['updateTestModeUI', typeof updateTestModeUI !== 'undefined' ? updateTestModeUI : undefined], ['testPingProd', typeof testPingProd !== 'undefined' ? testPingProd : undefined], ['testTelegramBot', typeof testTelegramBot !== 'undefined' ? testTelegramBot : undefined], ['triggerTelegramKvBackupNow', typeof triggerTelegramKvBackupNow !== 'undefined' ? triggerTelegramKvBackupNow : undefined], ['resetTelegramStt', typeof resetTelegramStt !== 'undefined' ? resetTelegramStt : undefined], ['triggerTelegramBackupNow', typeof triggerTelegramBackupNow !== 'undefined' ? triggerTelegramBackupNow : undefined], ['SITE_KEY', typeof SITE_KEY !== 'undefined' ? SITE_KEY : undefined], ['API', typeof API !== 'undefined' ? API : undefined], ['PDS', typeof PDS !== 'undefined' ? PDS : undefined], ['PD', typeof PD !== 'undefined' ? PD : undefined], ['GH_REPO', typeof GH_REPO !== 'undefined' ? GH_REPO : undefined], ['PKG_LIST', typeof PKG_LIST !== 'undefined' ? PKG_LIST : undefined], ['TABS', typeof TABS !== 'undefined' ? TABS : undefined], ['PKG_DB', typeof PKG_DB !== 'undefined' ? PKG_DB : undefined], ['$', typeof $ !== 'undefined' ? $ : undefined], ['arr', typeof arr !== 'undefined' ? arr : undefined], ['esc', typeof esc !== 'undefined' ? esc : undefined], ['q', typeof q !== 'undefined' ? q : undefined], ['cm', typeof closeAdminModal !== 'undefined' ? closeAdminModal : undefined], ['genId', typeof genId !== 'undefined' ? genId : undefined], ['genHex', typeof genHex !== 'undefined' ? genHex : undefined], ['normId', typeof normId !== 'undefined' ? normId : undefined], ['isLife', typeof isLife !== 'undefined' ? isLife : undefined], ['normSt', typeof normSt !== 'undefined' ? normSt : undefined], ['getT', typeof getT !== 'undefined' ? getT : undefined], ['trimNum', typeof trimNum !== 'undefined' ? trimNum : undefined], ['VND_SEP', typeof VND_SEP !== 'undefined' ? VND_SEP : undefined], ['fmtVnd', typeof fmtVnd !== 'undefined' ? fmtVnd : undefined], ['Toast', typeof Toast !== 'undefined' ? Toast : undefined], ['cp', typeof cp !== 'undefined' ? cp : undefined], ['sleep', typeof sleep !== 'undefined' ? sleep : undefined], ['off', typeof off !== 'undefined' ? off : undefined], ['TZN', typeof TZN !== 'undefined' ? TZN : undefined], ['nowMs', typeof nowMs !== 'undefined' ? nowMs : undefined], ['fmtBank', typeof fmtBank !== 'undefined' ? fmtBank : undefined], ['oTs', typeof oTs !== 'undefined' ? oTs : undefined], ['dmyOf', typeof dmyOf !== 'undefined' ? dmyOf : undefined], ['parseDmy', typeof parseDmy !== 'undefined' ? parseDmy : undefined], ['expEnd', typeof expEnd !== 'undefined' ? expEnd : undefined], ['monthInfo', typeof monthInfo !== 'undefined' ? monthInfo : undefined], ['fmtFull', typeof fmtFull !== 'undefined' ? fmtFull : undefined], ['OLD_BY_DATA', typeof OLD_BY_DATA !== 'undefined' ? OLD_BY_DATA : undefined], ['pkgLabel', typeof pkgLabel !== 'undefined' ? pkgLabel : undefined], ['fmtMonths', typeof fmtMonths !== 'undefined' ? fmtMonths : undefined], ['myWebIndex', typeof myWebIndex !== 'undefined' ? myWebIndex : undefined], ['payOf', typeof payOf !== 'undefined' ? payOf : undefined], ['TOKEN', typeof TOKEN !== 'undefined' ? TOKEN : undefined], ['myDev', typeof myDev !== 'undefined' ? myDev : undefined], ['aj', typeof aj !== 'undefined' ? aj : undefined], ['logEvent', typeof logEvent !== 'undefined' ? logEvent : undefined], ['ordersDb', typeof ordersDb !== 'undefined' ? ordersDb : undefined], ['curOrdTab', typeof curOrdTab !== 'undefined' ? curOrdTab : undefined], ['isMailMaster', typeof isMailMaster !== 'undefined' ? isMailMaster : undefined], ['expLocked', typeof expLocked !== 'undefined' ? expLocked : undefined], ['lockFulfillOn', typeof lockFulfillOn !== 'undefined' ? lockFulfillOn : undefined], ['mailOnSaveOn', typeof mailOnSaveOn !== 'undefined' ? mailOnSaveOn : undefined], ['manualEditOn', typeof manualEditOn !== 'undefined' ? manualEditOn : undefined], ['tombGet', typeof tombGet !== 'undefined' ? tombGet : undefined], ['tombSet', typeof tombSet !== 'undefined' ? tombSet : undefined], ['addTomb', typeof addTomb !== 'undefined' ? addTomb : undefined], ['rmTomb', typeof rmTomb !== 'undefined' ? rmTomb : undefined], ['isDeleted', typeof isDeleted !== 'undefined' ? isDeleted : undefined], ['isLockedPoolUrl', typeof isLockedPoolUrl !== 'undefined' ? isLockedPoolUrl : undefined], ['ordAmountTxt', typeof ordAmountTxt !== 'undefined' ? ordAmountTxt : undefined], ['curUpg', typeof curUpg !== 'undefined' ? curUpg : undefined], ['healAllMissing', typeof healAllMissing !== 'undefined' ? healAllMissing : undefined], ['htmlEscape', typeof htmlEscape !== 'undefined' ? htmlEscape : undefined], ['sendMailClient', typeof sendMailClient !== 'undefined' ? sendMailClient : undefined], ['mailGrad', typeof mailGrad !== 'undefined' ? mailGrad : undefined], ['mailShell', typeof mailShell !== 'undefined' ? mailShell : undefined], ['mailIdBox', typeof mailIdBox !== 'undefined' ? mailIdBox : undefined], ['mailPortal', typeof mailPortal !== 'undefined' ? mailPortal : undefined], ['mailBtn', typeof mailBtn !== 'undefined' ? mailBtn : undefined], ['mailSupport', typeof mailSupport !== 'undefined' ? mailSupport : undefined], ['TPL_THEME', typeof TPL_THEME !== 'undefined' ? TPL_THEME : undefined], ['P0', typeof P0 !== 'undefined' ? P0 : undefined], ['SYS_TPL', typeof SYS_TPL !== 'undefined' ? SYS_TPL : undefined], ['getTpl', typeof getTpl !== 'undefined' ? getTpl : undefined], ['subjVars', typeof subjVars !== 'undefined' ? subjVars : undefined], ['mailKeyOf', typeof mailKeyOf !== 'undefined' ? mailKeyOf : undefined], ['mailSuccess', typeof mailSuccess !== 'undefined' ? mailSuccess : undefined], ['mailFailed', typeof mailFailed !== 'undefined' ? mailFailed : undefined], ['mailExp', typeof mailExp !== 'undefined' ? mailExp : undefined], ['mailZalo', typeof mailZalo !== 'undefined' ? mailZalo : undefined], ['dataVars', typeof dataVars !== 'undefined' ? dataVars : undefined], ['mailData', typeof mailData !== 'undefined' ? mailData : undefined], ['revTab', typeof revTab !== 'undefined' ? revTab : undefined], ['REV_TABS', typeof REV_TABS !== 'undefined' ? REV_TABS : undefined], ['setRevTab', typeof setRevTab !== 'undefined' ? setRevTab : undefined], ['setRevPayView', typeof setRevPayView !== 'undefined' ? setRevPayView : undefined], ['setRevMonth', typeof setRevMonth !== 'undefined' ? setRevMonth : undefined], ['mcToHtml', typeof mcToHtml !== 'undefined' ? mcToHtml : undefined], ['addFaqRow', typeof addFaqRow !== 'undefined' ? addFaqRow : undefined], ['saveFaqAdmin', typeof saveFaqAdmin !== 'undefined' ? saveFaqAdmin : undefined], ['addFooterColumn', typeof addFooterColumn !== 'undefined' ? addFooterColumn : undefined], ['ftAddCol', typeof ftAddCol !== 'undefined' ? ftAddCol : undefined], ['ftDelCol', typeof ftDelCol !== 'undefined' ? ftDelCol : undefined], ['ftMoveCol', typeof ftMoveCol !== 'undefined' ? ftMoveCol : undefined], ['ftAddLink', typeof ftAddLink !== 'undefined' ? ftAddLink : undefined], ['ftDelLink', typeof ftDelLink !== 'undefined' ? ftDelLink : undefined], ['customCmsImageHandler', typeof customCmsImageHandler !== 'undefined' ? customCmsImageHandler : undefined], ['customCmsVideoHandler', typeof customCmsVideoHandler !== 'undefined' ? customCmsVideoHandler : undefined], ['recordAdminNav', typeof recordAdminNav !== 'undefined' ? recordAdminNav : undefined], ['closeCmsEditor', typeof closeCmsEditor !== 'undefined' ? closeCmsEditor : undefined], ['cnyRate', typeof cnyRate !== 'undefined' ? cnyRate : undefined], ['curVal', typeof curVal !== 'undefined' ? curVal : undefined], ['shortN', typeof shortN !== 'undefined' ? shortN : undefined], ['monthLbl', typeof monthLbl !== 'undefined' ? monthLbl : undefined], ['kpi', typeof kpi !== 'undefined' ? kpi : undefined], ['box', typeof box !== 'undefined' ? box : undefined], ['chartRevStacked', typeof chartRevStacked !== 'undefined' ? chartRevStacked : undefined], ['gridPkgTable', typeof gridPkgTable !== 'undefined' ? gridPkgTable : undefined], ['PAYLBL', typeof PAYLBL !== 'undefined' ? PAYLBL : undefined], ['MC_COLORS', typeof MC_COLORS !== 'undefined' ? MC_COLORS : undefined], ['MC_BT', typeof MC_BT !== 'undefined' ? MC_BT : undefined], ['MC_VARS_BASE', typeof MC_VARS_BASE !== 'undefined' ? MC_VARS_BASE : undefined], ['MC_VARS_SYS', typeof MC_VARS_SYS !== 'undefined' ? MC_VARS_SYS : undefined], ['MC_SYS_KEYS', typeof MC_SYS_KEYS !== 'undefined' ? MC_SYS_KEYS : undefined], ['MC_SYS_NAMES', typeof MC_SYS_NAMES !== 'undefined' ? MC_SYS_NAMES : undefined], ['MC_PRESETS', typeof MC_PRESETS !== 'undefined' ? MC_PRESETS : undefined], ['mc', typeof mc !== 'undefined' ? mc : undefined], ['mcColorName', typeof mcColorName !== 'undefined' ? mcColorName : undefined], ['mcClone', typeof mcClone !== 'undefined' ? mcClone : undefined], ['mcToTpl', typeof mcToTpl !== 'undefined' ? mcToTpl : undefined], ['extractOrder', typeof extractOrder !== 'undefined' ? extractOrder : undefined], ['delBtn', typeof delBtn !== 'undefined' ? delBtn : undefined], ['saveLinks', typeof saveLinks !== 'undefined' ? saveLinks : undefined], ['FIXED_PKG_IDS', typeof FIXED_PKG_IDS !== 'undefined' ? FIXED_PKG_IDS : undefined], ['adminPkgsList', typeof adminPkgsList !== 'undefined' ? adminPkgsList : undefined], ['sortablePkgsInstance', typeof sortablePkgsInstance !== 'undefined' ? sortablePkgsInstance : undefined], ['delCustomPkg', typeof delCustomPkg !== 'undefined' ? delCustomPkg : undefined], ['rsItems', typeof rsItems !== 'undefined' ? rsItems : undefined], ['rlPicks', typeof rlPicks !== 'undefined' ? rlPicks : undefined], ['rlAll', typeof rlAll !== 'undefined' ? rlAll : undefined], ['curDeadTab', typeof curDeadTab !== 'undefined' ? curDeadTab : undefined], ['deadLive', typeof deadLive !== 'undefined' ? deadLive : undefined], ['DEF_TABS', typeof DEF_TABS !== 'undefined' ? DEF_TABS : undefined], ['toSlug', typeof toSlug !== 'undefined' ? toSlug : undefined], ['curArtsReady', typeof curArtsReady !== 'undefined' ? curArtsReady : undefined], ['guideTabList', typeof guideTabList !== 'undefined' ? guideTabList : undefined], ['artsOf', typeof artsOf !== 'undefined' ? artsOf : undefined], ['curArtHtml', typeof curArtHtml !== 'undefined' ? curArtHtml : undefined], ['quillInst', typeof quillInst !== 'undefined' ? quillInst : undefined], ['sortableCmsTabs', typeof sortableCmsTabs !== 'undefined' ? sortableCmsTabs : undefined], ['safeUrl', typeof safeUrl !== 'undefined' ? safeUrl : undefined], ['saveCmsDb', typeof saveCmsDb !== 'undefined' ? saveCmsDb : undefined], ['curCheckSubTab', typeof curCheckSubTab !== 'undefined' ? curCheckSubTab : undefined], ['BLUR_RULES', typeof BLUR_RULES !== 'undefined' ? BLUR_RULES : undefined], ['DEFAULT_FAQS', typeof DEFAULT_FAQS !== 'undefined' ? DEFAULT_FAQS : undefined], ['adminFaqsList', typeof adminFaqsList !== 'undefined' ? adminFaqsList : undefined], ['DEFAULT_SYS_ROUTES', typeof DEFAULT_SYS_ROUTES !== 'undefined' ? DEFAULT_SYS_ROUTES : undefined], ['ftCols', typeof ftCols !== 'undefined' ? ftCols : undefined], ['FT_TEMPLATE', typeof FT_TEMPLATE !== 'undefined' ? FT_TEMPLATE : undefined], ['ftClone', typeof ftClone !== 'undefined' ? ftClone : undefined], ['yn', typeof yn !== 'undefined' ? yn : undefined], ['QL', typeof QL !== 'undefined' ? QL : undefined], ['MAIL_PROV_META', typeof MAIL_PROV_META !== 'undefined' ? MAIL_PROV_META : undefined], ['mailProvQuota', typeof mailProvQuota !== 'undefined' ? mailProvQuota : undefined], ['pickMailProvider', typeof pickMailProvider !== 'undefined' ? pickMailProvider : undefined], ['currentFulfillmentConfig', typeof currentFulfillmentConfig !== 'undefined' ? currentFulfillmentConfig : undefined], ['started', typeof started !== 'undefined' ? started : undefined], ['adminScrollTimer', typeof adminScrollTimer !== 'undefined' ? adminScrollTimer : undefined], ['isTestModeActive', typeof isTestModeActive !== 'undefined' ? isTestModeActive : undefined], ['toggleTestMode', typeof toggleTestMode !== 'undefined' ? toggleTestMode : undefined], ['testPingTest', typeof testPingTest !== 'undefined' ? testPingTest : undefined], ['createFakeTestOrder', typeof createFakeTestOrder !== 'undefined' ? createFakeTestOrder : undefined], ['cloneProdOrdersToTest', typeof cloneProdOrdersToTest !== 'undefined' ? cloneProdOrdersToTest : undefined], ['clearTestOrders', typeof clearTestOrders !== 'undefined' ? clearTestOrders : undefined], ['lastTxError', typeof lastTxError !== 'undefined' ? lastTxError : undefined],];
-  _exposed.push(['getRelinkBackupEnabled', typeof getRelinkBackupEnabled !== 'undefined' ? getRelinkBackupEnabled : undefined], ['toggleRelinkBackup', typeof toggleRelinkBackup !== 'undefined' ? toggleRelinkBackup : undefined]);
+  _exposed.push(['getRelinkBackupEnabled', typeof getRelinkBackupEnabled !== 'undefined' ? getRelinkBackupEnabled : undefined], ['toggleRelinkBackup', typeof toggleRelinkBackup !== 'undefined' ? toggleRelinkBackup : undefined], ['adminBackFromDeepTab', typeof adminBackFromDeepTab !== 'undefined' ? adminBackFromDeepTab : undefined], ['MOBILE_MAIN_TABS', typeof MOBILE_MAIN_TABS !== 'undefined' ? MOBILE_MAIN_TABS : undefined], ['MORE_SUB_TABS', typeof MORE_SUB_TABS !== 'undefined' ? MORE_SUB_TABS : undefined], ['getAdminSwipeTargetTab', typeof getAdminSwipeTargetTab !== 'undefined' ? getAdminSwipeTargetTab : undefined]);
   _exposed.forEach(([k, v]) => {
     if (v !== undefined) window[k] = v;
   });
@@ -9554,3 +9707,24 @@ if (typeof window !== 'undefined') {
     }
   });
 }
+
+export {
+  MOBILE_MAIN_TABS,
+  MORE_SUB_TABS,
+  saveAdminSubTab,
+  getAdminSubTab,
+  getAdminSwipeTargetTab,
+  buildAdminHistoryState,
+  adminBackFromDeepTab,
+  go,
+  switchPkgSubTab,
+  switchCheckSubTab,
+  switchTxTab,
+  switchSettingsTab,
+  switchWebAdminTab,
+  switchDeadSubTab,
+  mcSwitchTab,
+  openOrdModal,
+  openLnkModal,
+  cmsPersistGuideTabs
+};
