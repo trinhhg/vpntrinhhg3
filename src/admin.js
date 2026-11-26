@@ -337,17 +337,33 @@ function pkgOf(o) {
       };
     }
   }
-  const total = Number(o.totalVnd) || 0, data = String(o.pkgData || "").toUpperCase();
-  if (total > 0 && OLD_BY_DATA[data]) {
-    const op = PKG_DB[OLD_BY_DATA[data]];
-    const np = Object.values(PKG_DB).find(p => !p.old && p.d === data);
+  const total = Number(o.totalVnd) || 0;
+  let data = String(o.pkgData || "").toUpperCase();
+  const pkgTxt = String(o.pkg || "");
+  if (!data && pkgTxt) {
+    const gm = pkgTxt.match(/(\d+(?:\/\w+)?\s*GB(?:\s*\/\s*tháng)?)/i);
+    if (gm) data = gm[1].replace(/\s+/g, "");
+  }
+  const isPkgOld = /\[Giá cũ\]|\(giá cũ\)/i.test(pkgTxt);
+  if (pkgTxt) {
+    const matched = Object.values(PKG_DB).find(p =>
+      (!!p.old === isPkgOld) &&
+      (!data || p.d.toUpperCase() === data.toUpperCase()) &&
+      pkgTxt.toLowerCase().includes(String(p.n || "").toLowerCase())
+    );
+    if (matched) return matched;
+  }
+  if (total > 0 && OLD_BY_DATA[data.toUpperCase()]) {
+    const op = PKG_DB[OLD_BY_DATA[data.toUpperCase()]];
+    const np = Object.values(PKG_DB).find(p => !p.old && p.d.toUpperCase() === data.toUpperCase());
+    if (isPkgOld && op) return op;
     if (op && total % op.vnd === 0 && total / op.vnd <= 36) return op;
     if (np && total % np.vnd === 0 && total / np.vnd <= 36) return np;
   }
-  const found = Object.values(PKG_DB).find(p => !p.old && p.n === o.pkgName && p.d === o.pkgData) || Object.values(PKG_DB).find(p => p.n === o.pkgName && p.d === o.pkgData);
+  const found = Object.values(PKG_DB).find(p => !p.old && p.n === o.pkgName && p.d === (o.pkgData || data)) || Object.values(PKG_DB).find(p => p.n === o.pkgName && p.d === (o.pkgData || data));
   if (found) return found;
   if (Array.isArray(adminPkgsList)) {
-    const dp = adminPkgsList.find(p => (p.name === o.pkgName || p.id === o.pkgId) && (!o.pkgData || p.data === o.pkgData));
+    const dp = adminPkgsList.find(p => (p.name === o.pkgName || p.id === o.pkgId) && (!(o.pkgData || data) || p.data === (o.pkgData || data)));
     if (dp) return {
       n: dp.name || dp.n,
       d: dp.data || dp.d,
@@ -360,7 +376,7 @@ function pkgOf(o) {
 }
 const pkgLabel = o => {
   const p = pkgOf(o);
-  return p ? `${p.n} - ${fmtVnd(p.vnd)}VND${p.old?" (giá cũ)":""}` : (o.pkgName || "—");
+  return p ? `${p.old ? "[Giá cũ] " : ""}${p.n} - ${fmtVnd(p.vnd)}VND${p.d ? ` (${p.d})` : ""}` : (o?.pkg || [o?.pkgName, o?.pkgData].filter(Boolean).join(" - ") || "—");
 };
 // Số tháng: days/30; doanh thu chỉ tính phần nguyên (6.5 tháng => 6). Không làm tròn lên.
 const fmtMonths = d => {
@@ -449,6 +465,9 @@ function toLogin(msg) {
   TOKEN = "";
   clearAdminIntervals();
   clearTimeout(txPollT);
+  if (typeof adminSessionSubTabs === "object") {
+    for (const k of Object.keys(adminSessionSubTabs)) delete adminSessionSubTabs[k];
+  }
   localStorage.removeItem(SITE_KEY + "_tok");
   document.documentElement.classList.remove("has-tok");
   $("main").classList.add("hidden");
@@ -716,7 +735,7 @@ async function fetchAll(msg, throwOnError = false, explicitIsTest = undefined) {
           gb: "",
           remainGb: "",
           exp: l.expDate || "",
-          max: 30
+          max: ""
         });
       }
     });
@@ -753,15 +772,18 @@ const isLockedPoolUrl = u => {
   return s === "dabikhoa" || s === "da_bi_khoa";
 };
 let isPolling = false;
+let linksMutationSeq = 0;
 async function pollMain() {
   const anyModalOpen = document.querySelector('#mOrd:not(.hidden), #mRootEdit:not(.hidden), #mLnk:not(.hidden), #mCouponModal:not(.hidden), #mGiftRuleModal:not(.hidden)');
   if (isPolling || document.hidden || !TOKEN || switchingWarehouse || anyModalOpen) return;
   isPolling = true;
   const myEpoch = warehouseEpoch;
   const reqTest = isTestModeActive;
+  const seqSnap = linksMutationSeq;
   try {
     const j = await aj("/api/admin/poll", { isTest: reqTest });
-    if (myEpoch !== warehouseEpoch || switchingWarehouse) return;
+    if (myEpoch !== warehouseEpoch || switchingWarehouse || seqSnap !== linksMutationSeq) return;
+    if (document.querySelector('#mOrd:not(.hidden), #mRootEdit:not(.hidden), #mLnk:not(.hidden), #mCouponModal:not(.hidden), #mGiftRuleModal:not(.hidden)')) return;
     if (j && j.isTest !== undefined && Boolean(j.isTest) !== reqTest) return;
     const s = {
       o: JSON.stringify(arr(j.orders)),
@@ -796,17 +818,12 @@ let curSettingsTab = "setweb";
 let curWebSubTab = "ui";
 let adminEntryWasMore = false;
 
+const adminSessionSubTabs = {};
 function saveAdminSubTab(tabId, val) {
-  try {
-    if (tabId && val !== undefined) localStorage.setItem(SITE_KEY + "_subTab_" + tabId, String(val));
-  } catch (e) {}
+  if (tabId && val !== undefined) adminSessionSubTabs[tabId] = String(val);
 }
 function getAdminSubTab(tabId, fallback = "") {
-  try {
-    return localStorage.getItem(SITE_KEY + "_subTab_" + tabId) || fallback;
-  } catch (e) {
-    return fallback;
-  }
+  return adminSessionSubTabs[tabId] || fallback;
 }
 function getAdminSwipeTargetTab(curTabId, dir) {
   const idx = MOBILE_MAIN_TABS.indexOf(curTabId);
@@ -868,7 +885,7 @@ function initAdminMobileSwipe() {
     const t0 = e.touches[0];
     if (t0.clientX < 24 || t0.clientX > window.innerWidth - 24) return;
     const tgt = e.target;
-    if (tgt && tgt.closest && tgt.closest('input, textarea, select, [contenteditable="true"], .ql-editor, .ql-toolbar, .overflow-x-auto, table, .grip, .grip-cat')) return;
+    if (tgt && tgt.closest && tgt.closest('input, textarea, select, [contenteditable="true"], .ql-editor, .ql-toolbar, .overflow-x-auto, table, .grip, .grip-cat, .grip-pkg, .grip-faq, .grip-ft-col, .grip-ft-link')) return;
     sx = t0.clientX;
     sy = t0.clientY;
     st = Date.now();
@@ -1950,7 +1967,11 @@ const sendMailClient = (to, subject, html) => api("/api/admin/send_mail", { meth
   toast("Gửi email thất bại: " + (e?.message || "Lỗi kết nối"), "warn");
   return null;
 });
-const mailGrad = (c1, c2, ang, stop) => `linear-gradient(${Number(ang)||135}deg,${c1} 0%,${c2} ${Math.max(1,Math.min(100,Number(stop)||100))}%)`;
+const mailGrad = (c1, c2, ang, stop) => {
+  const s2 = Math.max(5, Math.min(100, Number(stop) || 100));
+  const s1 = Math.max(0, Math.min(80, s2 - 55));
+  return `linear-gradient(${Number(ang) || 135}deg,${c1} ${s1}%,${c2} ${s2}%)`;
+};
 const mailShell = (c1, c2, title, inner, ang, stop) => `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;width:100%;max-width:480px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden"><div style="background:${c1};background-image:${mailGrad(c1,c2,ang,stop)};padding:22px 16px;text-align:center"><h2 style="color:#ffffff;margin:0;font-size:18px;font-weight:700;line-height:1.4;text-transform:uppercase;letter-spacing:normal;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">${title}</h2></div><div style="padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">${inner}</div></div>`;
 const mailIdBox = (label, id, color) => `<div style="background:#f1f5f9;border-left:4px solid ${color};padding:15px;border-radius:8px;margin:18px 0;text-align:center"><p style="margin:0;font-size:11px;color:#64748b;font-weight:bold;text-transform:uppercase">${label}</p><p style="margin:8px 0 0;font-size:22px;font-weight:900;color:${color};letter-spacing:1px;word-break:break-word">${htmlEscape(id)}</p></div>`;
 const mailPortal = (PDx, label, orderId) => {
@@ -2558,9 +2579,14 @@ function revOver(R, b) {
     // Native Tailwind UI Render Bảng Gói & Xếp hạng Tháng (Zero Grid.js)
     const g = {};
     R.forEach(x => {
-      const k = x.p ? x.p.n + "|" + x.p.vnd : (x.o.pkgName || "Gói khác");
+      const p = x.p;
+      const pid = (x.o && x.o.pkgId && PKG_DB[x.o.pkgId]) ? x.o.pkgId : (p ? Object.keys(PKG_DB).find(id => PKG_DB[id] === p) || "" : "");
+      const k = p ? `${pid || p.n}|${p.vnd}|${p.d || ''}|${p.old ? 'old' : 'new'}` : (x.o.pkg || x.o.pkgName || "Gói khác");
+      const label = p
+        ? `${p.old ? "[Giá cũ] " : ""}${p.n} - ${fmtVnd(p.vnd)}VND (${p.d || ''})`
+        : (x.o.pkg || [x.o.pkgName, x.o.pkgData].filter(Boolean).join(" - ") || "Gói khác");
       const e = g[k] = g[k] || {
-        l: x.p ? `${x.p.n} (${x.p.d || ''})` : (x.o.pkgName || "Gói khác"),
+        l: label,
         n: 0,
         vnd: 0
       };
@@ -3013,6 +3039,21 @@ const MC_PRESETS = {
       t: "text",
       x: "Gói {pkg} của bạn sẽ hết hạn ngày {exp}. Gia hạn sớm để nhận ưu đãi..."
     }, { t: "portal", x: "GIA HẠN NGAY TẠI WEBSITE" }, { t: "support" }]
+  },
+  troubleshoot: {
+    name: "Mất kết nối VPN",
+    subject: "VPN Trinh Hg - Hướng dẫn xử lý khi mất kết nối",
+    title: "HƯỚNG DẪN\nKHẮC PHỤC KẾT NỐI",
+    c1: "#e11d48",
+    c2: "#f43f5e",
+    blocks: [
+      { t: "text", x: "Xin chào {email}," },
+      { t: "text", x: "Nếu app VPN đột ngột không vào được mạng, bạn thử 3 bước nhanh sau:\n1. Tắt/Bật lại 4G hoặc đổi Wi-Fi khác để loại trừ lỗi nhà mạng.\n2. Mở app VPN và bấm **Cập nhật (Update) gói đăng ký** để lấy máy chủ mới nhất.\n3. Copy lại Link Sub mới nhất trong Cổng Khách Hàng bên dưới và chọn node còn tải thấp.", b: 0 },
+      { t: "orderid" },
+      { t: "portal", x: "MỞ CỔNG KHÁCH HÀNG & CẬP NHẬT LINK" },
+      { t: "text", x: "Vẫn chưa vào được? Nhắn ngay Zalo **0917678211** hoặc Telegram **@hoaian57** kèm ảnh màn hình để shop xử lý ngay nhé!", sz: "m" },
+      { t: "support" }
+    ]
   }
 };
 let mc = {
@@ -3047,6 +3088,7 @@ function tplToMc(t) {
 const mcToTpl = () => ({
   subject: mc.subject,
   title: mc.title,
+  color: mc.color || mcColorName(mc.c1, mc.c2),
   c1: mc.c1,
   c2: mc.c2,
   ang: Number(mc.ang) || 135,
@@ -3072,12 +3114,14 @@ function mcSampleVars() {
 function mcRenderTabs() {
   ["sys", "free"].forEach(t => $("mcTab-" + t).classList.toggle("active", mcTab === t));
   $("mcRecipPanel").classList.toggle("hidden", mcTab !== "free");
-  $("mcHint").innerHTML = mcTab === "sys" ? "5 mẫu mail tự động của hệ thống. <b>Lưu mẫu</b> = bản đã lưu trở thành mẫu production mặc định (Worker dùng khi gửi thật). Không có quét danh sách / gửi thử — production quyết định khi nào gửi. Biến như <b>{email}</b> <b>{orderId}</b> <b>{pkgName}</b> được thay theo từng đơn." : "Soạn mail tự do gửi cho khách còn đơn còn hạn. Dùng <b>{email}</b> <b>{orderId}</b> <b>{pkg}</b> <b>{exp}</b>, hệ thống thay theo từng người nhận. Có thể Lưu mẫu / Nạp mẫu để dùng lại.";
+  $("mcHint").innerHTML = mcTab === "sys" ? "5 mẫu mail tự động của hệ thống. <b>Lưu mẫu</b> = bản đã lưu trở thành mẫu production mặc định (Worker dùng khi gửi thật). Biến như <b>{email}</b> <b>{orderId}</b> <b>{pkgName}</b> được thay theo từng đơn." : "Soạn mail tự do hoặc chọn 1 trong 4 mẫu có sẵn, chỉnh sửa rồi <b>Lưu mẫu</b>. Dùng bộ lọc bên dưới để quét đúng nhóm khách hàng cần gửi.";
   $("mcExtraBtn").innerHTML = mcTab === "sys" ? '<i class="fas fa-rotate-left mr-1"></i>Khôi phục mặc định' : '<i class="fas fa-trash mr-1"></i>Xóa mẫu đã lưu';
 }
 function mcRenderPresetOptions(keep) {
   const sys = cmsDb.mailSys || {}, fr = cmsDb.mailFree || {};
-  $("mcPreset").innerHTML = mcTab === "sys" ? MC_SYS_KEYS.map(k => `<option value="sys:${k}">${esc(MC_SYS_NAMES[k])}${sys[k]?" · đã tùy chỉnh":""}</option>`).join("") : `<optgroup label="Mẫu có sẵn">${Object.keys(MC_PRESETS).map(k=>`<option value="builtin:${k}">${esc(MC_PRESETS[k].name)}</option>`).join("")}</optgroup>` + (Object.keys(fr).length ? `<optgroup label="Mẫu đã lưu">${Object.entries(fr).map(([id,f])=>`<option value="saved:${esc(id)}">${esc(f.name||id)}</option>`).join("")}</optgroup>` : "");
+  $("mcPreset").innerHTML = mcTab === "sys"
+    ? MC_SYS_KEYS.map(k => `<option value="sys:${k}">${esc(MC_SYS_NAMES[k])}${sys[k]?" · đã tùy chỉnh":""}</option>`).join("")
+    : (keep === "free:new" ? `<option value="free:new">-- Tạo mẫu mới (chưa lưu) --</option>` : "") + `<optgroup label="Mẫu có sẵn">${Object.keys(MC_PRESETS).map(k=>`<option value="builtin:${k}">${esc(MC_PRESETS[k].name)}</option>`).join("")}</optgroup>` + (Object.keys(fr).length ? `<optgroup label="Mẫu đã lưu">${Object.entries(fr).map(([id,f])=>`<option value="saved:${esc(id)}">${esc(f.name||id)}</option>`).join("")}</optgroup>` : "");
   if (keep && [...$("mcPreset").options].some(o => o.value === keep)) $("mcPreset").value = keep;
 }
 function mcSetField(field, value) {
@@ -3102,8 +3146,37 @@ window.mcRequestStop = mcRequestStop;
 window.mcToggleAllRecs = mcToggleAllRecs;
 window.mcToggleRec = mcToggleRec;
 
+function mcNewTemplate() {
+  if (mcTab !== "free") {
+    mcTab = "free";
+    saveAdminSubTab("t-mail", "free");
+    mcRenderTabs();
+  }
+  mcCurKey = "free:new";
+  mc = {
+    subject: "VPN Trinh Hg - Thông báo mới",
+    title: "THÔNG BÁO MỚI",
+    color: "indigo",
+    c1: MC_COLORS.indigo[0],
+    c2: MC_COLORS.indigo[1],
+    ang: 135,
+    stop: 85,
+    blocks: [
+      { t: "text", x: "Xin chào {email}," },
+      { t: "text", x: "Nội dung thông báo..." },
+      { t: "orderid" },
+      { t: "portal", x: "TRUY CẬP CỔNG KHÁCH HÀNG" },
+      { t: "support" }
+    ]
+  };
+  window.mc = mc;
+  mcSel = -1;
+  mcRenderPresetOptions("free:new");
+  mcRenderEditor();
+}
 function mcLoadPreset() {
   const v = $("mcPreset").value, i = v.indexOf(":"), kind = v.slice(0, i), key = v.slice(i + 1);
+  if (v === "free:new") return mcNewTemplate();
   mcCurKey = v;
   if (kind === "sys") mc = tplToMc(getTpl(key));
   else if (kind === "saved") {
@@ -3267,8 +3340,11 @@ async function mcSaveTemplate() {
     return;
   }
   const cur = kind === "saved" ? (cmsDb.mailFree || {})[key] : null;
-  const name = prompt("Tên mẫu để lưu:", cur ? cur.name : (mc.subject || "Mẫu mới"));
-  if (!name || !name.trim()) return;
+  let name = cur && cur.name ? cur.name : "";
+  if (!name) {
+    name = prompt("Đặt tên mẫu mail để lưu:", mc.subject || "Mẫu thông báo mới");
+    if (!name || !name.trim()) return;
+  }
   const id = cur ? key : "f" + Date.now().toString(36);
   cmsDb.mailFree = cmsDb.mailFree || {};
   cmsDb.mailFree[id] = { name: name.trim(), tpl: mcToTpl(), ts: nowMs() };
@@ -3309,30 +3385,72 @@ async function mcExtraAction() {
     toast("Lỗi lưu: " + e.message, "err");
   }
 }
-function mcScan() {
-  const now = nowMs(), m = new Map();
+function mcScan(silent = false) {
+  const pkgSel = $("mcScanPkgFilter");
+  if (pkgSel && pkgSel.options.length <= 1) {
+    const dyn = Array.isArray(adminPkgsList) && adminPkgsList.length
+      ? adminPkgsList.map(p => [p.id, `${p.name || p.id} (${p.data || ""})`])
+      : PKG_LIST.map(([id, lbl]) => [id, lbl]);
+    const seen = new Set();
+    dyn.forEach(([id, lbl]) => {
+      if (!id || seen.has(id)) return;
+      seen.add(id);
+      const opt = document.createElement("option");
+      opt.value = id;
+      opt.textContent = lbl;
+      pkgSel.appendChild(opt);
+    });
+  }
+  const qText = ($("mcScanSearch")?.value || "").trim().toLowerCase();
+  const expMode = $("mcScanExpFilter")?.value || "active";
+  const pkgFilter = $("mcScanPkgFilter")?.value || "all";
+  const methodFilter = $("mcScanMethodFilter")?.value || "all";
+  const now = nowMs();
+  const m = new Map();
   ordersDb.filter(o => normSt(o.status) === "success" && o.email).forEach(o => {
     const life = isLife(o.expDate), end = life ? Infinity : expEnd(o.expDate);
-    if (!life && (!end || end < now)) return;
+    const dl = life ? Infinity : (end ? Math.ceil((end - now) / 864e5) : -1);
+    if (expMode === "active" && !life && (!end || end < now)) return;
+    if (expMode === "expiring" && (life || !end || end < now || dl > 3)) return;
+    if (expMode === "expired" && (life || (end && end >= now))) return;
+    if (expMode === "lifetime" && !life) return;
+    if (pkgFilter !== "all") {
+      const pObj = pkgOf(o);
+      const oid = o.pkgId || (pObj ? Object.keys(PKG_DB).find(k => PKG_DB[k] === pObj) : "");
+      if (oid !== pkgFilter) return;
+    }
+    if (methodFilter !== "all" && payOf(o) !== methodFilter) return;
+    if (qText) {
+      const hay = `${o.email || ""} ${o.id || ""} ${o.zalo || ""} ${o.nickname || ""} ${o.pkg || ""} ${pkgLabel(o)}`.toLowerCase();
+      if (!hay.includes(qText)) return;
+    }
     const k = o.email.toLowerCase(), c = m.get(k);
     if (!c || oTs(o) > oTs(c)) m.set(k, o);
   });
-  mcRecs = [...m.values()].map(o => ({
-    email: o.email,
-    id: o.id,
-    exp: o.expDate || "Vĩnh viễn",
-    pkg: pkgLabel(o),
-    o,
-    sel: true,
-    st: ""
-  })).sort((a, c) => a.email.localeCompare(c.email));
+  mcRecs = [...m.values()].map(o => {
+    const life = isLife(o.expDate), end = life ? Infinity : expEnd(o.expDate);
+    const dl = life ? Infinity : (end ? Math.ceil((end - now) / 864e5) : -999);
+    return {
+      email: o.email,
+      id: o.id,
+      exp: life ? "Vĩnh viễn" : (o.expDate || "—"),
+      daysLeft: dl,
+      life,
+      method: payOf(o) || "Bank",
+      zalo: o.zalo || "",
+      pkg: pkgLabel(o),
+      o,
+      sel: true,
+      st: ""
+    };
+  }).sort((a, c) => a.email.localeCompare(c.email));
   mcRenderRecs();
-  toast(`Tìm thấy ${mcRecs.length} email còn đơn còn hạn`);
+  if (!silent) toast(`Tìm thấy ${mcRecs.length} khách phù hợp bộ lọc`);
 }
 function mcRenderRecs() {
   const el = $("mcRecs");
   if (!mcRecs.length) {
-    el.innerHTML = '<div class="text-xs text-slate-400 italic">Không có email nào còn hạn.</div>';
+    el.innerHTML = '<div class="text-xs text-slate-400 italic py-2">Không có khách hàng nào khớp bộ lọc hiện tại.</div>';
     return;
   }
   const n = mcRecs.filter(r => r.sel).length, ic = {
@@ -3341,7 +3459,29 @@ function mcRenderRecs() {
     ok: '<i class="fas fa-circle-check text-emerald-500"></i>',
     err: '<i class="fas fa-circle-xmark text-red-500"></i>'
   };
-  el.innerHTML = `<label class="flex items-center gap-2 text-xs font-bold text-slate-700 mb-2"><input type="checkbox" ${n===mcRecs.length?"checked":""} onchange="mcToggleAllRecs(this.checked)" class="w-4 h-4 accent-indigo-600">Chọn tất cả (${n}/${mcRecs.length})</label><div class="max-h-64 overflow-y-auto border border-slate-100 rounded-xl divide-y divide-slate-100">${mcRecs.map((r,i)=>`<label class="flex items-center gap-2 px-3 py-2 text-xs cursor-pointer hover:bg-slate-50"><input type="checkbox" ${r.sel?"checked":""} onchange="mcToggleRec(${i}, this.checked)" class="w-4 h-4 accent-indigo-600"><span class="font-bold text-slate-700 truncate flex-1">${esc(r.email)}</span><span class="font-mono text-indigo-500">${esc(r.id)}</span><span class="text-slate-400 whitespace-nowrap">HSD ${esc(r.exp)}</span><span class="w-4 text-center">${ic[r.st]||""}</span></label>`).join("")}</div>`;
+  el.innerHTML = `<label class="flex items-center gap-2 text-xs font-bold text-slate-700 mb-2"><input type="checkbox" ${n===mcRecs.length?"checked":""} onchange="mcToggleAllRecs(this.checked)" class="w-4 h-4 accent-indigo-600">Chọn tất cả (${n}/${mcRecs.length})</label><div class="max-h-72 overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100">${mcRecs.map((r,i)=>{
+    const expBadge = r.life
+      ? '<span class="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 font-bold text-[10px]">Vĩnh viễn</span>'
+      : r.daysLeft < 0
+        ? `<span class="px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 font-bold text-[10px]">Hết hạn (${esc(r.exp)})</span>`
+        : r.daysLeft <= 3
+          ? `<span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold text-[10px]">Còn ${r.daysLeft}n (${esc(r.exp)})</span>`
+          : `<span class="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold text-[10px]">HSD ${esc(r.exp)}</span>`;
+    return `<label class="flex flex-wrap sm:flex-nowrap items-start sm:items-center gap-2 px-3 py-2.5 text-xs cursor-pointer hover:bg-slate-50">
+      <input type="checkbox" ${r.sel?"checked":""} onchange="mcToggleRec(${i}, this.checked)" class="w-4 h-4 accent-indigo-600 mt-0.5 sm:mt-0 shrink-0">
+      <div class="min-w-0 flex-1 space-y-0.5">
+        <div class="font-bold text-slate-800 break-all">${esc(r.email)}</div>
+        <div class="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500">
+          <span class="font-mono font-bold text-indigo-600">${esc(r.id)}</span>
+          <span>·</span>
+          <span class="font-medium text-slate-700">${esc(r.pkg)}</span>
+          <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold text-[10px]">${esc(r.method)}</span>
+          ${r.zalo ? `<span class="text-sky-600 font-medium">Zalo: ${esc(r.zalo)}</span>` : ""}
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5 shrink-0 ml-6 sm:ml-0">${expBadge}<span class="w-4 text-center">${ic[r.st]||""}</span></div>
+    </label>`;
+  }).join("")}</div>`;
 }
 async function mcSend() {
   if (mcSending) return;
@@ -4140,7 +4280,7 @@ function openRootEditModal(groupKey) {
   $("mREGb").value = p.gb || "";
   $("mRERemain").value = p.remainGb || "";
   $("mREExp").value = p.exp || "";
-  $("mREMax").value = p.max || 30;
+  $("mREMax").value = (p.max !== undefined && p.max !== null && p.max !== "") ? p.max : "";
   if ($("mREProv1")) $("mREProv1").value = (p.detectMode === "manual" && p.provider) ? p.provider : "auto";
   if ($("mREProto1")) $("mREProto1").value = (p.detectMode === "manual" && p.protocol) ? p.protocol : "auto";
 
@@ -4148,7 +4288,7 @@ function openRootEditModal(groupKey) {
   $("mREGb2").value = p.gb2 || "";
   $("mRERemain2").value = p.remainGb2 || "";
   $("mREExp2").value = p.exp2 || "";
-  $("mREMax2").value = p.max2 || 30;
+  $("mREMax2").value = (p.max2 !== undefined && p.max2 !== null && p.max2 !== "") ? p.max2 : "";
   if ($("mREProv2")) $("mREProv2").value = (p.detectMode2 === "manual" && p.provider2) ? p.provider2 : "auto";
   if ($("mREProto2")) $("mREProto2").value = (p.detectMode2 === "manual" && p.protocol2) ? p.protocol2 : "auto";
 
@@ -4161,7 +4301,9 @@ function openRootEditModal(groupKey) {
 
 const saveLinks = () => {
   healLinks();
+  linksMutationSeq++;
   return aj("/api/links", { method: "POST", body: linksDb }).then(() => {
+    linksMutationSeq++;
     lastSig.l = JSON.stringify(linksDb);
   });
 };
@@ -4312,18 +4454,16 @@ function renderLinks() {
         </div>
       </div>
 
-      <!-- URL LINK GỐC: KHUNG ĐẬM NỔI BẬT PHÂN BIỆT RÕ VỚI CARD LINK CON -->
-      <div class="bg-slate-900 border border-slate-800 p-2.5 rounded-xl space-y-1.5 shadow-inner">
-        <div class="font-mono text-[11px] font-semibold text-emerald-300 break-all cp flex items-start gap-2" onclick="cp(${q(g.orig)})">
-          <span class="bg-emerald-950 text-emerald-400 border border-emerald-800 text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 uppercase">Nguồn 1</span>
+      <!-- URL LINK GỐC: ĐỒNG BỘ MÀU NỀN SÁNG NHƯ KHO NGUỒN -->
+      <div class="dead-url-box space-y-1.5">
+        <div class="font-mono text-[11px] font-semibold text-emerald-700 break-all cp flex items-start gap-2" onclick="cp(${q(g.orig)})">
+          <span class="bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-black px-1.5 py-0.5 rounded shrink-0">[1]</span>
           <span class="hover:underline flex-1">${esc(g.orig)}</span>
-          <i class="far fa-copy text-slate-400 text-xs shrink-0 mt-0.5"></i>
         </div>
         ${g.orig2 ? `
-        <div class="font-mono text-[11px] font-semibold text-sky-300 break-all cp flex items-start gap-2 pt-1.5 border-t border-slate-800" onclick="cp(${q(g.orig2)})">
-          <span class="bg-sky-950 text-sky-400 border border-sky-800 text-[9px] font-black px-1.5 py-0.5 rounded shrink-0 uppercase">Nguồn 2</span>
+        <div class="font-mono text-[11px] font-semibold text-sky-700 break-all cp flex items-start gap-2 pt-1.5 border-t border-slate-200" onclick="cp(${q(g.orig2)})">
+          <span class="bg-sky-100 text-sky-800 border border-sky-200 text-[10px] font-black px-1.5 py-0.5 rounded shrink-0">[2]</span>
           <span class="hover:underline flex-1">${esc(g.orig2)}</span>
-          <i class="far fa-copy text-slate-400 text-xs shrink-0 mt-0.5"></i>
         </div>` : ''}
       </div>
       
@@ -4500,8 +4640,12 @@ async function saveRootEdit() {
     });
   }
 
-  closeAdminModal("mRootEdit");
+  linksMutationSeq++;
   await aj("/api/admin/save_links_and_pool", { method: "POST", body: { links: linksDb, pool: linkPoolDb } });
+  linksMutationSeq++;
+  lastSig.l = JSON.stringify(linksDb);
+  lastSig.p = JSON.stringify(linkPoolDb);
+  closeAdminModal("mRootEdit");
   renderLinks();
   if (!isSupportedCombo) {
     toast("Đã lưu metadata Combo Custom vào Kho dự phòng (không đổi các Link Sub sang V5/V6 giả vì tổ hợp chưa hỗ trợ routing)!");
@@ -4698,8 +4842,12 @@ async function createLink() {
   });
 
   try {
+    linksMutationSeq++;
     // Gộp lưu cả Link và Pool trong 1 lượt ghi duy nhất
     await aj("/api/admin/save_links_and_pool", { method: "POST", body: { links: linksDb, pool: linkPoolDb } });
+    linksMutationSeq++;
+    lastSig.l = JSON.stringify(linksDb);
+    lastSig.p = JSON.stringify(linkPoolDb);
     toast((isCombo ? "Đã tạo Link Trộn #" + finalIdx : "Đã tạo Link Đơn #" + finalIdx) + "! Nhớ Đồng bộ GitHub.");
     ["lkOrig", "lkOrig2", "lkEmail", "lkExp", "lkIdx", "lkGb1", "lkRemainGb1", "lkPoolExp1", "lkGb2", "lkRemainGb2", "lkPoolExp2"].forEach(f => {
       if ($(f)) $(f).value = "";
@@ -4817,10 +4965,10 @@ async function saveLnkEdit() {
   }
   delete l.machine;
 
-  closeAdminModal("mLnk");
-  renderLinks();
   try {
     await saveLinks();
+    closeAdminModal("mLnk");
+    renderLinks();
     toast("Đã cập nhật link con thành công! Token khách giữ nguyên.");
   } catch (e) {
     toast("Lỗi: " + e.message, "err");
@@ -5474,6 +5622,9 @@ function setupSortablePkgs() {
   sortablePkgsInstance = new Sortable(container, {
     handle: ".grip-pkg",
     animation: 150,
+    delay: 80,
+    delayOnTouchOnly: true,
+    touchStartThreshold: 4,
     onEnd: () => {
       const items = [...container.querySelectorAll(".pkg-sort-item")];
       const newOrderedList = [];
@@ -5483,7 +5634,7 @@ function setupSortablePkgs() {
         if (found) newOrderedList.push(found);
       });
       adminPkgsList = newOrderedList;
-      renderPkgAdmin();
+      setTimeout(() => renderPkgAdmin(), 0);
     }
   });
 }
@@ -5891,7 +6042,7 @@ function renderDeadSources() {
         <div class="dead-url-box space-y-1.5">${urlsHtml}</div>
         <div class="flex items-center justify-between text-[11px] text-slate-500 gap-2 flex-wrap">
           <span>Còn <b>${esc(p.remainGb || "—")} / ${esc(p.gb || "—")} GB</b> · HSD <b>${esc(p.exp || "Vĩnh viễn")}</b></span>
-          <span>Tải <b>${count}/${p.max || 30} máy</b></span>
+          <span>Tải <b>${count}${p.max ? "/" + esc(p.max) + " máy" : " máy"}</b></span>
         </div>
         ${childLinksHtml}
       </div>`;
@@ -5995,7 +6146,20 @@ const guideTabList = () => {
   return Array.isArray(t) && t.length ? t : DEF_TABS.map(x => ({ ...x }));
 };
 function cmsEnsureTabs() {
-  if (!Array.isArray(guides._tabs) || !guides._tabs.length) guides._tabs = DEF_TABS.map(x => ({ ...x }));
+  if (!Array.isArray(guides._tabs) || !guides._tabs.length) {
+    guides._tabs = DEF_TABS.map(x => ({ ...x }));
+    return;
+  }
+  guides._tabs.forEach(t => {
+    const def = DEF_TABS.find(d => d.id === t.id);
+    if (def) {
+      if (!t.ic) t.ic = def.ic;
+      if (!t.col) t.col = def.col;
+    } else {
+      if (!t.ic) t.ic = "fas fa-book-open";
+      if (!t.col) t.col = "text-indigo-500";
+    }
+  });
 }
 
 function ensureArts() {
@@ -6235,6 +6399,9 @@ function setupSortableCmsTabs() {
     handle: ".grip",
     draggable: "[data-tabid]",
     animation: 150,
+    delay: 80,
+    delayOnTouchOnly: true,
+    touchStartThreshold: 4,
     onEnd: async () => {
       cmsEnsureTabs();
       const currentIds = [...el.querySelectorAll("[data-tabid]")].map(d => d.dataset.tabid);
@@ -6266,6 +6433,7 @@ function cmsTabSet(k, v) {
     renderCmsTabBtns();
   }
 }
+const CMS_NEW_TAB_COLORS = ["text-indigo-500", "text-emerald-500", "text-amber-500", "text-rose-500", "text-sky-500"];
 async function cmsAddTab() {
   const name = prompt("Tên tab mới:", "");
   if (!name || !name.trim()) return;
@@ -6273,7 +6441,7 @@ async function cmsAddTab() {
   cmsEnsureTabs();
   ensureArts();
   const id = "t" + Date.now().toString(36);
-  guides._tabs.push({ id, name: name.trim(), img: "" });
+  guides._tabs.push({ id, name: name.trim(), img: "", ic: "fas fa-book-open", col: CMS_NEW_TAB_COLORS[guides._tabs.length % CMS_NEW_TAB_COLORS.length] });
   guides[id] = [];
   guides._articles[id] = [{
     slug: toSlug(name.trim()),
@@ -7020,6 +7188,7 @@ function addArticleToCategory(tabId) {
   }
 }
 
+let sortableGuideCats = null;
 function renderGuideCategoriesTree() {
   const container = $("cmsCategoriesTree");
   if (!container) return;
@@ -7035,7 +7204,7 @@ function renderGuideCategoriesTree() {
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-2 min-w-0 flex-1">
           <span class="grip-cat cursor-grab text-slate-400 hover:text-indigo-600 px-1 py-1 shrink-0" title="Kéo thả đổi thứ tự"><i class="fas fa-grip-vertical text-sm"></i></span>
-          ${tab.img ? `<img src="${esc(safeUrl(tab.img))}" class="w-5 h-5 rounded object-contain shrink-0">` : `<i class="${esc(tab.ic || "fas fa-book")} text-slate-500 text-sm shrink-0"></i>`}
+          ${tab.img ? `<img src="${esc(safeUrl(tab.img))}" class="w-5 h-5 rounded object-contain shrink-0">` : `<i class="${esc(tab.ic || "fas fa-book-open")} ${esc(tab.col || "text-indigo-500")} text-sm shrink-0"></i>`}
           <span class="font-bold text-sm text-slate-800 truncate cms-cat-title">${esc(tab.name)}</span>
           <span class="bg-slate-100 text-slate-600 border border-slate-200 font-semibold text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">${arts.length} bài</span>
         </div>
@@ -7073,15 +7242,19 @@ function renderGuideCategoriesTree() {
   }).join("");
 
   if (typeof Sortable !== "undefined") {
-    new Sortable(container, {
+    if (sortableGuideCats) sortableGuideCats.destroy();
+    sortableGuideCats = new Sortable(container, {
       handle: ".grip-cat",
       animation: 150,
+      delay: 80,
+      delayOnTouchOnly: true,
+      touchStartThreshold: 4,
       onEnd: async () => {
         const ids = [...container.querySelectorAll(".cms-cat-box")].map(el => el.dataset.tabid);
         guides._tabs.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
         try {
           await aj("/api/guides", { method: "POST", body: guides });
-          renderGuideCategoriesTree();
+          setTimeout(() => renderGuideCategoriesTree(), 0);
           toast("Đã lưu thứ tự danh mục thành công!");
         } catch (e) {
           if (e && e.message !== "401") toast("Lỗi lưu thứ tự danh mục: " + e.message, "err");
@@ -7374,6 +7547,7 @@ function loadAdminFaqs() {
   window.adminFaqsList = adminFaqsList;
 }
 
+let sortableFaqInstance = null;
 function renderFaqAdmin() {
   if (!Array.isArray(adminFaqsList) || !adminFaqsList.length) loadAdminFaqs();
   const c = $("faqAdminRows") || $("faqListContainer");
@@ -7404,13 +7578,18 @@ function renderFaqAdmin() {
   `).join("") || '<div class="text-xs text-slate-400 italic p-4 text-center">Chưa có câu hỏi FAQ nào. Bấm "+ Thêm câu hỏi" để thêm mới.</div>';
 
   if (typeof Sortable !== "undefined") {
-    new Sortable(c, {
+    if (sortableFaqInstance) sortableFaqInstance.destroy();
+    sortableFaqInstance = new Sortable(c, {
       handle: ".grip-faq",
       animation: 150,
+      delay: 80,
+      delayOnTouchOnly: true,
+      touchStartThreshold: 4,
       onEnd: (evt) => {
+        if (evt.oldIndex === evt.newIndex) return;
         const [moved] = adminFaqsList.splice(evt.oldIndex, 1);
         adminFaqsList.splice(evt.newIndex, 0, moved);
-        renderFaqAdmin();
+        setTimeout(() => renderFaqAdmin(), 0);
       }
     });
   }
@@ -7542,9 +7721,14 @@ function ftColsFromDb(ft) {
   return ftClone(FT_TEMPLATE);
 }
 
+let sortableFtColsInstance = null;
+let sortableFtLinkInstances = [];
 function renderFtCols() {
   const w = $("footerColsWrap") || $("ftColsWrap");
   if (!w) return;
+  if (sortableFtColsInstance) { sortableFtColsInstance.destroy(); sortableFtColsInstance = null; }
+  sortableFtLinkInstances.forEach(s => { try { s.destroy(); } catch {} });
+  sortableFtLinkInstances = [];
   w.innerHTML = ftCols.map((c, ci) => `
    <div data-col-idx="${ci}" class="ft-col-item border-2 border-slate-200 rounded-2xl p-3.5 bg-slate-50/70 space-y-3 transition hover:border-indigo-300">
     <div class="flex items-center gap-1.5 pb-2 border-b border-slate-200">
@@ -7569,26 +7753,34 @@ function renderFtCols() {
    </div>`).join('') || '<div class="col-span-full text-xs text-slate-400 italic p-3 border border-dashed border-slate-300 rounded-xl text-center">Chưa có cột nào.</div>';
 
   if (typeof Sortable !== "undefined") {
-    new Sortable(w, {
+    sortableFtColsInstance = new Sortable(w, {
       handle: ".grip-ft-col",
       animation: 150,
+      delay: 80,
+      delayOnTouchOnly: true,
+      touchStartThreshold: 4,
       onEnd: (evt) => {
+        if (evt.oldIndex === evt.newIndex) return;
         const [moved] = ftCols.splice(evt.oldIndex, 1);
         ftCols.splice(evt.newIndex, 0, moved);
-        renderFtCols();
+        setTimeout(() => renderFtCols(), 0);
       }
     });
     w.querySelectorAll(".ft-links-wrap").forEach(el => {
       const colIdx = Number(el.dataset.col);
-      new Sortable(el, {
+      sortableFtLinkInstances.push(new Sortable(el, {
         handle: ".grip-ft-link",
         animation: 150,
+        delay: 80,
+        delayOnTouchOnly: true,
+        touchStartThreshold: 4,
         onEnd: (evt) => {
+          if (evt.oldIndex === evt.newIndex) return;
           const [movedLink] = ftCols[colIdx].links.splice(evt.oldIndex, 1);
           ftCols[colIdx].links.splice(evt.newIndex, 0, movedLink);
-          renderFtCols();
+          setTimeout(() => renderFtCols(), 0);
         }
-      });
+      }));
     });
   }
 }
@@ -9645,7 +9837,7 @@ window.rejectTxItem = rejectTxItem;
 // Expose all admin functions and state to window for HTML inline event handlers
 if (typeof window !== 'undefined') {
   const _exposed = [['mcSetMobilePane', typeof mcSetMobilePane !== 'undefined' ? mcSetMobilePane : undefined], ['closeAdminModal', typeof closeAdminModal !== 'undefined' ? closeAdminModal : undefined], ['saveAllFuncSettings', typeof saveAllFuncSettings !== 'undefined' ? saveAllFuncSettings : undefined], ['renderGiftRulesAdmin', typeof renderGiftRulesAdmin !== 'undefined' ? renderGiftRulesAdmin : undefined], ['openAddGiftRuleModal', typeof openAddGiftRuleModal !== 'undefined' ? openAddGiftRuleModal : undefined], ['closeGiftRuleModal', typeof closeGiftRuleModal !== 'undefined' ? closeGiftRuleModal : undefined], ['saveGiftRuleModal', typeof saveGiftRuleModal !== 'undefined' ? saveGiftRuleModal : undefined], ['toggleGiftRuleStatus', typeof toggleGiftRuleStatus !== 'undefined' ? toggleGiftRuleStatus : undefined], ['deleteGiftRuleItem', typeof deleteGiftRuleItem !== 'undefined' ? deleteGiftRuleItem : undefined], ['updateGiftRulePkgCheckboxes', typeof updateGiftRulePkgCheckboxes !== 'undefined' ? updateGiftRulePkgCheckboxes : undefined], ['renderFlashSaleAdmin', typeof renderFlashSaleAdmin !== 'undefined' ? renderFlashSaleAdmin : undefined], ['saveFlashSaleConfig', typeof saveFlashSaleConfig !== 'undefined' ? saveFlashSaleConfig : undefined], ['renderCouponAdmin', typeof renderCouponAdmin !== 'undefined' ? renderCouponAdmin : undefined], ['toggleCouponStatus', typeof toggleCouponStatus !== 'undefined' ? toggleCouponStatus : undefined], ['deleteCouponItem', typeof deleteCouponItem !== 'undefined' ? deleteCouponItem : undefined], ['openAddCouponModal', typeof openAddCouponModal !== 'undefined' ? openAddCouponModal : undefined], ['closeCouponModal', typeof closeCouponModal !== 'undefined' ? closeCouponModal : undefined], ['saveCouponModal', typeof saveCouponModal !== 'undefined' ? saveCouponModal : undefined], ['saveRevRates', typeof saveRevRates !== 'undefined' ? saveRevRates : undefined], ['savePkgRates', typeof savePkgRates !== 'undefined' ? savePkgRates : undefined], ['syncRatesToPackages', typeof syncRatesToPackages !== 'undefined' ? syncRatesToPackages : undefined], ['syncPublicPackagesPayload', typeof syncPublicPackagesPayload !== 'undefined' ? syncPublicPackagesPayload : undefined], ['toggleCouponCheckoutInput', typeof toggleCouponCheckoutInput !== 'undefined' ? toggleCouponCheckoutInput : undefined], ['renderExceptionsTab', typeof renderExceptionsTab !== 'undefined' ? renderExceptionsTab : undefined], ['manualMatchTx', typeof manualMatchTx !== 'undefined' ? manualMatchTx : undefined], ['rejectTxItem', typeof rejectTxItem !== 'undefined' ? rejectTxItem : undefined], ['toast', typeof toast !== 'undefined' ? toast : undefined], ['autoGrow', typeof autoGrow !== 'undefined' ? autoGrow : undefined], ['parseAny', typeof parseAny !== 'undefined' ? parseAny : undefined], ['tickClocks', typeof tickClocks !== 'undefined' ? tickClocks : undefined], ['paintTimeUI', typeof paintTimeUI !== 'undefined' ? paintTimeUI : undefined], ['pickTz', typeof pickTz !== 'undefined' ? pickTz : undefined], ['applySim', typeof applySim !== 'undefined' ? applySim : undefined], ['clearSim', typeof clearSim !== 'undefined' ? clearSim : undefined], ['pkgOf', typeof pkgOf !== 'undefined' ? pkgOf : undefined], ['ordMonths', typeof ordMonths !== 'undefined' ? ordMonths : undefined], ['webLabel', typeof webLabel !== 'undefined' ? webLabel : undefined], ['getMe', typeof getMe !== 'undefined' ? getMe : undefined], ['linkBottom', typeof linkBottom !== 'undefined' ? linkBottom : undefined], ['api', typeof api !== 'undefined' ? api : undefined], ['toLogin', typeof toLogin !== 'undefined' ? toLogin : undefined], ['doLogin', typeof doLogin !== 'undefined' ? doLogin : undefined], ['doLogout', typeof doLogout !== 'undefined' ? doLogout : undefined], ['resetAndHardReload', typeof resetAndHardReload !== 'undefined' ? resetAndHardReload : undefined], ['healLinks', typeof healLinks !== 'undefined' ? healLinks : undefined], ['applyPoll', typeof applyPoll !== 'undefined' ? applyPoll : undefined], ['fetchAll', typeof fetchAll !== 'undefined' ? fetchAll : undefined], ['pollMain', typeof pollMain !== 'undefined' ? pollMain : undefined], ['switchPkgSubTab', typeof switchPkgSubTab !== 'undefined' ? switchPkgSubTab : undefined], ['buildTabs', typeof buildTabs !== 'undefined' ? buildTabs : undefined], ['go', typeof go !== 'undefined' ? go : undefined], ['switchOrdTab', typeof switchOrdTab !== 'undefined' ? switchOrdTab : undefined], ['ordCard', typeof ordCard !== 'undefined' ? ordCard : undefined], ['renderOrd', typeof renderOrd !== 'undefined' ? renderOrd : undefined], ['updateOrderTogglesUI', typeof updateOrderTogglesUI !== 'undefined' ? updateOrderTogglesUI : undefined], ['toggleLockFulfillBtn', typeof toggleLockFulfillBtn !== 'undefined' ? toggleLockFulfillBtn : undefined], ['toggleMailOnSaveBtn', typeof toggleMailOnSaveBtn !== 'undefined' ? toggleMailOnSaveBtn : undefined], ['toggleManualEditBtn', typeof toggleManualEditBtn !== 'undefined' ? toggleManualEditBtn : undefined], ['autoFillNickname', typeof autoFillNickname !== 'undefined' ? autoFillNickname : undefined], ['updMonths', typeof updMonths !== 'undefined' ? updMonths : undefined], ['updAmountUi', typeof updAmountUi !== 'undefined' ? updAmountUi : undefined], ['fillAmount', typeof fillAmount !== 'undefined' ? fillAmount : undefined], ['getOrderAnchorTs', typeof getOrderAnchorTs !== 'undefined' ? getOrderAnchorTs : undefined], ['autoFillDays', typeof autoFillDays !== 'undefined' ? autoFillDays : undefined], ['onPkgChange', typeof onPkgChange !== 'undefined' ? onPkgChange : undefined], ['onMethodChange', typeof onMethodChange !== 'undefined' ? onMethodChange : undefined], ['recalcExpFromDays', typeof recalcExpFromDays !== 'undefined' ? recalcExpFromDays : undefined], ['recalcDaysFromExp', typeof recalcDaysFromExp !== 'undefined' ? recalcDaysFromExp : undefined], ['togSF', typeof togSF !== 'undefined' ? togSF : undefined], ['syncUpg', typeof syncUpg !== 'undefined' ? syncUpg : undefined], ['readModal', typeof readModal !== 'undefined' ? readModal : undefined], ['openOrdModal', typeof openOrdModal !== 'undefined' ? openOrdModal : undefined], ['saveOrd', typeof saveOrd !== 'undefined' ? saveOrd : undefined], ['delOrd', typeof delOrd !== 'undefined' ? delOrd : undefined], ['getMissingOrders', typeof getMissingOrders !== 'undefined' ? getMissingOrders : undefined], ['updateCheckBadge', typeof updateCheckBadge !== 'undefined' ? updateCheckBadge : undefined], ['renderCheckTab', typeof renderCheckTab !== 'undefined' ? renderCheckTab : undefined], ['saveCheckManual', typeof saveCheckManual !== 'undefined' ? saveCheckManual : undefined], ['healSingleOrder', typeof healSingleOrder !== 'undefined' ? healSingleOrder : undefined], ['healAllMissingWithProgress', typeof healAllMissingWithProgress !== 'undefined' ? healAllMissingWithProgress : undefined], ['mailRender', typeof mailRender !== 'undefined' ? mailRender : undefined], ['orderVars', typeof orderVars !== 'undefined' ? orderVars : undefined], ['sendExpMail', typeof sendExpMail !== 'undefined' ? sendExpMail : undefined], ['sendZaloMail', typeof sendZaloMail !== 'undefined' ? sendZaloMail : undefined], ['getCentralRates', typeof getCentralRates !== 'undefined' ? getCentralRates : undefined], ['revList', typeof revList !== 'undefined' ? revList : undefined], ['costSum', typeof costSum !== 'undefined' ? costSum : undefined], ['monthTotals', typeof monthTotals !== 'undefined' ? monthTotals : undefined], ['renderRevenue', typeof renderRevenue !== 'undefined' ? renderRevenue : undefined], ['revOver', typeof revOver !== 'undefined' ? revOver : undefined], ['revPay', typeof revPay !== 'undefined' ? revPay : undefined], ['saveCentralRates', typeof saveCentralRates !== 'undefined' ? saveCentralRates : undefined], ['revPayDetail', typeof revPayDetail !== 'undefined' ? revPayDetail : undefined], ['revCost', typeof revCost !== 'undefined' ? revCost : undefined], ['addCost', typeof addCost !== 'undefined' ? addCost : undefined], ['delCost', typeof delCost !== 'undefined' ? delCost : undefined], ['tplToMc', typeof tplToMc !== 'undefined' ? tplToMc : undefined], ['mcSampleVars', typeof mcSampleVars !== 'undefined' ? mcSampleVars : undefined], ['mcRenderTabs', typeof mcRenderTabs !== 'undefined' ? mcRenderTabs : undefined], ['mcRenderPresetOptions', typeof mcRenderPresetOptions !== 'undefined' ? mcRenderPresetOptions : undefined], ['mcLoadPreset', typeof mcLoadPreset !== 'undefined' ? mcLoadPreset : undefined], ['mcSwitchTab', typeof mcSwitchTab !== 'undefined' ? mcSwitchTab : undefined], ['renderMailComposer', typeof renderMailComposer !== 'undefined' ? renderMailComposer : undefined], ['mcInsertVar', typeof mcInsertVar !== 'undefined' ? mcInsertVar : undefined], ['mcRenderEditor', typeof mcRenderEditor !== 'undefined' ? mcRenderEditor : undefined], ['mcPreview', typeof mcPreview !== 'undefined' ? mcPreview : undefined], ['mcSet', typeof mcSet !== 'undefined' ? mcSet : undefined], ['mcAdd', typeof mcAdd !== 'undefined' ? mcAdd : undefined], ['mcMove', typeof mcMove !== 'undefined' ? mcMove : undefined], ['mcDel', typeof mcDel !== 'undefined' ? mcDel : undefined], ['mcPickColor', typeof mcPickColor !== 'undefined' ? mcPickColor : undefined], ['mcColorInput', typeof mcColorInput !== 'undefined' ? mcColorInput : undefined], ['mcGrad', typeof mcGrad !== 'undefined' ? mcGrad : undefined], ['mcSaveTemplate', typeof mcSaveTemplate !== 'undefined' ? mcSaveTemplate : undefined], ['mcExtraAction', typeof mcExtraAction !== 'undefined' ? mcExtraAction : undefined], ['mcScan', typeof mcScan !== 'undefined' ? mcScan : undefined], ['mcRenderRecs', typeof mcRenderRecs !== 'undefined' ? mcRenderRecs : undefined], ['mcSend', typeof mcSend !== 'undefined' ? mcSend : undefined], ['dataPriceLabel', typeof dataPriceLabel !== 'undefined' ? dataPriceLabel : undefined], ['renderDataRequests', typeof renderDataRequests !== 'undefined' ? renderDataRequests : undefined], ['sendDataReport', typeof sendDataReport !== 'undefined' ? sendDataReport : undefined], ['delDataRequest', typeof delDataRequest !== 'undefined' ? delDataRequest : undefined], ['clearDataRequests', typeof clearDataRequests !== 'undefined' ? clearDataRequests : undefined], ['toggleDataRequestSeen', typeof toggleDataRequestSeen !== 'undefined' ? toggleDataRequestSeen : undefined], ['markAllDataRequestsSeen', typeof markAllDataRequestsSeen !== 'undefined' ? markAllDataRequestsSeen : undefined], ['switchTxTab', typeof switchTxTab !== 'undefined' ? switchTxTab : undefined], ['mergeTx', typeof mergeTx !== 'undefined' ? mergeTx : undefined], ['loadTx', typeof loadTx !== 'undefined' ? loadTx : undefined], ['deleteTx', typeof deleteTx !== 'undefined' ? deleteTx : undefined], ['renderTransactions', typeof renderTransactions !== 'undefined' ? renderTransactions : undefined], ['approveTransaction', typeof approveTransaction !== 'undefined' ? approveTransaction : undefined], ['detectProvider', typeof detectProvider !== 'undefined' ? detectProvider : undefined], ['buildMasked', typeof buildMasked !== 'undefined' ? buildMasked : undefined], ['openRootEditModal', typeof openRootEditModal !== 'undefined' ? openRootEditModal : undefined], ['toggleClusterSpecs', typeof toggleClusterSpecs !== 'undefined' ? toggleClusterSpecs : undefined], ['renderLinks', typeof renderLinks !== 'undefined' ? renderLinks : undefined], ['saveRootEdit', typeof saveRootEdit !== 'undefined' ? saveRootEdit : undefined], ['createLink', typeof createLink !== 'undefined' ? createLink : undefined], ['openLnkModal', typeof openLnkModal !== 'undefined' ? openLnkModal : undefined], ['saveLnkEdit', typeof saveLnkEdit !== 'undefined' ? saveLnkEdit : undefined], ['toggleLock', typeof toggleLock !== 'undefined' ? toggleLock : undefined], ['delLink', typeof delLink !== 'undefined' ? delLink : undefined], ['sortAllLinks', typeof sortAllLinks !== 'undefined' ? sortAllLinks : undefined], ['triggerGitHub', typeof triggerGitHub !== 'undefined' ? triggerGitHub : undefined], ['runGC', typeof runGC !== 'undefined' ? runGC : undefined], ['rebuildAllMAP', typeof rebuildAllMAP !== 'undefined' ? rebuildAllMAP : undefined], ['getDefaultAdminPkgs', typeof getDefaultAdminPkgs !== 'undefined' ? getDefaultAdminPkgs : undefined], ['hydrateTopNoticeForm', typeof hydrateTopNoticeForm !== 'undefined' ? hydrateTopNoticeForm : undefined], ['renderTopNoticeAdminPreview', typeof renderTopNoticeAdminPreview !== 'undefined' ? renderTopNoticeAdminPreview : undefined], ['onTopNoticeToggle', typeof onTopNoticeToggle !== 'undefined' ? onTopNoticeToggle : undefined], ['saveTopNotice', typeof saveTopNotice !== 'undefined' ? saveTopNotice : undefined], ['loadAdminPkgs', typeof loadAdminPkgs !== 'undefined' ? loadAdminPkgs : undefined], ['toggleHidePkg', typeof toggleHidePkg !== 'undefined' ? toggleHidePkg : undefined], ['renderPkgAdmin', typeof renderPkgAdmin !== 'undefined' ? renderPkgAdmin : undefined], ['toggleLifetimePkg', typeof toggleLifetimePkg !== 'undefined' ? toggleLifetimePkg : undefined], ['togglePkgCat', typeof togglePkgCat !== 'undefined' ? togglePkgCat : undefined], ['addNewCustomPkg', typeof addNewCustomPkg !== 'undefined' ? addNewCustomPkg : undefined], ['delPkg', typeof delPkg !== 'undefined' ? delPkg : undefined], ['saveAllPkgs', typeof saveAllPkgs !== 'undefined' ? saveAllPkgs : undefined], ['relinkScanRun', typeof relinkScanRun !== 'undefined' ? relinkScanRun : undefined], ['relinkMapRun', typeof relinkMapRun !== 'undefined' ? relinkMapRun : undefined], ['relinkApply', typeof relinkApply !== 'undefined' ? relinkApply : undefined], ['switchDeadSubTab', typeof switchDeadSubTab !== 'undefined' ? switchDeadSubTab : undefined], ['renderDead', typeof renderDead !== 'undefined' ? renderDead : undefined], ['renderDeadSources', typeof renderDeadSources !== 'undefined' ? renderDeadSources : undefined], ['hardDeleteSource', typeof hardDeleteSource !== 'undefined' ? hardDeleteSource : undefined], ['cleanUnusedSources', typeof cleanUnusedSources !== 'undefined' ? cleanUnusedSources : undefined], ['restoreLink', typeof restoreLink !== 'undefined' ? restoreLink : undefined], ['clearDeadLinks', typeof clearDeadLinks !== 'undefined' ? clearDeadLinks : undefined], ['cmsEnsureTabs', typeof cmsEnsureTabs !== 'undefined' ? cmsEnsureTabs : undefined], ['ensureArts', typeof ensureArts !== 'undefined' ? ensureArts : undefined], ['initGuides', typeof initGuides !== 'undefined' ? initGuides : undefined], ['renderGuideAll', typeof renderGuideAll !== 'undefined' ? renderGuideAll : undefined], ['copyArtDeepLink', typeof copyArtDeepLink !== 'undefined' ? copyArtDeepLink : undefined], ['getEditorHtml', typeof getEditorHtml !== 'undefined' ? getEditorHtml : undefined], ['commitCms', typeof commitCms !== 'undefined' ? commitCms : undefined], ['setCms', typeof setCms !== 'undefined' ? setCms : undefined], ['openArt', typeof openArt !== 'undefined' ? openArt : undefined], ['artAdd', typeof artAdd !== 'undefined' ? artAdd : undefined], ['artDel', typeof artDel !== 'undefined' ? artDel : undefined], ['renderArtList', typeof renderArtList !== 'undefined' ? renderArtList : undefined], ['renderCmsTabBtns', typeof renderCmsTabBtns !== 'undefined' ? renderCmsTabBtns : undefined], ['setupSortableCmsTabs', typeof setupSortableCmsTabs !== 'undefined' ? setupSortableCmsTabs : undefined], ['renderCmsTabEdit', typeof renderCmsTabEdit !== 'undefined' ? renderCmsTabEdit : undefined], ['cmsTabSet', typeof cmsTabSet !== 'undefined' ? cmsTabSet : undefined], ['cmsAddTab', typeof cmsAddTab !== 'undefined' ? cmsAddTab : undefined], ['cmsDelTab', typeof cmsDelTab !== 'undefined' ? cmsDelTab : undefined], ['bStyle', typeof bStyle !== 'undefined' ? bStyle : undefined], ['guideScroll', typeof guideScroll !== 'undefined' ? guideScroll : undefined], ['openLightbox', typeof openLightbox !== 'undefined' ? openLightbox : undefined], ['cmsGoto', typeof cmsGoto !== 'undefined' ? cmsGoto : undefined], ['cmsGotoArt', typeof cmsGotoArt !== 'undefined' ? cmsGotoArt : undefined], ['buildRichArticleView', typeof buildRichArticleView !== 'undefined' ? buildRichArticleView : undefined], ['scrollToHeadingText', typeof scrollToHeadingText !== 'undefined' ? scrollToHeadingText : undefined], ['cmsPrev', typeof cmsPrev !== 'undefined' ? cmsPrev : undefined], ['addArtFaqRow', typeof addArtFaqRow !== 'undefined' ? addArtFaqRow : undefined], ['delArtFaqRow', typeof delArtFaqRow !== 'undefined' ? delArtFaqRow : undefined], ['renderArtFaqsUI', typeof renderArtFaqsUI !== 'undefined' ? renderArtFaqsUI : undefined], ['toggleRelatedArtPick', typeof toggleRelatedArtPick !== 'undefined' ? toggleRelatedArtPick : undefined], ['renderCmsEditor', typeof renderCmsEditor !== 'undefined' ? renderCmsEditor : undefined], ['saveArtFaqsOnly', typeof saveArtFaqsOnly !== 'undefined' ? saveArtFaqsOnly : undefined], ['saveCms', typeof saveCms !== 'undefined' ? saveCms : undefined], ['closeCmsEditor', typeof closeCmsEditor !== 'undefined' ? closeCmsEditor : undefined], ['openCmsEditorForArt', typeof openCmsEditorForArt !== 'undefined' ? openCmsEditorForArt : undefined], ['addArticleToCategory', typeof addArticleToCategory !== 'undefined' ? addArticleToCategory : undefined], ['renderGuideCategoriesTree', typeof renderGuideCategoriesTree !== 'undefined' ? renderGuideCategoriesTree : undefined], ['switchCheckSubTab', typeof switchCheckSubTab !== 'undefined' ? switchCheckSubTab : undefined], ['switchSettingsTab', typeof switchSettingsTab !== 'undefined' ? switchSettingsTab : undefined], ['showCronLog', typeof showCronLog !== 'undefined' ? showCronLog : undefined], ['renderRouteRows', typeof renderRouteRows !== 'undefined' ? renderRouteRows : undefined], ['saveRouting', typeof saveRouting !== 'undefined' ? saveRouting : undefined], ['checkBlurValidity', typeof checkBlurValidity !== 'undefined' ? checkBlurValidity : undefined], ['renderBlurRows', typeof renderBlurRows !== 'undefined' ? renderBlurRows : undefined], ['saveBlur', typeof saveBlur !== 'undefined' ? saveBlur : undefined], ['renderDockRows', typeof renderDockRows !== 'undefined' ? renderDockRows : undefined], ['dockPv', typeof dockPv !== 'undefined' ? dockPv : undefined], ['readDockRows', typeof readDockRows !== 'undefined' ? readDockRows : undefined], ['addDockIcon', typeof addDockIcon !== 'undefined' ? addDockIcon : undefined], ['removeDockIcon', typeof removeDockIcon !== 'undefined' ? removeDockIcon : undefined], ['saveDock', typeof saveDock !== 'undefined' ? saveDock : undefined], ['loadAdminFaqs', typeof loadAdminFaqs !== 'undefined' ? loadAdminFaqs : undefined], ['renderFaqAdmin', typeof renderFaqAdmin !== 'undefined' ? renderFaqAdmin : undefined], ['addNewFaq', typeof addNewFaq !== 'undefined' ? addNewFaq : undefined], ['delFaq', typeof delFaq !== 'undefined' ? delFaq : undefined], ['moveFaq', typeof moveFaq !== 'undefined' ? moveFaq : undefined], ['saveFaqs', typeof saveFaqs !== 'undefined' ? saveFaqs : undefined], ['switchFaqSubTab', typeof switchFaqSubTab !== 'undefined' ? switchFaqSubTab : undefined], ['normRouteInput', typeof normRouteInput !== 'undefined' ? normRouteInput : undefined], ['loadRoutesConfigUI', typeof loadRoutesConfigUI !== 'undefined' ? loadRoutesConfigUI : undefined], ['saveRoutesConfig', typeof saveRoutesConfig !== 'undefined' ? saveRoutesConfig : undefined], ['ftColsFromDb', typeof ftColsFromDb !== 'undefined' ? ftColsFromDb : undefined], ['renderFtCols', typeof renderFtCols !== 'undefined' ? renderFtCols : undefined], ['ftAddCol', typeof ftAddCol !== 'undefined' ? ftAddCol : undefined], ['ftDelCol', typeof ftDelCol !== 'undefined' ? ftDelCol : undefined], ['ftMoveCol', typeof ftMoveCol !== 'undefined' ? ftMoveCol : undefined], ['ftAddLink', typeof ftAddLink !== 'undefined' ? ftAddLink : undefined], ['ftDelLink', typeof ftDelLink !== 'undefined' ? ftDelLink : undefined], ['loadFooterConfigUI', typeof loadFooterConfigUI !== 'undefined' ? loadFooterConfigUI : undefined], ['saveFooterConfig', typeof saveFooterConfig !== 'undefined' ? saveFooterConfig : undefined], ['saveQrExpireSeconds', typeof saveQrExpireSeconds !== 'undefined' ? saveQrExpireSeconds : undefined], ['switchWebAdminTab', typeof switchWebAdminTab !== 'undefined' ? switchWebAdminTab : undefined], ['loadWebAdminUI', typeof loadWebAdminUI !== 'undefined' ? loadWebAdminUI : undefined], ['loadSettingsUI', typeof loadSettingsUI !== 'undefined' ? loadSettingsUI : undefined], ['saveEmailPerm', typeof saveEmailPerm !== 'undefined' ? saveEmailPerm : undefined], ['initAdminNotifyUI', typeof initAdminNotifyUI !== 'undefined' ? initAdminNotifyUI : undefined], ['updateAdminNotifyStatusUI', typeof updateAdminNotifyStatusUI !== 'undefined' ? updateAdminNotifyStatusUI : undefined], ['saveAdminNotifyPerm', typeof saveAdminNotifyPerm !== 'undefined' ? saveAdminNotifyPerm : undefined], ['saveCronCfg', typeof saveCronCfg !== 'undefined' ? saveCronCfg : undefined], ['runCronNow', typeof runCronNow !== 'undefined' ? runCronNow : undefined], ['loadStatus', typeof loadStatus !== 'undefined' ? loadStatus : undefined], ['qBar', typeof qBar !== 'undefined' ? qBar : undefined], ['mailProvCard', typeof mailProvCard !== 'undefined' ? mailProvCard : undefined], ['selectMailProvider', typeof selectMailProvider !== 'undefined' ? selectMailProvider : undefined], ['saveMailProvider', typeof saveMailProvider !== 'undefined' ? saveMailProvider : undefined], ['renderMailProvCards', typeof renderMailProvCards !== 'undefined' ? renderMailProvCards : undefined], ['loadQuota', typeof loadQuota !== 'undefined' ? loadQuota : undefined], ['loadLogs', typeof loadLogs !== 'undefined' ? loadLogs : undefined], ['renderLogs', typeof renderLogs !== 'undefined' ? renderLogs : undefined], ['renderDev', typeof renderDev !== 'undefined' ? renderDev : undefined], ['delDev', typeof delDev !== 'undefined' ? delDev : undefined], ['migrateDates', typeof migrateDates !== 'undefined' ? migrateDates : undefined], ['migratePkg', typeof migratePkg !== 'undefined' ? migratePkg : undefined], ['loadFulfillmentConfig', typeof loadFulfillmentConfig !== 'undefined' ? loadFulfillmentConfig : undefined], ['renderFulfillmentUI', typeof renderFulfillmentUI !== 'undefined' ? renderFulfillmentUI : undefined], ['selectFailoverPolicy', typeof selectFailoverPolicy !== 'undefined' ? selectFailoverPolicy : undefined], ['updateFailoverPolicyUI', typeof updateFailoverPolicyUI !== 'undefined' ? updateFailoverPolicyUI : undefined], ['saveFulfillmentMapping', typeof saveFulfillmentMapping !== 'undefined' ? saveFulfillmentMapping : undefined], ['saveFailoverPolicy', typeof saveFailoverPolicy !== 'undefined' ? saveFailoverPolicy : undefined], ['startApp', typeof startApp !== 'undefined' ? startApp : undefined], ['restoreAdminScroll', typeof restoreAdminScroll !== 'undefined' ? restoreAdminScroll : undefined], ['updateTestModeUI', typeof updateTestModeUI !== 'undefined' ? updateTestModeUI : undefined], ['testPingProd', typeof testPingProd !== 'undefined' ? testPingProd : undefined], ['testTelegramBot', typeof testTelegramBot !== 'undefined' ? testTelegramBot : undefined], ['triggerTelegramKvBackupNow', typeof triggerTelegramKvBackupNow !== 'undefined' ? triggerTelegramKvBackupNow : undefined], ['resetTelegramStt', typeof resetTelegramStt !== 'undefined' ? resetTelegramStt : undefined], ['triggerTelegramBackupNow', typeof triggerTelegramBackupNow !== 'undefined' ? triggerTelegramBackupNow : undefined], ['SITE_KEY', typeof SITE_KEY !== 'undefined' ? SITE_KEY : undefined], ['API', typeof API !== 'undefined' ? API : undefined], ['PDS', typeof PDS !== 'undefined' ? PDS : undefined], ['PD', typeof PD !== 'undefined' ? PD : undefined], ['GH_REPO', typeof GH_REPO !== 'undefined' ? GH_REPO : undefined], ['PKG_LIST', typeof PKG_LIST !== 'undefined' ? PKG_LIST : undefined], ['TABS', typeof TABS !== 'undefined' ? TABS : undefined], ['PKG_DB', typeof PKG_DB !== 'undefined' ? PKG_DB : undefined], ['$', typeof $ !== 'undefined' ? $ : undefined], ['arr', typeof arr !== 'undefined' ? arr : undefined], ['esc', typeof esc !== 'undefined' ? esc : undefined], ['q', typeof q !== 'undefined' ? q : undefined], ['cm', typeof closeAdminModal !== 'undefined' ? closeAdminModal : undefined], ['genId', typeof genId !== 'undefined' ? genId : undefined], ['genHex', typeof genHex !== 'undefined' ? genHex : undefined], ['normId', typeof normId !== 'undefined' ? normId : undefined], ['isLife', typeof isLife !== 'undefined' ? isLife : undefined], ['normSt', typeof normSt !== 'undefined' ? normSt : undefined], ['getT', typeof getT !== 'undefined' ? getT : undefined], ['trimNum', typeof trimNum !== 'undefined' ? trimNum : undefined], ['VND_SEP', typeof VND_SEP !== 'undefined' ? VND_SEP : undefined], ['fmtVnd', typeof fmtVnd !== 'undefined' ? fmtVnd : undefined], ['Toast', typeof Toast !== 'undefined' ? Toast : undefined], ['cp', typeof cp !== 'undefined' ? cp : undefined], ['sleep', typeof sleep !== 'undefined' ? sleep : undefined], ['off', typeof off !== 'undefined' ? off : undefined], ['TZN', typeof TZN !== 'undefined' ? TZN : undefined], ['nowMs', typeof nowMs !== 'undefined' ? nowMs : undefined], ['fmtBank', typeof fmtBank !== 'undefined' ? fmtBank : undefined], ['oTs', typeof oTs !== 'undefined' ? oTs : undefined], ['dmyOf', typeof dmyOf !== 'undefined' ? dmyOf : undefined], ['parseDmy', typeof parseDmy !== 'undefined' ? parseDmy : undefined], ['expEnd', typeof expEnd !== 'undefined' ? expEnd : undefined], ['monthInfo', typeof monthInfo !== 'undefined' ? monthInfo : undefined], ['fmtFull', typeof fmtFull !== 'undefined' ? fmtFull : undefined], ['OLD_BY_DATA', typeof OLD_BY_DATA !== 'undefined' ? OLD_BY_DATA : undefined], ['pkgLabel', typeof pkgLabel !== 'undefined' ? pkgLabel : undefined], ['fmtMonths', typeof fmtMonths !== 'undefined' ? fmtMonths : undefined], ['myWebIndex', typeof myWebIndex !== 'undefined' ? myWebIndex : undefined], ['payOf', typeof payOf !== 'undefined' ? payOf : undefined], ['TOKEN', typeof TOKEN !== 'undefined' ? TOKEN : undefined], ['myDev', typeof myDev !== 'undefined' ? myDev : undefined], ['aj', typeof aj !== 'undefined' ? aj : undefined], ['logEvent', typeof logEvent !== 'undefined' ? logEvent : undefined], ['ordersDb', typeof ordersDb !== 'undefined' ? ordersDb : undefined], ['curOrdTab', typeof curOrdTab !== 'undefined' ? curOrdTab : undefined], ['isMailMaster', typeof isMailMaster !== 'undefined' ? isMailMaster : undefined], ['expLocked', typeof expLocked !== 'undefined' ? expLocked : undefined], ['lockFulfillOn', typeof lockFulfillOn !== 'undefined' ? lockFulfillOn : undefined], ['mailOnSaveOn', typeof mailOnSaveOn !== 'undefined' ? mailOnSaveOn : undefined], ['manualEditOn', typeof manualEditOn !== 'undefined' ? manualEditOn : undefined], ['tombGet', typeof tombGet !== 'undefined' ? tombGet : undefined], ['tombSet', typeof tombSet !== 'undefined' ? tombSet : undefined], ['addTomb', typeof addTomb !== 'undefined' ? addTomb : undefined], ['rmTomb', typeof rmTomb !== 'undefined' ? rmTomb : undefined], ['isDeleted', typeof isDeleted !== 'undefined' ? isDeleted : undefined], ['isLockedPoolUrl', typeof isLockedPoolUrl !== 'undefined' ? isLockedPoolUrl : undefined], ['ordAmountTxt', typeof ordAmountTxt !== 'undefined' ? ordAmountTxt : undefined], ['curUpg', typeof curUpg !== 'undefined' ? curUpg : undefined], ['healAllMissing', typeof healAllMissing !== 'undefined' ? healAllMissing : undefined], ['htmlEscape', typeof htmlEscape !== 'undefined' ? htmlEscape : undefined], ['sendMailClient', typeof sendMailClient !== 'undefined' ? sendMailClient : undefined], ['mailGrad', typeof mailGrad !== 'undefined' ? mailGrad : undefined], ['mailShell', typeof mailShell !== 'undefined' ? mailShell : undefined], ['mailIdBox', typeof mailIdBox !== 'undefined' ? mailIdBox : undefined], ['mailPortal', typeof mailPortal !== 'undefined' ? mailPortal : undefined], ['mailBtn', typeof mailBtn !== 'undefined' ? mailBtn : undefined], ['mailSupport', typeof mailSupport !== 'undefined' ? mailSupport : undefined], ['TPL_THEME', typeof TPL_THEME !== 'undefined' ? TPL_THEME : undefined], ['P0', typeof P0 !== 'undefined' ? P0 : undefined], ['SYS_TPL', typeof SYS_TPL !== 'undefined' ? SYS_TPL : undefined], ['getTpl', typeof getTpl !== 'undefined' ? getTpl : undefined], ['subjVars', typeof subjVars !== 'undefined' ? subjVars : undefined], ['mailKeyOf', typeof mailKeyOf !== 'undefined' ? mailKeyOf : undefined], ['mailSuccess', typeof mailSuccess !== 'undefined' ? mailSuccess : undefined], ['mailFailed', typeof mailFailed !== 'undefined' ? mailFailed : undefined], ['mailExp', typeof mailExp !== 'undefined' ? mailExp : undefined], ['mailZalo', typeof mailZalo !== 'undefined' ? mailZalo : undefined], ['dataVars', typeof dataVars !== 'undefined' ? dataVars : undefined], ['mailData', typeof mailData !== 'undefined' ? mailData : undefined], ['revTab', typeof revTab !== 'undefined' ? revTab : undefined], ['REV_TABS', typeof REV_TABS !== 'undefined' ? REV_TABS : undefined], ['setRevTab', typeof setRevTab !== 'undefined' ? setRevTab : undefined], ['setRevPayView', typeof setRevPayView !== 'undefined' ? setRevPayView : undefined], ['setRevMonth', typeof setRevMonth !== 'undefined' ? setRevMonth : undefined], ['mcToHtml', typeof mcToHtml !== 'undefined' ? mcToHtml : undefined], ['addFaqRow', typeof addFaqRow !== 'undefined' ? addFaqRow : undefined], ['saveFaqAdmin', typeof saveFaqAdmin !== 'undefined' ? saveFaqAdmin : undefined], ['addFooterColumn', typeof addFooterColumn !== 'undefined' ? addFooterColumn : undefined], ['ftAddCol', typeof ftAddCol !== 'undefined' ? ftAddCol : undefined], ['ftDelCol', typeof ftDelCol !== 'undefined' ? ftDelCol : undefined], ['ftMoveCol', typeof ftMoveCol !== 'undefined' ? ftMoveCol : undefined], ['ftAddLink', typeof ftAddLink !== 'undefined' ? ftAddLink : undefined], ['ftDelLink', typeof ftDelLink !== 'undefined' ? ftDelLink : undefined], ['customCmsImageHandler', typeof customCmsImageHandler !== 'undefined' ? customCmsImageHandler : undefined], ['customCmsVideoHandler', typeof customCmsVideoHandler !== 'undefined' ? customCmsVideoHandler : undefined], ['recordAdminNav', typeof recordAdminNav !== 'undefined' ? recordAdminNav : undefined], ['closeCmsEditor', typeof closeCmsEditor !== 'undefined' ? closeCmsEditor : undefined], ['cnyRate', typeof cnyRate !== 'undefined' ? cnyRate : undefined], ['curVal', typeof curVal !== 'undefined' ? curVal : undefined], ['shortN', typeof shortN !== 'undefined' ? shortN : undefined], ['monthLbl', typeof monthLbl !== 'undefined' ? monthLbl : undefined], ['kpi', typeof kpi !== 'undefined' ? kpi : undefined], ['box', typeof box !== 'undefined' ? box : undefined], ['chartRevStacked', typeof chartRevStacked !== 'undefined' ? chartRevStacked : undefined], ['gridPkgTable', typeof gridPkgTable !== 'undefined' ? gridPkgTable : undefined], ['PAYLBL', typeof PAYLBL !== 'undefined' ? PAYLBL : undefined], ['MC_COLORS', typeof MC_COLORS !== 'undefined' ? MC_COLORS : undefined], ['MC_BT', typeof MC_BT !== 'undefined' ? MC_BT : undefined], ['MC_VARS_BASE', typeof MC_VARS_BASE !== 'undefined' ? MC_VARS_BASE : undefined], ['MC_VARS_SYS', typeof MC_VARS_SYS !== 'undefined' ? MC_VARS_SYS : undefined], ['MC_SYS_KEYS', typeof MC_SYS_KEYS !== 'undefined' ? MC_SYS_KEYS : undefined], ['MC_SYS_NAMES', typeof MC_SYS_NAMES !== 'undefined' ? MC_SYS_NAMES : undefined], ['MC_PRESETS', typeof MC_PRESETS !== 'undefined' ? MC_PRESETS : undefined], ['mc', typeof mc !== 'undefined' ? mc : undefined], ['mcColorName', typeof mcColorName !== 'undefined' ? mcColorName : undefined], ['mcClone', typeof mcClone !== 'undefined' ? mcClone : undefined], ['mcToTpl', typeof mcToTpl !== 'undefined' ? mcToTpl : undefined], ['extractOrder', typeof extractOrder !== 'undefined' ? extractOrder : undefined], ['delBtn', typeof delBtn !== 'undefined' ? delBtn : undefined], ['saveLinks', typeof saveLinks !== 'undefined' ? saveLinks : undefined], ['FIXED_PKG_IDS', typeof FIXED_PKG_IDS !== 'undefined' ? FIXED_PKG_IDS : undefined], ['adminPkgsList', typeof adminPkgsList !== 'undefined' ? adminPkgsList : undefined], ['sortablePkgsInstance', typeof sortablePkgsInstance !== 'undefined' ? sortablePkgsInstance : undefined], ['delCustomPkg', typeof delCustomPkg !== 'undefined' ? delCustomPkg : undefined], ['rsItems', typeof rsItems !== 'undefined' ? rsItems : undefined], ['rlPicks', typeof rlPicks !== 'undefined' ? rlPicks : undefined], ['rlAll', typeof rlAll !== 'undefined' ? rlAll : undefined], ['curDeadTab', typeof curDeadTab !== 'undefined' ? curDeadTab : undefined], ['deadLive', typeof deadLive !== 'undefined' ? deadLive : undefined], ['DEF_TABS', typeof DEF_TABS !== 'undefined' ? DEF_TABS : undefined], ['toSlug', typeof toSlug !== 'undefined' ? toSlug : undefined], ['curArtsReady', typeof curArtsReady !== 'undefined' ? curArtsReady : undefined], ['guideTabList', typeof guideTabList !== 'undefined' ? guideTabList : undefined], ['artsOf', typeof artsOf !== 'undefined' ? artsOf : undefined], ['curArtHtml', typeof curArtHtml !== 'undefined' ? curArtHtml : undefined], ['quillInst', typeof quillInst !== 'undefined' ? quillInst : undefined], ['sortableCmsTabs', typeof sortableCmsTabs !== 'undefined' ? sortableCmsTabs : undefined], ['safeUrl', typeof safeUrl !== 'undefined' ? safeUrl : undefined], ['saveCmsDb', typeof saveCmsDb !== 'undefined' ? saveCmsDb : undefined], ['curCheckSubTab', typeof curCheckSubTab !== 'undefined' ? curCheckSubTab : undefined], ['BLUR_RULES', typeof BLUR_RULES !== 'undefined' ? BLUR_RULES : undefined], ['DEFAULT_FAQS', typeof DEFAULT_FAQS !== 'undefined' ? DEFAULT_FAQS : undefined], ['adminFaqsList', typeof adminFaqsList !== 'undefined' ? adminFaqsList : undefined], ['DEFAULT_SYS_ROUTES', typeof DEFAULT_SYS_ROUTES !== 'undefined' ? DEFAULT_SYS_ROUTES : undefined], ['ftCols', typeof ftCols !== 'undefined' ? ftCols : undefined], ['FT_TEMPLATE', typeof FT_TEMPLATE !== 'undefined' ? FT_TEMPLATE : undefined], ['ftClone', typeof ftClone !== 'undefined' ? ftClone : undefined], ['yn', typeof yn !== 'undefined' ? yn : undefined], ['QL', typeof QL !== 'undefined' ? QL : undefined], ['MAIL_PROV_META', typeof MAIL_PROV_META !== 'undefined' ? MAIL_PROV_META : undefined], ['mailProvQuota', typeof mailProvQuota !== 'undefined' ? mailProvQuota : undefined], ['pickMailProvider', typeof pickMailProvider !== 'undefined' ? pickMailProvider : undefined], ['currentFulfillmentConfig', typeof currentFulfillmentConfig !== 'undefined' ? currentFulfillmentConfig : undefined], ['started', typeof started !== 'undefined' ? started : undefined], ['adminScrollTimer', typeof adminScrollTimer !== 'undefined' ? adminScrollTimer : undefined], ['isTestModeActive', typeof isTestModeActive !== 'undefined' ? isTestModeActive : undefined], ['toggleTestMode', typeof toggleTestMode !== 'undefined' ? toggleTestMode : undefined], ['testPingTest', typeof testPingTest !== 'undefined' ? testPingTest : undefined], ['createFakeTestOrder', typeof createFakeTestOrder !== 'undefined' ? createFakeTestOrder : undefined], ['cloneProdOrdersToTest', typeof cloneProdOrdersToTest !== 'undefined' ? cloneProdOrdersToTest : undefined], ['clearTestOrders', typeof clearTestOrders !== 'undefined' ? clearTestOrders : undefined], ['lastTxError', typeof lastTxError !== 'undefined' ? lastTxError : undefined],];
-  _exposed.push(['cmsUpdateArtFaq', typeof cmsUpdateArtFaq !== 'undefined' ? cmsUpdateArtFaq : undefined], ['getRelinkBackupEnabled', typeof getRelinkBackupEnabled !== 'undefined' ? getRelinkBackupEnabled : undefined], ['toggleRelinkBackup', typeof toggleRelinkBackup !== 'undefined' ? toggleRelinkBackup : undefined], ['adminBackFromDeepTab', typeof adminBackFromDeepTab !== 'undefined' ? adminBackFromDeepTab : undefined], ['MOBILE_MAIN_TABS', typeof MOBILE_MAIN_TABS !== 'undefined' ? MOBILE_MAIN_TABS : undefined], ['MORE_SUB_TABS', typeof MORE_SUB_TABS !== 'undefined' ? MORE_SUB_TABS : undefined], ['getAdminSwipeTargetTab', typeof getAdminSwipeTargetTab !== 'undefined' ? getAdminSwipeTargetTab : undefined]);
+  _exposed.push(['mcNewTemplate', typeof mcNewTemplate !== 'undefined' ? mcNewTemplate : undefined], ['cmsUpdateArtFaq', typeof cmsUpdateArtFaq !== 'undefined' ? cmsUpdateArtFaq : undefined], ['getRelinkBackupEnabled', typeof getRelinkBackupEnabled !== 'undefined' ? getRelinkBackupEnabled : undefined], ['toggleRelinkBackup', typeof toggleRelinkBackup !== 'undefined' ? toggleRelinkBackup : undefined], ['adminBackFromDeepTab', typeof adminBackFromDeepTab !== 'undefined' ? adminBackFromDeepTab : undefined], ['MOBILE_MAIN_TABS', typeof MOBILE_MAIN_TABS !== 'undefined' ? MOBILE_MAIN_TABS : undefined], ['MORE_SUB_TABS', typeof MORE_SUB_TABS !== 'undefined' ? MORE_SUB_TABS : undefined], ['getAdminSwipeTargetTab', typeof getAdminSwipeTargetTab !== 'undefined' ? getAdminSwipeTargetTab : undefined]);
   _exposed.forEach(([k, v]) => {
     if (v !== undefined) window[k] = v;
   });
@@ -9746,6 +9938,8 @@ export {
   switchWebAdminTab,
   switchDeadSubTab,
   mcSwitchTab,
+  mcNewTemplate,
+  mcScan,
   openOrdModal,
   openLnkModal,
   cmsPersistGuideTabs,

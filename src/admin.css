@@ -818,11 +818,35 @@ textarea {
   }
 }
 
-.grip {
+.grip,
+.grip-cat,
+.grip-pkg,
+.grip-faq,
+.grip-ft-col,
+.grip-ft-link {
   touch-action: none;
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
+}
+
+.grip:active,
+.grip-cat:active,
+.grip-pkg:active,
+.grip-faq:active,
+.grip-ft-col:active,
+.grip-ft-link:active {
+  cursor: grabbing;
+}
+
+.sortable-chosen {
+  opacity: 0.9;
+}
+
+.sortable-ghost {
+  opacity: 0.45;
+  outline: 2px dashed #6366f1;
+  outline-offset: -2px;
 }
 
 .tab-over {

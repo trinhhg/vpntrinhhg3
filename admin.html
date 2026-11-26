@@ -373,14 +373,19 @@
         <p id="mcHint" class="text-[11px] text-slate-600 mb-4"></p>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
           <div id="mailEditCol" class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-3">
-            <div class="flex gap-2 flex-wrap"><select id="mcPreset" onchange="mcLoadPreset()" class="flex-1 min-w-[140px] p-2 border border-slate-200 rounded-lg text-xs bg-white font-bold"></select> <button onclick="mcLoadPreset()" class="bg-indigo-50 text-indigo-600 font-bold px-3 py-2 rounded-lg text-xs hover:bg-indigo-100">Nạp mẫu</button> <button onclick="mcSaveTemplate()" class="bg-emerald-50 text-emerald-700 font-bold px-3 py-2 rounded-lg text-xs hover:bg-emerald-100"><i class="fas fa-floppy-disk mr-1"></i>Lưu mẫu</button> <button id="mcExtraBtn" onclick="mcExtraAction()" class="bg-slate-100 text-slate-600 font-bold px-3 py-2 rounded-lg text-xs hover:bg-slate-200"></button></div>
+            <div class="flex gap-2 flex-wrap items-center">
+              <select id="mcPreset" onchange="mcLoadPreset()" class="flex-1 min-w-[140px] p-2 border border-slate-200 rounded-lg text-xs bg-white font-bold"></select>
+              <button type="button" onclick="mcNewTemplate()" class="bg-indigo-50 text-indigo-700 font-bold px-3 py-2 rounded-lg text-xs hover:bg-indigo-100 whitespace-nowrap"><i class="fas fa-plus mr-1"></i>Tạo mẫu mới</button>
+              <button type="button" onclick="mcSaveTemplate()" class="bg-emerald-50 text-emerald-700 font-bold px-3 py-2 rounded-lg text-xs hover:bg-emerald-100 whitespace-nowrap"><i class="fas fa-floppy-disk mr-1"></i>Lưu mẫu</button>
+              <button type="button" id="mcExtraBtn" onclick="mcExtraAction()" class="bg-slate-100 text-slate-600 font-bold px-3 py-2 rounded-lg text-xs hover:bg-slate-200 whitespace-nowrap"></button>
+            </div>
             <div>
               <div class="text-[10px] font-bold text-slate-500 mb-1">Bấm biến để chèn vào vị trí con trỏ đang gõ</div>
               <div id="mcVarBtns" class="flex flex-wrap gap-1.5"></div>
             </div>
             <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tiêu đề mail (subject)</label><input id="mcSubject" oninput="mcSetField('subject', this.value)" class="mc-ins w-full p-2 text-xs border border-slate-200 rounded-lg outline-none" placeholder="VPN Trinh Hg - ..."></div>
             <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Tiêu đề trên thanh màu (xuống dòng = 2 dòng)</label><textarea id="mcTitle" rows="2" oninput="mcSetField('title', this.value);mcPreview()" class="mc-ins w-full p-2 text-xs border border-slate-200 rounded-lg outline-none font-bold uppercase"></textarea></div>
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-2 space-y-2">
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-2">
               <div class="grid grid-cols-3 gap-2 items-end">
                 <div>
                   <label class="block text-[10px] font-bold text-slate-500 mb-0.5">Màu thanh tiêu đề</label>
@@ -398,10 +403,10 @@
                 <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Màu 2</label><input type="color" id="mcC2" oninput="mcColorInput('c2',this.value)" class="w-full h-9 border border-slate-200 rounded-lg"></div>
               </div>
               <div class="grid grid-cols-2 gap-3">
-                <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Thanh trượt chuyển màu: <b id="mcStopV">100</b>%</label><input type="range" min="1" max="100" id="mcStop" oninput="mcGrad('stop',this.value)" class="w-full accent-indigo-600"></div>
+                <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Độ chuyển màu: <b id="mcStopV">100</b>%</label><input type="range" min="1" max="100" id="mcStop" oninput="mcGrad('stop',this.value)" class="w-full accent-indigo-600"></div>
                 <div><label class="block text-[10px] font-bold text-slate-500 mb-0.5">Góc gradient: <b id="mcAngV">135</b>°</label><input type="range" min="1" max="360" id="mcAng" oninput="mcGrad('ang',this.value)" class="w-full accent-indigo-600"></div>
               </div>
-              <div id="mcGradBar" class="h-6 rounded-lg border border-slate-200"></div>
+              <div id="mcGradBar" class="h-8 rounded-xl border border-slate-200 shadow-inner"></div>
             </div>
             <div class="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
               <div class="p-2 border-b border-slate-200 flex gap-1.5 flex-wrap items-center" id="mcAddBtns"></div>
@@ -416,14 +421,33 @@
             </div>
           </div>
         </div>
-        <div id="mcRecipPanel" class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 mt-4">
-          <div class="flex flex-wrap items-center gap-2 mb-3">
-            <div class="font-bold text-sm text-slate-800 mr-auto"><i class="fas fa-users text-indigo-500 mr-1"></i>Người nhận (khách còn đơn còn hạn)</div>
-            <button onclick="mcScan()" class="bg-slate-100 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs hover:bg-slate-200"><i class="fas fa-search mr-1"></i>Quét danh sách</button>
+        <div id="mcRecipPanel" class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 mt-4 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="font-bold text-sm text-slate-800"><i class="fas fa-users text-indigo-500 mr-1.5"></i>Người nhận &amp; Bộ lọc khách hàng</div>
+            <button type="button" onclick="mcScan()" class="bg-indigo-600 text-white font-bold px-3.5 py-2 rounded-xl text-xs hover:bg-indigo-700 shadow-sm whitespace-nowrap"><i class="fas fa-filter mr-1"></i>Quét &amp; Lọc danh sách</button>
           </div>
-          <div id="mcRecs" class="text-xs text-slate-400 italic">Bấm "Quét danh sách" để lấy email còn hạn.</div>
-          <div class="flex flex-col sm:flex-row gap-2 mt-3"><button id="mcSendBtn" onclick="mcSend()" class="flex-1 bg-indigo-600 text-white font-bold py-3 px-3 rounded-xl text-xs sm:text-sm shadow-md hover:bg-indigo-700 whitespace-nowrap flex items-center justify-center gap-1.5"><i class="fas fa-paper-plane"></i><span>XÁC NHẬN BẮN MAIL</span></button><button onclick="mcRequestStop()" class="bg-red-50 text-red-600 font-bold px-4 py-3 rounded-xl text-xs sm:text-sm border border-red-100 whitespace-nowrap">Dừng</button></div>
-          <div id="mcProg" class="mt-3 hidden">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            <input id="mcScanSearch" type="text" oninput="mcScan(true)" placeholder="Tìm Email / Mã ĐH / Zalo..." class="p-2 border border-slate-200 rounded-xl text-xs bg-slate-50 focus:bg-white outline-none focus:border-indigo-500">
+            <select id="mcScanExpFilter" onchange="mcScan(true)" class="p-2 border border-slate-200 rounded-xl text-xs bg-slate-50 font-semibold text-slate-700 outline-none focus:border-indigo-500">
+              <option value="active">Còn hạn (Đang dùng)</option>
+              <option value="expiring">Sắp hết hạn (&le; 3 ngày)</option>
+              <option value="expired">Đã hết hạn</option>
+              <option value="lifetime">Gói vĩnh viễn</option>
+              <option value="all">Tất cả đơn thành công</option>
+            </select>
+            <select id="mcScanPkgFilter" onchange="mcScan(true)" class="p-2 border border-slate-200 rounded-xl text-xs bg-slate-50 font-semibold text-slate-700 outline-none focus:border-indigo-500">
+              <option value="all">Tất cả gói cước</option>
+            </select>
+            <select id="mcScanMethodFilter" onchange="mcScan(true)" class="p-2 border border-slate-200 rounded-xl text-xs bg-slate-50 font-semibold text-slate-700 outline-none focus:border-indigo-500">
+              <option value="all">Mọi PTTT</option>
+              <option value="Bank">VN Bank</option>
+              <option value="Alipay">Alipay</option>
+              <option value="Weixin">WeChat / Weixin</option>
+            </select>
+          </div>
+          <div id="mcRecs" class="text-xs text-slate-400 italic">Bấm "Quét &amp; Lọc danh sách" để hiển thị khách hàng phù hợp.</div>
+          <div class="flex flex-col sm:flex-row gap-2"><button type="button" id="mcSendBtn" onclick="mcSend()" class="flex-1 bg-indigo-600 text-white font-bold py-3 px-3 rounded-xl text-xs sm:text-sm shadow-md hover:bg-indigo-700 whitespace-nowrap flex items-center justify-center gap-1.5"><i class="fas fa-paper-plane"></i><span>XÁC NHẬN BẮN MAIL</span></button><button type="button" onclick="mcRequestStop()" class="bg-red-50 text-red-600 font-bold px-4 py-3 rounded-xl text-xs sm:text-sm border border-red-100 whitespace-nowrap">Dừng</button></div>
+          <div id="mcProg" class="hidden">
             <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
               <div id="mcBar" class="h-full bg-indigo-500 transition-all" style="width:0%"></div>
             </div>

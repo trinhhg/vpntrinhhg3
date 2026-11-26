@@ -166,7 +166,7 @@ describe('Round 2 TDD — Nhóm 2: Combo 3 Ưu Đãi & Portal Checkout', () => {
     const calcText = document.getElementById('priceCalculation')?.textContent || '';
     expect(calcText).toContain('72,000');
     expect(calcText).toMatch(/\+\s*5\s*ngày/i);
-    expect(calcText).toMatch(/HSD dự kiến/i);
+    expect(calcText).not.toMatch(/HSD dự kiến/i);
   });
 
   it('TC-11/12 Worker /api/public/order: Áp Flash Sale (scope pkg) -> Coupon -> Bonus Days (x qty) & lưu metadata coupon', async () => {

@@ -497,14 +497,17 @@ const FALLBACK_TR = {
     [keyOf('Vui lòng nhập Email để hệ thống kiểm tra lịch sử và hiển thị phương án Link Sub phù hợp.')]: 'Please enter your Email so the system can check your history and display the suitable Sub Link option.',
     [keyOf('Vui lòng nhập email để hệ thống kiểm tra lịch sử link sub.')]: 'Please enter your email so the system can check your sub link history.',
     [keyOf('Giải thích lựa chọn xử lý link sub')]: 'Sub link option guide',
-    [keyOf('Bạn sẽ tiếp tục dùng link sub đã thêm từ gói trước đó. Sau khi thanh toán và kích hoạt thành công, bạn chỉ cần cập nhật lại gói đăng ký trong app VPN tương ứng.')]: 'You will continue using the sub link from your previous plan. After payment and activation, simply update/refresh the subscription in your VPN app.',
-    [keyOf('Sau khi thanh toán và kích hoạt thành công, bạn sẽ cần copy hoặc quét QR để thêm link sub mới vào trong app VPN tương ứng để sử dụng.')]: 'After payment and activation, copy or scan the QR code to add the new sub link into your VPN app.',
-    [keyOf('Chọn tiếp tục dùng link sub cũ hoặc nhận link sub hoàn toàn mới.')]: 'Choose to keep your existing sub link or receive a brand new sub link.',
+    [keyOf('Giữ link sub cũ từ gói trước.')]: 'Keep your previous plan sub link.',
+    [keyOf('Cấp link mới độc lập (khuyên dùng nếu chưa rõ).')]: 'Issue a new standalone sub link (recommended if unsure).',
+    [keyOf('Chọn giữ link sub cũ hoặc nhận link sub mới.')]: 'Choose to keep your old sub link or receive a new one.',
     [keyOf('Chọn link đích cần giữ:')]: 'Select target link to keep:',
     [keyOf('Hoàn tiền:')]: 'Refunds:',
-    [keyOf('Website không hỗ trợ hoàn tiền sau khi đã mua hàng. Quý khách vui lòng chú ý trước khi thanh toán.')]: 'No refunds are supported after purchase. Please review carefully before paying.',
+    [keyOf('Website không hỗ trợ hoàn tiền sau khi mua.')]: 'No refunds apply after purchase.',
     [keyOf('1. Điền Email, chọn thời gian & phương thức, sau đó tạo đơn để lấy mã QR.')]: '1. Enter your Email, choose duration & payment method, then create an order to get the QR code.',
-    [keyOf('2. Không áp dụng hoàn tiền, khách hàng vui lòng đọc kỹ điều kiện này khi mua hàng.')]: '2. No refunds apply; please review this policy carefully before purchasing.'
+    [keyOf('2. Không áp dụng hoàn tiền, khách hàng vui lòng đọc kỹ điều kiện này khi mua hàng.')]: '2. No refunds apply; please review this policy carefully before purchasing.',
+    [keyOf('Phương án link:')]: 'Sub link:',
+    [keyOf('Cấp Link mới')]: 'New Link',
+    [keyOf('Gia hạn Link cũ')]: 'Keep Existing Link'
   },
   zh: {
     [keyOf('Gói 1 Tháng')]: '1个月套餐',
@@ -558,14 +561,17 @@ const FALLBACK_TR = {
     [keyOf('Vui lòng nhập Email để hệ thống kiểm tra lịch sử và hiển thị phương án Link Sub phù hợp.')]: '请输入邮箱，系统将自动查询历史订单并显示合适的订阅链接选项。',
     [keyOf('Vui lòng nhập email để hệ thống kiểm tra lịch sử link sub.')]: '请输入邮箱，以便系统查询您的订阅链接历史记录。',
     [keyOf('Giải thích lựa chọn xử lý link sub')]: '订阅链接处理说明',
-    [keyOf('Bạn sẽ tiếp tục dùng link sub đã thêm từ gói trước đó. Sau khi thanh toán và kích hoạt thành công, bạn chỉ cần cập nhật lại gói đăng ký trong app VPN tương ứng.')]: '您将保留并继续使用此前套餐的订阅链接。付款并激活成功后，只需在 VPN 应用中刷新订阅即可。',
-    [keyOf('Sau khi thanh toán và kích hoạt thành công, bạn sẽ cần copy hoặc quét QR để thêm link sub mới vào trong app VPN tương ứng để sử dụng.')]: '付款并激活成功后，您需要复制链接或扫描二维码，将新订阅链接添加到 VPN 应用中使用。',
-    [keyOf('Chọn tiếp tục dùng link sub cũ hoặc nhận link sub hoàn toàn mới.')]: '选择继续保留旧订阅链接或获取全新订阅链接。',
+    [keyOf('Giữ link sub cũ từ gói trước.')]: '保留此前套餐的订阅链接。',
+    [keyOf('Cấp link mới độc lập (khuyên dùng nếu chưa rõ).')]: '获取全新独立订阅链接（不确定时推荐）。',
+    [keyOf('Chọn giữ link sub cũ hoặc nhận link sub mới.')]: '选择保留旧链接或获取新链接。',
     [keyOf('Chọn link đích cần giữ:')]: '选择要保留的目标链接：',
     [keyOf('Hoàn tiền:')]: '退款说明：',
-    [keyOf('Website không hỗ trợ hoàn tiền sau khi đã mua hàng. Quý khách vui lòng chú ý trước khi thanh toán.')]: '本网站购买后不支持退款，请在付款前仔细确认。',
+    [keyOf('Website không hỗ trợ hoàn tiền sau khi mua.')]: '购买后不支持退款。',
     [keyOf('1. Điền Email, chọn thời gian & phương thức, sau đó tạo đơn để lấy mã QR.')]: '1. 填写邮箱并选择时长和支付方式，然后生成订单二维码。',
-    [keyOf('2. Không áp dụng hoàn tiền, khách hàng vui lòng đọc kỹ điều kiện này khi mua hàng.')]: '2. 本服务不支持退款，购买前请仔细阅读相关条款。'
+    [keyOf('2. Không áp dụng hoàn tiền, khách hàng vui lòng đọc kỹ điều kiện này khi mua hàng.')]: '2. 本服务不支持退款，购买前请仔细阅读相关条款。',
+    [keyOf('Phương án link:')]: '订阅方式：',
+    [keyOf('Cấp Link mới')]: '生成新链接',
+    [keyOf('Gia hạn Link cũ')]: '保留旧链接'
   }
 };
 
@@ -2730,12 +2736,12 @@ function calculateTotal() {
 
     const durInfo = calcCheckoutDaysAndExp(currentPackage, currentMultiplier);
     const durT = lang === 'en'
-      ? { total: 'Total:', day: 'days', bonus: 'bonus days', exp: 'Est. expiry:' }
+      ? { total: 'Total:', day: 'days', bonus: 'bonus days', couponPaid: 'Payable:' }
       : (lang === 'zh'
-        ? { total: '总计：', day: '天', bonus: '天赠送', exp: '预计到期：' }
-        : { total: 'Tổng:', day: 'ngày', bonus: 'ngày tặng', exp: 'HSD dự kiến:' });
+        ? { total: '总计：', day: '天', bonus: '天赠送', couponPaid: '实付：' }
+        : { total: 'Tổng:', day: 'ngày', bonus: 'ngày tặng', couponPaid: 'Thực thu:' });
     const durSummaryHtml = durInfo.totalDays > 0
-      ? `<div class="mt-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 flex flex-wrap items-center justify-center gap-1.5"><span>${durT.total} <b>${durInfo.baseDays} ${durT.day}</b>${durInfo.bonusDays > 0 ? ` <span class="text-rose-600 dark:text-rose-400 font-black">+ ${durInfo.bonusDays} ${durT.bonus} = ${durInfo.totalDays} ${durT.day}</span>` : ''}</span><span class="opacity-40">·</span><span>${durT.exp} <b class="text-indigo-700 dark:text-indigo-300">${durInfo.expText}</b></span></div>`
+      ? `<div class="mt-1 text-[11px] font-bold text-slate-600 dark:text-slate-300 flex flex-wrap items-center justify-center gap-1"><span>${durT.total} <b>${durInfo.baseDays} ${durT.day}</b>${durInfo.bonusDays > 0 ? ` <span class="text-rose-600 dark:text-rose-400 font-black">+ ${durInfo.bonusDays} ${durT.bonus} = ${durInfo.totalDays} ${durT.day}</span>` : ''}</span></div>`
       : '';
 
     if (currentAppliedCoupon) {
@@ -2764,9 +2770,9 @@ function calculateTotal() {
 
       if (pCalc) {
         if (isCnyPay) {
-          pCalc.innerHTML = `${calcStr}<br><span class="text-emerald-600 dark:text-emerald-400 font-black text-xs md:text-sm mt-1.5 block">Đã áp dụng mã ${esc(currentAppliedCoupon.code)} (-¥${discCny}) → Thực thu: <b>¥${currentTotalCny}</b></span>${durSummaryHtml}`;
+          pCalc.innerHTML = `${calcStr}<div class="text-emerald-600 dark:text-emerald-400 font-black text-xs mt-1">${esc(currentAppliedCoupon.code)} (-¥${discCny}) → ${durT.couponPaid} <b>¥${currentTotalCny}</b></div>${durSummaryHtml}`;
         } else {
-          pCalc.innerHTML = `${calcStr}<br><span class="text-emerald-600 dark:text-emerald-400 font-black text-xs md:text-sm mt-1.5 block">Đã áp dụng mã ${esc(currentAppliedCoupon.code)} (-${disc.toLocaleString('en-US')}đ) → Thực thu: <b>${currentTotalVnd.toLocaleString('en-US')}VND</b></span>${durSummaryHtml}`;
+          pCalc.innerHTML = `${calcStr}<div class="text-emerald-600 dark:text-emerald-400 font-black text-xs mt-1">${esc(currentAppliedCoupon.code)} (-${disc.toLocaleString('en-US')}đ) → ${durT.couponPaid} <b>${currentTotalVnd.toLocaleString('en-US')}VND</b></div>${durSummaryHtml}`;
         }
       }
     } else {
@@ -3298,12 +3304,107 @@ async function preparePaymentCardSnapshot(expectedKey) {
 
       if (getPaymentCardCacheKey() !== expectedKey) return null;
 
+      const m = $('payMethod')?.value || 'bank';
+      const dispId = isUpgradeMode ? (oCache?.id || '') : (currentOrderId || '');
+      const fp = m === 'bank' ? `${currentTotalVnd.toLocaleString('en-US')}VND` : `¥${currentTotalCny}`;
       const isDark = document.documentElement.classList.contains('dark');
-      const dataUrl = await domToPng(exportArea, {
-        scale: 2,
-        backgroundColor: isDark ? '#0a0a0a' : '#ffffff',
-        filter: (node) => !node.classList?.contains('export-ignore')
-      });
+      const qrBoxBg = isDark ? '#ffffff' : (m === 'bank' ? '#eef2ff' : '#f8fafc');
+      const qrBoxBorder = isDark ? '#6366f1' : (m === 'bank' ? '#e0e7ff' : '#e2e8f0');
+
+      // Chuyển QR đã decode sang Data URL nội tuyến (giữ hiệu ứng nền tím nhạt giống web bằng multiply trong Light mode)
+      let qrInlineSrc = qrImg.src;
+      try {
+        const tmpCanvas = document.createElement('canvas');
+        const rw = qrImg.naturalWidth || 420;
+        const rh = qrImg.naturalHeight || 420;
+        tmpCanvas.width = Math.max(rw, 520);
+        tmpCanvas.height = Math.max(1, Math.round(tmpCanvas.width * (rh / Math.max(1, rw))));
+        const ctx2d = tmpCanvas.getContext('2d');
+        if (ctx2d) {
+          ctx2d.fillStyle = qrBoxBg;
+          ctx2d.fillRect(0, 0, tmpCanvas.width, tmpCanvas.height);
+          if (!isDark) ctx2d.globalCompositeOperation = 'multiply';
+          ctx2d.drawImage(qrImg, 0, 0, tmpCanvas.width, tmpCanvas.height);
+          ctx2d.globalCompositeOperation = 'source-over';
+          const pngUrl = tmpCanvas.toDataURL('image/png');
+          if (pngUrl && pngUrl.length > 200) qrInlineSrc = pngUrl;
+        }
+      } catch (_) {}
+
+      const l = i18n[lang] || i18n.vi;
+      const memoHint = lang === 'en'
+        ? 'Please enter the exact order code as transfer note'
+        : (lang === 'zh' ? '请务必填写正确订单号作为转账备注' : 'VUI LÒNG NHẬP ĐÚNG MÃ ĐƠN VÀO NỘI DUNG CHUYỂN KHOẢN');
+
+      const bgCard = isDark ? '#0a0a0a' : '#ffffff';
+      const bgRow = isDark ? '#000000' : '#ffffff';
+      const borderCol = isDark ? 'rgba(255,255,255,0.12)' : '#e2e8f0';
+      const cardOuterBorder = isDark ? 'rgba(255,255,255,0.16)' : '#e2e8f0';
+      const txtMain = isDark ? '#ffffff' : '#0f172a';
+      const txtMuted = isDark ? '#94a3b8' : '#64748b';
+      const memoBg = isDark ? 'rgba(255,255,255,0.06)' : '#fef08a';
+      const memoBorder = isDark ? 'rgba(255,255,255,0.22)' : '#fde047';
+      const memoCodeBorder = isDark ? '#6366f1' : '#facc15';
+      const memoTitleCol = isDark ? '#c7d2fe' : '#854d0e';
+      const memoCodeBg = isDark ? '#000000' : '#ffffff';
+      const memoNoteCol = isDark ? '#a5b4fc' : '#854d0e';
+
+      const infoRowsHtml = [
+        [l.bank_owner || 'Chủ TK:', 'TRINH THI XUAN HUONG', txtMain],
+        ...(m === 'bank'
+          ? [
+              [l.bank_name || 'Ngân hàng:', 'MB BANK', txtMain],
+              [l.bank_num || 'Số TK:', '0917678211', isDark ? '#a5b4fc' : '#4f46e5']
+            ]
+          : []),
+        [l.copy_amount || 'Số tiền:', fp, isDark ? '#f87171' : '#ef4444']
+      ].map(([kLbl, vVal, vCol]) => `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border-radius:12px;background:${bgRow};border:1px solid ${borderCol};box-sizing:border-box;width:100%;">
+          <span style="font-size:12px;color:${txtMuted};font-weight:500;white-space:nowrap;">${esc(kLbl)}</span>
+          <strong style="font-size:13px;color:${vCol};font-weight:800;text-align:right;word-break:break-word;">${esc(vVal)}</strong>
+        </div>
+      `).join('');
+
+      const cardW = 420;
+      const mockupCard = document.createElement('div');
+      mockupCard.id = 'paymentMockupSnapshotHost';
+      mockupCard.style.cssText = `position:fixed;left:-99999px;top:0;width:${cardW}px;box-sizing:border-box;background:${bgCard};color:${txtMain};font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;border-radius:20px;border:1px solid ${cardOuterBorder};padding:22px 22px 24px;display:flex;flex-direction:column;align-items:center;pointer-events:none;`;
+      mockupCard.innerHTML = `
+        <div style="width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <span style="font-size:12px;font-weight:900;letter-spacing:0.5px;color:${isDark ? '#818cf8' : '#4f46e5'};">VPN TRINH HG</span>
+          <span style="font-size:11px;font-weight:700;color:${txtMuted};">${m === 'bank' ? 'MB BANK · VIETQR' : (m === 'alipay' ? 'ALIPAY' : 'WECHAT PAY')}</span>
+        </div>
+        <div style="background:${qrBoxBg};padding:10px;border-radius:14px;border:1px solid ${qrBoxBorder};box-shadow:0 2px 8px rgba(15,23,42,0.04);margin-bottom:16px;display:inline-flex;align-items:center;justify-content:center;">
+          <img src="${qrInlineSrc}" style="display:block;width:200px;height:auto;max-height:245px;object-fit:contain;border-radius:10px;" />
+        </div>
+        <div style="width:100%;display:flex;flex-direction:column;gap:8px;margin-bottom:16px;box-sizing:border-box;">
+          ${infoRowsHtml}
+        </div>
+        <div style="width:100%;box-sizing:border-box;background:${memoBg};border:1px solid ${memoBorder};border-radius:14px;padding:14px 12px;text-align:center;">
+          <div style="font-size:11px;font-weight:900;text-transform:uppercase;color:${memoTitleCol};margin-bottom:8px;">${esc(l.copy_memo || 'NỘI DUNG CHUYỂN KHOẢN:')}</div>
+          <div style="background:${memoCodeBg};border:2px solid ${memoCodeBorder};border-radius:12px;padding:11px 12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:24px;font-weight:900;letter-spacing:0.8px;color:${memoTitleCol};">${esc(dispId || '')}</div>
+          <div style="font-size:10px;font-style:italic;font-weight:700;color:${memoNoteCol};opacity:0.85;margin-top:8px;">(${esc(memoHint)})</div>
+        </div>
+      `;
+
+      document.body.appendChild(mockupCard);
+      let dataUrl = '';
+      try {
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+        const snapImg = mockupCard.querySelector('img');
+        if (snapImg && typeof snapImg.decode === 'function') {
+          try { await snapImg.decode(); } catch (_) {}
+        }
+        const exactH = Math.ceil(mockupCard.getBoundingClientRect().height || mockupCard.scrollHeight || 640);
+        dataUrl = await domToPng(mockupCard, {
+          scale: 2,
+          width: cardW,
+          height: exactH,
+          backgroundColor: bgCard
+        });
+      } finally {
+        mockupCard.remove();
+      }
 
       if (!dataUrl || dataUrl.length < 200) {
         throw new Error('Dữ liệu ảnh xuất ra không hợp lệ');
@@ -3391,17 +3492,21 @@ function renderPaymentBox() {
   col.classList.add('relative');
   const dispId = isUpgradeMode ? (oCache?.id || '') : (currentOrderId || '');
   const dlBtnHtml = `<button type="button" onclick="downloadPaymentCard()" title="${l.download_qr || 'Tải ảnh thanh toán'}" aria-label="${l.download_qr || 'Tải ảnh thanh toán'}" class="export-ignore absolute top-4 left-4 md:top-5 md:left-5 z-10 w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100/90 hover:bg-slate-200 text-slate-500 hover:text-indigo-600 dark:bg-white/10 dark:hover:bg-white/20 dark:text-slate-300 dark:hover:text-white transition-all duration-200 active:scale-90 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" /></svg></button>`;
-  const decisionBadgeHtml = currentSubDecision ? `<div class="mt-4 py-2.5 px-3 rounded-xl bg-[#eef2ff] dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 text-center text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1.5"><i class="fas fa-info-circle text-[#6366f1]"></i>Phương án link: <span class="text-[#4f46e5] dark:text-indigo-400 font-extrabold">${currentSubDecision === 'KEEP_EXISTING' ? 'Gia hạn Link cũ' : 'Cấp Link mới'}</span></div>` : '';
-  const paidBtnHtml = `<div class="mt-auto pt-4 w-full"><button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center btn-heartbeat"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button></div>`;
-  const memo = (cls, extra) => `<div class="highlight-copy py-4 px-3 rounded-xl text-center cursor-pointer" onclick="copyText('${dispId}')"><span class="block text-[11px] font-black mb-2 uppercase text-[#854d0e] dark:text-indigo-200">${l.copy_memo}</span><strong class="block bg-white dark:bg-black font-mono ${cls} py-3 rounded-xl shadow-inner border-2 border-yellow-400 dark:border-indigo-500 text-[#854d0e] dark:text-indigo-100 flex items-center justify-center gap-2">${dispId} <i class="far fa-copy opacity-50"></i></strong><p class="text-[10px] mt-2 italic font-bold opacity-80 ${extra} text-[#854d0e] dark:text-indigo-300">${extra ? l.input_manual : l.click_copy}</p></div>`;
+  const decisionBadgeHtml = currentSubDecision ? `<div class="flex-1 flex items-center justify-center py-4 w-full"><div class="w-fit mx-auto py-2 px-3.5 rounded-xl bg-[#eef2ff] dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 text-center text-xs font-bold text-slate-600 dark:text-slate-300 inline-flex items-center justify-center gap-1.5 shadow-xs"><i class="fas fa-info-circle text-[#6366f1]"></i>Phương án link: <span class="text-[#4f46e5] dark:text-indigo-400 font-extrabold">${currentSubDecision === 'KEEP_EXISTING' ? 'Gia hạn Link cũ' : 'Cấp Link mới'}</span></div></div>` : '<div class="flex-1 min-h-[16px]"></div>';
+  const paidBtnHtml = `<div class="w-full"><button type="button" onclick="confirmPaid()" id="btnPaidConfirm" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-3.5 md:py-4 rounded-xl text-sm uppercase transition shadow-md flex justify-center items-center btn-heartbeat"><i class="fas fa-check-circle mr-2"></i>${l.btn_paid}</button></div>`;
+  const memo = (cls, extra) => `<div class="highlight-copy w-full py-4 px-3 rounded-xl text-center cursor-pointer" onclick="copyText('${dispId}')"><span class="block text-[11px] font-black mb-2 uppercase text-[#854d0e] dark:text-indigo-200">${l.copy_memo}</span><strong class="block w-full bg-white dark:bg-black font-mono ${cls} py-3 rounded-xl shadow-inner border-2 border-yellow-400 dark:border-indigo-500 text-[#854d0e] dark:text-indigo-100 flex items-center justify-center gap-2">${dispId} <i class="far fa-copy opacity-50"></i></strong><p class="text-[10px] mt-2 italic font-bold opacity-80 ${extra} text-[#854d0e] dark:text-indigo-300">${extra ? l.input_manual : l.click_copy}</p></div>`;
 
   if (m === 'bank') {
-    const vietQrSrc = `/api/vietqr-image?amount=${currentTotalVnd}&addInfo=${encodeURIComponent(dispId)}`;
-    col.innerHTML = `${dlBtnHtml}<div class="text-center w-full flex flex-col flex-1 justify-between h-full"><div><div id="paymentExportArea"><div class="bg-indigo-50 dark:bg-white p-2 rounded-xl inline-block mb-4 border border-transparent dark:border-indigo-500 shadow-sm dark:shadow-[0_0_15px_rgba(99,102,241,0.5)]"><img id="paymentQrImg" src="${vietQrSrc}" class="w-40 h-40 md:w-56 md:h-56 rounded-xl mx-auto object-contain mix-blend-multiply dark:mix-blend-normal"></div><div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_name}</span><strong class="dark:text-white">MB BANK</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_num}</span><strong class="text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.6)] cursor-pointer" onclick="copyText('0917678211')">0917678211 <i class="far fa-copy ml-1"></i></strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div></div>${memo('text-2xl md:text-3xl', '')}</div>${decisionBadgeHtml}</div>${paidBtnHtml}</div>`;
+    const isLocalHost = typeof location !== 'undefined' && /^(localhost|127\.0\.0\.1)$/i.test(location.hostname || '');
+    const sameOriginQr = `/api/vietqr-image?amount=${currentTotalVnd}&addInfo=${encodeURIComponent(dispId)}`;
+    const prodProxyQr = `https://vpntrinhhg3.pages.dev/api/vietqr-image?amount=${currentTotalVnd}&addInfo=${encodeURIComponent(dispId)}`;
+    const directFallbackQr = `https://img.vietqr.io/image/mbbank-0917678211-compact.png?amount=${currentTotalVnd}&addInfo=${encodeURIComponent(dispId)}&accountName=${encodeURIComponent('TRINH THI XUAN HUONG')}`;
+    const vietQrSrc = isLocalHost ? prodProxyQr : sameOriginQr;
+    col.innerHTML = `${dlBtnHtml}<div class="text-center w-full flex flex-col flex-1 h-full"><div id="paymentExportArea" class="w-full"><div class="bg-indigo-50 dark:bg-white p-2 rounded-xl inline-block mb-4 border border-indigo-100 dark:border-indigo-500 shadow-sm dark:shadow-[0_0_15px_rgba(99,102,241,0.5)]"><img id="paymentQrImg" src="${vietQrSrc}" crossorigin="anonymous" data-fallback-src="${directFallbackQr}" onerror="if(!this.dataset.fbTried){this.dataset.fbTried='1';this.src=this.dataset.fallbackSrc;}" class="w-40 h-40 md:w-52 md:h-52 rounded-xl mx-auto object-contain mix-blend-multiply dark:mix-blend-normal"></div><div class="text-left text-xs space-y-2 mb-4 w-full"><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_name}</span><strong class="dark:text-white">MB BANK</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_num}</span><strong class="text-indigo-600 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.6)] cursor-pointer" onclick="copyText('0917678211')">0917678211 <i class="far fa-copy ml-1"></i></strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div></div>${memo('text-2xl md:text-3xl', '')}</div>${decisionBadgeHtml}${paidBtnHtml}</div>`;
   } else {
     const ali = m === 'alipay';
     const staticQrSrc = ali ? '/assets/qr/alipay.jpg' : '/assets/qr/weixin.jpg';
-    col.innerHTML = `${dlBtnHtml}<div class="text-center w-full flex flex-col flex-1 justify-between h-full"><div><div id="paymentExportArea"><div class="bg-slate-50 dark:bg-white p-2 rounded-xl inline-block mb-4 border border-slate-100 dark:border-transparent shadow-sm"><img id="paymentQrImg" src="${staticQrSrc}" class="w-48 max-w-full h-auto mx-auto rounded-lg object-contain mix-blend-multiply dark:mix-blend-normal"></div><div class="text-left text-xs space-y-2 mb-6 w-full"><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div></div>${memo('text-2xl', 'uppercase')}</div>${decisionBadgeHtml}</div>${paidBtnHtml}</div>`;
+    col.innerHTML = `${dlBtnHtml}<div class="text-center w-full flex flex-col flex-1 h-full"><div id="paymentExportArea" class="w-full"><div class="bg-slate-50 dark:bg-white p-2 rounded-xl inline-block mb-4 border border-slate-100 dark:border-indigo-500/40 shadow-sm"><img id="paymentQrImg" src="${staticQrSrc}" class="w-44 md:w-52 max-w-full h-auto mx-auto rounded-lg object-contain mix-blend-multiply dark:mix-blend-normal"></div><div class="text-left text-xs space-y-2 mb-4 w-full"><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.bank_owner}</span><strong class="dark:text-white">TRINH THI XUAN HUONG</strong></div><div class="flex justify-between bg-white dark:bg-black p-2.5 rounded-xl border border-slate-200 dark:border-white/10"><span class="text-slate-500 dark:text-slate-400">${l.copy_amount}</span><strong class="text-red-500 dark:text-red-400 font-black text-base">${fp}</strong></div></div>${memo('text-2xl', 'uppercase')}</div>${decisionBadgeHtml}${paidBtnHtml}</div>`;
   }
   if (lang !== 'vi' && typeof walkTr === 'function') walkTr(col);
 

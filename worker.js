@@ -54,7 +54,14 @@ function cleanOrderForSupabase(o) {
   if (typeof c.expFinal === "boolean") {
     c.expFinal = c.expFinal ? "true" : "false";
   }
-  // Loại bỏ toàn bộ các trường không thuộc Schema 38 cột của Supabase để triệt tiêu lỗi PGRST204
+  // Chuẩn hóa duy nhất 1 cột pkg = [Tên gói - Giá VND / ¥CNY (GB)] theo dropdown; bỏ pkgName/pkgData khỏi payload Supabase
+  if (!c.pkg || /[đ$]/.test(String(c.pkg)) || !/\([^)]*GB/i.test(String(c.pkg))) {
+    const dp = c.pkgId && DEFAULT_PKGS[c.pkgId] ? DEFAULT_PKGS[c.pkgId] : null;
+    if (dp) c.pkg = pkgStr(dp);
+    else if (c.pkgName || c.pkgData) c.pkg = [c.pkgName, c.pkgData].filter(Boolean).join(" - ");
+  }
+  delete c.pkgName;
+  delete c.pkgData;
   delete c.originalVnd;
   delete c.discountVnd;
   delete c.couponCode;
@@ -184,7 +191,7 @@ function getSupabase(env, isTest = false) {
     async updateOrder(id, fields) {
       const cleaned = {};
       const src = fields && typeof fields === "object" ? fields : {};
-      const STRIP_KEYS = new Set(["originalVnd", "discountVnd", "couponCode", "coupon", "bonusText", "giftName", "giftRuleId", "isTest", "subLinkDecision", "targetLink", "renewOf", "fulfillResult", "fallbackNew"]);
+      const STRIP_KEYS = new Set(["pkgName", "pkgData", "originalVnd", "discountVnd", "couponCode", "coupon", "bonusText", "giftName", "giftRuleId", "isTest", "subLinkDecision", "targetLink", "renewOf", "fulfillResult", "fallbackNew"]);
       for (const [k, v] of Object.entries(src)) {
         if (v === undefined || STRIP_KEYS.has(k)) continue;
         if (k === "totalVnd") {
@@ -901,32 +908,41 @@ const MONTHLY = {
   "1000GB": ["c1", "o3"]
 };
 const VND = (n) => String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-const pkgStr = (pk) => `${pk.n} - ${VND(pk.vnd)}VND${pk.old ? " (giá cũ)" : ""}`;
+const trimCnyStr = (v) => String(Math.round((Number(v) || 0) * 100) / 100);
+const pkgStr = (pk) => {
+  if (!pk) return "";
+  const prefix = pk.old ? "[Giá cũ] " : "";
+  const cnyPart = Number(pk.cny) > 0 ? ` / ¥${trimCnyStr(pk.cny)}` : "";
+  const dataPart = pk.d ? ` (${pk.d})` : "";
+  return `${prefix}${pk.n || ""} - ${VND(pk.vnd)}VND${cnyPart}${dataPart}`;
+};
 const monthsOf = (o) => {
   const pk = PKGS[o.pkgId];
   return pk && pk.m === 0 ? "Vĩnh viễn" : ((pk ? pk.m : 1) * (Number(o.qty) || 1)) + " tháng";
 };
 const daysOfPkg = (pk, qty) => (pk.m === 0 ? "" : (pk.m === 12 ? 365 : 30 * pk.m) * (Number(qty) || 1));
 const linkDate = (exp, cts) => isLifetime(exp) ? "Vĩnh viễn" : exp;
-// Nhận diện gói của 1 đơn (kể cả đơn cũ): ưu tiên số tiền đã thu + dung lượng -> tách giá cũ / giá mới. KHÔNG bao giờ đổi totalVnd.
+// Nhận diện gói của 1 đơn (kể cả đơn cũ): đọc cả cột pkg chuẩn lẫn legacy pkgName/pkgData, phân tách giá cũ vs giá mới theo VND + GB.
 function detectPkg(o) {
-  const s = String(o.pkg || ""), legacy = /[đ¥$]/.test(s);
-  if (!legacy && PKGS[o.pkgId]) return { id: o.pkgId, qty: Number(o.qty) || null };
-  const gm = s.match(/\((\d+GB)/i), pm = s.match(/-\s*([\d.,]+)\s*(?:đ|VND)/i);
-  const data = String(o.pkgData || (gm && gm[1]) || "").toUpperCase(), price = pm ? Number(pm[1].replace(/[.,]/g, "")) : 0, total = Number(o.totalVnd) || 0;
-  const name = String(o.pkgName || s.split(" - ")[0] || ""), cand = MONTHLY[data];
+  const s = String(o.pkg || "");
+  if (PKGS[o.pkgId] && (!s || s === pkgStr(PKGS[o.pkgId]))) return { id: o.pkgId, qty: Number(o.qty) || null };
+  const cleanPrefix = s.split(" - ")[0].replace(/^\[Giá cũ\]\s*/i, "").trim();
+  const gm = s.match(/\(([^)]*GB[^)]*)\)/i), pm = s.match(/-\s*([\d.,]+)\s*(?:đ|VND)/i);
+  const data = String(o.pkgData || (gm && gm[1]) || "").toUpperCase();
+  const price = pm ? Number(pm[1].replace(/[.,]/g, "")) : 0, total = Number(o.totalVnd) || 0;
+  const name = String(o.pkgName || cleanPrefix || ""), cand = MONTHLY[data];
   if (cand && (!name || /1 tháng/i.test(name))) {
+    if (price) {
+      const byP = cand.find((k) => PKGS[k].vnd === price);
+      if (byP) return { id: byP, qty: total > 0 ? Math.max(1, Math.round(total / PKGS[byP].vnd)) : null };
+    }
     if (total > 0) for (const id of cand) {
       const u = PKGS[id].vnd;
       if (total % u === 0 && total / u <= 36) return { id, qty: total / u };
     }
-    if (price) {
-      const id = cand.find((k) => PKGS[k].vnd === price);
-      if (id) return { id, qty: null };
-    }
     return { id: cand[0], qty: null };
   }
-  const id = Object.keys(PKGS).find((k) => !PKGS[k].old && PKGS[k].n === name && PKGS[k].d.toUpperCase() === data) || (price ? Object.keys(PKGS).find((k) => !PKGS[k].old && PKGS[k].vnd === price) : null);
+  const id = (PKGS[o.pkgId] ? o.pkgId : null) || Object.keys(PKGS).find((k) => !PKGS[k].old && PKGS[k].n === name && PKGS[k].d.toUpperCase() === data) || (price ? Object.keys(PKGS).find((k) => !PKGS[k].old && PKGS[k].vnd === price) : null);
   return id ? {
     id,
     qty: total > 0 ? Math.round(total / PKGS[id].vnd) || null : null
@@ -1655,6 +1671,15 @@ async function loadAll(KV, env, isTestOverride = null) {
             if (!ord.subLinkDecision && ord.lockInfo._wf.subLinkDecision) ord.subLinkDecision = ord.lockInfo._wf.subLinkDecision;
             if (!ord.targetLink && ord.lockInfo._wf.targetLink) ord.targetLink = ord.lockInfo._wf.targetLink;
             if (!ord.renewOf && ord.lockInfo._wf.renewOf) ord.renewOf = ord.lockInfo._wf.renewOf;
+          }
+          // Hydrate pkgName/pkgData in memory from 1-col Supabase `pkg` when legacy columns are omitted
+          if ((!ord.pkgName || !ord.pkgData) && (ord.pkg || ord.pkgId)) {
+            const pkMap = (typeof PKGS === "object" && PKGS) ? PKGS : DEFAULT_PKGS;
+            const pk = (ord.pkgId && pkMap[ord.pkgId]) || pkMap[detectPkg(ord).id];
+            if (pk) {
+              if (!ord.pkgName) ord.pkgName = pk.n;
+              if (!ord.pkgData) ord.pkgData = pk.d;
+            }
           }
           return ord;
         });
@@ -3529,7 +3554,7 @@ export default {
         if (!o || !tg || tg.old) return J({ ok: false, error: "Không tìm thấy đơn hoặc gói" }, 404);
         if (normStatus(o.status) !== "success") return J({ ok: false, error: "Đơn chưa kích hoạt" }, 409);
         if (o.pendingUpgrade) return J({ ok: false, error: "Đang có yêu cầu nâng gói chờ xác minh" }, 409);
-        const cur = PKGS[o.pkgId] || Object.values(PKGS).find((x) => x.n === o.pkgName && x.d === o.pkgData);
+        const cur = PKGS[o.pkgId] || Object.values(PKGS).find((x) => x.n === o.pkgName && x.d === o.pkgData) || PKGS[detectPkg(o).id];
         const baseCurVnd = cur ? Number(cur.vnd || 0) : (Number(o.totalVnd) > 0 ? Math.round(Number(o.totalVnd) / Math.max(1, Number(o.qty) || 1)) : 0);
         const baseCurCny = cur ? Number(cur.cny || 0) : (Number(o.totalCny) > 0 ? Number(o.totalCny) / Math.max(1, Number(o.qty) || 1) : 0);
 
@@ -3999,8 +4024,12 @@ export default {
             const [tb, rawPool] = await Promise.all([loadTombs(KV), KV.get("LINK_POOL")]);
             links = notTomb(links, tb); // link đã xóa không thể được ghi lại từ bản cũ (admin cũ / update_sub.py)
             const pool = arr(safeJson(rawPool, []));
-            await KV.put("ALL_LINKS", JSON.stringify(links));
-            await KV.put("GLOBAL_ROUTER", JSON.stringify(buildGlobalRouter(links, [], pool)));
+            for (const pl of pool) pl.used = links.filter((l) => l && (l.orig === pl.url || l.orig2 === pl.url)).length;
+            await Promise.all([
+              KV.put("ALL_LINKS", JSON.stringify(links)),
+              KV.put("LINK_POOL", JSON.stringify(pool)),
+              KV.put("GLOBAL_ROUTER", JSON.stringify(buildGlobalRouter(links, [], pool)))
+            ]);
             return OK();
           } catch (e) {
             return J({ error: (e && e.message) || "Links error" }, 400);
@@ -5342,17 +5371,29 @@ async function runCron(env, ctx, opt) {
         st.dL = true;
       }
 
-      // 2a. Chuyển các Link Đơn đang chạy trên dn: Ưu tiên Cùng nhà mạng -> Kitty -> Dừng
+      // 2a. Chuyển các Link Đơn đang chạy trên dn: Ưu tiên Cùng nhà mạng -> Kitty -> Dừng (cấp linkIndex trống kế tiếp tránh đụng #1)
+      const nextClusterIdx = (origUrl, orig2Url = "", skipLink = null) => {
+        const usedIdx = new Set(
+          st.links
+            .filter((x) => x && x !== skipLink && (orig2Url ? (x.isCombo && x.orig === origUrl && x.orig2 === orig2Url) : (!x.isCombo && x.orig === origUrl)))
+            .map((x) => parseInt(x.linkIndex, 10))
+            .filter((n) => n > 0)
+        );
+        let n = 1;
+        while (usedIdx.has(n)) n++;
+        return String(n);
+      };
       for (const l of st.links.filter((x) => x && !x.isCombo && x.orig === dn.url && !x.isLocked && !isAnchor(x))) {
         const picked = pickSingleWithPriority(st.pool, reqProv, null, dn.url);
         if (picked && picked.node && picked.node.url !== l.orig) {
+          l.linkIndex = nextClusterIdx(picked.node.url, "", l);
           l.orig = picked.node.url;
           l.provider = picked.meta.provider;
           l.protocol = picked.meta.protocol;
           dn.used = Math.max(0, (Number(dn.used) || 0) - 1);
           picked.node.used = (Number(picked.node.used) || 0) + 1;
           migrated++;
-          st.dL = true;
+          st.dL = st.dP = true;
         }
       }
 
@@ -5362,25 +5403,27 @@ async function runCron(env, ctx, opt) {
           const healthyMeta = resolveUrlMetaFromPool(l.orig2, st.pool, l, 2);
           const rep = pickComboReplacementLeg(st.pool, reqProv, healthyMeta.provider, l.orig2 || "", failoverPref);
           if (rep && rep.node && rep.node.url !== l.orig) {
+            l.linkIndex = nextClusterIdx(rep.node.url, l.orig2 || "", l);
             l.orig = rep.node.url;
             l.provider = rep.meta.provider;
             l.protocol = rep.meta.protocol;
             dn.used = Math.max(0, (Number(dn.used) || 0) - 1);
             rep.node.used = (Number(rep.node.used) || 0) + 1;
             migrated++;
-            st.dL = true;
+            st.dL = st.dP = true;
           }
         } else if (l.orig2 === dn.url) {
           const healthyMeta = resolveUrlMetaFromPool(l.orig, st.pool, l, 1);
           const rep = pickComboReplacementLeg(st.pool, reqProv, healthyMeta.provider, l.orig || "", failoverPref);
           if (rep && rep.node && rep.node.url !== l.orig2) {
+            l.linkIndex = nextClusterIdx(l.orig, rep.node.url, l);
             l.orig2 = rep.node.url;
             l.provider2 = rep.meta.provider;
             l.protocol2 = rep.meta.protocol;
             dn.used = Math.max(0, (Number(dn.used) || 0) - 1);
             rep.node.used = (Number(rep.node.used) || 0) + 1;
             migrated++;
-            st.dL = true;
+            st.dL = st.dP = true;
           }
         }
       }
@@ -6119,7 +6162,11 @@ async function sendMail(to, subject, html, env, cms, KV) {
 }
 
 // ---- Lõi mail dùng chung Admin + Worker (khớp 100% hàm mailRender phía admin.html để "xem trước" = "gửi thật")
-const mailGrad = (c1, c2, ang, stop) => `linear-gradient(${Number(ang) || 135}deg,${c1} 0%,${c2} ${Math.max(1, Math.min(100, Number(stop) || 100))}%)`;
+const mailGrad = (c1, c2, ang, stop) => {
+  const s2 = Math.max(5, Math.min(100, Number(stop) || 100));
+  const s1 = Math.max(0, Math.min(80, s2 - 55));
+  return `linear-gradient(${Number(ang) || 135}deg,${c1} ${s1}%,${c2} ${s2}%)`;
+};
 const mailShell = (c1, c2, title, inner, ang, stop) => `<div style="font-family:Arial,Helvetica,sans-serif;width:100%;max-width:480px;margin:auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden"><div style="background:${c1};background-image:${mailGrad(c1, c2, ang, stop)};padding:22px 16px;text-align:center"><h2 style="color:#ffffff;margin:0;font-size:18px;font-weight:800;line-height:1.4;text-transform:uppercase;letter-spacing:.5px;font-family:Arial,Helvetica,sans-serif">${title}</h2></div><div style="padding:20px;font-family:Arial,Helvetica,sans-serif">${inner}</div></div>`;
 const mailIdBox = (label, id, color) => `<div style="background:#f1f5f9;border-left:4px solid ${color};padding:15px;border-radius:8px;margin:18px 0;text-align:center"><p style="margin:0;font-size:11px;color:#64748b;font-weight:bold;text-transform:uppercase">${label}</p><p style="margin:8px 0 0;font-size:22px;font-weight:900;color:${color};letter-spacing:1px;word-break:break-word">${htmlEscape(id)}</p></div>`;
 const mailPortal = (PD, label, orderId) => {
@@ -6286,12 +6333,12 @@ function mailRender(tpl, v, PD) {
   return mailShell(tpl.c1, tpl.c2, htmlEscape(rp(tpl.title)).replace(/\n/g, "<br>"), inner, tpl.ang, tpl.stop);
 }
 function orderVars(o, extra) {
-  const pk = PKGS[o.pkgId] || PKGS[detectPkg(o).id], dl = o.expDate && !isLifetime(o.expDate) ? Math.ceil((parseDmy(o.expDate) + 864e5 - NOW()) / 864e5) : "";
+  const pk = (typeof PKGS === "object" && PKGS ? PKGS[o.pkgId] || PKGS[detectPkg(o).id] : null) || DEFAULT_PKGS[o.pkgId] || DEFAULT_PKGS[detectPkg(o).id], dl = o.expDate && !isLifetime(o.expDate) ? Math.ceil((parseDmy(o.expDate) + 864e5 - NOW()) / 864e5) : "";
   return {
     email: o.email || "",
     orderId: o.id || "",
-    pkgName: o.pkgName || "",
-    pkg: pk ? pkgStr(pk) : (o.pkgName || ""),
+    pkgName: o.pkgName || (pk ? pk.n : ""),
+    pkg: pk ? pkgStr(pk) : (o.pkg || o.pkgName || ""),
     exp: o.expDate || "",
     daysLeft: dl,
     nickname: o.nickname || "",
@@ -8404,6 +8451,8 @@ function proxyToSingbox(p) {
 export {
   LOCK_ORIG,
   isLockOrig,
+  pkgStr,
+  cleanOrderForSupabase,
   matchesFlashSaleScope,
   fetchUpstreamSub,
   parseURI,
