@@ -163,7 +163,7 @@ describe('src/shared.js — Tiện ích cốt lõi & Định dạng', () => {
   });
 
   describe('Toast Offset vs Admin #tabBar (toast)', () => {
-    it('tính offset top dưới #tabBar khi thanh tab đang hiển thị để không che nút', () => {
+    it('ghim Toast cố định góc trên bên phải (top-right, z-[999999]) để không che modal hay thanh tab', () => {
       document.body.innerHTML = '<header id="hdr"></header><div id="tabBar"></div>';
       const hdr = document.getElementById('hdr');
       const tabBar = document.getElementById('tabBar');
@@ -172,7 +172,9 @@ describe('src/shared.js — Tiện ích cốt lõi & Định dạng', () => {
       toast('Đã làm mới');
       const c = document.getElementById('toastStackContainer');
       expect(c).not.toBeNull();
-      expect(parseInt(c.style.top, 10)).toBeGreaterThanOrEqual(120);
+      expect(c.style.top).toContain('12px');
+      expect(c.className).toContain('right-3');
+      expect(c.className).toContain('z-[999999]');
       document.body.innerHTML = '';
     });
   });

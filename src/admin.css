@@ -1147,6 +1147,31 @@ textarea.autog {
 }
 
 /* Chống bẻ chữ nút bấm thành 2-4 dòng trên Mobile 20:9 (360px) */
+/* Minimal Neutral Surface (#t-dead) & Clean Mobile Editor (#t-cms) */
+.dead-url-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.625rem;
+  padding: 0.5rem 0.625rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  color: #334155;
+  word-break: break-all;
+}
+
+.dead-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+#t-cms summary::-webkit-details-marker,
+#t-dead summary::-webkit-details-marker {
+  display: none;
+}
+
 @media (max-width: 639px) {
   main#main button {
     white-space: nowrap;
@@ -1160,26 +1185,38 @@ textarea.autog {
 
   #t-cms .ql-toolbar.ql-snow {
     display: flex;
-    flex-wrap: wrap;
-    gap: 4px 2px;
-    padding: 6px !important;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 4px;
+    padding: 6px 8px !important;
+  }
+
+  #t-cms .ql-toolbar.ql-snow::-webkit-scrollbar {
+    display: none;
   }
 
   #t-cms .ql-toolbar.ql-snow .ql-formats {
-    margin-right: 4px !important;
+    margin-right: 6px !important;
     display: inline-flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
     align-items: center;
   }
 
-  #t-cms .ql-toolbar.ql-snow button {
-    min-height: 30px;
+  #t-cms .ql-toolbar.ql-snow button,
+  #t-cms .ql-toolbar.ql-snow .ql-picker-label {
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   #t-cms .ql-editor {
-    min-height: 310px !important;
+    min-height: 320px !important;
     font-size: 14px !important;
-    padding: 10px !important;
+    padding: 12px !important;
   }
 }
 

@@ -62,7 +62,7 @@ describe('Audit & Redesign Fixes Verification', () => {
   it('Tab Đã xóa mobile giữ nút Khôi phục không tràn màn hình (min-w-0 + shrink-0)', () => {
     const adminJs = readSrc('src/admin.js');
     expect(adminJs).toContain('flex items-center gap-2 min-w-0 flex-1');
-    expect(adminJs).toContain('shrink-0 whitespace-nowrap text-emerald-600');
+    expect(adminJs).toContain('min-h-[36px] shrink-0 whitespace-nowrap bg-white hover:bg-slate-50 text-slate-700');
   });
 
   it('Bottom Nav Admin mobile giữ cố định Đơn hàng và Link Sub trong 5 slot chuẩn iOS', () => {

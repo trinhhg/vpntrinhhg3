@@ -530,11 +530,11 @@ describe('Phần D1: Ma Trận 15 Tình Huống Vòng Đời Link Sub & Điều 
     expect(fulfillResult).toBe('create_new');
   });
 
-  it('Ca 9: Email có đúng 1 link bị khóa, chọn giữ -> mở khóa thành công nếu có node trống', () => {
+  it('Ca 9: Email có đúng 1 link bị khóa, chọn giữ -> mở khóa thành công nếu có node trống (hỗ trợ cả dabikhoa & Da_bi_khoa cũ)', () => {
     const link = {
       masked: 'link_locked',
       isLocked: true,
-      orig: 'Da_bi_khoa',
+      orig: 'dabikhoa',
       origBackup: 'node_alpha'
     };
     const pool = [{ url: 'node_alpha', used: 5, max: 30 }];
@@ -946,7 +946,7 @@ describe('Phần E: 17 Ca Kiểm Thử Vòng Đời Link Sub Theo Email & Schema
   // 9. Khách chọn cấp mới dù link cũ đang khóa: tạo link mới, không mở khóa link cũ
   it('Ca 9: Khách chọn cấp mới dù link cũ đang khóa -> tạo link mới, không mở khóa link cũ', () => {
     const me = getMeMock(1);
-    const oldLink = { masked: 'link_old_locked', isLocked: true, orig: 'Da_bi_khoa' };
+    const oldLink = { masked: 'link_old_locked', isLocked: true, orig: 'dabikhoa' };
     const order = { id: 'DH_CHOOSE_NEW', subLinkDecision: 'CREATE_NEW' };
 
     let createdLink = null;
@@ -988,7 +988,7 @@ describe('Phần E: 17 Ca Kiểm Thử Vòng Đời Link Sub Theo Email & Schema
     const lockedLink = {
       masked: 'expired_link_locked',
       isLocked: true,
-      orig: 'Da_bi_khoa',
+      orig: 'dabikhoa',
       origBackup: 'node_bk'
     };
     const pool = [{ url: 'node_bk', used: 2, max: 30 }];

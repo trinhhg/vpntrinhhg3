@@ -495,6 +495,14 @@ const FALLBACK_TR = {
     [keyOf('Cấp link mới')]: 'Issue new link',
     [keyOf('3. Chọn phương án Link Sub (nếu khả dụng)')]: '3. Choose Sub Link option (if available)',
     [keyOf('Vui lòng nhập Email để hệ thống kiểm tra lịch sử và hiển thị phương án Link Sub phù hợp.')]: 'Please enter your Email so the system can check your history and display the suitable Sub Link option.',
+    [keyOf('Vui lòng nhập email để hệ thống kiểm tra lịch sử link sub.')]: 'Please enter your email so the system can check your sub link history.',
+    [keyOf('Giải thích lựa chọn xử lý link sub')]: 'Sub link option guide',
+    [keyOf('Bạn sẽ tiếp tục dùng link sub đã thêm từ gói trước đó. Sau khi thanh toán và kích hoạt thành công, bạn chỉ cần cập nhật lại gói đăng ký trong app VPN tương ứng.')]: 'You will continue using the sub link from your previous plan. After payment and activation, simply update/refresh the subscription in your VPN app.',
+    [keyOf('Sau khi thanh toán và kích hoạt thành công, bạn sẽ cần copy hoặc quét QR để thêm link sub mới vào trong app VPN tương ứng để sử dụng.')]: 'After payment and activation, copy or scan the QR code to add the new sub link into your VPN app.',
+    [keyOf('Chọn tiếp tục dùng link sub cũ hoặc nhận link sub hoàn toàn mới.')]: 'Choose to keep your existing sub link or receive a brand new sub link.',
+    [keyOf('Chọn link đích cần giữ:')]: 'Select target link to keep:',
+    [keyOf('Hoàn tiền:')]: 'Refunds:',
+    [keyOf('Website không hỗ trợ hoàn tiền sau khi đã mua hàng. Quý khách vui lòng chú ý trước khi thanh toán.')]: 'No refunds are supported after purchase. Please review carefully before paying.',
     [keyOf('1. Điền Email, chọn thời gian & phương thức, sau đó tạo đơn để lấy mã QR.')]: '1. Enter your Email, choose duration & payment method, then create an order to get the QR code.',
     [keyOf('2. Không áp dụng hoàn tiền, khách hàng vui lòng đọc kỹ điều kiện này khi mua hàng.')]: '2. No refunds apply; please review this policy carefully before purchasing.'
   },
@@ -548,6 +556,14 @@ const FALLBACK_TR = {
     [keyOf('Cấp link mới')]: '生成新链接',
     [keyOf('3. Chọn phương án Link Sub (nếu khả dụng)')]: '3. 选择订阅链接方式（如可用）',
     [keyOf('Vui lòng nhập Email để hệ thống kiểm tra lịch sử và hiển thị phương án Link Sub phù hợp.')]: '请输入邮箱，系统将自动查询历史订单并显示合适的订阅链接选项。',
+    [keyOf('Vui lòng nhập email để hệ thống kiểm tra lịch sử link sub.')]: '请输入邮箱，以便系统查询您的订阅链接历史记录。',
+    [keyOf('Giải thích lựa chọn xử lý link sub')]: '订阅链接处理说明',
+    [keyOf('Bạn sẽ tiếp tục dùng link sub đã thêm từ gói trước đó. Sau khi thanh toán và kích hoạt thành công, bạn chỉ cần cập nhật lại gói đăng ký trong app VPN tương ứng.')]: '您将保留并继续使用此前套餐的订阅链接。付款并激活成功后，只需在 VPN 应用中刷新订阅即可。',
+    [keyOf('Sau khi thanh toán và kích hoạt thành công, bạn sẽ cần copy hoặc quét QR để thêm link sub mới vào trong app VPN tương ứng để sử dụng.')]: '付款并激活成功后，您需要复制链接或扫描二维码，将新订阅链接添加到 VPN 应用中使用。',
+    [keyOf('Chọn tiếp tục dùng link sub cũ hoặc nhận link sub hoàn toàn mới.')]: '选择继续保留旧订阅链接或获取全新订阅链接。',
+    [keyOf('Chọn link đích cần giữ:')]: '选择要保留的目标链接：',
+    [keyOf('Hoàn tiền:')]: '退款说明：',
+    [keyOf('Website không hỗ trợ hoàn tiền sau khi đã mua hàng. Quý khách vui lòng chú ý trước khi thanh toán.')]: '本网站购买后不支持退款，请在付款前仔细确认。',
     [keyOf('1. Điền Email, chọn thời gian & phương thức, sau đó tạo đơn để lấy mã QR.')]: '1. 填写邮箱并选择时长和支付方式，然后生成订单二维码。',
     [keyOf('2. Không áp dụng hoàn tiền, khách hàng vui lòng đọc kỹ điều kiện này khi mua hàng.')]: '2. 本服务不支持退款，购买前请仔细阅读相关条款。'
   }
@@ -2078,10 +2094,12 @@ function getActiveFlashSale() {
   return {
     title: s.title || "Flash Sale Giờ Vàng",
     percent: pct,
-    scope: s.scope || "all"
+    scope: s.scope || "all",
+    pkgIds: Array.isArray(s.pkgIds) ? s.pkgIds : [],
+    times: Array.isArray(s.times) ? s.times.map(String) : []
   };
 }
-// v1 — 2026-11-06 20:15 (UTC+7) — Đồng bộ kiểm tra scope Flash Sale (monthly/cycle và data/usage)
+// v1 — 2026-11-06 20:15 (UTC+7) — Đồng bộ kiểm tra scope Flash Sale (all, monthly/cycle, data/usage, pkg, time)
 function doesFlashSaleApply(pkg, sale) {
   if (!sale || !pkg || pkg.isCustom) return false;
   if (sale.scope === "cycle" || sale.scope === "monthly") {
@@ -2090,7 +2108,55 @@ function doesFlashSaleApply(pkg, sale) {
   if (sale.scope === "data" || sale.scope === "usage") {
     return pkg.time === "lifetime" || (pkg.category && pkg.category.includes("usage"));
   }
+  if (sale.scope === "pkg") {
+    return Array.isArray(sale.pkgIds) && sale.pkgIds.includes(pkg.id);
+  }
+  if (sale.scope === "time") {
+    const pkgTime = pkg.time !== undefined ? String(pkg.time) : '1';
+    return Array.isArray(sale.times) && sale.times.includes(pkgTime);
+  }
   return true; // 'all'
+}
+
+function getActiveGiftRuleForPkg(pkg) {
+  if (!pkg || pkg.isCustom || pkg.time === 'lifetime') return null;
+  const giftRules = Array.isArray(cfgCache?.giftRules) ? cfgCache.giftRules : [];
+  const nowMs = Date.now();
+  return giftRules.find(r => {
+    if (!r || r.enabled === false) return false;
+    if (!Array.isArray(r.packageIds) || !r.packageIds.includes(pkg.id)) return false;
+    const s = parseVnDateLimit(r.startDate, false);
+    const e = parseVnDateLimit(r.endDate, true);
+    return nowMs >= s && nowMs <= e;
+  }) || null;
+}
+
+function calcCheckoutDaysAndExp(pkg, qty = 1) {
+  if (!pkg || pkg.time === 'lifetime') return { baseDays: 0, bonusDays: 0, totalDays: 0, expText: 'Vĩnh viễn' };
+  const mult = Math.max(1, Number(qty) || 1);
+  const months = Number(pkg.time) || 1;
+  const baseDays = (months === 12 ? 365 : 30 * months) * mult;
+  const activeGift = getActiveGiftRuleForPkg(pkg);
+  const bonusPerUnit = activeGift ? (Number(activeGift.bonusDays) || 0) : (Number(pkg.bonus_days || pkg.bonusDays || 0));
+  const bonusDays = bonusPerUnit * mult;
+  const totalDays = baseDays + bonusDays;
+
+  const now = Date.now();
+  const vnToday0 = (() => {
+    const d = new Date(now + 7 * 36e5);
+    return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - 7 * 36e5;
+  })();
+  let anchorMs = vnToday0;
+  if (isRenewMode && oCache && oCache.expDate && !/vĩnh viễn|lifetime|永久/i.test(oCache.expDate)) {
+    const m = String(oCache.expDate).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m) {
+      const curExp0 = Date.UTC(+m[3], +m[2] - 1, +m[1]) - 7 * 36e5;
+      if (curExp0 >= vnToday0) anchorMs = curExp0;
+    }
+  }
+  const expD = new Date(anchorMs + totalDays * 864e5 + 7 * 36e5);
+  const expText = `${String(expD.getUTCDate()).padStart(2, '0')}/${String(expD.getUTCMonth() + 1).padStart(2, '0')}/${expD.getUTCFullYear()}`;
+  return { baseDays, bonusDays, totalDays, expText };
 }
 
 function getVndCnyRate() {
@@ -2412,6 +2478,10 @@ function openCheckout(id, overridePkgs) {
   selectDuration(1);
   if (!hideEmail) selectPayMethod('bank');
   toggleZalo();
+  if (!hideEmail && $('view-portal')?.classList.contains('active') && oCache && oCache.email && $('cusEmail')) {
+    $('cusEmail').value = oCache.email;
+    checkEmailExistingLinks(oCache.email);
+  }
   document.body.classList.add('checkout-active');
   renderPaymentBox();
 }
@@ -2650,6 +2720,25 @@ function calculateTotal() {
     }
 
     if (currentAppliedCoupon) {
+      const minSpend = Number(currentAppliedCoupon.minSpend || currentAppliedCoupon.minOrder) || 0;
+      if (minSpend > 0 && currentTotalVnd < minSpend) {
+        currentAppliedCoupon = null;
+        const msg = $('couponAppliedMsg');
+        if (msg) msg.classList.add('hidden');
+      }
+    }
+
+    const durInfo = calcCheckoutDaysAndExp(currentPackage, currentMultiplier);
+    const durT = lang === 'en'
+      ? { total: 'Total:', day: 'days', bonus: 'bonus days', exp: 'Est. expiry:' }
+      : (lang === 'zh'
+        ? { total: '总计：', day: '天', bonus: '天赠送', exp: '预计到期：' }
+        : { total: 'Tổng:', day: 'ngày', bonus: 'ngày tặng', exp: 'HSD dự kiến:' });
+    const durSummaryHtml = durInfo.totalDays > 0
+      ? `<div class="mt-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 flex flex-wrap items-center justify-center gap-1.5"><span>${durT.total} <b>${durInfo.baseDays} ${durT.day}</b>${durInfo.bonusDays > 0 ? ` <span class="text-rose-600 dark:text-rose-400 font-black">+ ${durInfo.bonusDays} ${durT.bonus} = ${durInfo.totalDays} ${durT.day}</span>` : ''}</span><span class="opacity-40">·</span><span>${durT.exp} <b class="text-indigo-700 dark:text-indigo-300">${durInfo.expText}</b></span></div>`
+      : '';
+
+    if (currentAppliedCoupon) {
       const isPct = currentAppliedCoupon.type === 'percent';
       let disc = isPct ? Math.round((currentTotalVnd * currentAppliedCoupon.value) / 100) : currentAppliedCoupon.value;
       if (currentAppliedCoupon.maxDiscount && disc > currentAppliedCoupon.maxDiscount) disc = currentAppliedCoupon.maxDiscount;
@@ -2675,13 +2764,13 @@ function calculateTotal() {
 
       if (pCalc) {
         if (isCnyPay) {
-          pCalc.innerHTML = `${calcStr}<br><span class="text-emerald-600 dark:text-emerald-400 font-black text-xs md:text-sm mt-1.5 block">Đã áp dụng mã ${esc(currentAppliedCoupon.code)} (-¥${discCny}) → Thực thu: <b>¥${currentTotalCny}</b></span>`;
+          pCalc.innerHTML = `${calcStr}<br><span class="text-emerald-600 dark:text-emerald-400 font-black text-xs md:text-sm mt-1.5 block">Đã áp dụng mã ${esc(currentAppliedCoupon.code)} (-¥${discCny}) → Thực thu: <b>¥${currentTotalCny}</b></span>${durSummaryHtml}`;
         } else {
-          pCalc.innerHTML = `${calcStr}<br><span class="text-emerald-600 dark:text-emerald-400 font-black text-xs md:text-sm mt-1.5 block">Đã áp dụng mã ${esc(currentAppliedCoupon.code)} (-${disc.toLocaleString('en-US')}đ) → Thực thu: <b>${currentTotalVnd.toLocaleString('en-US')}VND</b></span>`;
+          pCalc.innerHTML = `${calcStr}<br><span class="text-emerald-600 dark:text-emerald-400 font-black text-xs md:text-sm mt-1.5 block">Đã áp dụng mã ${esc(currentAppliedCoupon.code)} (-${disc.toLocaleString('en-US')}đ) → Thực thu: <b>${currentTotalVnd.toLocaleString('en-US')}VND</b></span>${durSummaryHtml}`;
         }
       }
     } else {
-      if (pCalc) pCalc.innerHTML = calcStr;
+      if (pCalc) pCalc.innerHTML = `${calcStr}${durSummaryHtml}`;
     }
   }
   renderPaymentBox();
@@ -4397,7 +4486,11 @@ function showPolicyPage(targetSection, skipPush = false) {
 }
 
 function switchPortalTab(tabId, fromUpgrade = false, skipPush = false) {
-  if (!fromUpgrade && tabId !== 'p-store') disableUpgradeMode();
+  if (!fromUpgrade) {
+    disableUpgradeMode();
+    $('checkoutSection')?.classList.add('hidden');
+    document.body.classList.remove('checkout-active');
+  }
 
   saveAndSwitchTabScroll(tabId);
   enablePortalFrame();
@@ -4487,6 +4580,25 @@ function logout() {
   document.body.classList.remove('checkout-active');
   router.navigate('/');
   window.scrollTo(0, 0);
+}
+
+function handleBrandLogoClick() {
+  ['guideAuthModal', 'policyModal', 'emailVerifyModal', 'pwaInstallGuideModal', 'wechatModal', 'qrSubModal'].forEach(id => {
+    const m = $(id);
+    if (m && !m.classList.contains('hidden')) m.classList.add('hidden');
+  });
+  unlockBodyScroll();
+  const inPortal = !!(oCache || document.documentElement.classList.contains('has-user-session') || $('view-portal')?.classList.contains('active'));
+  if (inPortal) {
+    logout();
+    return;
+  }
+  $('checkoutSection')?.classList.add('hidden');
+  document.body.classList.remove('checkout-active');
+  if (typeof router !== 'undefined' && location.pathname !== '/') {
+    router.navigate('/');
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function resetToGuest() {
@@ -4997,7 +5109,9 @@ const EXPOSED_FNS = {
   tx: typeof tx !== 'undefined' ? tx : undefined,
   pkgLine: typeof pkgLine !== 'undefined' ? pkgLine : undefined,
   getEffectivePkg: typeof getEffectivePkg !== 'undefined' ? getEffectivePkg : undefined,
-  calculateTotal: typeof calculateTotal !== 'undefined' ? calculateTotal : undefined
+  calculateTotal: typeof calculateTotal !== 'undefined' ? calculateTotal : undefined,
+  handleBrandLogoClick: typeof handleBrandLogoClick !== 'undefined' ? handleBrandLogoClick : undefined,
+  loadConfig: typeof loadConfig !== 'undefined' ? loadConfig : undefined
 };
 
 if (typeof window !== 'undefined') {

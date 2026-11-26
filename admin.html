@@ -297,72 +297,69 @@
       <div id="t-dead" class="hidden w-full min-w-0 space-y-3">
         <!-- Thanh chuyển đổi 2 Sub-tab -->
         <div class="overflow-x-auto scrollbar-none pb-1 w-full">
-          <div class="inline-flex bg-slate-200/80 p-1 rounded-xl gap-1 w-fit shrink-0 mb-1"><button type="button" onclick="switchDeadSubTab('links')" id="btn-dead-links" class="settings-sub-tab whitespace-nowrap shrink-0 active text-center !px-3 py-1.5 font-bold text-xs"><i class="fas fa-link-slash mr-1.5"></i>Link Sub Đã Xóa</button> <button type="button" onclick="switchDeadSubTab('sources')" id="btn-dead-sources" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 py-1.5 font-bold text-xs"><i class="fas fa-server mr-1.5"></i>Quản Lý Link Nguồn</button></div>
+          <div class="inline-flex bg-slate-100 border border-slate-200 p-1 rounded-xl gap-1 w-fit shrink-0"><button type="button" onclick="switchDeadSubTab('links')" id="btn-dead-links" class="settings-sub-tab whitespace-nowrap shrink-0 active text-center !px-3 py-1.5 font-bold text-xs">Link Sub Đã Xóa</button> <button type="button" onclick="switchDeadSubTab('sources')" id="btn-dead-sources" class="settings-sub-tab whitespace-nowrap shrink-0 text-center !px-3 py-1.5 font-bold text-xs">Quản Lý Link Nguồn</button></div>
         </div>
         <!-- SUB-TAB 1: LỊCH SỬ LINK SUB ĐÃ XÓA (48H) -->
         <div id="pane-dead-links" class="space-y-3">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-4 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white border border-slate-200 rounded-xl p-3.5 sm:p-4">
             <div class="min-w-0">
-              <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2"><i class="fas fa-ban text-red-500 shrink-0"></i><span>Lịch sử Link Sub Đã Xóa</span></h2>
-              <p class="text-[11px] text-slate-500 mt-0.5">Link bị xóa được giữ 48 giờ rồi hệ thống tự xóa hẳn khỏi KV. Link đã xóa sẽ không bao giờ tự quay lại Link Sub.</p>
+              <h2 class="text-sm sm:text-base font-bold text-slate-800">Lịch sử Link Sub Đã Xóa</h2>
+              <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">Giữ tối đa 48 giờ trước khi hệ thống xóa hẳn khỏi KV.</p>
             </div>
-            <button onclick="clearDeadLinks()" class="w-full sm:w-auto bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold px-3.5 py-2 rounded-xl text-xs shadow-sm shrink-0 whitespace-nowrap flex items-center justify-center gap-1.5 transition active:scale-95"><i class="fas fa-eraser"></i><span>Xóa hết lịch sử</span></button>
+            <button type="button" onclick="clearDeadLinks()" class="w-full sm:w-auto min-h-[36px] bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold px-3 py-1.5 rounded-lg text-xs shrink-0 whitespace-nowrap flex items-center justify-center gap-1.5 transition active:scale-95"><i class="fas fa-eraser text-slate-400"></i><span>Xóa hết lịch sử</span></button>
           </div>
-          <div id="deadBody" class="space-y-3"></div>
+          <div id="deadBody" class="space-y-2.5"></div>
         </div>
         <!-- SUB-TAB 2: QUẢN LÝ LINK NGUỒN TRONG KHO (HARD DELETE KHỎI KV) -->
         <div id="pane-dead-sources" class="hidden space-y-3">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-4 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white border border-slate-200 rounded-xl p-3.5 sm:p-4">
             <div class="min-w-0">
-              <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2 flex-wrap"><i class="fas fa-database text-indigo-600 shrink-0"></i><span>Quản lý Link Nguồn Kho KV</span> <span id="deadSourceCountBadge" class="bg-indigo-100 text-indigo-700 text-xs font-black px-2 py-0.5 rounded-full">0</span></h2>
-              <p class="text-[11px] text-slate-500 mt-0.5">Xóa triệt để các link nguồn mồ côi (không còn link ẩn hoạt động) khỏi Cloudflare KV để dọn sạch hệ thống.</p>
+              <h2 class="text-sm sm:text-base font-bold text-slate-800 flex items-center gap-2 flex-wrap"><span>Quản lý Link Nguồn KV</span> <span id="deadSourceCountBadge" class="bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-bold px-2 py-0.5 rounded-full">0</span></h2>
+              <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">Xóa triệt để các link nguồn không còn link con hoạt động khỏi Cloudflare KV.</p>
             </div>
-            <button onclick="cleanUnusedSources()" class="w-full sm:w-auto bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition active:scale-95 shrink-0 whitespace-nowrap flex items-center justify-center gap-1.5"><i class="fas fa-broom"></i><span>Dọn sạch nguồn không dùng</span></button>
+            <button type="button" onclick="cleanUnusedSources()" class="w-full sm:w-auto min-h-[36px] bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 font-semibold px-3 py-1.5 rounded-lg text-xs transition active:scale-95 shrink-0 whitespace-nowrap flex items-center justify-center gap-1.5"><i class="fas fa-broom"></i><span>Dọn nguồn không dùng</span></button>
           </div>
-          <div id="deadSourcesBody" class="space-y-3"></div>
+          <div id="deadSourcesBody" class="space-y-2.5"></div>
         </div>
       </div>
       <!-- ===== HƯỚNG DẪN ===== -->
-      <div id="t-cms" class="hidden w-full min-w-0 space-y-3 sm:space-y-4">
-        <!-- GIAO DIỆN 1: DANH SÁCH DANH MỤC DẠNG CÂY Y HỆT INDEX.HTML -->
-        <div id="cmsCategoriesView" class="space-y-3 sm:space-y-4">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white border border-slate-200 rounded-2xl p-3.5 sm:p-4 shadow-sm">
+      <div id="t-cms" class="hidden w-full min-w-0 space-y-3">
+        <!-- GIAO DIỆN 1: DANH SÁCH CHUYÊN MỤC SẠCH -->
+        <div id="cmsCategoriesView" class="space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white border border-slate-200 rounded-xl p-3.5 sm:p-4">
             <div class="min-w-0">
-              <h2 class="text-base sm:text-lg md:text-xl font-bold text-slate-800 flex items-center gap-2"><i class="fas fa-book-open text-indigo-600 shrink-0"></i><span class="truncate">Quản lý Chuyên mục &amp; Hướng dẫn</span></h2>
-              <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">Kéo icon <i class="fas fa-grip-vertical text-slate-400"></i> để đổi vị trí danh mục · Đồng bộ tức thì với Index.</p>
+              <h2 class="text-sm sm:text-base font-bold text-slate-800">Chuyên mục &amp; Bài hướng dẫn</h2>
+              <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">Kéo <i class="fas fa-grip-vertical text-slate-400"></i> đổi thứ tự · Bấm Sửa để chỉnh tên mục hoặc chạm bài viết để soạn.</p>
             </div>
-            <button type="button" onclick="cmsAddTab()" class="w-full sm:w-auto shrink-0 whitespace-nowrap bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3.5 py-2.5 sm:py-2 rounded-xl text-xs shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5"><i class="fas fa-plus"></i><span>Thêm mục mới</span></button>
+            <button type="button" onclick="cmsAddTab()" class="w-full sm:w-auto min-h-[36px] shrink-0 whitespace-nowrap bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3.5 py-2 rounded-lg text-xs transition active:scale-95 flex items-center justify-center gap-1.5"><i class="fas fa-plus"></i><span>Thêm mục mới</span></button>
           </div>
-          <div id="cmsCategoriesTree" class="space-y-3 sm:space-y-4"></div>
+          <div id="cmsCategoriesTree" class="space-y-2.5"></div>
         </div>
-        <!-- GIAO DIỆN 2: TRÌNH SOẠN THẢO BÀI VIẾT KÈM LIVE PREVIEW TRỰC TIẾP -->
-        <div id="cmsEditorWrap" class="hidden space-y-3 sm:space-y-4">
-          <div class="cms-sticky-bar flex items-center justify-between gap-2 bg-white/95 border border-slate-200 rounded-2xl p-2.5 sm:p-3.5 shadow-sm">
-            <button type="button" onclick="closeCmsEditor()" class="whitespace-nowrap shrink-0 text-indigo-600 hover:text-indigo-800 bg-indigo-50/70 hover:bg-indigo-100 font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 transition active:scale-95"><i class="fas fa-arrow-left"></i><span>Quay lại</span></button>
-            <div class="flex items-center gap-2 shrink-0"><button type="button" onclick="saveCms()" class="whitespace-nowrap bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3.5 sm:px-4 py-2 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center gap-1.5"><i class="fas fa-save"></i><span>Lưu bài viết</span></button></div>
+        <!-- GIAO DIỆN 2: TRÌNH SOẠN THẢO BÀI VIẾT TỐI GIẢN (1 THANH LƯU) -->
+        <div id="cmsEditorWrap" class="hidden space-y-3">
+          <div class="cms-sticky-bar flex items-center justify-between gap-2 bg-white/95 border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
+            <button type="button" onclick="closeCmsEditor()" class="min-h-[36px] whitespace-nowrap shrink-0 text-slate-700 hover:text-indigo-700 bg-slate-100 hover:bg-slate-200 font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition active:scale-95"><i class="fas fa-arrow-left"></i><span>Quay lại</span></button>
+            <button type="button" onclick="saveCms()" class="min-h-[36px] whitespace-nowrap shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-1.5 rounded-lg text-xs shadow-sm transition active:scale-95 flex items-center gap-1.5"><i class="fas fa-save"></i><span>Lưu bài viết</span></button>
           </div>
-          <!-- Cấu hình thông tin danh mục cha & metadata bài viết -->
-          <div id="cmsArtMeta" class="bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3"></div>
-          <!-- Trình soạn thảo Word Quill full-width kết hợp xem trước trực tiếp -->
-          <div class="space-y-3 sm:space-y-4">
-            <!-- Live TOC Xem Nhanh tự động cập nhật ngay trong luồng soạn thảo -->
-            <div id="cmsLiveTocBox" class="bg-indigo-50/60 border border-indigo-200 rounded-2xl p-3 sm:p-4 shadow-sm space-y-2">
-              <div class="flex items-center justify-between gap-2"><span class="font-extrabold text-xs sm:text-sm text-indigo-900 flex items-center gap-1.5 min-w-0 truncate"><i class="fas fa-list-ul text-indigo-600 shrink-0"></i><span class="truncate">Mục lục tự động (H2 / H3)</span></span><span id="cmsTocCountBadge" class="text-[10px] font-bold text-indigo-600 bg-white px-2 py-0.5 rounded-full border border-indigo-200 whitespace-nowrap shrink-0">0 mục</span></div>
-              <div id="cmsLiveTocList" class="space-y-1.5 pt-1">
-                <div class="text-xs text-slate-400 italic">Thêm các tiêu đề H2 hoặc H3 trong bài viết để tự động tạo cây mục lục...</div>
-              </div>
+          <!-- Thông tin bài viết & Tùy chọn gập gọn -->
+          <div id="cmsArtMeta" class="bg-white border border-slate-200 rounded-xl p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5"></div>
+          <!-- Mục lục tự động (gập mặc định giúp vùng viết Quill lên cao trên mobile) -->
+          <details id="cmsLiveTocBox" class="bg-white border border-slate-200 rounded-xl p-3 shadow-xs">
+            <summary class="cursor-pointer select-none flex items-center justify-between gap-2 list-none">
+              <span class="font-bold text-xs text-slate-800 flex items-center gap-1.5 min-w-0 truncate"><i class="fas fa-list-ul text-slate-400 shrink-0"></i><span class="truncate">Mục lục tự động (H2 / H3)</span></span>
+              <span id="cmsTocCountBadge" class="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 whitespace-nowrap shrink-0">0 mục</span>
+            </summary>
+            <div id="cmsLiveTocList" class="space-y-1.5 pt-2.5 mt-2 border-t border-slate-100">
+              <div class="text-xs text-slate-400 italic">Thêm các tiêu đề H2 hoặc H3 trong bài viết để tự động tạo cây mục lục...</div>
             </div>
-            <!-- Khung soạn thảo Word Quill toàn màn hình -->
-            <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-              <div class="bg-slate-50 px-3 py-2 border-b border-slate-200 flex justify-between items-center gap-2" id="cmsAddBtns"></div>
-              <div class="bg-white min-h-[340px] sm:min-h-[460px] p-1.5 sm:p-2">
-                <div id="quillEditor" class="text-sm text-slate-800 leading-relaxed min-h-[310px] sm:min-h-[420px]"></div>
-              </div>
-              <div class="p-3 sm:p-4 bg-slate-50 border-t border-slate-200 space-y-3 sm:space-y-4">
-                <div id="cmsEditorExtraFields"></div>
-                <button type="button" onclick="saveCms()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 sm:py-3.5 rounded-xl shadow-md text-xs sm:text-sm transition active:scale-[0.99] flex items-center justify-center gap-2 whitespace-nowrap"><i class="fas fa-save text-sm sm:text-base"></i><span>LƯU BÀI VIẾT</span></button>
-              </div>
+          </details>
+          <!-- Khung soạn thảo Quill (toolbar 1 hàng cuộn ngang trên mobile) -->
+          <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden flex flex-col">
+            <div class="bg-slate-50 px-3 py-2 border-b border-slate-200 flex justify-between items-center gap-2" id="cmsAddBtns"></div>
+            <div class="bg-white min-h-[340px] sm:min-h-[460px]">
+              <div id="quillEditor" class="text-sm text-slate-800 leading-relaxed min-h-[320px] sm:min-h-[440px]"></div>
             </div>
+            <div id="cmsEditorExtraFields" class="px-3 py-2 bg-slate-50 border-t border-slate-100 text-[11px] text-slate-400 empty:hidden"></div>
           </div>
         </div>
       </div>

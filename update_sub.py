@@ -1637,9 +1637,14 @@ def parse_traffic(header: str) -> dict:
     return {"used": f"{used_gb:.2f}", "total": f"{total_gb:.2f}", "percent": pct, "expire": exp_str}
 
 
+def is_lock_orig(u_val: str) -> bool:
+    s = str(u_val or "").strip().lower()
+    return s in ("dabikhoa", "da_bi_khoa")
+
+
 def extract_source_token(u_val: str) -> str:
     s = str(u_val or "").strip()
-    if not s or s == "Da_bi_khoa":
+    if not s or is_lock_orig(s):
         return ""
     try:
         m_kt = re.search(r'/oosaka/([a-zA-Z0-9_%-]{8,})', s, re.IGNORECASE)
@@ -1666,6 +1671,23 @@ def extract_source_token(u_val: str) -> str:
     except Exception:
         pass
     return ""
+
+
+def fetch_upstream_sub(orig_url: str):
+    """Ưu tiên Clash YAML (FlClash) để giữ đủ hy2 fingerprint & ports/mport; tự fallback v2rayN/6.23."""
+    for ua in ("FlClash/v0.9.3 clash-verge Platform/windows", "v2rayN/6.23"):
+        try:
+            r = requests.get(orig_url, headers={
+                "User-Agent": ua,
+                "Accept": "text/html,application/xhtml+xml,application/xml,text/yaml,*/*;q=0.8",
+            }, timeout=30)
+            if r.status_code == 200:
+                txt = r.text.strip()
+                if len(txt) >= 500 and "ERROR" not in txt:
+                    return r
+        except Exception:
+            pass
+    return None
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -1696,7 +1718,7 @@ def update_all():
         for u_key, p_key in (("url", "provider"), ("url2", "provider2"), ("url3", "provider3")):
             u_val = str(pl.get(u_key) or "").strip()
             p_val = str(pl.get(p_key) or "").strip()
-            if not u_val or u_val == "Da_bi_khoa": continue
+            if not u_val or is_lock_orig(u_val): continue
             tok = extract_source_token(u_val)
             if tok:
                 seen_orig[tok] = u_val
@@ -1709,7 +1731,7 @@ def update_all():
         for u_key, p_key in (("orig", "provider"), ("orig2", "provider2"), ("orig3", "provider3")):
             u_val = str(lnk.get(u_key) or "").strip()
             p_val = str(lnk.get(p_key) or "").strip()
-            if not u_val or u_val == "Da_bi_khoa": continue
+            if not u_val or is_lock_orig(u_val): continue
             tok = extract_source_token(u_val)
             if tok:
                 if tok not in seen_orig:
@@ -1745,15 +1767,14 @@ def update_all():
             provider = "Custom_Source"
         print(f"\n→ [{provider}] token: {orig_token[:12]}... url: {orig_url[:55]}...")
         try:
-            r = requests.get(orig_url, headers={"User-Agent": "v2rayN/6.23",
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"}, timeout=30)
-            if r.status_code != 200:
-                print(f"  [!] HTTP {r.status_code}"); time.sleep(3); continue
+            r = fetch_upstream_sub(orig_url)
+            if not r:
+                print(f"  [!] Không tải được payload hợp lệ từ FlClash / v2rayN"); time.sleep(3); continue
             raw_b64   = r.text.strip()
             user_info = r.headers.get("subscription-userinfo", "")
-            print(f"  b64 length: {len(raw_b64)} chars")
+            print(f"  b64/yaml length: {len(raw_b64)} chars")
             if len(raw_b64) < 500 or "ERROR" in raw_b64:
-                print("  [!] Bỏ qua - b64 quá ngắn hoặc lỗi"); time.sleep(3); continue
+                print("  [!] Bỏ qua - dữ liệu quá ngắn hoặc lỗi"); time.sleep(3); continue
             traffic = parse_traffic(user_info)
             final_b64, final_yaml, final_singbox = process_b64(raw_b64, provider)
             try:

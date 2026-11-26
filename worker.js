@@ -890,7 +890,11 @@ const PKGS = new Proxy(DEFAULT_PKGS, {
     };
   }
 });
-const LOCK_ORIG = "Da_bi_khoa";
+const LOCK_ORIG = "dabikhoa";
+const isLockOrig = (u) => {
+  const s = String(u || "").trim().toLowerCase();
+  return s === "dabikhoa" || s === "da_bi_khoa";
+};
 const MONTHLY = {
   "100GB": ["t1", "o1"],
   "500GB": ["t2", "o2"],
@@ -1050,14 +1054,16 @@ const lockAt = (exp) => {
   const t0 = parseDmy(exp);
   return t0 || Infinity;
 };
-// origBackup: URL gốc thật được cất khi link bị khóa (orig -> "Da_bi_khoa"); gia hạn/mở khóa sẽ khôi phục từ đây.
+// origBackup: URL gốc thật được cất khi link bị khóa (orig -> "dabikhoa", tương thích ngược Da_bi_khoa); gia hạn/mở khóa sẽ khôi phục từ đây.
 function lockLink(l) {
   l.isLocked = true;
-  if (l.orig && l.orig !== LOCK_ORIG) {
+  if (l.orig && !isLockOrig(l.orig)) {
     l.origBackup = l.orig;
     l.orig = LOCK_ORIG;
+  } else if (!l.orig || isLockOrig(l.orig)) {
+    l.orig = LOCK_ORIG;
   }
-  if (l.orig2 && l.orig2 !== LOCK_ORIG) {
+  if (l.orig2 && !isLockOrig(l.orig2)) {
     l.origBackup2 = l.orig2;
     delete l.orig2;
   }
@@ -1115,6 +1121,20 @@ function getActiveGiftRule(rules, pkgId, now = Date.now()) {
     }
   }
   return null;
+}
+
+function matchesFlashSaleScope(fs, pk, pkgId = "") {
+  if (!fs || !pk) return false;
+  const fsScope = fs.scope || "all";
+  const pkgTime = pk.time !== undefined ? pk.time : (pk.m === 0 ? "lifetime" : (pk.m || 1));
+  const isCyclePkg = pk.m !== 0 && pkgTime !== "lifetime" && (!pk.category || !pk.category.includes("usage"));
+  const isDataPkg = pk.m === 0 || pkgTime === "lifetime" || (pk.category && pk.category.includes("usage"));
+  if (fsScope === "all") return true;
+  if ((fsScope === "monthly" || fsScope === "cycle") && isCyclePkg) return true;
+  if ((fsScope === "data" || fsScope === "usage") && isDataPkg) return true;
+  if (fsScope === "pkg") return Array.isArray(fs.pkgIds) && fs.pkgIds.includes(pkgId || pk.id);
+  if (fsScope === "time") return Array.isArray(fs.times) && fs.times.map(String).includes(String(pkgTime));
+  return false;
 }
 
 // v1 — 2026-11-06 20:15 (UTC+7) — Đồng bộ computeExp cho KEEP_EXISTING + Bộ nhận diện nguồn Hybrid & ưu tiên Fallback
@@ -1186,7 +1206,7 @@ const PARAM_MAP_DEFAULT = {
 // v2 — 2026-11-06 22:00 (UTC+7) — Trích xuất token không phân biệt hoa/thường, giải mã URL-encoded và path token
 function extractSourceToken(rawUrl) {
   const s = String(rawUrl || "").trim();
-  if (!s || s === LOCK_ORIG) return "";
+  if (!s || isLockOrig(s)) return "";
   try {
     const mKt = s.match(/\/oosaka\/([a-zA-Z0-9_%-]{8,})/i);
     if (mKt) {
@@ -1217,7 +1237,7 @@ function extractSourceToken(rawUrl) {
 
 function detectUrlSourceMeta(rawUrl) {
   const s = String(rawUrl || "").trim();
-  if (!s || s === LOCK_ORIG) return { provider: "other", protocol: "", token: "", verified: false };
+  if (!s || isLockOrig(s)) return { provider: "other", protocol: "", token: "", verified: false };
   try {
     const u = new URL(s);
     const host = u.hostname.toLowerCase();
@@ -1306,7 +1326,7 @@ function resolvePoolLegMeta(p, leg = 1) {
 }
 
 function resolveUrlMetaFromPool(rawUrl, pool = [], fallbackLink = null, leg = 1) {
-  if (!rawUrl || rawUrl === LOCK_ORIG) return { provider: "other", protocol: "", token: "", verified: false };
+  if (!rawUrl || isLockOrig(rawUrl)) return { provider: "other", protocol: "", token: "", verified: false };
   for (const p of (pool || [])) {
     if (!p) continue;
     if (p.url === rawUrl) return resolvePoolLegMeta(p, 1);
@@ -1333,7 +1353,7 @@ function resolveUrlMetaFromPool(rawUrl, pool = [], fallbackLink = null, leg = 1)
 function isLegDying(p, leg = 1) {
   if (!p) return true;
   const u = leg === 2 ? p.url2 : p.url;
-  if (!u || u === LOCK_ORIG) return true;
+  if (!u || isLockOrig(u)) return true;
   const exp = leg === 2 ? (p.exp2 || p.exp) : p.exp;
   if (exp && !isLifetime(exp)) {
     const t = parseDmy(exp);
@@ -1354,7 +1374,7 @@ function isDying(p) {
   return false;
 }
 
-const poolOk = (p) => !!(p && p.url && p.url !== LOCK_ORIG && p.id !== "POOL-179017008791528") && (Number(p.used) || 0) < (Number(p.max) || 30) && !isDying(p);
+const poolOk = (p) => !!(p && p.url && !isLockOrig(p.url) && p.id !== "POOL-179017008791528") && (Number(p.used) || 0) < (Number(p.max) || 30) && !isDying(p);
 
 function isSourceEligibleForAuto(p, reqProv = null, reqProto = null) {
   if (!poolOk(p) || p.isCombo) return false;
@@ -1432,6 +1452,25 @@ function pickComboReplacementLeg(pool, brokenProv, healthyProv, healthyUrl = "",
     };
   }
   return null;
+}
+
+async function fetchUpstreamSub(targetUrl) {
+  if (!targetUrl) return { ok: false, rawText: "", userInfo: "" };
+  for (const ua of ["FlClash/v0.9.3 clash-verge Platform/windows", "v2rayN/6.23"]) {
+    try {
+      const r = await fetch(targetUrl, {
+        headers: { "User-Agent": ua },
+        cf: { cacheTtl: 0, cacheEverything: false }
+      });
+      if (r.ok) {
+        const rawText = (await r.text()).trim();
+        if (rawText && rawText.length >= 20 && !/^ERROR/i.test(rawText)) {
+          return { ok: true, rawText, userInfo: r.headers.get("subscription-userinfo") || "", ua };
+        }
+      }
+    } catch {}
+  }
+  return { ok: false, rawText: "", userInfo: "" };
 }
 
 function getMe(url, env, cms, request = null) {
@@ -1764,7 +1803,7 @@ function publicOrder(o, cms, links, field) {
     const rawVal = getOrderRawSubLink(o, i, field);
     const hasLink = !!rawVal;
     const foundRec = hasLink ? linkArr.find((l) => l && l.masked === rawVal) : null;
-    const isLinkLocked = !!(foundRec && (foundRec.isLocked || foundRec.orig === LOCK_ORIG));
+    const isLinkLocked = !!(foundRec && (foundRec.isLocked || isLockOrig(foundRec.orig)));
 
     out["blur" + i] = sec.blur;
     out["lock" + i] = sec.lock;
@@ -1870,7 +1909,7 @@ async function authorizeSubLinkAccess(KV, env, url, request, isTestReq, orderId,
   // 4. Kiểm tra trạng thái khóa của bản ghi Link Sub trong kho cục bộ (nếu có)
   const links = arr(rawLinks);
   const foundRec = links.find((l) => l && l.masked === rawUrl);
-  if (foundRec && (foundRec.isLocked || foundRec.orig === LOCK_ORIG)) {
+  if (foundRec && (foundRec.isLocked || isLockOrig(foundRec.orig))) {
     return {
       ok: false,
       status: 403,
@@ -1948,7 +1987,7 @@ function applyUpgrade(o, st = null) {
       if (isLifetime(o.expDate)) curLink.expDate = "Vĩnh viễn";
       if (curLink.isLocked) {
         curLink.isLocked = false;
-        if (curLink.orig === LOCK_ORIG && curLink.origBackup) {
+        if (isLockOrig(curLink.orig) && curLink.origBackup) {
           curLink.orig = curLink.origBackup;
           delete curLink.origBackup;
         }
@@ -2052,11 +2091,11 @@ function fulfillOrder(st, o, me, log) {
   const life = isLifetime(o.expDate);
 
   if (link) {
-    const isLocked = link.isLocked || link.orig === LOCK_ORIG;
+    const isLocked = link.isLocked || isLockOrig(link.orig);
     if (link.isCombo) {
       // Xử lý mở khóa / kiểm tra 2 chân của Link Combo theo đúng thứ tự ưu tiên
-      const orig1Candidate = isLocked ? (link.origBackup && link.origBackup !== LOCK_ORIG ? link.origBackup : "") : link.orig;
-      const orig2Candidate = isLocked ? (link.origBackup2 && link.origBackup2 !== LOCK_ORIG ? link.origBackup2 : "") : link.orig2;
+      const orig1Candidate = isLocked ? (link.origBackup && !isLockOrig(link.origBackup) ? link.origBackup : "") : link.orig;
+      const orig2Candidate = isLocked ? (link.origBackup2 && !isLockOrig(link.origBackup2) ? link.origBackup2 : "") : link.orig2;
       const meta1Old = resolveUrlMetaFromPool(orig1Candidate, st.pool, link, 1);
       const meta2Old = resolveUrlMetaFromPool(orig2Candidate, st.pool, link, 2);
       const reqProv1 = meta1Old.provider !== "other" ? meta1Old.provider : "lx";
@@ -2119,7 +2158,7 @@ function fulfillOrder(st, o, me, log) {
       o.fulfillResult = isLocked ? "restore_locked" : "keep_active";
     } else if (isLocked) {
       // B8: Mở khóa link đơn -> ưu tiên cùng nguồn cũ -> cùng nhà mạng -> Kitty -> Fail-Closed
-      const backupUrl = (link.origBackup && link.origBackup !== LOCK_ORIG) ? link.origBackup : "";
+      const backupUrl = (link.origBackup && !isLockOrig(link.origBackup)) ? link.origBackup : "";
       const oldMeta = resolveUrlMetaFromPool(backupUrl, st.pool, link, 1);
       const reqProv = oldMeta.provider !== "other" ? oldMeta.provider : "lx";
       let eligibleNode = backupUrl ? st.pool.find(p => p && !p.isCombo && p.url === backupUrl && isSourceEligibleForAuto(p)) : null;
@@ -2581,9 +2620,9 @@ export default {
               const targetUrl = comboOrigUrls[pickIdx];
               const targetProv = provList[pickIdx];
               if (!targetUrl) return getDead();
-              const r = await fetch(targetUrl, { headers: { "User-Agent": "v2rayN/6.23" } });
-              if (!r.ok) return getDead();
-              const rawText = (await r.text()).trim();
+              const fetched = await fetchUpstreamSub(targetUrl);
+              if (!fetched.ok) return getDead();
+              const rawText = fetched.rawText;
               const provName = modeFromProv(targetProv, targetUrl);
               const { newB64, yamlStr, singboxStr, error: procErr } = processB64(rawText, ACTIVE_INFO_NAMES, VP, provName);
               if (procErr || (!newB64 && !yamlStr && !singboxStr)) return getDead();
@@ -2680,12 +2719,9 @@ export default {
           if (hitRes) return hitRes;
 
           if (!cd && origUrl) {
-            const r = await fetch(origUrl, {
-              headers: { "User-Agent": "v2rayN/6.23" },
-              cf: { cacheTtl: 0, cacheEverything: false }
-            });
-            if (r.ok) {
-              const rawText = (await r.text()).trim(), ui = r.headers.get("subscription-userinfo") || "";
+            const fetched = await fetchUpstreamSub(origUrl);
+            if (fetched.ok) {
+              const rawText = fetched.rawText, ui = fetched.userInfo;
               if (rawText && rawText.length >= 20) {
                 const { newB64, yamlStr, singboxStr, error: procErr } = processB64(rawText, ACTIVE_INFO_NAMES, VP, singleMode);
                 if (!procErr && (newB64 || yamlStr || singboxStr)) {
@@ -3159,7 +3195,7 @@ export default {
             let isLocked = false;
             let linkStatus = "active";
             if (foundRec) {
-              isLocked = !!(foundRec.isLocked || foundRec.orig === LOCK_ORIG || (!isLifetime(ord.expDate) && parseDmy(ord.expDate) ? parseDmy(ord.expDate) < todayStart : false));
+              isLocked = !!(foundRec.isLocked || isLockOrig(foundRec.orig) || (!isLifetime(ord.expDate) && parseDmy(ord.expDate) ? parseDmy(ord.expDate) < todayStart : false));
               linkStatus = isLocked ? "locked" : "active";
             } else {
               linkStatus = "unverified";
@@ -3339,24 +3375,19 @@ export default {
         let discountVnd = 0;
         let discountCny = 0;
 
-        // 1. Áp dụng Flash Sale nếu có hiệu lực và khớp phạm vi gói (scope) - chuẩn múi giờ UTC+7
+        // 1. Áp dụng Flash Sale nếu có hiệu lực và khớp phạm vi gói (all, monthly/cycle, data/usage, pkg, time) - UTC+7
         const fs = (st.cms && st.cms.sales && st.cms.sales.campaign) || (st.cms && st.cms.settings && st.cms.settings.flashSale);
+        let flashSalePct = 0;
         if (fs && fs.enabled && Number(fs.discountPercent) > 0) {
           const fsStart = parseVnBoundary(fs.startDate, false);
           const fsEnd = parseVnBoundary(fs.endDate, true);
-          if (now >= fsStart && now <= fsEnd) {
-            const fsScope = fs.scope || "all";
-            const isCyclePkg = pk.m !== 0 && pk.time !== "lifetime" && (!pk.category || !pk.category.includes("usage"));
-            const isDataPkg = pk.m === 0 || pk.time === "lifetime" || (pk.category && pk.category.includes("usage"));
-            const scopeMatched = fsScope === "all" || ((fsScope === "monthly" || fsScope === "cycle") && isCyclePkg) || ((fsScope === "data" || fsScope === "usage") && isDataPkg);
-            if (scopeMatched) {
-              const discountPct = Math.min(90, Math.max(1, Number(fs.discountPercent)));
-              const unitDiscountedVnd = Math.max(2000, Math.round(Number(pk.vnd || 0) * (100 - discountPct) / 100));
-              finalVnd = unitDiscountedVnd * qty;
-              const rawCny = Number(pk.cny || 0);
-              const unitDiscountedCny = rawCny > 0 ? Math.max(0.5, Math.round(rawCny * (100 - discountPct) / 10) / 10) : 0;
-              finalCny = Math.round(unitDiscountedCny * qty * 100) / 100;
-            }
+          if (now >= fsStart && now <= fsEnd && matchesFlashSaleScope(fs, pk, b.pkgId)) {
+            flashSalePct = Math.min(90, Math.max(1, Number(fs.discountPercent)));
+            const unitDiscountedVnd = Math.max(2000, Math.round(Number(pk.vnd || 0) * (100 - flashSalePct) / 100));
+            finalVnd = unitDiscountedVnd * qty;
+            const rawCny = Number(pk.cny || 0);
+            const unitDiscountedCny = rawCny > 0 ? Math.max(0.5, Math.round(rawCny * (100 - flashSalePct) / 10) / 10) : 0;
+            finalCny = Math.round(unitDiscountedCny * qty * 100) / 100;
           }
         }
 
@@ -3440,7 +3471,7 @@ export default {
           info1: "",
           info2: "",
           info3: "",
-          lockInfo: {},
+          lockInfo: appliedCouponCode || flashSalePct ? { _wf: { couponCode: appliedCouponCode, discountVnd, discountCny, flashSalePct } } : {},
           sourceWeb: String(b.sourceWeb || "").slice(0, 80),
           orderType: isRenew ? "renew" : "new",
           isTest: !!isTestReq,
@@ -3510,22 +3541,10 @@ export default {
           const fsStart = parseVnBoundary(fs.startDate, false);
           const fsEnd = parseVnBoundary(fs.endDate, true);
           const nowMs = NOW();
-          if (nowMs >= fsStart && nowMs <= fsEnd) {
-            let matchScope = false;
-            const sc = fs.scope || "all";
-            const pkgTime = tg.time !== undefined ? tg.time : (tg.m === 0 ? "lifetime" : (tg.m || 1));
-            const isCyclePkg = tg.m !== 0 && pkgTime !== "lifetime" && (!tg.category || !tg.category.includes("usage"));
-            const isDataPkg = tg.m === 0 || pkgTime === "lifetime" || (tg.category && tg.category.includes("usage"));
-            if (sc === "all") matchScope = true;
-            else if ((sc === "monthly" || sc === "cycle") && isCyclePkg) matchScope = true;
-            else if ((sc === "data" || sc === "usage") && isDataPkg) matchScope = true;
-            else if (sc === "pkg" && Array.isArray(fs.pkgIds) && fs.pkgIds.includes(b.pkgId)) matchScope = true;
-            else if (sc === "time" && Array.isArray(fs.times) && fs.times.map(String).includes(String(pkgTime))) matchScope = true;
-            if (matchScope) {
-              const pct = Math.min(90, Math.max(1, Number(fs.discountPercent)));
-              targetVnd = Math.max(2000, Math.round(targetVnd * (100 - pct) / 100));
-              if (targetCny > 0) targetCny = Math.max(0.5, Math.round(targetCny * (100 - pct) / 10) / 10);
-            }
+          if (nowMs >= fsStart && nowMs <= fsEnd && matchesFlashSaleScope(fs, tg, b.pkgId)) {
+            const pct = Math.min(90, Math.max(1, Number(fs.discountPercent)));
+            targetVnd = Math.max(2000, Math.round(targetVnd * (100 - pct) / 100));
+            if (targetCny > 0) targetCny = Math.max(0.5, Math.round(targetCny * (100 - pct) / 10) / 10);
           }
         }
 
@@ -3838,13 +3857,27 @@ export default {
               log("warn", "fulfill", `Không tìm thấy đơn trong bảng ${st.isTest ? "ALL_ORDERS_TEST" : "ALL_ORDERS"}`, oid, oid);
               continue;
             }
-            // Xác minh trạng thái thanh toán trước khi fulfillment (kiểm tra D1 nếu có kết nối, hoặc trạng thái đơn)
+            // Chặn tuyệt đối đơn đã hủy / thất bại
+            if (normStatus(o.status) === "failed") {
+              results.errors.push(oid);
+              log("warn", "fulfill", "Chặn fulfillment - Đơn đã ở trạng thái failed/hủy", oid, oid);
+              continue;
+            }
+            // Xác minh trạng thái thanh toán trước khi fulfillment (Fail-Closed khi D1 chưa xác nhận success hoặc lỗi kết nối D1)
             if (normStatus(o.status) !== "success") {
-              const d1Check = await d1(env, `/api/orders/${oid}`);
-              if (d1Check.ok && d1Check.data && d1Check.data.order && d1Check.data.order.status && d1Check.data.order.status !== "success") {
-                results.errors.push(oid);
-                log("warn", "fulfill", "Chặn fulfillment - D1 chưa xác nhận trạng thái thanh toán success", oid, oid);
-                continue;
+              if (env.D1_URL && env.D1_SECRET) {
+                const d1Check = await d1(env, `/api/orders/${oid}`);
+                if (!d1Check.ok) {
+                  results.errors.push(oid);
+                  log("warn", "fulfill", "Chặn fulfillment - Lỗi xác minh thanh toán D1 (fail-closed)", `${oid} HTTP ${d1Check.status}`, oid);
+                  continue;
+                }
+                const d1St = normStatus(d1Check.data && d1Check.data.order && d1Check.data.order.status ? d1Check.data.order.status : "");
+                if (!d1Check.data || !d1Check.data.order || (d1St && d1St !== "success")) {
+                  results.errors.push(oid);
+                  log("warn", "fulfill", `Chặn fulfillment - D1 báo trạng thái ${d1St || "empty"}`, oid, oid);
+                  continue;
+                }
               }
               o.status = "success";
               o.paidAt = NOW();
@@ -4047,7 +4080,7 @@ export default {
           return J({ ok: true });
         }
 
-        // Dọn sạch toàn bộ link nguồn thực sự không còn bất kỳ link khách nào (bảo toàn link #1 khách thật & Da_bi_khoa)
+        // Dọn sạch toàn bộ link nguồn thực sự không còn bất kỳ link khách nào (bảo toàn link #1 khách thật & dabikhoa)
         if (p === "/api/admin/source/clean_unused" && m === "POST") {
           const st = await st0();
           let subsObj = safeJson(await KV.get("GLOBAL_SUBS"), {});
@@ -4056,7 +4089,7 @@ export default {
           const getTokSafe = (u) => extractSourceToken(u) || null;
           const isLegacyAnchor = (l) => l && !l.orderId && String(l.email || "").trim().toLowerCase() === "auto" && String(l.linkIndex) === "1";
           const unusedPool = st.pool.filter(p => {
-            if (!p || !p.url || p.url === LOCK_ORIG) return false;
+            if (!p || !p.url || isLockOrig(p.url)) return false;
             const activeLinks = st.links.filter(l => {
               if (!l || isLegacyAnchor(l)) return false;
               if (p.isCombo && p.url2) {
@@ -4581,9 +4614,9 @@ export default {
                   if (od.expDate) {
                     lTarget.expDate = isLifetime(od.expDate) ? "Vĩnh viễn" : od.expDate;
                   }
-                  if (!isExpiredOrder(od, NOW()) && (lTarget.isLocked || lTarget.orig === LOCK_ORIG)) {
+                  if (!isExpiredOrder(od, NOW()) && (lTarget.isLocked || isLockOrig(lTarget.orig))) {
                     lTarget.isLocked = false;
-                    if (lTarget.orig === LOCK_ORIG && lTarget.origBackup) {
+                    if (isLockOrig(lTarget.orig) && lTarget.origBackup) {
                       lTarget.orig = lTarget.origBackup;
                       delete lTarget.origBackup;
                     }
@@ -5278,7 +5311,7 @@ async function runCron(env, ctx, opt) {
     }
   }
 
-  // 1. Khóa link: đúng 00:00:00 UTC+7 ngày hết hạn là khóa link sub ẩn và đổi nguồn Da_bi_khoa
+  // 1. Khóa link: đúng 00:00:00 UTC+7 ngày hết hạn là khóa link sub ẩn và đổi nguồn dabikhoa
   for (const l of st.links) {
     if (!l || l.isLocked || !l.expDate || isLifetime(l.expDate)) continue;
     if (now >= lockAt(l.expDate)) {
@@ -5474,10 +5507,10 @@ function buildGlobalRouter(links, orders = [], pool = []) {
       const isLife = isLifetime(effectiveExp);
       const dayStart = parseDmy(effectiveExp);
       const lockTs = isLife ? 4102444800000 : (dayStart || 0);
-      const isLocked = !!l.isLocked || (!isLife && lockTs > 0 && now >= lockTs) || (l.orig === LOCK_ORIG);
+      const isLocked = !!l.isLocked || (!isLife && lockTs > 0 && now >= lockTs) || isLockOrig(l.orig);
 
       if (l.isCombo) {
-        if (isLocked || l.orig === LOCK_ORIG) {
+        if (isLocked || isLockOrig(l.orig)) {
           r[mt] = {
             isCombo: true,
             tokens: [],
@@ -5500,7 +5533,7 @@ function buildGlobalRouter(links, orders = [], pool = []) {
         const providers = [];
         const seenOrig = new Set();
         for (const item of origList) {
-          if (!item.raw || item.raw === LOCK_ORIG || seenOrig.has(item.raw)) continue;
+          if (!item.raw || isLockOrig(item.raw) || seenOrig.has(item.raw)) continue;
           seenOrig.add(item.raw);
           const ot = extractSourceToken(item.raw);
           const meta = resolveUrlMetaFromPool(item.raw, pool, l, item.leg);
@@ -5522,7 +5555,7 @@ function buildGlobalRouter(links, orders = [], pool = []) {
         continue;
       }
       if (!l.orig) continue;
-      if (isLocked || l.orig === LOCK_ORIG) {
+      if (isLocked || isLockOrig(l.orig)) {
         r[mt] = {
           origTok: "",
           origUrl: LOCK_ORIG,
@@ -5605,7 +5638,7 @@ async function relinkScan(env, url, st, o) {
       if (manual && !o.includeManual) continue;
       const isUrl = /^https?:\/\//i.test(v);
       const ownLink = st.links.find((l) => l && String(l.masked || "").trim() === v);
-      const isLockedRec = !!(ownLink && (ownLink.isLocked || ownLink.orig === LOCK_ORIG));
+      const isLockedRec = !!(ownLink && (ownLink.isLocked || isLockOrig(ownLink.orig)));
       // Link coi là chết nếu: sai cú pháp URL, hoặc thuộc web này nhưng không có trong ALL_LINKS hoặc link đã bị khóa
       const isDead = !isUrl || (f === me.field && (!ownLink || isLockedRec));
       if (o.scope === "dead" && !isDead) continue;
@@ -5626,8 +5659,8 @@ async function relinkScan(env, url, st, o) {
 
 // Tìm link còn sống khớp nhất cho 1 đơn: ưu tiên URL đang có trong ô info của đơn, rồi orderId trùng, rồi cùng email duy nhất không nhập nhằng.
 function matchLink(links, od, field, allOrders = []) {
-  const isLockedRec = (x) => !!(x && (x.isLocked || x.orig === LOCK_ORIG));
-  const canRecover = (x) => !!(x && /^https?:\/\//i.test(String(x.masked || "").trim()) && (!isLockedRec(x) || (x.origBackup && x.origBackup !== LOCK_ORIG)));
+  const isLockedRec = (x) => !!(x && (x.isLocked || isLockOrig(x.orig)));
+  const canRecover = (x) => !!(x && /^https?:\/\//i.test(String(x.masked || "").trim()) && (!isLockedRec(x) || (x.origBackup && !isLockOrig(x.origBackup))));
   const oid = normId(od.id);
   const curUrl = field ? String(od[field] || "").trim() : "";
   if (curUrl) {
@@ -5687,7 +5720,7 @@ async function relinkMap(env, url, st, me, o) {
     const cur = String(od[f] || "").trim();
     const isUrl = /^https?:\/\//i.test(cur);
     const curLinkRec = cur ? st.links.find((l) => l && String(l.masked || "").trim() === cur) : null;
-    const curLocked = !!(curLinkRec && (curLinkRec.isLocked || curLinkRec.orig === LOCK_ORIG));
+    const curLocked = !!(curLinkRec && (curLinkRec.isLocked || isLockOrig(curLinkRec.orig)));
     const curDead = !!(cur && (deadSet.has(cur) || (curLinkRec && curLinkRec.id && tombIdSet.has(String(curLinkRec.id).trim()))));
 
     // Nếu ô info của Web hiện tại ĐÃ có link hợp lệ (không bị khóa, không thuộc DEAD_LINKS/tombstone) thì bỏ qua ngay, bất kể web khác rỗng hay orderId/HSD lệch
@@ -5698,7 +5731,7 @@ async function relinkMap(env, url, st, me, o) {
     const l = matchLink(st.links, od, f, st.orders);
     if (l) {
       const toUrl = String(l.masked || "").trim();
-      const targetLocked = !!(l.isLocked || l.orig === LOCK_ORIG);
+      const targetLocked = !!(l.isLocked || isLockOrig(l.orig));
       if (toUrl && (toUrl !== cur || targetLocked)) {
         items.push({
           id: od.id,
@@ -8369,6 +8402,10 @@ function proxyToSingbox(p) {
 }
 
 export {
+  LOCK_ORIG,
+  isLockOrig,
+  matchesFlashSaleScope,
+  fetchUpstreamSub,
   parseURI,
   processB64,
   buildYaml,

@@ -709,7 +709,7 @@ async function fetchAll(msg, throwOnError = false, explicitIsTest = undefined) {
 
     // AGENTS.md Quy tắc 40 & 44: fetchAll chỉ đọc dữ liệu hiển thị, không tự ý ghi KV khi vừa tải trang
     linksDb.forEach(l => {
-      if (l.orig && l.orig !== "Da_bi_khoa" && !linkPoolDb.find(p => p.url === l.orig) && !isLockedPoolUrl(l.orig)) {
+      if (l.orig && !isLockedPoolUrl(l.orig) && !linkPoolDb.find(p => p.url === l.orig)) {
         linkPoolDb.push({
           id: "POOL-" + Date.now() + Math.floor(Math.random() * 100),
           url: l.orig,
@@ -747,7 +747,11 @@ async function fetchAll(msg, throwOnError = false, explicitIsTest = undefined) {
     return null;
   }
 }
-const isLockedPoolUrl = u => u === "Da_bi_khoa";
+const LOCK_ORIG = "dabikhoa";
+const isLockedPoolUrl = u => {
+  const s = String(u || "").trim().toLowerCase();
+  return s === "dabikhoa" || s === "da_bi_khoa";
+};
 let isPolling = false;
 async function pollMain() {
   const anyModalOpen = document.querySelector('#mOrd:not(.hidden), #mRootEdit:not(.hidden), #mLnk:not(.hidden), #mCouponModal:not(.hidden), #mGiftRuleModal:not(.hidden)');
@@ -3787,7 +3791,7 @@ const PROV_LABELS = {
 // v2 — 2026-11-06 22:00 (UTC+7) — Trích xuất token không phân biệt hoa/thường, giải mã URL-encoded và path token
 function extractOriginTokenAdmin(rawUrl) {
   const s = String(rawUrl || "").trim();
-  if (!s || s === "Da_bi_khoa") return "";
+  if (!s || isLockedPoolUrl(s)) return "";
   const dec = (val) => {
     try {
       return decodeURIComponent(String(val || ""));
@@ -3824,7 +3828,7 @@ function extractOriginTokenAdmin(rawUrl) {
 
 function analyzeSourceUrl(rawUrl, manualProv = "auto", manualProto = "auto", savedMeta = null) {
   const s = String(rawUrl || "").trim();
-  if (!s || s === "Da_bi_khoa") {
+  if (!s || isLockedPoolUrl(s)) {
     return {
       provider: "other",
       protocol: "",
@@ -4198,10 +4202,10 @@ function renderLinks() {
   });
 
   let clusterIndex = 0;
-  // Cụm Da_bi_khoa luôn luôn bị ghim ở CUỐI BẢNG dù có link mới chuyển vào
+  // Cụm dabikhoa luôn luôn bị ghim ở CUỐI BẢNG dù có link mới chuyển vào
   const sortedGroups = Object.values(grps).sort((a, b) => {
-    const aLocked = (a.orig === "Da_bi_khoa" || a.key.includes("Da_bi_khoa"));
-    const bLocked = (b.orig === "Da_bi_khoa" || b.key.includes("Da_bi_khoa"));
+    const aLocked = isLockedPoolUrl(a.orig) || /da_bi_khoa|dabikhoa/i.test(a.key || "");
+    const bLocked = isLockedPoolUrl(b.orig) || /da_bi_khoa|dabikhoa/i.test(b.key || "");
     if (aLocked && !bLocked) return 1;
     if (!aLocked && bLocked) return -1;
     return 0;
@@ -4240,7 +4244,7 @@ function renderLinks() {
       networkBadge = p === "kt" ? `<span class="badge-kt">Kitty (v3)</span>` : (p === "lx" ? `<span class="badge-lx">Liangxin (v1)</span>` : (p === "dj" ? `<span class="badge-dj">DJJC (v2)</span>` : (p === "custom_v7" ? `<span class="badge-ot !bg-indigo-100 !text-indigo-800">Custom V7</span>` : (p === "custom_v8" ? `<span class="badge-ot !bg-teal-100 !text-teal-800">Custom V8</span>` : `<span class="badge-ot">Chưa phân loại</span>`))));
     }
 
-    const isLockedCluster = (g.orig === "Da_bi_khoa" || g.key.includes("Da_bi_khoa"));
+    const isLockedCluster = isLockedPoolUrl(g.orig) || /da_bi_khoa|dabikhoa/i.test(g.key || "");
     let verifyBadge = "";
     if (!isLockedCluster) {
       const allVerified = g.isCombo ? (info1.verified && info2 && info2.verified) : info1.verified;
@@ -4892,13 +4896,13 @@ async function sortAllLinks() {
 
   for (const k in g) {
     const cluster = g[k];
-    const isLockedCluster = (k === "Da_bi_khoa" || k.includes("Da_bi_khoa"));
+    const isLockedCluster = isLockedPoolUrl(k) || /da_bi_khoa|dabikhoa/i.test(k || "");
 
     // Tìm node kỹ thuật (nếu có)
     let techNode = null;
     const clientLinks = [];
     cluster.forEach(l => {
-      if (isLockedCluster && !l.orderId && (l.orig === "Da_bi_khoa" || l.id === "POOL-179017008791528" || String(l.email).toLowerCase() === "auto")) {
+      if (isLockedCluster && !l.orderId && (isLockedPoolUrl(l.orig) || l.id === "POOL-179017008791528" || String(l.email).toLowerCase() === "auto")) {
         techNode = l;
       } else {
         clientLinks.push(l);
@@ -4993,7 +4997,7 @@ async function rebuildAllMAP() {
           syncedExp++;
         }
       }
-      if (!l.masked && l.orig && l.orig !== "Da_bi_khoa") {
+      if (!l.masked && l.orig && !isLockedPoolUrl(l.orig)) {
         const built = buildMasked(l.orig, true, l.orig2 || "");
         if (built) l.masked = built;
       }
@@ -5754,13 +5758,28 @@ function renderDead() {
   }
   const list = deadLive(), tb = $("deadBody");
   if (!list.length) {
-    tb.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold">Không có lịch sử xóa</div>`;
+    tb.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 text-xs font-semibold">Không có lịch sử xóa</div>`;
     return;
   }
   tb.innerHTML = list.map((l, i) => {
     const t = Number(l.deadTs) || parseAny(l.deadDate), left = Math.max(0, Math.ceil((t + 48 * 36e5 - nowMs()) / 36e5));
-    return `<div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex flex-col gap-2"><div class="flex items-center justify-between gap-2"><div class="flex items-center gap-2 min-w-0 flex-1"><span class="font-bold text-xs text-slate-400 shrink-0">#${i+1}</span><span class="font-bold text-slate-800 text-sm cp truncate" onclick="cp(${q(l.email)})">${esc(l.email||"—")}</span></div><button onclick="restoreLink(${q(l.id)})" class="shrink-0 whitespace-nowrap text-emerald-600 font-bold px-3 py-1.5 bg-emerald-50 rounded-lg text-xs hover:bg-emerald-500 hover:text-white border border-emerald-100 transition active:scale-95"><i class="fas fa-rotate-left mr-1"></i>Khôi phục</button></div>
-  <div class="text-[10px] font-mono text-slate-500 break-all cp" onclick="cp(${q(l.orig)})">${esc(l.orig||"—")}</div><div class="text-[10px] font-mono text-indigo-500 break-all cp" onclick="cp(${q(l.masked)})">${esc(l.masked||"—")}</div><div class="text-xs text-slate-500 font-bold">Ngắt: ${fmtBank(t)} <span class="text-orange-500 ml-1">(tự xóa hẳn sau ${left}h)</span></div></div>`;
+    return `<div class="bg-white border border-slate-200 rounded-xl p-3.5 space-y-2">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <span class="font-mono text-[11px] font-bold text-slate-400 shrink-0">#${i + 1}</span>
+          <span class="font-bold text-slate-800 text-xs sm:text-sm cp truncate" onclick="cp(${q(l.email)})">${esc(l.email || "—")}</span>
+        </div>
+        <button type="button" onclick="restoreLink(${q(l.id)})" class="min-h-[36px] shrink-0 whitespace-nowrap bg-white hover:bg-slate-50 text-slate-700 font-semibold px-3 py-1.5 rounded-lg text-xs border border-slate-200 transition active:scale-95 flex items-center gap-1.5"><i class="fas fa-rotate-left text-slate-400"></i><span>Khôi phục</span></button>
+      </div>
+      <div class="dead-url-box space-y-1">
+        <div class="cp" onclick="cp(${q(l.orig)})"><span class="text-slate-400 mr-1.5">Gốc:</span>${esc(l.orig || "—")}</div>
+        <div class="cp border-t border-slate-200/80 pt-1 text-indigo-700" onclick="cp(${q(l.masked)})"><span class="text-slate-400 mr-1.5">Sub:</span>${esc(l.masked || "—")}</div>
+      </div>
+      <div class="text-[11px] text-slate-500 font-medium flex items-center justify-between gap-2 flex-wrap">
+        <span>Ngắt: ${fmtBank(t)}</span>
+        <span class="text-amber-700">Tự xóa hẳn sau ${left}h</span>
+      </div>
+    </div>`;
   }).join("");
 }
 
@@ -5768,12 +5787,12 @@ function renderDeadSources() {
   const container = $("deadSourcesBody");
   if (!container) return;
 
-  // Khử trùng lặp Combo (AB = BA) khi hiển thị
+  // Khử trùng lặp Combo 2/3 chân khi hiển thị
   const dedupedPool = [];
   const seenComboKeys = new Set();
   for (const p of linkPoolDb) {
     if (p.isCombo && p.url && p.url2) {
-      const comboKey = [p.url.trim(), p.url2.trim()].sort().join("|");
+      const comboKey = [p.url.trim(), p.url2.trim(), (p.url3 || "").trim()].filter(Boolean).sort().join("|");
       if (seenComboKeys.has(comboKey)) continue;
       seenComboKeys.add(comboKey);
     }
@@ -5782,120 +5801,100 @@ function renderDeadSources() {
 
   if ($("deadSourceCountBadge")) $("deadSourceCountBadge").textContent = dedupedPool.length;
   if (!dedupedPool.length) {
-    container.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm font-bold">Kho link nguồn đang trống</div>`;
+    container.innerHTML = `<div class="p-6 text-center text-slate-400 bg-white rounded-xl border border-slate-200 text-xs font-semibold">Kho link nguồn đang trống</div>`;
     return;
   }
 
-  // Node kỹ thuật Da_bi_khoa luôn luôn ở vị trí đầu tiên (#1) trong kho quản lý nguồn
+  // Node kỹ thuật dabikhoa (tương thích ngược Da_bi_khoa) luôn đứng đầu (#1)
   dedupedPool.sort((a, b) => {
-    const aLocked = (a.url === "Da_bi_khoa" || a.id === "POOL-179017008791528");
-    const bLocked = (b.url === "Da_bi_khoa" || b.id === "POOL-179017008791528");
+    const aLocked = isLockedPoolUrl(a.url) || a.id === "POOL-179017008791528";
+    const bLocked = isLockedPoolUrl(b.url) || b.id === "POOL-179017008791528";
     if (aLocked && !bLocked) return -1;
     if (!aLocked && bLocked) return 1;
     return 0;
   });
 
   container.innerHTML = dedupedPool.map((p, idx) => {
-    const isLockedNode = (p.url === "Da_bi_khoa" || p.id === "POOL-179017008791528");
+    const isLockedNode = isLockedPoolUrl(p.url) || p.id === "POOL-179017008791528";
     const isCombo = !!p.isCombo;
 
-    // Tìm tất cả link sub của khách đang chạy trên nguồn này
     const activeLinks = linksDb.filter(l => {
       if (!l) return false;
       if (isCombo) {
-        const ck1 = [p.url.trim(), (p.url2 || "").trim()].sort().join("|");
-        const ck2 = [(l.orig || "").trim(), (l.orig2 || "").trim()].sort().join("|");
+        const ck1 = [p.url.trim(), (p.url2 || "").trim(), (p.url3 || "").trim()].filter(Boolean).sort().join("|");
+        const ck2 = [(l.orig || "").trim(), (l.orig2 || "").trim(), (l.orig3 || "").trim()].filter(Boolean).sort().join("|");
         return l.isCombo && ck1 === ck2;
       }
+      if (isLockedNode) return !l.isCombo && isLockedPoolUrl(l.orig);
       return !l.isCombo && l.orig === p.url;
     });
     const count = activeLinks.length;
     const isUsing = count > 0;
 
-    let netTag = "";
+    let provLabel = "Other";
     if (isLockedNode) {
-      netTag = `<span class="bg-slate-200 text-slate-800 font-black px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs border border-slate-300 whitespace-nowrap inline-flex items-center gap-1 shrink-0">🔒 Node Kỹ Thuật (Khóa Hệ Thống)</span>`;
+      provLabel = "dabikhoa · Khóa hệ thống";
     } else if (isCombo) {
-      const p1 = detectProvider(p.url), p2 = detectProvider(p.url2);
-      const s = new Set([p1, p2]);
-      let cTag = "Combo Trộn";
-      if (s.has("lx") && s.has("kt")) cTag = "Combo Liangxin + Kitty";
-      else if (s.has("lx") && s.has("dj")) cTag = "Combo Liangxin + DJJC";
-      else if (s.has("kt") && s.has("dj")) cTag = "Combo Kitty + DJJC";
-      netTag = `<span class="inline-flex items-center gap-1 text-xs font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">${cTag}</span>`;
+      const pNames = [p.url, p.url2, p.url3].filter(Boolean).map(u => PROV_LABELS[detectProvider(u)] || "Other");
+      provLabel = `Combo ${pNames.join(" + ")}`;
     } else {
       const pr = detectProvider(p.url);
-      netTag = pr === "kt" ? `<span class="badge-kt">Kitty</span>` : (pr === "lx" ? `<span class="badge-lx">Liangxin</span>` : (pr === "dj" ? `<span class="badge-dj">DJJC</span>` : `<span class="badge-ot">Other</span>`));
+      provLabel = PROV_LABELS[pr] || "Other";
     }
 
-    let statusBadge = "";
-    if (isLockedNode) {
-      statusBadge = `<span class="bg-slate-100 text-slate-700 font-bold px-2.5 py-0.5 rounded-full text-xs border border-slate-300">${count} link đang bị ngắt kết nối</span>`;
-    } else if (isUsing) {
-      statusBadge = `<span class="bg-emerald-100 text-emerald-800 font-black px-2.5 py-0.5 rounded-full text-xs border border-emerald-300 flex items-center gap-1 shrink-0"><i class="fas fa-check-circle text-emerald-600"></i>Đang dùng: ${count} link</span>`;
-    } else {
-      statusBadge = `<span class="bg-amber-100 text-amber-800 font-black px-2.5 py-0.5 rounded-full text-xs border border-amber-300 flex items-center gap-1 shrink-0"><i class="fas fa-triangle-exclamation text-amber-600"></i>Không có link ẩn</span>`;
-    }
+    const dotColor = isLockedNode ? "bg-slate-400" : isUsing ? "bg-emerald-500" : "bg-amber-500";
+    const statusText = isLockedNode ? `${count} link khóa` : isUsing ? `${count} link` : "Không dùng";
 
-    let cardClass = isLockedNode ? "bg-slate-50 border-2 border-slate-300 shadow-sm" : isUsing ? "bg-emerald-50/50 border-2 border-emerald-200 hover:border-emerald-300" : "bg-slate-100/70 border-2 border-slate-200 hover:border-amber-300";
+    const deleteBtn = isLockedNode ? "" : `
+      <button type="button" onclick="hardDeleteSource(${q(p.id)}, ${q(p.url)}, ${q(p.url2 || "")})" title="Xóa vĩnh viễn khỏi toàn bộ KV" class="min-h-[36px] bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-200 font-semibold px-2.5 py-1 rounded-lg text-xs transition active:scale-95 inline-flex items-center gap-1 whitespace-nowrap shrink-0">
+        <i class="fas fa-trash-can text-[11px]"></i><span>Xóa</span>
+      </button>`;
 
-    // Nút Xóa hẳn: ẨN HOÀN TOÀN với node Da_bi_khoa
-    const deleteBtn = isLockedNode ? '' : `
-     <button onclick="hardDeleteSource(${q(p.id)}, ${q(p.url)}, ${q(p.url2 || '')})" title="Xóa vĩnh viễn khỏi toàn bộ KV" class="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 font-bold px-3 py-1.5 rounded-xl text-xs shadow-sm transition active:scale-95 inline-flex items-center gap-1 whitespace-nowrap shrink-0">
-       <i class="fas fa-trash-can text-xs"></i><span>Xóa khỏi KV</span>
-     </button>
-   `;
+    const urlsHtml = [p.url, p.url2, p.url3].filter(Boolean).map((u, uIdx) => {
+      const dispUrl = isLockedNode ? "dabikhoa" : u;
+      return `<div class="flex items-start gap-2 ${uIdx > 0 ? "pt-1.5 border-t border-slate-200/80" : ""} cp" onclick="${uIdx > 0 ? "event.stopPropagation();" : ""}cp(${q(dispUrl)})"><span class="text-[10px] font-bold text-slate-400 uppercase shrink-0">[${uIdx + 1}]</span><span class="flex-1 min-w-0">${esc(dispUrl)}</span></div>`;
+    }).join("");
 
-    // Cây danh sách link con chạy dưới nguồn này
-    let childLinksHtml = "";
-    if (activeLinks.length) {
-      childLinksHtml = `
-       <div class="mt-2 pt-2 border-t border-slate-200/60 space-y-1">
-         <div class="text-[10px] font-bold text-slate-500 uppercase">Danh sách link con đang chạy trên nguồn này (${activeLinks.length}):</div>
-         <div class="max-h-36 overflow-y-auto space-y-1 pr-1 scroll-hide">
-           ${activeLinks.map(l => `
-             <div class="flex items-center justify-between gap-2 p-1.5 bg-white border border-slate-200 rounded-lg text-[11px]">
-               <div class="flex items-center gap-1.5 truncate">
-                 <span class="font-bold text-slate-700">${esc(l.email || "Khách")}</span>
-                 <span class="text-slate-400 font-mono text-[10px]">#${l.linkIndex || 1}</span>
-                 <span class="font-mono text-indigo-600 text-[10px] break-all select-all flex-1" onclick="cp('${esc(l.masked)}')">${esc(l.masked)}</span>
-               </div>
-               <span class="text-[10px] text-slate-500 shrink-0">${linkBottom(l)}</span>
-             </div>
-           `).join("")}
-         </div>
-       </div>
-     `;
-    }
+    const childLinksHtml = activeLinks.length ? `
+      <details class="pt-1 border-t border-slate-100">
+        <summary class="cursor-pointer select-none text-[11px] font-semibold text-slate-600 hover:text-indigo-600 py-1 flex items-center justify-between list-none">
+          <span><i class="fas fa-chevron-right text-[9px] mr-1.5 text-slate-400"></i>Xem ${activeLinks.length} link con đang chạy</span>
+          <span class="text-[10px] text-slate-400">Chạm mở</span>
+        </summary>
+        <div class="mt-1.5 max-h-40 overflow-y-auto space-y-1 scroll-hide">
+          ${activeLinks.map(l => `
+            <div class="flex items-center justify-between gap-2 px-2.5 py-1.5 bg-slate-50 border border-slate-200/80 rounded-lg text-[11px]">
+              <div class="flex items-center gap-1.5 min-w-0 flex-1">
+                <span class="font-semibold text-slate-700 truncate max-w-[110px]">${esc(l.email || "Khách")}</span>
+                <span class="text-slate-400 font-mono text-[10px] shrink-0">#${l.linkIndex || 1}</span>
+                <span class="font-mono text-indigo-700 text-[10px] truncate cp flex-1" onclick="cp(${q(l.masked)})">${esc(l.masked)}</span>
+              </div>
+              <span class="text-[10px] text-slate-500 shrink-0">${linkBottom(l)}</span>
+            </div>
+          `).join("")}
+        </div>
+      </details>` : "";
 
     return `
-   <div class="${cardClass} rounded-2xl p-3.5 shadow-sm space-y-2.5 transition">
-     <div class="flex items-center justify-between gap-2 flex-wrap">
-       <div class="flex items-center gap-2">
-         <span class="text-xs font-bold text-slate-400">#${idx + 1}</span>
-         ${netTag}
-         <span class="text-[10px] font-mono font-bold text-slate-500">${esc(p.id)}</span>
-       </div>
-       <div class="flex items-center gap-2 flex-wrap">
-         ${statusBadge}
-         ${deleteBtn}
-       </div>
-     </div>
-
-     <!-- URL Nguồn -->
-     <div class="bg-slate-900 border border-slate-800 p-2 rounded-xl font-mono text-[11px] text-emerald-300 break-all cp space-y-1" onclick="cp(${q(p.url)})">
-       <div class="flex items-start gap-1.5"><span class="bg-emerald-950 text-emerald-400 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0">Nguồn 1</span><span class="flex-1">${esc(p.url)}</span></div>
-       ${p.url2 ? `<div class="flex items-start gap-1.5 pt-1 border-t border-slate-800 text-sky-300" onclick="event.stopPropagation();cp(${q(p.url2)})"><span class="bg-sky-950 text-sky-400 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0">Nguồn 2</span><span class="flex-1">${esc(p.url2)}</span></div>` : ''}
-     </div>
-
-     <!-- Thông số GB / HSD -->
-     <div class="flex items-center justify-between text-xs text-slate-600 pt-1 border-t border-slate-200/60 flex-wrap gap-2">
-       <div>Dung lượng: <b>${esc(p.remainGb || '—')} / ${esc(p.gb || '—')} GB</b> · HSD: <b>${esc(p.exp || 'Vĩnh viễn')}</b></div>
-       <div class="text-[11px] text-slate-500">Giới hạn tải: <b>${count}/${p.max || 30} thiết bị</b></div>
-     </div>
-
-     ${childLinksHtml}
-   </div>`;
+      <div class="bg-white border ${isLockedNode ? "border-slate-300 bg-slate-50/70" : "border-slate-200"} rounded-xl p-3.5 space-y-2.5">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5 min-w-0 flex-1 flex-wrap">
+            <span class="text-[11px] font-mono font-bold text-slate-400 shrink-0">#${idx + 1}</span>
+            <span class="bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap">${esc(provLabel)}</span>
+            <span class="text-[10px] font-mono text-slate-400 truncate">${esc(p.id)}</span>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-700 whitespace-nowrap"><span class="dead-status-dot ${dotColor}"></span>${esc(statusText)}</span>
+            ${deleteBtn}
+          </div>
+        </div>
+        <div class="dead-url-box space-y-1.5">${urlsHtml}</div>
+        <div class="flex items-center justify-between text-[11px] text-slate-500 gap-2 flex-wrap">
+          <span>Còn <b>${esc(p.remainGb || "—")} / ${esc(p.gb || "—")} GB</b> · HSD <b>${esc(p.exp || "Vĩnh viễn")}</b></span>
+          <span>Tải <b>${count}/${p.max || 30} máy</b></span>
+        </div>
+        ${childLinksHtml}
+      </div>`;
   }).join("");
 }
 
@@ -5914,7 +5913,7 @@ async function hardDeleteSource(id, url, url2) {
 async function cleanUnusedSources() {
   const isLegacyAnchor = (l) => l && !l.orderId && String(l.email || "").trim().toLowerCase() === "auto" && String(l.linkIndex) === "1";
   const unused = linkPoolDb.filter(p => {
-    if (!p || !p.url || p.url === "Da_bi_khoa") return false;
+    if (!p || !p.url || isLockedPoolUrl(p.url)) return false;
     const activeLinks = linksDb.filter(l => {
       if (!l || isLegacyAnchor(l)) return false;
       if (p.isCombo && p.url2) return (l.orig === p.url && l.orig2 === p.url2) || (l.orig === p.url2 && l.orig2 === p.url);
@@ -6435,11 +6434,11 @@ function cmsPrev() {
   const temp = document.createElement("div");
   temp.innerHTML = curArtHtml || "";
   const headings = [];
-  temp.querySelectorAll("h2, h3").forEach((el, idx) => {
+  temp.querySelectorAll("h2, h3").forEach((el, domIdx) => {
     const txt = (el.textContent || "").trim();
     if (!txt) return;
     const tag = el.tagName.toLowerCase();
-    headings.push({ tag, label: txt });
+    headings.push({ tag, label: txt, domIdx });
   });
 
   const tocList = $("cmsLiveTocList");
@@ -6448,10 +6447,11 @@ function cmsPrev() {
   if (tocList) {
     if (headings.length) {
       tocList.innerHTML = headings.map(h => {
+        const jumpAttr = `onclick="document.querySelectorAll('#quillEditor h2, #quillEditor h3')[${h.domIdx}]?.scrollIntoView({behavior:'smooth',block:'center'})"`;
         if (h.tag === 'h2') {
-          return `<div class="font-bold text-xs text-indigo-950 flex items-center gap-1.5"><span class="text-indigo-600 font-bold">❯</span><span>${esc(h.label)}</span></div>`;
+          return `<button type="button" ${jumpAttr} class="w-full text-left font-bold text-xs text-slate-800 hover:text-indigo-700 flex items-center gap-1.5 py-0.5 transition"><span class="text-slate-400 font-bold">❯</span><span class="truncate">${esc(h.label)}</span></button>`;
         }
-        return `<div class="font-semibold text-xs text-slate-600 pl-4 flex items-center gap-1.5"><span class="text-indigo-400 text-[10px]">❯</span><span>${esc(h.label)}</span></div>`;
+        return `<button type="button" ${jumpAttr} class="w-full text-left font-medium text-xs text-slate-600 hover:text-indigo-700 pl-4 flex items-center gap-1.5 py-0.5 transition"><span class="text-slate-400 text-[10px]">❯</span><span class="truncate">${esc(h.label)}</span></button>`;
       }).join("");
     } else {
       tocList.innerHTML = '<div class="text-xs text-slate-400 italic">Thêm các tiêu đề H2 hoặc H3 trong bài viết để tự động tạo cây mục lục...</div>';
@@ -6592,10 +6592,10 @@ function renderCmsEditor() {
   </div></div></details>`;
   setTimeout(renderArtFaqsUI, 20);
   $("cmsAddBtns").innerHTML = `
-  <div class="flex items-center gap-2 min-w-0 flex-1">
-   <span class="font-extrabold text-xs text-slate-700 truncate"><i class="fas fa-pen-nib text-indigo-600 mr-1.5"></i>Soạn thảo Quill (H2/H3 tự tạo mục lục)</span>
+  <div class="flex items-center justify-between gap-2 min-w-0 flex-1">
+   <span class="font-bold text-xs text-slate-700 truncate"><i class="fas fa-pen-nib text-slate-400 mr-1.5"></i>Soạn thảo Quill</span>
+   <span class="text-[11px] text-slate-400 whitespace-nowrap shrink-0">H2/H3 tự tạo mục lục · Ctrl+S lưu</span>
   </div>
-  <button type="button" onclick="saveCms()" class="tb-btn shrink-0 whitespace-nowrap !h-auto py-1.5 !bg-indigo-600 !text-white !border-indigo-600 hover:!bg-indigo-700 shadow-xs text-xs font-bold px-3"><i class="fas fa-floppy-disk mr-1"></i>Lưu</button>
  `;
 
   if (typeof Quill !== "undefined" && $("quillEditor")) {
@@ -7029,51 +7029,48 @@ function renderGuideCategoriesTree() {
 
   container.innerHTML = tabs.map((tab, tIdx) => {
     const arts = artsOf(tab.id);
-    const isProtectedTab = DEF_TABS.some(d => d.id === tab.id) || /lưu ý chung|tiktok/i.test(tab.name || '') || ['tmuamybok', 'tmubcksib', 't_general', 't_tiktok'].includes(tab.id);
+    const isProtectedTab = DEF_TABS.some(d => d.id === tab.id) || /lưu ý chung|tiktok/i.test(tab.name || "") || ["tmuamybok", "tmubcksib", "t_general", "t_tiktok"].includes(tab.id);
     return `
-   <div data-tabid="${esc(tab.id)}" class="cms-cat-box bg-white border border-slate-200 rounded-2xl p-3 sm:p-4 shadow-sm space-y-2.5 sm:space-y-3">
-     <!-- Header Mục / Danh mục lớn (2 hàng gọn cho Mobile 1 tay, 1 hàng trên Desktop) -->
-     <div class="border-b border-slate-100 pb-2.5 space-y-2">
-       <div class="flex items-center gap-2 min-w-0">
-         <span class="grip-cat cursor-grab text-slate-400 hover:text-indigo-600 px-1 py-1 shrink-0" title="Kéo thả đổi thứ tự"><i class="fas fa-grip-vertical text-base sm:text-lg"></i></span>
-         ${tab.img ? `<img src="${esc(safeUrl(tab.img))}" class="w-5 h-5 sm:w-6 sm:h-6 rounded object-contain shrink-0">` : `<i class="${esc(tab.ic||'fas fa-book')} ${esc(tab.col||'text-indigo-600')} text-base sm:text-lg shrink-0"></i>`}
-         <input type="text" value="${esc(tab.name)}" oninput="cmsUpdateTabField(${tIdx}, 'name', this.value)" placeholder="Tên mục..." class="flex-1 min-w-0 font-extrabold text-xs sm:text-sm md:text-base text-slate-800 border border-slate-200 rounded-lg px-2.5 py-1.5 outline-none focus:border-indigo-500 bg-white">
-         <span class="bg-indigo-50 text-indigo-700 font-bold text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">${arts.length} bài</span>
-         ${isProtectedTab ? '' : `
-         <button type="button" onclick="cmsDelTabById(${q(tab.id)})" class="text-red-500 hover:text-white hover:bg-red-500 bg-red-50 px-2.5 py-1.5 rounded-lg text-xs shrink-0 whitespace-nowrap transition" title="Xóa danh mục"><i class="fas fa-trash"></i></button>
-         `}
-       </div>
-       <div class="flex items-center gap-2 min-w-0">
-         <input type="text" value="${esc(tab.img||'')}" oninput="cmsUpdateTabField(${tIdx}, 'img', this.value)" placeholder="URL icon (để trống = mặc định)" class="flex-1 min-w-0 px-2.5 py-1.5 text-[11px] sm:text-xs border border-slate-200 rounded-lg outline-none focus:border-indigo-500 font-mono bg-slate-50">
-         <button type="button" onclick="addArticleToCategory(${q(tab.id)})" class="whitespace-nowrap shrink-0 bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white font-bold px-3 py-1.5 rounded-xl text-xs transition flex items-center gap-1 shadow-xs">
-           <i class="fas fa-plus"></i><span>Bài mới</span>
-         </button>
-       </div>
-     </div>
-
-     <!-- Danh sách các bài viết con thuộc mục này -->
-     <div class="space-y-2">
-       ${arts.map(a => {
-         const sl = a.slug || toSlug(a.name);
-         const timeStr = a.updated ? fmtBank(a.updated) : "Mới";
-         return `
-         <div onclick="openCmsEditorForArt(${q(tab.id)}, ${q(sl)})" class="cursor-pointer bg-slate-50/70 hover:bg-indigo-50/40 border border-slate-200 rounded-xl p-2.5 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 transition">
-           <div class="min-w-0">
-             <div class="font-bold text-xs md:text-sm text-slate-800 break-words leading-snug">${esc(a.name || "(Chưa đặt tên)")}</div>
-             <div class="text-[10px] text-slate-500 mt-0.5 truncate">Tác giả: <b>${esc(a.author || "Admin")}</b> · Cập nhật: ${timeStr}</div>
-           </div>
-           <div class="flex items-center justify-end sm:justify-start gap-1.5 shrink-0 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-slate-200/60" onclick="event.stopPropagation()">
-             <button type="button" onclick="copyArtDeepLink(${q(tab.id)}, ${q(sl)})" class="whitespace-nowrap shrink-0 text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-600 hover:text-white transition"><i class="fas fa-link mr-1"></i>Link</button>
-             <button type="button" onclick="openCmsEditorForArt(${q(tab.id)}, ${q(sl)})" class="whitespace-nowrap shrink-0 text-indigo-600 bg-white border border-indigo-200 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-indigo-600 hover:text-white transition"><i class="fas fa-pen mr-1"></i>Sửa</button>
-             <button type="button" onclick="artDelInTab(${q(tab.id)}, ${q(sl)})" class="whitespace-nowrap shrink-0 text-red-500 bg-white border border-red-200 px-2.5 py-1.5 rounded-lg text-xs hover:bg-red-500 hover:text-white transition" title="Xóa bài viết"><i class="fas fa-trash"></i></button>
-          </div>
+    <div data-tabid="${esc(tab.id)}" class="cms-cat-box bg-white border border-slate-200 rounded-xl p-3 sm:p-4 space-y-2.5">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+          <span class="grip-cat cursor-grab text-slate-400 hover:text-indigo-600 px-1 py-1 shrink-0" title="Kéo thả đổi thứ tự"><i class="fas fa-grip-vertical text-sm"></i></span>
+          ${tab.img ? `<img src="${esc(safeUrl(tab.img))}" class="w-5 h-5 rounded object-contain shrink-0">` : `<i class="${esc(tab.ic || "fas fa-book")} text-slate-500 text-sm shrink-0"></i>`}
+          <span class="font-bold text-sm text-slate-800 truncate cms-cat-title">${esc(tab.name)}</span>
+          <span class="bg-slate-100 text-slate-600 border border-slate-200 font-semibold text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">${arts.length} bài</span>
         </div>
-        `;
-       }).join('') || '<div class="text-[11px] text-slate-400 italic py-2">Chưa có bài viết nào trong mục này. Bấm "+ Bài mới" để tạo bài đầu tiên.</div>'}
-     </div>
-   </div>
-   `;
-  }).join('');
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button type="button" onclick="this.closest('.cms-cat-box').querySelector('.cms-cat-edit')?.classList.toggle('hidden')" class="min-h-[36px] whitespace-nowrap bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold px-2.5 py-1 rounded-lg text-xs transition flex items-center gap-1" title="Chỉnh tên & icon danh mục"><i class="fas fa-sliders text-slate-400 text-[11px]"></i><span>Sửa</span></button>
+          <button type="button" onclick="addArticleToCategory(${q(tab.id)})" class="min-h-[36px] whitespace-nowrap bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white border border-indigo-200/70 font-bold px-2.5 py-1 rounded-lg text-xs transition flex items-center gap-1"><i class="fas fa-plus"></i><span>Bài</span></button>
+        </div>
+      </div>
+      <div class="cms-cat-edit hidden bg-slate-50 border border-slate-200 rounded-lg p-2.5 space-y-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <input type="text" value="${esc(tab.name)}" oninput="cmsUpdateTabField(${tIdx}, 'name', this.value);this.closest('.cms-cat-box').querySelector('.cms-cat-title').textContent=this.value;" placeholder="Tên danh mục..." class="flex-1 min-w-0 font-bold text-xs text-slate-800 border border-slate-200 rounded-lg px-2.5 py-2 outline-none focus:border-indigo-500 bg-white">
+          ${isProtectedTab ? "" : `<button type="button" onclick="cmsDelTabById(${q(tab.id)})" class="min-h-[36px] text-rose-600 hover:text-white hover:bg-rose-600 bg-white border border-rose-200 px-2.5 py-1.5 rounded-lg text-xs shrink-0 whitespace-nowrap transition" title="Xóa danh mục"><i class="fas fa-trash"></i></button>`}
+        </div>
+        <input type="text" value="${esc(tab.img || "")}" oninput="cmsUpdateTabField(${tIdx}, 'img', this.value)" placeholder="URL icon (để trống = mặc định)" class="w-full px-2.5 py-1.5 text-[11px] border border-slate-200 rounded-lg outline-none focus:border-indigo-500 font-mono bg-white">
+      </div>
+      <div class="divide-y divide-slate-100 border-t border-slate-100 pt-1">
+        ${arts.map(a => {
+          const sl = a.slug || toSlug(a.name);
+          const timeStr = a.updated ? fmtBank(a.updated) : "Mới";
+          return `
+          <div onclick="openCmsEditorForArt(${q(tab.id)}, ${q(sl)})" class="cursor-pointer hover:bg-slate-50/80 py-2.5 px-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2 transition rounded-lg">
+            <div class="min-w-0">
+              <div class="font-semibold text-xs sm:text-sm text-slate-800 break-words leading-snug">${esc(a.name || "(Chưa đặt tên)")}</div>
+              <div class="text-[11px] text-slate-500 mt-0.5 truncate">${esc(a.author || "Admin")} · ${timeStr}</div>
+            </div>
+            <div class="flex items-center justify-end gap-1.5 shrink-0" onclick="event.stopPropagation()">
+              <button type="button" onclick="copyArtDeepLink(${q(tab.id)}, ${q(sl)})" class="min-h-[36px] whitespace-nowrap shrink-0 text-slate-700 bg-white border border-slate-200 px-2.5 py-1 rounded-lg text-xs font-semibold hover:bg-slate-50 transition"><i class="fas fa-link mr-1 text-slate-400"></i>Link</button>
+              <button type="button" onclick="openCmsEditorForArt(${q(tab.id)}, ${q(sl)})" class="min-h-[36px] whitespace-nowrap shrink-0 text-indigo-700 bg-indigo-50/70 border border-indigo-200/70 px-3 py-1 rounded-lg text-xs font-bold hover:bg-indigo-600 hover:text-white transition"><i class="fas fa-pen mr-1"></i>Sửa</button>
+              <button type="button" onclick="artDelInTab(${q(tab.id)}, ${q(sl)})" class="min-h-[36px] whitespace-nowrap shrink-0 text-rose-600 bg-white border border-slate-200 px-2.5 py-1 rounded-lg text-xs hover:bg-rose-50 hover:border-rose-200 transition" title="Xóa bài viết"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>`;
+        }).join("") || '<div class="text-xs text-slate-400 italic py-2.5">Chưa có bài viết. Bấm "+ Bài" để tạo mới.</div>'}
+      </div>
+    </div>`;
+  }).join("");
 
   if (typeof Sortable !== "undefined") {
     new Sortable(container, {
