@@ -9,7 +9,7 @@ describe('CMS Guide & Video / Lightbox / CTA Features', () => {
     ADD_ATTR: [
       'allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'target', 
       'rel', 'class', 'style', 'width', 'height', 'controls', 'autoplay', 
-      'loop', 'muted', 'poster', 'type', 'data-cta', 'onclick'
+      'loop', 'muted', 'poster', 'type', 'data-cta'
     ]
   };
 

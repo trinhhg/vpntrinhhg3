@@ -598,8 +598,8 @@ a[role="button"]:active,
 }
 
 /* Khóa cứng đồng nhất 100% chiều cao 36px cho cả 4 nút hỗ trợ ở Footer (Zalo, Mess, WeChat, Telegram) */
-#footerArea button,
-#footerArea a {
+#footerArea .footer-support-btns button,
+#footerArea .footer-support-btns a {
   height: 36px !important;
   min-height: 36px !important;
   max-height: 36px !important;

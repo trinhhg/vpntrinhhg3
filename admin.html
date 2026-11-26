@@ -40,7 +40,7 @@
     </header>
     <main id="main" class="hidden max-w-7xl mx-auto p-2 md:p-4 w-full min-w-0">
       <!-- Konsta UI Segmented Tab Bar (Tablet/Desktop) -->
-      <div id="tabBar" class="hidden md:flex md:flex-wrap gap-2 mb-4 p-1.5 bg-slate-200/70 rounded-2xl backdrop-blur-sm"></div>
+      <div id="tabBar" class="hidden md:flex md:flex-nowrap md:overflow-x-auto xl:flex-wrap gap-1 xl:gap-1.5 mb-4 p-1.5 bg-slate-200/70 rounded-2xl backdrop-blur-sm"></div>
       <!-- ===== ĐƠN HÀNG (KONSTA INSET GROUPED STYLE) ===== -->
       <div id="t-ord" class="w-full min-w-0">
         <div class="flex items-center justify-between gap-2 mb-3">
@@ -801,12 +801,14 @@
                     <div class="font-bold text-xs text-indigo-900 uppercase flex items-center gap-1.5"><i class="fas fa-link text-indigo-600 shrink-0"></i>1. Đường dẫn chuyển hướng hệ thống (URL Routes)</div>
                     <span class="text-[10px] text-indigo-600 font-bold bg-white px-2 py-0.5 rounded-full border border-indigo-200 whitespace-nowrap shrink-0">Worker Tự Động Định Tuyến</span>
                   </div>
-                  <p class="text-[11px] text-slate-600">Cấu hình URL đích khi khách click vào các mục tra cứu và cài đặt trên Menu Header và Footer.</p>
-                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                    <div><label class="block font-bold text-slate-700 mb-1">Mục "Tra cứu &amp; Cài đặt":</label> <input type="text" id="routeLookup" placeholder="/portal/lookup hoặc #lookup" class="w-full p-2 border rounded-xl bg-white font-mono text-indigo-700 outline-none focus:border-indigo-500"></div>
-                    <div><label class="block font-bold text-slate-700 mb-1">Mục "Kiểm tra dung lượng":</label> <input type="text" id="routeData" placeholder="/portal/data hoặc #data" class="w-full p-2 border rounded-xl bg-white font-mono text-indigo-700 outline-none focus:border-indigo-500"></div>
-                    <div><label class="block font-bold text-slate-700 mb-1">Mục "Đổi sang Web dự phòng":</label> <input type="text" id="routeBackup" placeholder="/portal/backup hoặc #backup" class="w-full p-2 border rounded-xl bg-white font-mono text-indigo-700 outline-none focus:border-indigo-500"></div>
+                  <p class="text-[11px] text-slate-600">Cấu hình URL đích cho các nhóm trang công khai trên Portal &amp; Index (tự động điều hướng bởi Router &amp; Worker).</p>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                    <div><label for="rtOrder" class="block font-bold text-slate-700 mb-1">Tra cứu đơn hàng:</label> <input type="text" id="rtOrder" placeholder="/portal/order" class="w-full p-2 border rounded-xl bg-white font-mono text-indigo-700 outline-none focus:border-indigo-500"></div>
+                    <div><label for="rtPackages" class="block font-bold text-slate-700 mb-1">Danh sách gói cước:</label> <input type="text" id="rtPackages" placeholder="/packages" class="w-full p-2 border rounded-xl bg-white font-mono text-indigo-700 outline-none focus:border-indigo-500"></div>
+                    <div><label for="rtGuide" class="block font-bold text-slate-700 mb-1">Hướng dẫn cài đặt:</label> <input type="text" id="rtGuide" placeholder="/portal/guide" class="w-full p-2 border rounded-xl bg-white font-mono text-indigo-700 outline-none focus:border-indigo-500"></div>
+                    <div><label for="rtPolicy" class="block font-bold text-slate-700 mb-1">Chính sách &amp; Pháp lý:</label> <input type="text" id="rtPolicy" placeholder="/policy" class="w-full p-2 border rounded-xl bg-white font-mono text-indigo-700 outline-none focus:border-indigo-500"></div>
                   </div>
+                  <div class="pt-1 flex justify-end"><button type="button" onclick="saveRoutesConfig()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-sm transition active:scale-95 flex items-center gap-1.5"><i class="fas fa-save"></i>Lưu URL Routes</button></div>
                 </div>
                 <!-- 2. DANH SÁCH WEB DỰ PHÒNG -->
                 <div class="space-y-2">
@@ -1057,11 +1059,11 @@
             <div class="font-bold text-sm text-slate-800 mb-1">1. Múi giờ thực tế</div>
             <div class="grid grid-cols-2 gap-2.5 sm:gap-3 mt-2">
               <button id="tzCardVN" onclick="pickTz('VN')" class="border-2 border-slate-200 rounded-2xl p-2.5 sm:p-3 text-left transition min-w-0">
-                <div class="text-[11px] sm:text-xs font-bold text-slate-600 whitespace-nowrap truncate">🇻🇳 Việt Nam (UTC+7)</div>
+                <div class="text-[11px] sm:text-xs font-bold text-slate-600 flex flex-wrap items-center gap-x-1 leading-tight"><span>🇻🇳 Việt Nam</span><span class="whitespace-nowrap">(UTC+7)</span></div>
                 <div id="clkVN" class="font-mono text-[11px] sm:text-base md:text-xl font-black text-slate-800 mt-1 whitespace-nowrap tracking-tight">--</div>
               </button>
               <button id="tzCardCN" onclick="pickTz('CN')" class="border-2 border-slate-200 rounded-2xl p-2.5 sm:p-3 text-left transition min-w-0">
-                <div class="text-[11px] sm:text-xs font-bold text-slate-600 whitespace-nowrap truncate">🇨🇳 Trung Quốc (UTC+8)</div>
+                <div class="text-[11px] sm:text-xs font-bold text-slate-600 flex flex-wrap items-center gap-x-1 leading-tight"><span>🇨🇳 Trung Quốc</span><span class="whitespace-nowrap">(UTC+8)</span></div>
                 <div id="clkCN" class="font-mono text-[11px] sm:text-base md:text-xl font-black text-slate-800 mt-1 whitespace-nowrap tracking-tight">--</div>
               </button>
             </div>
@@ -1218,10 +1220,10 @@
           <div id="mOIdNote" class="hidden text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-2 mb-2"></div>
           <div class="mb-2"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Email Khách</label><input id="mOEmail" type="text" onblur="onOrdEmailBlur()" class="w-full p-2.5 text-xs border rounded-xl outline-none bg-slate-50 font-medium"></div>
           <div class="mb-2"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">Gói VPN</label><select id="mOPkg" onchange="onPkgChange()" class="w-full p-2.5 text-xs border rounded-xl font-bold text-indigo-700 bg-indigo-50 outline-none"></select></div>
-          <div class="grid grid-cols-3 gap-2 mb-2">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-2">
             <div>
               <label class="block font-bold text-[10px] text-slate-600 mb-0.5">Trạng thái</label>
-              <select id="mOStatus" onchange="togSF()" class="w-full p-2.5 text-xs border rounded-xl font-bold outline-none bg-white">
+              <select id="mOStatus" onchange="togSF()" class="w-full p-2 sm:p-2.5 text-xs border rounded-xl font-bold outline-none bg-white whitespace-nowrap">
                 <option value="pending">Chờ duyệt</option>
                 <option value="success">Thành công</option>
                 <option value="failed">Từ chối</option>
@@ -1229,13 +1231,13 @@
             </div>
             <div>
               <label class="block font-bold text-[10px] text-slate-600 mb-0.5">Thanh toán</label>
-              <select id="mOMethod" onchange="onMethodChange()" class="w-full p-2.5 text-xs border rounded-xl font-bold outline-none bg-white">
+              <select id="mOMethod" onchange="onMethodChange()" class="w-full p-2 sm:p-2.5 text-xs border rounded-xl font-bold outline-none bg-white whitespace-nowrap">
                 <option value="Ngân hàng VN">Bank VN</option>
                 <option value="Alipay">Alipay</option>
                 <option value="Weixin">Weixin</option>
               </select>
             </div>
-            <div><label class="block font-bold text-[10px] text-slate-600 mb-0.5">HSD</label><input id="mOExp" type="text" oninput="recalcDaysFromExp()" class="w-full p-2.5 text-xs border rounded-xl outline-none text-center font-bold bg-white" placeholder="DD/MM/YYYY"></div>
+            <div class="col-span-2 sm:col-span-1"><label class="block font-bold text-[10px] text-slate-600 mb-0.5">HSD</label><input id="mOExp" type="text" oninput="recalcDaysFromExp()" class="w-full p-2 sm:p-2.5 text-xs border rounded-xl outline-none text-center font-bold bg-white" placeholder="DD/MM/YYYY"></div>
           </div>
           <!-- HÀNG 1: SĐT Zalo | Số ngày SD | Tặng -->
           <div class="grid grid-cols-3 gap-2 mb-2">

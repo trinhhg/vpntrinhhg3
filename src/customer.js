@@ -457,6 +457,7 @@ const FALLBACK_TR = {
     [keyOf('Gói Vĩnh Viễn')]: 'Lifetime Plan',
     [keyOf('Tốc độ cao')]: 'High Speed',
     [keyOf('Băng thông lên đến 3Gbps')]: 'Bandwidth up to 3Gbps',
+    [keyOf('Đường truyền ổn định, tối ưu mượt mà cho mạng xã hội & Stream video chuẩn 4K.')]: 'Stable high-speed connection smoothly optimized for social media and 4K video streaming.',
     [keyOf('Đa dạng máy chủ tối ưu mượt')]: 'Multiple optimized high-speed servers',
     [keyOf('Việt Nam mượt mọi nền tảng')]: 'Optimized for Vietnam across all platforms',
     [keyOf('Mọi quốc gia khác')]: 'All other countries',
@@ -468,11 +469,25 @@ const FALLBACK_TR = {
     [keyOf('Liên hệ Admin')]: 'Contact Admin',
     [keyOf('Dung lượng:')]: 'Data:',
     [keyOf('Giới hạn thiết bị:')]: 'Device limit:',
+    [keyOf('Dịch vụ')]: 'Services',
+    [keyOf('Hướng dẫn')]: 'Guides',
+    [keyOf('Pháp lý')]: 'Legal',
+    [keyOf('Web dự phòng')]: 'Mirror Sites',
+    [keyOf('Cài đặt iOS & Android')]: 'iOS & Android Setup',
+    [keyOf('Cài đặt iOS (iPhone/iPad)')]: 'iOS Setup (iPhone/iPad)',
+    [keyOf('Lưu ý cho Tiktok')]: 'TikTok Usage Notes',
+    [keyOf('Cài đặt Android')]: 'Android Setup',
+    [keyOf('Cài đặt Windows')]: 'Windows Setup',
+    [keyOf('Cài đặt MacOS')]: 'macOS Setup',
+    [keyOf('Cài đặt iPhone & MacBook')]: 'iPhone & MacBook Setup',
     [keyOf('Quay lại trang chủ')]: 'Back to Home',
     [keyOf('Mục lục xem nhanh')]: 'Quick Table of Contents',
     [keyOf('Chính sách sử dụng dịch vụ')]: 'Terms of Service',
+    [keyOf('Chính sách sử dụng')]: 'Terms of Service',
     [keyOf('Miễn trừ trách nhiệm pháp lý')]: 'Legal Disclaimer',
+    [keyOf('Miễn trừ trách nhiệm')]: 'Legal Disclaimer',
     [keyOf('Quy định hoàn tiền')]: 'Refund Policy',
+    [keyOf('Chính sách hoàn tiền')]: 'Refund Policy',
     [keyOf('Chính Sách & Pháp Lý')]: 'Policies & Legal',
     [keyOf('Các điều khoản, quy định sử dụng và chính sách hoàn tiền chính thức của VPN Trinh Hg.')]: 'Official terms, usage policies and refund rules of VPN Trinh Hg.',
     [keyOf('Xử lý link sub')]: 'Sub Link Option',
@@ -495,6 +510,7 @@ const FALLBACK_TR = {
     [keyOf('Gói Vĩnh Viễn')]: '永久套餐',
     [keyOf('Tốc độ cao')]: '高速节点',
     [keyOf('Băng thông lên đến 3Gbps')]: '带宽高达 3Gbps',
+    [keyOf('Đường truyền ổn định, tối ưu mượt mà cho mạng xã hội & Stream video chuẩn 4K.')]: '线路高速稳定，针对社交平台与 4K 超清视频流畅优化。',
     [keyOf('Đa dạng máy chủ tối ưu mượt')]: '多线优化高速服务器',
     [keyOf('Việt Nam mượt mọi nền tảng')]: '越南全平台流畅',
     [keyOf('Mọi quốc gia khác')]: '其他所有国家',
@@ -506,11 +522,25 @@ const FALLBACK_TR = {
     [keyOf('Liên hệ Admin')]: '联系管理员',
     [keyOf('Dung lượng:')]: '流量：',
     [keyOf('Giới hạn thiết bị:')]: '设备限制：',
+    [keyOf('Dịch vụ')]: '服务项目',
+    [keyOf('Hướng dẫn')]: '使用教程',
+    [keyOf('Pháp lý')]: '法律条款',
+    [keyOf('Web dự phòng')]: '备用网址',
+    [keyOf('Cài đặt iOS & Android')]: 'iOS 与 Android 教程',
+    [keyOf('Cài đặt iOS (iPhone/iPad)')]: 'iOS (iPhone/iPad) 教程',
+    [keyOf('Lưu ý cho Tiktok')]: 'TikTok 注意事项',
+    [keyOf('Cài đặt Android')]: 'Android 安装教程',
+    [keyOf('Cài đặt Windows')]: 'Windows 安装教程',
+    [keyOf('Cài đặt MacOS')]: 'macOS 安装教程',
+    [keyOf('Cài đặt iPhone & MacBook')]: 'iPhone 与 MacBook 教程',
     [keyOf('Quay lại trang chủ')]: '返回首页',
     [keyOf('Mục lục xem nhanh')]: '快速目录',
     [keyOf('Chính sách sử dụng dịch vụ')]: '服务条款',
+    [keyOf('Chính sách sử dụng')]: '服务条款',
     [keyOf('Miễn trừ trách nhiệm pháp lý')]: '免责声明',
+    [keyOf('Miễn trừ trách nhiệm')]: '免责声明',
     [keyOf('Quy định hoàn tiền')]: '退款政策',
+    [keyOf('Chính sách hoàn tiền')]: '退款政策',
     [keyOf('Chính Sách & Pháp Lý')]: '政策与法律条款',
     [keyOf('Các điều khoản, quy định sử dụng và chính sách hoàn tiền chính thức của VPN Trinh Hg.')]: 'VPN Trinh Hg 官方服务条款、免责声明与退款政策。',
     [keyOf('Xử lý link sub')]: '订阅链接处理方式',
@@ -562,13 +592,13 @@ function resolvePkgDisplayName(pkg, targetLang = lang) {
   return normalizeTrString(tx(rawVi));
 }
 
-function lookup(text) {
-  const L = TR[lang];
+function lookup(text, targetLang = lang) {
+  const L = TR[targetLang];
   const k = keyOf(text);
   if (L && Object.prototype.hasOwnProperty.call(L, k) && L[k]) return normalizeTrString(L[k]);
   if (L) {
-    if (!TRPAT[lang]) buildPat(lang);
-    for (const p of TRPAT[lang]) {
+    if (!TRPAT[targetLang]) buildPat(targetLang);
+    for (const p of TRPAT[targetLang]) {
       const m = text.match(p.re);
       if (m) {
         return normalizeTrString(p.t.replace(/\{(\d+)\}/g, (_, i) => {
@@ -578,15 +608,15 @@ function lookup(text) {
       }
     }
   }
-  const fbMap = FALLBACK_TR[lang];
+  const fbMap = FALLBACK_TR[targetLang];
   const fb = fbMap && Object.prototype.hasOwnProperty.call(fbMap, k) ? fbMap[k] : null;
   return fb ? normalizeTrString(fb) : null;
 }
 /* tx('chữ tiếng Việt') -> chữ theo ngôn ngữ hiện tại (dùng cho input.value, alert... nơi DOM không tự dịch được) */
-const tx = s => {
+const tx = (s, targetLang = lang) => {
   s = String(s == null ? '' : s);
-  if (lang === 'vi') return s;
-  const r = lookup(normWs(s));
+  if (targetLang === 'vi') return s;
+  const r = lookup(normWs(s), targetLang);
   return (r != null && !/\[\[\d+\]\]/.test(r)) ? r : s;
 };
 const regHtml = (el, o) => {
@@ -1500,15 +1530,15 @@ async function loadConfig() {
             hidden: !!p.hidden,
             category: p.category || ['cycle'],
             vi: {
-              name: p.name || p.vi?.name || 'Gói VPN',
+              name: p.vi?.name || p.name || 'Gói VPN',
               price: p.isCustom ? 'Liên hệ Admin' : (p.vnd ? Number(p.vnd).toLocaleString('en-US') + 'VND' : '0VND')
             },
             en: {
-              name: p.name || p.en?.name || 'VPN Plan',
+              name: p.en?.name || p.name || 'VPN Plan',
               price: p.isCustom ? 'Contact Admin' : ('¥' + (p.cny || 0))
             },
             zh: {
-              name: p.name || p.zh?.name || 'VPN套餐',
+              name: p.zh?.name || p.name || 'VPN套餐',
               price: p.isCustom ? '联系管理员' : ('¥' + (p.cny || 0))
             },
             vnd: Number(p.vnd) || 0,
@@ -1531,7 +1561,7 @@ async function loadConfig() {
         try {
           localStorage.setItem('vpn_dynamic_pkgs_cache', JSON.stringify(pkgs));
         } catch (e) {}
-        renderPackages('all');
+        renderPackages(currentPackageFilter || 'all');
       }
       if (Array.isArray(cfgCache.faqs) && cfgCache.faqs.length) {
         renderDynamicFaqs(cfgCache.faqs);
@@ -1591,14 +1621,14 @@ function renderDynamicFooter(ft) {
   if (wrap) {
     let colsHtml = footerColsOf(ft).filter(c => c && Array.isArray(c.links) && c.links.length).map(c => `<div class="space-y-2"><div class="font-extrabold text-sm text-slate-800 dark:text-white uppercase tracking-wider">${esc(c.title||'')}</div><ul class="space-y-1.5 text-slate-600 dark:text-slate-300 font-medium">${c.links.map(l=>{
         const raw=String(l.url||''), rel=toRelativeAppUrl(raw), ext=/^https?:\/\//i.test(rel);
-        return `<li><a href="${ext?esc(rel):'#'}" ${ext?'target="_blank" rel="noopener"':''} data-u="${esc(raw)}" onclick="return footerLinkClick(event,this)" class="hover:text-indigo-600 transition flex items-center gap-1.5 text-left"><span>›</span> ${esc(l.title||'')}</a></li>`;
+        return `<li><a href="${ext?esc(rel):'#'}" ${ext?'target="_blank" rel="noopener noreferrer"':''} data-u="${esc(raw)}" onclick="return footerLinkClick(event,this)" class="hover:text-indigo-600 transition flex items-center gap-1.5 text-left"><span>›</span> ${esc(l.title||'')}</a></li>`;
       }).join('')}</ul></div>`).join('');
 
     // Đưa danh sách Web dự phòng thành cột danh mục liên kết thứ 4 trong footer
     if (Array.isArray(ft.backups)) {
       const bl = ft.backups.filter(b => b && b.url);
       if (bl.length) {
-        colsHtml += `<div class="space-y-2"><div class="font-extrabold text-sm text-slate-800 dark:text-white uppercase tracking-wider">Web dự phòng</div><ul class="space-y-1.5 text-slate-600 dark:text-slate-300 font-medium">${bl.map(b=>`<li><a href="${esc(b.url)}" target="_blank" rel="noopener" class="hover:text-indigo-600 transition flex items-center gap-1.5 text-left"><span>›</span> ${esc(b.name||b.url)}</a></li>`).join('')}</ul></div>`;
+        colsHtml += `<div class="space-y-2"><div class="font-extrabold text-sm text-slate-800 dark:text-white uppercase tracking-wider">Web dự phòng</div><ul class="space-y-1.5 text-slate-600 dark:text-slate-300 font-medium">${bl.map(b=>`<li><a href="${esc(b.url)}" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-600 transition flex items-center gap-1.5 text-left"><span>›</span> ${esc(b.name||b.url)}</a></li>`).join('')}</ul></div>`;
       }
     }
     wrap.innerHTML = colsHtml;
@@ -1889,17 +1919,16 @@ window.addEventListener('scroll', () => {
         mnw.style.transform = 'translate(-50%, 0)';
       }
     }
-  } else {
-    if (fs) {
-      if (inCheckout) {
-        fs.style.opacity = '0';
-        fs.style.pointerEvents = 'none';
-        fs.style.transform = 'translateY(20px)';
-      } else {
-        fs.style.opacity = '1';
-        fs.style.pointerEvents = 'auto';
-        fs.style.transform = 'translateY(0)';
-      }
+  }
+  if (fs) {
+    if (inCheckout) {
+      fs.style.opacity = '0';
+      fs.style.pointerEvents = 'none';
+      fs.style.transform = 'translateY(20px)';
+    } else {
+      fs.style.opacity = '1';
+      fs.style.pointerEvents = 'auto';
+      fs.style.transform = 'translateY(0)';
     }
   }
 });
@@ -1925,7 +1954,10 @@ async function changeLanguage(val) {
   paintLangButtons(nextLang);
   document.querySelectorAll('[data-i18n]').forEach(el => el.innerHTML = i18n[lang][el.getAttribute('data-i18n')] || el.innerHTML);
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => el.placeholder = i18n[lang][el.getAttribute('data-i18n-placeholder')] || el.placeholder);
-  renderPackages('all');
+  renderPackages(currentPackageFilter || 'all');
+  if (cfgCache && cfgCache.footer && typeof cfgCache.footer === 'object') {
+    renderDynamicFooter(cfgCache.footer);
+  }
   if (!$('checkoutSection').classList.contains('hidden') && currentPackage) {
     const rawPkg = pkgs.find(p => p.id === currentPackage.id) || currentPackage;
     renderCheckoutPackageSummary(rawPkg, currentPackage);
@@ -1980,8 +2012,8 @@ const DEFAULT_FAQS_STATIC = [{
 
 function buildFaqHtmlList(faqsList) {
   return faqsList.map(item => `
-    <details class="bg-white dark:bg-[#0a0a0a] rounded-2xl shadow-sm border border-slate-100 dark:border-white/10 group cursor-pointer w-full transition-all" onclick="event.preventDefault();this.open=!this.open;">
-      <summary class="font-bold text-indigo-700 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.3)] text-sm flex justify-between items-center outline-none p-4 md:p-5 select-none">
+    <details class="bg-white dark:bg-[#0a0a0a] rounded-2xl shadow-sm border border-slate-100 dark:border-white/10 group w-full transition-all">
+      <summary class="font-bold text-indigo-700 dark:text-indigo-300 dark:drop-shadow-[0_0_8px_rgba(165,180,252,0.3)] text-sm flex justify-between items-center outline-none p-4 md:p-5 select-none cursor-pointer">
         <span>${esc(item.q || '')}</span>
         <span class="transition group-open:rotate-180 text-slate-400 dark:text-slate-500"><i class="fas fa-chevron-down"></i></span>
       </summary>
@@ -2032,7 +2064,7 @@ function parseVnDateLimit(str, isEnd = false) {
 function getActiveFlashSale() {
   const s = (cfgCache && (cfgCache.flashSale || (cfgCache.sales && cfgCache.sales.campaign))) || null;
   if (!s || !s.enabled) return null;
-  const pct = Number(s.discountPercent) || 0;
+  const pct = Math.min(90, Math.max(0, Number(s.discountPercent) || 0));
   if (pct <= 0) return null;
   const now = Date.now();
   if (s.startDate) {
@@ -2143,7 +2175,9 @@ function genHTML(rawPkg) {
   const pkgDisplayName = resolvePkgDisplayName(pkg, lang);
   const pkgDataDisplay = formatPkgDataLabel(pkg.data || '', lang);
 
-  let displayTime = pkg.time === 'lifetime' ? tx('Vĩnh viễn') : `${pkg.time} ${tx('Tháng')}`;
+  let displayTime = pkg.time === 'lifetime'
+    ? tx('Vĩnh viễn')
+    : `${pkg.time} ${lang === 'en' ? (Number(pkg.time) > 1 ? 'Months' : 'Month') : tx('Tháng')}`;
   if ((pkg.category || []).includes('usage') && !pkg.isCustom) displayTime = tx('Vĩnh viễn');
 
   let devText = '';
@@ -2154,7 +2188,9 @@ function genHTML(rawPkg) {
     devText = tx('Tùy chọn');
   } else {
     const devNum = devRaw.replace(/\D/g, '');
-    devText = devNum ? `${devNum} ${tx('Thiết bị')}` : tx(devRaw);
+    devText = devNum
+      ? `${devNum} ${lang === 'en' ? (Number(devNum) > 1 ? 'Devices' : 'Device') : tx('Thiết bị')}`
+      : tx(devRaw);
   }
 
   const isDisabled = isUpgradeMode && (pkg.vnd <= baseOrderPriceVnd || (oCache && pkg.id === oCache.pkgId)) && !pkg.isCustom;
@@ -2261,11 +2297,15 @@ function genHTML(rawPkg) {
  </div>`;
 }
 
+let currentPackageFilter = 'all';
+
 function renderPackages(filter) {
+  const nextFilter = filter || currentPackageFilter || 'all';
+  currentPackageFilter = nextFilter;
   ['htab', 'ptab'].forEach(p => ['all', 'travel', 'cycle', 'usage'].forEach(t => {
     const b = $(`${p}-${t}`);
     if (!b) return;
-    if (t === filter) {
+    if (t === nextFilter) {
       b.classList.add('active', 'bg-indigo-600', 'text-white');
       b.classList.remove('text-slate-600', 'dark:text-slate-300');
     } else {
@@ -2274,7 +2314,7 @@ function renderPackages(filter) {
     }
   }));
   // Lọc bỏ toàn bộ gói có flag hidden để CSS grid tự động co dồn card lên hàng trên
-  const visiblePkgs = pkgs.filter(p => !p.hidden && (filter === 'all' || (p.category && p.category.includes(filter))));
+  const visiblePkgs = pkgs.filter(p => !p.hidden && (nextFilter === 'all' || (p.category && p.category.includes(nextFilter))));
   const html = visiblePkgs.map(genHTML).join('');
   if ($('packagesContainerHome')) $('packagesContainerHome').innerHTML = html;
   if ($('packagesContainerPortal')) $('packagesContainerPortal').innerHTML = html;
@@ -2363,13 +2403,14 @@ function openCheckout(id, overridePkgs) {
     }
   }
 
-  // Bật/Tắt ô nhập mã giảm giá theo cài đặt từ admin
+  // Bật/Tắt ô nhập mã giảm giá theo cài đặt từ admin (ẩn khi nâng cấp)
   const couponEnabled = (cfgCache && (cfgCache.couponEnabled !== undefined ? cfgCache.couponEnabled : (cfgCache.cms && cfgCache.cms.settings && cfgCache.cms.settings.couponEnabled))) !== false;
   const cWrap = $('couponBlockWrap');
-  if (cWrap) cWrap.classList.toggle('hidden', !couponEnabled);
+  if (cWrap) cWrap.classList.toggle('hidden', !couponEnabled || isUpgradeMode);
 
   renderDurationSelector(currentPackage);
   selectDuration(1);
+  if (!hideEmail) selectPayMethod('bank');
   toggleZalo();
   document.body.classList.add('checkout-active');
   renderPaymentBox();
@@ -2413,12 +2454,12 @@ function renderDurationSelector(pkg) {
   if (pkg.time === 3) {
     block.innerHTML = `
    <label class="block font-bold text-xs text-slate-700 dark:text-slate-200 mb-2">Chọn chu kỳ thanh toán:</label>
-   <div class="grid grid-cols-5 gap-1.5 md:gap-2 text-center">
-    <button type="button" onclick="selectDuration(1)" id="dur-btn-1" class="dur-btn active !bg-indigo-600 !text-white font-bold py-2 rounded-lg text-xs md:text-sm">3T <span class="text-[9px] font-normal block sm:inline">(x1)</span></button>
-    <button type="button" onclick="selectDuration(2)" id="dur-btn-2" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-xs md:text-sm">6T <span class="text-[9px] font-normal block sm:inline">(x2)</span></button>
-    <button type="button" onclick="selectDuration(3)" id="dur-btn-3" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-xs md:text-sm">9T <span class="text-[9px] font-normal block sm:inline">(x3)</span></button>
-    <button type="button" onclick="selectDuration(4)" id="dur-btn-4" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-xs md:text-sm">12T <span class="text-[9px] font-normal block sm:inline">(x4)</span></button>
-    <button type="button" onclick="selectDuration('custom')" id="dur-btn-custom" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-xs md:text-sm">XT <span class="text-[9px] font-normal block sm:inline">(Tùy chọn)</span></button>
+   <div class="grid grid-cols-5 gap-1 sm:gap-2 text-center">
+    <button type="button" onclick="selectDuration(1)" id="dur-btn-1" class="dur-btn min-w-0 px-0.5 active !bg-indigo-600 !text-white font-bold py-2 rounded-lg text-xs md:text-sm">3T <span class="text-[9px] font-normal block sm:inline leading-tight">(x1)</span></button>
+    <button type="button" onclick="selectDuration(2)" id="dur-btn-2" class="dur-btn min-w-0 px-0.5 bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-xs md:text-sm">6T <span class="text-[9px] font-normal block sm:inline leading-tight">(x2)</span></button>
+    <button type="button" onclick="selectDuration(3)" id="dur-btn-3" class="dur-btn min-w-0 px-0.5 bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-xs md:text-sm">9T <span class="text-[9px] font-normal block sm:inline leading-tight">(x3)</span></button>
+    <button type="button" onclick="selectDuration(4)" id="dur-btn-4" class="dur-btn min-w-0 px-0.5 bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-xs md:text-sm">12T <span class="text-[9px] font-normal block sm:inline leading-tight">(x4)</span></button>
+    <button type="button" onclick="selectDuration('custom')" id="dur-btn-custom" class="dur-btn min-w-0 px-0.5 bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-xs md:text-sm">XT <span class="text-[9px] font-normal block sm:inline leading-tight">(Tùy chọn)</span></button>
    </div>
    <div id="customDurWrap" class="hidden mt-3"><div class="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 p-2 rounded-lg border border-indigo-100 dark:border-indigo-500/30"><label class="text-xs font-bold text-indigo-800 dark:text-indigo-300 whitespace-nowrap pl-1">Nhập số chu kỳ (mỗi chu kỳ 3 tháng):</label><input type="number" id="customDurInput" min="1" max="40" value="2" oninput="calculateTotal()" class="w-full p-2 text-sm border border-slate-300 dark:border-white/20 rounded outline-none font-bold bg-white dark:bg-black text-center text-slate-800 dark:text-white"></div></div>
    <div id="priceCalculation" class="mt-3 text-sm font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-500/30 p-2.5 rounded-lg text-center"></div>
@@ -2430,12 +2471,12 @@ function renderDurationSelector(pkg) {
   // 4. Gói 1 tháng thông thường (mặc định)
   block.innerHTML = `
   <label class="block font-bold text-xs text-slate-700 dark:text-slate-200 mb-2" data-i18n="choose_dur">Chọn thời gian:</label>
-  <div class="grid grid-cols-5 gap-2 text-center">
-    <button type="button" onclick="selectDuration(1)" id="dur-btn-1" class="dur-btn active !bg-indigo-600 !text-white font-bold py-2 rounded-lg text-sm">1 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
-    <button type="button" onclick="selectDuration(3)" id="dur-btn-3" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900">3 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
-    <button type="button" onclick="selectDuration(6)" id="dur-btn-6" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900">6 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
-    <button type="button" onclick="selectDuration(12)" id="dur-btn-12" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900">12 <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
-    <button type="button" onclick="selectDuration('custom')" id="dur-btn-custom" class="dur-btn bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-900">X <span class="text-[9px] font-normal" data-i18n="month_lbl">Tháng</span></button>
+  <div class="grid grid-cols-5 gap-1.5 sm:gap-2 text-center">
+    <button type="button" onclick="selectDuration(1)" id="dur-btn-1" class="dur-btn min-w-0 px-0.5 active !bg-indigo-600 !text-white font-bold py-2 rounded-lg text-xs sm:text-sm">1 <span class="block sm:inline text-[9px] font-normal leading-tight" data-i18n="month_lbl">Tháng</span></button>
+    <button type="button" onclick="selectDuration(3)" id="dur-btn-3" class="dur-btn min-w-0 px-0.5 bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-900">3 <span class="block sm:inline text-[9px] font-normal leading-tight" data-i18n="month_lbl">Tháng</span></button>
+    <button type="button" onclick="selectDuration(6)" id="dur-btn-6" class="dur-btn min-w-0 px-0.5 bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-900">6 <span class="block sm:inline text-[9px] font-normal leading-tight" data-i18n="month_lbl">Tháng</span></button>
+    <button type="button" onclick="selectDuration(12)" id="dur-btn-12" class="dur-btn min-w-0 px-0.5 bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-900">12 <span class="block sm:inline text-[9px] font-normal leading-tight" data-i18n="month_lbl">Tháng</span></button>
+    <button type="button" onclick="selectDuration('custom')" id="dur-btn-custom" class="dur-btn min-w-0 px-0.5 bg-white dark:bg-black border border-slate-200 dark:border-white/20 text-slate-600 dark:text-slate-300 font-bold py-2 rounded-lg text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-900">X <span class="block sm:inline text-[9px] font-normal leading-tight" data-i18n="month_lbl">Tháng</span></button>
   </div>
   <div id="customDurWrap" class="hidden mt-3"><div class="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 p-2 rounded-lg border border-indigo-100 dark:border-indigo-500/30"><label class="text-xs font-bold text-indigo-800 dark:text-indigo-300 whitespace-nowrap pl-1" data-i18n="input_months">Nhập số tháng:</label><input type="number" id="customDurInput" min="1" max="120" value="2" oninput="calculateTotal()" class="w-full p-2 text-sm border border-slate-300 dark:border-white/20 rounded outline-none focus:border-indigo-500 font-bold bg-white dark:bg-black text-center text-slate-800 dark:text-white"></div></div>
   <div id="priceCalculation" class="mt-3 text-sm font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-500/30 p-2.5 rounded-lg text-center"></div>
@@ -2465,14 +2506,16 @@ function selectDuration(m) {
 }
 
 function selectPayMethod(method) {
-  $('payMethod').value = method;
+  if ($('payMethod')) $('payMethod').value = method;
   document.querySelectorAll('.pay-btn').forEach(b => {
     b.classList.remove('active', 'border-indigo-500', 'bg-indigo-50', 'text-indigo-700');
     b.classList.add('border-slate-200', 'text-slate-600');
   });
   const ab = $('pay-btn-' + method);
-  ab.classList.remove('border-slate-200', 'text-slate-600');
-  ab.classList.add('active', 'border-indigo-500', 'bg-indigo-50', 'text-indigo-700');
+  if (ab) {
+    ab.classList.remove('border-slate-200', 'text-slate-600');
+    ab.classList.add('active', 'border-indigo-500', 'bg-indigo-50', 'text-indigo-700');
+  }
   if (currentPackage) {
     const raw = pkgs.find(p => p.id === currentPackage.id) || currentPackage;
     renderCheckoutPackageSummary(raw, currentPackage);
@@ -2486,6 +2529,11 @@ function applyCouponCode() {
   const inp = $('couponInput');
   const msg = $('couponAppliedMsg');
   if (!inp) return;
+  if (isUpgradeMode) {
+    currentAppliedCoupon = null;
+    if (msg) msg.classList.add('hidden');
+    return;
+  }
   const code = inp.value.trim().toUpperCase();
   if (!code) {
     currentAppliedCoupon = null;
@@ -2509,8 +2557,8 @@ function applyCouponCode() {
 
   const now = Date.now();
   if (c.startDate) {
-    const sTs = new Date(c.startDate).getTime();
-    if (sTs && now < sTs) {
+    const sTs = parseVnDateLimit(c.startDate, false);
+    if (!isNaN(sTs) && now < sTs) {
       currentAppliedCoupon = null;
       if (msg) {
         msg.textContent = 'Mã giảm giá chưa đến thời gian áp dụng!';
@@ -2524,8 +2572,8 @@ function applyCouponCode() {
   }
   const expStr = c.expiry || c.endDate;
   if (expStr) {
-    const eTs = new Date(expStr).getTime();
-    if (eTs && now > eTs) {
+    const eTs = parseVnDateLimit(expStr, true);
+    if (!isNaN(eTs) && now > eTs) {
       currentAppliedCoupon = null;
       if (msg) {
         msg.textContent = 'Mã giảm giá đã hết hạn sử dụng!';
@@ -2549,8 +2597,9 @@ function applyCouponCode() {
     calculateTotal();
     return;
   }
+  const baseVnd = currentPackage ? (Number(currentPackage.vnd || 0) * (currentMultiplier || 1)) : (currentTotalVnd || 0);
   const minSpend = Number(c.minSpend || c.minOrder) || 0;
-  if (minSpend > 0 && (currentTotalVnd || 0) < minSpend) {
+  if (minSpend > 0 && baseVnd < minSpend) {
     currentAppliedCoupon = null;
     if (msg) {
       msg.textContent = `Đơn hàng tối thiểu phải từ ${minSpend.toLocaleString('en-US')}đ!`;
@@ -3608,6 +3657,7 @@ async function checkEmailExistingLinks(email) {
     lockSubDecisionUI('', 'Không thể xác minh lịch sử đơn hàng và Link Sub của email này. Hai lựa chọn đang khóa để tránh cấp nhầm link.', 'all');
     renderPaymentBox();
   } catch (e) {
+    if (seq !== emailLookupSeq) return;
     existingCustomerLinks = [];
     detectedRenewOf = '';
     emailLookupState = 'error';
@@ -3813,13 +3863,14 @@ function updatePortalInfo(o) {
   ['portalContentPending', 'portalContentManual', 'pendingActiveState', 'pendingTimeoutState', 'portalContentSuccess', 'portalContentFailed', 'portalContentLoadError'].forEach(id => $(id)?.classList.add('hidden'));
   $('upgradeSuccessBadge').classList.add('hidden');
   stopTick();
+  const st = normSt(o.status);
   const manual = /alipay|weixin|wechat/i.test(o.method || ''), now = Date.now() + skew;
-  if (o.status === 'failed') {
+  if (st === 'failed') {
     $('portalContentFailed').classList.remove('hidden');
     $('failReasonText').innerText = o.reason || L.admin_rejected;
     return;
   }
-  if (o.status === 'pending') {
+  if (st === 'pending') {
     if (manual) {
       $('portalContentManual').classList.remove('hidden');
       return;
@@ -3925,7 +3976,7 @@ function pkgLine(o) {
   const p = pkgs.find(x => x.id === o.pkgId) || pkgs.find(x => x.vi.name === o.pkgName && x.data === o.pkgData);
   if (!p) return o.pkgName ? tx(sc(o.pkgName)) : tx('Gói VPN');
   const priceStr = (lang === 'en' || lang === 'zh') ? `¥${p.cny || 0}` : `${Number(p.vnd || 0).toLocaleString('en-US')}VND`;
-  return `${tx(sc(p.vi.name))} – ${priceStr}`;
+  return `${resolvePkgDisplayName(p, lang)} – ${priceStr}`;
 }
 
 function getEffectiveSubLink(o, optIndex) {
@@ -4325,8 +4376,8 @@ function scrollToPolicySection(id) {
 }
 
 function showPolicyPage(targetSection, skipPush = false) {
+  const sub = targetSection ? `/${targetSection}` : '';
   if (!skipPush && typeof router !== 'undefined') {
-    const sub = targetSection ? `/${targetSection}` : '';
     router.navigate(`${appRoutes.policy}${sub}`);
   }
   $('view-store').classList.remove('active');
@@ -4340,6 +4391,9 @@ function showPolicyPage(targetSection, skipPush = false) {
   if ($('policyBodyTerms')) $('policyBodyTerms').innerHTML = ft.terms ? `<p class="whitespace-pre-line leading-relaxed">${esc(ft.terms)}</p>` : "<p>Quý khách sử dụng dịch vụ VPN vui lòng tuân thủ quy định pháp luật nước sở tại, không sử dụng dịch vụ vào các mục đích vi phạm pháp luật.</p>";
   if ($('policyBodyDisclaimer')) $('policyBodyDisclaimer').innerHTML = ft.disclaimer ? `<p class="whitespace-pre-line leading-relaxed">${esc(ft.disclaimer)}</p>` : "<p>Chúng tôi chỉ cung cấp giải pháp mạng kỹ thuật. Khách hàng chịu toàn bộ trách nhiệm về các hoạt động và nội dung truy cập cá nhân.</p>";
   if ($('policyBodyRefund')) $('policyBodyRefund').innerHTML = ft.refund ? `<p class="whitespace-pre-line leading-relaxed">${esc(ft.refund)}</p>` : "<p>Website không áp dụng chính sách hoàn tiền cho các đơn hàng đã thanh toán và kích hoạt thành công. Quý khách vui lòng lưu ý và cân nhắc trước khi thanh toán.</p>";
+  if (!skipPush) {
+    applyRouteScroll(`${appRoutes.policy}${sub || '/terms'}`, false);
+  }
 }
 
 function switchPortalTab(tabId, fromUpgrade = false, skipPush = false) {
@@ -4754,9 +4808,6 @@ function setupAppRoutes() {
       const tp = match && match.data && match.data.type;
       showPolicyPage(tp || 'terms', true);
       applyRouteScroll(`${basePath}/${tp || 'terms'}`, isPop);
-      if (!isPop && tp && tp !== 'terms') {
-        setTimeout(() => scrollToPolicySection(tp.startsWith('policy-') ? tp : `policy-${tp}`), 80);
-      }
     });
   };
   bindPolicyRoutes(appRoutes.policy);
@@ -4769,7 +4820,51 @@ function setupAppRoutes() {
   });
 }
 
+function bindCusEmailInputListener() {
+  const emInput = $('cusEmail');
+  if (!emInput || emInput.dataset.emailBound === '1') return;
+  emInput.dataset.emailBound = '1';
+  let emailDebounce = null;
+  emInput.addEventListener('input', () => {
+    const email = emInput.value.trim();
+    if (email && email.toLowerCase() === lastCheckedEmail.toLowerCase() && emailLookupState !== 'error' && emailLookupState !== 'idle') {
+      return;
+    }
+    currentSubDecision = '';
+    detectedRenewOf = '';
+    existingCustomerLinks = [];
+    $('subLinkLifecycleWrap')?.classList.remove('hidden');
+    $('multiLinkSelectorWrap')?.classList.add('hidden');
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      lastCheckedEmail = '';
+      emailLookupState = 'idle';
+      lockSubDecisionUI('CREATE_NEW', 'Vui lòng nhập email để hệ thống kiểm tra lịch sử link sub.', 'all');
+      clearTimeout(emailDebounce);
+      renderPaymentBox();
+      return;
+    }
+    lockSubDecisionUI('CREATE_NEW', 'Đang nhập email...', 'all');
+    emailLookupState = 'checking';
+    renderPaymentBox();
+    clearTimeout(emailDebounce);
+    emailDebounce = setTimeout(() => {
+      checkEmailExistingLinks(email);
+    }, 450);
+  });
+  emInput.addEventListener('blur', () => {
+    clearTimeout(emailDebounce);
+    const email = emInput.value.trim();
+    if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      if (email.toLowerCase() !== lastCheckedEmail.toLowerCase() || emailLookupState === 'error') {
+        checkEmailExistingLinks(email);
+      }
+    }
+  });
+}
+
 window.onload = async function () {
+  bindCusEmailInputListener();
   let savedLang = 'vi';
   try {
     const storedLang = localStorage.getItem('vpn_lang');
@@ -4798,47 +4893,6 @@ window.onload = async function () {
   await loadConfig();
   setupAppRoutes();
   router.resolve();
-
-  const emInput = $('cusEmail');
-  if (emInput) {
-    let emailDebounce = null;
-    emInput.addEventListener('input', () => {
-      const email = emInput.value.trim();
-      if (email && email.toLowerCase() === lastCheckedEmail.toLowerCase() && emailLookupState !== 'error' && emailLookupState !== 'idle') {
-        return;
-      }
-      currentSubDecision = '';
-      detectedRenewOf = '';
-      existingCustomerLinks = [];
-      $('subLinkLifecycleWrap')?.classList.remove('hidden');
-      $('multiLinkSelectorWrap')?.classList.add('hidden');
-
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        lastCheckedEmail = '';
-        emailLookupState = 'idle';
-        lockSubDecisionUI('CREATE_NEW', 'Vui lòng nhập email để hệ thống kiểm tra lịch sử link sub.', 'all');
-        clearTimeout(emailDebounce);
-        renderPaymentBox();
-        return;
-      }
-      lockSubDecisionUI('CREATE_NEW', 'Đang nhập email...', 'all');
-      emailLookupState = 'checking';
-      renderPaymentBox();
-      clearTimeout(emailDebounce);
-      emailDebounce = setTimeout(() => {
-        checkEmailExistingLinks(email);
-      }, 450);
-    });
-    emInput.addEventListener('blur', () => {
-      clearTimeout(emailDebounce);
-      const email = emInput.value.trim();
-      if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        if (email.toLowerCase() !== lastCheckedEmail.toLowerCase() || emailLookupState === 'error') {
-          checkEmailExistingLinks(email);
-        }
-      }
-    });
-  }
 };
 
 async function requestDataCheck() {
@@ -4937,7 +4991,13 @@ const EXPOSED_FNS = {
   copyCurrentOrderId: typeof copyCurrentOrderId !== 'undefined' ? copyCurrentOrderId : undefined,
   retryPortalOrderLoad: typeof retryPortalOrderLoad !== 'undefined' ? retryPortalOrderLoad : undefined,
   triggerPwaInstall: typeof triggerPwaInstall !== 'undefined' ? triggerPwaInstall : undefined,
-  closePwaInstallGuideModal: typeof closePwaInstallGuideModal !== 'undefined' ? closePwaInstallGuideModal : undefined
+  closePwaInstallGuideModal: typeof closePwaInstallGuideModal !== 'undefined' ? closePwaInstallGuideModal : undefined,
+  showPolicyPage: typeof showPolicyPage !== 'undefined' ? showPolicyPage : undefined,
+  updatePortalInfo: typeof updatePortalInfo !== 'undefined' ? updatePortalInfo : undefined,
+  tx: typeof tx !== 'undefined' ? tx : undefined,
+  pkgLine: typeof pkgLine !== 'undefined' ? pkgLine : undefined,
+  getEffectivePkg: typeof getEffectivePkg !== 'undefined' ? getEffectivePkg : undefined,
+  calculateTotal: typeof calculateTotal !== 'undefined' ? calculateTotal : undefined
 };
 
 if (typeof window !== 'undefined') {
@@ -4962,7 +5022,7 @@ if (typeof window !== 'undefined') {
     isSyncing = true;
     try {
       await loadConfig();
-      if (typeof renderPackages === 'function') safeStep('renderPackages', () => renderPackages('all'));
+      if (typeof renderPackages === 'function') safeStep('renderPackages', () => renderPackages(currentPackageFilter || 'all'));
       if (typeof renderDock === 'function') safeStep('renderDock', () => renderDock());
       if (typeof renderGiftSticker === 'function') safeStep('renderGiftSticker', () => renderGiftSticker());
       if (typeof renderTopNoticeBar === 'function') safeStep('renderTopNoticeBar', () => renderTopNoticeBar());
@@ -5078,8 +5138,16 @@ export {
   applyRouteScroll,
   changeLanguage,
   openCheckout,
+  selectPayMethod,
   toggleZalo,
   renderCheckoutPackageSummary,
   genHTML,
+  showPolicyPage,
+  updatePortalInfo,
+  tx,
+  pkgLine,
+  applyCouponCode,
+  getEffectivePkg,
+  calculateTotal,
   EXPOSED_FNS
 };

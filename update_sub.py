@@ -121,11 +121,13 @@ dns:
     - 223.5.5.5
     - 119.29.29.29
   nameserver:
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
+    - 223.5.5.5
+    - 119.29.29.29
+  fallback:
     - https://dns.cloudflare.com/dns-query
     - https://dns.google/dns-query
-    - 1.1.1.1
-    - 8.8.8.8
-  fallback:
     - 1.1.1.1
     - 8.8.8.8
   fallback-filter:
@@ -170,21 +172,14 @@ dns:
   cache-max-size: 0"""
 
 KITTY_RULES = [
-    # 1. Domain nguồn & node của Kitty (kết nối trực tiếp, không bị vòng lặp)
+    # 1. DNS Proxy & Domain nguồn/node của Kitty
+    "IP-CIDR,1.1.1.1/32,VPN Trinh Hg,no-resolve",
+    "IP-CIDR,8.8.8.8/32,VPN Trinh Hg,no-resolve",
+    "DOMAIN,dns.google,VPN Trinh Hg",
+    "DOMAIN,dns.cloudflare.com,VPN Trinh Hg",
     "DOMAIN,m1.tohno-1.top,DIRECT",
     "DOMAIN-SUFFIX,tohno-1.top,DIRECT",
     "DOMAIN-SUFFIX,oh-node.com,DIRECT",
-    "DOMAIN-SUFFIX,hoyoverse.com,DIRECT",
-    "DOMAIN-SUFFIX,setel.com,DIRECT",
-    "DOMAIN-SUFFIX,capcom.co.jp,DIRECT",
-    "DOMAIN-SUFFIX,bandainamcoent.co.jp,DIRECT",
-    "DOMAIN-SUFFIX,coway.com,DIRECT",
-    "DOMAIN-SUFFIX,philips.com,DIRECT",
-    "DOMAIN-SUFFIX,bp.com,DIRECT",
-    "DOMAIN-SUFFIX,siemens.com,DIRECT",
-    "DOMAIN-SUFFIX,asus.com,DIRECT",
-    "DOMAIN-SUFFIX,hsbc.com.hk,DIRECT",
-    "DOMAIN-SUFFIX,susercontent.com,DIRECT",
     # 2. Mạng nội bộ Private
     "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve",
     "IP-CIDR,10.0.0.0/8,DIRECT,no-resolve",
@@ -513,6 +508,7 @@ LIANGXIN_RULES = [
 
 DJJC_RULES = [
     "IP-CIDR,1.1.1.1/32,VPN Trinh Hg,no-resolve", "IP-CIDR,8.8.8.8/32,VPN Trinh Hg,no-resolve",
+    "DOMAIN,dns.google,VPN Trinh Hg", "DOMAIN,dns.cloudflare.com,VPN Trinh Hg",
     "DOMAIN-SUFFIX,services.googleapis.cn,VPN Trinh Hg", "DOMAIN-SUFFIX,xn--ngstr-lra8j.com,VPN Trinh Hg",
     "DOMAIN,safebrowsing.urlsec.qq.com,DIRECT", "DOMAIN,safebrowsing.googleapis.com,DIRECT",
     "DOMAIN,developer.apple.com,VPN Trinh Hg", "DOMAIN-SUFFIX,digicert.com,VPN Trinh Hg",
@@ -669,13 +665,52 @@ DJJC_RULES = [
     "GEOIP,CN,DIRECT", "MATCH,VPN Trinh Hg"
 ]
 
-# COMBO_RULES gộp đầy đủ từ Liangxin + DJJC, loại bỏ trùng lặp và giữ nguyên thứ tự
-_seen_combo = set()
-COMBO_RULES = []
-for _r in LIANGXIN_RULES + DJJC_RULES:
-    if _r not in _seen_combo:
-        _seen_combo.add(_r)
-        COMBO_RULES.append(_r)
+def merge_subscription_rules(*rule_lists) -> list:
+    seen = {}
+    specific, directs, geoips = [], [], []
+    for rlist in rule_lists:
+        for rule in (rlist or []):
+            r = str(rule or "").strip()
+            if not r:
+                continue
+            parts = r.split(",")
+            rtype = parts[0]
+            if rtype == "MATCH":
+                continue
+            key = f"{rtype},{parts[1] if len(parts) > 1 else ''}"
+            if key in seen:
+                continue
+            seen[key] = r
+            target = parts[2].strip() if len(parts) > 2 else ""
+            if rtype == "GEOIP":
+                geoips.append(r)
+            elif target == "DIRECT":
+                directs.append(r)
+            else:
+                specific.append(r)
+    return specific + directs + geoips + ["MATCH,VPN Trinh Hg"]
+
+KITTY_RULES = merge_subscription_rules(KITTY_RULES)
+LIANGXIN_RULES = merge_subscription_rules(LIANGXIN_RULES)
+DJJC_RULES = merge_subscription_rules(DJJC_RULES)
+COMBO_RULES = merge_subscription_rules(LIANGXIN_RULES, DJJC_RULES)
+COMBO_ALL_RULES = merge_subscription_rules(LIANGXIN_RULES, DJJC_RULES, KITTY_RULES)
+
+def _resolve_sub_mode(mode: str):
+    m_low = str(mode).lower()
+    if m_low in ("kitty", "single_kt"):
+        return KITTY_DNS_CLASH, KITTY_RULES, "kitty"
+    if m_low == "combo_liki":
+        return KITTY_DNS_CLASH, merge_subscription_rules(LIANGXIN_RULES, KITTY_RULES), "combo_kitty"
+    if m_low == "combo_kidj":
+        return KITTY_DNS_CLASH, merge_subscription_rules(DJJC_RULES, KITTY_RULES), "combo_kitty"
+    if m_low == "combo_all":
+        return COMBO_DNS_CLASH, COMBO_ALL_RULES, "combo"
+    if m_low in ("combo", "combo_lidj"):
+        return COMBO_DNS_CLASH, COMBO_RULES, "combo"
+    if m_low in ("djjc", "single_dj"):
+        return DJJC_DNS_CLASH, DJJC_RULES, "default"
+    return LIANGXIN_DNS_CLASH, LIANGXIN_RULES, "default"
 
 
 # ── Parse proxy URI ───────────────────────────────────────────────────────────
@@ -685,15 +720,20 @@ def parse_hysteria2(uri: str) -> dict | None:
     try:
         u = urllib.parse.urlparse(base)
         p = {k: v[0] for k, v in urllib.parse.parse_qs(u.query).items()}
+        insecure_raw = p.get("insecure") if "insecure" in p else p.get("allowInsecure")
+        skip_cert = (str(insecure_raw).lower() in ("1", "true")) if insecure_raw is not None else False
         proxy = {
             "type": "hysteria2",
             "server": u.hostname,
             "port": u.port or 443,
             "password": urllib.parse.unquote(u.username or ""),
             "udp": True,
-            "skip-cert-verify": True,
+            "skip-cert-verify": skip_cert,
         }
-        if p.get("sni"):           proxy["sni"]           = p["sni"]
+        if p.get("sni") or p.get("peer"): proxy["sni"] = p.get("sni") or p.get("peer")
+        fp_val = p.get("pinSHA256") or p.get("fingerprint") or p.get("fp")
+        if fp_val:                 proxy["fingerprint"] = fp_val
+        if p.get("alpn"):          proxy["alpn"] = [x.strip() for x in p["alpn"].split(",") if x.strip()]
         port_hop = p.get("ports") or p.get("mport")
         if port_hop:
             proxy["ports"] = port_hop
@@ -836,8 +876,12 @@ def proxy_to_singbox_outbound(p: dict) -> dict | None:
     elif p["type"] in ("hysteria2", "hy2"):
         out["type"]     = "hysteria2"
         out["password"] = p.get("password", "")
-        tls = {"enabled": True, "insecure": True} # Luôn bật insecure cho Hysteria2
-        if p.get("sni"): tls["server_name"] = p["sni"]
+        hop = p.get("mport") or p.get("ports")
+        if hop:
+            out["server_ports"] = [x.strip().replace("-", ":") for x in str(hop).split(",") if x.strip()]
+        tls = {"enabled": True, "insecure": bool(p.get("skip-cert-verify"))}
+        if p.get("sni"):  tls["server_name"] = p["sni"]
+        if p.get("alpn"): tls["alpn"] = p["alpn"] if isinstance(p["alpn"], list) else [x.strip() for x in str(p["alpn"]).split(",") if x.strip()]
         out["tls"] = tls
         if p.get("obfs"):
             out["obfs"] = {
@@ -862,21 +906,10 @@ def build_singbox_full(proxy_list: list, mode: str) -> str:
     Output JSON khớp sát với config gốc xuất từ Hiddify:
     selector → urltest → direct → block → dns-out → info nodes → real nodes
     + inbounds (mixed + tun) + dns block + route rules + experimental
-    Hỗ trợ 3 mode: 'liangxin', 'djjc', 'combo'
+    Hỗ trợ các mode single & combo
     """
     real_names   = [p["name"] for p in proxy_list]
-    m_low = str(mode).lower()
-    if m_low in ("kitty", "single_kt"):
-        active_rules = KITTY_RULES
-    elif m_low in ("combo_liki", "combo_kidj"):
-        base_r = LIANGXIN_RULES if "liki" in m_low else DJJC_RULES
-        active_rules = list(dict.fromkeys(KITTY_RULES + base_r))
-    elif m_low in ("combo", "combo_lidj"):
-        active_rules = COMBO_RULES
-    elif m_low == "djjc" or m_low == "single_dj":
-        active_rules = DJJC_RULES
-    else:
-        active_rules = LIANGXIN_RULES
+    _, active_rules, _ = _resolve_sub_mode(mode)
     proxy_group  = "节点选择"
 
     # ── Outbounds — thứ tự giống hệt file gốc ─────────────────────────────
@@ -1003,6 +1036,13 @@ def build_singbox_full(proxy_list: list, mode: str) -> str:
         if blk_s: r["domain_suffix"]  = blk_s
         if blk_k: r["domain_keyword"] = blk_k
         route_rules.append(r)
+    if prx_d or prx_s or prx_k:
+        r = {"outbound": proxy_group}
+        if prx_d: r["domain"]         = prx_d
+        if prx_s: r["domain_suffix"]  = prx_s
+        if prx_k: r["domain_keyword"] = prx_k
+        route_rules.append(r)
+    if prx_ip: route_rules.append({"ip_cidr": prx_ip, "outbound": proxy_group})
     if dir_d or dir_s or dir_k:
         r = {"outbound": "direct"}
         if dir_d: r["domain"]         = dir_d
@@ -1011,14 +1051,7 @@ def build_singbox_full(proxy_list: list, mode: str) -> str:
         route_rules.append(r)
     if dir_ip:  route_rules.append({"ip_cidr": dir_ip, "outbound": "direct"})
     if dir_geo: route_rules.append({"geoip":   dir_geo, "outbound": "direct"})
-    if prx_d or prx_s or prx_k:
-        r = {"outbound": proxy_group}
-        if prx_d: r["domain"]         = prx_d
-        if prx_s: r["domain_suffix"]  = prx_s
-        if prx_k: r["domain_keyword"] = prx_k
-        route_rules.append(r)
-    if prx_ip: route_rules.append({"ip_cidr": prx_ip, "outbound": proxy_group})
-    route_rules.append({"geoip": ["cn"], "outbound": "direct"})
+    else:       route_rules.append({"geoip": ["cn"], "outbound": "direct"})
 
     route_block = {
         "rules":                 route_rules,
@@ -1062,11 +1095,69 @@ def proxy_to_inline(p: dict) -> str:
     parts = []
     for k, v in p.items():
         if isinstance(v, bool):   parts.append(f"{k}: {str(v).lower()}")
+        elif isinstance(v, list):
+            arr = ", ".join(_q(x) for x in v)
+            parts.append(f"{k}: [{arr}]")
         elif isinstance(v, dict):
             inner = ", ".join(f"{ik}: {_q(iv) if isinstance(iv,str) else (str(iv).lower() if isinstance(iv,bool) else iv)}" for ik, iv in v.items())
             parts.append(f"{k}: {{{inner}}}")
         else: parts.append(f"{k}: {_q(v)}")
     return "    - { " + ", ".join(parts) + " }"
+
+def proxy_to_uri(p: dict) -> str:
+    if not isinstance(p, dict) or not p.get("type") or not p.get("server"):
+        return ""
+    ptype = str(p["type"]).lower()
+    port = int(p.get("port") or 443)
+    frag = urllib.parse.quote(str(p.get("name") or "VPN Node"), safe="")
+    if ptype in ("hysteria2", "hy2"):
+        qp = []
+        if p.get("sni"): qp.append(f"sni={urllib.parse.quote(str(p['sni']), safe='')}")
+        if p.get("skip-cert-verify") is True: qp.append("insecure=1")
+        elif p.get("skip-cert-verify") is False: qp.append("insecure=0")
+        if p.get("fingerprint"): qp.append(f"pinSHA256={urllib.parse.quote(str(p['fingerprint']), safe='')}")
+        if p.get("alpn"):
+            alpn_s = ",".join(str(x) for x in p["alpn"]) if isinstance(p["alpn"], list) else str(p["alpn"])
+            if alpn_s: qp.append(f"alpn={urllib.parse.quote(alpn_s, safe='')}")
+        if p.get("obfs"): qp.append(f"obfs={urllib.parse.quote(str(p['obfs']), safe='')}")
+        if p.get("obfs-password"): qp.append(f"obfs-password={urllib.parse.quote(str(p['obfs-password']), safe='')}")
+        hop = p.get("mport") or p.get("ports")
+        if hop:
+            qp.append(f"mport={urllib.parse.quote(str(hop), safe='')}")
+            qp.append(f"ports={urllib.parse.quote(str(hop), safe='')}")
+        qs = ("?" + "&".join(qp)) if qp else ""
+        return f"hysteria2://{urllib.parse.quote(str(p.get('password') or ''), safe='')}@{p['server']}:{port}{qs}#{frag}"
+    if ptype == "vless" and p.get("uuid"):
+        qp = [f"type={urllib.parse.quote(str(p.get('network') or 'tcp'), safe='')}"]
+        ro = p.get("reality-opts") if isinstance(p.get("reality-opts"), dict) else None
+        if ro and ro.get("public-key"):
+            qp.append("security=reality")
+            qp.append(f"pbk={urllib.parse.quote(str(ro['public-key']), safe='')}")
+            if ro.get("short-id"): qp.append(f"sid={urllib.parse.quote(str(ro['short-id']), safe='')}")
+        elif p.get("tls"):
+            qp.append("security=tls")
+            if p.get("skip-cert-verify"): qp.append("insecure=1")
+        else:
+            qp.append("security=none")
+        if p.get("servername"): qp.append(f"sni={urllib.parse.quote(str(p['servername']), safe='')}")
+        if p.get("client-fingerprint"): qp.append(f"fp={urllib.parse.quote(str(p['client-fingerprint']), safe='')}")
+        if p.get("flow"): qp.append(f"flow={urllib.parse.quote(str(p['flow']), safe='')}")
+        ws = p.get("ws-opts") if isinstance(p.get("ws-opts"), dict) else None
+        gr = p.get("grpc-opts") if isinstance(p.get("grpc-opts"), dict) else None
+        if p.get("network") == "ws" and ws:
+            qp.append(f"path={urllib.parse.quote(str(ws.get('path') or '/'), safe='')}")
+            h = (ws.get("headers") or {}).get("Host")
+            if h: qp.append(f"host={urllib.parse.quote(str(h), safe='')}")
+        elif p.get("network") == "grpc" and gr and gr.get("grpc-service-name"):
+            qp.append(f"serviceName={urllib.parse.quote(str(gr['grpc-service-name']), safe='')}")
+        return f"vless://{urllib.parse.quote(str(p['uuid']), safe='')}@{p['server']}:{port}?{'&'.join(qp)}#{frag}"
+    if ptype == "trojan" and p.get("password") is not None:
+        qp = []
+        if p.get("sni"): qp.append(f"sni={urllib.parse.quote(str(p['sni']), safe='')}")
+        if p.get("skip-cert-verify"): qp.append("allowInsecure=1")
+        qs = ("?" + "&".join(qp)) if qp else ""
+        return f"trojan://{urllib.parse.quote(str(p['password']), safe='')}@{p['server']}:{port}{qs}#{frag}"
+    return ""
 
 def group_to_inline(g: dict) -> str:
     name  = _q(g["name"])
@@ -1078,23 +1169,7 @@ def group_to_inline(g: dict) -> str:
     return line + " }"
 
 def build_yaml(proxy_list: list, mode: str) -> str:
-    m_low = str(mode).lower()
-    
-    if m_low in ("kitty", "single_kt"):
-        dns_clash = KITTY_DNS_CLASH
-        rules_list = KITTY_RULES
-    elif m_low in ("combo_liki", "combo_kidj"):
-        dns_clash = KITTY_DNS_CLASH
-        rules_list = list(dict.fromkeys(KITTY_RULES + (LIANGXIN_RULES if "liki" in m_low else DJJC_RULES)))
-    elif m_low in ("combo", "combo_lidj"):
-        dns_clash  = COMBO_DNS_CLASH
-        rules_list = COMBO_RULES
-    elif m_low == "djjc" or m_low == "single_dj":
-        dns_clash  = DJJC_DNS_CLASH
-        rules_list = DJJC_RULES
-    else:
-        dns_clash  = LIANGXIN_DNS_CLASH
-        rules_list = LIANGXIN_RULES
+    dns_clash, rules_list, kind = _resolve_sub_mode(mode)
 
     info_proxies = []
     for name in INFO_NODES:
@@ -1109,7 +1184,7 @@ def build_yaml(proxy_list: list, mode: str) -> str:
     all_names   = [p["name"] for p in all_proxies]
     real_names  = [p["name"] for p in proxy_list]
 
-    if m_low in ("kitty", "single_kt"):
+    if kind == "kitty":
         groups = [
             {"name": "VPN Trinh Hg", "type": "select",
              "proxies": ["Auto Select", "DIRECT"] + all_names},
@@ -1118,7 +1193,7 @@ def build_yaml(proxy_list: list, mode: str) -> str:
              "url": "http://cp.cloudflare.com/generate_204",
              "interval": 300, "tolerance": 50},
         ]
-    elif m_low in ("combo_liki", "combo_kidj"):
+    elif kind == "combo_kitty":
         groups = [
             {"name": "VPN Trinh Hg", "type": "select",
              "proxies": ["Auto Select", "Fallback", "DIRECT"] + all_names},
@@ -1302,13 +1377,16 @@ def process_b64(raw_b64: str, provider_name: str):
 
                 p_type = ob.get("type")
                 if p_type in ("hysteria2", "hy2"):
+                    tls = ob.get("tls", {})
+                    fp_val = tls.get("fingerprint") or (tls.get("utls") or {}).get("fingerprint")
                     px = {
                         "name": new_name, "type": "hysteria2", "server": ob.get("server"),
                         "port": int(ob.get("server_port") or 443), "password": ob.get("password"),
-                        "udp": True, "skip-cert-verify": True
+                        "udp": True, "skip-cert-verify": bool(tls.get("insecure"))
                     }
-                    tls = ob.get("tls", {})
                     if tls.get("server_name"): px["sni"] = tls["server_name"]
+                    if fp_val:                 px["fingerprint"] = str(fp_val)
+                    if tls.get("alpn"):        px["alpn"] = tls["alpn"] if isinstance(tls["alpn"], list) else [str(tls["alpn"])]
                     obfs = ob.get("obfs", {})
                     if obfs.get("type"): px["obfs"] = obfs["type"]
                     if obfs.get("password"): px["obfs-password"] = obfs["password"]
@@ -1319,13 +1397,9 @@ def process_b64(raw_b64: str, provider_name: str):
                         px["mport"] = str(mport)
                         px["ports"] = str(mport)
                     proxy_list.append(px)
-                    
-                    # Tạo URI Hysteria2 hoàn chỉnh đưa vào new_b64_lines (có cả mport và ports)
-                    sni_p = f"&sni={px['sni']}" if px.get("sni") else ""
-                    mport_p = f"&mport={px['mport']}&ports={px['ports']}" if px.get("mport") else ""
-                    obfs_p = f"&obfs={px['obfs']}&obfs-password={urllib.parse.quote(px['obfs-password'])}" if px.get("obfs") else ""
-                    uri = f"hysteria2://{px['password']}@{px['server']}:{px['port']}?insecure=1{sni_p}{mport_p}{obfs_p}#{urllib.parse.quote(new_name)}"
-                    new_b64_lines.append(uri)
+                    uri = proxy_to_uri(px)
+                    if uri:
+                        new_b64_lines.append(uri)
 
                 elif p_type == "vless":
                     tls_obj = ob.get("tls", {})
@@ -1491,7 +1565,14 @@ def process_b64(raw_b64: str, provider_name: str):
                     new_name = f"{new_name} ({seen_names[new_name]})"
                 px_copy = dict(px)
                 px_copy["name"] = new_name
+                if px_copy.get("ports") or px_copy.get("mport"):
+                    hop = str(px_copy.get("ports") or px_copy.get("mport"))
+                    px_copy["ports"] = hop
+                    px_copy["mport"] = hop
                 proxy_list.append(px_copy)
+                uri_line = proxy_to_uri(px_copy)
+                if uri_line:
+                    new_b64_lines.append(uri_line)
         except Exception as e:
             print(f"  [!] Lỗi parse YAML: {e}")
             return "", "", ""
@@ -1612,7 +1693,7 @@ def update_all():
     # 1. Nạp metadata provider từ LINK_POOL trước (để có sẵn cấu hình Admin đã xác nhận)
     for pl in pool_db:
         if not isinstance(pl, dict): continue
-        for u_key, p_key in (("url", "provider"), ("url2", "provider2")):
+        for u_key, p_key in (("url", "provider"), ("url2", "provider2"), ("url3", "provider3")):
             u_val = str(pl.get(u_key) or "").strip()
             p_val = str(pl.get(p_key) or "").strip()
             if not u_val or u_val == "Da_bi_khoa": continue
@@ -1622,10 +1703,10 @@ def update_all():
                 if p_val and p_val != "other":
                     seen_prov[tok] = p_val
 
-    # 2. Quét toàn bộ ALL_LINKS (cả chân 1 orig và chân 2 orig2 của Link Combo)
+    # 2. Quét toàn bộ ALL_LINKS (cả chân 1 orig, chân 2 orig2 và chân 3 orig3 của Link Combo)
     for lnk in links_db:
         if not isinstance(lnk, dict): continue
-        for u_key, p_key in (("orig", "provider"), ("orig2", "provider2")):
+        for u_key, p_key in (("orig", "provider"), ("orig2", "provider2"), ("orig3", "provider3")):
             u_val = str(lnk.get(u_key) or "").strip()
             p_val = str(lnk.get(p_key) or "").strip()
             if not u_val or u_val == "Da_bi_khoa": continue
