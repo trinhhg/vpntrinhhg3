@@ -83,6 +83,13 @@ document.addEventListener('click', (e) => {
 });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeImageLightbox();
+  if ((e.key === 'Enter' || e.key === ' ') && e.target?.closest) {
+    const actionEl = e.target.closest('#guideText [data-guide-action]');
+    if (actionEl) {
+      e.preventDefault();
+      actionEl.click();
+    }
+  }
 });
 
 if (typeof window !== 'undefined') {
@@ -131,7 +138,7 @@ function updateAppRoutes(customRoutes) {
   } catch (e) {}
 }
 let currentTotalVnd = 0, currentTotalCny = 0, currentDurationMode = 1;
-let isUpgradeMode = false, isRenewMode = false, upgradeConfirmed = false, baseOrderPriceVnd = 0, baseOrderPriceCny = 0;
+let isUpgradeMode = false, isRenewMode = false, upgradeConfirmed = false, baseOrderPriceVnd = 0, baseOrderPriceCny = 0, preserveStoreModeOnRoute = false;
 let lastScrollY = 0, pollT = null, tickT = null, skew = 0, lastSig = '';
 let pendingChildOrder = null, childPollT = null;
 let emailLookupState = 'idle', emailLookupSeq = 0, currentSubDecision = '', existingCustomerLinks = [], detectedRenewOf = '', lastCheckedEmail = '';
@@ -1285,31 +1292,17 @@ async function openGuideArticle(tabId, slug, skipPush) {
     `;
   }
 
-  // 2. Render Mục bài viết liên quan khác (hiển thị khi có bài liên kết và showRelated không bị tắt)
+  // 2. Render Mục bài viết liên quan khác (hiển thị dạng thẻ bài báo 1 cột kèm mô tả ngắn)
   let relBlockHtml = '';
   const hasRelated = Array.isArray(art.relatedArts) && art.relatedArts.length > 0;
   if (hasRelated && art.showRelated !== false) {
     const tabs = guideTabList();
-    const otherList = tabs.flatMap(t => guideArts(t.id)).filter(x => {
-      const curSlug = String(x.slug || toSlug(x.name)).toLowerCase();
+    const otherEntries = tabs.flatMap(t => guideArts(t.id).map(item => ({ item, tabName: t.name }))).filter(({ item }) => {
+      const curSlug = String(item.slug || toSlug(item.name)).toLowerCase();
       return art.relatedArts.some(r => String(toSlug(r)).toLowerCase() === curSlug);
     });
-    if (otherList.length) {
-      relBlockHtml = `
-        <div class="mt-8 pt-6 border-t border-slate-200 dark:border-white/10">
-          <h4 class="text-sm font-extrabold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
-            <i class="fas fa-newspaper text-indigo-500"></i>Bài viết khác có thể bạn quan tâm:
-          </h4>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            ${otherList.map(item => `
-              <div role="button" tabindex="0" data-guide-action="openart" data-guide-slug="${esc(item.slug || toSlug(item.name))}" class="cursor-pointer bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-white/10 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-xl p-3 flex items-center justify-between gap-2 transition hover:-translate-y-0.5 shadow-sm">
-                <span class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">${esc(item.name || item.slug)}</span>
-                <i class="fas fa-arrow-right text-xs text-indigo-500 shrink-0"></i>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
+    if (otherEntries.length) {
+      relBlockHtml = buildRelatedArticlesHtml(otherEntries);
     }
   }
 
@@ -1321,6 +1314,61 @@ async function openGuideArticle(tabId, slug, skipPush) {
       $('view-portal').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
+}
+
+function extractGuideExcerpt(art, maxLen = 155) {
+  if (!art || typeof art !== 'object') return '';
+  let text = '';
+  const rawHtml = typeof art.html === 'string' ? art.html.trim() : '';
+  if (rawHtml && typeof document !== 'undefined') {
+    const box = document.createElement('div');
+    box.innerHTML = typeof DOMPurify?.sanitize === 'function' ? DOMPurify.sanitize(rawHtml, GUIDE_PURIFY_CONFIG) : rawHtml;
+    const bodyTexts = Array.from(box.querySelectorAll('p, li, blockquote'))
+      .map(el => (el.textContent || '').replace(/\s+/g, ' ').trim())
+      .filter(Boolean);
+    text = bodyTexts[0] || (box.textContent || '').replace(/\s+/g, ' ').trim();
+  } else if (Array.isArray(art.blocks) && art.blocks.length) {
+    text = art.blocks
+      .map(b => String(b?.text || b?.html || '').replace(/<[^>]+>/g, ' '))
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+  if (!text) return '';
+  if (text.length <= maxLen) return text;
+  const sliced = text.slice(0, maxLen);
+  const lastSpace = sliced.lastIndexOf(' ');
+  return (lastSpace > Math.floor(maxLen * 0.6) ? sliced.slice(0, lastSpace) : sliced).trim() + '...';
+}
+
+function buildRelatedArticlesHtml(entries) {
+  if (!Array.isArray(entries) || !entries.length) return '';
+  return `
+    <div class="mt-8 pt-6 border-t border-slate-200 dark:border-white/10">
+      <h4 class="text-sm md:text-base font-extrabold text-slate-800 dark:text-slate-100 mb-3.5 flex items-center gap-2">
+        <i class="fas fa-newspaper text-indigo-500" aria-hidden="true"></i>
+        <span>Bài viết khác có thể bạn quan tâm:</span>
+      </h4>
+      <div class="flex flex-col gap-3">
+        ${entries.map(({ item, tabName }) => {
+          const slug = item.slug || toSlug(item.name);
+          const excerpt = extractGuideExcerpt(item, 155);
+          return `
+            <div role="button" tabindex="0" data-guide-action="openart" data-guide-slug="${esc(slug)}" class="group cursor-pointer bg-slate-50/90 dark:bg-[#111217] border border-slate-200 dark:border-white/10 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-2xl p-4 flex items-center justify-between gap-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md shadow-xs">
+              <div class="min-w-0 flex-1 space-y-1">
+                ${tabName ? `<div class="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">${esc(tabName)}</div>` : ''}
+                <div class="text-sm md:text-[15px] font-extrabold text-slate-800 dark:text-white leading-snug break-words group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">${esc(item.name || item.slug)}</div>
+                ${excerpt ? `<p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-2 font-medium m-0">${esc(excerpt)}</p>` : ''}
+              </div>
+              <span class="w-8 h-8 rounded-xl bg-white dark:bg-black/60 border border-slate-200 dark:border-white/10 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 flex items-center justify-center shrink-0 transition-colors">
+                <i class="fas fa-arrow-right text-xs" aria-hidden="true"></i>
+              </span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
 }
 
 function pubScrollToHeadingText(txt) {
@@ -1639,6 +1687,17 @@ function renderDynamicFooter(ft) {
   try {
     localStorage.setItem('vpn_footer_cache', JSON.stringify(ft));
   } catch (e) {}
+  const showFull = ft.showFullFooter !== false;
+  const footerEl = $('footerArea');
+  const fullColsWrap = $('footerFullColsWrap');
+  if (fullColsWrap) fullColsWrap.classList.toggle('hidden', !showFull);
+  if (footerEl) {
+    footerEl.classList.toggle('footer-compact', !showFull);
+    footerEl.classList.toggle('pt-8', showFull);
+    footerEl.classList.toggle('pb-4', showFull);
+    footerEl.classList.toggle('pt-3', !showFull);
+    footerEl.classList.toggle('pb-3', !showFull);
+  }
   const wrap = $('footerDynCols');
   if (wrap) {
     let colsHtml = footerColsOf(ft).filter(c => c && Array.isArray(c.links) && c.links.length).map(c => `<div class="space-y-2"><div class="font-extrabold text-sm text-slate-800 dark:text-white uppercase tracking-wider">${esc(c.title||'')}</div><ul class="space-y-1.5 text-slate-600 dark:text-slate-300 font-medium">${c.links.map(l=>{
@@ -2715,7 +2774,7 @@ function calculateTotal() {
     const calcStr = isCnyPay ? `¥${currentTotalCny}` : `${currentTotalVnd.toLocaleString('en-US')}VND`;
     const upNote = $('upgradePriceNote');
     if (upNote) upNote.innerHTML = `Đơn giá nâng cấp: <b>${noteStr} / Tháng</b>`;
-    if (pCalc) pCalc.innerText = `Thanh toán chênh lệch (${currentMultiplier} tháng): ${calcStr}`;
+    if (pCalc) pCalc.textContent = `Thanh toán chênh lệch (${currentMultiplier} tháng): ${calcStr}`;
   } else {
     currentTotalVnd = currentPackage.vnd * currentMultiplier;
     currentTotalCny = parseFloat((currentPackage.cny * currentMultiplier).toFixed(2));
@@ -4630,10 +4689,15 @@ function switchPortalTab(tabId, fromUpgrade = false, skipPush = false) {
     $('p-store').classList.add('active');
     highlightNavBtns('p-store');
     if (!skipPush) {
-      if (targetOid) {
-        router.navigate(`/portal/order/${encodeURIComponent(normOrderIdClean(targetOid))}/packages`);
-      } else {
-        router.navigate(appRoutes.packages);
+      preserveStoreModeOnRoute = !!(fromUpgrade && (isUpgradeMode || isRenewMode));
+      try {
+        if (targetOid) {
+          router.navigate(`/portal/order/${encodeURIComponent(normOrderIdClean(targetOid))}/packages`);
+        } else {
+          router.navigate(appRoutes.packages);
+        }
+      } finally {
+        preserveStoreModeOnRoute = false;
       }
     }
     renderPackages('all');
@@ -4833,7 +4897,10 @@ window.addEventListener('popstate', () => {
 });
 
 // KHAI BÁO CÁC ROUTE ĐỘNG TRÊN NAVIGO (ĐỊNH DANH ĐƠN BẰNG /portal/order/:orderId, BỎ SESSION 24H)
+let appRoutesBound = false;
 function setupAppRoutes() {
+  if (appRoutesBound) return;
+  appRoutesBound = true;
   router.on('/', () => {
     const isPop = consumePopstateNav();
     showLandingPage();
@@ -4853,8 +4920,10 @@ function setupAppRoutes() {
     if (!cleanId) return router.navigate('/');
     const routeKey = `/portal/order/${cleanId}/packages`;
     if (oCache && normOrderIdClean(oCache.id) === cleanId) {
+      const keepMode = preserveStoreModeOnRoute;
+      preserveStoreModeOnRoute = false;
       enterPortal(oCache, true);
-      switchPortalTab('p-store', false, true);
+      switchPortalTab('p-store', keepMode, true);
       applyRouteScroll(routeKey, isPop);
       return;
     }
@@ -5216,7 +5285,10 @@ const EXPOSED_FNS = {
   getEffectivePkg: typeof getEffectivePkg !== 'undefined' ? getEffectivePkg : undefined,
   calculateTotal: typeof calculateTotal !== 'undefined' ? calculateTotal : undefined,
   handleBrandLogoClick: typeof handleBrandLogoClick !== 'undefined' ? handleBrandLogoClick : undefined,
-  loadConfig: typeof loadConfig !== 'undefined' ? loadConfig : undefined
+  loadConfig: typeof loadConfig !== 'undefined' ? loadConfig : undefined,
+  renderDynamicFooter: typeof renderDynamicFooter !== 'undefined' ? renderDynamicFooter : undefined,
+  extractGuideExcerpt: typeof extractGuideExcerpt !== 'undefined' ? extractGuideExcerpt : undefined,
+  buildRelatedArticlesHtml: typeof buildRelatedArticlesHtml !== 'undefined' ? buildRelatedArticlesHtml : undefined
 };
 
 if (typeof window !== 'undefined') {
@@ -5368,5 +5440,14 @@ export {
   applyCouponCode,
   getEffectivePkg,
   calculateTotal,
+  renderDynamicFooter,
+  extractGuideExcerpt,
+  buildRelatedArticlesHtml,
+  startUpgrade,
+  startRenew,
+  openPortalByOrderId,
+  setupAppRoutes,
+  loadConfig,
+  switchPortalTab,
   EXPOSED_FNS
 };

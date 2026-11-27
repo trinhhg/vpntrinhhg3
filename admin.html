@@ -675,7 +675,7 @@
               </div>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-              <!-- Cột trái: QR Expire Seconds & Blur -->
+              <!-- Cột trái hàng 1: QR Expire Seconds & Email Verify TTL -->
               <div class="space-y-4">
                 <div class="bg-white border border-indigo-200 rounded-2xl shadow-sm p-4 md:p-5 space-y-2.5">
                   <div class="font-bold text-sm text-indigo-900 flex items-center justify-between"><span><i class="fas fa-qrcode text-indigo-600 mr-1.5"></i>Thời gian tự hủy mã QR</span> <span class="text-[10px] font-black px-2 py-0.5 rounded bg-indigo-100 text-indigo-700">Đơn vị: Giây</span></div>
@@ -694,6 +694,20 @@
                     <button type="button" onclick="saveEmailVerifyTtl()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md shrink-0 transition active:scale-95"> <i class="fas fa-save mr-1"></i>LƯU THỜI GIAN XÁC MINH </button>
                   </div>
                 </div>
+              </div>
+              <!-- Cột phải hàng 1: Định tuyến gốc -->
+              <div class="space-y-4">
+                <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-5 space-y-2">
+                  <div class="font-bold text-sm text-slate-800"><i class="fas fa-route text-indigo-500 mr-1.5"></i>Định tuyến Gốc (Gán ô Link 1/2/3)</div>
+                  <p class="text-[11px] text-slate-500">Nhập từ khóa domain của từng web (VD: doicucden, onepiece, lucastanora) để Worker gán link sub tương ứng.</p>
+                  <div id="routeRows" class="space-y-2"></div>
+                  <button onclick="saveRouting()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs shadow-md mt-1">LƯU ĐỊNH TUYẾN GỐC</button>
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+              <!-- Cột trái hàng 2: Cấu hình Làm mờ / Khóa / Kiểm tra -->
+              <div>
                 <div class="bg-white border border-purple-200 rounded-2xl shadow-sm p-4 md:p-5 space-y-2">
                   <div class="font-bold text-sm text-purple-800 flex items-center justify-between"><span><i class="fas fa-eye-slash text-purple-500 mr-1.5"></i>Cấu hình Làm mờ / Khóa / Kiểm tra (Web này)</span><span class="text-[10px] font-black px-2 py-0.5 rounded bg-purple-100 text-purple-700">Chỉ web này</span></div>
                   <p class="text-[11px] text-slate-500">Nhập đúng từ khóa domain để mở quyền cấu hình 3 công tắc độc lập cho từng ô Link Sub. Cài đặt chỉ áp dụng trên chính web này. Lưu ý: Khi <b>Kiểm tra</b> bật, hệ thống luôn mask dấu chấm (••••••••) trước khi xác minh email kể cả khi tắt Bật mờ.</p>
@@ -766,13 +780,19 @@
                   </details>
                 </div>
               </div>
-              <!-- Cột phải: Định tuyến gốc -->
-              <div class="space-y-4">
-                <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-5 space-y-2">
-                  <div class="font-bold text-sm text-slate-800"><i class="fas fa-route text-indigo-500 mr-1.5"></i>Định tuyến Gốc (Gán ô Link 1/2/3)</div>
-                  <p class="text-[11px] text-slate-500">Nhập từ khóa domain của từng web (VD: doicucden, onepiece, lucastanora) để Worker gán link sub tương ứng.</p>
-                  <div id="routeRows" class="space-y-2"></div>
-                  <button onclick="saveRouting()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs shadow-md mt-1">LƯU ĐỊNH TUYẾN GỐC</button>
+              <!-- Cột phải hàng 2: Bật / tắt hiển thị Footer đầy đủ ở trang Index -->
+              <div>
+                <div class="bg-white border border-indigo-200 rounded-2xl shadow-sm p-4 md:p-5 space-y-3">
+                  <div class="font-bold text-sm text-slate-800 flex items-center justify-between gap-2">
+                    <span><i class="fas fa-shoe-prints text-indigo-500 mr-1.5"></i>Hiển thị Footer ở Trang chủ (Index)</span>
+                    <span id="footerDisplayStatusBadge" class="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">BẬT</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 leading-relaxed">Điều chỉnh chế độ hiển thị Footer tại trang <code>index</code>: khi <b>BẬT</b> hiển thị đầy đủ các cột thông tin; khi <b>TẮT</b> thu gọn còn 1 hàng 4 nút hỗ trợ (Zalo Support, Mess Support, WeChat, Telegram) và dòng bản quyền.</p>
+                  <label for="toggleShowFullFooter" class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer select-none">
+                    <span class="text-xs font-bold text-slate-700">Hiển thị Footer đầy đủ</span>
+                    <div class="toggle-wrap"><input type="checkbox" id="toggleShowFullFooter" checked onchange="updateFooterDisplayBadge(this.checked)"><span class="toggle-slider"></span></div>
+                  </label>
+                  <button type="button" onclick="saveFooterDisplayToggle()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition active:scale-95 flex items-center justify-center gap-1.5"><i class="fas fa-save"></i><span>Lưu</span></button>
                 </div>
               </div>
             </div>
