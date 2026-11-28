@@ -381,6 +381,51 @@ function getSupabase(env, isTest = false) {
       }
 
       return true;
+    },
+    async overwriteProdOrders(rows) {
+      if (isTest || table !== "ALL_ORDERS") {
+        throw new Error("Overwrite JSON chỉ được phép thực thi trên Kho Thật (ALL_ORDERS)");
+      }
+      if (!Array.isArray(rows) || rows.length === 0) {
+        throw new Error("Danh sách đơn hàng ghi đè rỗng");
+      }
+      const cleaned = rows.map((row) => cleanOrderForSupabase(row));
+      const clearRes = await fetch(`${url}/ALL_ORDERS?id=not.is.null`, { method: "DELETE", headers });
+      if (!clearRes.ok) {
+        throw new Error(`Overwrite PROD: không xóa được dữ liệu cũ ALL_ORDERS: ${
+          await readError(clearRes, "Xóa kho thật thất bại")
+        }`);
+      }
+      for (let i = 0; i < cleaned.length; i += 100) {
+        const batch = cleaned.slice(i, i + 100);
+        const writeRes = await fetch(`${url}/ALL_ORDERS`, {
+          method: "POST",
+          headers: {
+            ...headers,
+            "Content-Type": "application/json",
+            Prefer: "resolution=merge-duplicates,return=minimal"
+          },
+          body: JSON.stringify(batch)
+        });
+        if (!writeRes.ok) {
+          throw new Error(`Overwrite PROD: ghi nhóm ${i + 1}–${i + batch.length} thất bại: ${
+            await readError(writeRes, "Ghi kho thật thất bại")
+          }`);
+        }
+      }
+      const verifyRes = await fetch(`${url}/ALL_ORDERS?select=id`, { headers: { ...headers, Prefer: "count=exact" } });
+      if (!verifyRes.ok) {
+        throw new Error(`Overwrite PROD: không xác minh được ALL_ORDERS: ${
+          await readError(verifyRes, "Xác minh kho thật thất bại")
+        }`);
+      }
+      const contentRange = verifyRes.headers.get("content-range") || "";
+      const totalPart = contentRange.split("/")[1];
+      const actualCount = totalPart && totalPart !== "*" ? Number(totalPart) : null;
+      if (actualCount !== null && actualCount < cleaned.length) {
+        throw new Error(`Ghi đè chưa đủ dữ liệu: JSON=${cleaned.length}, ALL_ORDERS=${actualCount}`);
+      }
+      return cleaned.length;
     }
   };
 }
@@ -3744,6 +3789,47 @@ export default {
         if (!sb) return J({ ok: false, error: "Chưa cấu hình Supabase" }, 500);
         await sb.clearTest();
         return J({ ok: true });
+      }
+      if (p === "/api/admin/prod/overwrite" && m === "POST") {
+        const bad = need(admin);
+        if (bad) return bad;
+        const b = await body();
+        const rawOrders = Array.isArray(b?.orders) ? b.orders : null;
+        if (!rawOrders || !rawOrders.length) {
+          return J({ ok: false, error: "File JSON phải là mảng có ít nhất 1 đơn hàng" }, 400);
+        }
+        const seenIds = new Set();
+        const cleaned = [];
+        for (let i = 0; i < rawOrders.length; i++) {
+          const item = rawOrders[i];
+          if (!item || typeof item !== "object" || Array.isArray(item)) {
+            return J({ ok: false, error: `Dòng #${i + 1} không phải đối tượng đơn hàng hợp lệ` }, 400);
+          }
+          const oid = normId(item.id);
+          if (!oid) {
+            return J({ ok: false, error: `Dòng #${i + 1} bị thiếu mã đơn (id)` }, 400);
+          }
+          if (seenIds.has(oid)) {
+            return J({ ok: false, error: `Phát hiện mã đơn trùng lặp trong JSON: ${oid}` }, 400);
+          }
+          seenIds.add(oid);
+          cleaned.push(cleanOrderForSupabase({ ...item, id: oid }));
+        }
+        const sbProd = getSupabase(env, false);
+        if (!sbProd) return J({ ok: false, error: "Chưa cấu hình Supabase" }, 500);
+        let backup = { ok: false };
+        try {
+          backup = await runTelegramBackup(
+            env,
+            "Backup trước khi Ghi đè ALL_ORDERS từ JSON",
+            `Chuẩn bị ghi đè ${cleaned.length} đơn hàng từ JSON Admin tải lên Kho Thật.`,
+            false
+          );
+        } catch (_) {}
+        const count = await sbProd.overwriteProdOrders(cleaned);
+        log("warn", "admin", "Ghi đè toàn bộ Kho Thật (ALL_ORDERS) từ file JSON", `${count} đơn (backup TG: ${backup?.ok ? "OK" : "bỏ qua/lỗi"})`);
+        await flushLog(KV, log);
+        return J({ ok: true, count, backupOk: !!backup?.ok });
       }
 
       // ================================================================ ADMIN LOGIN

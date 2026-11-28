@@ -495,3 +495,237 @@ describe('Single-column pkg normalization & 1-col Supabase compatibility', () =>
     expect(workerSrc).not.toContain('pkg: "Gói 1 tháng - 60,000VND"');
   });
 });
+
+describe('Dynamic Package Dropdown Sync & Kho Thật JSON Import/Overwrite', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+    vi.restoreAllMocks();
+  });
+
+  it('Dropbox #mOPkg đồng bộ tên/giá/dung lượng & gói mới từ Tab Bán hàng (adminPkgsList), vẫn giữ Giá cũ o1/o2/o3', async () => {
+    setupDomFromFile('admin.html');
+    const mod = await import('../src/admin.js');
+    // Reset to defaults then customize t2 + add custom 3-month pkg
+    window.adminPkgsList = [
+      ...window.getDefaultAdminPkgs().map(p => (p.id === 't2'
+        ? { ...p, name: 'Gói 1 tháng Pro', vnd: 75000, cny: 19.5, data: '600GB' }
+        : p)),
+      { id: 'pkg_vip3m', name: 'Gói Quý 3T', time: 3, vnd: 180000, cny: 45, data: '800GB', dev: '3 Thiết bị', category: ['cycle'], features: [] },
+    ];
+
+    const entries = mod.getOrdPkgEntries();
+    const t2 = entries.find(e => e[0] === 't2');
+    const custom3m = entries.find(e => e[0] === 'pkg_vip3m');
+    const o1 = entries.find(e => e[0] === 'o1');
+    expect(t2[1]).toBe('Gói 1 tháng Pro - 75,000VND / ¥19.5 (600GB)');
+    expect(custom3m[1]).toBe('Gói Quý 3T - 180,000VND / ¥45 (800GB)');
+    expect(custom3m[2]).toBe(90);
+    expect(o1[1]).toBe('[Giá cũ] Gói 1 tháng - 50,000VND / ¥12.5 (100GB)');
+    expect(entries.some(e => e[0] === 'custom')).toBe(false);
+
+    mod.openOrdModal();
+    const sel = document.getElementById('mOPkg');
+    const optTexts = [...sel.options].map(o => o.textContent);
+    expect(optTexts).toContain('Gói 1 tháng Pro - 75,000VND / ¥19.5 (600GB)');
+    expect(optTexts).toContain('Gói Quý 3T - 180,000VND / ¥45 (800GB)');
+    expect(optTexts).toContain('[Giá cũ] Gói 1 tháng - 50,000VND / ¥12.5 (100GB)');
+
+    sel.value = 'pkg_vip3m';
+    window.onPkgChange();
+    expect(document.getElementById('mODays').value).toBe('90');
+    expect(document.getElementById('mOAmount').value).toBe('180000');
+
+    document.getElementById('mOMethod').value = 'Alipay';
+    window.onMethodChange();
+    expect(document.getElementById('mOAmount').value).toBe('45');
+  });
+
+  it('evaluateOrdersImportJson & handleProdJsonSelect đánh giá chuẩn schema 1 cột, legacy 3 cột và file lỗi', async () => {
+    setupDomFromFile('admin.html');
+    const mod = await import('../src/admin.js');
+    window.adminPkgsList = window.getDefaultAdminPkgs();
+
+    const validOrder36 = {
+      id: 'DH2G58BSWNML',
+      email: 'hasagi868@gmail.com',
+      nickname: null,
+      zalo: null,
+      method: 'Ngân hàng VN',
+      pkgId: 't2',
+      qty: 3,
+      pkg: 'Gói 1 tháng - 70,000VND / ¥18 (500GB)',
+      totalVnd: 210000,
+      totalCny: null,
+      days: 90,
+      expDate: '19/01/2027',
+      status: 'success',
+      createdTs: 1792548480000,
+      date: '21/10/2026 09:08',
+      dateCreated: '21/10/2026 09:08',
+      expFinal: true,
+      fulfilledAt: null,
+      paidAt: null,
+      reason: null,
+      needSupport: false,
+      info1: null,
+      info2: null,
+      info3: 'https://vpntrinhhg3.pages.dev/v1/VPNTrinhHg?OwO=abc',
+      lockInfo: '{}',
+      orderType: 'new',
+      sourceWeb: null,
+      workerUrl: null,
+      isUpgrade: false,
+      upgradeStatus: null,
+      upgradedAt: 0,
+      pendingUpgrade: null,
+      lastMailTrack: null,
+      created_at: null,
+      updated_at: null,
+      bonusDays: 0,
+    };
+
+    const exactRep = mod.evaluateOrdersImportJson([validOrder36]);
+    expect(exactRep.okToOverwrite).toBe(true);
+    expect(exactRep.schemaType).toBe('exact_1col');
+    expect(exactRep.matchedSchemaCols.length).toBe(36);
+    expect(exactRep.legacyColsFound).toEqual([]);
+    expect(exactRep.matchedPkgCount).toBe(1);
+
+    const legacyRep = mod.evaluateOrdersImportJson([{
+      ...validOrder36,
+      id: 'DHLEGACY9999',
+      pkgName: 'Gói 1 tháng',
+      pkgData: '500GB',
+    }]);
+    expect(legacyRep.okToOverwrite).toBe(true);
+    expect(legacyRep.schemaType).toBe('legacy_3col');
+    expect(legacyRep.legacyColsFound).toEqual(['pkgName', 'pkgData']);
+
+    const dupRep = mod.evaluateOrdersImportJson([validOrder36, { ...validOrder36 }]);
+    expect(dupRep.okToOverwrite).toBe(false);
+    expect(dupRep.schemaType).toBe('invalid');
+    expect(dupRep.duplicateIds).toContain('DH2G58BSWNML');
+
+    // UI upload simulation enables #btnProdOverwriteJson for valid JSON, disables for invalid
+    await window.handleProdJsonSelect({
+      files: [{ name: 'Backup_Orders_2026_11_28.json', async text() { return JSON.stringify([validOrder36]); } }],
+    });
+    expect(document.getElementById('prodJsonReport').classList.contains('hidden')).toBe(false);
+    expect(document.getElementById('prodJsonReport').textContent).toContain('Chuẩn Kho Thật 1 cột pkg');
+    expect(document.getElementById('btnProdOverwriteJson').disabled).toBe(false);
+
+    await window.handleProdJsonSelect({
+      files: [{ name: 'broken.json', async text() { return JSON.stringify([{ email: 'x@y.com' }]); } }],
+    });
+    expect(document.getElementById('btnProdOverwriteJson').disabled).toBe(true);
+    expect(document.getElementById('prodJsonReport').textContent).toContain('Không đạt chuẩn');
+  });
+
+  it('Worker POST /api/admin/prod/overwrite bảo vệ auth, backup trước, chỉ ghi đè ALL_ORDERS và giữ nguyên ALL_LINKS', async () => {
+    const workerMod = await import('../worker.js');
+    const workerDefault = workerMod.default;
+    const prodRows = [
+      { id: 'DHOLDPROD001', email: 'old@test.com', status: 'success', pkgId: 't1', pkg: 'Gói 1 tháng - 60,000VND / ¥15.5 (100GB)' },
+    ];
+    const testRows = [
+      { id: 'DHTESTKEEP01', email: 'test@test.com', status: 'pending', pkgId: 't1', pkg: 'Gói 1 tháng - 60,000VND / ¥15.5 (100GB)' },
+    ];
+    const kv = makeMockKV({
+      ALL_LINKS: [{ masked: 'https://vpntrinhhg3.pages.dev/v1/VPNTrinhHg?OwO=keep', orderId: 'DHKEEP' }],
+      LINK_POOL: [],
+      ALL_CMS: {},
+    });
+    const env = {
+      VPN_KV3: kv,
+      ADMIN_PASSWORD: 'pw',
+      SUPABASE_URL: 'https://supabase.test',
+      SUPABASE_KEY: 'sk',
+      WEB_INDEX: '3',
+    };
+    const supabaseCalls = [];
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (u, opts = {}) => {
+      const urlStr = String(u);
+      const m = (opts.method || 'GET').toUpperCase();
+      supabaseCalls.push({ urlStr, m });
+      if (urlStr.includes('/ALL_ORDERS_TEST')) {
+        throw new Error('Must NOT touch ALL_ORDERS_TEST during prod overwrite');
+      }
+      if (urlStr.includes('/ALL_ORDERS')) {
+        if (m === 'DELETE') {
+          prodRows.length = 0;
+          return new Response(null, { status: 204 });
+        }
+        if (m === 'POST') {
+          const inserted = JSON.parse(opts.body || '[]');
+          prodRows.push(...inserted);
+          return new Response('', { status: 201 });
+        }
+        return new Response(JSON.stringify(prodRows), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json', 'content-range': `0-0/${prodRows.length}` },
+        });
+      }
+      return new Response('{}', { status: 200 });
+    });
+
+    const unauth = await workerDefault.fetch(new Request('https://worker.test/api/admin/prod/overwrite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orders: [{ id: 'DHNEW0000001' }] }),
+    }), env, { waitUntil: () => {} });
+    expect(unauth.status).toBe(401);
+
+    const loginRes = await workerDefault.fetch(new Request('https://worker.test/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: 'pw' }),
+    }), env, { waitUntil: () => {} });
+    const { token } = await loginRes.json();
+
+    const badDup = await workerDefault.fetch(new Request('https://worker.test/api/admin/prod/overwrite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ orders: [{ id: 'DHNEW0000001' }, { id: 'DHNEW0000001' }] }),
+    }), env, { waitUntil: () => {} });
+    expect(badDup.status).toBe(400);
+    expect(prodRows.length).toBe(1); // Chưa bị xóa khi payload lỗi!
+
+    const okRes = await workerDefault.fetch(new Request('https://worker.test/api/admin/prod/overwrite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        orders: [
+          {
+            id: 'DHNEW0000001',
+            email: 'new1@test.com',
+            pkgId: 't2',
+            pkgName: 'Gói 1 tháng',
+            pkgData: '500GB',
+            pkg: 'Gói 1 tháng (500GB · 70,000VND)',
+            totalVnd: 70000,
+            status: 'success',
+          },
+          {
+            id: 'DHNEW0000002',
+            email: 'new2@test.com',
+            pkgId: 'c2',
+            pkg: 'Gói Cao Cấp - 200,000VND / ¥50 (3000GB)',
+            totalVnd: 200000,
+            status: 'pending',
+          },
+        ],
+      }),
+    }), env, { waitUntil: () => {} });
+    expect(okRes.status).toBe(200);
+    const okJson = await okRes.json();
+    expect(okJson.ok).toBe(true);
+    expect(okJson.count).toBe(2);
+    expect(prodRows.map(r => r.id)).toEqual(['DHNEW0000001', 'DHNEW0000002']);
+    expect(prodRows[0].pkg).toBe('Gói 1 tháng - 70,000VND / ¥18 (500GB)');
+    expect(prodRows[0].pkgName).toBeUndefined();
+    expect(prodRows[0].pkgData).toBeUndefined();
+    expect(testRows.length).toBe(1);
+    const savedLinks = JSON.parse(await kv.get('ALL_LINKS'));
+    expect(savedLinks).toHaveLength(1);
+  });
+});

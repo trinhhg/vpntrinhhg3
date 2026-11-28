@@ -900,8 +900,28 @@
                 </div>
                 <p class="text-[11px] text-emerald-800 leading-snug">Kho lưu trữ toàn bộ đơn hàng thật của khách hàng. Kết nối trực tiếp qua Supabase PostgreSQL.</p>
               </div>
-              <div class="space-y-2 pt-1">
+              <div class="space-y-2.5 pt-1">
                 <button type="button" id="btnPingProd" onclick="testPingProd()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95"> <i class="fas fa-plug"></i>Kiểm tra kết nối Kho Thật </button>
+                <div class="pt-2 border-t border-emerald-200/80 space-y-2">
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <span class="text-[11px] font-extrabold text-emerald-900"><i class="fas fa-file-import mr-1 text-emerald-700"></i>Import JSON &amp; Ghi đè Kho Thật</span>
+                    <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 border border-emerald-300 px-1.5 py-0.5 rounded">Chuẩn 1 cột pkg</span>
+                  </div>
+                  <label for="prodJsonFile" class="w-full bg-white hover:bg-emerald-50 text-emerald-800 border-2 border-dashed border-emerald-400 font-bold py-2 px-3 rounded-xl text-xs cursor-pointer flex items-center justify-center gap-1.5 transition">
+                    <i class="fas fa-upload"></i>
+                    <span id="prodJsonFileLabel" class="truncate">Chọn file Backup_Orders_*.json để kiểm tra...</span>
+                  </label>
+                  <input type="file" id="prodJsonFile" accept=".json,application/json" onchange="handleProdJsonSelect(this)" class="hidden">
+                  <div id="prodJsonReport" class="hidden bg-white border border-emerald-200 rounded-xl p-2.5 text-[11px] space-y-1.5 text-slate-700 shadow-xs"></div>
+                  <div class="flex items-center gap-2">
+                    <button type="button" id="btnProdOverwriteJson" onclick="overwriteProdFromJson()" disabled class="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-2.5 px-3 rounded-xl text-xs shadow-sm flex items-center justify-center gap-1.5 transition active:scale-95">
+                      <i class="fas fa-triangle-exclamation"></i>Ghi đè toàn bộ lên Kho Thật
+                    </button>
+                    <button type="button" id="btnProdClearJson" onclick="clearProdJsonSelection()" class="hidden bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 font-bold py-2.5 px-2.5 rounded-xl text-xs transition" title="Hủy file đã chọn">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
                 <div id="prodActionLog" class="text-[11px] text-emerald-900 font-medium italic min-h-[18px] break-words"></div>
               </div>
             </div>

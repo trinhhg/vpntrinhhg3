@@ -322,20 +322,64 @@ async function clearSim() {
 
 // ===================== GÓI / GIÁ =====================
 const OLD_BY_DATA = { "100GB": "o1", "500GB": "o2", "1000GB": "o3" };
+function normalizeModalPkg(p) {
+  if (!p || typeof p !== "object") return null;
+  const rawM = p.m !== undefined ? Number(p.m) : (p.time === "lifetime" ? 0 : (Number(p.time) || 1));
+  const m = isNaN(rawM) ? 1 : rawM;
+  const days = m === 0 ? 0 : (m === 12 ? 365 : m * 30);
+  return {
+    id: p.id || "",
+    n: String(p.n ?? p.name ?? p.id ?? "").trim(),
+    d: String(p.d ?? p.data ?? "").trim(),
+    vnd: Number(p.vnd) || 0,
+    cny: Number(p.cny) || 0,
+    m,
+    days,
+    old: !!p.old
+  };
+}
+function fmtModalPkgLabel(p) {
+  const np = normalizeModalPkg(p);
+  if (!np) return "";
+  const prefix = np.old ? "[Giá cũ] " : "";
+  const cnyPart = np.cny > 0 ? ` / ¥${trimNum(np.cny)}` : "";
+  const dataPart = np.d ? ` (${np.d})` : "";
+  return `${prefix}${np.n} - ${fmtVnd(np.vnd)}VND${cnyPart}${dataPart}`;
+}
+function getOrdPkgEntries() {
+  const src = (Array.isArray(adminPkgsList) && adminPkgsList.length)
+    ? adminPkgsList
+    : (typeof getDefaultAdminPkgs === "function" ? getDefaultAdminPkgs() : []);
+  const entries = [];
+  const seen = new Set();
+  src.forEach(dp => {
+    if (!dp || !dp.id || dp.id === "custom" || dp.isCustom || seen.has(dp.id)) return;
+    seen.add(dp.id);
+    const np = normalizeModalPkg(dp);
+    if (np) entries.push([np.id, fmtModalPkgLabel(np), np.days, np]);
+  });
+  Object.entries(PKG_DB).forEach(([k, v]) => {
+    if (!v || seen.has(k) || !v.old) return;
+    seen.add(k);
+    const np = normalizeModalPkg({ id: k, ...v });
+    if (np) entries.push([k, fmtModalPkgLabel(np), np.days, np]);
+  });
+  return entries;
+}
+function findModalPkgById(pid) {
+  if (!pid || pid === "-1") return null;
+  if (PKG_DB[pid]?.old) return normalizeModalPkg({ id: pid, ...PKG_DB[pid] });
+  if (Array.isArray(adminPkgsList) && adminPkgsList.length) {
+    const dp = adminPkgsList.find(x => x && x.id === pid && x.id !== "custom" && !x.isCustom);
+    if (dp) return normalizeModalPkg(dp);
+  }
+  return PKG_DB[pid] ? normalizeModalPkg({ id: pid, ...PKG_DB[pid] }) : null;
+}
 function pkgOf(o) {
   if (!o) return null;
   if (o.pkgId) {
-    if (PKG_DB[o.pkgId]) return PKG_DB[o.pkgId];
-    if (Array.isArray(adminPkgsList)) {
-      const dp = adminPkgsList.find(x => x.id === o.pkgId);
-      if (dp) return {
-        n: dp.name || dp.n,
-        d: dp.data || dp.d,
-        vnd: Number(dp.vnd) || 0,
-        cny: Number(dp.cny) || 0,
-        m: dp.time === "lifetime" ? 0 : Number(dp.time) || 1
-      };
-    }
+    const byId = findModalPkgById(o.pkgId);
+    if (byId) return byId;
   }
   const total = Number(o.totalVnd) || 0;
   let data = String(o.pkgData || "").toUpperCase();
@@ -345,8 +389,15 @@ function pkgOf(o) {
     if (gm) data = gm[1].replace(/\s+/g, "");
   }
   const isPkgOld = /\[Giá cũ\]|\(giá cũ\)/i.test(pkgTxt);
+  const allEntries = getOrdPkgEntries().map(e => e[3]);
   if (pkgTxt) {
-    const matched = Object.values(PKG_DB).find(p =>
+    const exactLblMatch = getOrdPkgEntries().find(e => e[1] === pkgTxt);
+    if (exactLblMatch) return exactLblMatch[3];
+    const matched = allEntries.find(p =>
+      (!!p.old === isPkgOld) &&
+      (!data || p.d.toUpperCase() === data.toUpperCase()) &&
+      pkgTxt.toLowerCase().includes(String(p.n || "").toLowerCase())
+    ) || Object.entries(PKG_DB).map(([id, v]) => ({ id, ...v })).find(p =>
       (!!p.old === isPkgOld) &&
       (!data || p.d.toUpperCase() === data.toUpperCase()) &&
       pkgTxt.toLowerCase().includes(String(p.n || "").toLowerCase())
@@ -354,24 +405,15 @@ function pkgOf(o) {
     if (matched) return matched;
   }
   if (total > 0 && OLD_BY_DATA[data.toUpperCase()]) {
-    const op = PKG_DB[OLD_BY_DATA[data.toUpperCase()]];
-    const np = Object.values(PKG_DB).find(p => !p.old && p.d.toUpperCase() === data.toUpperCase());
+    const op = normalizeModalPkg({ id: OLD_BY_DATA[data.toUpperCase()], ...PKG_DB[OLD_BY_DATA[data.toUpperCase()]] });
+    const np = allEntries.find(p => !p.old && p.d.toUpperCase() === data.toUpperCase());
     if (isPkgOld && op) return op;
     if (op && total % op.vnd === 0 && total / op.vnd <= 36) return op;
     if (np && total % np.vnd === 0 && total / np.vnd <= 36) return np;
   }
-  const found = Object.values(PKG_DB).find(p => !p.old && p.n === o.pkgName && p.d === (o.pkgData || data)) || Object.values(PKG_DB).find(p => p.n === o.pkgName && p.d === (o.pkgData || data));
+  const found = allEntries.find(p => !p.old && p.n === o.pkgName && p.d === (o.pkgData || data))
+    || allEntries.find(p => p.n === o.pkgName && p.d === (o.pkgData || data));
   if (found) return found;
-  if (Array.isArray(adminPkgsList)) {
-    const dp = adminPkgsList.find(p => (p.name === o.pkgName || p.id === o.pkgId) && (!(o.pkgData || data) || p.data === (o.pkgData || data)));
-    if (dp) return {
-      n: dp.name || dp.n,
-      d: dp.data || dp.d,
-      vnd: Number(dp.vnd) || 0,
-      cny: Number(dp.cny) || 0,
-      m: dp.time === "lifetime" ? 0 : Number(dp.time) || 1
-    };
-  }
   return null;
 }
 const pkgLabel = o => {
@@ -679,7 +721,7 @@ async function fetchAll(msg, throwOnError = false, explicitIsTest = undefined) {
   const reqTest = explicitIsTest !== undefined ? !!explicitIsTest : isTestModeActive;
   const myEpoch = warehouseEpoch;
   try {
-    const [pollRes, cmsRes, deadRes, devsRes, gRes] = await Promise.allSettled([aj("/api/admin/poll", { isTest: reqTest }), aj("/api/cms", { isTest: reqTest }), aj("/api/deadlinks", { isTest: reqTest }), aj("/api/devices", { isTest: reqTest }), aj("/api/guides", { isTest: reqTest })]);
+    const [pollRes, cmsRes, deadRes, devsRes, gRes, pkgsRes] = await Promise.allSettled([aj("/api/admin/poll", { isTest: reqTest }), aj("/api/cms", { isTest: reqTest }), aj("/api/deadlinks", { isTest: reqTest }), aj("/api/devices", { isTest: reqTest }), aj("/api/guides", { isTest: reqTest }), aj("/api/packages", { isTest: reqTest })]);
     if (myEpoch !== warehouseEpoch) return null;
     if (pollRes.status !== "fulfilled") {
       throw pollRes.reason || new Error("Không tải được dữ liệu chính (/api/admin/poll)");
@@ -688,6 +730,16 @@ async function fetchAll(msg, throwOnError = false, explicitIsTest = undefined) {
     if (poll && poll.isTest !== undefined && Boolean(poll.isTest) !== reqTest) return null;
 
     const failedParts = [];
+    if (pkgsRes?.status === "fulfilled") {
+      const pj = pkgsRes.value;
+      if (Array.isArray(pj?.packages) && pj.packages.length) {
+        adminPkgsList = pj.packages;
+        window.adminPkgsList = adminPkgsList;
+      } else if (Array.isArray(pj) && pj.length) {
+        adminPkgsList = pj;
+        window.adminPkgsList = adminPkgsList;
+      }
+    }
     if (deadRes.status === "fulfilled") {
       deadDb = arr(deadRes.value);
     } else {
@@ -1361,9 +1413,11 @@ function updAmountUi() {
   $("mOAmountNote").textContent = bank ? "Bank VN: totalCny để trống." : "Alipay/Weixin: totalVnd để trống. Đơn mới tự lấy tiền từ gói; đơn cũ thiếu tiền thì bạn tự nhập.";
 }
 function fillAmount() {
-  const pk = PKG_DB[$("mOPkg").value];
+  const pk = findModalPkgById($("mOPkg").value);
   if (!pk) return;
-  const bank = !/alipay|weixin/i.test($("mOMethod").value), d = parseInt($("mODays").value) || 0, qty = pk.m === 1 ? Math.max(1, Math.floor(d / 30)) : 1, v = bank ? pk.vnd * qty : (pk.cny ? pk.cny * qty : 0);
+  const bank = !/alipay|weixin/i.test($("mOMethod").value), d = parseInt($("mODays").value) || 0;
+  const unitDays = pk.m === 12 ? 365 : 30 * (pk.m || 1);
+  const qty = pk.m > 0 ? Math.max(1, Math.floor(d / unitDays)) : 1, v = bank ? pk.vnd * qty : (pk.cny ? pk.cny * qty : 0);
   $("mOAmount").value = v ? trimNum(v) : "";
   updAmountUi();
 }
@@ -1375,7 +1429,7 @@ function getOrderAnchorTs() {
 }
 
 function autoFillDays() {
-  const p = PKG_LIST.find(x => x[0] === $("mOPkg").value);
+  const p = getOrdPkgEntries().find(x => x[0] === $("mOPkg").value);
   if (!p) return;
   if (!modalNew && expLocked()) {
     updMonths();
@@ -1532,23 +1586,14 @@ function openOrdModal(id) {
   $("mOStatus").value = o ? normSt(o.status) : "pending";
   $("mOMethod").value = /alipay/i.test(o?.method || "") ? "Alipay" : /weixin|wechat/i.test(o?.method || "") ? "Weixin" : "Ngân hàng VN";
   const sel = $("mOPkg");
-  const dynamicList = [...PKG_LIST];
-  if (Array.isArray(adminPkgsList) && adminPkgsList.length) {
-    adminPkgsList.forEach(dp => {
-      if (!dynamicList.some(x => x[0] === dp.id)) {
-        const timeNum = dp.time === "lifetime" ? 0 : (Number(dp.time) || 1) * 30;
-        const cnyPart = Number(dp.cny) > 0 ? ` / ¥${trimNum(dp.cny)}` : "";
-        const dataPart = dp.data ? ` (${dp.data})` : "";
-        dynamicList.push([dp.id, `${dp.name || dp.id} - ${fmtVnd(dp.vnd)}VND${cnyPart}${dataPart}`, timeNum]);
-      }
-    });
-  }
-  sel.innerHTML = dynamicList.map(p => `<option value="${p[0]}">${esc(p[1])}</option>`).join("");
+  const dynamicList = getOrdPkgEntries();
+  sel.innerHTML = dynamicList.map(p => `<option value="${esc(p[0])}">${esc(p[1])}</option>`).join("");
   if (o) {
     let pid = dynamicList.find(p => p[0] === o.pkgId)?.[0];
+    if (!pid) pid = dynamicList.find(p => o.pkg && p[1] === o.pkg)?.[0];
     if (!pid) {
       const pp = pkgOf(o);
-      if (pp) pid = Object.keys(PKG_DB).find(k => PKG_DB[k] === pp);
+      if (pp?.id) pid = dynamicList.find(p => p[0] === pp.id)?.[0];
     }
     if (!pid) pid = dynamicList.find(p => o.pkgName && o.pkgData && p[1].startsWith(o.pkgName) && p[1].includes("(" + o.pkgData + ")"))?.[0];
     if (pid) sel.value = pid;
@@ -1560,7 +1605,7 @@ function openOrdModal(id) {
     $("mOAmount").value = bank ? (o.totalVnd || "") : (o.totalCny || o.totalVnd || "");
   }
   else {
-    sel.value = "t1";
+    sel.value = dynamicList.some(p => p[0] === "t1") ? "t1" : (dynamicList[0]?.[0] || "");
     $("mOAmount").value = "";
   }
 
@@ -1648,9 +1693,10 @@ async function saveOrd() {
     if (bank) body.totalVnd = amt || "";
     else body.totalCny = amt || "";
   }
-  const pk = PKG_DB[cur.pkgId];
+  const pk = findModalPkgById(cur.pkgId);
   if (pk && (modalNew || cur.days !== modalInit.days || cur.pkgId !== modalInit.pkgId)) {
-    body.qty = pk.m === 1 ? Math.max(1, Math.floor((parseInt(cur.baseDays || $("mODays").value) || 0) / 30)) : 1;
+    const unitDays = pk.m === 12 ? 365 : 30 * (pk.m || 1);
+    body.qty = pk.m > 0 ? Math.max(1, Math.floor((parseInt(cur.baseDays || $("mODays").value) || 0) / unitDays)) : 1;
   }
   if (!modalNew && expLocked()) {
     delete body.expDate;
@@ -9041,6 +9087,285 @@ async function testPingProd() {
   }
 }
 
+const PROD_ORDERS_SCHEMA_COLS = [
+  "id", "email", "nickname", "zalo", "method", "pkgId", "qty", "pkg", "totalVnd", "totalCny",
+  "days", "expDate", "status", "createdTs", "date", "dateCreated", "expFinal", "fulfilledAt",
+  "paidAt", "reason", "needSupport", "info1", "info2", "info3", "lockInfo", "orderType",
+  "sourceWeb", "workerUrl", "isUpgrade", "upgradeStatus", "upgradedAt", "pendingUpgrade",
+  "lastMailTrack", "created_at", "updated_at", "bonusDays"
+];
+const PROD_REQUIRED_COLS = ["id", "email", "pkg", "status"];
+const PROD_LEGACY_COLS = ["pkgName", "pkgData"];
+let pendingProdImportRows = null;
+let pendingProdImportReport = null;
+
+function evaluateOrdersImportJson(rawData, expectedPkgEntries = getOrdPkgEntries()) {
+  const fatalErrors = [];
+  const warnings = [];
+  if (!Array.isArray(rawData)) {
+    return {
+      okToOverwrite: false,
+      schemaType: "invalid",
+      schemaLabel: "Không phải mảng JSON hợp lệ",
+      totalRows: 0,
+      validIds: 0,
+      missingIdRows: 0,
+      duplicateIds: [],
+      presentCols: [],
+      matchedSchemaCols: [],
+      missingSchemaCols: [...PROD_ORDERS_SCHEMA_COLS],
+      missingRequiredCols: [...PROD_REQUIRED_COLS],
+      legacyColsFound: [],
+      extraCols: [],
+      matchedPkgCount: 0,
+      nonStandardPkgCount: 0,
+      pkgMismatchSamples: [],
+      warnings,
+      fatalErrors: ["Root file JSON phải là một mảng ([...]) chứa các đối tượng đơn hàng."]
+    };
+  }
+  if (!rawData.length) {
+    return {
+      okToOverwrite: false,
+      schemaType: "invalid",
+      schemaLabel: "File JSON rỗng (0 đơn)",
+      totalRows: 0,
+      validIds: 0,
+      missingIdRows: 0,
+      duplicateIds: [],
+      presentCols: [],
+      matchedSchemaCols: [],
+      missingSchemaCols: [...PROD_ORDERS_SCHEMA_COLS],
+      missingRequiredCols: [...PROD_REQUIRED_COLS],
+      legacyColsFound: [],
+      extraCols: [],
+      matchedPkgCount: 0,
+      nonStandardPkgCount: 0,
+      pkgMismatchSamples: [],
+      warnings,
+      fatalErrors: ["File JSON không có đơn hàng nào (0 phần tử)."]
+    };
+  }
+
+  const colSet = new Set();
+  const seenIds = new Set();
+  const duplicateIds = [];
+  let missingIdRows = 0;
+  let nonObjectRows = 0;
+  let invalidStatusRows = 0;
+  const expectedLabels = new Set((expectedPkgEntries || []).map(e => e[1]));
+  let matchedPkgCount = 0;
+  let nonStandardPkgCount = 0;
+  const pkgMismatchSamples = [];
+
+  rawData.forEach((row) => {
+    if (!row || typeof row !== "object" || Array.isArray(row)) {
+      nonObjectRows++;
+      return;
+    }
+    Object.keys(row).forEach(k => colSet.add(k));
+    const id = normId(row.id);
+    if (!id) missingIdRows++;
+    else if (seenIds.has(id)) duplicateIds.push(id);
+    else seenIds.add(id);
+
+    const st = String(row.status || "").toLowerCase();
+    if (!["success", "pending", "failed", "cancelled", "cancel", "refund"].includes(st)) {
+      invalidStatusRows++;
+    }
+    const pkgVal = String(row.pkg || "").trim();
+    if (pkgVal && expectedLabels.has(pkgVal)) {
+      matchedPkgCount++;
+    } else {
+      nonStandardPkgCount++;
+      if (pkgMismatchSamples.length < 3) {
+        pkgMismatchSamples.push({ id: id || "(không có ID)", pkg: pkgVal || "(trống)" });
+      }
+    }
+  });
+
+  if (nonObjectRows > 0) fatalErrors.push(`${nonObjectRows} dòng không phải JSON object hợp lệ.`);
+  if (missingIdRows > 0) fatalErrors.push(`${missingIdRows} đơn bị thiếu mã đơn (id).`);
+  if (duplicateIds.length > 0) fatalErrors.push(`Phát hiện ${duplicateIds.length} mã đơn trùng lặp: ${duplicateIds.slice(0, 3).join(", ")}${duplicateIds.length > 3 ? "..." : ""}.`);
+
+  const presentCols = [...colSet];
+  const schemaSet = new Set(PROD_ORDERS_SCHEMA_COLS);
+  const matchedSchemaCols = PROD_ORDERS_SCHEMA_COLS.filter(c => colSet.has(c));
+  const missingSchemaCols = PROD_ORDERS_SCHEMA_COLS.filter(c => !colSet.has(c));
+  const missingRequiredCols = PROD_REQUIRED_COLS.filter(c => !colSet.has(c));
+  const legacyColsFound = PROD_LEGACY_COLS.filter(c => colSet.has(c));
+  const extraCols = presentCols.filter(c => !schemaSet.has(c) && !PROD_LEGACY_COLS.includes(c));
+
+  if (missingRequiredCols.length > 0) {
+    fatalErrors.push(`Thiếu cột bắt buộc: ${missingRequiredCols.join(", ")}.`);
+  }
+  if (legacyColsFound.length > 0) {
+    warnings.push(`Phát hiện cột cũ đã bỏ (${legacyColsFound.join(", ")}). Worker sẽ tự loại bỏ khi ghi vào ALL_ORDERS.`);
+  }
+  if (extraCols.length > 0) {
+    warnings.push(`Có ${extraCols.length} cột lạ ngoài schema chuẩn: ${extraCols.join(", ")}.`);
+  }
+  if (missingSchemaCols.length > 0) {
+    warnings.push(`Thiếu ${missingSchemaCols.length} cột phụ so với mẫu 36 cột: ${missingSchemaCols.slice(0, 6).join(", ")}${missingSchemaCols.length > 6 ? "..." : ""}.`);
+  }
+  if (invalidStatusRows > 0) {
+    warnings.push(`${invalidStatusRows} đơn có trạng thái khác chuẩn (success/pending/failed).`);
+  }
+  if (nonStandardPkgCount > 0) {
+    warnings.push(`${nonStandardPkgCount}/${rawData.length} đơn có tên gói (pkg) khác danh sách dropdown hiện tại.`);
+  }
+
+  let schemaType = "exact_1col";
+  let schemaLabel = `Chuẩn Kho Thật 1 cột pkg (${matchedSchemaCols.length}/${PROD_ORDERS_SCHEMA_COLS.length} cột khớp)`;
+  if (fatalErrors.length > 0) {
+    schemaType = "invalid";
+    schemaLabel = "Không đạt chuẩn — có lỗi nghiêm trọng";
+  } else if (legacyColsFound.length > 0) {
+    schemaType = "legacy_3col";
+    schemaLabel = "Schema cũ (3 cột pkg/pkgName/pkgData — sẽ tự chuẩn hóa 1 cột)";
+  } else if (missingSchemaCols.length > 0 || extraCols.length > 0) {
+    schemaType = "partial_1col";
+    schemaLabel = `Schema 1 cột pkg (khớp ${matchedSchemaCols.length}/${PROD_ORDERS_SCHEMA_COLS.length} cột${extraCols.length ? `, +${extraCols.length} cột thừa` : ""})`;
+  }
+
+  return {
+    okToOverwrite: fatalErrors.length === 0 && rawData.length > 0,
+    schemaType,
+    schemaLabel,
+    totalRows: rawData.length,
+    validIds: seenIds.size,
+    missingIdRows,
+    duplicateIds,
+    presentCols,
+    matchedSchemaCols,
+    missingSchemaCols,
+    missingRequiredCols,
+    legacyColsFound,
+    extraCols,
+    matchedPkgCount,
+    nonStandardPkgCount,
+    pkgMismatchSamples,
+    warnings,
+    fatalErrors
+  };
+}
+
+function clearProdJsonSelection() {
+  pendingProdImportRows = null;
+  pendingProdImportReport = null;
+  if ($("prodJsonFile")) $("prodJsonFile").value = "";
+  if ($("prodJsonFileLabel")) $("prodJsonFileLabel").textContent = "Chọn file Backup_Orders_*.json để kiểm tra...";
+  if ($("prodJsonReport")) {
+    $("prodJsonReport").innerHTML = "";
+    $("prodJsonReport").classList.add("hidden");
+  }
+  if ($("btnProdOverwriteJson")) $("btnProdOverwriteJson").disabled = true;
+  if ($("btnProdClearJson")) $("btnProdClearJson").classList.add("hidden");
+}
+
+function renderProdJsonReport(report, fileName = "") {
+  const box = $("prodJsonReport");
+  if (!box) return;
+  const badgeCls = report.schemaType === "exact_1col"
+    ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+    : (report.schemaType === "invalid" ? "bg-red-100 text-red-800 border-red-300" : "bg-amber-100 text-amber-800 border-amber-300");
+  const pkgLine = report.totalRows > 0
+    ? `<div class="flex items-center justify-between gap-2 text-[11px] pt-1 border-t border-slate-100">
+        <span>Khớp định dạng cột <b>pkg</b>:</span>
+        <span class="font-bold ${report.nonStandardPkgCount === 0 ? "text-emerald-700" : "text-amber-700"}">${report.matchedPkgCount}/${report.totalRows} đơn chuẩn dropdown</span>
+      </div>`
+    : "";
+  const errHtml = report.fatalErrors.length
+    ? `<div class="bg-red-50 border border-red-200 rounded-lg p-2 text-red-700 space-y-0.5">${report.fatalErrors.map(e => `<div>✖ ${esc(e)}</div>`).join("")}</div>`
+    : "";
+  const warnHtml = report.warnings.length
+    ? `<div class="bg-amber-50 border border-amber-200 rounded-lg p-2 text-amber-800 space-y-0.5">${report.warnings.map(w => `<div>⚠ ${esc(w)}</div>`).join("")}</div>`
+    : `<div class="text-emerald-700 font-bold">✔ Toàn bộ cấu trúc cột, mã đơn và tên gói đều khớp hoàn toàn với schema Kho Thật!</div>`;
+  const sampleHtml = report.pkgMismatchSamples.length
+    ? `<div class="text-[10px] text-slate-500">Mẫu gói khác chuẩn: ${report.pkgMismatchSamples.map(s => `<code>${esc(s.id)}</code>: ${esc(s.pkg)}`).join(" | ")}</div>`
+    : "";
+
+  box.innerHTML = `
+    <div class="flex items-center justify-between gap-2 flex-wrap">
+      <span class="font-extrabold text-slate-800 truncate">${esc(fileName || "JSON đã chọn")}</span>
+      <span class="text-[10px] font-black px-2 py-0.5 rounded-full border ${badgeCls}">${esc(report.schemaLabel)}</span>
+    </div>
+    <div class="grid grid-cols-2 gap-1.5 text-[11px] bg-slate-50 rounded-lg p-2 border border-slate-200">
+      <div>Tổng đơn: <b>${report.totalRows}</b></div>
+      <div>ID hợp lệ: <b>${report.validIds}</b></div>
+      <div>Cột khớp: <b>${report.matchedSchemaCols.length}/${PROD_ORDERS_SCHEMA_COLS.length}</b></div>
+      <div>Thiếu/Thừa: <b>${report.missingSchemaCols.length} thiếu / ${report.legacyColsFound.length + report.extraCols.length} thừa</b></div>
+    </div>
+    ${pkgLine}
+    ${errHtml}
+    ${warnHtml}
+    ${sampleHtml}
+  `;
+  box.classList.remove("hidden");
+}
+
+async function handleProdJsonSelect(input) {
+  const file = input?.files?.[0];
+  if (!file) return clearProdJsonSelection();
+  if ($("prodJsonFileLabel")) $("prodJsonFileLabel").textContent = file.name;
+  if ($("btnProdClearJson")) $("btnProdClearJson").classList.remove("hidden");
+  try {
+    const rawText = await file.text();
+    const parsed = JSON.parse(rawText);
+    const report = evaluateOrdersImportJson(parsed);
+    pendingProdImportRows = report.okToOverwrite ? parsed : null;
+    pendingProdImportReport = report;
+    renderProdJsonReport(report, file.name);
+    if ($("btnProdOverwriteJson")) $("btnProdOverwriteJson").disabled = !report.okToOverwrite;
+  } catch (e) {
+    pendingProdImportRows = null;
+    pendingProdImportReport = null;
+    const errReport = evaluateOrdersImportJson(null);
+    errReport.fatalErrors = ["Không đọc được JSON hợp lệ: " + (e?.message || e)];
+    renderProdJsonReport(errReport, file.name);
+    if ($("btnProdOverwriteJson")) $("btnProdOverwriteJson").disabled = true;
+    toast("File JSON lỗi cú pháp: " + e.message, "err");
+  }
+}
+
+async function overwriteProdFromJson() {
+  if (!Array.isArray(pendingProdImportRows) || !pendingProdImportRows.length || !pendingProdImportReport?.okToOverwrite) {
+    return toast("Vui lòng chọn file JSON hợp lệ trước khi đẩy lên Kho Thật!", "err");
+  }
+  const count = pendingProdImportRows.length;
+  const legacyNote = pendingProdImportReport.legacyColsFound.length
+    ? `\n• Cột thừa cũ (${pendingProdImportReport.legacyColsFound.join(", ")}) sẽ được Worker tự bỏ để giữ chuẩn 1 cột pkg.`
+    : "";
+  if (!confirm(`⚠️ XÁC NHẬN GHI ĐÈ TOÀN BỘ KHO THẬT (ALL_ORDERS)?\n\n• Số lượng sẽ ghi đè: ${count} đơn hàng\n• Đánh giá schema: ${pendingProdImportReport.schemaLabel}${legacyNote}\n• Hệ thống sẽ tự bắn Backup Kho Thật sang Telegram trước khi xóa cũ & nạp mới.\n• Không đụng tới KV ALL_LINKS.\n\nBạn chắc chắn muốn thực hiện?`)) {
+    return;
+  }
+  const btn = $("btnProdOverwriteJson");
+  const logEl = $("prodActionLog");
+  if (btn) btn.disabled = true;
+  if (logEl) logEl.innerHTML = `<span class="text-red-700 font-bold"><i class="fas fa-spinner fa-spin mr-1"></i>Đang backup &amp; ghi đè ${count} đơn hàng lên ALL_ORDERS...</span>`;
+  try {
+    const res = await aj("/api/admin/prod/overwrite", {
+      method: "POST",
+      body: { orders: pendingProdImportRows },
+      isTest: false
+    });
+    if (!res || res.ok === false) {
+      throw new Error(res?.error || "Ghi đè ALL_ORDERS thất bại");
+    }
+    const pushedCount = res.count || count;
+    if (logEl) {
+      logEl.innerHTML = `<span class="text-emerald-700 font-bold">✔ Đã ghi đè thành công <b>${pushedCount}</b> đơn hàng lên Kho Thật (ALL_ORDERS)${res.backupOk ? " · Đã bắn backup Telegram" : ""}.</span>`;
+    }
+    toast(`Đã ghi đè ${pushedCount} đơn hàng lên Kho Thật!`);
+    clearProdJsonSelection();
+    if (!isTestModeActive) await fetchAll(false, false, false);
+  } catch (e) {
+    if (logEl) logEl.innerHTML = `<span class="text-red-600 font-bold">✘ Ghi đè thất bại: ${esc(e.message)}</span>`;
+    toast("Lỗi ghi đè Kho Thật: " + e.message, "err");
+    if (btn && pendingProdImportRows?.length) btn.disabled = false;
+  }
+}
+
 async function testPingTest() {
   const logEl = $("testActionLog");
   const btn = $("btnPingTest");
@@ -9890,9 +10215,16 @@ window.rejectTxItem = rejectTxItem;
 // Expose all admin functions and state to window for HTML inline event handlers
 if (typeof window !== 'undefined') {
   const _exposed = [['mcSetMobilePane', typeof mcSetMobilePane !== 'undefined' ? mcSetMobilePane : undefined], ['closeAdminModal', typeof closeAdminModal !== 'undefined' ? closeAdminModal : undefined], ['saveAllFuncSettings', typeof saveAllFuncSettings !== 'undefined' ? saveAllFuncSettings : undefined], ['renderGiftRulesAdmin', typeof renderGiftRulesAdmin !== 'undefined' ? renderGiftRulesAdmin : undefined], ['openAddGiftRuleModal', typeof openAddGiftRuleModal !== 'undefined' ? openAddGiftRuleModal : undefined], ['closeGiftRuleModal', typeof closeGiftRuleModal !== 'undefined' ? closeGiftRuleModal : undefined], ['saveGiftRuleModal', typeof saveGiftRuleModal !== 'undefined' ? saveGiftRuleModal : undefined], ['toggleGiftRuleStatus', typeof toggleGiftRuleStatus !== 'undefined' ? toggleGiftRuleStatus : undefined], ['deleteGiftRuleItem', typeof deleteGiftRuleItem !== 'undefined' ? deleteGiftRuleItem : undefined], ['updateGiftRulePkgCheckboxes', typeof updateGiftRulePkgCheckboxes !== 'undefined' ? updateGiftRulePkgCheckboxes : undefined], ['renderFlashSaleAdmin', typeof renderFlashSaleAdmin !== 'undefined' ? renderFlashSaleAdmin : undefined], ['saveFlashSaleConfig', typeof saveFlashSaleConfig !== 'undefined' ? saveFlashSaleConfig : undefined], ['renderCouponAdmin', typeof renderCouponAdmin !== 'undefined' ? renderCouponAdmin : undefined], ['toggleCouponStatus', typeof toggleCouponStatus !== 'undefined' ? toggleCouponStatus : undefined], ['deleteCouponItem', typeof deleteCouponItem !== 'undefined' ? deleteCouponItem : undefined], ['openAddCouponModal', typeof openAddCouponModal !== 'undefined' ? openAddCouponModal : undefined], ['closeCouponModal', typeof closeCouponModal !== 'undefined' ? closeCouponModal : undefined], ['saveCouponModal', typeof saveCouponModal !== 'undefined' ? saveCouponModal : undefined], ['saveRevRates', typeof saveRevRates !== 'undefined' ? saveRevRates : undefined], ['savePkgRates', typeof savePkgRates !== 'undefined' ? savePkgRates : undefined], ['syncRatesToPackages', typeof syncRatesToPackages !== 'undefined' ? syncRatesToPackages : undefined], ['syncPublicPackagesPayload', typeof syncPublicPackagesPayload !== 'undefined' ? syncPublicPackagesPayload : undefined], ['toggleCouponCheckoutInput', typeof toggleCouponCheckoutInput !== 'undefined' ? toggleCouponCheckoutInput : undefined], ['renderExceptionsTab', typeof renderExceptionsTab !== 'undefined' ? renderExceptionsTab : undefined], ['manualMatchTx', typeof manualMatchTx !== 'undefined' ? manualMatchTx : undefined], ['rejectTxItem', typeof rejectTxItem !== 'undefined' ? rejectTxItem : undefined], ['toast', typeof toast !== 'undefined' ? toast : undefined], ['autoGrow', typeof autoGrow !== 'undefined' ? autoGrow : undefined], ['parseAny', typeof parseAny !== 'undefined' ? parseAny : undefined], ['tickClocks', typeof tickClocks !== 'undefined' ? tickClocks : undefined], ['paintTimeUI', typeof paintTimeUI !== 'undefined' ? paintTimeUI : undefined], ['pickTz', typeof pickTz !== 'undefined' ? pickTz : undefined], ['applySim', typeof applySim !== 'undefined' ? applySim : undefined], ['clearSim', typeof clearSim !== 'undefined' ? clearSim : undefined], ['pkgOf', typeof pkgOf !== 'undefined' ? pkgOf : undefined], ['ordMonths', typeof ordMonths !== 'undefined' ? ordMonths : undefined], ['webLabel', typeof webLabel !== 'undefined' ? webLabel : undefined], ['getMe', typeof getMe !== 'undefined' ? getMe : undefined], ['linkBottom', typeof linkBottom !== 'undefined' ? linkBottom : undefined], ['api', typeof api !== 'undefined' ? api : undefined], ['toLogin', typeof toLogin !== 'undefined' ? toLogin : undefined], ['doLogin', typeof doLogin !== 'undefined' ? doLogin : undefined], ['doLogout', typeof doLogout !== 'undefined' ? doLogout : undefined], ['resetAndHardReload', typeof resetAndHardReload !== 'undefined' ? resetAndHardReload : undefined], ['healLinks', typeof healLinks !== 'undefined' ? healLinks : undefined], ['applyPoll', typeof applyPoll !== 'undefined' ? applyPoll : undefined], ['fetchAll', typeof fetchAll !== 'undefined' ? fetchAll : undefined], ['pollMain', typeof pollMain !== 'undefined' ? pollMain : undefined], ['switchPkgSubTab', typeof switchPkgSubTab !== 'undefined' ? switchPkgSubTab : undefined], ['buildTabs', typeof buildTabs !== 'undefined' ? buildTabs : undefined], ['go', typeof go !== 'undefined' ? go : undefined], ['switchOrdTab', typeof switchOrdTab !== 'undefined' ? switchOrdTab : undefined], ['ordCard', typeof ordCard !== 'undefined' ? ordCard : undefined], ['renderOrd', typeof renderOrd !== 'undefined' ? renderOrd : undefined], ['updateOrderTogglesUI', typeof updateOrderTogglesUI !== 'undefined' ? updateOrderTogglesUI : undefined], ['toggleLockFulfillBtn', typeof toggleLockFulfillBtn !== 'undefined' ? toggleLockFulfillBtn : undefined], ['toggleMailOnSaveBtn', typeof toggleMailOnSaveBtn !== 'undefined' ? toggleMailOnSaveBtn : undefined], ['toggleManualEditBtn', typeof toggleManualEditBtn !== 'undefined' ? toggleManualEditBtn : undefined], ['autoFillNickname', typeof autoFillNickname !== 'undefined' ? autoFillNickname : undefined], ['updMonths', typeof updMonths !== 'undefined' ? updMonths : undefined], ['updAmountUi', typeof updAmountUi !== 'undefined' ? updAmountUi : undefined], ['fillAmount', typeof fillAmount !== 'undefined' ? fillAmount : undefined], ['getOrderAnchorTs', typeof getOrderAnchorTs !== 'undefined' ? getOrderAnchorTs : undefined], ['autoFillDays', typeof autoFillDays !== 'undefined' ? autoFillDays : undefined], ['onPkgChange', typeof onPkgChange !== 'undefined' ? onPkgChange : undefined], ['onMethodChange', typeof onMethodChange !== 'undefined' ? onMethodChange : undefined], ['recalcExpFromDays', typeof recalcExpFromDays !== 'undefined' ? recalcExpFromDays : undefined], ['recalcDaysFromExp', typeof recalcDaysFromExp !== 'undefined' ? recalcDaysFromExp : undefined], ['togSF', typeof togSF !== 'undefined' ? togSF : undefined], ['syncUpg', typeof syncUpg !== 'undefined' ? syncUpg : undefined], ['readModal', typeof readModal !== 'undefined' ? readModal : undefined], ['openOrdModal', typeof openOrdModal !== 'undefined' ? openOrdModal : undefined], ['saveOrd', typeof saveOrd !== 'undefined' ? saveOrd : undefined], ['delOrd', typeof delOrd !== 'undefined' ? delOrd : undefined], ['getMissingOrders', typeof getMissingOrders !== 'undefined' ? getMissingOrders : undefined], ['updateCheckBadge', typeof updateCheckBadge !== 'undefined' ? updateCheckBadge : undefined], ['renderCheckTab', typeof renderCheckTab !== 'undefined' ? renderCheckTab : undefined], ['saveCheckManual', typeof saveCheckManual !== 'undefined' ? saveCheckManual : undefined], ['healSingleOrder', typeof healSingleOrder !== 'undefined' ? healSingleOrder : undefined], ['healAllMissingWithProgress', typeof healAllMissingWithProgress !== 'undefined' ? healAllMissingWithProgress : undefined], ['mailRender', typeof mailRender !== 'undefined' ? mailRender : undefined], ['orderVars', typeof orderVars !== 'undefined' ? orderVars : undefined], ['sendExpMail', typeof sendExpMail !== 'undefined' ? sendExpMail : undefined], ['sendZaloMail', typeof sendZaloMail !== 'undefined' ? sendZaloMail : undefined], ['getCentralRates', typeof getCentralRates !== 'undefined' ? getCentralRates : undefined], ['revList', typeof revList !== 'undefined' ? revList : undefined], ['costSum', typeof costSum !== 'undefined' ? costSum : undefined], ['monthTotals', typeof monthTotals !== 'undefined' ? monthTotals : undefined], ['renderRevenue', typeof renderRevenue !== 'undefined' ? renderRevenue : undefined], ['revOver', typeof revOver !== 'undefined' ? revOver : undefined], ['revPay', typeof revPay !== 'undefined' ? revPay : undefined], ['saveCentralRates', typeof saveCentralRates !== 'undefined' ? saveCentralRates : undefined], ['revPayDetail', typeof revPayDetail !== 'undefined' ? revPayDetail : undefined], ['revCost', typeof revCost !== 'undefined' ? revCost : undefined], ['addCost', typeof addCost !== 'undefined' ? addCost : undefined], ['delCost', typeof delCost !== 'undefined' ? delCost : undefined], ['tplToMc', typeof tplToMc !== 'undefined' ? tplToMc : undefined], ['mcSampleVars', typeof mcSampleVars !== 'undefined' ? mcSampleVars : undefined], ['mcRenderTabs', typeof mcRenderTabs !== 'undefined' ? mcRenderTabs : undefined], ['mcRenderPresetOptions', typeof mcRenderPresetOptions !== 'undefined' ? mcRenderPresetOptions : undefined], ['mcLoadPreset', typeof mcLoadPreset !== 'undefined' ? mcLoadPreset : undefined], ['mcSwitchTab', typeof mcSwitchTab !== 'undefined' ? mcSwitchTab : undefined], ['renderMailComposer', typeof renderMailComposer !== 'undefined' ? renderMailComposer : undefined], ['mcInsertVar', typeof mcInsertVar !== 'undefined' ? mcInsertVar : undefined], ['mcRenderEditor', typeof mcRenderEditor !== 'undefined' ? mcRenderEditor : undefined], ['mcPreview', typeof mcPreview !== 'undefined' ? mcPreview : undefined], ['mcSet', typeof mcSet !== 'undefined' ? mcSet : undefined], ['mcAdd', typeof mcAdd !== 'undefined' ? mcAdd : undefined], ['mcMove', typeof mcMove !== 'undefined' ? mcMove : undefined], ['mcDel', typeof mcDel !== 'undefined' ? mcDel : undefined], ['mcPickColor', typeof mcPickColor !== 'undefined' ? mcPickColor : undefined], ['mcColorInput', typeof mcColorInput !== 'undefined' ? mcColorInput : undefined], ['mcGrad', typeof mcGrad !== 'undefined' ? mcGrad : undefined], ['mcSaveTemplate', typeof mcSaveTemplate !== 'undefined' ? mcSaveTemplate : undefined], ['mcExtraAction', typeof mcExtraAction !== 'undefined' ? mcExtraAction : undefined], ['mcScan', typeof mcScan !== 'undefined' ? mcScan : undefined], ['mcRenderRecs', typeof mcRenderRecs !== 'undefined' ? mcRenderRecs : undefined], ['mcSend', typeof mcSend !== 'undefined' ? mcSend : undefined], ['dataPriceLabel', typeof dataPriceLabel !== 'undefined' ? dataPriceLabel : undefined], ['renderDataRequests', typeof renderDataRequests !== 'undefined' ? renderDataRequests : undefined], ['sendDataReport', typeof sendDataReport !== 'undefined' ? sendDataReport : undefined], ['delDataRequest', typeof delDataRequest !== 'undefined' ? delDataRequest : undefined], ['clearDataRequests', typeof clearDataRequests !== 'undefined' ? clearDataRequests : undefined], ['toggleDataRequestSeen', typeof toggleDataRequestSeen !== 'undefined' ? toggleDataRequestSeen : undefined], ['markAllDataRequestsSeen', typeof markAllDataRequestsSeen !== 'undefined' ? markAllDataRequestsSeen : undefined], ['switchTxTab', typeof switchTxTab !== 'undefined' ? switchTxTab : undefined], ['mergeTx', typeof mergeTx !== 'undefined' ? mergeTx : undefined], ['loadTx', typeof loadTx !== 'undefined' ? loadTx : undefined], ['deleteTx', typeof deleteTx !== 'undefined' ? deleteTx : undefined], ['renderTransactions', typeof renderTransactions !== 'undefined' ? renderTransactions : undefined], ['approveTransaction', typeof approveTransaction !== 'undefined' ? approveTransaction : undefined], ['detectProvider', typeof detectProvider !== 'undefined' ? detectProvider : undefined], ['buildMasked', typeof buildMasked !== 'undefined' ? buildMasked : undefined], ['openRootEditModal', typeof openRootEditModal !== 'undefined' ? openRootEditModal : undefined], ['toggleClusterSpecs', typeof toggleClusterSpecs !== 'undefined' ? toggleClusterSpecs : undefined], ['renderLinks', typeof renderLinks !== 'undefined' ? renderLinks : undefined], ['saveRootEdit', typeof saveRootEdit !== 'undefined' ? saveRootEdit : undefined], ['createLink', typeof createLink !== 'undefined' ? createLink : undefined], ['openLnkModal', typeof openLnkModal !== 'undefined' ? openLnkModal : undefined], ['saveLnkEdit', typeof saveLnkEdit !== 'undefined' ? saveLnkEdit : undefined], ['toggleLock', typeof toggleLock !== 'undefined' ? toggleLock : undefined], ['delLink', typeof delLink !== 'undefined' ? delLink : undefined], ['sortAllLinks', typeof sortAllLinks !== 'undefined' ? sortAllLinks : undefined], ['triggerGitHub', typeof triggerGitHub !== 'undefined' ? triggerGitHub : undefined], ['runGC', typeof runGC !== 'undefined' ? runGC : undefined], ['rebuildAllMAP', typeof rebuildAllMAP !== 'undefined' ? rebuildAllMAP : undefined], ['getDefaultAdminPkgs', typeof getDefaultAdminPkgs !== 'undefined' ? getDefaultAdminPkgs : undefined], ['hydrateTopNoticeForm', typeof hydrateTopNoticeForm !== 'undefined' ? hydrateTopNoticeForm : undefined], ['renderTopNoticeAdminPreview', typeof renderTopNoticeAdminPreview !== 'undefined' ? renderTopNoticeAdminPreview : undefined], ['onTopNoticeToggle', typeof onTopNoticeToggle !== 'undefined' ? onTopNoticeToggle : undefined], ['saveTopNotice', typeof saveTopNotice !== 'undefined' ? saveTopNotice : undefined], ['loadAdminPkgs', typeof loadAdminPkgs !== 'undefined' ? loadAdminPkgs : undefined], ['toggleHidePkg', typeof toggleHidePkg !== 'undefined' ? toggleHidePkg : undefined], ['renderPkgAdmin', typeof renderPkgAdmin !== 'undefined' ? renderPkgAdmin : undefined], ['toggleLifetimePkg', typeof toggleLifetimePkg !== 'undefined' ? toggleLifetimePkg : undefined], ['togglePkgCat', typeof togglePkgCat !== 'undefined' ? togglePkgCat : undefined], ['addNewCustomPkg', typeof addNewCustomPkg !== 'undefined' ? addNewCustomPkg : undefined], ['delPkg', typeof delPkg !== 'undefined' ? delPkg : undefined], ['saveAllPkgs', typeof saveAllPkgs !== 'undefined' ? saveAllPkgs : undefined], ['relinkScanRun', typeof relinkScanRun !== 'undefined' ? relinkScanRun : undefined], ['relinkMapRun', typeof relinkMapRun !== 'undefined' ? relinkMapRun : undefined], ['relinkApply', typeof relinkApply !== 'undefined' ? relinkApply : undefined], ['switchDeadSubTab', typeof switchDeadSubTab !== 'undefined' ? switchDeadSubTab : undefined], ['renderDead', typeof renderDead !== 'undefined' ? renderDead : undefined], ['renderDeadSources', typeof renderDeadSources !== 'undefined' ? renderDeadSources : undefined], ['hardDeleteSource', typeof hardDeleteSource !== 'undefined' ? hardDeleteSource : undefined], ['cleanUnusedSources', typeof cleanUnusedSources !== 'undefined' ? cleanUnusedSources : undefined], ['restoreLink', typeof restoreLink !== 'undefined' ? restoreLink : undefined], ['clearDeadLinks', typeof clearDeadLinks !== 'undefined' ? clearDeadLinks : undefined], ['cmsEnsureTabs', typeof cmsEnsureTabs !== 'undefined' ? cmsEnsureTabs : undefined], ['ensureArts', typeof ensureArts !== 'undefined' ? ensureArts : undefined], ['initGuides', typeof initGuides !== 'undefined' ? initGuides : undefined], ['renderGuideAll', typeof renderGuideAll !== 'undefined' ? renderGuideAll : undefined], ['copyArtDeepLink', typeof copyArtDeepLink !== 'undefined' ? copyArtDeepLink : undefined], ['getEditorHtml', typeof getEditorHtml !== 'undefined' ? getEditorHtml : undefined], ['commitCms', typeof commitCms !== 'undefined' ? commitCms : undefined], ['setCms', typeof setCms !== 'undefined' ? setCms : undefined], ['openArt', typeof openArt !== 'undefined' ? openArt : undefined], ['artAdd', typeof artAdd !== 'undefined' ? artAdd : undefined], ['artDel', typeof artDel !== 'undefined' ? artDel : undefined], ['renderArtList', typeof renderArtList !== 'undefined' ? renderArtList : undefined], ['renderCmsTabBtns', typeof renderCmsTabBtns !== 'undefined' ? renderCmsTabBtns : undefined], ['setupSortableCmsTabs', typeof setupSortableCmsTabs !== 'undefined' ? setupSortableCmsTabs : undefined], ['renderCmsTabEdit', typeof renderCmsTabEdit !== 'undefined' ? renderCmsTabEdit : undefined], ['cmsTabSet', typeof cmsTabSet !== 'undefined' ? cmsTabSet : undefined], ['cmsAddTab', typeof cmsAddTab !== 'undefined' ? cmsAddTab : undefined], ['cmsDelTab', typeof cmsDelTab !== 'undefined' ? cmsDelTab : undefined], ['bStyle', typeof bStyle !== 'undefined' ? bStyle : undefined], ['guideScroll', typeof guideScroll !== 'undefined' ? guideScroll : undefined], ['openLightbox', typeof openLightbox !== 'undefined' ? openLightbox : undefined], ['cmsGoto', typeof cmsGoto !== 'undefined' ? cmsGoto : undefined], ['cmsGotoArt', typeof cmsGotoArt !== 'undefined' ? cmsGotoArt : undefined], ['buildRichArticleView', typeof buildRichArticleView !== 'undefined' ? buildRichArticleView : undefined], ['scrollToHeadingText', typeof scrollToHeadingText !== 'undefined' ? scrollToHeadingText : undefined], ['cmsPrev', typeof cmsPrev !== 'undefined' ? cmsPrev : undefined], ['addArtFaqRow', typeof addArtFaqRow !== 'undefined' ? addArtFaqRow : undefined], ['delArtFaqRow', typeof delArtFaqRow !== 'undefined' ? delArtFaqRow : undefined], ['renderArtFaqsUI', typeof renderArtFaqsUI !== 'undefined' ? renderArtFaqsUI : undefined], ['toggleRelatedArtPick', typeof toggleRelatedArtPick !== 'undefined' ? toggleRelatedArtPick : undefined], ['renderCmsEditor', typeof renderCmsEditor !== 'undefined' ? renderCmsEditor : undefined], ['saveArtFaqsOnly', typeof saveArtFaqsOnly !== 'undefined' ? saveArtFaqsOnly : undefined], ['saveCms', typeof saveCms !== 'undefined' ? saveCms : undefined], ['closeCmsEditor', typeof closeCmsEditor !== 'undefined' ? closeCmsEditor : undefined], ['openCmsEditorForArt', typeof openCmsEditorForArt !== 'undefined' ? openCmsEditorForArt : undefined], ['addArticleToCategory', typeof addArticleToCategory !== 'undefined' ? addArticleToCategory : undefined], ['renderGuideCategoriesTree', typeof renderGuideCategoriesTree !== 'undefined' ? renderGuideCategoriesTree : undefined], ['switchCheckSubTab', typeof switchCheckSubTab !== 'undefined' ? switchCheckSubTab : undefined], ['switchSettingsTab', typeof switchSettingsTab !== 'undefined' ? switchSettingsTab : undefined], ['showCronLog', typeof showCronLog !== 'undefined' ? showCronLog : undefined], ['renderRouteRows', typeof renderRouteRows !== 'undefined' ? renderRouteRows : undefined], ['saveRouting', typeof saveRouting !== 'undefined' ? saveRouting : undefined], ['checkBlurValidity', typeof checkBlurValidity !== 'undefined' ? checkBlurValidity : undefined], ['renderBlurRows', typeof renderBlurRows !== 'undefined' ? renderBlurRows : undefined], ['saveBlur', typeof saveBlur !== 'undefined' ? saveBlur : undefined], ['renderDockRows', typeof renderDockRows !== 'undefined' ? renderDockRows : undefined], ['dockPv', typeof dockPv !== 'undefined' ? dockPv : undefined], ['readDockRows', typeof readDockRows !== 'undefined' ? readDockRows : undefined], ['addDockIcon', typeof addDockIcon !== 'undefined' ? addDockIcon : undefined], ['removeDockIcon', typeof removeDockIcon !== 'undefined' ? removeDockIcon : undefined], ['saveDock', typeof saveDock !== 'undefined' ? saveDock : undefined], ['loadAdminFaqs', typeof loadAdminFaqs !== 'undefined' ? loadAdminFaqs : undefined], ['renderFaqAdmin', typeof renderFaqAdmin !== 'undefined' ? renderFaqAdmin : undefined], ['addNewFaq', typeof addNewFaq !== 'undefined' ? addNewFaq : undefined], ['delFaq', typeof delFaq !== 'undefined' ? delFaq : undefined], ['moveFaq', typeof moveFaq !== 'undefined' ? moveFaq : undefined], ['saveFaqs', typeof saveFaqs !== 'undefined' ? saveFaqs : undefined], ['switchFaqSubTab', typeof switchFaqSubTab !== 'undefined' ? switchFaqSubTab : undefined], ['normRouteInput', typeof normRouteInput !== 'undefined' ? normRouteInput : undefined], ['loadRoutesConfigUI', typeof loadRoutesConfigUI !== 'undefined' ? loadRoutesConfigUI : undefined], ['saveRoutesConfig', typeof saveRoutesConfig !== 'undefined' ? saveRoutesConfig : undefined], ['ftColsFromDb', typeof ftColsFromDb !== 'undefined' ? ftColsFromDb : undefined], ['renderFtCols', typeof renderFtCols !== 'undefined' ? renderFtCols : undefined], ['ftAddCol', typeof ftAddCol !== 'undefined' ? ftAddCol : undefined], ['ftDelCol', typeof ftDelCol !== 'undefined' ? ftDelCol : undefined], ['ftMoveCol', typeof ftMoveCol !== 'undefined' ? ftMoveCol : undefined], ['ftAddLink', typeof ftAddLink !== 'undefined' ? ftAddLink : undefined], ['ftDelLink', typeof ftDelLink !== 'undefined' ? ftDelLink : undefined], ['loadFooterConfigUI', typeof loadFooterConfigUI !== 'undefined' ? loadFooterConfigUI : undefined], ['saveFooterConfig', typeof saveFooterConfig !== 'undefined' ? saveFooterConfig : undefined], ['saveQrExpireSeconds', typeof saveQrExpireSeconds !== 'undefined' ? saveQrExpireSeconds : undefined], ['switchWebAdminTab', typeof switchWebAdminTab !== 'undefined' ? switchWebAdminTab : undefined], ['loadWebAdminUI', typeof loadWebAdminUI !== 'undefined' ? loadWebAdminUI : undefined], ['loadSettingsUI', typeof loadSettingsUI !== 'undefined' ? loadSettingsUI : undefined], ['saveEmailPerm', typeof saveEmailPerm !== 'undefined' ? saveEmailPerm : undefined], ['initAdminNotifyUI', typeof initAdminNotifyUI !== 'undefined' ? initAdminNotifyUI : undefined], ['updateAdminNotifyStatusUI', typeof updateAdminNotifyStatusUI !== 'undefined' ? updateAdminNotifyStatusUI : undefined], ['saveAdminNotifyPerm', typeof saveAdminNotifyPerm !== 'undefined' ? saveAdminNotifyPerm : undefined], ['saveCronCfg', typeof saveCronCfg !== 'undefined' ? saveCronCfg : undefined], ['runCronNow', typeof runCronNow !== 'undefined' ? runCronNow : undefined], ['loadStatus', typeof loadStatus !== 'undefined' ? loadStatus : undefined], ['qBar', typeof qBar !== 'undefined' ? qBar : undefined], ['mailProvCard', typeof mailProvCard !== 'undefined' ? mailProvCard : undefined], ['selectMailProvider', typeof selectMailProvider !== 'undefined' ? selectMailProvider : undefined], ['saveMailProvider', typeof saveMailProvider !== 'undefined' ? saveMailProvider : undefined], ['renderMailProvCards', typeof renderMailProvCards !== 'undefined' ? renderMailProvCards : undefined], ['loadQuota', typeof loadQuota !== 'undefined' ? loadQuota : undefined], ['loadLogs', typeof loadLogs !== 'undefined' ? loadLogs : undefined], ['renderLogs', typeof renderLogs !== 'undefined' ? renderLogs : undefined], ['renderDev', typeof renderDev !== 'undefined' ? renderDev : undefined], ['delDev', typeof delDev !== 'undefined' ? delDev : undefined], ['migrateDates', typeof migrateDates !== 'undefined' ? migrateDates : undefined], ['migratePkg', typeof migratePkg !== 'undefined' ? migratePkg : undefined], ['loadFulfillmentConfig', typeof loadFulfillmentConfig !== 'undefined' ? loadFulfillmentConfig : undefined], ['renderFulfillmentUI', typeof renderFulfillmentUI !== 'undefined' ? renderFulfillmentUI : undefined], ['selectFailoverPolicy', typeof selectFailoverPolicy !== 'undefined' ? selectFailoverPolicy : undefined], ['updateFailoverPolicyUI', typeof updateFailoverPolicyUI !== 'undefined' ? updateFailoverPolicyUI : undefined], ['saveFulfillmentMapping', typeof saveFulfillmentMapping !== 'undefined' ? saveFulfillmentMapping : undefined], ['saveFailoverPolicy', typeof saveFailoverPolicy !== 'undefined' ? saveFailoverPolicy : undefined], ['startApp', typeof startApp !== 'undefined' ? startApp : undefined], ['restoreAdminScroll', typeof restoreAdminScroll !== 'undefined' ? restoreAdminScroll : undefined], ['updateTestModeUI', typeof updateTestModeUI !== 'undefined' ? updateTestModeUI : undefined], ['testPingProd', typeof testPingProd !== 'undefined' ? testPingProd : undefined], ['testTelegramBot', typeof testTelegramBot !== 'undefined' ? testTelegramBot : undefined], ['triggerTelegramKvBackupNow', typeof triggerTelegramKvBackupNow !== 'undefined' ? triggerTelegramKvBackupNow : undefined], ['resetTelegramStt', typeof resetTelegramStt !== 'undefined' ? resetTelegramStt : undefined], ['triggerTelegramBackupNow', typeof triggerTelegramBackupNow !== 'undefined' ? triggerTelegramBackupNow : undefined], ['SITE_KEY', typeof SITE_KEY !== 'undefined' ? SITE_KEY : undefined], ['API', typeof API !== 'undefined' ? API : undefined], ['PDS', typeof PDS !== 'undefined' ? PDS : undefined], ['PD', typeof PD !== 'undefined' ? PD : undefined], ['GH_REPO', typeof GH_REPO !== 'undefined' ? GH_REPO : undefined], ['PKG_LIST', typeof PKG_LIST !== 'undefined' ? PKG_LIST : undefined], ['TABS', typeof TABS !== 'undefined' ? TABS : undefined], ['PKG_DB', typeof PKG_DB !== 'undefined' ? PKG_DB : undefined], ['$', typeof $ !== 'undefined' ? $ : undefined], ['arr', typeof arr !== 'undefined' ? arr : undefined], ['esc', typeof esc !== 'undefined' ? esc : undefined], ['q', typeof q !== 'undefined' ? q : undefined], ['cm', typeof closeAdminModal !== 'undefined' ? closeAdminModal : undefined], ['genId', typeof genId !== 'undefined' ? genId : undefined], ['genHex', typeof genHex !== 'undefined' ? genHex : undefined], ['normId', typeof normId !== 'undefined' ? normId : undefined], ['isLife', typeof isLife !== 'undefined' ? isLife : undefined], ['normSt', typeof normSt !== 'undefined' ? normSt : undefined], ['getT', typeof getT !== 'undefined' ? getT : undefined], ['trimNum', typeof trimNum !== 'undefined' ? trimNum : undefined], ['VND_SEP', typeof VND_SEP !== 'undefined' ? VND_SEP : undefined], ['fmtVnd', typeof fmtVnd !== 'undefined' ? fmtVnd : undefined], ['Toast', typeof Toast !== 'undefined' ? Toast : undefined], ['cp', typeof cp !== 'undefined' ? cp : undefined], ['sleep', typeof sleep !== 'undefined' ? sleep : undefined], ['off', typeof off !== 'undefined' ? off : undefined], ['TZN', typeof TZN !== 'undefined' ? TZN : undefined], ['nowMs', typeof nowMs !== 'undefined' ? nowMs : undefined], ['fmtBank', typeof fmtBank !== 'undefined' ? fmtBank : undefined], ['oTs', typeof oTs !== 'undefined' ? oTs : undefined], ['dmyOf', typeof dmyOf !== 'undefined' ? dmyOf : undefined], ['parseDmy', typeof parseDmy !== 'undefined' ? parseDmy : undefined], ['expEnd', typeof expEnd !== 'undefined' ? expEnd : undefined], ['monthInfo', typeof monthInfo !== 'undefined' ? monthInfo : undefined], ['fmtFull', typeof fmtFull !== 'undefined' ? fmtFull : undefined], ['OLD_BY_DATA', typeof OLD_BY_DATA !== 'undefined' ? OLD_BY_DATA : undefined], ['pkgLabel', typeof pkgLabel !== 'undefined' ? pkgLabel : undefined], ['fmtMonths', typeof fmtMonths !== 'undefined' ? fmtMonths : undefined], ['myWebIndex', typeof myWebIndex !== 'undefined' ? myWebIndex : undefined], ['payOf', typeof payOf !== 'undefined' ? payOf : undefined], ['TOKEN', typeof TOKEN !== 'undefined' ? TOKEN : undefined], ['myDev', typeof myDev !== 'undefined' ? myDev : undefined], ['aj', typeof aj !== 'undefined' ? aj : undefined], ['logEvent', typeof logEvent !== 'undefined' ? logEvent : undefined], ['ordersDb', typeof ordersDb !== 'undefined' ? ordersDb : undefined], ['curOrdTab', typeof curOrdTab !== 'undefined' ? curOrdTab : undefined], ['isMailMaster', typeof isMailMaster !== 'undefined' ? isMailMaster : undefined], ['expLocked', typeof expLocked !== 'undefined' ? expLocked : undefined], ['lockFulfillOn', typeof lockFulfillOn !== 'undefined' ? lockFulfillOn : undefined], ['mailOnSaveOn', typeof mailOnSaveOn !== 'undefined' ? mailOnSaveOn : undefined], ['manualEditOn', typeof manualEditOn !== 'undefined' ? manualEditOn : undefined], ['tombGet', typeof tombGet !== 'undefined' ? tombGet : undefined], ['tombSet', typeof tombSet !== 'undefined' ? tombSet : undefined], ['addTomb', typeof addTomb !== 'undefined' ? addTomb : undefined], ['rmTomb', typeof rmTomb !== 'undefined' ? rmTomb : undefined], ['isDeleted', typeof isDeleted !== 'undefined' ? isDeleted : undefined], ['isLockedPoolUrl', typeof isLockedPoolUrl !== 'undefined' ? isLockedPoolUrl : undefined], ['ordAmountTxt', typeof ordAmountTxt !== 'undefined' ? ordAmountTxt : undefined], ['curUpg', typeof curUpg !== 'undefined' ? curUpg : undefined], ['healAllMissing', typeof healAllMissing !== 'undefined' ? healAllMissing : undefined], ['htmlEscape', typeof htmlEscape !== 'undefined' ? htmlEscape : undefined], ['sendMailClient', typeof sendMailClient !== 'undefined' ? sendMailClient : undefined], ['mailGrad', typeof mailGrad !== 'undefined' ? mailGrad : undefined], ['mailShell', typeof mailShell !== 'undefined' ? mailShell : undefined], ['mailIdBox', typeof mailIdBox !== 'undefined' ? mailIdBox : undefined], ['mailPortal', typeof mailPortal !== 'undefined' ? mailPortal : undefined], ['mailBtn', typeof mailBtn !== 'undefined' ? mailBtn : undefined], ['mailSupport', typeof mailSupport !== 'undefined' ? mailSupport : undefined], ['TPL_THEME', typeof TPL_THEME !== 'undefined' ? TPL_THEME : undefined], ['P0', typeof P0 !== 'undefined' ? P0 : undefined], ['SYS_TPL', typeof SYS_TPL !== 'undefined' ? SYS_TPL : undefined], ['getTpl', typeof getTpl !== 'undefined' ? getTpl : undefined], ['subjVars', typeof subjVars !== 'undefined' ? subjVars : undefined], ['mailKeyOf', typeof mailKeyOf !== 'undefined' ? mailKeyOf : undefined], ['mailSuccess', typeof mailSuccess !== 'undefined' ? mailSuccess : undefined], ['mailFailed', typeof mailFailed !== 'undefined' ? mailFailed : undefined], ['mailExp', typeof mailExp !== 'undefined' ? mailExp : undefined], ['mailZalo', typeof mailZalo !== 'undefined' ? mailZalo : undefined], ['dataVars', typeof dataVars !== 'undefined' ? dataVars : undefined], ['mailData', typeof mailData !== 'undefined' ? mailData : undefined], ['revTab', typeof revTab !== 'undefined' ? revTab : undefined], ['REV_TABS', typeof REV_TABS !== 'undefined' ? REV_TABS : undefined], ['setRevTab', typeof setRevTab !== 'undefined' ? setRevTab : undefined], ['setRevPayView', typeof setRevPayView !== 'undefined' ? setRevPayView : undefined], ['setRevMonth', typeof setRevMonth !== 'undefined' ? setRevMonth : undefined], ['mcToHtml', typeof mcToHtml !== 'undefined' ? mcToHtml : undefined], ['addFaqRow', typeof addFaqRow !== 'undefined' ? addFaqRow : undefined], ['saveFaqAdmin', typeof saveFaqAdmin !== 'undefined' ? saveFaqAdmin : undefined], ['addFooterColumn', typeof addFooterColumn !== 'undefined' ? addFooterColumn : undefined], ['ftAddCol', typeof ftAddCol !== 'undefined' ? ftAddCol : undefined], ['ftDelCol', typeof ftDelCol !== 'undefined' ? ftDelCol : undefined], ['ftMoveCol', typeof ftMoveCol !== 'undefined' ? ftMoveCol : undefined], ['ftAddLink', typeof ftAddLink !== 'undefined' ? ftAddLink : undefined], ['ftDelLink', typeof ftDelLink !== 'undefined' ? ftDelLink : undefined], ['customCmsImageHandler', typeof customCmsImageHandler !== 'undefined' ? customCmsImageHandler : undefined], ['customCmsVideoHandler', typeof customCmsVideoHandler !== 'undefined' ? customCmsVideoHandler : undefined], ['recordAdminNav', typeof recordAdminNav !== 'undefined' ? recordAdminNav : undefined], ['closeCmsEditor', typeof closeCmsEditor !== 'undefined' ? closeCmsEditor : undefined], ['cnyRate', typeof cnyRate !== 'undefined' ? cnyRate : undefined], ['curVal', typeof curVal !== 'undefined' ? curVal : undefined], ['shortN', typeof shortN !== 'undefined' ? shortN : undefined], ['monthLbl', typeof monthLbl !== 'undefined' ? monthLbl : undefined], ['kpi', typeof kpi !== 'undefined' ? kpi : undefined], ['box', typeof box !== 'undefined' ? box : undefined], ['chartRevStacked', typeof chartRevStacked !== 'undefined' ? chartRevStacked : undefined], ['gridPkgTable', typeof gridPkgTable !== 'undefined' ? gridPkgTable : undefined], ['PAYLBL', typeof PAYLBL !== 'undefined' ? PAYLBL : undefined], ['MC_COLORS', typeof MC_COLORS !== 'undefined' ? MC_COLORS : undefined], ['MC_BT', typeof MC_BT !== 'undefined' ? MC_BT : undefined], ['MC_VARS_BASE', typeof MC_VARS_BASE !== 'undefined' ? MC_VARS_BASE : undefined], ['MC_VARS_SYS', typeof MC_VARS_SYS !== 'undefined' ? MC_VARS_SYS : undefined], ['MC_SYS_KEYS', typeof MC_SYS_KEYS !== 'undefined' ? MC_SYS_KEYS : undefined], ['MC_SYS_NAMES', typeof MC_SYS_NAMES !== 'undefined' ? MC_SYS_NAMES : undefined], ['MC_PRESETS', typeof MC_PRESETS !== 'undefined' ? MC_PRESETS : undefined], ['mc', typeof mc !== 'undefined' ? mc : undefined], ['mcColorName', typeof mcColorName !== 'undefined' ? mcColorName : undefined], ['mcClone', typeof mcClone !== 'undefined' ? mcClone : undefined], ['mcToTpl', typeof mcToTpl !== 'undefined' ? mcToTpl : undefined], ['extractOrder', typeof extractOrder !== 'undefined' ? extractOrder : undefined], ['delBtn', typeof delBtn !== 'undefined' ? delBtn : undefined], ['saveLinks', typeof saveLinks !== 'undefined' ? saveLinks : undefined], ['FIXED_PKG_IDS', typeof FIXED_PKG_IDS !== 'undefined' ? FIXED_PKG_IDS : undefined], ['adminPkgsList', typeof adminPkgsList !== 'undefined' ? adminPkgsList : undefined], ['sortablePkgsInstance', typeof sortablePkgsInstance !== 'undefined' ? sortablePkgsInstance : undefined], ['delCustomPkg', typeof delCustomPkg !== 'undefined' ? delCustomPkg : undefined], ['rsItems', typeof rsItems !== 'undefined' ? rsItems : undefined], ['rlPicks', typeof rlPicks !== 'undefined' ? rlPicks : undefined], ['rlAll', typeof rlAll !== 'undefined' ? rlAll : undefined], ['curDeadTab', typeof curDeadTab !== 'undefined' ? curDeadTab : undefined], ['deadLive', typeof deadLive !== 'undefined' ? deadLive : undefined], ['DEF_TABS', typeof DEF_TABS !== 'undefined' ? DEF_TABS : undefined], ['toSlug', typeof toSlug !== 'undefined' ? toSlug : undefined], ['curArtsReady', typeof curArtsReady !== 'undefined' ? curArtsReady : undefined], ['guideTabList', typeof guideTabList !== 'undefined' ? guideTabList : undefined], ['artsOf', typeof artsOf !== 'undefined' ? artsOf : undefined], ['curArtHtml', typeof curArtHtml !== 'undefined' ? curArtHtml : undefined], ['quillInst', typeof quillInst !== 'undefined' ? quillInst : undefined], ['sortableCmsTabs', typeof sortableCmsTabs !== 'undefined' ? sortableCmsTabs : undefined], ['safeUrl', typeof safeUrl !== 'undefined' ? safeUrl : undefined], ['saveCmsDb', typeof saveCmsDb !== 'undefined' ? saveCmsDb : undefined], ['curCheckSubTab', typeof curCheckSubTab !== 'undefined' ? curCheckSubTab : undefined], ['BLUR_RULES', typeof BLUR_RULES !== 'undefined' ? BLUR_RULES : undefined], ['DEFAULT_FAQS', typeof DEFAULT_FAQS !== 'undefined' ? DEFAULT_FAQS : undefined], ['adminFaqsList', typeof adminFaqsList !== 'undefined' ? adminFaqsList : undefined], ['DEFAULT_SYS_ROUTES', typeof DEFAULT_SYS_ROUTES !== 'undefined' ? DEFAULT_SYS_ROUTES : undefined], ['ftCols', typeof ftCols !== 'undefined' ? ftCols : undefined], ['FT_TEMPLATE', typeof FT_TEMPLATE !== 'undefined' ? FT_TEMPLATE : undefined], ['ftClone', typeof ftClone !== 'undefined' ? ftClone : undefined], ['yn', typeof yn !== 'undefined' ? yn : undefined], ['QL', typeof QL !== 'undefined' ? QL : undefined], ['MAIL_PROV_META', typeof MAIL_PROV_META !== 'undefined' ? MAIL_PROV_META : undefined], ['mailProvQuota', typeof mailProvQuota !== 'undefined' ? mailProvQuota : undefined], ['pickMailProvider', typeof pickMailProvider !== 'undefined' ? pickMailProvider : undefined], ['currentFulfillmentConfig', typeof currentFulfillmentConfig !== 'undefined' ? currentFulfillmentConfig : undefined], ['started', typeof started !== 'undefined' ? started : undefined], ['adminScrollTimer', typeof adminScrollTimer !== 'undefined' ? adminScrollTimer : undefined], ['isTestModeActive', typeof isTestModeActive !== 'undefined' ? isTestModeActive : undefined], ['toggleTestMode', typeof toggleTestMode !== 'undefined' ? toggleTestMode : undefined], ['testPingTest', typeof testPingTest !== 'undefined' ? testPingTest : undefined], ['createFakeTestOrder', typeof createFakeTestOrder !== 'undefined' ? createFakeTestOrder : undefined], ['cloneProdOrdersToTest', typeof cloneProdOrdersToTest !== 'undefined' ? cloneProdOrdersToTest : undefined], ['clearTestOrders', typeof clearTestOrders !== 'undefined' ? clearTestOrders : undefined], ['lastTxError', typeof lastTxError !== 'undefined' ? lastTxError : undefined],];
-  _exposed.push(['mcNewTemplate', typeof mcNewTemplate !== 'undefined' ? mcNewTemplate : undefined], ['cmsUpdateArtFaq', typeof cmsUpdateArtFaq !== 'undefined' ? cmsUpdateArtFaq : undefined], ['getRelinkBackupEnabled', typeof getRelinkBackupEnabled !== 'undefined' ? getRelinkBackupEnabled : undefined], ['toggleRelinkBackup', typeof toggleRelinkBackup !== 'undefined' ? toggleRelinkBackup : undefined], ['adminBackFromDeepTab', typeof adminBackFromDeepTab !== 'undefined' ? adminBackFromDeepTab : undefined], ['MOBILE_MAIN_TABS', typeof MOBILE_MAIN_TABS !== 'undefined' ? MOBILE_MAIN_TABS : undefined], ['MORE_SUB_TABS', typeof MORE_SUB_TABS !== 'undefined' ? MORE_SUB_TABS : undefined], ['getAdminSwipeTargetTab', typeof getAdminSwipeTargetTab !== 'undefined' ? getAdminSwipeTargetTab : undefined], ['updateFooterDisplayBadge', typeof updateFooterDisplayBadge !== 'undefined' ? updateFooterDisplayBadge : undefined], ['saveFooterDisplayToggle', typeof saveFooterDisplayToggle !== 'undefined' ? saveFooterDisplayToggle : undefined]);
+  _exposed.push(['mcNewTemplate', typeof mcNewTemplate !== 'undefined' ? mcNewTemplate : undefined], ['cmsUpdateArtFaq', typeof cmsUpdateArtFaq !== 'undefined' ? cmsUpdateArtFaq : undefined], ['getRelinkBackupEnabled', typeof getRelinkBackupEnabled !== 'undefined' ? getRelinkBackupEnabled : undefined], ['toggleRelinkBackup', typeof toggleRelinkBackup !== 'undefined' ? toggleRelinkBackup : undefined], ['adminBackFromDeepTab', typeof adminBackFromDeepTab !== 'undefined' ? adminBackFromDeepTab : undefined], ['MOBILE_MAIN_TABS', typeof MOBILE_MAIN_TABS !== 'undefined' ? MOBILE_MAIN_TABS : undefined], ['MORE_SUB_TABS', typeof MORE_SUB_TABS !== 'undefined' ? MORE_SUB_TABS : undefined], ['getAdminSwipeTargetTab', typeof getAdminSwipeTargetTab !== 'undefined' ? getAdminSwipeTargetTab : undefined], ['updateFooterDisplayBadge', typeof updateFooterDisplayBadge !== 'undefined' ? updateFooterDisplayBadge : undefined], ['saveFooterDisplayToggle', typeof saveFooterDisplayToggle !== 'undefined' ? saveFooterDisplayToggle : undefined], ['fmtModalPkgLabel', typeof fmtModalPkgLabel !== 'undefined' ? fmtModalPkgLabel : undefined], ['getOrdPkgEntries', typeof getOrdPkgEntries !== 'undefined' ? getOrdPkgEntries : undefined], ['evaluateOrdersImportJson', typeof evaluateOrdersImportJson !== 'undefined' ? evaluateOrdersImportJson : undefined], ['handleProdJsonSelect', typeof handleProdJsonSelect !== 'undefined' ? handleProdJsonSelect : undefined], ['clearProdJsonSelection', typeof clearProdJsonSelection !== 'undefined' ? clearProdJsonSelection : undefined], ['overwriteProdFromJson', typeof overwriteProdFromJson !== 'undefined' ? overwriteProdFromJson : undefined]);
   _exposed.forEach(([k, v]) => {
     if (v !== undefined) window[k] = v;
+  });
+  Object.defineProperty(window, 'adminPkgsList', {
+    configurable: true,
+    get: () => adminPkgsList,
+    set: v => {
+      adminPkgsList = Array.isArray(v) ? v : [];
+    }
   });
   Object.defineProperty(window, 'isTestModeActive', {
     configurable: true,
@@ -9999,5 +10331,8 @@ export {
   applyPoll,
   cmsUpdateArtFaq,
   pickTz,
-  resetWarehouseScopedState
+  resetWarehouseScopedState,
+  fmtModalPkgLabel,
+  getOrdPkgEntries,
+  evaluateOrdersImportJson
 };
