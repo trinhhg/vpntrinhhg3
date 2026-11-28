@@ -55,10 +55,15 @@ function cleanOrderForSupabase(o) {
     c.expFinal = c.expFinal ? "true" : "false";
   }
   // Chuẩn hóa duy nhất 1 cột pkg = [Tên gói - Giá VND / ¥CNY (GB)] theo dropdown; bỏ pkgName/pkgData khỏi payload Supabase
-  if (!c.pkg || /[đ$]/.test(String(c.pkg)) || !/\([^)]*GB/i.test(String(c.pkg))) {
-    const dp = c.pkgId && DEFAULT_PKGS[c.pkgId] ? DEFAULT_PKGS[c.pkgId] : null;
-    if (dp) c.pkg = pkgStr(dp);
-    else if (c.pkgName || c.pkgData) c.pkg = [c.pkgName, c.pkgData].filter(Boolean).join(" - ");
+  const pkMap = (typeof PKGS === "object" && PKGS) ? PKGS : DEFAULT_PKGS;
+  const detId = typeof detectPkg === "function" ? detectPkg(c).id : null;
+  const resolvedId = (c.pkgId && c.pkgId !== "custom" && pkMap[c.pkgId]) ? c.pkgId : (detId && detId !== "custom" && pkMap[detId] ? detId : null);
+  const dp = resolvedId ? pkMap[resolvedId] : null;
+  if (dp) {
+    const wantPkg = pkgStr(dp);
+    if (!c.pkg || c.pkg !== wantPkg) c.pkg = wantPkg;
+  } else if ((!c.pkg || /[đ$]/.test(String(c.pkg))) && (c.pkgName || c.pkgData)) {
+    c.pkg = [c.pkgName, c.pkgData].filter(Boolean).join(" - ");
   }
   delete c.pkgName;
   delete c.pkgData;
@@ -326,7 +331,11 @@ function getSupabase(env, isTest = false) {
 
       // Ghi từng nhóm 100 đơn vào bảng TEST.
       for (let i = 0; i < prod.length; i += 100) {
-        const batch = prod.slice(i, i + 100);
+        const batch = prod.slice(i, i + 100).map((row) => {
+          if (!row || typeof row !== "object") return row;
+          const { pkgName, pkgData, ...rest } = row;
+          return rest;
+        });
 
         const writeRes = await fetch(`${url}/ALL_ORDERS_TEST`, {
           method: "POST",
@@ -610,7 +619,7 @@ async function runTelegramBackup(env, actionReason = "Admin gửi thủ công", 
 
   const jsonContent = JSON.stringify(orders, null, 2);
 
-  const headers = ["id", "email", "nickname", "zalo", "method", "pkgId", "qty", "pkgName", "totalVnd", "totalCny", "days", "expDate", "status", "createdTs", "date"];
+  const headers = ["id", "email", "nickname", "zalo", "method", "pkgId", "qty", "pkg", "totalVnd", "totalCny", "days", "expDate", "status", "createdTs", "date"];
   const csvRows = [headers.join(",")];
   for (const o of orders) {
     csvRows.push(headers.map(h => {
@@ -926,9 +935,9 @@ const linkDate = (exp, cts) => isLifetime(exp) ? "Vĩnh viễn" : exp;
 function detectPkg(o) {
   const s = String(o.pkg || "");
   if (PKGS[o.pkgId] && (!s || s === pkgStr(PKGS[o.pkgId]))) return { id: o.pkgId, qty: Number(o.qty) || null };
-  const cleanPrefix = s.split(" - ")[0].replace(/^\[Giá cũ\]\s*/i, "").trim();
-  const gm = s.match(/\(([^)]*GB[^)]*)\)/i), pm = s.match(/-\s*([\d.,]+)\s*(?:đ|VND)/i);
-  const data = String(o.pkgData || (gm && gm[1]) || "").toUpperCase();
+  const cleanPrefix = s.split(/\s+-\s+|\s*\(/)[0].replace(/^\[Giá cũ\]\s*/i, "").trim();
+  const gm = s.match(/\(([^)·]*GB[^)·]*)/i), pm = s.match(/(?:-|·)\s*([\d.,]+)\s*(?:đ|VND)/i);
+  const data = String(o.pkgData || (gm && gm[1].trim()) || "").toUpperCase();
   const price = pm ? Number(pm[1].replace(/[.,]/g, "")) : 0, total = Number(o.totalVnd) || 0;
   const name = String(o.pkgName || cleanPrefix || ""), cand = MONTHLY[data];
   if (cand && (!name || /1 tháng/i.test(name))) {
@@ -1642,6 +1651,18 @@ const notTomb = (links, tb) => {
 };
 
 // ---------------------------------------------------------------- state
+function hydrateOrderPkg(ord) {
+  if (!ord || typeof ord !== "object") return ord;
+  if ((!ord.pkgName || !ord.pkgData) && (ord.pkg || ord.pkgId)) {
+    const pkMap = (typeof PKGS === "object" && PKGS) ? PKGS : DEFAULT_PKGS;
+    const pk = (ord.pkgId && pkMap[ord.pkgId]) || pkMap[detectPkg(ord).id];
+    if (pk) {
+      if (!ord.pkgName) ord.pkgName = pk.n;
+      if (!ord.pkgData) ord.pkgData = pk.d;
+    }
+  }
+  return ord;
+}
 // v2 — 2026-11-06 22:00 (UTC+7) — Supabase là nguồn đơn hàng duy nhất; loại bỏ hoàn toàn đọc/ghi ALL_ORDERS và ALL_ORDERS_TEST trong KV
 async function loadAll(KV, env, isTestOverride = null) {
   const g = async (k, d) => safeJson(await KV.get(k), d);
@@ -1672,16 +1693,7 @@ async function loadAll(KV, env, isTestOverride = null) {
             if (!ord.targetLink && ord.lockInfo._wf.targetLink) ord.targetLink = ord.lockInfo._wf.targetLink;
             if (!ord.renewOf && ord.lockInfo._wf.renewOf) ord.renewOf = ord.lockInfo._wf.renewOf;
           }
-          // Hydrate pkgName/pkgData in memory from 1-col Supabase `pkg` when legacy columns are omitted
-          if ((!ord.pkgName || !ord.pkgData) && (ord.pkg || ord.pkgId)) {
-            const pkMap = (typeof PKGS === "object" && PKGS) ? PKGS : DEFAULT_PKGS;
-            const pk = (ord.pkgId && pkMap[ord.pkgId]) || pkMap[detectPkg(ord).id];
-            if (pk) {
-              if (!ord.pkgName) ord.pkgName = pk.n;
-              if (!ord.pkgData) ord.pkgData = pk.d;
-            }
-          }
-          return ord;
+          return hydrateOrderPkg(ord);
         });
       } else {
         sbOk = false;
@@ -1786,6 +1798,7 @@ function getOrderRawSubLink(o, idx, schemaField) {
 }
 
 function publicOrder(o, cms, links, field) {
+  hydrateOrderPkg(o);
   const s = (cms && cms.settings) || {};
   const emailVerifyTtlSeconds = s.emailVerifyTtlSeconds !== undefined ? Math.max(1, parseInt(s.emailVerifyTtlSeconds) || 259200) : ((parseInt(s.emailVerifyTtlHours) || 72) * 3600);
   const emailVerifyTtlHours = Math.round(emailVerifyTtlSeconds / 3600);
@@ -3226,6 +3239,7 @@ export default {
               linkStatus = "unverified";
               isLocked = !ordActive;
             }
+            hydrateOrderPkg(ord);
             existingLinks.push({
               url: `ORDER_REF:${ord.id}`,
               orderRef: ord.id,
@@ -3700,9 +3714,7 @@ export default {
           method: "Ngân hàng VN",
           pkgId: "t1",
           qty: 1,
-          pkgName: "Gói 1 tháng",
-          pkgData: "100GB",
-          pkg: "Gói 1 tháng - 60,000VND",
+          pkg: pkgStr(PKGS.t1),
           totalVnd: 60000,
           days: 30,
           expDate: addDaysDmy(day0(now), 30),
@@ -3804,6 +3816,7 @@ export default {
         } catch (err) {
           return J({ ok: false, error: err.message || String(err) }, 503);
         }
+        if (o) hydrateOrderPkg(o);
         return o ? J({
           ok: true,
           order: {
@@ -3868,7 +3881,7 @@ export default {
               try {
                 const directOrd = await sb.getOrder(oid);
                 if (directOrd && directOrd.id) {
-                  o = directOrd;
+                  o = hydrateOrderPkg(directOrd);
                   st.orders.unshift(o);
                 }
               } catch (sbGetErr) {
@@ -4219,7 +4232,7 @@ export default {
                     } catch { ord.lockInfo = {};
                     }
                   }
-                  return ord;
+                  return hydrateOrderPkg(ord);
                 });
                 sbOk = true;
               } else {
@@ -5131,8 +5144,6 @@ export default {
                 await sb.patchOrder(mo.id, {
                   pkgId: mo.pkgId,
                   pkg: mo.pkg,
-                  pkgName: mo.pkgName,
-                  pkgData: mo.pkgData,
                   qty: mo.qty
                 }).catch(() => {});
               }
@@ -8452,6 +8463,8 @@ export {
   LOCK_ORIG,
   isLockOrig,
   pkgStr,
+  detectPkg,
+  hydrateOrderPkg,
   cleanOrderForSupabase,
   matchesFlashSaleScope,
   fetchUpstreamSub,

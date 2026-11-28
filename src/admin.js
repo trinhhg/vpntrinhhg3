@@ -1537,7 +1537,9 @@ function openOrdModal(id) {
     adminPkgsList.forEach(dp => {
       if (!dynamicList.some(x => x[0] === dp.id)) {
         const timeNum = dp.time === "lifetime" ? 0 : (Number(dp.time) || 1) * 30;
-        dynamicList.push([dp.id, `${dp.name || dp.id} - ${fmtVnd(dp.vnd)}VND (${dp.data || ''})`, timeNum]);
+        const cnyPart = Number(dp.cny) > 0 ? ` / ¥${trimNum(dp.cny)}` : "";
+        const dataPart = dp.data ? ` (${dp.data})` : "";
+        dynamicList.push([dp.id, `${dp.name || dp.id} - ${fmtVnd(dp.vnd)}VND${cnyPart}${dataPart}`, timeNum]);
       }
     });
   }
@@ -1627,6 +1629,14 @@ async function saveOrd() {
     if (modalNew ? (cur[k] !== "" && cur[k] !== "-1") : cur[k] !== modalInit[k]) {
       if (k === "pkgId" && cur[k] === "-1") continue;
       body[k] = cur[k];
+    }
+  }
+  const selPkgEl = $("mOPkg");
+  const selPkgLbl = selPkgEl && selPkgEl.selectedIndex >= 0 ? selPkgEl.options[selPkgEl.selectedIndex].textContent.trim() : "";
+  if (oldId && cur.pkgId && cur.pkgId !== "-1" && !body.pkgId) {
+    const origOrd = ordersDb.find(x => x.id === oldId);
+    if (origOrd && (!origOrd.pkgId || origOrd.pkgId !== cur.pkgId || (selPkgLbl && origOrd.pkg !== selPkgLbl))) {
+      body.pkgId = cur.pkgId;
     }
   }
   const bank = !/alipay|weixin/i.test(cur.method), amt = Number(String(cur.amount).replace(/[,\s]/g, "")) || 0;
@@ -9817,7 +9827,7 @@ function renderExceptionsTab() {
                   <option value="">-- Chọn đơn hàng đang chờ (${pendingOrders.length} đơn) --</option>
                   ${pendingOrders.map(o => `
                     <option value="${esc(o.id)}" ${tx.order_id && normId(tx.order_id) === normId(o.id) ? 'selected' : ''}>
-                      ${esc(o.id)} · ${esc(o.email)} · ${fmtVnd(o.totalVnd || 0)}đ · ${esc(o.pkgName || '')}
+                      ${esc(o.id)} · ${esc(o.email)} · ${fmtVnd(o.totalVnd || 0)}đ · ${esc(pkgLabel(o))}
                     </option>
                   `).join("")}
                 </select>

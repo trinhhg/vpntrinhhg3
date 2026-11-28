@@ -386,3 +386,112 @@ describe('Round 3 E2E Worker Integration — Combo 3 -> Auto-Fulfill -> Upgrade 
     expect(JSON.parse(await kv.get('ALL_LINKS'))).toHaveLength(1);
   });
 });
+
+describe('Single-column pkg normalization & 1-col Supabase compatibility', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('cleanOrderForSupabase chuẩn hóa mọi format pkg cũ/thiếu thành chuỗi dropdown chuẩn và xóa pkgName/pkgData', async () => {
+    const { cleanOrderForSupabase, detectPkg, hydrateOrderPkg } = await import('../worker.js');
+
+    const c1 = cleanOrderForSupabase({
+      id: 'DHLEGACY01',
+      pkgId: 't1',
+      pkg: 'Gói 1 tháng - 60,000VND',
+      pkgName: 'Gói 1 tháng',
+      pkgData: '100GB',
+      totalVnd: 60000,
+    });
+    expect(c1.pkg).toBe('Gói 1 tháng - 60,000VND / ¥15.5 (100GB)');
+    expect(c1.pkgName).toBeUndefined();
+    expect(c1.pkgData).toBeUndefined();
+
+    const c2 = cleanOrderForSupabase({
+      id: 'DHLEGACY02',
+      pkg: 'Gói 1 tháng (500GB · 70,000VND)',
+      totalVnd: 210000,
+    });
+    expect(c2.pkg).toBe('Gói 1 tháng - 70,000VND / ¥18 (500GB)');
+    expect(c2.pkgName).toBeUndefined();
+    expect(c2.pkgData).toBeUndefined();
+
+    const cOld = cleanOrderForSupabase({
+      id: 'DHLEGACY03',
+      pkg: 'Gói 1 tháng (100GB · 50,000VND)',
+      totalVnd: 50000,
+    });
+    expect(cOld.pkg).toBe('[Giá cũ] Gói 1 tháng - 50,000VND / ¥12.5 (100GB)');
+
+    expect(detectPkg({ pkg: 'Gói 1 tháng (500GB · 70,000VND)', totalVnd: 210000 }).id).toBe('t2');
+    const h = hydrateOrderPkg({ id: 'DH1COL0001', pkgId: 'c1', pkg: 'Gói 1 tháng - 80,000VND / ¥20.5 (1000GB)' });
+    expect(h.pkgName).toBe('Gói 1 tháng');
+    expect(h.pkgData).toBe('1000GB');
+  });
+
+  it('/api/admin/poll và /api/public/lookup tự hydrate pkgName/pkgData từ bảng 1 cột pkg', async () => {
+    const workerMod = await import('../worker.js');
+    const workerDefault = workerMod.default;
+    const sbDb = makeSupabaseOrdersDb([
+      {
+        id: 'DH1COLPOLL1',
+        email: 'onecol@test.com',
+        status: 'success',
+        pkgId: 't2',
+        pkg: 'Gói 1 tháng - 70,000VND / ¥18 (500GB)',
+        totalVnd: 70000,
+        createdTs: Date.now(),
+        expDate: '30/12/2030',
+        info3: 'https://vpntrinhhg3.pages.dev/v1/VPNTrinhHg?OwO=abc1234567890',
+      },
+    ]);
+    const kv = makeMockKV({ ALL_LINKS: [], LINK_POOL: [], ALL_CMS: {} });
+    const env = {
+      VPN_KV3: kv,
+      ADMIN_PASSWORD: 'pw',
+      SUPABASE_URL: 'https://supabase.test',
+      SUPABASE_KEY: 'sk',
+      WEB_INDEX: '3',
+    };
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (u, opts) => {
+      if (String(u).includes('supabase.test')) return sbDb.handleFetch(String(u), opts);
+      return new Response('{}', { status: 200 });
+    });
+
+    const loginRes = await workerDefault.fetch(new Request('https://worker.test/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: 'pw' }),
+    }), env, { waitUntil: () => {} });
+    const { token } = await loginRes.json();
+
+    const pollRes = await workerDefault.fetch(new Request('https://worker.test/api/admin/poll', {
+      headers: { Authorization: `Bearer ${token}` },
+    }), env, { waitUntil: () => {} });
+    expect(pollRes.status).toBe(200);
+    const pollJson = await pollRes.json();
+    expect(pollJson.orders[0].pkg).toBe('Gói 1 tháng - 70,000VND / ¥18 (500GB)');
+    expect(pollJson.orders[0].pkgName).toBe('Gói 1 tháng');
+    expect(pollJson.orders[0].pkgData).toBe('500GB');
+
+    const lookupRes = await workerDefault.fetch(new Request('https://vpntrinhhg3.pages.dev/api/public/lookup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q: 'DH1COLPOLL1' }),
+    }), env, { waitUntil: () => {} });
+    expect(lookupRes.status).toBe(200);
+    const lookupJson = await lookupRes.json();
+    expect(lookupJson.order.pkg).toBe('Gói 1 tháng - 70,000VND / ¥18 (500GB)');
+    expect(lookupJson.order.pkgName).toBe('Gói 1 tháng');
+    expect(lookupJson.order.pkgData).toBe('500GB');
+  });
+
+  it('src/admin.js saveOrd gửi pkgId khi pkg lưu trong DB khác nhãn dropdown dù chưa đổi selection; fake_order không hardcode thiếu', () => {
+    const adminJs = readSrc('src/admin.js');
+    expect(adminJs).toContain('origOrd.pkg !== selPkgLbl');
+    expect(adminJs).toContain('pkgLabel(o)');
+    const workerSrc = readSrc('worker.js');
+    expect(workerSrc).toContain('pkg: pkgStr(PKGS.t1)');
+    expect(workerSrc).not.toContain('pkg: "Gói 1 tháng - 60,000VND"');
+  });
+});
